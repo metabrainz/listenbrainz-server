@@ -889,9 +889,9 @@ const getAlbumArtFromListenMetadata = async (
  * https://codepen.io/influxweb/pen/LpoXba
  */
 /* eslint-disable no-bitwise */
-function getAverageRGBOfImage(
+async function getAverageRGBOfImage(
   imgEl: HTMLImageElement | null
-): { r: number; g: number; b: number } {
+): Promise<{ r: number; g: number; b: number }> {
   const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
   if (!imgEl) {
     return defaultRGB;
@@ -899,45 +899,61 @@ function getAverageRGBOfImage(
   const blockSize = 5; // only visit every 5 pixels
   const canvas = document.createElement("canvas");
   const context = canvas.getContext && canvas.getContext("2d");
-  let data;
-  let i = -4;
-  const rgb = { r: 0, g: 0, b: 0 };
-  let count = 0;
 
   if (!context) {
     return defaultRGB;
   }
 
-  const height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
-  const width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
-  canvas.height = height;
-  canvas.width = width;
-  context.drawImage(imgEl, 0, 0);
+  const processImage = () => {
+    const height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
+    const width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
+    canvas.height = height;
+    canvas.width = width;
+    context.drawImage(imgEl, 0, 0);
 
-  try {
-    data = context.getImageData(0, 0, width, height);
-  } catch (e) {
-    /* security error, img on diff domain */
-    return defaultRGB;
-  }
+    let data;
+    try {
+      data = context.getImageData(0, 0, width, height);
+    } catch (e) {
+      /* security error, img on diff domain */
+      return defaultRGB;
+    }
 
-  const { length } = data.data;
+    const { length } = data.data;
 
-  // eslint-disable-next-line no-cond-assign
-  while ((i += blockSize * 4) < length) {
-    count += 1;
-    rgb.r += data.data[i];
-    rgb.g += data.data[i + 1];
-    rgb.b += data.data[i + 2];
-  }
+    const rgb = { r: 0, g: 0, b: 0 };
+    let count = 0;
+    let i = -4;
+    // eslint-disable-next-line no-cond-assign
+    while ((i += blockSize * 4) < length) {
+      count += 1;
+      rgb.r += data.data[i];
+      rgb.g += data.data[i + 1];
+      rgb.b += data.data[i + 2];
+    }
 
-  // ~~ used to floor values
-  rgb.r = ~~(rgb.r / count);
-  rgb.g = ~~(rgb.g / count);
-  rgb.b = ~~(rgb.b / count);
+    // ~~ used to floor values
+    rgb.r = ~~(rgb.r / count);
+    rgb.g = ~~(rgb.g / count);
+    rgb.b = ~~(rgb.b / count);
 
-  return rgb;
+    return rgb;
+  };
+
+  return new Promise((resolve) => {
+    if (imgEl.complete) {
+      // Image is already loaded
+      resolve(processImage());
+    } else {
+      // Wait for the image to load
+      // eslint-disable-next-line no-param-reassign
+      imgEl.onload = () => {
+        resolve(processImage());
+      };
+    }
+  });
 }
+
 /* eslint-enable no-bitwise */
 
 export function feedReviewEventToListen(
