@@ -219,7 +219,7 @@ class CoverArtGenerator:
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
 
         results = {}
-        if release_mbids and len(release_mbids) != 0:
+        if release_mbids:
             mbids = [mbid for mbid in release_mbids if mbid]
             results = self.load_release_caa_ids(mbids)
         elif release_group_mbids:
