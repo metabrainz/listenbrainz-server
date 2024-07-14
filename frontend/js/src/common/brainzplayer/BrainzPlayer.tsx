@@ -161,6 +161,7 @@ export default function BrainzPlayer() {
     queue,
     ambientQueue,
     queueRepeatMode,
+    currentTrackCoverURL,
   } = useBrainzPlayerContext();
 
   const dispatch = useBrainzPlayerDispatch();
@@ -679,14 +680,6 @@ export default function BrainzPlayer() {
     }
   }, [currentDataSourceIndex, dataSourceRefs, invalidateDataSource]);
 
-  const getCurrentTrackName = (): string => {
-    return getTrackName(currentListen);
-  };
-
-  const getCurrentTrackArtists = (): string | undefined => {
-    return getArtistName(currentListen);
-  };
-
   const stopPlayerStateTimer = React.useCallback((): void => {
     debouncedCheckProgressAndSubmitListen.flush();
     if (playerStateTimerID.current) {
@@ -964,6 +957,7 @@ export default function BrainzPlayer() {
           dataSourceRefs[currentDataSourceIndex]?.current?.name
         }
         clearQueue={clearQueue}
+        currentTrackCoverURL={currentTrackCoverURL}
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer

@@ -417,8 +417,6 @@
   position: fixed;
   padding: 0.5rem;
   z-index: 9997;
-  background-color: rgb(208, 48, 8);
-  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6) 80%);
   height: 100vh;
   width: 100%;
   display: flex !important;
@@ -431,14 +429,22 @@
     bottom: 0;
   }
 
-  .cover-art-wrapper {
-    min-width: 60px;
-    flex: 0;
+  .cover-art-scroll-wrapper {
+    overflow-x: auto;
+    scroll-snap-stop: always;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1em;
-    align-content: center;
+
+    .cover-art-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5em 1em;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      min-width: 100%;
+    }
   }
 
   .header,
@@ -491,7 +497,10 @@
       span {
         display: inline-block;
         position: relative;
-        animation: leftright 6s infinite alternate ease-in-out;
+
+        &.animate {
+          animation: leftright 6s infinite alternate ease-in-out;
+        }
       }
     }
 

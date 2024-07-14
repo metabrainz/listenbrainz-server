@@ -890,9 +890,9 @@ const getAlbumArtFromListenMetadata = async (
  */
 /* eslint-disable no-bitwise */
 async function getAverageRGBOfImage(
-  imgEl: HTMLImageElement | null
+  imgEl: HTMLImageElement | null,
+  defaultRGB: { r: number; g: number; b: number } = { r: 0, g: 0, b: 0 }
 ): Promise<{ r: number; g: number; b: number }> {
-  const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
   if (!imgEl) {
     return defaultRGB;
   }

@@ -60,6 +60,7 @@ type MusicPlayerProps = {
   toggleRepeatMode: () => void;
   submitFeedback: (score: ListenFeedBack) => Promise<void>;
   currentListenFeedback: number;
+  musicPlayerCoverArtRef: React.RefObject<HTMLImageElement>;
   disabled?: boolean;
 };
 
@@ -74,6 +75,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     toggleRepeatMode,
     submitFeedback,
     currentListenFeedback,
+    musicPlayerCoverArtRef,
     disabled,
   } = props;
 
@@ -104,6 +106,8 @@ function MusicPlayer(props: MusicPlayerProps) {
     }
   }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
 
+  const coverArtScrollRef = React.useRef<HTMLDivElement>(null);
+
   return (
     <>
       <div className="header">
@@ -113,6 +117,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           title="Hide queue"
           style={{
             fontSize: "x-large",
+            padding: "5px 10px",
           }}
           onClick={onHide}
         />
@@ -126,15 +131,20 @@ function MusicPlayer(props: MusicPlayerProps) {
           title="Hide queue"
           style={{
             fontSize: "x-large",
+            padding: "5px 10px",
           }}
         />
       </div>
-      <div className="cover-art cover-art-wrapper">
-        <img
-          alt="coverart"
-          className="img-responsive"
-          src={currentTrackCoverURL}
-        />
+      <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
+        <div className="cover-art cover-art-wrapper">
+          <img
+            alt="coverart"
+            className="img-responsive"
+            src={currentTrackCoverURL}
+            ref={musicPlayerCoverArtRef}
+            crossOrigin="anonymous"
+          />
+        </div>
       </div>
       <div className="info">
         <div className="info-text-wrapper">

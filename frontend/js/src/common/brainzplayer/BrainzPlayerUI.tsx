@@ -18,10 +18,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
 import { Link } from "react-router-dom";
+import tinycolor from "tinycolor2";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
+import {
+  getAverageRGBOfImage,
+  getRecordingMBID,
+  getRecordingMSID,
+} from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
 import {
@@ -48,6 +53,7 @@ type BrainzPlayerUIProps = {
   listenBrainzAPIBaseURI: string;
   disabled?: boolean;
   clearQueue: () => void;
+  currentTrackCoverURL?: string;
 };
 
 type PlaybackControlButtonProps = {
@@ -193,6 +199,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     seekToPositionMs,
     disabled,
     clearQueue,
+    currentTrackCoverURL,
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
@@ -204,6 +211,21 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   const [showQueue, setShowQueue] = React.useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
+
+  const defaultRGBForMusicPlayer = React.useMemo(() => {
+    return {
+      r: 208,
+      g: 48,
+      b: 8,
+    };
+  }, []);
+
+  const [
+    musicPlayerBackgroundColor,
+    setMusicPlayerBackgroundColor,
+  ] = React.useState<tinycolor.Instance>(
+    tinycolor.fromRatio(defaultRGBForMusicPlayer)
+  );
 
   const toggleQueue = React.useCallback(() => {
     setShowQueue((prevShowQueue) => !prevShowQueue);
@@ -218,12 +240,35 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
+
+  React.useEffect(() => {
+    getAverageRGBOfImage(
+      musicPlayerCoverArtRef?.current,
+      defaultRGBForMusicPlayer
+    ).then(
+      (averageColor) => {
+        const adjustedMusicPlayerBackgroundColor = tinycolor.fromRatio(
+          averageColor
+        );
+        adjustedMusicPlayerBackgroundColor.saturate(20);
+        setMusicPlayerBackgroundColor(adjustedMusicPlayerBackgroundColor);
+      },
+      (error) => {
+        console.error("Error getting average color", error);
+      }
+    );
+  }, [currentTrackCoverURL, defaultRGBForMusicPlayer]);
+
   return (
     <>
       <div className={`queue ${showQueue ? "show" : ""}`}>
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
-      <div className={`music-player ${showMusicPlayer ? "show" : ""}`}>
+      <div
+        className={`music-player ${showMusicPlayer ? "show" : ""}`}
+        style={{ ["background" as string]: musicPlayerBackgroundColor }}
+      >
         <MusicPlayer
           onHide={toggleMusicPlayer}
           toggleQueue={toggleQueue}
@@ -234,6 +279,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           toggleRepeatMode={toggleRepeatMode}
           submitFeedback={submitFeedback}
           currentListenFeedback={currentListenFeedback}
+          musicPlayerCoverArtRef={musicPlayerCoverArtRef}
           disabled={disabled}
         />
       </div>
