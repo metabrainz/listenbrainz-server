@@ -118,29 +118,32 @@ def cover_art_grid_post():
     mbids = []
     entity = "release"
     
-    def look_for_release_group_mbids():
+    def get_release_group_mbids() -> tuple[list, str]:
+        """
+        Sanity checks and gets `release_group_mbids` in response.
+        """
         if "release_group_mbids" not in r:
             return
         
         if not isinstance(r["release_group_mbids"], list):
             raise APIBadRequest("release_group_mbids must be a list of strings specifying release_group_mbids")
-
-        nonlocal mbids 
-        nonlocal entity
         
         mbids = list(r["release_group_mbids"])
         entity = "release_group"
-    
+        
+        return mbids, entity
     
     if "release_mbids" in r:
         if not isinstance(r["release_mbids"], list):
             raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
         
         mbids = list(r["release_mbids"])
+        
+        # release mbids list empty? Fallback to release group mbids.
         if (len(r["release_mbids"]) == 0):
-            look_for_release_group_mbids()
+            mbids, entity = get_release_group_mbids()
     else:       
-        look_for_release_group_mbids()
+        mbids, entity = get_release_group_mbids()
 
     if len(mbids) > 100:
         mbids = mbids[:100]
