@@ -64,8 +64,8 @@ def cover_art_grid_post():
     :type tiles: ``list``
     :param release_mbids: An ordered list of release_mbids. The images will be loaded and processed
                           in the order that this list is in. The cover art for the release_mbids will be placed
-                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well, ONLY cover arts
-                          for release_group_mbids will be processed.
+                          on the tiles defined by the tiles parameter. If release_group_mbids are supplied as well, 
+                          ONLY cover arts for release_group_mbids will be processed.
     :type release_mbids: ``list``
     :param release_group_mbids: An ordered list of release_group_mbids. The images will be loaded and processed
                           in the order that this list is in. The cover art for the release_group_mbids will be placed
@@ -117,32 +117,32 @@ def cover_art_grid_post():
     # Get release_mbids or release_group_mbids
     mbids = []
     entity = "release"
-    
+
     def get_release_group_mbids() -> tuple[list, str]:
         """
         Sanity checks and gets `release_group_mbids` in response.
         """
         if "release_group_mbids" not in r:
             return
-        
+
         if not isinstance(r["release_group_mbids"], list):
             raise APIBadRequest("release_group_mbids must be a list of strings specifying release_group_mbids")
-        
+
         mbids = list(r["release_group_mbids"])
         entity = "release_group"
-        
+
         return mbids, entity
-    
+
     if "release_mbids" in r:
         if not isinstance(r["release_mbids"], list):
             raise APIBadRequest("release_mbids must be a list of strings specifying release_mbids")
-        
+
         mbids = list(r["release_mbids"])
-        
+
         # release mbids list empty? Fallback to release group mbids.
         if (len(r["release_mbids"]) == 0):
             mbids, entity = get_release_group_mbids()
-    else:       
+    else:
         mbids, entity = get_release_group_mbids()
 
     if len(mbids) > 100:

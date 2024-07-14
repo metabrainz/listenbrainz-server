@@ -67,7 +67,8 @@ class ArtViewsTestCase(IntegrationTestCase):
     @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
     @patch.object(CoverArtGenerator, "load_release_caa_ids")
     @patch.object(CoverArtGenerator, "download_user_stats")
-    def test_cover_art_custom_release_stats(self, mock_download_user_stats, mock_get_release_caa_ids, mock_get_release_group_caa_ids):
+    def test_cover_art_custom_release_stats(self, mock_download_user_stats, 
+                                            mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         mock_download_user_stats.return_value = [
             ReleaseRecord(
                 release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
@@ -162,7 +163,7 @@ class ArtViewsTestCase(IntegrationTestCase):
                 "artist": None
             }
         }
-        
+
         mock_get_release_group_caa_ids.return_value = {}
         resp = self.client.post(self.custom_url_for('art_api_v1.cover_art_grid_post'), data=post_json,
                                 content_type="application/json")

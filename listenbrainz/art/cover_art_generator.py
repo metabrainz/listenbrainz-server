@@ -225,7 +225,7 @@ class CoverArtGenerator:
         elif release_group_mbids:
             mbids = [mbid for mbid in release_group_mbids if mbid]
             results = self.load_release_group_caa_ids(mbids)
-        
+
         covers = [
             {
                 "entity_mbid": mbid,
