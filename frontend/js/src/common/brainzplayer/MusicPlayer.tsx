@@ -50,6 +50,40 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
   );
 }
 
+function AnimateTextOnOverflow(props: {
+  text?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const { text, className, style } = props;
+  const textRef = React.useRef<HTMLDivElement>(null);
+  const [isOverflowing, setIsOverflowing] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current) {
+        setIsOverflowing(
+          textRef.current.scrollWidth > textRef.current.clientWidth
+        );
+      }
+    };
+
+    checkOverflow();
+  }, [text]);
+
+  return (
+    <div ref={textRef} className="text-scroll-wrapper">
+      <span
+        className={`${className} ${isOverflowing ? "animate" : ""}`}
+        title={text}
+        style={style}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
 type MusicPlayerProps = {
   onHide: () => void;
   toggleQueue: () => void;
@@ -121,9 +155,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           }}
           onClick={onHide}
         />
-        <div className="text-scroll-wrapper">
-          <span>{currentTrackAlbum}</span>
-        </div>
+        <AnimateTextOnOverflow text={currentTrackAlbum} />
 
         <FontAwesomeIcon
           className="btn toggle-info"
@@ -148,15 +180,11 @@ function MusicPlayer(props: MusicPlayerProps) {
       </div>
       <div className="info">
         <div className="info-text-wrapper">
-          <div className="text-scroll-wrapper">
-            <span
-              className="text-muted"
-              title={currentTrackName}
-              style={{ fontSize: "1.5em" }}
-            >
-              {currentTrackName}
-            </span>
-          </div>
+          <AnimateTextOnOverflow
+            className="text-muted"
+            text={currentTrackName}
+            style={{ fontSize: "1.5em" }}
+          />
           <span
             className="text-muted ellipsis"
             title={currentTrackArtist}
