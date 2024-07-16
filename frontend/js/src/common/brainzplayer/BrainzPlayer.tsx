@@ -902,13 +902,7 @@ export default class BrainzPlayer extends React.Component<
       refreshSoundcloudToken,
       listenBrainzAPIBaseURI,
     } = this.props;
-    const {
-      youtubeAuth,
-      spotifyAuth,
-      soundcloudAuth,
-      appleAuth,
-      userPreferences,
-    } = this.context;
+    const { youtubeAuth, userPreferences } = this.context;
     const brainzPlayerDisabled =
       userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
@@ -949,7 +943,6 @@ export default class BrainzPlayer extends React.Component<
               refreshSpotifyToken={refreshSpotifyToken}
               onInvalidateDataSource={this.invalidateDataSource}
               ref={this.spotifyPlayer}
-              spotifyUser={spotifyAuth}
               playerPaused={playerPaused}
               onPlayerPausedChange={this.playerPauseChange}
               onProgressChange={this.progressChange}
@@ -994,7 +987,6 @@ export default class BrainzPlayer extends React.Component<
               }
               onInvalidateDataSource={this.invalidateDataSource}
               ref={this.soundcloudPlayer}
-              soundcloudUser={soundcloudAuth}
               refreshSoundcloudToken={refreshSoundcloudToken}
               playerPaused={playerPaused}
               onPlayerPausedChange={this.playerPauseChange}
