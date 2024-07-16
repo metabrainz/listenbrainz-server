@@ -9,6 +9,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import tinycolor from "tinycolor2";
+import { BarDatum } from "@nivo/bar";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
@@ -26,6 +27,8 @@ import ListenCard from "../../common/listens/ListenCard";
 import {
   COLOR_BLACK,
   COLOR_LB_ASPHALT,
+  COLOR_LB_BLUE,
+  COLOR_LB_LIGHT_GRAY,
   COLOR_LB_ORANGE,
   COLOR_WHITE,
 } from "../../utils/constants";
@@ -47,6 +50,39 @@ export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
 };
 
 const ROWS_PER_PAGE = 25;
+
+function getLabelSVG({ data: datum }: { data: UserEntityDatum }) {
+  let additionalContent;
+  if (
+    datum.entityType === "recording" ||
+    datum.entityType === "release-group"
+  ) {
+    additionalContent = `${datum.artist}`;
+  }
+  if (additionalContent) {
+    return (
+      <>
+        <tspan x="15" dy="-7" textAnchor="start" fontWeight="bold">
+          {datum.entity}
+        </tspan>
+        <tspan
+          x="15"
+          dy="17"
+          textAnchor="start"
+          fontSize="13px"
+          fill={COLOR_LB_LIGHT_GRAY}
+        >
+          {additionalContent}
+        </tspan>
+      </>
+    );
+  }
+  return (
+    <tspan x="15" textAnchor="start" fontWeight="bold">
+      {datum.entity}
+    </tspan>
+  );
+}
 
 export default function UserEntityChart() {
   const loaderData = useLoaderData() as UserEntityChartLoaderData;
@@ -94,7 +130,6 @@ export default function UserEntityChart() {
           entity,
           ROWS_PER_PAGE
         );
-
         setData(entityData);
         setMaxListens(fetchedData.maxListens);
         setTotalPages(fetchedData.totalPages);
@@ -240,36 +275,32 @@ export default function UserEntityChart() {
                   maxValue={maxListens}
                   layout="horizontal"
                   enableGridX
-                  labelTextColor={(datum) => {
-                    return tinycolor
-                      .mostReadable(
-                        datum.color,
-                        [COLOR_BLACK, COLOR_WHITE, COLOR_LB_ASPHALT],
-                        { includeFallbackColors: true }
-                      )
-                      .toHexString();
-                  }}
+                  // @ts-ignore - the function can return SVG elements, not just strings
+                  label={getLabelSVG}
+                  labelTextColor={COLOR_LB_ASPHALT}
                   defs={[
                     {
                       id: "barGradient",
                       type: "linearGradient",
                       colors: [
                         {
-                          offset: 0,
-                          color: tinycolor(COLOR_LB_ORANGE)
-                            .desaturate(30)
-                            .lighten(30)
+                          offset: 20,
+                          color: tinycolor(COLOR_LB_BLUE)
+                            .lighten(60)
+                            .desaturate(15)
                             .toString(),
                         },
                         {
-                          offset: 100,
+                          offset: 80,
                           color: tinycolor(COLOR_LB_ORANGE)
-                            .saturate(30)
+                            .spin(20)
+                            .saturate()
+                            .lighten(35)
                             .toString(),
                         },
                       ],
-                      y2: "100%",
-                      gradientTransform: "rotate(-90 0.5 0.5)",
+                      y2: "90vw",
+                      gradientTransform: "rotate(-90)",
                       gradientUnits: "userSpaceOnUse",
                     },
                   ]}

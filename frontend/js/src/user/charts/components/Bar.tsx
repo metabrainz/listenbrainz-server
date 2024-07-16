@@ -5,7 +5,6 @@ import {
   BarTooltipProps,
   BarSvgProps,
 } from "@nivo/bar";
-import { omit } from "lodash";
 import { TooltipWrapper } from "@nivo/tooltip";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 
@@ -35,25 +34,15 @@ export default function Bar(props: BarProps) {
   const theme = {
     labels: {
       text: {
-        fontSize: "16px",
-        fontWeight: "bold",
-        fill: "white",
+        fontSize: "15px",
+        fontFamily: "'Sintony', sans-serif",
       },
     },
   };
-  const typescriptCompliantData: BarDatum[] = data?.map((datum) =>
-    omit(datum, [
-      "entityMBID",
-      "artist",
-      "artistMBID",
-      "release",
-      "releaseMBID",
-      "artists",
-    ])
-  );
+
   return (
     <ResponsiveBar
-      data={typescriptCompliantData}
+      data={data}
       maxValue={maxValue}
       layout="horizontal"
       colors={COLOR_LB_ORANGE}
