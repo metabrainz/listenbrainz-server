@@ -206,7 +206,7 @@ The following optional elements may also be included in the ``additional_info`` 
      - array of strings
      - A list of MusicBrainz Work IDs that may be associated with this recording.
    * - ``tracknumber``
-     - integer
+     - string
      - The tracknumber of the recording. This first recording on a release is tracknumber 1.
    * - ``isrc``
      - string
