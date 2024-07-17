@@ -692,12 +692,17 @@ def get_feed_events_for_user(
     hidden_events_recommendation = {}
 
     for hidden_event in hidden_events:
-        if hidden_event.event_type.value == UserTimelineEventType.RECORDING_RECOMMENDATION.value:
+        if hidden_event.event_type.value in [
+            UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             hidden_events_recommendation[hidden_event.event_id] = hidden_event
         else:
             hidden_events_pin[hidden_event.event_id] = hidden_event
 
     for event in recording_recommendation_events:
+        if event.id in hidden_events_recommendation:
+            event.hidden = True
+
+    for event in personal_recording_recommendation_events:
         if event.id in hidden_events_recommendation:
             event.hidden = True
 
