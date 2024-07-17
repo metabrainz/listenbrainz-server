@@ -100,7 +100,7 @@ def get_caa_ids_for_release_mbids(curs, release_mbids: Iterable[str]):
            LEFT JOIN release_group_cover_art rgca
                   ON rm.mbid = rgca.original_mbid
     """
-    result = execute_values(curs, query, [(UUID(mbid)) for mbid in release_mbids], fetch=True)
+    result = execute_values(curs, query, [(UUID(mbid),) for mbid in release_mbids], fetch=True)
     return {row["original_mbid"]: row for row in result}
 
 
@@ -132,5 +132,5 @@ def get_caa_ids_for_release_group_mbids(curs, release_group_mbids: Iterable[str]
                      WHERE type_id = 1
                        AND mime_type != 'application/pdf'
     """
-    result = execute_values(curs, query, [(UUID(mbid)) for mbid in release_group_mbids], fetch=True)
+    result = execute_values(curs, query, [(UUID(mbid),) for mbid in release_group_mbids], fetch=True)
     return {row["original_mbid"]: row for row in result}
