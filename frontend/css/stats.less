@@ -25,11 +25,12 @@
   }
 }
 
+@bar-height: 5em;
 .bar-chart {
   position: relative;
   width: 100%;
   margin-bottom: 1em;
-  min-height: calc(25 * 5em); // 25 items on the graph
+  min-height: calc(25 * @bar-height); // 25 items on the graph
   > * {
     position: absolute;
     width: 100%;
@@ -48,6 +49,54 @@
     padding: 9px 12px;
     border: 1px solid #ccc;
   }
+  foreignObject {
+    width: 95%;
+    height: @bar-height;
+    padding: 0.5em;
+    .graph-bar {
+      align-items: center;
+      height: 100%;
+      gap: 0.6em;
+      .position{
+        margin: 0;
+        flex: 0;
+        border-right: 1px solid grey;
+        padding-right: 0.6em;
+        font-size: smaller;
+      }
+      align-items: center;
+      // a {color: inherit;}
+      > .graph-bar-text{
+            overflow: auto;
+      }
+      .graph-bar-entity {
+        font-weight: bold;
+        color: darken(@light-grey,30%);
+      }
+      .graph-bar-artist {
+        color: @light-grey;
+        font-size: 0.8em;
+      }
+      .badge {
+        flex: 0;
+        flex-basis: auto;
+      }
+    }
+    @media (max-width: @screen-phone) {
+      // On mobile, show the position to the right of the bar to leave more space for the text
+      overflow: visible;
+      .graph-bar {
+        position: relative;
+        .position {
+          position: absolute;
+          border: none;
+          right: 0;
+          bottom: -0.4em;
+        }
+      }
+    }
+  }
+
 }
 
 .top-entity-listencards {

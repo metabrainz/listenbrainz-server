@@ -9,7 +9,8 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import tinycolor from "tinycolor2";
-import { BarDatum } from "@nivo/bar";
+import { BarItemProps } from "@nivo/bar";
+import { padStart } from "lodash";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
@@ -20,18 +21,18 @@ import Pill from "../../components/Pill";
 import {
   getAllStatRanges,
   getChartEntityDetails,
+  getEntityLink,
   isInvalidStatRange,
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
 import {
-  COLOR_BLACK,
   COLOR_LB_ASPHALT,
   COLOR_LB_BLUE,
-  COLOR_LB_LIGHT_GRAY,
   COLOR_LB_ORANGE,
-  COLOR_WHITE,
 } from "../../utils/constants";
+import { getStatsArtistLink } from "../../utils/utils";
+import { useMediaQuery } from "../../explore/fresh-releases/utils";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -51,36 +52,57 @@ export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
 
 const ROWS_PER_PAGE = 25;
 
-function getLabelSVG({ data: datum }: { data: UserEntityDatum }) {
-  let additionalContent;
-  if (
-    datum.entityType === "recording" ||
-    datum.entityType === "release-group"
-  ) {
-    additionalContent = `${datum.artist}`;
+// @ts-ignore - Not sure why it does not accept UserEntityDatum,
+// but BarDatum does not represent the actual data format we have.
+function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
+  const { bar } = barProps;
+  const { x, y, width, height, data } = bar;
+
+  let title = data.data.entity;
+  if (data.data.artist) {
+    title += ` - ${data.data.artist}`;
   }
-  if (additionalContent) {
-    return (
-      <>
-        <tspan x="15" dy="-7" textAnchor="start" fontWeight="bold">
-          {datum.entity}
-        </tspan>
-        <tspan
-          x="15"
-          dy="17"
-          textAnchor="start"
-          fontSize="13px"
-          fill={COLOR_LB_LIGHT_GRAY}
-        >
-          {additionalContent}
-        </tspan>
-      </>
-    );
-  }
+
   return (
-    <tspan x="15" textAnchor="start" fontWeight="bold">
-      {datum.entity}
-    </tspan>
+    <g transform={`translate(${x}, ${y})`}>
+      <rect
+        width={width}
+        height={height}
+        fill={data.fill}
+        strokeWidth="0"
+        rx="0"
+      />
+      <foreignObject style={{ width, height }}>
+        <div className="graph-bar flex" title={title}>
+          <div className="position">
+            #{padStart(data.data.idx.toString(), 2, "0")}
+          </div>
+          <div className="graph-bar-text">
+            <div className="graph-bar-entity ellipsis-2-lines">
+              {getEntityLink(
+                data.data.entityType,
+                data.data.entity,
+                data.data.entityMBID
+              )}
+            </div>
+            {data.data.artist && (
+              <div className="graph-bar-artist ellipsis">
+                {getStatsArtistLink(
+                  data.data.artists,
+                  data.data.artist,
+                  data.data.artistMBID
+                )}
+              </div>
+            )}
+          </div>
+          <div className="badge badge-info">
+            {data.data.count}
+            &nbsp;
+            <FontAwesomeIcon icon={faHeadphones} />
+          </div>
+        </div>
+      </foreignObject>
+    </g>
   );
 }
 
@@ -104,6 +126,8 @@ export default function UserEntityChart() {
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
   const ranges = getAllStatRanges();
+
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -276,8 +300,13 @@ export default function UserEntityChart() {
                   layout="horizontal"
                   enableGridX
                   // @ts-ignore - the function can return SVG elements, not just strings
-                  label={getLabelSVG}
+                  barComponent={CustomBarComponent}
                   labelTextColor={COLOR_LB_ASPHALT}
+                  margin={{
+                    bottom: 40,
+                    left: isMobile ? 5 : 15,
+                    right: isMobile ? 0 : 15,
+                  }}
                   defs={[
                     {
                       id: "barGradient",
