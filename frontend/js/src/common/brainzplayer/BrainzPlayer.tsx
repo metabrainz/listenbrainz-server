@@ -276,21 +276,7 @@ export default class BrainzPlayer extends React.Component<
         userPreferences?.brainzplayer?.soundcloudEnabled === false &&
         userPreferences?.brainzplayer?.appleMusicEnabled === false;
       if (brainzPlayerDisabled) {
-        toast.info(
-          <ToastMsg
-            title="BrainzPlayer disabled"
-            message={
-              <>
-                You have disabled all music services for playback on
-                ListenBrainz. To enable them again, please go to the{" "}
-                <Link to="/settings/brainzplayer/">
-                  music player preferences
-                </Link>{" "}
-                page
-              </>
-            }
-          />
-        );
+        this.infoBPDeactivated();
         return;
       }
     }
@@ -356,7 +342,7 @@ export default class BrainzPlayer extends React.Component<
     const { listens } = this.props;
     const { isActivated } = this.state;
 
-    if (!isActivated) {
+    if (!isActivated || !this.dataSources.length) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -447,6 +433,9 @@ export default class BrainzPlayer extends React.Component<
   };
 
   activatePlayerAndPlay = (): void => {
+    if (!this.dataSources.length) {
+      return;
+    }
     overwriteMediaSession(this.mediaSessionHandlers);
     this.setState({ isActivated: true }, this.playNextTrack);
   };
@@ -455,6 +444,10 @@ export default class BrainzPlayer extends React.Component<
     listen: Listen | JSPFTrack,
     datasourceIndex: number = 0
   ): void => {
+    if (!this.dataSources.length) {
+      this.handleInfoMessage(<> </>, "BrainzPlayer is deactivated");
+      return;
+    }
     this.setState({
       isActivated: true,
       currentListen: listen,
@@ -874,6 +867,23 @@ export default class BrainzPlayer extends React.Component<
     this.playerStateTimerID = undefined;
   };
 
+  private infoBPDeactivated() {
+    toast.info(
+      <ToastMsg
+        title="BrainzPlayer disabled"
+        message={
+          <>
+            You have disabled all music services for playback on ListenBrainz.
+            To enable them again, please go to the{" "}
+            <Link to="/settings/brainzplayer/">music player preferences</Link>{" "}
+            page
+          </>
+        }
+      />,
+      { toastId: "brainzplayer-deactivated" }
+    );
+  }
+
   render() {
     const {
       currentDataSourceIndex,
@@ -892,13 +902,7 @@ export default class BrainzPlayer extends React.Component<
       refreshSoundcloudToken,
       listenBrainzAPIBaseURI,
     } = this.props;
-    const {
-      youtubeAuth,
-      spotifyAuth,
-      soundcloudAuth,
-      appleAuth,
-      userPreferences,
-    } = this.context;
+    const { youtubeAuth, userPreferences } = this.context;
     const brainzPlayerDisabled =
       userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
@@ -907,7 +911,7 @@ export default class BrainzPlayer extends React.Component<
     return (
       <div>
         <BrainzPlayerUI
-          disabled={brainzPlayerDisabled}
+          disabled={brainzPlayerDisabled || !this.dataSources.length}
           playPreviousTrack={this.playPreviousTrack}
           playNextTrack={this.playNextTrack}
           togglePlay={
@@ -939,7 +943,6 @@ export default class BrainzPlayer extends React.Component<
               refreshSpotifyToken={refreshSpotifyToken}
               onInvalidateDataSource={this.invalidateDataSource}
               ref={this.spotifyPlayer}
-              spotifyUser={spotifyAuth}
               playerPaused={playerPaused}
               onPlayerPausedChange={this.playerPauseChange}
               onProgressChange={this.progressChange}
@@ -984,7 +987,6 @@ export default class BrainzPlayer extends React.Component<
               }
               onInvalidateDataSource={this.invalidateDataSource}
               ref={this.soundcloudPlayer}
-              soundcloudUser={soundcloudAuth}
               refreshSoundcloudToken={refreshSoundcloudToken}
               playerPaused={playerPaused}
               onPlayerPausedChange={this.playerPauseChange}
@@ -1005,7 +1007,6 @@ export default class BrainzPlayer extends React.Component<
                 this.dataSources[currentDataSourceIndex]?.current instanceof
                   AppleMusicPlayer
               }
-              appleMusicUser={appleAuth}
               onInvalidateDataSource={this.invalidateDataSource}
               ref={this.appleMusicPlayer}
               playerPaused={playerPaused}

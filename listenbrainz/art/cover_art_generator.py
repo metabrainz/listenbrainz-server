@@ -8,7 +8,7 @@ import listenbrainz.db.user as db_user
 from data.model.common_stat import StatisticsRange
 from data.model.user_entity import EntityRecord
 
-from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids
+from listenbrainz.db.cover_art import get_caa_ids_for_release_mbids, get_caa_ids_for_release_group_mbids
 from listenbrainz.webserver import db_conn
 
 #: Minimum image size
@@ -197,27 +197,43 @@ class CoverArtGenerator:
 
         return f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb{cover_art_size}.jpg"
 
-    def load_caa_ids(self, release_mbids):
+    def load_release_caa_ids(self, release_mbids):
         """ Load caa_ids for the given release mbids """
+        if len(release_mbids) == 0:
+            return {}
         with psycopg2.connect(self.mb_db_connection_str) as conn, \
                 conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
             return get_caa_ids_for_release_mbids(curs, release_mbids)
 
-    def load_images(self, mbids, tile_addrs=None, layout=None, cover_art_size=500):
-        """ Given a list of MBIDs and optional tile addresses, resolve all the cover art design, all the
-            cover art to be used and then return the list of images and locations where they should be
+    def load_release_group_caa_ids(self, release_group_mbids):
+        """ Load caa_ids for the given release group mbids """
+        if len(release_group_mbids) == 0:
+            return {}
+        with psycopg2.connect(self.mb_db_connection_str) as conn, \
+                conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
+            return get_caa_ids_for_release_group_mbids(curs, release_group_mbids)
+
+    def load_images(self, release_mbids, release_group_mbids=[], tile_addrs=None, layout=None, cover_art_size=500):
+        """ Given a list of release and release group MBIDs and optional tile addresses, resolve all the cover art design,
+            all the cover art to be used and then return the list of images and locations where they should be
             placed. Return an array of dicts containing the image coordinates and the URL of the image. """
 
-        release_mbids = [mbid for mbid in mbids if mbid]
-        results = self.load_caa_ids(release_mbids)
+        results = {}
+        if release_mbids:
+            mbids = [mbid for mbid in release_mbids if mbid]
+            results = self.load_release_caa_ids(mbids)
+        elif release_group_mbids:
+            mbids = [mbid for mbid in release_group_mbids if mbid]
+            results = self.load_release_group_caa_ids(mbids)
+
         covers = [
             {
-                "entity_mbid": release_mbid,
-                "title": results[release_mbid]["title"],
-                "artist": results[release_mbid]["artist"],
-                "caa_id": results[release_mbid]["caa_id"],
-                "caa_release_mbid": results[release_mbid]["caa_release_mbid"]
-            } for release_mbid in release_mbids
+                "entity_mbid": mbid,
+                "title": results[mbid]["title"],
+                "artist": results[mbid]["artist"],
+                "caa_id": results[mbid]["caa_id"],
+                "caa_release_mbid": results[mbid]["caa_release_mbid"]
+            } for mbid in mbids
         ]
         return self.generate_from_caa_ids(covers, tile_addrs, layout, cover_art_size)
 

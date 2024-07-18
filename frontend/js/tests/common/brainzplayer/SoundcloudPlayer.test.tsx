@@ -1,22 +1,32 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow } from "enzyme";
+import { mount } from "enzyme";
 
 import { act } from "react-dom/test-utils";
-import SoundcloudPlayer, {
-  SoundcloudPlayerState,
-} from "../../../src/common/brainzplayer/SoundcloudPlayer";
-import {
-  DataSourceProps,
-  DataSourceTypes,
-} from "../../../src/common/brainzplayer/BrainzPlayer";
+import SoundcloudPlayer from "../../../src/common/brainzplayer/SoundcloudPlayer";
+import { DataSourceTypes } from "../../../src/common/brainzplayer/BrainzPlayer";
 import APIService from "../../../src/utils/APIService";
+import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import GlobalAppContext from "../../../src/utils/GlobalAppContext";
+
+// Create a new instance of GlobalAppContext
+const defaultContext = {
+  APIService: new APIService("foo"),
+  websocketsUrl: "",
+  youtubeAuth: {} as YoutubeUser,
+  spotifyAuth: {} as SpotifyUser,
+  currentUser: {} as ListenBrainzUser,
+  soundcloudAuth: {
+    access_token: "heyo-soundcloud",
+  },
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
+};
 
 const props = {
   show: true,
   playerPaused: false,
-  soundcloudUser: {
-    access_token: "heyo-soundcloud",
-  },
   refreshSoundcloudToken: new APIService("base-uri").refreshSoundcloudToken,
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},
@@ -65,11 +75,16 @@ describe("SoundcloudPlayer", () => {
       onInvalidateDataSource,
       onTrackNotFound,
     };
-    const wrapper = mount<SoundcloudPlayer>(
-      <SoundcloudPlayer {...mockProps} />
-    );
 
-    const instance = wrapper.instance();
+    const wrapper = mount(
+      <GlobalAppContext.Provider value={defaultContext}>
+        <SoundcloudPlayer {...mockProps} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper
+      .find(SoundcloudPlayer)
+      .instance() as SoundcloudPlayer;
+
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");
     }

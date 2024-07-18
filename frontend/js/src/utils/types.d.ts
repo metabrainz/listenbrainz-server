@@ -33,7 +33,7 @@ interface AdditionalInfo {
   origin_url?: string | null;
   tags?: Array<string> | null;
   track_mbid?: string | null;
-  tracknumber?: number | null;
+  tracknumber?: string | number | null;
   work_mbids?: Array<string> | null;
 }
 
