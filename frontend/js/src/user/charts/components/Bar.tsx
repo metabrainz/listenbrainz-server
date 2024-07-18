@@ -26,6 +26,7 @@ export default function Bar(props: BarProps) {
           <b>
             {value} {Number(value) === 1 ? "listen" : "listens"}
           </b>
+          {datum.artist && <div>{datum.artist}</div>}
         </div>
       </TooltipWrapper>
     );
