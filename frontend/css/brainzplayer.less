@@ -425,7 +425,6 @@
   transition: bottom 1s ease-in-out;
   padding: 0 1.5em;
   padding-bottom: @brainzplayer-height + @progress-bar-height;
-  justify-content: space-evenly;
 
   &.open {
     bottom: 0;
@@ -439,6 +438,8 @@
     display: flex;
     flex-shrink: 0;
     aspect-ratio: 1;
+    margin-top: auto;
+    margin-bottom: auto;
 
     .cover-art-wrapper {
       display: flex;
@@ -450,17 +451,13 @@
     }
   }
 
-  .header {
-    padding-top: 0 !important;
-  }
-
   .header,
   .info {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 0;
+    padding: 1em 0;
     color: white;
 
     .love,
@@ -528,6 +525,7 @@
     align-items: center;
     justify-content: space-between;
     color: white;
+    margin-bottom: auto;
 
     .play svg {
       font-size: 4.25em !important;
@@ -535,6 +533,8 @@
   }
 
   .progress-bar-wrapper {
+    margin: 10px 0;
+
     .progress {
       position: inherit;
       height: 10px;
