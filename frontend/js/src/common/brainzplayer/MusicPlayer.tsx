@@ -96,6 +96,7 @@ type MusicPlayerProps = {
   currentListenFeedback: number;
   musicPlayerCoverArtRef: React.RefObject<HTMLImageElement>;
   disabled?: boolean;
+  mostReadableTextColor: string;
 };
 
 function MusicPlayer(props: MusicPlayerProps) {
@@ -111,6 +112,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     currentListenFeedback,
     musicPlayerCoverArtRef,
     disabled,
+    mostReadableTextColor,
   } = props;
 
   // BrainzPlayer Context
@@ -218,7 +220,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           durationMs={durationMs}
           seekToPositionMs={seekToPositionMs}
         />
-        <div className="elapsed small text-muted">
+        <div style={{ color: mostReadableTextColor }}>
           {millisecondsToStr(progressMs)}&#8239;/&#8239;
           {millisecondsToStr(durationMs)}
         </div>

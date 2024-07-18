@@ -227,6 +227,24 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     tinycolor.fromRatio(defaultRGBForMusicPlayer)
   );
 
+  const allColors = React.useMemo(() => {
+    return Object.keys(tinycolor.names).map((color) => tinycolor(color));
+  }, []);
+
+  const [mostReadableTextColor, setMostReadableTextColor] = React.useState<
+    string
+  >(
+    tinycolor.mostReadable(musicPlayerBackgroundColor, allColors).toHexString()
+  );
+
+  React.useEffect(() => {
+    setMostReadableTextColor(
+      tinycolor
+        .mostReadable(musicPlayerBackgroundColor, allColors)
+        .toHexString()
+    );
+  }, [musicPlayerBackgroundColor, allColors]);
+
   const toggleQueue = React.useCallback(() => {
     setShowQueue((prevShowQueue) => !prevShowQueue);
   }, []);
@@ -267,7 +285,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       </div>
       <div
         className={`music-player ${
-          isPlayingATrack && showMusicPlayer ? "show" : ""
+          isPlayingATrack && showMusicPlayer ? "open" : ""
         }`}
         style={{ ["background" as string]: musicPlayerBackgroundColor }}
       >
@@ -283,6 +301,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           currentListenFeedback={currentListenFeedback}
           musicPlayerCoverArtRef={musicPlayerCoverArtRef}
           disabled={disabled}
+          mostReadableTextColor={mostReadableTextColor}
         />
       </div>
       <div
