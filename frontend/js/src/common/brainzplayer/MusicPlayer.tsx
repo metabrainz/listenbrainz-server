@@ -16,6 +16,8 @@ import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import ProgressBar from "./ProgressBar";
 import { millisecondsToStr } from "../../playlists/utils";
 import { useBrainzPlayerContext } from "./BrainzPlayerContext";
+import { getAlbumArtFromListenMetadata } from "../../utils/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type PlaybackControlButtonProps = {
   className: string;
@@ -84,6 +86,104 @@ function AnimateTextOnOverflow(props: {
   );
 }
 
+function CoverArtScrollWrapper({
+  previousTrackCoverURL,
+  currentTrackCoverURL,
+  nextTrackCoverURL,
+  musicPlayerCoverArtRef,
+  playPreviousTrack,
+  playNextTrack,
+}: {
+  previousTrackCoverURL?: string;
+  currentTrackCoverURL?: string;
+  nextTrackCoverURL?: string;
+  musicPlayerCoverArtRef: React.RefObject<HTMLImageElement>;
+  playPreviousTrack: () => void;
+  playNextTrack: () => void;
+}) {
+  const coverArtScrollRef = React.useRef(null);
+  const previousCoverArtRef = React.useRef(null);
+  const currentCoverArtRef = React.useRef(null);
+  const nextCoverArtRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const options = {
+      root: coverArtScrollRef.current,
+      threshold: 0.5, // Adjust based on when you want to trigger the callback
+    };
+
+    const callback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          if (entry.target === previousCoverArtRef.current) {
+            console.log("previous");
+            playPreviousTrack();
+          } else if (entry.target === nextCoverArtRef.current) {
+            console.log("next");
+            playNextTrack();
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(callback, options);
+
+    const previousElem = previousCoverArtRef.current;
+    const currentElem = currentCoverArtRef.current;
+    const nextElem = nextCoverArtRef.current;
+
+    if (previousElem) observer.observe(previousElem);
+    if (currentElem) observer.observe(currentElem);
+    if (nextElem) observer.observe(nextElem);
+
+    return () => {
+      if (previousElem) observer.unobserve(previousElem);
+      if (currentElem) observer.unobserve(currentElem);
+      if (nextElem) observer.unobserve(nextElem);
+    };
+  }, [
+    previousTrackCoverURL,
+    currentTrackCoverURL,
+    nextTrackCoverURL,
+    playPreviousTrack,
+    playNextTrack,
+  ]);
+
+  return (
+    <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
+      {previousTrackCoverURL && (
+        <div className="cover-art cover-art-wrapper" ref={previousCoverArtRef}>
+          <img
+            alt="coverart"
+            className="img-responsive"
+            src={previousTrackCoverURL}
+            crossOrigin="anonymous"
+          />
+        </div>
+      )}
+      <div className="cover-art cover-art-wrapper" ref={currentCoverArtRef}>
+        <img
+          alt="coverart"
+          className="img-responsive"
+          src={currentTrackCoverURL}
+          crossOrigin="anonymous"
+          ref={musicPlayerCoverArtRef}
+        />
+      </div>
+      {nextTrackCoverURL && (
+        <div className="cover-art cover-art-wrapper" ref={nextCoverArtRef}>
+          <img
+            alt="coverart"
+            className="img-responsive"
+            src={nextTrackCoverURL}
+            crossOrigin="anonymous"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 type MusicPlayerProps = {
   onHide: () => void;
   toggleQueue: () => void;
@@ -126,7 +226,12 @@ function MusicPlayer(props: MusicPlayerProps) {
     durationMs,
     progressMs,
     queueRepeatMode,
+    queue,
+    ambientQueue,
   } = useBrainzPlayerContext();
+
+  // Global App Context
+  const { spotifyAuth, APIService } = React.useContext(GlobalAppContext);
 
   const isPlayingATrack = React.useMemo(() => !!currentListen, [currentListen]);
 
@@ -143,6 +248,43 @@ function MusicPlayer(props: MusicPlayerProps) {
   }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
 
   const coverArtScrollRef = React.useRef<HTMLDivElement>(null);
+
+  const currentQueueIndex = React.useMemo(() => {
+    return queue.findIndex((track) => track.id === currentListen?.id);
+  }, [currentListen, queue]);
+
+  // States to save previous and next track cover art URLs
+  const [previousTrackCoverURL, setPreviousTrackCoverURL] = React.useState("");
+  const [nextTrackCoverURL, setNextTrackCoverURL] = React.useState("");
+
+  // Get previous and next track cover art URLs
+  React.useEffect(() => {
+    const getAndSetCoverArt = async (
+      track: BrainzPlayerQueueItem,
+      setCoverArt: any
+    ) => {
+      const coverArt = await getAlbumArtFromListenMetadata(
+        track,
+        spotifyAuth,
+        APIService
+      );
+      setCoverArt(coverArt);
+    };
+
+    if (currentQueueIndex > 0) {
+      getAndSetCoverArt(queue[currentQueueIndex - 1], setPreviousTrackCoverURL);
+    } else {
+      setPreviousTrackCoverURL("");
+    }
+
+    if (currentQueueIndex < queue.length - 1) {
+      getAndSetCoverArt(queue[currentQueueIndex + 1], setNextTrackCoverURL);
+    } else if (ambientQueue.length > 0) {
+      getAndSetCoverArt(ambientQueue[0], setNextTrackCoverURL);
+    } else {
+      setNextTrackCoverURL("");
+    }
+  }, [APIService, ambientQueue, currentQueueIndex, queue, spotifyAuth]);
 
   return (
     <>
@@ -169,17 +311,45 @@ function MusicPlayer(props: MusicPlayerProps) {
           }}
         />
       </div>
-      <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
-        <div className="cover-art cover-art-wrapper">
-          <img
-            alt="coverart"
-            className="img-responsive"
-            src={currentTrackCoverURL}
-            ref={musicPlayerCoverArtRef}
-            crossOrigin="anonymous"
-          />
-        </div>
-      </div>
+      <CoverArtScrollWrapper
+        previousTrackCoverURL={previousTrackCoverURL}
+        currentTrackCoverURL={currentTrackCoverURL}
+        nextTrackCoverURL={nextTrackCoverURL}
+        musicPlayerCoverArtRef={musicPlayerCoverArtRef}
+        playPreviousTrack={playPreviousTrack}
+        playNextTrack={playNextTrack}
+      />
+      {/* <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
+            {previousTrackCoverURL && (
+              <div className="cover-art cover-art-wrapper">
+                <img
+                  alt="coverart"
+                  className="img-responsive"
+                  src={previousTrackCoverURL}
+                  crossOrigin="anonymous"
+                />
+              </div>
+            )}
+            <div className="cover-art cover-art-wrapper">
+              <img
+                alt="coverart"
+                className="img-responsive"
+                src={currentTrackCoverURL}
+                ref={musicPlayerCoverArtRef}
+                crossOrigin="anonymous"
+              />
+            </div>
+            {nextTrackCoverURL && (
+              <div className="cover-art cover-art-wrapper">
+                <img
+                  alt="coverart"
+                  className="img-responsive"
+                  src={nextTrackCoverURL}
+                  crossOrigin="anonymous"
+                />
+              </div>
+            )}
+          </div> */}
       <div className="info">
         <div className="info-text-wrapper">
           <AnimateTextOnOverflow
