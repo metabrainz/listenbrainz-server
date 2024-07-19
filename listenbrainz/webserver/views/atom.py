@@ -1,4 +1,4 @@
-from datetime import datetime, date, timezone
+from datetime import datetime, date, timedelta, timezone
 from feedgen.feed import FeedGenerator
 from flask import Blueprint, Response, current_app, request, render_template, url_for
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -138,14 +138,10 @@ def get_listens(user_name):
     if minutes < 1 or minutes > MAX_MINUTES_OF_LISTENS:
         return BadRequest("Value of minutes is out of range")
 
-    # estimate limit from minutes, assuming 1 listen per minute.
-    # mostly likely there won't be that much listens, but with such padding
-    # it's less likely for feed readers to miss listens.
-    limit = minutes
-
     to_ts = datetime.now()
+    from_ts = to_ts - timedelta(minutes=minutes)
     listens, _, _ = timescale_connection._ts.fetch_listens(
-        user, to_ts=to_ts, limit=limit
+        user, from_ts=from_ts, to_ts=to_ts, limit=MAX_ITEMS_PER_GET
     )
 
     fg = _init_feed(
