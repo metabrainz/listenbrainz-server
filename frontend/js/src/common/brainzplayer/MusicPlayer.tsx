@@ -319,37 +319,6 @@ function MusicPlayer(props: MusicPlayerProps) {
         playPreviousTrack={playPreviousTrack}
         playNextTrack={playNextTrack}
       />
-      {/* <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
-            {previousTrackCoverURL && (
-              <div className="cover-art cover-art-wrapper">
-                <img
-                  alt="coverart"
-                  className="img-responsive"
-                  src={previousTrackCoverURL}
-                  crossOrigin="anonymous"
-                />
-              </div>
-            )}
-            <div className="cover-art cover-art-wrapper">
-              <img
-                alt="coverart"
-                className="img-responsive"
-                src={currentTrackCoverURL}
-                ref={musicPlayerCoverArtRef}
-                crossOrigin="anonymous"
-              />
-            </div>
-            {nextTrackCoverURL && (
-              <div className="cover-art cover-art-wrapper">
-                <img
-                  alt="coverart"
-                  className="img-responsive"
-                  src={nextTrackCoverURL}
-                  crossOrigin="anonymous"
-                />
-              </div>
-            )}
-          </div> */}
       <div className="info">
         <div className="info-text-wrapper">
           <AnimateTextOnOverflow
