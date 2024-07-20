@@ -344,7 +344,7 @@
 .queue {
   position: fixed;
   padding: 1em;
-  bottom: -100%;
+  bottom: calc(-100% - @brainzplayer-height - @progress-bar-height);
   transition: bottom 1s ease-in-out;
   width: 100%;
   max-width: 550px;
@@ -436,7 +436,6 @@
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     display: flex;
-    flex-shrink: 0;
     aspect-ratio: 1;
     margin-top: auto;
     margin-bottom: auto;

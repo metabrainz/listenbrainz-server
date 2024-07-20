@@ -137,10 +137,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   React.useEffect(() => {
     // Also check the width on first render
-    setIsMobile(window.innerWidth <= 768);
+    setIsMobile(/Mobi/.test(navigator.userAgent));
 
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(/Mobi/.test(navigator.userAgent));
     };
     window.addEventListener("resize", handleResize);
   }, []);
