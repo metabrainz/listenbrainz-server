@@ -309,11 +309,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         aria-label="Playback control"
         data-testid="brainzplayer-ui"
       >
-        <ProgressBar
-          progressMs={progressMs}
-          durationMs={durationMs}
-          seekToPositionMs={seekToPositionMs}
-        />
+        {!showMusicPlayer && (
+          <ProgressBar
+            progressMs={progressMs}
+            durationMs={durationMs}
+            seekToPositionMs={seekToPositionMs}
+          />
+        )}
         <div className="content">
           <div className="cover-art">
             <div className="no-album-art" />
