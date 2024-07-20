@@ -105,21 +105,20 @@ function CoverArtScrollWrapper({
   const previousCoverArtRef = React.useRef(null);
   const currentCoverArtRef = React.useRef(null);
   const nextCoverArtRef = React.useRef(null);
+  const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
   React.useEffect(() => {
     const options = {
       root: coverArtScrollRef.current,
-      threshold: 0.5, // Adjust based on when you want to trigger the callback
+      threshold: 0.5,
     };
 
     const callback = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           if (entry.target === previousCoverArtRef.current) {
-            console.log("previous");
             playPreviousTrack();
           } else if (entry.target === nextCoverArtRef.current) {
-            console.log("next");
             playNextTrack();
           }
         }
@@ -165,7 +164,7 @@ function CoverArtScrollWrapper({
         <img
           alt="coverart"
           className="img-responsive"
-          src={currentTrackCoverURL}
+          src={currentTrackCoverURL || COVERART_PLACEHOLDER}
           crossOrigin="anonymous"
           ref={musicPlayerCoverArtRef}
         />
@@ -246,8 +245,6 @@ function MusicPlayer(props: MusicPlayerProps) {
       submitFeedback(currentListenFeedback === -1 ? 0 : -1);
     }
   }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
-
-  const coverArtScrollRef = React.useRef<HTMLDivElement>(null);
 
   const currentQueueIndex = React.useMemo(() => {
     return queue.findIndex((track) => track.id === currentListen?.id);
