@@ -1,8 +1,13 @@
 import * as React from "react";
-import { ReactSortable } from "react-sortablejs";
 import NiceModal from "@ebay/nice-modal-react";
-import { faChevronDown, faSave } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronDown,
+  faGripLines,
+  faSave,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Reorder, useDragControls } from "framer-motion";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
@@ -17,6 +22,40 @@ type BrainzPlayerQueueProps = {
   clearQueue: () => void;
   onHide: () => void;
 };
+
+function DragItem({
+  queueItem,
+  removeTrackFromQueue,
+}: {
+  queueItem: BrainzPlayerQueueItem;
+  removeTrackFromQueue: (track: BrainzPlayerQueueItem) => void;
+}) {
+  const controls = useDragControls();
+  const dragHandle = (
+    <div className="drag-handle text-muted">
+      <FontAwesomeIcon
+        icon={faGripLines as IconProp}
+        title="Drag to reorder"
+        onPointerDown={(e) => controls.start(e)}
+        style={{ touchAction: "none" }}
+      />
+    </div>
+  );
+
+  return (
+    <Reorder.Item
+      value={queueItem}
+      dragListener={false}
+      dragControls={controls}
+    >
+      <QueueItemCard
+        track={queueItem}
+        removeTrackFromQueue={removeTrackFromQueue}
+        customDragHandle={dragHandle}
+      />
+    </Reorder.Item>
+  );
+}
 
 const MAX_AMBIENT_QUEUE_ITEMS = 15;
 
@@ -48,13 +87,15 @@ function Queue(props: BrainzPlayerQueueProps) {
     []
   );
 
-  const moveQueueItem = React.useCallback((evt: any) => {
-    dispatch({
-      type: "MOVE_QUEUE_ITEM",
-      data: evt,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const reorderQueue = React.useCallback(
+    (newQueueOrder: BrainzPlayerQueueItem[]) => {
+      dispatch({
+        queue: newQueueOrder,
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    []
+  );
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
 
@@ -134,25 +175,24 @@ function Queue(props: BrainzPlayerQueueProps) {
       </div>
       <div className="queue-list" data-testid="queue">
         {queueNextUp.length > 0 ? (
-          <ReactSortable
-            handle=".drag-handle"
-            list={queueNextUp}
-            onEnd={moveQueueItem}
-            setList={() => {}}
+          <Reorder.Group
+            values={queueNextUp}
+            onReorder={(newOrder) => {
+              setQueueNextUp(newOrder);
+              reorderQueue(newOrder);
+            }}
           >
-            {queueNextUp.map(
-              (queueItem: BrainzPlayerQueueItem, index: number) => {
-                if (!queueItem) return null;
-                return (
-                  <QueueItemCard
-                    key={`${queueItem?.id}-${index.toString()}`}
-                    track={queueItem}
-                    removeTrackFromQueue={removeTrackFromQueue}
-                  />
-                );
-              }
-            )}
-          </ReactSortable>
+            {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
+              if (!queueItem) return null;
+              return (
+                <DragItem
+                  key={queueItem.id}
+                  queueItem={queueItem}
+                  removeTrackFromQueue={removeTrackFromQueue}
+                />
+              );
+            })}
+          </Reorder.Group>
         ) : (
           <div className="lead text-center">
             <p>Nothing in this queue yet</p>

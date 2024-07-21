@@ -11,10 +11,16 @@ type QueueItemCardProps = {
   track: BrainzPlayerQueueItem;
   removeTrackFromQueue?: (track: BrainzPlayerQueueItem) => void;
   hideDragHandle?: boolean;
+  customDragHandle?: React.ReactElement<any>;
 };
 
 function QueueItemCard(props: QueueItemCardProps) {
-  const { track, removeTrackFromQueue, hideDragHandle = false } = props;
+  const {
+    track,
+    removeTrackFromQueue,
+    hideDragHandle = false,
+    customDragHandle = undefined,
+  } = props;
 
   const removeTrack = () => {
     if (removeTrackFromQueue) {
@@ -46,7 +52,9 @@ function QueueItemCard(props: QueueItemCardProps) {
       listen={track}
       showTimestamp={false}
       showUsername={false}
-      beforeThumbnailContent={!hideDragHandle ? dragHandle : undefined}
+      beforeThumbnailContent={
+        !hideDragHandle ? customDragHandle || dragHandle : undefined
+      }
       additionalMenuItems={additionalMenuItems}
     />
   );
