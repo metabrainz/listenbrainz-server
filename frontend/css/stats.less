@@ -47,6 +47,7 @@
     width: 95%;
     height: @bar-height;
     padding: 0.5em;
+    overflow: visible;
     .graph-bar {
       align-items: center;
       height: 100%;
@@ -75,7 +76,6 @@
     }
     @media (max-width: @screen-phone) {
       // On mobile, show the position to the right of the bar to leave more space for the text
-      overflow: visible;
       .graph-bar {
         position: relative;
         .position {

@@ -213,7 +213,6 @@ export default function UserEntityChart() {
                   to={`../top-tracks/${attributesForLinks}`}
                   relative="route"
                   className="user-charts-pill"
-                  replace
                 >
                   Tracks
                 </Link>
@@ -292,10 +291,10 @@ export default function UserEntityChart() {
                 <Bar
                   isMobileSize={isMobile}
                   data={[...data].reverse()}
+                  isInteractive={false}
                   maxValue={maxListens}
                   layout="horizontal"
                   enableGridX
-                  // @ts-ignore - the function can return SVG elements, not just strings
                   barComponent={CustomBarComponent}
                   labelTextColor={COLOR_LB_ASPHALT}
                   margin={{
@@ -320,8 +319,8 @@ export default function UserEntityChart() {
                           offset: 80,
                           color: tinycolor(COLOR_LB_ORANGE)
                             .spin(20)
-                            .saturate()
-                            .lighten(35)
+                            .saturate(15)
+                            .lighten(30)
                             .toString(),
                         },
                       ],
