@@ -239,6 +239,8 @@ export default function BrainzPlayer() {
   isActivatedRef.current = isActivated;
   const currentTrackNameRef = React.useRef(currentTrackName);
   currentTrackNameRef.current = currentTrackName;
+  const listenSubmittedRef = React.useRef(listenSubmitted);
+  listenSubmittedRef.current = listenSubmitted;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -456,7 +458,7 @@ export default function BrainzPlayer() {
   };
 
   const checkProgressAndSubmitListen = async () => {
-    if (!currentUser?.auth_token || listenSubmitted) {
+    if (!currentUser?.auth_token || listenSubmittedRef.current) {
       return;
     }
     let playbackTimeRequired = SUBMIT_LISTEN_AFTER_MS;
@@ -468,6 +470,7 @@ export default function BrainzPlayer() {
     }
     if (continuousPlaybackTime >= playbackTimeRequired) {
       const listen = getListenMetadataToSubmit();
+      dispatch({ listenSubmitted: true });
       await submitListenToListenBrainz("single", listen);
     }
   };
