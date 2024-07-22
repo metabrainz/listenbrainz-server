@@ -335,40 +335,6 @@ export default function UserEntityChart() {
                   // labelPosition="start" // Upcoming nivo release, see https://github.com/plouc/nivo/pull/2585
                 />
               </div>
-              <div ref={listenContainer} className="top-entity-listencards">
-                {data?.slice().map((datum, index) => {
-                  const listen = listenableItems[index];
-                  const listenDetails = getChartEntityDetails(datum);
-                  const listenCountComponent = (
-                    <span className="badge badge-info">
-                      {datum.count}
-                      &nbsp;
-                      <FontAwesomeIcon icon={faHeadphones} />
-                    </span>
-                  );
-                  return (
-                    <ListenCard
-                      key={`${datum.idx + 1}`}
-                      listenDetails={listenDetails}
-                      listen={listen}
-                      showTimestamp={false}
-                      showUsername={false}
-                      additionalActions={listenCountComponent}
-                    />
-                  );
-                })}
-              </div>
-
-              {terminology === "album" && (
-                <div className="row">
-                  <div className="col-xs-12">
-                    <small>
-                      <sup>*</sup>The listen count denotes the number of times
-                      you have listened to a recording from the release group.
-                    </small>
-                  </div>
-                </div>
-              )}
               <div className="row">
                 <div className="col-xs-12">
                   <ul className="pager">
@@ -405,6 +371,73 @@ export default function UserEntityChart() {
                   </ul>
                 </div>
               </div>
+
+              {(entity === "artist" || entity === "recording") && (
+                <div ref={listenContainer} className="top-entity-listencards">
+                  {data?.slice().map((datum, index) => {
+                    const listen = listenableItems[index];
+                    const listenDetails = getChartEntityDetails(datum);
+                    const listenCountComponent = (
+                      <span className="badge badge-info">
+                        {datum.count}
+                        &nbsp;
+                        <FontAwesomeIcon icon={faHeadphones} />
+                      </span>
+                    );
+                    return (
+                      <ListenCard
+                        key={`${datum.idx + 1}`}
+                        listenDetails={listenDetails}
+                        listen={listen}
+                        showTimestamp={false}
+                        showUsername={false}
+                        additionalActions={listenCountComponent}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {(entity === "release" || entity === "release-group") && (
+                <>
+                  <p className="small">
+                    <sup>*</sup>The listen count denotes the number of times you
+                    have listened to a recording from the release group.
+                  </p>
+                  <div
+                    ref={listenContainer}
+                    className="release-cards-grid top-entity-grid"
+                  >
+                    {data?.slice().map((datum, index) => {
+                      return (
+                        <ReleaseCard
+                          key={datum.entity + datum.entityMBID}
+                          releaseName={datum.entity}
+                          releaseGroupMBID={
+                            entity === "release-group"
+                              ? datum.entityMBID
+                              : datum.releaseGroupMBID
+                          }
+                          releaseMBID={datum.releaseMBID}
+                          artistMBIDs={
+                            datum.artistMBID ??
+                            datum.artists?.map((a) => a.artist_mbid) ??
+                            []
+                          }
+                          artistCredits={datum.artists}
+                          artistCreditName={datum.artist as string}
+                          listenCount={datum.count}
+                          caaID={datum.caaID ?? null}
+                          caaReleaseMBID={datum.caaReleaseMBID ?? null}
+                          showListens
+                          showReleaseTitle
+                          showArtist
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
           )}
         </Loader>
