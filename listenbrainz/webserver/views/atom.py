@@ -8,11 +8,13 @@ from listenbrainz.webserver import db_conn, timescale_connection
 from listenbrainz.webserver.views.api_tools import (
     _parse_int_arg,
     get_non_negative_param,
+    is_valid_uuid,
 )
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 from data.model.common_stat import StatisticsRange
+from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 from listenbrainz.webserver.views.stats_api import _is_valid_range
 import listenbrainz.db.stats as db_stats
 from data.model.user_entity import EntityRecord
@@ -21,6 +23,7 @@ from listenbrainz.webserver.views.api_tools import (
     MAX_ITEMS_PER_GET,
 )
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
+import listenbrainz.db.playlist as db_playlist
 
 DEFAULT_MINUTES_OF_LISTENS = 60
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
@@ -582,6 +585,66 @@ def get_recording_stats(user_name):
 
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
+
+    atomfeed = fg.atom_str(pretty=True)
+
+    return Response(atomfeed, mimetype="application/atom+xml")
+
+@atom_bp.route("/playlist/<playlist_mbid>")
+@crossdomain
+@ratelimit()
+def get_playlist_recordings(playlist_mbid):
+    """
+    Get recording feed for a playlist.
+
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 400: Bad Request.
+    :statuscode 401: Invalid authentication.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/atom+xml*
+    """
+    if not is_valid_uuid(playlist_mbid):
+        BadRequest("Invalid playlist MBID")
+
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+
+    if playlist is None:
+        raise NotFound("Playlist not found")
+
+    if not playlist.is_visible_by(None):
+        raise NotFound("Playlist not found")
+
+    fetch_playlist_recording_metadata(playlist)
+
+    fg = _init_feed(
+        _external_url_for(".get_playlist_recordings", playlist_mbid=playlist_mbid),
+        playlist.name,
+        _external_url_for(".get_playlist_recordings", playlist_mbid=playlist_mbid),
+        _external_url_for("playlist.load_playlist", playlist_mbid=playlist_mbid),
+    )
+
+    for recording in playlist.recordings:
+        fe = fg.add_entry()
+        fe.id(f"{_external_url_for('.get_playlist_recordings', playlist_mbid=playlist_mbid)}/{recording.mbid}")
+        fe.title(f"{recording.title} by {recording.artist_credit}" if recording.artist_credit else recording.title)
+
+        content = render_template(
+            "atom/recording.html",
+            recording_mbid=recording.mbid,
+            recording_title=recording.title,
+            artist_credit=recording.artist_credit,
+            artist_mbid=recording.artist_mbids[0] if recording.artist_mbids else None,
+            recording_mb_page_base_url="https://musicbrainz.org/recording/",
+            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+        )
+        fe.content(
+            content=content,
+            type="html",
+        )
+
+        t_with_tz = recording.created.astimezone(timezone.utc)
+        fe.published(t_with_tz)
+        fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
