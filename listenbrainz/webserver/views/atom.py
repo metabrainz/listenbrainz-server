@@ -592,6 +592,7 @@ def get_recording_stats(user_name):
 
 @atom_bp.route("/playlist/<playlist_mbid>")
 @crossdomain
+@api_listenstore_needed
 @ratelimit()
 def get_playlist_recordings(playlist_mbid):
     """
@@ -604,15 +605,15 @@ def get_playlist_recordings(playlist_mbid):
     :resheader Content-Type: *application/atom+xml*
     """
     if not is_valid_uuid(playlist_mbid):
-        BadRequest("Invalid playlist MBID")
+        return BadRequest("Invalid playlist MBID")
 
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
 
     if playlist is None:
-        raise NotFound("Playlist not found")
+        return NotFound("Playlist not found")
 
     if not playlist.is_visible_by(None):
-        raise NotFound("Playlist not found")
+        return NotFound("Playlist not found")
 
     fetch_playlist_recording_metadata(playlist)
 
