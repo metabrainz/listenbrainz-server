@@ -178,6 +178,7 @@ export default function UserEntityChart() {
   const userStatsTitle =
     user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
+  const attributesForLinks = `?range=${range}`;
   return (
     <div role="main">
       <Helmet>
@@ -191,27 +192,25 @@ export default function UserEntityChart() {
             <div className="col-xs-12">
               <Pill active={terminology === "artist"} type="secondary">
                 <Link
-                  to="../top-artists/"
+                  to={`../top-artists/${attributesForLinks}`}
                   relative="route"
                   className="user-charts-pill"
-                  replace
                 >
                   Artists
                 </Link>
               </Pill>
               <Pill active={terminology === "album"} type="secondary">
                 <Link
-                  to="../top-albums/"
+                  to={`../top-albums/${attributesForLinks}`}
                   relative="route"
                   className="user-charts-pill"
-                  replace
                 >
                   Albums
                 </Link>
               </Pill>
               <Pill active={terminology === "track"} type="secondary">
                 <Link
-                  to="../top-tracks/"
+                  to={`../top-tracks/${attributesForLinks}`}
                   relative="route"
                   className="user-charts-pill"
                   replace
