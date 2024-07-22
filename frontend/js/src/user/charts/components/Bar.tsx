@@ -48,7 +48,6 @@ export default function Bar(props: BarProps) {
     tickPadding: 5,
     legend: "Number of listens",
     legendOffset: 30,
-    // legendPosition: "middle",
   };
 
   return (
@@ -68,8 +67,12 @@ export default function Bar(props: BarProps) {
         left: 15,
         right: 15,
       }}
-      axisBottom={horizontalAxis}
-      axisTop={horizontalAxis}
+      axisBottom={{ ...horizontalAxis, legendPosition: "middle" }}
+      axisTop={{
+        ...horizontalAxis,
+        legendPosition: "middle",
+        legendOffset: -30,
+      }}
       axisLeft={null}
       theme={theme}
       keys={["count"]}
