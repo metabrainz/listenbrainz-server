@@ -11,10 +11,11 @@ import { COLOR_LB_ORANGE } from "../../../utils/constants";
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
+  isMobileSize?: boolean;
 } & Partial<BarSvgProps<any>>;
 
 export default function Bar(props: BarProps) {
-  const { data, maxValue, ...barProps } = props;
+  const { data, maxValue, isMobileSize, ...barProps } = props;
 
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
     const { data: datum, value } = tooltipProps;
@@ -41,6 +42,15 @@ export default function Bar(props: BarProps) {
     },
   };
 
+  const horizontalAxis = {
+    tickSize: 5,
+    tickValues: isMobileSize ? 5 : 11,
+    tickPadding: 5,
+    legend: "Number of listens",
+    legendOffset: 30,
+    // legendPosition: "middle",
+  };
+
   return (
     <ResponsiveBar
       data={data}
@@ -58,14 +68,8 @@ export default function Bar(props: BarProps) {
         left: 15,
         right: 15,
       }}
-      axisBottom={{
-        tickSize: 5,
-        tickValues: 11,
-        tickPadding: 5,
-        legend: "Number of listens",
-        legendOffset: 30,
-        legendPosition: "middle",
-      }}
+      axisBottom={horizontalAxis}
+      axisTop={horizontalAxis}
       axisLeft={null}
       theme={theme}
       keys={["count"]}

@@ -33,6 +33,7 @@ import {
 } from "../../utils/constants";
 import { getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
+import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -58,7 +59,7 @@ function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
   const { bar } = barProps;
   const { x, y, width, height, data } = bar;
 
-  let title = data.data.entity;
+  let title = `${data.data.count} listens | ${data.data.entity}`;
   if (data.data.artist) {
     title += ` - ${data.data.artist}`;
   }
@@ -72,7 +73,7 @@ function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
         strokeWidth="0"
         rx="0"
       />
-      <foreignObject style={{ width, height }}>
+      <foreignObject style={{ width: Math.max(170, width), height }}>
         <div className="graph-bar flex" title={title}>
           <div className="position">
             #{padStart(data.data.idx.toString(), 2, "0")}
@@ -94,11 +95,6 @@ function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
                 )}
               </div>
             )}
-          </div>
-          <div className="badge badge-info">
-            {data.data.count}
-            &nbsp;
-            <FontAwesomeIcon icon={faHeadphones} />
           </div>
         </div>
       </foreignObject>
@@ -295,6 +291,7 @@ export default function UserEntityChart() {
               </div>
               <div className="row bar-chart">
                 <Bar
+                  isMobileSize={isMobile}
                   data={[...data].reverse()}
                   maxValue={maxListens}
                   layout="horizontal"
@@ -304,8 +301,9 @@ export default function UserEntityChart() {
                   labelTextColor={COLOR_LB_ASPHALT}
                   margin={{
                     bottom: 40,
+                    top: 40,
                     left: isMobile ? 5 : 15,
-                    right: isMobile ? 0 : 15,
+                    right: isMobile ? 30 : 15,
                   }}
                   defs={[
                     {
