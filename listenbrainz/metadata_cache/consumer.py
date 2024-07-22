@@ -81,7 +81,7 @@ class ServiceMetadataCache(ConsumerMixin):
                 self.crawler = Crawler(self.app, self.handler)
                 self.crawler.start()
 
-                self.app.logger.info(f"Starting {self.crawler.name} Metadata Cache ...")
+                self.app.logger.info(f"Starting {self.handler.name} Metadata Cache ...")
                 self.init_rabbitmq_connection()
                 self.run()
             except KeyboardInterrupt:

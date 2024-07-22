@@ -109,7 +109,7 @@ export default function RecommendationsPage() {
 
   // Functions
   const fetchPlaylist = React.useCallback(
-    async (playlistId: string) => {
+    async (playlistId: string, reloadOnError = false) => {
       try {
         const response = await APIService.getPlaylist(
           playlistId,
@@ -124,6 +124,9 @@ export default function RecommendationsPage() {
         setSelectedPlaylist(JSPFObject.playlist);
       } catch (error) {
         toast.error(error.message);
+        if (reloadOnError) {
+          window.location.reload();
+        }
       }
     },
     [APIService, currentUser?.auth_token]
@@ -149,7 +152,7 @@ export default function RecommendationsPage() {
       toast.error("No playlist to select");
       return;
     }
-    await fetchPlaylist(playlistId);
+    await fetchPlaylist(playlistId, true);
   };
 
   const copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {

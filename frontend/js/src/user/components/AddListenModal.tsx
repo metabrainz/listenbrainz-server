@@ -35,17 +35,20 @@ export function getListenFromRecording(
           ?.map((artist) => `${artist.name}${artist.joinphrase}`)
           .join("") ?? "",
       track_name: recording.title,
-      release_name: releaseOrCanonical.title,
+      release_name: releaseOrCanonical?.title,
       additional_info: {
-        release_mbid: releaseOrCanonical.id,
-        release_group_mbid: releaseOrCanonical["release-group"].id,
+        release_mbid: releaseOrCanonical?.id,
+        release_group_mbid: releaseOrCanonical?.["release-group"]?.id,
         recording_mbid: recording.id,
         submission_client: "listenbrainz web",
-        duration_ms: recording.length,
         artist_mbids: recording["artist-credit"].map((ac) => ac.artist.id),
       },
     },
   };
+  if (recording.length) {
+    // Cannot send a `null` duration
+    listen.track_metadata.additional_info!.duration_ms = recording.length;
+  }
   return listen;
 }
 
@@ -65,15 +68,21 @@ export const getListenFromTrack = (
       additional_info: {
         recording_mbid: track.recording.id,
         submission_client: "listenbrainz web",
-        duration_ms: track.length,
         track_mbid: track.id,
-        tracknumber: parseInt(track.number, 10),
+        tracknumber: track.number,
         artist_mbids: track["artist-credit"].map((ac) => ac.artist.id),
       },
     },
   };
+  if (track.length) {
+    // Cannot send a `null` duration
+    listen.track_metadata.additional_info!.duration_ms = track.length;
+  } else if (track.recording.length) {
+    // Cannot send a `null` duration
+    listen.track_metadata.additional_info!.duration_ms = track.recording.length;
+  }
   if (release) {
-    listen.track_metadata.release_mbid = release.id;
+    listen.track_metadata.additional_info!.release_mbid = release.id;
     listen.track_metadata.release_name = release.title;
   }
   return listen;
@@ -202,6 +211,10 @@ export default NiceModal.create(() => {
     handleError,
   ]);
 
+  const userLocale = navigator.languages?.length
+    ? navigator.languages[0]
+    : navigator.language;
+
   return (
     <div
       className={`modal fade ${modal.visible ? "in" : ""}`}
@@ -317,7 +330,9 @@ export default NiceModal.create(() => {
                     }
                     maxDate={new Date()}
                     clearIcon={null}
-                    format="yyyy-MM-dd h:mm:ss a"
+                    format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
+                    locale={userLocale}
+                    maxDetail="second"
                     disabled={!customTimestamp}
                   />
                 </div>

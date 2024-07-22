@@ -76,7 +76,8 @@ class DumpTestCase(DatabaseTestCase):
         data[1]["to_ts"] = to_ts1
 
         time_now = datetime.today()
-        dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
+        with self.app.app_context():
+            dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
 
         found = set()

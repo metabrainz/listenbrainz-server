@@ -9,6 +9,7 @@ metadata_viewer_bp = Blueprint("metadata_viewer", __name__)
 
 @metadata_viewer_bp.route("/",  defaults={'path': ''})
 @metadata_viewer_bp.route('/<path:path>/')
+@login_required
 def playing_now_metadata_page(path):
     return render_template("index.html")
 

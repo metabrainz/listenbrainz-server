@@ -86,16 +86,6 @@ const getIndexRoutes = (): RouteObject[] => {
           loader: RouteLoader,
         },
         {
-          path: "listening-now/",
-          lazy: async () => {
-            const PlayingNowPage = await import(
-              "../metadata-viewer/MetadataViewerPage"
-            );
-            return { Component: PlayingNowPage.PlayingNowPageWrapper };
-          },
-          loader: RouteLoader,
-        },
-        {
           path: "/statistics/",
           lazy: async () => {
             const UserDashboardLayout = await import("../user/layout");

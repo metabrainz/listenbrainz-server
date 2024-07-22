@@ -362,9 +362,13 @@ def dump_statistics(location: str):
     ]
     full_path = os.path.join(location, "statistics")
     for stat in stats:
-        os.makedirs(full_path, exist_ok=True)
-        with open(os.path.join(full_path, f"{stat}.jsonl"), "wb+") as fp:
-            couchdb.dump_database(stat, fp)
+        try:
+            current_app.logger.info(f"Dumping statistics for {stat}...")
+            os.makedirs(full_path, exist_ok=True)
+            with open(os.path.join(full_path, f"{stat}.jsonl"), "wb+") as fp:
+                couchdb.dump_database(stat, fp)
+        except Exception:
+            current_app.logger.info(f"Failed to create dump for {stat}:", exc_info=True)
 
 
 def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str, tables: Optional[dict],

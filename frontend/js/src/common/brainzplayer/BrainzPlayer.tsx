@@ -977,7 +977,6 @@ export default function BrainzPlayer() {
             refreshSpotifyToken={refreshSpotifyToken}
             onInvalidateDataSource={invalidateDataSource}
             ref={spotifyPlayerRef}
-            spotifyUser={spotifyAuth}
             playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
@@ -1022,7 +1021,6 @@ export default function BrainzPlayer() {
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={soundcloudPlayerRef}
-            soundcloudUser={soundcloudAuth}
             refreshSoundcloudToken={refreshSoundcloudToken}
             playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
@@ -1043,7 +1041,6 @@ export default function BrainzPlayer() {
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
                 AppleMusicPlayer
             }
-            appleMusicUser={appleAuth}
             onInvalidateDataSource={invalidateDataSource}
             ref={appleMusicPlayerRef}
             playerPaused={playerPaused}

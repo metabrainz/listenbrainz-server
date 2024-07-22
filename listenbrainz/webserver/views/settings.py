@@ -372,9 +372,9 @@ def music_services_set_token(service_name: str):
     if service_name != 'apple':
         raise APIInternalServerError("The set-token method not implemented for this service")
 
-    music_user_token = request.data
+    music_user_token = request.data.decode('UTF-8')
 
-    if music_user_token is None:
+    if not music_user_token:
         raise BadRequest('Missing user token in request body')
 
     apple_service = AppleService()
