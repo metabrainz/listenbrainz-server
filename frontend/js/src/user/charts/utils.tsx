@@ -121,6 +121,7 @@ export const processData = (
           artistMBID: elem.artist_mbids,
           release: elem.release_name,
           releaseMBID: elem.release_mbid,
+          recordingMSID: elem.recording_msid,
           idx: offset + idx + 1,
           count: elem.listen_count,
           caaID: elem.caa_id,
