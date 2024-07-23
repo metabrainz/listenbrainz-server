@@ -140,18 +140,16 @@ function Queue(props: BrainzPlayerQueueProps) {
             onEnd={moveQueueItem}
             setList={() => {}}
           >
-            {queueNextUp.map(
-              (queueItem: BrainzPlayerQueueItem, index: number) => {
-                if (!queueItem) return null;
-                return (
-                  <QueueItemCard
-                    key={`${queueItem?.id}-${index.toString()}`}
-                    track={queueItem}
-                    removeTrackFromQueue={removeTrackFromQueue}
-                  />
-                );
-              }
-            )}
+            {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
+              if (!queueItem) return null;
+              return (
+                <QueueItemCard
+                  key={queueItem?.id}
+                  track={queueItem}
+                  removeTrackFromQueue={removeTrackFromQueue}
+                />
+              );
+            })}
           </ReactSortable>
         ) : (
           <div className="lead text-center">
@@ -166,11 +164,11 @@ function Queue(props: BrainzPlayerQueueProps) {
         {ambientQueue.length > 0
           ? ambientQueue
               .slice(0, MAX_AMBIENT_QUEUE_ITEMS)
-              .map((queueItem: BrainzPlayerQueueItem, index: number) => {
+              .map((queueItem: BrainzPlayerQueueItem) => {
                 if (!queueItem) return null;
                 return (
                   <QueueItemCard
-                    key={`${queueItem?.id}-${index.toString()}`}
+                    key={queueItem?.id}
                     track={queueItem}
                     removeTrackFromQueue={removeTrackFromAmbientQueue}
                     hideDragHandle
