@@ -19,13 +19,11 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
-  JSPFTrackToListen,
 } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
-import { listenOrJSPFTrackToQueueItem } from "../../common/brainzplayer/utils";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -367,8 +365,7 @@ export default function RecommendationsPage() {
 
   React.useEffect(() => {
     if (selectedPlaylist) {
-      const listensFromJSPFTracks =
-        selectedPlaylist?.track.map(listenOrJSPFTrackToQueueItem) ?? [];
+      const listensFromJSPFTracks = selectedPlaylist?.track ?? [];
       dispatch({
         type: "SET_CURRENT_LISTEN",
         data: listensFromJSPFTracks,

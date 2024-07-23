@@ -32,7 +32,6 @@ import {
   PLAYLIST_URI_PREFIX,
 } from "./utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
-import { listenOrJSPFTrackToQueueItem } from "../common/brainzplayer/utils";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
@@ -200,7 +199,7 @@ export default function PlaylistPage() {
       );
       dispatch({
         type: "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
-        data: listenOrJSPFTrackToQueueItem(jspfTrack),
+        data: jspfTrack,
       });
       toast.success(
         <ToastMsg
@@ -247,7 +246,7 @@ export default function PlaylistPage() {
         };
         dispatch({
           type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-          data: listenOrJSPFTrackToQueueItem(trackToDelete),
+          data: trackToDelete,
         });
         setPlaylist(newPlaylist);
         emitPlaylistChanged(newPlaylist);
@@ -306,10 +305,9 @@ export default function PlaylistPage() {
   const customFields = getPlaylistExtension(playlist);
 
   React.useEffect(() => {
-    const listens = tracks.map(listenOrJSPFTrackToQueueItem);
     dispatch({
       type: "SET_CURRENT_LISTEN",
-      data: listens,
+      data: tracks,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
