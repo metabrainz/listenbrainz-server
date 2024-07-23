@@ -1375,7 +1375,7 @@ export function YearInMusicWrapper() {
 
   const dispatch = useBrainzPlayerDispatch();
   React.useEffect(() => {
-    dispatch({ type: "SET_CURRENT_LISTEN", data: listens });
+    dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
   }, [listens]);
 
   return (

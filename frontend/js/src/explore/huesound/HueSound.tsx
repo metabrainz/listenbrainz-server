@@ -45,7 +45,7 @@ export default function HueSound() {
     }
     selectedReleaseTracks?.shift();
     dispatch({
-      type: "SET_CURRENT_LISTEN",
+      type: "SET_AMBIENT_QUEUE",
       data: selectedReleaseTracks,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

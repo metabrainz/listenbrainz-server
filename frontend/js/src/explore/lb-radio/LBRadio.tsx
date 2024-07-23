@@ -114,7 +114,7 @@ export default function LBRadio() {
 
   React.useEffect(() => {
     dispatch({
-      type: "SET_CURRENT_LISTEN",
+      type: "SET_AMBIENT_QUEUE",
       data: jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen),
     });
   }, [jspfPlaylist?.playlist?.track]);

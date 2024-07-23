@@ -67,7 +67,7 @@ export const initialValue: BrainzPlayerContextT = {
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
   type?:
-    | "SET_CURRENT_LISTEN"
+    | "SET_AMBIENT_QUEUE"
     | "SET_PLAYBACK_TIMER"
     | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
@@ -98,7 +98,7 @@ function valueReducer(
   };
 
   switch (action.type) {
-    case "SET_CURRENT_LISTEN": {
+    case "SET_AMBIENT_QUEUE": {
       if (!action.data) {
         return { ...state, ...action };
       }

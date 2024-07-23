@@ -306,7 +306,7 @@ export default function PlaylistPage() {
 
   React.useEffect(() => {
     dispatch({
-      type: "SET_CURRENT_LISTEN",
+      type: "SET_AMBIENT_QUEUE",
       data: tracks,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

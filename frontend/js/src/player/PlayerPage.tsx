@@ -264,7 +264,7 @@ export function PlayerPageWrapper() {
   React.useEffect(() => {
     const listens = tracks?.map(JSPFTrackToListen);
     dispatch({
-      type: "SET_CURRENT_LISTEN",
+      type: "SET_AMBIENT_QUEUE",
       data: listens,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
