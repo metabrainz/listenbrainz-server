@@ -287,7 +287,12 @@ export default function UserEntityChart() {
                   </h4>
                 </div>
               </div>
-              <div className="row bar-chart">
+              <div
+                className="row bar-chart"
+                style={{
+                  minHeight: `calc(${Math.min(data.length, 25)} * 5em)`,
+                }}
+              >
                 <Bar
                   isMobileSize={isMobile}
                   data={[...data].reverse()}
