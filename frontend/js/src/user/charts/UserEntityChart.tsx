@@ -8,9 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import tinycolor from "tinycolor2";
 import { BarItemProps } from "@nivo/bar";
-import { padStart } from "lodash";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
@@ -26,11 +24,7 @@ import {
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
-import {
-  COLOR_LB_ASPHALT,
-  COLOR_LB_BLUE,
-  COLOR_LB_ORANGE,
-} from "../../utils/constants";
+import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
 import { getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
 import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
@@ -76,7 +70,9 @@ function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
       <foreignObject style={{ width: Math.max(170, width), height }}>
         <div className="graph-bar flex" title={title}>
           <div className="position">
-            #{padStart(data.data.idx.toString(), 2, "0")}
+            {data.data.count}
+            <br />
+            <FontAwesomeIcon icon={faHeadphones} />
           </div>
           <div className="graph-bar-text">
             <div className="graph-bar-entity ellipsis-2-lines">
@@ -314,19 +310,12 @@ export default function UserEntityChart() {
                       type: "linearGradient",
                       colors: [
                         {
-                          offset: 20,
-                          color: tinycolor(COLOR_LB_BLUE)
-                            .lighten(60)
-                            .desaturate(15)
-                            .toString(),
+                          offset: 10,
+                          color: "#ffe2ad",
                         },
                         {
-                          offset: 80,
-                          color: tinycolor(COLOR_LB_ORANGE)
-                            .spin(20)
-                            .saturate(15)
-                            .lighten(30)
-                            .toString(),
+                          offset: 90,
+                          color: COLOR_LB_ORANGE,
                         },
                       ],
                       y2: "90vw",
