@@ -64,6 +64,7 @@ declare type BaseListenFormat = {
 declare type Listen = BaseListenFormat & {
   listened_at_iso?: string | null;
   playing_now?: boolean | null;
+  inserted_at?: number;
 };
 
 declare type Recommendation = Listen & {
