@@ -75,7 +75,8 @@ class ServerTestCase(unittest.TestCase):
             Note that this function is not on feature parity with Flask's url_for() and only supports the
             basic use cases we have.
         """
-        return self.url_adapter.build(endpoint, values)
+        force_external = values.pop('force_external', False)
+        return self.url_adapter.build(endpoint, values, force_external=force_external)
 
     def assertMessageFlashed(self, message, category='message'):
         """

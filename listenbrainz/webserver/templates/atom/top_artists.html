@@ -1,0 +1,12 @@
+<p>
+    {% for artist in artists %}
+        <li>
+            {% if artist.artist_mbid %}
+                <a href="{{ artist_page_base_url }}{{ artist.artist_mbid }}">{{ artist.artist_name }}</a>
+            {% else %}
+                {{ artist.artist_name }}
+            {% endif %}:
+            {{ artist.listen_count }} listens
+        </li>
+    {% endfor %}
+</p>
