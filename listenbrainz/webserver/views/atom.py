@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta, timezone
+import uuid
 from feedgen.feed import FeedGenerator
 from flask import Blueprint, Response, current_app, request, render_template, url_for
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -29,6 +30,10 @@ DEFAULT_MINUTES_OF_LISTENS = 60
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
 DEFAULT_NUMBER_OF_FRESH_RELEASE_DAYS = 3
 MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
+RECOMMENDATION_TYPES = (
+    "weekly-jams",
+    "weekly-exploration",
+)
 
 
 atom_bp = Blueprint("atom", __name__)
@@ -646,6 +651,82 @@ def get_playlist_recordings(playlist_mbid):
         t_with_tz = recording.created.astimezone(timezone.utc)
         fe.published(t_with_tz)
         fe.updated(t_with_tz)
+
+    atomfeed = fg.atom_str(pretty=True)
+
+    return Response(atomfeed, mimetype="application/atom+xml")
+
+
+@atom_bp.route("/user/<user_name>/recommendations")
+@crossdomain
+@api_listenstore_needed
+@ratelimit()
+def get_recommendation(user_name):
+    """
+    Get recommendation for a user.
+
+    :param recommendation_type: Type of recommendation to get. See `RECOMMENDATION_TYPES` for possible values.
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 204: Recommendation for the user haven't been generated.
+    :statuscode 400: Bad Request.
+    :statuscode 401: Invalid authentication.
+    :statuscode 404: Playlist not found
+    :resheader Content-Type: *application/atom+xml*
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        return NotFound("User not found")
+
+    recommendation_type = request.args.get("recommendation_type", default=RECOMMENDATION_TYPES[0])
+    if recommendation_type not in RECOMMENDATION_TYPES:
+        return BadRequest("Invalid type")
+
+    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, user['id'])
+
+    playlist = next(
+        (
+            pl
+            for pl in playlists
+            if pl.additional_metadata.get("algorithm_metadata", {}).get(
+                "source_patch", None
+            )
+            == recommendation_type
+        ),
+        None,
+    )
+
+    if playlist is None:
+        return Response(
+            status=204, response="Recommedation for the user haven't been generated."
+        )
+
+    fetch_playlist_recording_metadata(playlist)
+
+    fg = _init_feed(
+        f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
+        f"{'Weekly Jams' if recommendation_type == 'weekly-jams' else 'Weekly Exploration'} for {user_name}",
+        f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
+        _external_url_for("user.recommendation_playlists", user_name=user_name),
+    )
+
+    fe = fg.add_entry()
+    fe.id(f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}/{playlist.created.timestamp()}")
+    fe.title(playlist.name)
+
+    content = render_template(
+        "atom/playlist.html",
+        tracks=playlist.recordings,
+        recording_mb_page_base_url="https://musicbrainz.org/recording/",
+        artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+    )
+    fe.content(
+        content=content,
+        type="html",
+    )
+
+    t_with_tz = playlist.created.astimezone(timezone.utc)
+    fe.published(t_with_tz)
+    fe.updated(t_with_tz)
 
     atomfeed = fg.atom_str(pretty=True)
 
