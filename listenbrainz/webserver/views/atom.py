@@ -595,6 +595,7 @@ def get_recording_stats(user_name):
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
+
 @atom_bp.route("/playlist/<playlist_mbid>")
 @crossdomain
 @api_listenstore_needed
@@ -631,8 +632,14 @@ def get_playlist_recordings(playlist_mbid):
 
     for recording in playlist.recordings:
         fe = fg.add_entry()
-        fe.id(f"{_external_url_for('.get_playlist_recordings', playlist_mbid=playlist_mbid)}/{recording.mbid}")
-        fe.title(f"{recording.title} by {recording.artist_credit}" if recording.artist_credit else recording.title)
+        fe.id(
+            f"{_external_url_for('.get_playlist_recordings', playlist_mbid=playlist_mbid)}/{recording.mbid}"
+        )
+        fe.title(
+            f"{recording.title} by {recording.artist_credit}"
+            if recording.artist_credit
+            else recording.title
+        )
 
         content = render_template(
             "atom/recording.html",
@@ -677,11 +684,15 @@ def get_recommendation(user_name):
     if user is None:
         return NotFound("User not found")
 
-    recommendation_type = request.args.get("recommendation_type", default=RECOMMENDATION_TYPES[0])
+    recommendation_type = request.args.get(
+        "recommendation_type", default=RECOMMENDATION_TYPES[0]
+    )
     if recommendation_type not in RECOMMENDATION_TYPES:
         return BadRequest("Invalid type")
 
-    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, user['id'])
+    playlists = db_playlist.get_recommendation_playlists_for_user(
+        db_conn, ts_conn, user["id"]
+    )
 
     playlist = next(
         (
@@ -710,7 +721,9 @@ def get_recommendation(user_name):
     )
 
     fe = fg.add_entry()
-    fe.id(f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}/{playlist.created.timestamp()}")
+    fe.id(
+        f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}/{playlist.created.timestamp()}"
+    )
     fe.title(playlist.name)
 
     content = render_template(
