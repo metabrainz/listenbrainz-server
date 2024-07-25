@@ -44,7 +44,7 @@ export default function Bar(props: BarProps) {
 
   const horizontalAxis = {
     tickSize: 5,
-    tickValues: isMobileSize ? 5 : 9,
+    tickValues: isMobileSize ? Math.min(5, maxValue) : Math.min(9, maxValue),
     tickPadding: 5,
     legend: "Number of listens",
     legendOffset: 30,

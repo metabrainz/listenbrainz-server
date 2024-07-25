@@ -286,7 +286,7 @@ export default function UserEntityChart() {
               <div
                 className="row bar-chart"
                 style={{
-                  minHeight: `calc(${Math.min(data.length, 25)} * 5em)`,
+                  minHeight: `calc(${Math.min(data.length, 25)} * 4.5em)`,
                 }}
               >
                 <Bar
@@ -296,6 +296,7 @@ export default function UserEntityChart() {
                   maxValue={maxListens}
                   layout="horizontal"
                   enableGridX
+                  gridXValues={Array.from(Array(maxListens).keys())}
                   barComponent={CustomBarComponent}
                   labelTextColor={COLOR_LB_ASPHALT}
                   margin={{
@@ -311,7 +312,7 @@ export default function UserEntityChart() {
                       colors: [
                         {
                           offset: 10,
-                          color: "#ffe2ad",
+                          color: "antiquewhite",
                         },
                         {
                           offset: 90,
