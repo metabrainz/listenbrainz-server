@@ -388,7 +388,7 @@ export default function UserEntityChart() {
                           <span>...</span>
                         </li>
                       )}
-                      {currPage > 2 && currPage - 2 < totalPages && (
+                      {currPage >= 2 && currPage - 2 < totalPages && (
                         <li>
                           <Link
                             to={{
@@ -414,7 +414,7 @@ export default function UserEntityChart() {
                           </Link>
                         </li>
                       )}
-                      <li title="Current page">
+                      <li title="Current page" className="active">
                         <span>page {currPage}</span>
                       </li>
                       {currPage + 1 <= totalPages && (
