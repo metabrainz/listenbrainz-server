@@ -307,8 +307,6 @@ export default function UserEntityChart() {
                   isInteractive={false}
                   maxValue={maxListens}
                   layout="horizontal"
-                  enableGridX
-                  gridXValues={Array.from(Array(maxListens).keys())}
                   barComponent={CustomBarComponent}
                   labelTextColor={COLOR_LB_ASPHALT}
                   margin={{

@@ -41,10 +41,13 @@ export default function Bar(props: BarProps) {
       },
     },
   };
+  const numberOfTicks = isMobileSize
+    ? Math.min(5, maxValue)
+    : Math.min(9, maxValue);
 
   const horizontalAxis = {
     tickSize: 5,
-    tickValues: isMobileSize ? Math.min(5, maxValue) : Math.min(9, maxValue),
+    tickValues: numberOfTicks,
     tickPadding: 5,
     legend: "Number of listens",
     legendOffset: 30,
@@ -58,6 +61,8 @@ export default function Bar(props: BarProps) {
       colors={COLOR_LB_ORANGE}
       indexBy="id"
       enableGridY={false}
+      enableGridX
+      gridXValues={numberOfTicks}
       padding={0.1}
       label={(x: any) => x.data.entity}
       labelSkipWidth={0}
