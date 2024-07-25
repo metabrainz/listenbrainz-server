@@ -56,7 +56,9 @@ const ROWS_PER_PAGE = 25;
 function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
   const { bar } = barProps;
   const { x, y, width, height, data } = bar;
-  let title = `#${data.data.idx} (${data.data.count} listens) | ${data.data.entity}`;
+  let title = `#${data.data.idx} (${data.data.count} listen${
+    data.data.count === 1 ? "" : "s"
+  }) | ${data.data.entity}`;
   if (data.data.artist) {
     title += ` - ${data.data.artist}`;
   }
