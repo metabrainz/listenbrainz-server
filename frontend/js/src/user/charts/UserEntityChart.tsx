@@ -1,6 +1,10 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
 import {
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
+  faAngleLeft,
+  faAngleRight,
   faExclamationCircle,
   faHeadphones,
 } from "@fortawesome/free-solid-svg-icons";
@@ -278,8 +282,16 @@ export default function UserEntityChart() {
             <>
               <div className="row">
                 <div className="col-xs-12">
-                  <h4 style={{ textTransform: "capitalize" }}>
-                    {terminology} count - <b>{entityCount}</b> / Page {currPage}
+                  <h4>
+                    <span style={{ textTransform: "capitalize" }}>
+                      {terminology}
+                    </span>
+                    &nbsp;count - <b>{entityCount} total</b>
+                    {entityCount > 1000 && (
+                      <span className="small">
+                        &nbsp;(showing the first 1000)
+                      </span>
+                    )}
                   </h4>
                 </div>
               </div>
@@ -330,38 +342,157 @@ export default function UserEntityChart() {
               </div>
               <div className="row">
                 <div className="col-xs-12">
-                  <ul className="pager">
-                    <li
-                      className={`previous ${
-                        !(prevPage > 0) ? "disabled" : ""
-                      }`}
-                    >
-                      <Link
-                        to={{
-                          pathname: window.location.pathname,
-                          search: `?page=${prevPage}&range=${range}`,
-                        }}
-                        role="button"
+                  <div className="text-center">
+                    <ul className="pagination">
+                      <li
+                        className={`previous ${
+                          !(prevPage > 0) ? "disabled" : ""
+                        }`}
+                        title="First page"
                       >
-                        &larr; Previous
-                      </Link>
-                    </li>
-                    <li
-                      className={`next ${
-                        !(nextPage <= totalPages) ? "disabled" : ""
-                      }`}
-                    >
-                      <Link
-                        to={{
-                          pathname: window.location.pathname,
-                          search: `?page=${nextPage}&range=${range}`,
-                        }}
-                        role="button"
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=1&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          <FontAwesomeIcon
+                            icon={faAngleDoubleLeft}
+                            size="sm"
+                            style={{ verticalAlign: "middle" }}
+                          />
+                        </Link>
+                      </li>
+                      <li
+                        className={`previous ${
+                          !(prevPage > 0) ? "disabled" : ""
+                        }`}
+                        title="Previous page"
                       >
-                        Next &rarr;
-                      </Link>
-                    </li>
-                  </ul>
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${prevPage}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          <FontAwesomeIcon
+                            icon={faAngleLeft}
+                            size="sm"
+                            style={{ verticalAlign: "middle" }}
+                          />{" "}
+                          Previous
+                        </Link>
+                      </li>
+                      {currPage > 2 && (
+                        <li>
+                          <span>...</span>
+                        </li>
+                      )}
+                      {currPage > 2 && currPage - 2 < totalPages && (
+                        <li>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=${currPage - 2}&range=${range}`,
+                            }}
+                            role="button"
+                          >
+                            {currPage - 2}
+                          </Link>
+                        </li>
+                      )}
+                      {currPage > 2 && currPage - 1 < totalPages && (
+                        <li>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=${currPage - 1}&range=${range}`,
+                            }}
+                            role="button"
+                          >
+                            {currPage - 1}
+                          </Link>
+                        </li>
+                      )}
+                      <li title="Current page">
+                        <span>page {currPage}</span>
+                      </li>
+                      {currPage + 1 <= totalPages && (
+                        <li>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=${currPage + 1}&range=${range}`,
+                            }}
+                            role="button"
+                          >
+                            {currPage + 1}
+                          </Link>
+                        </li>
+                      )}
+                      {currPage + 2 <= totalPages && (
+                        <li>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=${currPage + 2}&range=${range}`,
+                            }}
+                            role="button"
+                          >
+                            {currPage + 2}
+                          </Link>
+                        </li>
+                      )}
+                      {currPage + 2 < totalPages && (
+                        <li>
+                          <span>...</span>
+                        </li>
+                      )}
+                      <li
+                        className={`next ${
+                          !(nextPage <= totalPages) ? "disabled" : ""
+                        }`}
+                        title="Next page"
+                      >
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${nextPage}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          Next{" "}
+                          <FontAwesomeIcon
+                            icon={faAngleRight}
+                            size="sm"
+                            style={{ verticalAlign: "middle" }}
+                          />
+                        </Link>
+                      </li>
+                      <li
+                        className={`next ${
+                          !(nextPage <= totalPages) ? "disabled" : ""
+                        }`}
+                        title="Last page"
+                      >
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${totalPages}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          <FontAwesomeIcon
+                            icon={faAngleDoubleRight}
+                            size="sm"
+                            style={{ verticalAlign: "middle" }}
+                          />
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
 

@@ -24,34 +24,37 @@ export const getData = async (
     rowsPerPage
   );
   let maxListens = 0;
-  let totalPages = 0;
+  // We only calculate the top 1000 entities nowadays,
+  // so we don't want to use the total_{entity}_count value
+  // which does not represent what we have stats for
+  const totalPages = 1000 / rowsPerPage;
   let entityCount = 0;
 
   if (entity === "artist") {
     entityData = entityData as UserArtistsResponse;
     maxListens = entityData.payload.artists?.[0]?.listen_count;
-    totalPages = Math.ceil(entityData.payload.total_artist_count / rowsPerPage);
+    // totalPages = Math.ceil(entityData.payload.total_artist_count / rowsPerPage);
     entityCount = entityData.payload.total_artist_count;
   } else if (entity === "release") {
     entityData = entityData as UserReleasesResponse;
     maxListens = entityData.payload.releases?.[0]?.listen_count;
-    totalPages = Math.ceil(
+    /* totalPages = Math.ceil(
       entityData.payload.total_release_count / rowsPerPage
-    );
+    ); */
     entityCount = entityData.payload.total_release_count;
   } else if (entity === "recording") {
     entityData = entityData as UserRecordingsResponse;
     maxListens = entityData.payload.recordings?.[0]?.listen_count;
-    totalPages = Math.ceil(
+    /* totalPages = Math.ceil(
       entityData.payload.total_recording_count / rowsPerPage
-    );
+    ); */
     entityCount = entityData.payload.total_recording_count;
   } else if (entity === "release-group") {
     entityData = entityData as UserReleaseGroupsResponse;
     maxListens = entityData.payload.release_groups?.[0]?.listen_count;
-    totalPages = Math.ceil(
+    /* totalPages = Math.ceil(
       entityData.payload.total_release_group_count / rowsPerPage
-    );
+    ); */
     entityCount = entityData.payload.total_release_group_count;
   }
 
