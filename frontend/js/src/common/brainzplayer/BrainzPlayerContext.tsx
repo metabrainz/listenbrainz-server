@@ -221,27 +221,28 @@ function valueReducer(
       };
     }
     case "REMOVE_TRACK_FROM_AMBIENT_QUEUE": {
-      const { track: trackToDelete, index } = action.data as {
+      const { track, index } = action.data as {
         track: BrainzPlayerQueueItem;
         index: number;
       };
+      const trackToDelete = listenOrJSPFTrackToQueueItem(track);
       const { ambientQueue } = state;
-
-      if (
-        index >= ambientQueue.length ||
-        ambientQueue[index].id !== trackToDelete.id
-      ) {
-        return state;
-      }
 
       if (index === -1) {
         const updatedQueue = ambientQueue.filter(
-          (track) => track.id !== trackToDelete.id
+          (trackInQueue) => trackInQueue.id !== trackToDelete.id
         );
         return {
           ...state,
           ambientQueue: updatedQueue,
         };
+      }
+
+      if (
+        index >= ambientQueue.length ||
+        ambientQueue[index]?.id !== trackToDelete.id
+      ) {
+        return state;
       }
 
       const updatedAmbientQueue = [...ambientQueue];
