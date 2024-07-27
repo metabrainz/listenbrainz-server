@@ -246,7 +246,10 @@ export default function PlaylistPage() {
         };
         dispatch({
           type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-          data: trackToDelete,
+          data: {
+            track: trackToDelete,
+            index: -1,
+          },
         });
         setPlaylist(newPlaylist);
         emitPlaylistChanged(newPlaylist);

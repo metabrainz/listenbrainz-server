@@ -32,6 +32,7 @@ const repeatModes = [
 
 export type BrainzPlayerContextT = {
   currentListen?: BrainzPlayerQueueItem;
+  currentListenIndex: number;
   currentDataSourceIndex: number;
   currentTrackName: string;
   currentTrackArtist?: string;
@@ -50,6 +51,7 @@ export type BrainzPlayerContextT = {
 };
 
 export const initialValue: BrainzPlayerContextT = {
+  currentListenIndex: -1,
   currentDataSourceIndex: 0,
   currentTrackName: "",
   currentTrackArtist: "",
@@ -87,15 +89,6 @@ function valueReducer(
   if (!action.type) {
     return { ...state, ...action };
   }
-
-  const isCurrentlyPlaying = (element: BrainzPlayerQueueItem) => {
-    const { currentListen } = state;
-    if (isNil(currentListen)) {
-      return false;
-    }
-
-    return isEqual(element.id, currentListen.id);
-  };
 
   switch (action.type) {
     case "SET_AMBIENT_QUEUE": {
@@ -147,9 +140,8 @@ function valueReducer(
       };
     }
     case "MOVE_QUEUE_ITEM": {
-      const { queue } = state;
+      const { queue, currentListenIndex } = state;
       const evt = action.data as any;
-      const currentListenIndex = queue.findIndex(isCurrentlyPlaying);
 
       const newQueue = [...queue];
       const newIndex = evt.newIndex + currentListenIndex + 1;
@@ -159,9 +151,29 @@ function valueReducer(
       newQueue.splice(oldIndex, 1);
       newQueue.splice(newIndex, 0, toMove);
 
+      let newCurrentListenIndex = currentListenIndex;
+
+      if (oldIndex === currentListenIndex) {
+        // If the currently playing track is the one being moved
+        newCurrentListenIndex = newIndex;
+      } else if (
+        oldIndex < currentListenIndex &&
+        newIndex >= currentListenIndex
+      ) {
+        // If an item before the current listen is moved to after it
+        newCurrentListenIndex -= 1;
+      } else if (
+        oldIndex > currentListenIndex &&
+        newIndex <= currentListenIndex
+      ) {
+        // If an item after the current listen is moved to before it
+        newCurrentListenIndex += 1;
+      }
+
       return {
         ...state,
         queue: newQueue,
+        currentListenIndex: newCurrentListenIndex,
       };
     }
     case "MOVE_AMBIENT_QUEUE_ITEM": {
@@ -179,31 +191,70 @@ function valueReducer(
       };
     }
     case "REMOVE_TRACK_FROM_QUEUE": {
-      const trackToDelete = action.data as BrainzPlayerQueueItem;
-      const { queue } = state;
-      const updatedQueue = queue.filter(
-        (track) => track.id !== trackToDelete.id
-      );
+      const { track: trackToDelete, index } = action.data as {
+        track: BrainzPlayerQueueItem;
+        index: number;
+      };
+      const { queue, currentListenIndex = -1 } = state;
+
+      if (
+        index < 0 ||
+        index >= queue.length ||
+        queue[index].id !== trackToDelete.id
+      ) {
+        return state;
+      }
+
+      const updatedQueue = [...queue];
+      updatedQueue.splice(index, 1);
+
+      // Calculate the new currentListenIndex
+      let newCurrentListenIndex = currentListenIndex;
+      if (index < currentListenIndex) {
+        newCurrentListenIndex -= 1;
+      }
+
       return {
         ...state,
         queue: updatedQueue,
+        currentListenIndex: newCurrentListenIndex,
       };
     }
     case "REMOVE_TRACK_FROM_AMBIENT_QUEUE": {
-      const trackToDelete = action.data as BrainzPlayerQueueItem;
+      const { track: trackToDelete, index } = action.data as {
+        track: BrainzPlayerQueueItem;
+        index: number;
+      };
       const { ambientQueue } = state;
-      const updatedQueue = ambientQueue.filter(
-        (track) => track.id !== trackToDelete.id
-      );
+
+      if (
+        index >= ambientQueue.length ||
+        ambientQueue[index].id !== trackToDelete.id
+      ) {
+        return state;
+      }
+
+      if (index === -1) {
+        const updatedQueue = ambientQueue.filter(
+          (track) => track.id !== trackToDelete.id
+        );
+        return {
+          ...state,
+          ambientQueue: updatedQueue,
+        };
+      }
+
+      const updatedAmbientQueue = [...ambientQueue];
+      updatedAmbientQueue.splice(index, 1);
+
       return {
         ...state,
-        ambientQueue: updatedQueue,
+        ambientQueue: updatedAmbientQueue,
       };
     }
     case "ADD_LISTEN_TO_TOP_OF_QUEUE": {
       const trackToAdd = listenOrJSPFTrackToQueueItem(action.data);
-      const { queue } = state;
-      const currentListenIndex = queue.findIndex(isCurrentlyPlaying);
+      const { queue, currentListenIndex } = state;
       const insertionIndex =
         currentListenIndex === -1 ? 0 : currentListenIndex + 1;
 
@@ -293,6 +344,7 @@ export function BrainzPlayerProvider({
   });
 
   const memoizedValue = React.useMemo(() => value, [value]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedDispatch = React.useMemo(() => dispatch, []);
 
   return (
