@@ -567,16 +567,12 @@ export default function BrainzPlayer() {
 
     let nextListenIndex: number;
     if (queueRepeatMode === QueueRepeatModes.one) {
-      nextListenIndex = currentPlayingListenIndex;
-    } else if (queueRepeatMode === QueueRepeatModes.off) {
-      if (invert === true) {
-        nextListenIndex = currentPlayingListenIndex - 1;
-      } else {
-        nextListenIndex = currentPlayingListenIndex + 1;
-      }
+      nextListenIndex =
+        currentPlayingListenIndex + (currentPlayingListenIndex < 0 ? 1 : 0);
     } else {
-      nextListenIndex = currentPlayingListenIndex + (invert ? -1 : 1);
+      nextListenIndex = currentPlayingListenIndex + (invert === true ? -1 : 1);
     }
+
     if (nextListenIndex < 0) {
       nextListenIndex = currentQueue.length - 1;
     }
@@ -610,10 +606,9 @@ export default function BrainzPlayer() {
         );
         return;
       }
-    } else {
-      nextListenIndex = 0;
     }
 
+    nextListenIndex = 0;
     const nextListen = currentQueue[nextListenIndex];
     if (!nextListen) {
       handleWarning(

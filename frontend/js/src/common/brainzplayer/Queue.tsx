@@ -80,11 +80,8 @@ function Queue(props: BrainzPlayerQueueProps) {
   };
 
   React.useEffect(() => {
-    if (currentListen && queue.length > 0) {
-      if (
-        currentListenIndex === -1 ||
-        currentListenIndex === queue.length - 1
-      ) {
+    if (currentListen && currentListenIndex >= 0 && queue.length > 0) {
+      if (currentListenIndex === queue.length - 1) {
         setQueueNextUp([]);
       } else {
         const nextUp = queue.slice(currentListenIndex + 1);
