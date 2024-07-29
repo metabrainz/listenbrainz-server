@@ -852,6 +852,25 @@ export default function BrainzPlayer() {
     );
   };
 
+  const playAmbientQueue = (): void => {
+    // 1. Clear the items in the queue after the current playing track
+    const currentPlayingListenIndex = currentListenIndexRef.current;
+    dispatch(
+      {
+        type: "CLEAR_QUEUE_AFTER_CURRENT",
+      },
+      async () => {
+        while (queueRef.current.length !== currentPlayingListenIndex + 1) {
+          // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        // 2. Play the first item in the ambient queue
+        playNextTrack();
+      }
+    );
+  };
+
   // eslint-disable-next-line react/sort-comp
   const throttledTrackInfoChange = _throttle(trackInfoChange, 2000, {
     leading: false,
@@ -893,6 +912,9 @@ export default function BrainzPlayer() {
         break;
       case "force-play":
         togglePlay();
+        break;
+      case "play-ambient-queue":
+        playAmbientQueue();
         break;
       default:
       // do nothing

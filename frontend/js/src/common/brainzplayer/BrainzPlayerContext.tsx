@@ -73,6 +73,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "SET_PLAYBACK_TIMER"
     | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
+    | "CLEAR_QUEUE_AFTER_CURRENT"
     | "MOVE_AMBIENT_QUEUE_ITEM"
     | "REMOVE_TRACK_FROM_QUEUE"
     | "REMOVE_TRACK_FROM_AMBIENT_QUEUE"
@@ -281,6 +282,14 @@ function valueReducer(
       return {
         ...state,
         ambientQueue: [...ambientQueue, trackToAdd],
+      };
+    }
+    case "CLEAR_QUEUE_AFTER_CURRENT": {
+      const { currentListenIndex, queue } = state;
+      const updatedQueue = queue.slice(0, currentListenIndex + 1);
+      return {
+        ...state,
+        queue: updatedQueue,
       };
     }
     default: {

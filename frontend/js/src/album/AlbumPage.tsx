@@ -343,8 +343,7 @@ export default function AlbumPage(): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
-                        payload: listensFromAlbumsRecordingsFlattened,
+                        brainzplayer_event: "play-ambient-queue",
                       },
                       window.location.origin
                     );
