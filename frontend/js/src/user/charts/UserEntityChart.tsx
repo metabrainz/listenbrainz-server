@@ -168,8 +168,6 @@ export default function UserEntityChart() {
     fetchData();
   }, [APIService, currPage, entity, range, user, loaderData, navigate]);
 
-  const listenContainer = React.useRef<HTMLDivElement>(null);
-
   const listenableItems: BaseListenFormat[] =
     data?.map(userChartEntityToListen) ?? [];
 
@@ -496,7 +494,7 @@ export default function UserEntityChart() {
               </div>
 
               {(entity === "artist" || entity === "recording") && (
-                <div ref={listenContainer} className="top-entity-listencards">
+                <div className="top-entity-listencards">
                   {data?.slice().map((datum, index) => {
                     const listen = listenableItems[index];
                     const listenDetails = getChartEntityDetails(datum);
@@ -527,10 +525,7 @@ export default function UserEntityChart() {
                     <sup>*</sup>The listen count denotes the number of times you
                     have listened to a recording from the release group.
                   </p>
-                  <div
-                    ref={listenContainer}
-                    className="release-cards-grid top-entity-grid"
-                  >
+                  <div className="release-cards-grid top-entity-grid">
                     {data?.slice().map((datum, index) => {
                       return (
                         <ReleaseCard
