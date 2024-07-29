@@ -92,11 +92,15 @@
 }
 
 .top-entity-listencards {
-  display: grid;
-  grid-auto-flow: row;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  .listen-card .main-content .right-section {
-    flex: 0;
+  display: flex;
+  flex-wrap: wrap;
+  .listen-card {
+    flex: 1;
+    flex-basis: 360px;
+    max-width: 100%;
+    .main-content .right-section {
+      flex: 0;
+    }
   }
 }
 .release-cards-grid.top-entity-grid {
