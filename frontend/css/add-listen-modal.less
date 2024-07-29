@@ -160,6 +160,7 @@
   .add-album-track {
     display: flex;
     gap: 1em;
+    position: relative;
     .track-number {
       align-self: end;
     }
@@ -175,10 +176,14 @@
     grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
   }
   .default-duration {
+    &.heading {
+      right: 1.7em;
+      z-index: 1;
+    }
     margin: 0;
     position: absolute;
     width: initial;
-    right: 1.4em;
+    right: 0;
     background-color: oldlace;
   }
   // Chevron indicator

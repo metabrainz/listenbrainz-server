@@ -28,7 +28,7 @@ const totallyInnocentListen: Listen = {
 function AIBrainzHeader() {
   const dispatch = useBrainzPlayerDispatch();
   React.useEffect(() => {
-    dispatch({ type: "SET_CURRENT_LISTEN", data: [totallyInnocentListen] });
+    dispatch({ type: "SET_AMBIENT_QUEUE", data: [totallyInnocentListen] });
   }, [totallyInnocentListen]);
   return (
     <Helmet>

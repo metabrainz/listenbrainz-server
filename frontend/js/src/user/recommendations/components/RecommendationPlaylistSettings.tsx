@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCode,
+  faCog,
   faPlayCircle,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
@@ -13,6 +14,7 @@ import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import ListenPayloadModal from "../../../common/listens/ListenPayloadModal";
+import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
 
 export type RecommendationPlaylistSettingsProps = {
   playlist: JSPFPlaylist;
@@ -102,6 +104,19 @@ export default function RecommendationPlaylistSettings({
           >
             <FontAwesomeIcon icon={faCode} title="Inspect playlist" />
           </button>
+          <span className="dropdown">
+            <button
+              className="dropdown-toggle btn btn-icon btn-info"
+              type="button"
+              id="playlistOptionsDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="true"
+            >
+              <FontAwesomeIcon icon={faCog} title="More options" />
+            </button>
+            <PlaylistMenu playlist={playlist} />
+          </span>
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;

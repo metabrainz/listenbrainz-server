@@ -61,15 +61,23 @@ const MAX_AMBIENT_QUEUE_ITEMS = 15;
 
 function Queue(props: BrainzPlayerQueueProps) {
   const dispatch = useBrainzPlayerDispatch();
-  const { queue, ambientQueue, currentListen } = useBrainzPlayerContext();
+  const {
+    queue,
+    ambientQueue,
+    currentListen,
+    currentListenIndex = -1,
+  } = useBrainzPlayerContext();
 
   const { clearQueue, onHide } = props;
 
   const removeTrackFromQueue = React.useCallback(
-    (track: BrainzPlayerQueueItem) => {
+    (track: BrainzPlayerQueueItem, index: number) => {
       dispatch({
         type: "REMOVE_TRACK_FROM_QUEUE",
-        data: track,
+        data: {
+          track,
+          index,
+        },
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,10 +85,13 @@ function Queue(props: BrainzPlayerQueueProps) {
   );
 
   const removeTrackFromAmbientQueue = React.useCallback(
-    (track: BrainzPlayerQueueItem) => {
+    (track: BrainzPlayerQueueItem, index: number) => {
       dispatch({
         type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-        data: track,
+        data: {
+          track,
+          index,
+        },
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,15 +121,8 @@ function Queue(props: BrainzPlayerQueueProps) {
   };
 
   React.useEffect(() => {
-    if (currentListen && queue.length > 0) {
-      const currentListenIndex = queue.findIndex(
-        (track) => track.id === currentListen.id
-      );
-
-      if (
-        currentListenIndex === -1 ||
-        currentListenIndex === queue.length - 1
-      ) {
+    if (currentListen && currentListenIndex >= 0 && queue.length > 0) {
+      if (currentListenIndex === queue.length - 1) {
         setQueueNextUp([]);
       } else {
         const nextUp = queue.slice(currentListenIndex + 1);
@@ -128,7 +132,7 @@ function Queue(props: BrainzPlayerQueueProps) {
       // If there is no current listen track, show all tracks in the queue
       setQueueNextUp([...queue]);
     }
-  }, [queue, currentListen]);
+  }, [queue, currentListen, currentListenIndex]);
 
   return (
     <>
@@ -182,13 +186,15 @@ function Queue(props: BrainzPlayerQueueProps) {
               reorderQueue(newOrder);
             }}
           >
-            {queueNextUp.map((queueItem: BrainzPlayerQueueItem) => {
+            {queueNextUp.map((queueItem: BrainzPlayerQueueItem, index: number) => {
               if (!queueItem) return null;
               return (
                 <DragItem
                   key={queueItem.id}
                   queueItem={queueItem}
-                  removeTrackFromQueue={removeTrackFromQueue}
+                  removeTrackFromQueue={(
+                    trackToDelete: BrainzPlayerQueueItem
+                  ) => removeTrackFromQueue(trackToDelete, index)}
                 />
               );
             })}
@@ -210,9 +216,11 @@ function Queue(props: BrainzPlayerQueueProps) {
                 if (!queueItem) return null;
                 return (
                   <QueueItemCard
-                    key={`${queueItem?.id}-${index.toString()}`}
+                    key={queueItem?.id}
                     track={queueItem}
-                    removeTrackFromQueue={removeTrackFromAmbientQueue}
+                    removeTrackFromQueue={(
+                      trackToDelete: BrainzPlayerQueueItem
+                    ) => removeTrackFromAmbientQueue(trackToDelete, index)}
                     hideDragHandle
                   />
                 );

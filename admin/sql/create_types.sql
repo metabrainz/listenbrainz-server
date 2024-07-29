@@ -8,7 +8,7 @@ CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike',
 
 CREATE TYPE user_timeline_event_type_enum AS ENUM('recording_recommendation', 'notification', 'critiquebrainz_review', 'personal_recording_recommendation');
 
-CREATE TYPE hide_user_timeline_event_type_enum AS ENUM('recording_recommendation', 'recording_pin');
+CREATE TYPE hide_user_timeline_event_type_enum AS ENUM('recording_recommendation', 'personal_recording_recommendation', 'recording_pin');
 
 CREATE TYPE external_service_oauth_type AS ENUM ('spotify', 'youtube', 'critiquebrainz', 'lastfm', 'librefm', 'musicbrainz', 'soundcloud', 'apple', 'musicbrainz-prod', 'musicbrainz-beta', 'musicbrainz-test');
 

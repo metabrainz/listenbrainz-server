@@ -28,7 +28,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.exceptions import DatabaseException
 
 from listenbrainz.db.model.user_timeline_event import UserTimelineEventType, RecordingRecommendationMetadata, \
-    NotificationMetadata
+    NotificationMetadata, WritePersonalRecordingRecommendationMetadata
 
 
 class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
@@ -336,6 +336,18 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             )
         )
 
+        # creating a personal recommendation event
+        event_personal_rec = db_user_timeline_event.create_personal_recommendation_event(
+            self.db_conn,
+            user_id=new_user['id'],
+            metadata=WritePersonalRecordingRecommendationMetadata(
+                blurb_content="I have seen the FNORDs",
+                recording_mbid=str(uuid.uuid4()),
+                recording_msid=str(uuid.uuid4()),
+                users=list(self.user['musicbrainz_id'])
+            )
+        )
+
         # hiding event
         hidden_event = db_user_timeline_event.hide_user_timeline_event(
             self.db_conn,
@@ -344,14 +356,26 @@ class UserTimelineEventDatabaseTestCase(DatabaseTestCase):
             event_id=event_rec.id
         )
 
+        # hiding personal rec event
+        hidden_personal_event = db_user_timeline_event.hide_user_timeline_event(
+            self.db_conn,
+            user_id=self.user['id'],
+            event_type=UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
+            event_id=event_personal_rec.id
+        )
+
         hidden_events = db_user_timeline_event.get_hidden_timeline_events(
             self.db_conn,
             user_id=self.user['id'],
-            count=1,
+            count=2,
         )
 
-        self.assertEqual(1, len(hidden_events))
-        self.assertEqual(event_rec.id, hidden_events[0].event_id)
+        self.assertEqual(2, len(hidden_events))
+        # events are in reverse chronological order
+        self.assertEqual(hidden_events[1].event_type.value, 'recording_recommendation')
+        self.assertEqual(event_rec.id, hidden_events[1].event_id)
+        self.assertEqual(hidden_events[0].event_type.value, 'personal_recording_recommendation')
+        self.assertEqual(event_personal_rec.id, hidden_events[0].event_id)
 
     def test_hide_feed_events_honors_count_parameter(self):
         # creating a user

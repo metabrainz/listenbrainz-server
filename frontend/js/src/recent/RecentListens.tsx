@@ -97,7 +97,7 @@ export function RecentListensWrapper() {
 
   React.useEffect(() => {
     dispatch({
-      type: "SET_CURRENT_LISTEN",
+      type: "SET_AMBIENT_QUEUE",
       data: listens,
     });
   }, [listens]);

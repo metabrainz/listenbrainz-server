@@ -190,7 +190,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                  , rgpt.name AS type
                                  , jsonb_agg(jsonb_build_object(
                                         'artist_mbid', a2.gid::TEXT,
-                                        'artist_credit_name', a2.name,
+                                        'artist_credit_name', acn2.name,
                                         'join_phrase', acn2.join_phrase
                                    ) ORDER BY acn2.position) AS release_group_artists
                               FROM musicbrainz.artist a

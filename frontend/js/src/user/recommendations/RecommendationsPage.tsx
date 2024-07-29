@@ -19,13 +19,11 @@ import {
   getPlaylistExtension,
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
-  JSPFTrackToListen,
 } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
-import { listenOrJSPFTrackToQueueItem } from "../../common/brainzplayer/utils";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -109,7 +107,7 @@ export default function RecommendationsPage() {
 
   // Functions
   const fetchPlaylist = React.useCallback(
-    async (playlistId: string) => {
+    async (playlistId: string, reloadOnError = false) => {
       try {
         const response = await APIService.getPlaylist(
           playlistId,
@@ -124,6 +122,9 @@ export default function RecommendationsPage() {
         setSelectedPlaylist(JSPFObject.playlist);
       } catch (error) {
         toast.error(error.message);
+        if (reloadOnError) {
+          window.location.reload();
+        }
       }
     },
     [APIService, currentUser?.auth_token]
@@ -149,7 +150,7 @@ export default function RecommendationsPage() {
       toast.error("No playlist to select");
       return;
     }
-    await fetchPlaylist(playlistId);
+    await fetchPlaylist(playlistId, true);
   };
 
   const copyPlaylist: React.ReactEventHandler<HTMLElement> = async (event) => {
@@ -364,10 +365,9 @@ export default function RecommendationsPage() {
 
   React.useEffect(() => {
     if (selectedPlaylist) {
-      const listensFromJSPFTracks =
-        selectedPlaylist?.track.map(listenOrJSPFTrackToQueueItem) ?? [];
+      const listensFromJSPFTracks = selectedPlaylist?.track ?? [];
       dispatch({
-        type: "SET_CURRENT_LISTEN",
+        type: "SET_AMBIENT_QUEUE",
         data: listensFromJSPFTracks,
       });
     }

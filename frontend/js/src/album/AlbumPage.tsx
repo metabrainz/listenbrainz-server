@@ -196,7 +196,7 @@ export default function AlbumPage(): JSX.Element {
 
   React.useEffect(() => {
     dispatch({
-      type: "SET_CURRENT_LISTEN",
+      type: "SET_AMBIENT_QUEUE",
       data: listensFromAlbumsRecordingsFlattened,
     });
   }, [listensFromAlbumsRecordingsFlattened]);

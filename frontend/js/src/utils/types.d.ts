@@ -33,7 +33,7 @@ interface AdditionalInfo {
   origin_url?: string | null;
   tags?: Array<string> | null;
   track_mbid?: string | null;
-  tracknumber?: number | null;
+  tracknumber?: string | number | null;
   work_mbids?: Array<string> | null;
 }
 
@@ -64,6 +64,7 @@ declare type BaseListenFormat = {
 declare type Listen = BaseListenFormat & {
   listened_at_iso?: string | null;
   playing_now?: boolean | null;
+  inserted_at?: number;
 };
 
 declare type Recommendation = Listen & {

@@ -16,6 +16,7 @@ import {
   initialValue as initialBrainzPlayerContextValue,
 } from "../../../src/common/brainzplayer/BrainzPlayerContext";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
+import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -63,23 +64,21 @@ const useBrainzPlayerContext = jest.fn();
 
 // Give yourself a two minute break and go listen to this gem
 // https://musicbrainz.org/recording/7fcaf5b3-e682-4ce6-be61-d3bce775a43f
-const listen: BrainzPlayerQueueItem = {
-  id: "listen-1",
+const listen = listenOrJSPFTrackToQueueItem({
   listened_at: 0,
   track_metadata: {
     artist_name: "Moondog",
     track_name: "Bird's Lament",
   },
-};
+});
 // On the other hand, do yourself a favor and *do not* go listen to this one
-const listen2: BrainzPlayerQueueItem = {
-  id: "listen-2",
+const listen2 = listenOrJSPFTrackToQueueItem({
   listened_at: 42,
   track_metadata: {
     artist_name: "Rick Astley",
     track_name: "Never Gonna Give You Up",
   },
-};
+});
 
 function BrainzPlayerWithWrapper(brainzPlayerProps: {
   additionalContextValues?: Partial<BrainzPlayerContextT>;
@@ -195,6 +194,7 @@ describe("BrainzPlayer", () => {
       <BrainzPlayerWithWrapper
         additionalContextValues={{
           queue: [listen, listen2],
+          currentListenIndex: -1,
         }}
       />,
       {
@@ -203,9 +203,6 @@ describe("BrainzPlayer", () => {
       },
       {}
     );
-
-    const playButton = screen.getByTestId("bp-play-button");
-    await user.click(playButton);
 
     const queueList = screen.getByTestId("queue");
     expect(queueList).toBeInTheDocument();
@@ -219,8 +216,8 @@ describe("BrainzPlayer", () => {
     renderWithProviders(
       <BrainzPlayerWithWrapper
         additionalContextValues={{
-          currentListen: listen,
           queue: [listen, listen2],
+          currentListenIndex: -1,
         }}
       />,
       {
@@ -232,8 +229,11 @@ describe("BrainzPlayer", () => {
 
     const playButton = screen.getByTestId("bp-play-button");
     await user.click(playButton);
+
+    // Now the queue should have the second listen item
     let queueList = screen.getByTestId("queue");
     expect(queueList).toBeInTheDocument();
+    expect(queueList.innerHTML).toContain("Rick Astley");
 
     // Now click on the next button
     const nextButton = screen.getByTestId("bp-next-button");
@@ -248,8 +248,8 @@ describe("BrainzPlayer", () => {
     renderWithProviders(
       <BrainzPlayerWithWrapper
         additionalContextValues={{
-          currentListen: listen2,
           queue: [listen, listen2],
+          currentListenIndex: -1,
         }}
       />,
       {
@@ -262,18 +262,17 @@ describe("BrainzPlayer", () => {
     const playButton = screen.getByTestId("bp-play-button");
     await user.click(playButton);
 
-    // The queue should have be empty
     let queueList = screen.getByTestId("queue");
-    expect(queueList).toBeInTheDocument();
-    expect(queueList.innerHTML).toContain("Nothing in this queue yet");
+    expect(queueList.innerHTML).toContain("Never Gonna Give You Up");
 
     // Now click on the next button
     const previousButton = screen.getByTestId("bp-previous-button");
     await user.click(previousButton);
 
-    // Now check if the queue should have the first item
+    // Now check if the queue should be empty as the previous track wraped around to the end
     queueList = screen.getByTestId("queue");
-    expect(queueList.innerHTML).toContain("Never Gonna Give You Up");
+    expect(queueList).toBeInTheDocument();
+    expect(queueList.innerHTML).toContain("Nothing in this queue yet");
   });
 
   test("localstorage brainzplayer stop time should be updated", async () => {
