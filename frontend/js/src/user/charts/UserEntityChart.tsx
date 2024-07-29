@@ -187,89 +187,83 @@ export default function UserEntityChart() {
       </Helmet>
       <div style={{ marginTop: "1em", minHeight: 500 }}>
         <Loader isLoading={loading}>
-          <div className="row">
-            <div className="col-xs-12">
-              <Pill active={terminology === "artist"} type="secondary">
-                <Link
-                  to={`../top-artists/${attributesForLinks}`}
-                  relative="route"
-                  className="user-charts-pill"
-                >
-                  Artists
-                </Link>
-              </Pill>
-              <Pill active={terminology === "album"} type="secondary">
-                <Link
-                  to={`../top-albums/${attributesForLinks}`}
-                  relative="route"
-                  className="user-charts-pill"
-                >
-                  Albums
-                </Link>
-              </Pill>
-              <Pill active={terminology === "track"} type="secondary">
-                <Link
-                  to={`../top-tracks/${attributesForLinks}`}
-                  relative="route"
-                  className="user-charts-pill"
-                >
-                  Tracks
-                </Link>
-              </Pill>
-            </div>
+          <div>
+            <Pill active={terminology === "artist"} type="secondary">
+              <Link
+                to={`../top-artists/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Artists
+              </Link>
+            </Pill>
+            <Pill active={terminology === "album"} type="secondary">
+              <Link
+                to={`../top-albums/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Albums
+              </Link>
+            </Pill>
+            <Pill active={terminology === "track"} type="secondary">
+              <Link
+                to={`../top-tracks/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Tracks
+              </Link>
+            </Pill>
           </div>
-          <div className="row">
-            <div className="col-xs-12">
-              <h3>
-                Top{" "}
-                <span style={{ textTransform: "capitalize" }}>
-                  {terminology ? `${terminology}s` : ""}
-                </span>{" "}
-                of {range !== "all_time" ? "the" : ""}
-                <span className="dropdown" style={{ fontSize: 22 }}>
-                  <button
-                    className="dropdown-toggle btn-transparent capitalize-bold"
-                    data-toggle="dropdown"
-                    type="button"
-                  >
-                    {ranges.get(range)}
-                    <span className="caret" />
-                  </button>
-                  <ul className="dropdown-menu" role="menu">
-                    {Array.from(ranges, ([stat_type, stat_name]) => {
-                      return (
-                        <li key={`${stat_type}-${stat_name}`}>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=1&range=${stat_type}`,
-                            }}
-                            role="button"
-                          >
-                            {stat_name}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </span>
-                {range !== "all_time" &&
-                  !hasError &&
-                  `(${startDate?.toLocaleString("en-us", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })} - ${endDate?.toLocaleString("en-us", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })})`}
-              </h3>
-            </div>
-          </div>
+          <h3>
+            Top{" "}
+            <span style={{ textTransform: "capitalize" }}>
+              {terminology ? `${terminology}s` : ""}
+            </span>{" "}
+            of {range !== "all_time" ? "the" : ""}
+            <span className="dropdown" style={{ fontSize: 22 }}>
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                {ranges.get(range)}
+                <span className="caret" />
+              </button>
+              <ul className="dropdown-menu" role="menu">
+                {Array.from(ranges, ([stat_type, stat_name]) => {
+                  return (
+                    <li key={`${stat_type}-${stat_name}`}>
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=1&range=${stat_type}`,
+                        }}
+                        role="button"
+                      >
+                        {stat_name}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </span>
+            {range !== "all_time" &&
+              !hasError &&
+              `(${startDate?.toLocaleString("en-us", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })} - ${endDate?.toLocaleString("en-us", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })})`}
+          </h3>
           {hasError && (
-            <div className="row mt-15 mb-15">
-              <div className="col-xs-12 text-center">
+            <div className="mt-15 mb-15">
+              <div className="text-center">
                 <span style={{ fontSize: 24 }}>
                   <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
                   {errorMessage}
@@ -335,160 +329,156 @@ export default function UserEntityChart() {
                   // labelPosition="start" // Upcoming nivo release, see https://github.com/plouc/nivo/pull/2585
                 />
               </div>
-              <div className="row">
-                <div className="col-xs-12">
-                  <div className="text-center">
-                    <ul className="pagination">
-                      <li
-                        className={`previous ${
-                          !(prevPage > 0) ? "disabled" : ""
-                        }`}
-                        title="First page"
+              <div className="text-center">
+                <ul className="pagination">
+                  <li
+                    className={`previous ${
+                      !(prevPage > 0) ? "disabled" : ""
+                    }`}
+                    title="First page"
+                  >
+                    <Link
+                      to={{
+                        pathname: window.location.pathname,
+                        search: `?page=1&range=${range}`,
+                      }}
+                      role="button"
+                    >
+                      <FontAwesomeIcon
+                        icon={faAngleDoubleLeft}
+                        size="sm"
+                        style={{ verticalAlign: "middle" }}
+                      />
+                    </Link>
+                  </li>
+                  <li
+                    className={`previous ${
+                      !(prevPage > 0) ? "disabled" : ""
+                    }`}
+                    title="Previous page"
+                  >
+                    <Link
+                      to={{
+                        pathname: window.location.pathname,
+                        search: `?page=${prevPage}&range=${range}`,
+                      }}
+                      role="button"
+                    >
+                      <FontAwesomeIcon
+                        icon={faAngleLeft}
+                        size="sm"
+                        style={{ verticalAlign: "middle" }}
+                      />{" "}
+                      Previous
+                    </Link>
+                  </li>
+                  {currPage > 2 && (
+                    <li>
+                      <span>...</span>
+                    </li>
+                  )}
+                  {currPage >= 2 && currPage - 2 < totalPages && (
+                    <li>
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${currPage - 2}&range=${range}`,
+                        }}
+                        role="button"
                       >
-                        <Link
-                          to={{
-                            pathname: window.location.pathname,
-                            search: `?page=1&range=${range}`,
-                          }}
-                          role="button"
-                        >
-                          <FontAwesomeIcon
-                            icon={faAngleDoubleLeft}
-                            size="sm"
-                            style={{ verticalAlign: "middle" }}
-                          />
-                        </Link>
-                      </li>
-                      <li
-                        className={`previous ${
-                          !(prevPage > 0) ? "disabled" : ""
-                        }`}
-                        title="Previous page"
+                        {currPage - 2}
+                      </Link>
+                    </li>
+                  )}
+                  {currPage > 2 && currPage - 1 < totalPages && (
+                    <li>
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${currPage - 1}&range=${range}`,
+                        }}
+                        role="button"
                       >
-                        <Link
-                          to={{
-                            pathname: window.location.pathname,
-                            search: `?page=${prevPage}&range=${range}`,
-                          }}
-                          role="button"
-                        >
-                          <FontAwesomeIcon
-                            icon={faAngleLeft}
-                            size="sm"
-                            style={{ verticalAlign: "middle" }}
-                          />{" "}
-                          Previous
-                        </Link>
-                      </li>
-                      {currPage > 2 && (
-                        <li>
-                          <span>...</span>
-                        </li>
-                      )}
-                      {currPage >= 2 && currPage - 2 < totalPages && (
-                        <li>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=${currPage - 2}&range=${range}`,
-                            }}
-                            role="button"
-                          >
-                            {currPage - 2}
-                          </Link>
-                        </li>
-                      )}
-                      {currPage > 2 && currPage - 1 < totalPages && (
-                        <li>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=${currPage - 1}&range=${range}`,
-                            }}
-                            role="button"
-                          >
-                            {currPage - 1}
-                          </Link>
-                        </li>
-                      )}
-                      <li title="Current page" className="active">
-                        <span>page {currPage}</span>
-                      </li>
-                      {currPage + 1 <= totalPages && (
-                        <li>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=${currPage + 1}&range=${range}`,
-                            }}
-                            role="button"
-                          >
-                            {currPage + 1}
-                          </Link>
-                        </li>
-                      )}
-                      {currPage + 2 <= totalPages && (
-                        <li>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=${currPage + 2}&range=${range}`,
-                            }}
-                            role="button"
-                          >
-                            {currPage + 2}
-                          </Link>
-                        </li>
-                      )}
-                      {currPage + 2 < totalPages && (
-                        <li>
-                          <span>...</span>
-                        </li>
-                      )}
-                      <li
-                        className={`next ${
-                          !(nextPage <= totalPages) ? "disabled" : ""
-                        }`}
-                        title="Next page"
+                        {currPage - 1}
+                      </Link>
+                    </li>
+                  )}
+                  <li title="Current page" className="active">
+                    <span>page {currPage}</span>
+                  </li>
+                  {currPage + 1 <= totalPages && (
+                    <li>
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${currPage + 1}&range=${range}`,
+                        }}
+                        role="button"
                       >
-                        <Link
-                          to={{
-                            pathname: window.location.pathname,
-                            search: `?page=${nextPage}&range=${range}`,
-                          }}
-                          role="button"
-                        >
-                          Next{" "}
-                          <FontAwesomeIcon
-                            icon={faAngleRight}
-                            size="sm"
-                            style={{ verticalAlign: "middle" }}
-                          />
-                        </Link>
-                      </li>
-                      <li
-                        className={`next ${
-                          !(nextPage <= totalPages) ? "disabled" : ""
-                        }`}
-                        title="Last page"
+                        {currPage + 1}
+                      </Link>
+                    </li>
+                  )}
+                  {currPage + 2 <= totalPages && (
+                    <li>
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${currPage + 2}&range=${range}`,
+                        }}
+                        role="button"
                       >
-                        <Link
-                          to={{
-                            pathname: window.location.pathname,
-                            search: `?page=${totalPages}&range=${range}`,
-                          }}
-                          role="button"
-                        >
-                          <FontAwesomeIcon
-                            icon={faAngleDoubleRight}
-                            size="sm"
-                            style={{ verticalAlign: "middle" }}
-                          />
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+                        {currPage + 2}
+                      </Link>
+                    </li>
+                  )}
+                  {currPage + 2 < totalPages && (
+                    <li>
+                      <span>...</span>
+                    </li>
+                  )}
+                  <li
+                    className={`next ${
+                      !(nextPage <= totalPages) ? "disabled" : ""
+                    }`}
+                    title="Next page"
+                  >
+                    <Link
+                      to={{
+                        pathname: window.location.pathname,
+                        search: `?page=${nextPage}&range=${range}`,
+                      }}
+                      role="button"
+                    >
+                      Next{" "}
+                      <FontAwesomeIcon
+                        icon={faAngleRight}
+                        size="sm"
+                        style={{ verticalAlign: "middle" }}
+                      />
+                    </Link>
+                  </li>
+                  <li
+                    className={`next ${
+                      !(nextPage <= totalPages) ? "disabled" : ""
+                    }`}
+                    title="Last page"
+                  >
+                    <Link
+                      to={{
+                        pathname: window.location.pathname,
+                        search: `?page=${totalPages}&range=${range}`,
+                      }}
+                      role="button"
+                    >
+                      <FontAwesomeIcon
+                        icon={faAngleDoubleRight}
+                        size="sm"
+                        style={{ verticalAlign: "middle" }}
+                      />
+                    </Link>
+                  </li>
+                </ul>
               </div>
 
               {(entity === "artist" || entity === "recording") && (
