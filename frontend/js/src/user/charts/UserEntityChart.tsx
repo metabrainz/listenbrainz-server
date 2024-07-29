@@ -279,21 +279,19 @@ export default function UserEntityChart() {
           )}
           {!hasError && (
             <>
-              <div className="row">
-                <div className="col-xs-12">
-                  <h4>
-                    <span style={{ textTransform: "capitalize" }}>
-                      {terminology}
+              {entityCount && (
+                <h4>
+                  <span style={{ textTransform: "capitalize" }}>
+                    {terminology}
+                  </span>
+                  &nbsp;count - <b>{entityCount} total</b>
+                  {entityCount > 1000 && (
+                    <span className="small">
+                      &nbsp;(showing the first 1000)
                     </span>
-                    &nbsp;count - <b>{entityCount} total</b>
-                    {entityCount > 1000 && (
-                      <span className="small">
-                        &nbsp;(showing the first 1000)
-                      </span>
-                    )}
-                  </h4>
-                </div>
-              </div>
+                  )}
+                </h4>
+              )}
               <div
                 className="row bar-chart"
                 style={{
