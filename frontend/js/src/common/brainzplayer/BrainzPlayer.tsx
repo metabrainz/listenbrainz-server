@@ -23,10 +23,8 @@ import {
   hasNotificationPermission,
   overwriteMediaSession,
   updateMediaSession,
-  updateWindowTitle,
 } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getArtistName, getTrackName } from "../../utils/utils";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
