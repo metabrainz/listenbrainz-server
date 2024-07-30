@@ -9,6 +9,7 @@ import listenbrainz_spark.stats.sitewide.listening_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
+import listenbrainz_spark.stats.user.most_listened_year
 import listenbrainz_spark.stats.listener.entity
 import listenbrainz_spark.year_in_music.new_releases_of_top_artists
 import listenbrainz_spark.year_in_music.similar_users
@@ -41,6 +42,7 @@ functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
+    'stats.user.most_listened_year': listenbrainz_spark.stats.user.most_listened_year.get_most_listened_year,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.sitewide.listening_activity': listenbrainz_spark.stats.sitewide.listening_activity.get_listening_activity,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,

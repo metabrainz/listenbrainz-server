@@ -1,6 +1,7 @@
 import os
 import sys
 from datetime import date
+from typing import Optional
 
 import click
 import orjson
@@ -116,6 +117,30 @@ def request_user_stats(type_, range_, entity, database):
     params["database"] = database
 
     send_request_to_spark_cluster(f"stats.user.{type_}", **params)
+
+
+@cli.command(name="request_most_listened_year")
+@click.option("--year", type=int, help="Year for which to calculate the stat",
+                default=date.today().year)
+@click.option("--month", type=click.Choice([str(i) for i in range(1, 13)]), help="The month for which to calculate the stat")
+@click.option("--day", type=click.Choice([str(i) for i in range(1, 32)]), help="The day for which to calculate the stat")
+def request_most_listened_year(year: int, month: Optional[str], day: Optional[str]):
+    """ Send request to calculate most listened year to the spark cluster
+    """
+    # Check if the parameters are valid
+    if month and not year:
+        print("Year must be provided if month is provided")
+        sys.exit(-1)
+    if day and not (month and year):
+        print("Year and month must be provided if day is provided")
+        sys.exit(-1)
+    
+    if day:
+        day = int(day)
+    if month:
+        month = int(month)
+
+    send_request_to_spark_cluster("stats.user.most_listened_year", year=year, month=month, day=day)
 
 
 @cli.command(name="request_sitewide_stats")

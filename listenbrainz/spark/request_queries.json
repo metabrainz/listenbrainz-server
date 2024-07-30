@@ -24,6 +24,11 @@
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
     "params": ["stats_range", "database"]
   },
+  "stats.user.most_listened_year": {
+    "name": "stats.user.most_listened_year",
+    "description": "Calculate the year for in which highest number of albums listened by the user were released",
+    "params": ["year", "month", "day"]
+  },
   "stats.sitewide.entity": {
     "name": "stats.sitewide.entity",
     "description": "Calculate top entites listened to on the website in the requested stats_range",
