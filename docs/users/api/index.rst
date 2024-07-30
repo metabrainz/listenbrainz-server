@@ -82,6 +82,14 @@ Reference
    misc
 
 
+OpenAPI specification
+-------------
+
+Contributor `rain0r <https://github.com/rain0r>`_ went through the trouble of making
+an OpenAPI 3 specification for the ListenBrainz API. Many thanks! Check it out here:
+`<https://github.com/rain0r/listenbrainz-openapi>`_
+
+
 Rate limiting
 -------------
 

@@ -35,10 +35,10 @@ export function getListenFromRecording(
           ?.map((artist) => `${artist.name}${artist.joinphrase}`)
           .join("") ?? "",
       track_name: recording.title,
-      release_name: releaseOrCanonical.title,
+      release_name: releaseOrCanonical?.title,
       additional_info: {
-        release_mbid: releaseOrCanonical.id,
-        release_group_mbid: releaseOrCanonical["release-group"].id,
+        release_mbid: releaseOrCanonical?.id,
+        release_group_mbid: releaseOrCanonical?.["release-group"]?.id,
         recording_mbid: recording.id,
         submission_client: "listenbrainz web",
         artist_mbids: recording["artist-credit"].map((ac) => ac.artist.id),
