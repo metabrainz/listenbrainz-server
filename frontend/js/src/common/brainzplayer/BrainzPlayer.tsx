@@ -683,7 +683,12 @@ export default function BrainzPlayer() {
     } catch (error) {
       handleError(error, "Could not play");
     }
-  }, [currentDataSourceIndex, dataSourceRefs, invalidateDataSource]);
+  }, [
+    currentDataSourceIndex,
+    dataSourceRefs,
+    playerPaused,
+    invalidateDataSource,
+  ]);
 
   const stopPlayerStateTimer = React.useCallback((): void => {
     debouncedCheckProgressAndSubmitListen.flush();
