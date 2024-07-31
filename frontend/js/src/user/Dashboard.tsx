@@ -446,6 +446,7 @@ export default function Listen() {
       type: "SET_AMBIENT_QUEUE",
       data: allListenables,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListenables]);
 
   const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;

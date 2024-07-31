@@ -77,6 +77,7 @@ export default function MusicNeighborhood() {
       type: "SET_AMBIENT_QUEUE",
       data: currentTracks,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTracks]);
 
   const [artistInfo, setArtistInfo] = React.useState<ArtistInfoType | null>(

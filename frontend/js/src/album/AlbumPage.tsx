@@ -198,6 +198,7 @@ export default function AlbumPage(): JSX.Element {
       type: "SET_AMBIENT_QUEUE",
       data: listensFromAlbumsRecordingsFlattened,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromAlbumsRecordingsFlattened]);
 
   const filteredTags = chain(releaseGroupTags)

@@ -117,6 +117,7 @@ export default function LBRadio() {
       type: "SET_AMBIENT_QUEUE",
       data: jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen),
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jspfPlaylist?.playlist?.track]);
 
   return (

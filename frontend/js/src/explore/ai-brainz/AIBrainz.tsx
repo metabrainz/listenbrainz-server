@@ -29,6 +29,7 @@ function AIBrainzHeader() {
   const dispatch = useBrainzPlayerDispatch();
   React.useEffect(() => {
     dispatch({ type: "SET_AMBIENT_QUEUE", data: [totallyInnocentListen] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totallyInnocentListen]);
   return (
     <Helmet>

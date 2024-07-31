@@ -127,7 +127,8 @@ export default function UserEntityChart() {
       type: "SET_AMBIENT_QUEUE",
       data: listenableItems,
     });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listenableItems]);
 
   const userOrLoggedInUser: string | undefined =
     user?.name ?? currentUser?.name;
