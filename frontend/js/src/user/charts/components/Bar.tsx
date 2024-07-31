@@ -1,94 +1,88 @@
 import * as React from "react";
 import {
   ResponsiveBar,
-  LabelFormatter,
   BarDatum,
   BarTooltipProps,
+  BarSvgProps,
 } from "@nivo/bar";
-import type { AxisTickProps } from "@nivo/axes";
-import { omit } from "lodash";
-import { BasicTooltip } from "@nivo/tooltip";
+import { TooltipWrapper } from "@nivo/tooltip";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
-};
+  isMobileSize?: boolean;
+} & Partial<BarSvgProps<any>>;
 
 export default function Bar(props: BarProps) {
-  const { data, maxValue } = props;
-
-  const renderTickValue = (tick: AxisTickProps<any>): JSX.Element => {
-    const datum: UserEntityDatum = data?.[tick.tickIndex];
-    const { idx } = datum;
-    return (
-      <g transform={`translate(${tick.x - 10}, ${tick.y + 7})`}>
-        <text textAnchor="end">{idx}.</text>
-      </g>
-    );
-  };
-
-  const labelFormatter = (((label: string) => {
-    return (
-      <tspan x={5} textAnchor="start">
-        {label}
-      </tspan>
-    );
-  }) as unknown) as LabelFormatter;
+  const { data, maxValue, isMobileSize, ...barProps } = props;
 
   const customTooltip = (tooltipProps: BarTooltipProps<BarDatum>) => {
-    const { data: datum, value, color } = tooltipProps;
+    const { data: datum, value } = tooltipProps;
     return (
-      <BasicTooltip
-        id={datum.entity}
-        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
-        color={color}
-      />
+      <TooltipWrapper anchor="center" position={[0, 0]}>
+        <div className="graph-tooltip" id={datum.entity.toString()}>
+          <span className="badge badge-info">#{datum.idx}</span> {datum.entity}
+          :&nbsp;
+          <b>
+            {value} {Number(value) === 1 ? "listen" : "listens"}
+          </b>
+          {datum.artist && <div>{datum.artist}</div>}
+        </div>
+      </TooltipWrapper>
     );
   };
 
   const theme = {
     labels: {
       text: {
-        fontSize: "14px",
+        fontSize: "15px",
+        fontFamily: "'Sintony', sans-serif",
       },
     },
   };
-  const typescriptCompliantData: BarDatum[] = data?.map((datum) =>
-    omit(datum, [
-      "entityMBID",
-      "artist",
-      "artistMBID",
-      "release",
-      "releaseMBID",
-      "artists",
-    ])
-  );
+  const numberOfTicks = isMobileSize
+    ? Math.min(5, maxValue)
+    : Math.min(9, maxValue);
+
+  const horizontalAxis = {
+    tickSize: 5,
+    tickValues: numberOfTicks,
+    tickPadding: 5,
+    legend: "Number of listens",
+    legendOffset: 30,
+  };
+
   return (
     <ResponsiveBar
-      data={typescriptCompliantData}
+      data={data}
       maxValue={maxValue}
       layout="horizontal"
       colors={COLOR_LB_ORANGE}
       indexBy="id"
       enableGridY={false}
+      enableGridX
+      gridXValues={numberOfTicks}
       padding={0.1}
-      labelFormat={labelFormatter}
+      label={(x: any) => x.data.entity}
       labelSkipWidth={0}
       tooltip={customTooltip}
       margin={{
-        top: -12,
-        left: 35,
+        bottom: 40,
+        left: 15,
+        right: 15,
       }}
-      axisLeft={{
-        tickSize: 0,
-        tickValues: data?.length,
-        tickPadding: 5,
-        renderTick: renderTickValue,
+      axisBottom={{ ...horizontalAxis, legendPosition: "middle" }}
+      axisTop={{
+        ...horizontalAxis,
+        legendPosition: "middle",
+        legendOffset: -30,
       }}
+      axisLeft={null}
       theme={theme}
       keys={["count"]}
       animate={false}
+      {...barProps}
     />
   );
 }

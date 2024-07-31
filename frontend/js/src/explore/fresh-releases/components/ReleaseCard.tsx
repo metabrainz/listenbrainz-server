@@ -141,9 +141,14 @@ export default function ReleaseCard(props: ReleaseCardProps) {
     }
   }, [releaseMBID, releaseGroupMBID, caaID, caaReleaseMBID, setCoverartSrc]);
 
-  const linkToEntity = releaseGroupMBID
-    ? `/album/${releaseGroupMBID}/`
-    : `/release/${releaseMBID}/`;
+  let linkToEntity: string;
+  if (releaseGroupMBID) {
+    linkToEntity = `/album/${releaseGroupMBID}/`;
+  } else if (releaseMBID) {
+    linkToEntity = `/release/${releaseMBID}/`;
+  } else {
+    linkToEntity = `/search/?search_type=album&search_term=${releaseName}+${artistCreditName}`;
+  }
 
   const coverArtElement = coverartSrc ? (
     <>
@@ -233,7 +238,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
           </div>
         </div>
       )}
-      {showArtist && isArray(artistCredits) && (
+      {showArtist && isArray(artistCredits) && artistCredits.length && (
         <div className="release-artist" title={artistCreditName}>
           {artistCredits.map((ac) => (
             <span key={ac.artist_mbid}>
@@ -247,7 +252,15 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       )}
       {showArtist && !isArray(artistCredits) && (
         <div className="release-artist" title={artistCreditName}>
-          <Link to={`/artist/${artistMBIDs[0]}/`}>{artistCreditName}</Link>
+          <Link
+            to={
+              artistMBIDs.length
+                ? `/artist/${artistMBIDs[0]}/`
+                : `/search/?search_type=artist&search_term=${artistCreditName}`
+            }
+          >
+            {artistCreditName}
+          </Link>
         </div>
       )}
     </div>

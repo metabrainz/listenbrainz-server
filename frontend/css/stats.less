@@ -24,3 +24,87 @@
     position: relative;
   }
 }
+
+@bar-height: 4.5em;
+.bar-chart {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1em;
+  min-height: calc(25 * @bar-height); // 25 items on the graph
+  > * {
+    position: absolute;
+    width: 100%;
+  }
+  .graph-tooltip {
+    z-index: 100;
+    background: white;
+    padding: 9px 12px;
+    border: 1px solid #ccc;
+    width: 300px;
+  }
+  foreignObject {
+    //default width and height, they are overwritten in the CustomBarComponent
+    width: 95%;
+    height: @bar-height;
+    padding: 0.5em;
+    overflow: visible;
+    .graph-bar {
+      height: 100%;
+      gap: 0.6em;
+      .position {
+        margin: 0;
+        flex: 0;
+        border-right: 1px solid grey;
+        padding-right: 0.6em;
+        font-size: smaller;
+        white-space: nowrap;
+        text-align: center;
+      }
+      align-items: center;
+      > .graph-bar-text {
+        overflow: auto;
+        min-width: 150px;
+      }
+      .graph-bar-entity {
+        font-weight: bold;
+        color: darken(@light-grey, 30%);
+      }
+      .graph-bar-artist {
+        color: @light-grey;
+        font-size: 0.8em;
+      }
+    }
+    @media (max-width: @screen-phone) {
+      // On mobile, show the position to the right of the bar to leave more space for the text
+      .graph-bar {
+        position: relative;
+        .position {
+          position: absolute;
+          border: none;
+          left: calc(100% + 1.2em);
+        }
+      }
+    }
+  }
+  @media (max-width: @screen-tablet) {
+    width: calc(100vw - 2em);
+  }
+}
+
+.top-entity-listencards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 @listen-card-margin-bottom;
+  .listen-card {
+    flex: 1;
+    flex-basis: 360px;
+    max-width: 100%;
+    .main-content .right-section {
+      flex: 0;
+    }
+  }
+}
+.release-cards-grid.top-entity-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, max-content));
+  place-content: space-evenly;
+}
