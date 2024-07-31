@@ -80,7 +80,8 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "REMOVE_TRACK_FROM_AMBIENT_QUEUE"
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
-    | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
+    | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
+    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
   data?: any;
 };
 
@@ -299,6 +300,16 @@ function valueReducer(
         ...state,
         queue: [...queue, ...ambientQueue],
         ambientQueue: [],
+      };
+    }
+    case "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE": {
+      const tracksToAdd = (action.data as BrainzPlayerQueue).map(
+        listenOrJSPFTrackToQueueItem
+      );
+      const { ambientQueue } = state;
+      return {
+        ...state,
+        ambientQueue: [...ambientQueue, ...tracksToAdd],
       };
     }
     default: {
