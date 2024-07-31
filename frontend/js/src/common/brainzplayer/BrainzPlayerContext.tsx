@@ -75,6 +75,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "MOVE_QUEUE_ITEM"
     | "CLEAR_QUEUE_AFTER_CURRENT"
     | "MOVE_AMBIENT_QUEUE_ITEM"
+    | "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE"
     | "REMOVE_TRACK_FROM_QUEUE"
     | "REMOVE_TRACK_FROM_AMBIENT_QUEUE"
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
@@ -290,6 +291,14 @@ function valueReducer(
       return {
         ...state,
         queue: updatedQueue,
+      };
+    }
+    case "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE": {
+      const { queue, ambientQueue } = state;
+      return {
+        ...state,
+        queue: [...queue, ...ambientQueue],
+        ambientQueue: [],
       };
     }
     default: {
