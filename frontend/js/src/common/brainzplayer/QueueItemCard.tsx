@@ -16,12 +16,6 @@ type QueueItemCardProps = {
 function QueueItemCard(props: QueueItemCardProps) {
   const { track, removeTrackFromQueue, hideDragHandle = false } = props;
 
-  const removeTrack = () => {
-    if (removeTrackFromQueue) {
-      removeTrackFromQueue(track);
-    }
-  };
-
   const dragHandle = (
     <div className="drag-handle text-muted">
       <FontAwesomeIcon icon={faGripLines as IconProp} title="Drag to reorder" />
@@ -35,7 +29,9 @@ function QueueItemCard(props: QueueItemCardProps) {
         title="Remove from Queue"
         text="Remove from Queue"
         icon={faTrash}
-        action={removeTrack}
+        action={() => {
+          removeTrackFromQueue(track);
+        }}
       />,
     ];
   }

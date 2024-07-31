@@ -20,8 +20,9 @@ const getBrainzPlayerQueueItemKey = (listen: Listen): string =>
     ","
   )}-${getReleaseMBID(listen)}-${getReleaseGroupMBID(listen)}-${
     listen.track_metadata?.mbid_mapping?.caa_id
-  }-${listen.track_metadata?.mbid_mapping?.caa_release_mbid}
-  -${listen.listened_at}-${listen.inserted_at}`;
+  }-${listen.track_metadata?.mbid_mapping?.caa_release_mbid}-${
+    listen.listened_at
+  }-${listen.inserted_at}`;
 
 // eslint-disable-next-line import/prefer-default-export
 export function listenOrJSPFTrackToQueueItem(
