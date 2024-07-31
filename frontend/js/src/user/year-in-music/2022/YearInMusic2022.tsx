@@ -1241,21 +1241,7 @@ export function YearInMusicWrapper() {
   const fallbackUser = { name: "" };
   const { user = fallbackUser, data: yearInMusicData } = data || {};
   const listens: BaseListenFormat[] = [];
-  if (yearInMusicData?.top_artists) {
-    yearInMusicData.top_artists.forEach((artist) => {
-      const listen = {
-        listened_at: 0,
-        track_metadata: {
-          artist_name: artist.artist_name,
-          track_name: "",
-          additional_info: {
-            artist_mbids: [artist.artist_mbid],
-          },
-        },
-      };
-      listens.push(listen);
-    });
-  }
+
   if (yearInMusicData?.top_recordings) {
     yearInMusicData.top_recordings.forEach((recording) => {
       const listen = {
@@ -1268,31 +1254,6 @@ export function YearInMusicWrapper() {
             recording_mbid: recording.recording_mbid,
             release_mbid: recording.release_mbid,
             artist_mbids: recording.artist_mbids,
-          },
-        },
-      };
-      listens.push(listen);
-    });
-  }
-
-  if (yearInMusicData?.new_releases_of_top_artists) {
-    yearInMusicData.new_releases_of_top_artists.forEach((release) => {
-      const listen = {
-        listened_at: 0,
-        track_metadata: {
-          artist_name: release.artist_credit_name,
-          track_name: release.title,
-          release_name: release.title,
-          additional_info: {
-            release_group_mbid: release.release_group_mbid,
-            artist_mbids: release.artist_credit_mbids,
-          },
-          mbid_mapping: {
-            recording_mbid: "",
-            release_mbid: "",
-            artist_mbids: [],
-            caa_id: release.caa_id,
-            caa_release_mbid: release.caa_release_mbid,
           },
         },
       };
@@ -1376,6 +1337,7 @@ export function YearInMusicWrapper() {
   const dispatch = useBrainzPlayerDispatch();
   React.useEffect(() => {
     dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
 
   return (
