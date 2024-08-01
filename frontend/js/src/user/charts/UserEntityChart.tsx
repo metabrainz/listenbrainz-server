@@ -175,6 +175,27 @@ export default function UserEntityChart() {
   const dispatch = useBrainzPlayerDispatch();
 
   React.useEffect(() => {
+    // If the entity is an artist or recording, then we add the release name or release group name to the track name for the listen so that BrainzPlayer plays a track from the release or release group.
+    if (["release", "release-group"].includes(entity)) {
+      const listensToDispatch = listenableItems.map((listen) => {
+        const releaseName = listen.track_metadata?.release_name;
+        const releaseGroupName =
+          listen.track_metadata?.mbid_mapping?.release_group_name;
+        return {
+          ...listen,
+          track_metadata: {
+            ...listen.track_metadata,
+            track_name: releaseName || releaseGroupName || "",
+          },
+        };
+      });
+      dispatch({
+        type: "SET_AMBIENT_QUEUE",
+        data: listensToDispatch,
+      });
+      return;
+    }
+
     dispatch({
       type: "SET_AMBIENT_QUEUE",
       data: listenableItems,
