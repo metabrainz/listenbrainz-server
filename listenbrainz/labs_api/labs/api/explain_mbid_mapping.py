@@ -9,8 +9,8 @@ from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 
 class ExplainMBIDMappingInput(BaseModel):
     artist_credit_name: str
-    recording_name: Optional[str]
-    release_name: str
+    recording_name: str
+    release_name: Optional[str]
 
 
 class ExplainMBIDMappingOutputLog(BaseModel):
