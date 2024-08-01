@@ -86,6 +86,25 @@ def send_request_to_spark_cluster(query, **params):
         )
 
 
+@cli.command(name="request_incremental_stats")
+@click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
+              help="Time range of statistics to calculate", required=True)
+@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings', 'release_groups']),
+              help="Entity for which statistics should be calculated")
+@click.option("--database", type=str, help="Name of the couchdb database to store data in")
+def request_incremental_stats(range_, entity, database):
+    """ Send an incremental user stats request to the spark cluster """
+    params = {
+        "stats_range": range_,
+        "entity": entity
+    }
+    if not database:
+        today = date.today().strftime("%Y%m%d")
+        database = f"{entity}_incremental_{range_}_{today}"
+    params["database"] = database
+    send_request_to_spark_cluster("stats.user.incremental", **params)
+
+
 @cli.command(name="request_user_stats")
 @click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'listeners']),
               help="Type of statistics to calculate", required=True)

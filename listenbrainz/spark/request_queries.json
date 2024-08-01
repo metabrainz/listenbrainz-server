@@ -24,6 +24,11 @@
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
     "params": ["stats_range", "database"]
   },
+  "stats.user.incremental": {
+    "name": "stats.user.incremental",
+    "description": "Calculate incremental stats",
+    "params": ["entity", "stats_range", "message_type", "database"]
+  },
   "stats.sitewide.entity": {
     "name": "stats.sitewide.entity",
     "description": "Calculate top entites listened to on the website in the requested stats_range",

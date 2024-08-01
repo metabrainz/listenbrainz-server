@@ -1,5 +1,7 @@
 import os
 
+from sklearn import experimental
+
 # Location new parquet dump listen files
 LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
 
@@ -14,6 +16,9 @@ INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "inc
 
 # Directory containing RDD checkpoints to break lineage while using iterative algorithms.
 CHECKPOINT_DIR = os.path.join('/', 'checkpoint')
+
+LISTENBRAINZ_EXPERIMENTAL_STATS_DIR = os.path.join('/', 'data', 'stats-experimental')
+INTERMEDIATE_STATS_JOB_PARQUET = os.path.join('/', 'intermediate-stats-job')
 
 ################################################
 # Recommendation `recording` absolute path/dir #

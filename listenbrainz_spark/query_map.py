@@ -8,6 +8,7 @@ import listenbrainz_spark.stats.sitewide.entity
 import listenbrainz_spark.stats.sitewide.listening_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
+import listenbrainz_spark.stats.incremental.entity
 import listenbrainz_spark.stats.user.listening_activity
 import listenbrainz_spark.stats.listener.entity
 import listenbrainz_spark.year_in_music.new_releases_of_top_artists
@@ -38,6 +39,7 @@ import listenbrainz_spark.echo.echo
 functions = {
     'echo.echo': listenbrainz_spark.echo.echo.handler,
     'stats.entity.listeners': listenbrainz_spark.stats.listener.entity.get_listener_stats,
+    'stats.user.incremental': listenbrainz_spark.stats.incremental.entity.get_entity_stats,
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,

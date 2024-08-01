@@ -62,6 +62,15 @@ recording_similarity_schema = StructType([
     StructField('partial_similarity', FloatType(), nullable=False)
 ])
 
+intermediate_stats_job_schema = StructType([
+    StructField('type', StringType(), nullable=False),
+    StructField('entity', StringType(), nullable=False),
+    StructField('range', StringType(), nullable=False),
+    StructField('latest_created_at', TimestampType(), nullable=False),
+    StructField('started_at', TimestampType(), nullable=True),
+    StructField('ended_at', TimestampType(), nullable=True),
+])
+
 # schema to contain model parameters.
 model_param_schema = [
     StructField('alpha', FloatType(), nullable=True),  # Baseline level of confidence weighting applied.
