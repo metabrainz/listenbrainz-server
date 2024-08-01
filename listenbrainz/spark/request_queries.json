@@ -27,7 +27,7 @@
   "stats.user.incremental": {
     "name": "stats.user.incremental",
     "description": "Calculate incremental stats",
-    "params": ["entity", "stats_range", "message_type", "database"]
+    "params": ["entity", "stats_range", "database"]
   },
   "stats.sitewide.entity": {
     "name": "stats.sitewide.entity",
