@@ -22,6 +22,7 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../../utils/utils";
+import MultiTrackMBIDMappingModal from "../../common/listens/MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
@@ -254,7 +255,12 @@ export default function MissingMBDataPage() {
                   const multiTrackMappingButton = (
                     <button
                       type="button"
-                      onClick={() => {}}
+                      onClick={() => {
+                        NiceModal.show(MultiTrackMBIDMappingModal, {
+                            missingData: group,
+                            releaseName,
+                          });
+                      }}
                       data-toggle="modal"
                       data-target="#MultiTrackMBIDMappingModal"
                     >
@@ -285,15 +291,15 @@ export default function MissingMBDataPage() {
                           // Commenting this out for now because currently it leads to new eager users creating
                           // a bunch of standalone recordings, and possible duplicates
                           /* const addToMB = (
-                  <ListenControl
-                    buttonClassName="btn btn-sm"
-                    icon={faPlus}
-                    title="Add missing recording"
-                    text=""
-                    // eslint-disable-next-line react/jsx-no-bind
-                    action={this.submitMissingData.bind(this, listen)}
-                  />
-                ); */
+                            <ListenControl
+                              buttonClassName="btn btn-sm"
+                              icon={faPlus}
+                              title="Add missing recording"
+                              text=""
+                              // eslint-disable-next-line react/jsx-no-bind
+                              action={this.submitMissingData.bind(this, listen)}
+                            />
+                          ); */
 
                           const recordingMSID = getRecordingMSID(listen);
                           const canDelete =
