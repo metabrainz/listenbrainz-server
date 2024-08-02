@@ -100,6 +100,7 @@ export function RecentListensWrapper() {
       type: "SET_AMBIENT_QUEUE",
       data: listens,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
   return <RecentListens {...data} />;
 }

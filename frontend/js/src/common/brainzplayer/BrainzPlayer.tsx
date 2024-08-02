@@ -23,10 +23,8 @@ import {
   hasNotificationPermission,
   overwriteMediaSession,
   updateMediaSession,
-  updateWindowTitle,
 } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getArtistName, getTrackName } from "../../utils/utils";
 import BrainzPlayerUI from "./BrainzPlayerUI";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
@@ -567,25 +565,31 @@ export default function BrainzPlayer() {
     const currentPlayingListenIndex = currentListenIndexRef.current;
 
     let nextListenIndex: number;
+    // If the queue repeat mode is one, then play the same track again
     if (queueRepeatMode === QueueRepeatModes.one) {
       nextListenIndex =
         currentPlayingListenIndex + (currentPlayingListenIndex < 0 ? 1 : 0);
     } else {
+      // Otherwise, play the next track in the queue
       nextListenIndex = currentPlayingListenIndex + (invert === true ? -1 : 1);
     }
 
+    // If nextListenIndex is less than 0, wrap around to the last track in the queue
     if (nextListenIndex < 0) {
       nextListenIndex = currentQueue.length - 1;
     }
 
+    // If nextListenIndex is within the queue length, play the next track
     if (nextListenIndex < currentQueue.length) {
       const nextListen = currentQueue[nextListenIndex];
       playListen(nextListen, nextListenIndex, 0);
       return;
     }
 
-    // If nextListenIndex exceeds the queue length, then pop the first item from the ambient queue, if available
-    // and add it to the end of the queue to play it next, otherwise wrap around to the first track
+    // If the nextListenIndex is greater than the queue length, i.e. the queue has endes, then there are two possibilities:
+    // 1. If there are listens in the ambient queue, then play the first listen in the ambient queue.
+    //    In this case, we'll move the first listen from the ambient queue to the main queue and play it.
+    // 2. If there are no listens in the ambient queue, then play the first listen in the main queue.
     if (currentAmbientQueue.length > 0) {
       const ambientQueueTop = currentAmbientQueue.shift();
       if (ambientQueueTop) {
@@ -609,6 +613,7 @@ export default function BrainzPlayer() {
       }
     }
 
+    // If there are no listens in the ambient queue, then play the first listen in the main queue
     nextListenIndex = 0;
     const nextListen = currentQueue[nextListenIndex];
     if (!nextListen) {
@@ -679,7 +684,12 @@ export default function BrainzPlayer() {
     } catch (error) {
       handleError(error, "Could not play");
     }
-  }, [currentDataSourceIndex, dataSourceRefs, invalidateDataSource]);
+  }, [
+    currentDataSourceIndex,
+    dataSourceRefs,
+    playerPaused,
+    invalidateDataSource,
+  ]);
 
   const stopPlayerStateTimer = React.useCallback((): void => {
     debouncedCheckProgressAndSubmitListen.flush();
@@ -690,14 +700,14 @@ export default function BrainzPlayer() {
   }, [debouncedCheckProgressAndSubmitListen]);
 
   /* Updating the progress bar without calling any API to check current player state */
-  const getStatePosition = (): void => {
+  const updatePlayerProgressBar = (): void => {
     dispatch({ type: "SET_PLAYBACK_TIMER" });
   };
 
   const startPlayerStateTimer = (): void => {
     stopPlayerStateTimer();
     playerStateTimerID.current = setInterval(() => {
-      getStatePosition();
+      updatePlayerProgressBar();
       debouncedCheckProgressAndSubmitListen();
     }, 400);
   };
@@ -854,6 +864,25 @@ export default function BrainzPlayer() {
     );
   };
 
+  const playAmbientQueue = (): void => {
+    // 1. Clear the items in the queue after the current playing track
+    const currentPlayingListenIndex = currentListenIndexRef.current;
+    dispatch(
+      {
+        type: "CLEAR_QUEUE_AFTER_CURRENT",
+      },
+      async () => {
+        while (queueRef.current.length !== currentPlayingListenIndex + 1) {
+          // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+
+        // 2. Play the first item in the ambient queue
+        playNextTrack();
+      }
+    );
+  };
+
   // eslint-disable-next-line react/sort-comp
   const throttledTrackInfoChange = _throttle(trackInfoChange, 2000, {
     leading: false,
@@ -895,6 +924,9 @@ export default function BrainzPlayer() {
         break;
       case "force-play":
         togglePlay();
+        break;
+      case "play-ambient-queue":
+        playAmbientQueue();
         break;
       default:
       // do nothing

@@ -74,12 +74,15 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "SET_PLAYBACK_TIMER"
     | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
+    | "CLEAR_QUEUE_AFTER_CURRENT"
     | "MOVE_AMBIENT_QUEUE_ITEM"
+    | "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE"
     | "REMOVE_TRACK_FROM_QUEUE"
     | "REMOVE_TRACK_FROM_AMBIENT_QUEUE"
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
-    | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
+    | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
+    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
   data?: any;
 };
 
@@ -282,6 +285,32 @@ function valueReducer(
       return {
         ...state,
         ambientQueue: [...ambientQueue, trackToAdd],
+      };
+    }
+    case "CLEAR_QUEUE_AFTER_CURRENT": {
+      const { currentListenIndex, queue } = state;
+      const updatedQueue = queue.slice(0, currentListenIndex + 1);
+      return {
+        ...state,
+        queue: updatedQueue,
+      };
+    }
+    case "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE": {
+      const { queue, ambientQueue } = state;
+      return {
+        ...state,
+        queue: [...queue, ...ambientQueue],
+        ambientQueue: [],
+      };
+    }
+    case "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE": {
+      const tracksToAdd = (action.data as BrainzPlayerQueue).map(
+        listenOrJSPFTrackToQueueItem
+      );
+      const { ambientQueue } = state;
+      return {
+        ...state,
+        ambientQueue: [...ambientQueue, ...tracksToAdd],
       };
     }
     default: {

@@ -11,7 +11,7 @@ class RoutesTestCase(ServerTestCase):
         # Don't add a / to API endpoints, because a redirect on a POST from an external client
         #  may result in unexpected results
         # Admin endpoints are maintained by flask-admin
-        ignored_prefixes = (API_PREFIX, '/admin', '/static')
+        ignored_prefixes = (API_PREFIX, '/admin', '/static', '/syndication-feed')
         # Specific endpoint for deleting accounts from musicbrainz-server (MBS-9680)
         ignored_endpoints = {'index.mb_user_deleter'}
 

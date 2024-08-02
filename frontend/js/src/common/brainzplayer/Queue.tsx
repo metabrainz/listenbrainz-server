@@ -108,6 +108,13 @@ function Queue(props: BrainzPlayerQueueProps) {
     []
   );
 
+  const moveAmbientQueueItemsToQueue = React.useCallback(() => {
+    dispatch({
+      type: "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
 
   const addQueueToPlaylist = () => {
@@ -207,6 +214,17 @@ function Queue(props: BrainzPlayerQueueProps) {
       </div>
       <div className="queue-headers">
         <h4>On this page:</h4>
+        {ambientQueue.length > 0 && (
+          <div className="queue-buttons">
+            <button
+              className="btn btn-info btn-sm"
+              onClick={moveAmbientQueueItemsToQueue}
+              type="button"
+            >
+              Move to Queue
+            </button>
+          </div>
+        )}
       </div>
       <div className="queue-list" data-testid="ambient-queue">
         {ambientQueue.length > 0

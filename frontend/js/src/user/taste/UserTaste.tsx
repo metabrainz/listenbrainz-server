@@ -89,6 +89,7 @@ export function UserTastesWrapper() {
       type: "SET_AMBIENT_QUEUE",
       data: listenables,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listenables]);
 
   return <UserTaste {...data} />;

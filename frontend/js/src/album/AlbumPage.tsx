@@ -199,6 +199,7 @@ export default function AlbumPage(): JSX.Element {
       type: "SET_AMBIENT_QUEUE",
       data: listensFromAlbumsRecordingsFlattened,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromAlbumsRecordingsFlattened]);
 
   const filteredTags = chain(releaseGroupTags)
@@ -344,8 +345,7 @@ export default function AlbumPage(): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
-                        payload: listensFromAlbumsRecordingsFlattened,
+                        brainzplayer_event: "play-ambient-queue",
                       },
                       window.location.origin
                     );

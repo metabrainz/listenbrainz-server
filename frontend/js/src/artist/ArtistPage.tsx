@@ -294,8 +294,7 @@ export default function ArtistPage(): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
-                        payload: listensFromPopularRecordings,
+                        brainzplayer_event: "play-ambient-queue",
                       },
                       window.location.origin
                     );

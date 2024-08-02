@@ -961,41 +961,6 @@ export function YearInMusicWrapper() {
     });
   }
 
-  if (yearInMusicData?.top_artists) {
-    yearInMusicData.top_artists.forEach((artist) => {
-      const listen = {
-        listened_at: 0,
-        track_metadata: {
-          artist_name: artist.artist_name,
-          track_name: "",
-          additional_info: {
-            artist_mbids: artist.artist_mbids,
-          },
-        },
-      };
-      listens.push(listen);
-    });
-  }
-
-  if (yearInMusicData?.new_releases_of_top_artists) {
-    yearInMusicData.new_releases_of_top_artists.forEach((release) => {
-      const listen = {
-        listened_at: 0,
-        listened_at_iso: release.first_release_date,
-        track_metadata: {
-          artist_name: release.artist_credit_names.join(", "),
-          track_name: release.title,
-          release_name: release.title,
-          additional_info: {
-            release_mbid: release.release_mbid,
-            artist_mbids: release.artist_credit_mbids,
-          },
-        },
-      };
-      listens.push(listen);
-    });
-  }
-
   function getPlaylistByName(
     playlistName: string,
     description?: string
@@ -1092,6 +1057,7 @@ export function YearInMusicWrapper() {
   const dispatch = useBrainzPlayerDispatch();
   React.useEffect(() => {
     dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
 
   return (

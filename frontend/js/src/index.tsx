@@ -1,8 +1,14 @@
 import * as React from "react";
 import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
@@ -19,7 +25,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (sentry_dsn) {
     Sentry.init({
       dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
+      integrations: [
+        Sentry.reactRouterV6BrowserTracingIntegration({
+          useEffect: React.useEffect,
+          useLocation,
+          useNavigationType,
+          createRoutesFromChildren,
+          matchRoutes,
+        }),
+      ],
       tracesSampleRate: sentry_traces_sample_rate,
     });
   }
@@ -27,7 +41,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { currentUser } = globalAppContext;
 
   const routes = getRoutes(currentUser?.name);
-  const router = createBrowserRouter(routes);
+  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
+    createBrowserRouter
+  );
+  const router = sentryCreateBrowserRouter(routes);
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
