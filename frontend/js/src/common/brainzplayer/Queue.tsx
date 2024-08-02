@@ -103,8 +103,8 @@ function Queue(props: BrainzPlayerQueueProps) {
       dispatch({
         queue: newQueueOrder,
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -193,18 +193,20 @@ function Queue(props: BrainzPlayerQueueProps) {
               reorderQueue(newOrder);
             }}
           >
-            {queueNextUp.map((queueItem: BrainzPlayerQueueItem, index: number) => {
-              if (!queueItem) return null;
-              return (
-                <DragItem
-                  key={queueItem.id}
-                  queueItem={queueItem}
-                  removeTrackFromQueue={(
-                    trackToDelete: BrainzPlayerQueueItem
-                  ) => removeTrackFromQueue(trackToDelete, index)}
-                />
-              );
-            })}
+            {queueNextUp.map(
+              (queueItem: BrainzPlayerQueueItem, index: number) => {
+                if (!queueItem) return null;
+                return (
+                  <DragItem
+                    key={queueItem.id}
+                    queueItem={queueItem}
+                    removeTrackFromQueue={(
+                      trackToDelete: BrainzPlayerQueueItem
+                    ) => removeTrackFromQueue(trackToDelete, index)}
+                  />
+                );
+              }
+            )}
           </Reorder.Group>
         ) : (
           <div className="lead text-center">
