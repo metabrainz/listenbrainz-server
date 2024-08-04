@@ -90,7 +90,6 @@ services:
       - redis
       - lb_db
       - rabbitmq
-      - lb_db
 
   background_tasks:
     image: web
@@ -102,7 +101,6 @@ services:
       - redis
       - lb_db
       - rabbitmq
-      - lb_db
 
   spotify_reader:
     image: web
@@ -114,13 +112,13 @@ services:
       - redis
       - lb_db
       - rabbitmq
-      - lb_db
 
   lastfm_importer:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
     command: python3 -m "listenbrainz.listens_importer.lastfm"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - rabbitmq
