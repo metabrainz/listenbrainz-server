@@ -1,13 +1,20 @@
 import uuid
+from trace import Trace
+from typing import List
+from xml.sax import parse
 
 import requests
 from flask import current_app
 from psycopg2.extras import execute_values
+from pydantic import NoneStr
 from requests.adapters import HTTPAdapter, Retry
 from sqlalchemy import text
 
 from brainzutils import musicbrainz_db
 
+from data.model.external_service import ExternalServiceType
+from listenbrainz.db import external_service_oauth
+from listenbrainz.domain.importer_service import ImporterService
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.errors import APINotFound
 
@@ -138,3 +145,16 @@ def import_feedback(user_id: int, lfm_user: str) -> dict:
     counts["inserted"] = len(recording_feedback)
 
     return counts
+
+
+class LastfmService(ImporterService):
+
+    def __init__(self):
+        super(LastfmService, self).__init__(ExternalServiceType.LASTFM)
+
+    def add_new_user(self, user_id: int, token: dict) -> bool:
+        external_service_oauth.save_token(
+            db_conn, user_id=user_id, service=self.service, access_token=None, refresh_token=None,
+            token_expires_ts=None, record_listens=True, scopes=[], external_user_id=token["external_user_id"]
+        )
+        return True

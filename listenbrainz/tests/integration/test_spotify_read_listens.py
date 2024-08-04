@@ -8,7 +8,7 @@ from flask.testing import FlaskClient
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.listens_importer import spotify_read_listens
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db import external_service_oauth
 
