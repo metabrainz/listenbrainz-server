@@ -7,8 +7,8 @@ from listenbrainz import db, utils
 import sqlalchemy
 
 
-def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: str, refresh_token: Optional[str],
-               token_expires_ts: int, record_listens: bool, scopes: List[str], external_user_id: Optional[str] = None):
+def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
+               token_expires_ts: Optional[int], record_listens: bool, scopes: Optional[List[str]], external_user_id: Optional[str] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
@@ -29,7 +29,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     # to use the new values. any column which does not have a new value to be set should
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
-    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
+    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts) if token_expires_ts else None
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO external_service_oauth AS eso
         (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
