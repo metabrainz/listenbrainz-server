@@ -10,8 +10,8 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
 import Fuse from "fuse.js";
-import { omit } from "lodash";
-import ListenCard from "./ListenCard";
+import { omit, size } from "lodash";
+import ListenCard from "../../common/listens/ListenCard";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
@@ -20,7 +20,7 @@ import {
   MBTrackWithAC,
 } from "../../user/components/AddListenModal";
 import { MBReleaseWithMetadata } from "../../user/components/AddAlbumListens";
-import ListenControl from "./ListenControl";
+import ListenControl from "../../common/listens/ListenControl";
 
 type MatchingTracksResult = MBTrackWithAC & {
   searchString: string;
@@ -31,7 +31,7 @@ type MatchingTracksResults = {
 };
 
 export type MultiTrackMBIDMappingModalProps = {
-  releaseName: string;
+  releaseName: string | null;
   missingData: Array<MissingMBData>;
 };
 
@@ -94,10 +94,9 @@ export default NiceModal.create(
 
     const submitMBIDMapping = React.useCallback(
       async (event: React.FormEvent) => {
-        if (event) {
-          event.preventDefault();
-        }
-        if (!matchingTracks?.length || !auth_token) {
+        event.preventDefault();
+
+        if (!matchingTracks || !size(matchingTracks) || !auth_token) {
           return;
         }
         const promises: Promise<any>[] = [];
@@ -273,7 +272,7 @@ export default NiceModal.create(
                 </a>
               </small>
               <div>
-                <h5>Search</h5>
+                <h4>Search</h4>
                 <div className="card listen-card">
                   <SearchAlbumOrMBID
                     onSelectAlbum={setSelectedAlbumMBID}
@@ -340,46 +339,48 @@ export default NiceModal.create(
                 </div>
               )}
 
-              {hasMatches &&
-                matchingTracksEntries &&
-                matchingTracksEntries.map(([recordingMSID, track]) => {
-                  return (
-                    <div className="flex" style={{ alignItems: "center" }}>
-                      <q>{track.searchString}</q>
-                      <FontAwesomeIcon
-                        icon={faArrowRightLong}
-                        style={{ flex: "0 1 50px" }}
-                      />
-                      <div style={{ flex: "2 1 0%" }}>
-                        <ListenCard
-                          key={recordingMSID}
-                          compact
-                          listen={getListenFromTrack(
-                            track,
-                            new Date(0),
-                            selectedAlbum
-                          )}
-                          showTimestamp={false}
-                          showUsername={false}
-                          // eslint-disable-next-line react/jsx-no-useless-fragment
-                          feedbackComponent={<></>}
-                          additionalActions={
-                            <ListenControl
-                              buttonClassName="btn-transparent"
-                              text=""
-                              title="Remove from matches"
-                              icon={faTimesCircle}
-                              iconSize="lg"
-                              action={() =>
-                                removeItemFromMatches(recordingMSID)
-                              }
-                            />
-                          }
+              {hasMatches && matchingTracksEntries && (
+                <div className="mt-15">
+                  {matchingTracksEntries.map(([recordingMSID, track]) => {
+                    return (
+                      <div className="flex" style={{ alignItems: "center" }}>
+                        <q>{track.searchString}</q>
+                        <FontAwesomeIcon
+                          icon={faArrowRightLong}
+                          style={{ flex: "0 1 50px" }}
                         />
+                        <div style={{ flex: "2 1 0%" }}>
+                          <ListenCard
+                            key={recordingMSID}
+                            compact
+                            listen={getListenFromTrack(
+                              track,
+                              new Date(0),
+                              selectedAlbum
+                            )}
+                            showTimestamp={false}
+                            showUsername={false}
+                            // eslint-disable-next-line react/jsx-no-useless-fragment
+                            feedbackComponent={<></>}
+                            additionalActions={
+                              <ListenControl
+                                buttonClassName="btn-transparent"
+                                text=""
+                                title="Remove from matches"
+                                icon={faTimesCircle}
+                                iconSize="lg"
+                                action={() =>
+                                  removeItemFromMatches(recordingMSID)
+                                }
+                              />
+                            }
+                          />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              )}
               {unmatchedItems && Boolean(unmatchedItems.length) && (
                 <>
                   {selectedAlbum ? (
