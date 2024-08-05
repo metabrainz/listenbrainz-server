@@ -305,7 +305,6 @@ export default function MissingMBDataPage() {
                     style={{ padding: "5px" }}
                     type="button"
                     onClick={(e) => {
-                      e.stopPropagation();
                       NiceModal.show(MultiTrackMBIDMappingModal, {
                         missingData: group,
                         releaseName,
