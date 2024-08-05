@@ -2,9 +2,11 @@ import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import React, {
+  forwardRef,
   useCallback,
   useContext,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -37,11 +39,10 @@ type SearchTrackOrMBIDProps = {
   expectedPayload: PayloadType;
 } & ConditionalReturnValue;
 
-export default function SearchTrackOrMBID({
-  onSelectRecording,
-  expectedPayload,
-  defaultValue,
-}: SearchTrackOrMBIDProps) {
+const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
+  { onSelectRecording, expectedPayload, defaultValue }: SearchTrackOrMBIDProps,
+  inputRefForParent
+) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
   const dropdownRef = DropdownRef();
@@ -50,6 +51,25 @@ export default function SearchTrackOrMBID({
     []
   );
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const inputRefLocal = useRef<HTMLInputElement>(null);
+
+  // Allow parents to focus on input
+  useImperativeHandle(
+    inputRefForParent,
+    () => {
+      return {
+        focus() {
+          inputRefLocal?.current?.focus();
+        },
+      };
+    },
+    []
+  );
+
+  // Autofocus once on load
+  useEffect(() => {
+    inputRefLocal?.current?.focus();
+  }, []);
 
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
@@ -180,6 +200,7 @@ export default function SearchTrackOrMBID({
     setInputValue("");
     setSearchResults([]);
     setSelectedIndex(-1);
+    inputRefLocal?.current?.focus();
   };
 
   useEffect(() => {
@@ -199,6 +220,7 @@ export default function SearchTrackOrMBID({
     <div>
       <div className="input-group dropdown-search" ref={dropdownRef}>
         <input
+          ref={inputRefLocal}
           type="search"
           value={inputValue}
           className="form-control"
@@ -261,4 +283,6 @@ export default function SearchTrackOrMBID({
       </div>
     </div>
   );
-}
+});
+
+export default SearchTrackOrMBID;

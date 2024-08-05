@@ -48,6 +48,8 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     TrackMetadata
   >();
 
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
   const closeModal = React.useCallback(() => {
     modal.hide();
     document?.body?.classList?.remove("modal-open");
@@ -141,6 +143,8 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     setDefaultValue(
       `${getTrackName(listenToMap)} - ${getArtistName(listenToMap)}`
     );
+    // Autofocus on the search input in order to automatically show list of results
+    searchInputRef?.current?.focus();
   }, [listenToMap]);
 
   const listenFromSelectedRecording = getListenFromSelectedRecording(
@@ -270,6 +274,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               ) : (
                 <div className="card listen-card">
                   <SearchTrackOrMBID
+                    ref={searchInputRef}
                     expectedPayload="trackmetadata"
                     key={`${defaultValue}-${copyTextClickCounter}`}
                     onSelectRecording={(trackMetadata) => {
