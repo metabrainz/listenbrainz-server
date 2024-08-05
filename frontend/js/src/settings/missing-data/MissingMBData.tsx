@@ -9,7 +9,7 @@ import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import { chain, forEach, groupBy } from "lodash";
+import { groupBy } from "lodash";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
@@ -40,6 +40,24 @@ export interface MissingMBDataState {
   deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage?: number;
   loading: boolean;
+}
+
+export function missingDataToListen(
+  data: MissingMBData,
+  user: ListenBrainzUser
+): Listen {
+  return {
+    listened_at: new Date(data.listened_at).getTime() / 1000,
+    user_name: user.name,
+    track_metadata: {
+      artist_name: data.artist_name,
+      track_name: data.recording_name,
+      release_name: data?.release_name,
+      additional_info: {
+        recording_msid: data.recording_msid,
+      },
+    },
+  };
 }
 
 const EXPECTED_ITEMS_PER_PAGE = 25;
@@ -255,16 +273,17 @@ export default function MissingMBDataPage() {
                   const multiTrackMappingButton = (
                     <button
                       type="button"
+                      className="btn btn-sm btn-primary"
                       onClick={() => {
                         NiceModal.show(MultiTrackMBIDMappingModal, {
-                            missingData: group,
-                            releaseName,
-                          });
+                          missingData: group,
+                          releaseName,
+                        });
                       }}
                       data-toggle="modal"
                       data-target="#MultiTrackMBIDMappingModal"
                     >
-                      Link listens for this release
+                      Link {group.length} listen{group.length > 1 && "s"}
                     </button>
                   );
                   return (
@@ -285,22 +304,9 @@ export default function MissingMBDataPage() {
                           return undefined;
                         }
                         let additionalActions;
-                        const listen = missingMBDataAsListen[index];
+                        const listen = missingDataToListen(data, user);
                         const additionalMenuItems = [];
                         if (user?.auth_token) {
-                          // Commenting this out for now because currently it leads to new eager users creating
-                          // a bunch of standalone recordings, and possible duplicates
-                          /* const addToMB = (
-                            <ListenControl
-                              buttonClassName="btn btn-sm"
-                              icon={faPlus}
-                              title="Add missing recording"
-                              text=""
-                              // eslint-disable-next-line react/jsx-no-bind
-                              action={this.submitMissingData.bind(this, listen)}
-                            />
-                          ); */
-
                           const recordingMSID = getRecordingMSID(listen);
                           const canDelete =
                             Boolean(listen.listened_at) &&
@@ -324,7 +330,7 @@ export default function MissingMBDataPage() {
                           ) {
                             const linkWithMB = (
                               <ListenControl
-                                buttonClassName="btn btn-sm btn-success"
+                                buttonClassName="btn btn-link color-orange"
                                 text=""
                                 title="Link with MusicBrainz"
                                 icon={faLink}
@@ -340,6 +346,7 @@ export default function MissingMBDataPage() {
                         }
                         return (
                           <ListenCard
+                            compact
                             key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
                             showTimestamp
                             showUsername={false}
@@ -347,7 +354,7 @@ export default function MissingMBDataPage() {
                             customThumbnail={<></>}
                             // eslint-disable-next-line react/jsx-no-useless-fragment
                             feedbackComponent={<></>}
-                            listen={missingMBDataAsListen[index]}
+                            listen={listen}
                             additionalMenuItems={additionalMenuItems}
                             additionalActions={additionalActions}
                           />
