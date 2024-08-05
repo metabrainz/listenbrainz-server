@@ -392,6 +392,7 @@ export default function MissingMBDataPage() {
                         {multiTrackMappingButton} {releaseName}
                       </>
                     }
+                    defaultOpen={group.length === 1}
                   >
                     {listenCards}
                   </Accordion>
