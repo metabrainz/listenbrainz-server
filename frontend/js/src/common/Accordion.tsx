@@ -8,6 +8,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { uniqueId } from "lodash";
 import React, { Children, PropsWithChildren, useState } from "react";
+import { AutoScroll } from "sortablejs";
+import { COLOR_LB_LIGHT_GRAY } from "../utils/constants";
 
 type AccordionProps = {
   title: string | JSX.Element;
@@ -18,16 +20,18 @@ type AccordionProps = {
     | "success"
     | "primary"
     | "default";
+  defaultOpen?: boolean;
 };
 export default function Accordion({
   title,
   bootstrapType = "default",
+  defaultOpen,
   children,
 }: PropsWithChildren<AccordionProps>) {
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState(Boolean(defaultOpen));
   const contentID = uniqueId();
   return (
-    <div className={`panel panel-${bootstrapType}`} key={uniqueId()}>
+    <div className={`panel panel-${bootstrapType} accordion`} key={uniqueId()}>
       <div
         className="panel-heading"
         role="button"
@@ -39,8 +43,10 @@ export default function Accordion({
       >
         <span className="panel-title">{title}</span>
         <FontAwesomeIcon
-          style={{ float: "right" }}
-          icon={isActive ? faChevronCircleDown : faChevronCircleRight}
+          className="accordion-arrow"
+          icon={faChevronCircleRight}
+          rotation={isActive ? 90 : undefined}
+          color={COLOR_LB_LIGHT_GRAY}
         />
       </div>
       {isActive && (
