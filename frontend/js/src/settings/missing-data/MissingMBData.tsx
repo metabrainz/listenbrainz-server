@@ -301,9 +301,11 @@ export default function MissingMBDataPage() {
                 const releaseName = group.at(0)?.release_name ?? null;
                 const multiTrackMappingButton = (
                   <button
-                    type="button"
                     className="btn btn-sm btn-primary"
-                    onClick={() => {
+                    style={{ padding: "5px" }}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       NiceModal.show(MultiTrackMBIDMappingModal, {
                         missingData: group,
                         releaseName,
@@ -387,7 +389,7 @@ export default function MissingMBDataPage() {
                   <Accordion
                     title={
                       <>
-                        {releaseName} {multiTrackMappingButton}
+                        {multiTrackMappingButton} {releaseName}
                       </>
                     }
                   >
