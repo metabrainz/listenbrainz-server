@@ -4,7 +4,8 @@ from flask import current_app
 from sqlalchemy import text
 
 from listenbrainz.background.delete import delete_listens_history, delete_user
-from listenbrainz.webserver import create_app, db_conn
+from listenbrainz.background.export import export_user
+from listenbrainz.webserver import create_app, db_conn, ts_conn
 
 
 def add_task(user_id, task):
@@ -35,6 +36,8 @@ class BackgroundTasks:
             delete_listens_history(db_conn, task.user_id, task.created)
         elif task.task == "delete_user":
             delete_user(db_conn, task.user_id, task.created)
+        elif task.task == "export_user":
+            export_user(db_conn, ts_conn, task.user_id)
         else:
             current_app.logger.error(f"Unknown task type: {task}")
         return True
@@ -57,7 +60,6 @@ class BackgroundTasks:
             except Exception:
                 current_app.logger.error("Error in background tasks processor:", exc_info=True)
                 time.sleep(5)
-
 
 if __name__ == "__main__":
     bt = BackgroundTasks()
