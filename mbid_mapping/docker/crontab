@@ -7,8 +7,11 @@
 # Rebuild the spotify metadata index every friday at 1 A.M.
 0 1 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py build-spotify-metadata-index >> /code/mapper/cron-spotify-metadata-index.log 2>&1
 
-# Rebuild the apple music metadata index every friday at 1 A.M.
-0 1 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py build-apple-metadata-index >> /code/mapper/cron-apple-metadata-index.log 2>&1
+# Rebuild the apple music metadata index every friday at 2 A.M.
+0 2 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py build-apple-metadata-index >> /code/mapper/cron-apple-metadata-index.log 2>&1
+
+# Rebuild the soundcloud music metadata index every friday at 3 A.M.
+0 3 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py build-soundcloud-metadata-index >> /code/mapper/cron-soundcloud-metadata-index.log 2>&1
 
 # Rebuild similar tag data at 2am sundays
 0 2 * * 0 listenbrainz /usr/local/bin/python /code/mapper/manage.py build-tag-similarity >> /code/mapper/cron-tag-similarity.log 2>&1
