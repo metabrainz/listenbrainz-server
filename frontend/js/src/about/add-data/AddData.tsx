@@ -315,6 +315,15 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://github.com/defvs/ytm-extractor">
+              ytm-extractor
+            </a>
+          </em>
+          , a Kotlin (Java) script to submit your YouTube Music watch history
+          to Listenbrainz
+        </li>
+        <li>
+          <em>
             <a href="https://gist.github.com/fuddl/e17aa687df6ac1c7cbee5650ccfbc889">
               YTMusic2listenbrainz.py
             </a>
