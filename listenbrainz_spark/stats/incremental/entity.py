@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def save_parquet(df, dest_path):
-    tmp_path = str(uuid.uuid4())
-    df.write.parquet(f"/{tmp_path}")
+    tmp_path = f"/{uuid.uuid4()}"
+    df.write.parquet(tmp_path)
     if path_exists(dest_path):
         delete_dir(dest_path, recursive=True)
     rename(tmp_path, dest_path)
