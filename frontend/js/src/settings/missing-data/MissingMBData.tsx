@@ -68,14 +68,16 @@ export default function MissingMBDataPage() {
 
   // Loader
   const props = useLoaderData() as MissingMBDataLoaderData;
+  const { missing_data: missingDataProps = [] } = props;
+
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
 
-
   // State
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
   const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
-    missingDataProps.slice(0, EXPECTED_ITEMS_PER_PAGE) || []
-    missingDataProps || []
+    missingDataProps
   );
   const unsortedGroupedMissingData = groupBy(missingData, "release_name");
   // remove and store a catchall group with no release name
@@ -95,12 +97,11 @@ export default function MissingMBDataPage() {
     sortedMissingDataGroups.push(noReleaseNameGroup.null);
   }
 
-  const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
+  // Pagination
   const currPage = isNull(pageSearchParam) ? 1 : parseInt(pageSearchParam, 10);
   const totalPages = unsortedGroupedMissingData
     ? Math.ceil(size(unsortedGroupedMissingData) / EXPECTED_ITEMS_PER_PAGE)
     : 0;
-  const [loading, setLoading] = React.useState<boolean>(false);
 
   const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
   const itemsOnThisPage = sortedMissingDataGroups.slice(
@@ -183,11 +184,13 @@ export default function MissingMBDataPage() {
   }, [setSearchParams]);
 
   React.useEffect(() => {
+    // Prevent arbitrary pagination to a non-existing page
     if (currPage > totalPages) {
       setSearchParams({ page: "1" });
     }
   }, [currPage, setSearchParams, totalPages]);
 
+  // BrainzPlayer
   React.useEffect(() => {
     const missingMBDataAsListen = itemsOnThisPage.flatMap((x) => [
       ...x.map((y) => missingDataToListen(y, user)),
@@ -227,161 +230,159 @@ export default function MissingMBDataPage() {
         Listens with no album information are shown at the very end of the list.
       </p>
       <div>
-        <div>
-          <div>
-            <div id="missingMBData" ref={missingMBDataTableRef}>
-              <div
-                style={{
-                  height: 0,
-                  position: "sticky",
-                  top: "50%",
-                  zIndex: 1,
+        <div id="missingMBData" ref={missingMBDataTableRef}>
+          <div
+            style={{
+              height: 0,
+              position: "sticky",
+              top: "50%",
+              zIndex: 1,
+            }}
+          >
+            <Loader isLoading={loading} />
+          </div>
+          {itemsOnThisPage.map((group) => {
+            const releaseName = group.at(0)?.release_name ?? null;
+            const multiTrackMappingButton = (
+              <button
+                className="btn btn-sm btn-primary"
+                style={{ padding: "5px" }}
+                type="button"
+                onClick={(e) => {
+                  NiceModal.show<MatchingTracksResults, any>(
+                    MultiTrackMBIDMappingModal,
+                    {
+                      missingData: group,
+                      releaseName,
+                    }
+                  ).then((matchingTracks) => {
+                    // Remove successfully matched items from the page
+                    setMissingData((prevValue) =>
+                      prevValue.filter(
+                        (md) => !matchingTracks[md.recording_msid]
+                      )
+                    );
+                  });
                 }}
+                data-toggle="modal"
+                data-target="#MultiTrackMBIDMappingModal"
               >
-                <Loader isLoading={loading} />
-              </div>
-              {itemsOnThisPage.map((group) => {
-                const releaseName = group.at(0)?.release_name ?? null;
-                const multiTrackMappingButton = (
-                  <button
-                    className="btn btn-sm btn-primary"
-                    style={{ padding: "5px" }}
-                    type="button"
-                    onClick={(e) => {
-                      NiceModal.show<MatchingTracksResults, any>(
-                        MultiTrackMBIDMappingModal,
-                        {
-                          missingData: group,
-                          releaseName,
-                        }
-                        );
-                      });
-                    }}
-                    data-toggle="modal"
-                    data-target="#MultiTrackMBIDMappingModal"
-                  >
-                    <FontAwesomeIcon icon={faLink} /> x {group.length}
-                  </button>
-                );
-                const listenCards = group.map((groupItem) => {
-                  if (
-                    deletedListens.find(
-                      (deletedMSID) => deletedMSID === groupItem.recording_msid
-                    )
-                  ) {
-                    // If the item was deleted, don't show it to the user
-                    return undefined;
-                  }
-                  let additionalActions;
-                  const listen = missingDataToListen(groupItem, user);
-                  const additionalMenuItems = [];
-                  if (user?.auth_token) {
-                    const recordingMSID = getRecordingMSID(listen);
-                    const canDelete =
-                      Boolean(listen.listened_at) && Boolean(recordingMSID);
+                <FontAwesomeIcon icon={faLink} /> x {group.length}
+              </button>
+            );
+            const listenCards = group.map((groupItem) => {
+              if (
+                deletedListens.find(
+                  (deletedMSID) => deletedMSID === groupItem.recording_msid
+                )
+              ) {
+                // If the item was deleted, don't show it to the user
+                return undefined;
+              }
+              let additionalActions;
+              const listen = missingDataToListen(groupItem, user);
+              const additionalMenuItems = [];
+              if (user?.auth_token) {
+                const recordingMSID = getRecordingMSID(listen);
+                const canDelete =
+                  Boolean(listen.listened_at) && Boolean(recordingMSID);
 
-                    if (canDelete) {
-                      additionalMenuItems.push(
-                        <ListenControl
-                          text="Delete Listen"
-                          icon={faTrashAlt}
-                          action={() => {
-                            deleteListen(groupItem);
-                          }}
-                        />
-                      );
-                    }
-
-                    if (
-                      listen?.track_metadata?.additional_info?.recording_msid
-                    ) {
-                      const linkWithMB = (
-                        <ListenControl
-                          buttonClassName="btn btn-link color-orange"
-                          text=""
-                          title="Link with MusicBrainz"
-                          icon={faLink}
-                          action={() => {
-                            NiceModal.show(MBIDMappingModal, {
-                              listenToMap: listen,
-                            });
-                          }}
-                        />
-                      );
-                      additionalActions = linkWithMB;
-                    }
-                  }
-                  return (
-                    <ListenCard
-                      key={`${groupItem.recording_name}-${groupItem.artist_name}-${groupItem.listened_at}`}
-                      showTimestamp
-                      showUsername={false}
-                      // eslint-disable-next-line react/jsx-no-useless-fragment
-                      customThumbnail={<></>}
-                      // eslint-disable-next-line react/jsx-no-useless-fragment
-                      feedbackComponent={<></>}
-                      listen={listen}
-                      additionalMenuItems={additionalMenuItems}
-                      additionalActions={additionalActions}
+                if (canDelete) {
+                  additionalMenuItems.push(
+                    <ListenControl
+                      text="Delete Listen"
+                      icon={faTrashAlt}
+                      action={() => {
+                        deleteListen(groupItem);
+                      }}
                     />
                   );
-                });
-                if (!releaseName?.length) {
-                  // If this is the group with no release name, return listencards
-                  // directly instead of an accordion group
-                  return <div>{listenCards}</div>;
                 }
-                return (
-                  <Accordion
-                    title={
-                      <>
-                        {multiTrackMappingButton} {releaseName}
-                      </>
-                    }
-                    defaultOpen={group.length === 1}
-                  >
-                    {listenCards}
-                  </Accordion>
-                );
-              })}
-            </div>
-            <ul className="pager" style={{ display: "flex" }}>
-              <li
-                className={`previous ${
-                  currPage && currPage <= 1 ? "hidden" : ""
-                }`}
+
+                if (listen?.track_metadata?.additional_info?.recording_msid) {
+                  const linkWithMB = (
+                    <ListenControl
+                      buttonClassName="btn btn-link color-orange"
+                      text=""
+                      title="Link with MusicBrainz"
+                      icon={faLink}
+                      action={() => {
+                        NiceModal.show(MBIDMappingModal, {
+                          listenToMap: listen,
+                        });
+                      }}
+                    />
+                  );
+                  additionalActions = linkWithMB;
+                }
+              }
+              return (
+                <ListenCard
+                  key={`${groupItem.recording_name}-${groupItem.artist_name}-${groupItem.listened_at}`}
+                  showTimestamp
+                  showUsername={false}
+                  // eslint-disable-next-line react/jsx-no-useless-fragment
+                  customThumbnail={<></>}
+                  // eslint-disable-next-line react/jsx-no-useless-fragment
+                  feedbackComponent={<></>}
+                  listen={listen}
+                  additionalMenuItems={additionalMenuItems}
+                  additionalActions={additionalActions}
+                />
+              );
+            });
+            if (!releaseName?.length) {
+              // If this is the group with no release name, return listencards
+              // directly instead of an accordion group
+              return <div>{listenCards}</div>;
+            }
+            return (
+              <Accordion
+                title={
+                  <>
+                    {multiTrackMappingButton} {releaseName}
+                  </>
+                }
+                defaultOpen={group.length === 1}
               >
-                <a
-                  role="button"
-                  onClick={handleClickPrevious}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleClickPrevious();
-                  }}
-                  tabIndex={0}
-                >
-                  &larr; Previous
-                </a>
-              </li>
-              <li
-                className={`next ${
-                  currPage && currPage >= totalPages ? "hidden" : ""
-                }`}
-                style={{ marginLeft: "auto" }}
-              >
-                <a
-                  role="button"
-                  onClick={handleClickNext}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleClickNext();
-                  }}
-                  tabIndex={0}
-                >
-                  Next &rarr;
-                </a>
-              </li>
-            </ul>
-          </div>
+                {listenCards}
+              </Accordion>
+            );
+          })}
         </div>
+        <ul className="pager" style={{ display: "flex" }}>
+          <li
+            className={`previous ${currPage && currPage <= 1 ? "hidden" : ""}`}
+          >
+            <a
+              role="button"
+              onClick={handleClickPrevious}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleClickPrevious();
+              }}
+              tabIndex={0}
+            >
+              &larr; Previous
+            </a>
+          </li>
+          <li
+            className={`next ${
+              currPage && currPage >= totalPages ? "hidden" : ""
+            }`}
+            style={{ marginLeft: "auto" }}
+          >
+            <a
+              role="button"
+              onClick={handleClickNext}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleClickNext();
+              }}
+              tabIndex={0}
+            >
+              Next &rarr;
+            </a>
+          </li>
+        </ul>
       </div>
     </>
   );
