@@ -334,10 +334,11 @@ export default function MissingMBDataPage() {
             if (!releaseName?.length) {
               // If this is the group with no release name, return listencards
               // directly instead of an accordion group
-              return <div>{listenCards}</div>;
+              return <div key="no-release-name">{listenCards}</div>;
             }
             return (
               <Accordion
+                key={releaseName}
                 title={
                   <>
                     {multiTrackMappingButton} {releaseName}

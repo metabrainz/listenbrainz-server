@@ -357,6 +357,7 @@ export default NiceModal.create(
                         />
                         <div style={{ flex: "2 1 0%" }}>
                           <ListenCard
+                            key={recordingMSID}
                             compact
                             listen={getListenFromTrack(
                               track,
