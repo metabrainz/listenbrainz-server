@@ -142,8 +142,8 @@ def combine_artist_stats(existing_table, new_table):
              , COALESCE(e.artist_name, n.artist_name) AS artist_name
              , COALESCE(e.listen_count, 0) AS old_listen_count
              , COALESCE(e.listen_count, 0) + COALESCE(n.listen_count, 0) AS new_listen_count
-          FROM parquet.`/{existing_table}` AS e
-     FULL JOIN parquet.`/{new_table}` n
+          FROM {existing_table} AS e
+     FULL JOIN {new_table} n
             ON e.user_id = n.user_id
            AND e.artist_mbid = n.artist_mbid
            AND e.artist_name = n.artist_name
