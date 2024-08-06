@@ -26,7 +26,7 @@ type MatchingTracksResult = MBTrackWithAC & {
   searchString: string;
 };
 
-type MatchingTracksResults = {
+export type MatchingTracksResults = {
   [recording_msid: string]: MatchingTracksResult;
 };
 

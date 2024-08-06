@@ -3,27 +3,24 @@
 import * as React from "react";
 
 import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import { groupBy, pick, size, sortBy } from "lodash";
+import { groupBy, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
 import MBIDMappingModal from "../../common/listens/MBIDMappingModal";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import {
-  getArtistName,
-  getRecordingMSID,
-  getTrackName,
-} from "../../utils/utils";
-import MultiTrackMBIDMappingModal from "./MultiTrackMBIDMappingModal";
+import { getRecordingMSID } from "../../utils/utils";
+import MultiTrackMBIDMappingModal, {
+  MatchingTracksResults,
+} from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
@@ -71,34 +68,45 @@ export default function MissingMBDataPage() {
 
   // Loader
   const props = useLoaderData() as MissingMBDataLoaderData;
-  const { missing_data: missingDataProps = [] } = props;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageSearchParam = searchParams.get("page");
+
 
   // State
   const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
     missingDataProps.slice(0, EXPECTED_ITEMS_PER_PAGE) || []
+    missingDataProps || []
   );
   const unsortedGroupedMissingData = groupBy(missingData, "release_name");
   // remove and store a catchall group with no release name
-  const noRelease = pick(unsortedGroupedMissingData, "null");
-  if (size(noRelease) > 0) {
-    // remove catchall group from other groups
+  const noReleaseNameGroup = pick(unsortedGroupedMissingData, "null");
+  if (size(noReleaseNameGroup) > 0) {
+    // remove catchall group from other groups,
+    // we want to add it at the very end
     delete unsortedGroupedMissingData.null;
   }
   const sortedMissingDataGroups = sortBy(
     unsortedGroupedMissingData,
     "length"
   ).reverse();
-  if (noRelease.null?.length) {
-    // re-add the group with no release name at the end
-    sortedMissingDataGroups.push(noRelease.null);
+  if (noReleaseNameGroup.null?.length) {
+    // re-add the group with no release name at the end,
+    // will be displayed as single listens rather than a group
+    sortedMissingDataGroups.push(noReleaseNameGroup.null);
   }
 
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
-  const [currPage, setCurrPage] = React.useState<number>(1);
+  const currPage = isNull(pageSearchParam) ? 1 : parseInt(pageSearchParam, 10);
   const totalPages = unsortedGroupedMissingData
     ? Math.ceil(size(unsortedGroupedMissingData) / EXPECTED_ITEMS_PER_PAGE)
     : 0;
   const [loading, setLoading] = React.useState<boolean>(false);
+
+  const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
+  const itemsOnThisPage = sortedMissingDataGroups.slice(
+    offset,
+    offset + EXPECTED_ITEMS_PER_PAGE
+  );
 
   // Ref
   const missingMBDataTableRef = React.useRef<HTMLDivElement>(null);
@@ -109,50 +117,6 @@ export default function MissingMBDataPage() {
       missingMBDataTableRef.current.scrollIntoView({ behavior: "smooth" });
     }
     setLoading(false);
-  };
-
-  const submitMissingData = (listen: Listen) => {
-    // This function submits data to the MusicBrainz server. We have not used
-    // fetch here because the endpoint where the submision is being done
-    // replies back with HTML and since we cannot redirect via fetch, we have
-    // to resort to such obscure method :D
-    const form = document.createElement("form");
-    form.method = "post";
-    form.action = "https://musicbrainz.org/release/add";
-    form.target = "_blank";
-    const name = document.createElement("input");
-    name.type = "hidden";
-    name.name = "name";
-    name.value = listen.track_metadata?.release_name || "";
-    form.appendChild(name);
-    const recording = document.createElement("input");
-    recording.type = "hidden";
-    recording.name = "mediums.0.track.0.name";
-    recording.value = getTrackName(listen);
-    form.appendChild(recording);
-    const artists = getArtistName(listen).split(",");
-    artists.forEach((artist, index) => {
-      const artistCredit = document.createElement("input");
-      artistCredit.type = "hidden";
-      artistCredit.name = `artist_credit.names.${index}.artist.name`;
-      artistCredit.value = artist;
-      form.appendChild(artistCredit);
-      if (index !== artists.length - 1) {
-        const joiner = document.createElement("input");
-        joiner.type = "hidden";
-        joiner.name = `artist_credit.names.${index}.join_phrase`;
-        joiner.value = ", ";
-        form.appendChild(joiner);
-      }
-    });
-    const editNote = document.createElement("textarea");
-    editNote.style.display = "none";
-    editNote.name = "edit_note";
-    editNote.value = `Imported from ${user.name}'s ListenBrainz Missing MusicBrainz Data Page`;
-    form.appendChild(editNote);
-    document.body.appendChild(form);
-    form.submit();
-    form.remove();
   };
 
   const deleteListen = async (data: MissingMBData) => {
@@ -196,64 +160,43 @@ export default function MissingMBDataPage() {
   const handleClickPrevious = () => {
     if (currPage && currPage > 1) {
       setLoading(true);
-      const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
       const updatedPage = currPage - 1;
-      setMissingData(
-        missingDataProps.slice(offset - EXPECTED_ITEMS_PER_PAGE, offset) || []
-      );
-      setCurrPage(updatedPage);
+      setSearchParams({ page: updatedPage.toString() });
       afterDisplay();
-      window.history.pushState(null, "", `?page=${updatedPage}`);
     }
   };
 
   const handleClickNext = () => {
     if (currPage && currPage < totalPages) {
       setLoading(true);
-      const offset = currPage * EXPECTED_ITEMS_PER_PAGE;
       const updatedPage = currPage + 1;
-      setMissingData(
-        missingDataProps.slice(offset, offset + EXPECTED_ITEMS_PER_PAGE) || []
-      );
-      setCurrPage(updatedPage);
+      setSearchParams({ page: updatedPage.toString() });
       afterDisplay();
-      window.history.pushState(null, "", `?page=${updatedPage}`);
     }
   };
 
-  const missingMBDataAsListen = missingData.map((data) => {
-    return {
-      listened_at: new Date(data.listened_at).getTime() / 1000,
-      user_name: user.name,
-      track_metadata: {
-        artist_name: data.artist_name,
-        track_name: data.recording_name,
-        release_name: data?.release_name,
-        additional_info: {
-          recording_msid: data.recording_msid,
-        },
-      },
-    };
-  });
-
   // Effects
   React.useEffect(() => {
-    window.history.replaceState(null, "", `?page=${currPage}`);
-  }, []);
+    // Only run once
+    setSearchParams({ page: currPage.toString() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setSearchParams]);
 
   React.useEffect(() => {
+    if (currPage > totalPages) {
+      setSearchParams({ page: "1" });
+    }
+  }, [currPage, setSearchParams, totalPages]);
+
+  React.useEffect(() => {
+    const missingMBDataAsListen = itemsOnThisPage.flatMap((x) => [
+      ...x.map((y) => missingDataToListen(y, user)),
+    ]);
     dispatch({
       type: "SET_AMBIENT_QUEUE",
       data: missingMBDataAsListen,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missingMBDataAsListen]);
-
-  const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
-  const itemsOnThisPage = sortedMissingDataGroups.slice(
-    offset,
-    offset + EXPECTED_ITEMS_PER_PAGE
-  );
+  }, [dispatch, itemsOnThisPage, user]);
 
   return (
     <>
@@ -305,9 +248,13 @@ export default function MissingMBDataPage() {
                     style={{ padding: "5px" }}
                     type="button"
                     onClick={(e) => {
-                      NiceModal.show(MultiTrackMBIDMappingModal, {
-                        missingData: group,
-                        releaseName,
+                      NiceModal.show<MatchingTracksResults, any>(
+                        MultiTrackMBIDMappingModal,
+                        {
+                          missingData: group,
+                          releaseName,
+                        }
+                        );
                       });
                     }}
                     data-toggle="modal"
