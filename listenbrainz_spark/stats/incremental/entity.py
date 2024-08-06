@@ -248,7 +248,7 @@ def incremental_process_job(from_date, to_date, previous_job, type_, entity, sta
     combined_artists_df = combine_artist_stats(existing_artists_table, new_artists_table)
     combined_artists_df.createOrReplaceTempView(combined_artists_table)
 
-    return combined_artists_df, filter_top_k_artists_incremental(incremental_listens_table, combined_artists_table, 1000)
+    return combined_artists_table, filter_top_k_artists_incremental(incremental_listens_table, combined_artists_table, 1000)
 
 
 def incremental_process_job_end(type_, entity, stats_range, combined_artists_table, stats_aggregation_path):
