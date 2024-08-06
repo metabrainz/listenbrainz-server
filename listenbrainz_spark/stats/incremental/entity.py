@@ -236,8 +236,8 @@ def incremental_process_job(from_date, to_date, previous_job, type_, entity, sta
         .filter(f"created > to_timestamp('{previous_job['latest_created_at']}') AND listened_at >= to_timestamp('{from_date}') AND listened_at <= to_timestamp('{to_date}')") \
         .createOrReplaceTempView(incremental_listens_table)
 
-    latest_created_at = run_query(f"select max(created) as latest_created_at from {incremental_listens_table}") \
-        .collect()[0].latest_created_at
+    new_row_df = run_query(f"select max(created) as latest_created_at from {incremental_listens_table}").collect()[0]
+    latest_created_at = new_row_df.latest_created_at or previous_job["latest_created_at"]
     start_job(type_, entity, stats_range, latest_created_at)
 
     new_artists_df = get_artists_from_listens(incremental_listens_table, [cache_table])
