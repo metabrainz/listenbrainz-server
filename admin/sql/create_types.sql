@@ -19,4 +19,4 @@ CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_
 
 CREATE TYPE do_not_recommend_entity_type AS ENUM ('artist', 'release', 'release_group', 'recording');
 
-CREATE TYPE background_tasks_type AS ENUM ('delete_listens', 'delete_user');
+CREATE TYPE background_tasks_type AS ENUM ('delete_listens', 'delete_user', 'export_user');

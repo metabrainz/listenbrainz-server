@@ -226,6 +226,14 @@ CREATE TABLE background_tasks (
     created         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_data_export (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    filename            TEXT NOT NULL,
+    available_until     TIMESTAMPTZ NOT NULL,
+    created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
