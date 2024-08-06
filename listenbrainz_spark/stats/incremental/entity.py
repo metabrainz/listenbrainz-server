@@ -233,7 +233,7 @@ def incremental_process_job(from_date, to_date, previous_job, type_, entity, sta
 
     incremental_listens_table = f"user_{entity}_{stats_range}_new"
     read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
-        .filter(f"created > to_timestamp('{previous_job['latest_created_at']}') AND listened_at >= to_timestamp('{from_date}') AND listened_at <= to_timestamp('{to_date}'") \
+        .filter(f"created > to_timestamp('{previous_job['latest_created_at']}') AND listened_at >= to_timestamp('{from_date}') AND listened_at <= to_timestamp('{to_date}')") \
         .createOrReplaceTempView(incremental_listens_table)
 
     latest_created_at = run_query(f"select max(created) as latest_created_at from {incremental_listens_table}") \
