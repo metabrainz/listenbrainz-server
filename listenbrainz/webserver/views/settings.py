@@ -1,11 +1,13 @@
 import json
+import os.path
 from datetime import datetime
 
 import orjson
 import json
 from flask import Blueprint, Response, render_template, request, url_for, \
-    redirect, current_app, jsonify, stream_with_context
+    redirect, current_app, jsonify, stream_with_context, send_file
 from flask_login import current_user, login_required
+from sqlalchemy import text
 from werkzeug.exceptions import NotFound, BadRequest
 
 import listenbrainz.db.feedback as db_feedback
@@ -104,87 +106,34 @@ def import_data():
     return jsonify(data)
 
 
-def fetch_listens(musicbrainz_id, to_ts):
-    """
-    Fetch all listens for the user from listenstore by making repeated queries
-    to listenstore until we get all the data. Returns a generator that streams
-    the results.
-    """
-    while True:
-        batch, _, _ = timescale_connection._ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
-        if not batch:
-            break
-        yield from batch
-        to_ts = batch[-1].timestamp.replace(tzinfo=None)  # new to_ts will be the the timestamp of the last listen fetched
-
-
-def fetch_feedback(user_id):
-    """
-    Fetch feedback by making repeated queries to DB until we get all the data.
-    Returns a generator that streams the results.
-    """
-    batch = []
-    offset = 0
-    while True:
-        batch = db_feedback.get_feedback_for_user(
-            db_conn,
-            ts_conn,
-            user_id=current_user.id,
-            limit=EXPORT_FETCH_COUNT,
-            offset=offset
-        )
-        if not batch:
-            break
-        yield from batch
-        offset += len(batch)
-
-
-def stream_json_array(elements):
-    """ Return a generator of string fragments of the elements encoded as array. """
-    for i, element in enumerate(elements):
-        yield '[' if i == 0 else ','
-        yield orjson.dumps(element).decode("utf-8")
-    yield ']'
-
-
 @settings_bp.route("/export/", methods=["POST"])
 @api_login_required
 @web_listenstore_needed
 def export_data():
-    """ Exporting the data to json """
-    filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
-
-    # Build a generator that streams the json response. We never load all
-    # listens into memory at once, and we can start serving the response
-    # immediately.
-    to_ts = datetime.utcnow()
-    listens = fetch_listens(current_user.musicbrainz_id, to_ts)
-    output = stream_json_array(listen.to_api() for listen in listens)
-
-    response = Response(stream_with_context(output))
-    response.headers["Content-Disposition"] = "attachment; filename=" + filename
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    response.mimetype = "text/json"
-    return response
+    """ Add a request to export the user data to an archive in background. """
+    try:
+        add_task(current_user.id, "export_user")
+        return jsonify({"success": True})
+    except Exception:
+        current_app.logger.error('Error while exporting user data: %s', current_user.musicbrainz_id, exc_info=True)
+        raise APIInternalServerError(f'Error while exporting user data {current_user.musicbrainz_id}, please try again later.')
 
 
-@settings_bp.route("/export-feedback/", methods=["POST"])
-@login_required
-def export_feedback():
-    """ Exporting the feedback data to json """
-    filename = current_user.musicbrainz_id + "_lb_feedback-" + datetime.today().strftime('%Y-%m-%d') + ".json"
+@settings_bp.route("/export/archive/", methods=["POST"])
+@api_login_required
+@web_listenstore_needed
+def download_export_archive():
+    """ Add a request to export the user data to an archive in background. """
+    result = db_conn.execute(
+        text("SELECT filename FROM user_data_export WHERE user_id = :user_id"),
+        {"user_id": current_user.id}
+    )
+    row = result.first()
+    if row is None:
+        raise APINotFound("No export found for user.")
 
-    # Build a generator that streams the json response. We never load all
-    # feedback into memory at once, and we can start serving the response
-    # immediately.
-    feedback = fetch_feedback(current_user.id)
-    output = stream_json_array(fb.to_api() for fb in feedback)
-
-    response = Response(stream_with_context(output))
-    response.headers["Content-Disposition"] = "attachment; filename=" + filename
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    response.mimetype = "text/json"
-    return response
+    file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename))
+    return send_file(file_path, mimetype="application/zip", as_attachment=True)
 
 
 @settings_bp.route('/delete/', methods=['POST'])
@@ -201,11 +150,11 @@ def delete():
     that they wish to delete their ListenBrainz account.
     """
     try:
-        add_task(current_user.id, 'delete_user')
+        add_task(current_user.id, "delete_user")
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting user: %s', current_user.musicbrainz_id, exc_info=True)
-        raise APIInternalServerError('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
+        raise APIInternalServerError(f'Error while deleting user {current_user.musicbrainz_id}, please try again later.')
 
 
 @settings_bp.route('/delete-listens/', methods=['POST'])
@@ -222,11 +171,11 @@ def delete_listens():
     wish to delete their listens.
     """
     try:
-        add_task(current_user.id, 'delete_listens')
+        add_task(current_user.id, "delete_listens")
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting listens for user: %s', current_user.musicbrainz_id, exc_info=True)
-        raise APIInternalServerError("Error while deleting listens for user: %s" % current_user.musicbrainz_id)
+        raise APIInternalServerError(f"Error while deleting listens for user: {current_user.musicbrainz_id}")
 
 
 def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:

@@ -10,7 +10,7 @@ from listenbrainz.webserver import create_app, db_conn, ts_conn
 
 def add_task(user_id, task):
     """ Add a task to the background tasks """
-    query = "INSERT INTO background_tasks (user_id, task) VALUES (:user_id, :task)"
+    query = "INSERT INTO background_tasks (user_id, task) VALUES (:user_id, :task) ON CONFLICT DO NOTHING"
     db_conn.execute(text(query), {"user_id": user_id, "task": task})
     db_conn.commit()
 

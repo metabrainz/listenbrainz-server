@@ -2,14 +2,19 @@ import os.path
 import shutil
 import tempfile
 import zipfile
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
+from pathlib import Path
 
+import orjson
 from dateutil.relativedelta import relativedelta
+from flask import current_app
 from sqlalchemy import text
 
+from listenbrainz.db import user as db_user
 from listenbrainz.webserver import timescale_connection
 
 BATCH_SIZE = 1000
+USER_DATA_EXPORT_AVAILABILITY = timedelta(days=30)  # how long should a user data export be saved for on our servers
 
 
 def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
@@ -145,22 +150,41 @@ def export_pinned_recordings_for_user(db_conn, tmp_dir: str, user_id: int) -> st
     return None
 
 
+def export_info_for_user(tmp_dir, user):
+    """ Export user's info to a file in json format. """
+    file_path = os.path.join(tmp_dir, "user.json")
+    with open(file_path, "wb") as file:
+        file.write(orjson.dumps({"user_id": user["id"], "username": user["musicbrainz_id"]}))
+        file.write(b"\n")
+    return file_path
+
+
 def export_user(db_conn, ts_conn, user_id: int):
     """ Export all data for the given user in a zip archive """
-    archive_name = f"export_{user_id}.zip"
-    dest_path = os.path.join(archive_name)
+    user = db_user.get(db_conn, user_id)
+    if user is None:
+        current_app.logger.info("User with id: %s does not exist, skipping export.", user_id)
+        return
+
+    archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
+    dest_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], archive_name)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         archive_path = os.path.join(tmp_dir, archive_name)
         with zipfile.ZipFile(archive_path, "w") as archive:
-            listen_files = export_listens_for_user(ts_conn, tmp_dir, user_id)
-            feedback_file = export_feedback_for_user(db_conn, tmp_dir, user_id)
-            pinned_recording_file = export_pinned_recordings_for_user(db_conn, tmp_dir, user_id)
-
             all_files = []
+
+            user_file = export_info_for_user(tmp_dir, user)
+            all_files.append(user_file)
+
+            listen_files = export_listens_for_user(ts_conn, tmp_dir, user_id)
             all_files.extend(listen_files)
+
+            feedback_file = export_feedback_for_user(db_conn, tmp_dir, user_id)
             if feedback_file:
                 all_files.append(feedback_file)
+
+            pinned_recording_file = export_pinned_recordings_for_user(db_conn, tmp_dir, user_id)
             if pinned_recording_file:
                 all_files.append(pinned_recording_file)
 
@@ -168,3 +192,36 @@ def export_user(db_conn, ts_conn, user_id: int):
                 archive.write(file, arcname=os.path.relpath(file, tmp_dir))
 
         shutil.move(archive_path, dest_path)
+
+    created = datetime.now()
+    available_until = created + USER_DATA_EXPORT_AVAILABILITY
+    db_conn.execute(text("""
+        INSERT INTO user_data_export (user_id, filename, available_until, created)
+             VALUES (:user_id, :filename, :available_until, :created)
+        ON CONFLICT (user_id)
+          DO UPDATE
+                SET available_until = EXCLUDED.available_until
+                  , filename = EXCLUDED.filename
+                  , created = EXCLUDED.created
+    """), {
+        "user_id": user_id,
+        "filename": archive_name,
+        "available_until": available_until,
+        "created": created
+    })
+    db_conn.commit()
+    # todo: send email that export is done
+
+
+def cleanup_old_exports(db_conn):
+    """ Delete user data exports that have expired or are absent (new export created) from user_data_export table """
+    with db_conn.begin():
+        db_conn.execute(text("DELETE FROM user_data_export WHERE available_until < NOW()"))
+        result = db_conn.execute(text("SELECT filename FROM user_data_export"))
+        files_to_keep = {r.filename for r in result.all()}
+
+        # delete exports that are no longer required
+        for path in Path(current_app.config["USER_DATA_EXPORT_BASE_DIR"]).iterdir():
+            if path.is_file() and path.name not in files_to_keep:
+                current_app.logger.info("Removing file: %s", path)
+                path.unlink(missing_ok=True)
