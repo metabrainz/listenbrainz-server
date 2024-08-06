@@ -247,6 +247,11 @@ def incremental_process_job(from_date, to_date, previous_job, type_, entity, sta
     combined_artists_table = f"{entity}_{stats_range}_combined"
     combined_artists_df = combine_artist_stats(existing_artists_table, new_artists_table)
     combined_artists_df.createOrReplaceTempView(combined_artists_table)
+
+    return combined_artists_df, filter_top_k_artists_incremental(incremental_listens_table, combined_artists_table, 1000)
+
+
+def incremental_process_job_end(type_, entity, stats_range, combined_artists_table, stats_aggregation_path):
     new_stats_df = run_query(f"""
         SELECT user_id
              , artist_mbid
@@ -255,10 +260,7 @@ def incremental_process_job(from_date, to_date, previous_job, type_, entity, sta
           FROM {combined_artists_table}
     """)
     save_parquet(new_stats_df, stats_aggregation_path)
-
     end_job(type_, entity, stats_range)
-
-    return filter_top_k_artists_incremental(incremental_listens_table, combined_artists_table, 1000)
 
 
 def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
@@ -328,8 +330,17 @@ def get_entity_stats(entity: str, stats_range: str, database: str):
 
     if is_full:
         top_artists_df = full_process_job(from_date, to_date, message_type, entity, stats_range, cache_table, stats_aggregation_path)
+        combined_artists_table = None
     else:
-        top_artists_df = incremental_process_job(from_date, to_date, previous_job, message_type, entity, stats_range, cache_table, stats_aggregation_path)
+        combined_artists_table, top_artists_df = incremental_process_job(
+            from_date, to_date, previous_job, message_type, entity, stats_range, cache_table, stats_aggregation_path
+        )
 
     top_artists = top_artists_df.toLocalIterator()
-    return create_messages(top_artists, entity, stats_range, from_date, to_date, message_type, is_full, database)
+
+    messages = create_messages(top_artists, entity, stats_range, from_date, to_date, message_type, is_full, database)
+    for message in messages:
+        yield message
+
+    if not is_full:
+        incremental_process_job_end(message_type, entity, stats_range, combined_artists_table, stats_aggregation_path)
