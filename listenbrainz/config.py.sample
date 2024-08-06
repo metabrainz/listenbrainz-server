@@ -209,3 +209,6 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = False
 
 # If set to True, do not allow new users without email to register
 REJECT_NEW_USERS_WITHOUT_EMAIL = False
+
+# base directory for user data exports
+USER_DATA_EXPORT_BASE_DIR = "/mnt/exports/"
