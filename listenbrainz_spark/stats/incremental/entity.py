@@ -2,13 +2,14 @@ import logging
 import os.path
 import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import List, Iterator, Optional, Dict
 
 from more_itertools import chunked
 from pyspark.sql import Row, DataFrame
 
 from listenbrainz_spark.exceptions import PathNotFoundException
-from listenbrainz_spark.hdfs import path_exists, delete_dir, rename
+from listenbrainz_spark.hdfs import path_exists, delete_dir, rename, create_dir
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, INTERMEDIATE_STATS_JOB_PARQUET, \
     LISTENBRAINZ_EXPERIMENTAL_STATS_DIR, INCREMENTAL_DUMPS_SAVE_PATH
 from listenbrainz_spark.schema import intermediate_stats_job_schema
@@ -22,8 +23,12 @@ logger = logging.getLogger(__name__)
 def save_parquet(df, dest_path):
     tmp_path = f"/{uuid.uuid4()}"
     df.write.parquet(tmp_path)
+
     if path_exists(dest_path):
         delete_dir(dest_path, recursive=True)
+
+    dest_path_parent = str(Path(dest_path).parent)
+    create_dir(dest_path_parent)
     rename(tmp_path, dest_path)
 
 
