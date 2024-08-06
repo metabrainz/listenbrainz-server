@@ -35,6 +35,7 @@ PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / co
 
 SPARK_LISTENS_SCHEMA = pa.schema([
     pa.field("listened_at", pa.timestamp("ms"), False),
+    pa.field("created", pa.timestamp("ms"), False),
     pa.field("user_id", pa.int64(), False),
     pa.field("recording_msid", pa.string(), False),
     pa.field("artist_name", pa.string(), False),
@@ -342,6 +343,7 @@ class DumpListenStore:
         -- setting multiple columns at once.
                 WITH listen_with_mbid AS (
                      SELECT l.listened_at
+                          , l.created
                           , l.user_id
                           , l.recording_msid
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
@@ -365,6 +367,7 @@ class DumpListenStore:
                       WHERE {criteria} > %(start)s
                         AND {criteria} <= %(end)s
                 )    SELECT l.listened_at
+                          , l.created
                           , l.user_id
                           , l.recording_msid::TEXT
                           , l_artist_credit_mbids
@@ -388,7 +391,7 @@ class DumpListenStore:
         listen_count = 0
         current_listened_at = None
         conn = timescale.engine.raw_connection()
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
+        with (conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs):
             curs.execute(query, args)
             while True:
                 t0 = time.monotonic()
@@ -396,6 +399,7 @@ class DumpListenStore:
                 approx_size = 0
                 data = {
                     'listened_at': [],
+                    'created': [],
                     'user_id': [],
                     'recording_msid': [],
                     'artist_name': [],
@@ -438,10 +442,11 @@ class DumpListenStore:
 
                     current_listened_at = result["listened_at"]
                     data["listened_at"].append(current_listened_at)
+                    data["created"].append(result["created"])
                     data["user_id"].append(result["user_id"])
                     data["recording_msid"].append(result["recording_msid"])
-                    approx_size += len(str(result["listened_at"])) + len(str(result["user_id"])) \
-                                   + len(result["recording_msid"])
+                    approx_size += len(str(result["listened_at"])) + len(str(result["created"])) \
+                                   + len(str(result["user_id"])) + len(result["recording_msid"])
 
                     written += 1
                     listen_count += 1

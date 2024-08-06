@@ -14,6 +14,7 @@ mlhd_schema = StructType([
 
 listens_new_schema = StructType([
     StructField('listened_at', TimestampType(), nullable=False),
+    StructField('created', TimestampType(), nullable=False),
     StructField('user_id', IntegerType(), nullable=False),
     StructField('recording_msid', StringType(), nullable=False),
     StructField('artist_name', StringType(), nullable=False),
