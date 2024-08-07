@@ -1,6 +1,6 @@
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental import Entity
+from listenbrainz_spark.stats.incremental import Entity, save_parquet, end_job
 
 
 class Release(Entity):
@@ -21,15 +21,15 @@ class Release(Entity):
          LEFT JOIN parquet.`{cache_table}` rel
                 ON rel.release_mbid = l.release_mbid
         ), intermediate_table as (
-           SELECT user_id
-                , first(release_name) AS any_release_name
-                , any_release_mbid
-                , first(release_artist_name) AS any_artist_name
-                , artist_credit_mbids
-                , artists
-                , caa_id
-                , caa_release_mbid
-                , count(*) as listen_count
+            SELECT user_id
+                 , first(release_name) AS any_release_name
+                 , any_release_mbid
+                 , first(release_artist_name) AS any_artist_name
+                 , artist_credit_mbids
+                 , artists
+                 , caa_id
+                 , caa_release_mbid
+                 , count(*) as listen_count
               FROM gather_release_data
              WHERE release_name != ''
                AND release_name IS NOT NULL
@@ -154,6 +154,21 @@ class Release(Entity):
             GROUP BY user_id
               HAVING ANY(new_listen_count != old_listen_count)
         """)
+
+    def post_process_incremental(self, type_, entity, stats_range, combined_entity_table, stats_aggregation_path):
+        new_stats_df = run_query(f"""
+            SELECT user_id
+                 , release_name
+                 , release                 , artist_name
+                 , artist_credit_mbids
+                 , caa_id
+                 , caa_release_mbid
+                 , artists
+                 , new_listen_count AS listen_count
+              FROM {combined_entity_table}
+        """)
+        save_parquet(new_stats_df, stats_aggregation_path)
+        end_job(type_, entity, stats_range)
 
     def get_cache_tables(self):
         return [RELEASE_METADATA_CACHE_DATAFRAME]

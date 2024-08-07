@@ -71,13 +71,5 @@ class Entity(abc.ABC):
 
         return self.filter_top_incremental(incremental_listens_table, combined_stats_table,1000)
 
-    def post_process_incremental(self, type_, entity, stats_range, combined_artists_table, stats_aggregation_path):
-        new_stats_df = run_query(f"""
-            SELECT user_id
-                 , artist_mbid
-                 , artist_name
-                 , new_listen_count AS listen_count
-              FROM {combined_artists_table}
-        """)
-        save_parquet(new_stats_df, stats_aggregation_path)
-        end_job(type_, entity, stats_range)
+    def post_process_incremental(self, type_, entity, stats_range, combined_entity_table, stats_aggregation_path):
+        pass

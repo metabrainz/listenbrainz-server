@@ -1,6 +1,6 @@
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental import Entity
+from listenbrainz_spark.stats.incremental import Entity, end_job, save_parquet
 
 
 class Artist(Entity):
@@ -107,6 +107,17 @@ class Artist(Entity):
             GROUP BY user_id
               HAVING ANY(new_listen_count != old_listen_count)
         """)
+
+    def post_process_incremental(self, type_, entity, stats_range, combined_entity_table, stats_aggregation_path):
+        new_stats_df = run_query(f"""
+            SELECT user_id
+                 , artist_mbid
+                 , artist_name
+                 , new_listen_count AS listen_count
+              FROM {combined_entity_table}
+        """)
+        save_parquet(new_stats_df, stats_aggregation_path)
+        end_job(type_, entity, stats_range)
 
     def get_cache_tables(self):
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
