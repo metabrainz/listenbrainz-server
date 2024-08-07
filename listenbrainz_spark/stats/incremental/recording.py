@@ -43,7 +43,7 @@ class Recording(Entity):
                      , any_release_name AS release_name
                      , any_release_mbid AS release_mbid
                      , any_artist_name AS artist_name
-                     , coalesce(artist_credit_mbids, array()) as artist_mbids
+                     , artist_credit_mbids
                      , artists
                      , caa_id
                      , caa_release_mbid
@@ -106,7 +106,7 @@ class Recording(Entity):
                                   , release_name
                                   , release_mbid
                                   , artist_name
-                                  , artist_credit_mbids
+                                  , coalesce(artist_credit_mbids, array()) as artist_mbids
                                   , artists
                                   , caa_id
                                   , caa_release_mbid
@@ -150,7 +150,7 @@ class Recording(Entity):
                               , release_name
                               , release_mbid
                               , artist_name
-                              , artist_credit_mbids
+                              , coalesce(artist_credit_mbids, array()) as artist_mbids
                               , artists
                               , caa_id
                               , caa_release_mbid
