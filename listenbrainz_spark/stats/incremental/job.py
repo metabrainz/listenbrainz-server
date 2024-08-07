@@ -39,9 +39,11 @@ def start_job(type_: str, entity: str, stats_range: str, latest_created_at: date
     try:
         incremental_stats_job_df: DataFrame = read_files_from_HDFS(INTERMEDIATE_STATS_JOB_PARQUET)
         incremental_stats_job_df = incremental_stats_job_df \
-            .filter(incremental_stats_job_df.type != type_) \
-            .filter(incremental_stats_job_df.entity != entity) \
-            .filter(incremental_stats_job_df.range != stats_range)
+            .filter(~(
+                (incremental_stats_job_df.type == type_)
+              & (incremental_stats_job_df.entity == entity)
+              & (incremental_stats_job_df.range == stats_range)
+            ))
         incremental_stats_job_df = incremental_stats_job_df.union(new_row_df)
     except PathNotFoundException:
         logger.info("Intermediate job stats records file not found, creating...")
@@ -55,9 +57,11 @@ def end_job(type_: str, entity: str, stats_range: str):
     try:
         incremental_stats_job_df: DataFrame = read_files_from_HDFS(INTERMEDIATE_STATS_JOB_PARQUET)
         job_row_df = incremental_stats_job_df \
-            .filter(incremental_stats_job_df.type == type_) \
-            .filter(incremental_stats_job_df.entity == entity) \
-            .filter(incremental_stats_job_df.range == stats_range)
+            .filter(~(
+                (incremental_stats_job_df.type == type_)
+              & (incremental_stats_job_df.entity == entity)
+              & (incremental_stats_job_df.range == stats_range)
+            ))
         jobs = job_row_df.collect()
 
         if len(jobs) == 0:
@@ -71,9 +75,11 @@ def end_job(type_: str, entity: str, stats_range: str):
         updated_job_df = create_dataframe(updated_job, schema=intermediate_stats_job_schema)
 
         incremental_stats_job_df = incremental_stats_job_df \
-            .filter(incremental_stats_job_df.type != type_) \
-            .filter(incremental_stats_job_df.entity != entity) \
-            .filter(incremental_stats_job_df.range != stats_range)
+            .filter(~(
+                (incremental_stats_job_df.type == type_)
+              & (incremental_stats_job_df.entity == entity)
+              & (incremental_stats_job_df.range == stats_range)
+            ))
         incremental_stats_job_df = incremental_stats_job_df.union(updated_job_df)
         save_parquet(incremental_stats_job_df, INTERMEDIATE_STATS_JOB_PARQUET)
     except PathNotFoundException:
