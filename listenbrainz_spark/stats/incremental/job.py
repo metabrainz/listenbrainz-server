@@ -57,16 +57,15 @@ def end_job(type_: str, entity: str, stats_range: str):
     try:
         incremental_stats_job_df: DataFrame = read_files_from_HDFS(INTERMEDIATE_STATS_JOB_PARQUET)
         job_row_df = incremental_stats_job_df \
-            .filter(~(
-                (incremental_stats_job_df.type == type_)
-              & (incremental_stats_job_df.entity == entity)
-              & (incremental_stats_job_df.range == stats_range)
-            ))
+            .filter(incremental_stats_job_df.type == type_) \
+            .filter(incremental_stats_job_df.entity == entity) \
+            .filter(incremental_stats_job_df.range == stats_range)
         jobs = job_row_df.collect()
 
         if len(jobs) == 0:
             logger.error(f"Intermediate jobs stats records: no entry found for"
                          f" type={type_}, entity={entity} and range={stats_range}")
+            return
 
         job = jobs[0].asDict()
         job["ended_at"] = ended_at
