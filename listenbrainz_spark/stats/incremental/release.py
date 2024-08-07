@@ -133,7 +133,8 @@ class Release(Entity):
                      , RANK() over (PARTITION BY user_id ORDER BY new_listen_count DESC) AS rank
                   FROM {combined_stats_table} c
                  WHERE c.user_id IN (SELECT user_id FROM users_with_changes)
-            )   SELECT user_id
+            ), aggregate_stats AS (
+               SELECT user_id
                      , sort_array(
                         collect_list(
                             struct(
@@ -153,13 +154,26 @@ class Release(Entity):
                WHERE rank <= {k}
             GROUP BY user_id
               HAVING ANY(new_listen_count != old_listen_count)
+            ), entity_counts AS (
+              SELECT user_id
+                   , count(*) as releases_count
+                FROM filtered_entity_stats
+            GROUP BY user_id    
+            )
+              SELECT agg.user_id
+                   , releases
+                   , releases_count
+                FROM aggregate_stats agg
+                JOIN entity_counts ec
+                  ON agg.user_id = ec.user_id
         """)
 
     def post_process_incremental(self, type_, entity, stats_range, combined_entity_table, stats_aggregation_path):
         new_stats_df = run_query(f"""
             SELECT user_id
                  , release_name
-                 , release                 , artist_name
+                 , release       
+                 , artist_name
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid

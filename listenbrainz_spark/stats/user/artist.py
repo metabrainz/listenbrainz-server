@@ -53,12 +53,12 @@ def get_artists(table: str, cache_tables: List[str], number_of_results: int) -> 
              FROM listens_with_mb_data
          GROUP BY user_id
                 , lower(artist_name)
-                , artist_mbid    
+                , artist_mbid
         ), entity_count as (
             SELECT user_id
                  , count(*) as artists_count
               FROM intermediate_table
-          GROUP BY user_id      
+          GROUP BY user_id
         ), ranked_stats as (
             SELECT user_id
                  , any_artist_name AS artist_name
