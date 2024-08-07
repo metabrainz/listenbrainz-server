@@ -18,7 +18,7 @@ class Artist(Entity):
                      , COALESCE(at.artist_name, el.artist_credit_name) AS artist_name
                      , el.artist_mbid
                   FROM exploded_listens el
-             LEFT JOIN {cache_table} at
+             LEFT JOIN parquet.`{cache_table}` at
                     ON el.artist_mbid = at.artist_mbid
             ), intermediate_table AS (
                 SELECT user_id

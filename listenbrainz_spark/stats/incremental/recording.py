@@ -22,9 +22,9 @@ class Recording(Entity):
                      , rel.caa_release_mbid
                      , count(*) as listen_count
                   FROM {listen_table} l
-             LEFT JOIN {rec_cache_table} rec
+             LEFT JOIN parquet.`{rec_cache_table}` rec
                     ON rec.recording_mbid = l.recording_mbid
-             LEFT JOIN {rel_cache_table} rel
+             LEFT JOIN parquet.`{rel_cache_table}` rel
                     ON rel.release_mbid = l.release_mbid
               GROUP BY l.user_id
                      , lower(l.recording_name)

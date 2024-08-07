@@ -13,7 +13,6 @@ from listenbrainz_spark.stats.incremental.recording import Recording
 from listenbrainz_spark.stats.incremental.release import Release
 from listenbrainz_spark.stats.incremental.release_group import ReleaseGroup
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
-from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -87,13 +86,6 @@ def get_entity_stats(entity: str, stats_range: str, database: str):
     is_full = previous_job is None or previous_job["latest_created_at"] <= from_date
 
     entity_obj = entity_map.get(entity)
-
-    cache_tables = []
-    for idx, df_path in enumerate(entity_obj.get_cache_tables()):
-        df_name = f"entity_data_cache_{idx}"
-        cache_tables.append(df_name)
-        read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-
     stats_aggregation_path = os.path.join(LISTENBRAINZ_EXPERIMENTAL_STATS_DIR, message_type, entity, stats_range)
 
     if is_full:

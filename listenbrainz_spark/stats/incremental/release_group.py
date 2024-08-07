@@ -22,9 +22,9 @@ class ReleaseGroup(Entity):
                      , rg.caa_id
                      , rg.caa_release_mbid
                   FROM {listen_table} l
-             LEFT JOIN {rel_cache_table} rel
+             LEFT JOIN parquet.`{rel_cache_table}` rel
                     ON rel.release_mbid = l.release_mbid
-             LEFT JOIN {rg_cache_table} rg
+             LEFT JOIN parquet.`{rg_cache_table}` rg
                     ON rg.release_group_mbid = rel.release_group_mbid
             ), intermediate_table as (
                 SELECT user_id

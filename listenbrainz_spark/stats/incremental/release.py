@@ -18,7 +18,7 @@ class Release(Entity):
                  , rel.caa_id
                  , rel.caa_release_mbid
               FROM {listen_table} l
-         LEFT JOIN {cache_table} rel
+         LEFT JOIN parquet.`{cache_table}` rel
                 ON rel.release_mbid = l.release_mbid
         ), intermediate_table as (
            SELECT user_id
