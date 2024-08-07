@@ -87,7 +87,7 @@ def get_job(type_: str, entity: str, stats_range: str):
             .filter(incremental_stats_job_df.type == type_) \
             .filter(incremental_stats_job_df.entity == entity) \
             .filter(incremental_stats_job_df.range == stats_range) \
-            .filter(incremental_stats_job_df.ended_at.isNotlNull())
+            .filter(incremental_stats_job_df.ended_at.isNotNull())
 
         jobs = incremental_stats_job_df.collect()
         if len(jobs) > 0:
