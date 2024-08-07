@@ -64,7 +64,7 @@ class ReleaseGroup(Entity):
         return run_query(f"""
             SELECT COALESCE(n.user_id, e.user_id) AS user_id
                  , COALESCE(n.release_group_name, e.release_group_name) AS release_group_name
-                 , COALESCE(n.release_group_mbid, e.release_mbid) AS release_group_mbid
+                 , COALESCE(n.release_group_mbid, e.release_group_mbid) AS release_group_mbid
                  , COALESCE(n.artist_name, e.artist_name) AS artist_name
                  , COALESCE(n.artist_credit_mbids, e.artist_credit_mbids) AS artist_credit_mbids
                  , COALESCE(n.artists, e.artists) AS artists
