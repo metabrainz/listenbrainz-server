@@ -39,16 +39,16 @@ class Artist(Entity):
 
     def combine_existing_and_new_stats(self, existing_table: str, new_table: str):
         return run_query(f"""
-            SELECT COALESCE(e.user_id, n.user_id) AS user_id
-                 , COALESCE(e.artist_mbid, n.artist_mbid) AS artist_mbid
-                 , COALESCE(e.artist_name, n.artist_name) AS artist_name
+            SELECT COALESCE(n.user_id, e.user_id) AS user_id
+                 , COALESCE(n.artist_mbid, e.artist_mbid) AS artist_mbid
+                 , COALESCE(n.artist_name, e.artist_name) AS artist_name
                  , COALESCE(e.listen_count, 0) AS old_listen_count
-                 , COALESCE(e.listen_count, 0) + COALESCE(n.listen_count, 0) AS new_listen_count
+                 , COALESCE(n.listen_count, 0) + COALESCE(e.listen_count, 0) AS new_listen_count
               FROM {existing_table} AS e
          FULL JOIN {new_table} n
-                ON e.user_id = n.user_id
-               AND e.artist_mbid = n.artist_mbid
-               AND e.artist_name = n.artist_name
+                ON n.user_id = e.user_id
+               AND n.artist_mbid = e.artist_mbid
+               AND n.artist_name = e.artist_name
         """)
 
     def filter_top_full(self, table: str, k: int):

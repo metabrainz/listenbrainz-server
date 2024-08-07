@@ -5,12 +5,13 @@ from typing import Iterator, Optional, Dict
 
 from more_itertools import chunked
 
-from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, \
-    LISTENBRAINZ_EXPERIMENTAL_STATS_DIR, INCREMENTAL_DUMPS_SAVE_PATH, RELEASE_METADATA_CACHE_DATAFRAME, \
-    RECORDING_ARTIST_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats import run_query, get_dates_for_stats_range
+from listenbrainz_spark.path import LISTENBRAINZ_EXPERIMENTAL_STATS_DIR
+from listenbrainz_spark.stats import get_dates_for_stats_range
 from listenbrainz_spark.stats.incremental.artist import Artist
 from listenbrainz_spark.stats.incremental.job import get_job
+from listenbrainz_spark.stats.incremental.recording import Recording
+from listenbrainz_spark.stats.incremental.release import Release
+from listenbrainz_spark.stats.incremental.release_group import ReleaseGroup
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.utils import read_files_from_HDFS
 
@@ -19,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 entity_map = {
     "artists": Artist(),
+    "recordings": Recording(),
+    "releases": Release(),
+    "release_groups": ReleaseGroup(),
 }
 
 
