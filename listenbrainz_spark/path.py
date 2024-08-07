@@ -3,7 +3,7 @@ import os
 # Location new parquet dump listen files
 LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new-new')
 
-LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY = os.path.join('/', 'data', 'stats-new')
+LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY = os.path.join('/', 'data', 'stats-new-new')
 
 # MLHD+ dump files
 MLHD_PLUS_RAW_DATA_DIRECTORY = os.path.join("/", "mlhd-raw")
