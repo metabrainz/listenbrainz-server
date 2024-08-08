@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   faChevronDown,
   faTimesCircle,
@@ -25,6 +25,8 @@ export default function AddSingleListen({
       | (MusicBrainzRelease & WithReleaseGroup)
       | undefined;
   }>({});
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const removeRecording = (recordingMBID: string) => {
     setSelectedRecordings((prevRecordings) =>
@@ -72,6 +74,7 @@ export default function AddSingleListen({
   return (
     <div>
       <SearchTrackOrMBID
+        ref={searchInputRef}
         expectedPayload="recording"
         onSelectRecording={selectRecording}
       />
@@ -101,6 +104,7 @@ export default function AddSingleListen({
                       iconSize="lg"
                       action={() => {
                         removeRecording(recording.id);
+                        searchInputRef?.current?.focus();
                       }}
                     />
                   }
