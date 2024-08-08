@@ -1,14 +1,10 @@
-/* Thanks go to Yogesh Chavan (https://github.com/myogeshchavan97) for this implementation:
+/* Thanks go to Yogesh Chavan (https://github.com/myogeshchavan97) for the base for this implementation:
    https://github.com/myogeshchavan97/react-accordion-demo
 */
-import {
-  faChevronCircleDown,
-  faChevronCircleRight,
-} from "@fortawesome/free-solid-svg-icons";
+import { faChevronCircleRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { uniqueId } from "lodash";
-import React, { Children, PropsWithChildren, useState } from "react";
-import { AutoScroll } from "sortablejs";
+import * as React from "react";
 import { COLOR_LB_LIGHT_GRAY } from "../utils/constants";
 
 type AccordionProps = {
@@ -27,27 +23,28 @@ export default function Accordion({
   bootstrapType = "default",
   defaultOpen,
   children,
-}: PropsWithChildren<AccordionProps>) {
-  const [isActive, setIsActive] = useState(Boolean(defaultOpen));
+}: React.PropsWithChildren<AccordionProps>) {
+  const [isActive, setIsActive] = React.useState(Boolean(defaultOpen));
   const contentID = uniqueId();
   return (
     <div className={`panel panel-${bootstrapType} accordion`} key={uniqueId()}>
-      <div
-        className="panel-heading"
-        role="button"
-        onClick={() => setIsActive(!isActive)}
-        aria-expanded={isActive}
-        aria-controls={contentID}
-        tabIndex={0}
-        onKeyDown={() => setIsActive(!isActive)}
-      >
-        <span className="panel-title">{title}</span>
-        <FontAwesomeIcon
-          className="accordion-arrow"
-          icon={faChevronCircleRight}
-          rotation={isActive ? 90 : undefined}
-          color={COLOR_LB_LIGHT_GRAY}
-        />
+      <div className="panel-heading" role="heading" aria-level={3}>
+        <div
+          role="button"
+          onClick={() => setIsActive(!isActive)}
+          aria-expanded={isActive}
+          aria-controls={contentID}
+          tabIndex={0}
+          onKeyDown={() => setIsActive(!isActive)}
+        >
+          <span className="panel-title">{title}</span>
+          <FontAwesomeIcon
+            className="accordion-arrow"
+            icon={faChevronCircleRight}
+            rotation={isActive ? 90 : undefined}
+            color={COLOR_LB_LIGHT_GRAY}
+          />
+        </div>
       </div>
       {isActive && (
         <div
