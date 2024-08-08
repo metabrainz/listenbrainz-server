@@ -69,14 +69,14 @@ class Recording(Entity):
          FULL JOIN {new_table} n
                 ON n.user_id = e.user_id
                AND n.track_name = e.track_name
-               AND n.recording_mbid = e.recording_mbid
-               AND n.release_name = e.release_name
-               AND n.release_mbid = e.release_mbid
+               AND (n.recording_mbid = e.recording_mbid OR (n.recording_mbid IS NULL AND e.recording_mbid IS NULL))
+               AND (n.release_name = e.release_name OR (n.release_name IS NULL AND e.release_name IS NULL))
+               AND (n.release_mbid = e.release_mbid OR (n.release_mbid iS NULL AND e.release_mbid IS NULL))
                AND n.artist_name = e.artist_name
-               AND n.artist_credit_mbids = e.artist_credit_mbids
-               AND n.artists = e.artists
-               AND n.caa_id = e.caa_id
-               AND n.caa_release_mbid = e.caa_release_mbid
+               AND (n.artist_credit_mbids = e.artist_credit_mbids OR (n.artist_credit_mbids IS NULL AND e.artist_credit_mbids IS NULL))
+               AND (n.artists = e.artists OR (n.artists IS NULL AND e.artists IS NULL))
+               AND (n.caa_id = e.caa_id OR (n.caa_id IS NULL AND e.caa_id IS NULL))
+               AND (n.caa_release_mbid = e.caa_release_mbid OR (n.caa_release_mbid IS NULL AND e.caa_release_mbid IS NULL))
         """)
 
     def filter_top_full(self, table: str, k: int):
@@ -170,8 +170,8 @@ class Recording(Entity):
             GROUP BY user_id    
             )
               SELECT agg.user_id
-                   , recordings
-                   , recordings_count
+                   , recordings as data
+                   , recordings_count as count
                 FROM aggregate_stats agg
                 JOIN entity_counts ec
                   ON agg.user_id = ec.user_id

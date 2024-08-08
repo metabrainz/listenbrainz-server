@@ -114,8 +114,8 @@ class Artist(Entity):
             GROUP BY user_id    
             )
               SELECT agg.user_id
-                   , artists
-                   , artists_count
+                   , artists as data
+                   , artists_count as count
                 FROM aggregate_stats agg
                 JOIN entity_counts ec
                   ON agg.user_id = ec.user_id

@@ -76,12 +76,12 @@ class ReleaseGroup(Entity):
          FULL JOIN {new_table} n
                 ON n.user_id = e.user_id
                AND n.release_group_name = e.release_group_name
-               AND n.release_group_mbid = e.release_group_mbid
+               AND (n.release_group_mbid = e.release_group_mbid OR (n.release_group_mbid IS NULL AND e.release_group_mbid IS NULL))
                AND n.artist_name = e.artist_name
-               AND n.artist_credit_mbids = e.artist_credit_mbids
-               AND n.artists = e.artists
-               AND n.caa_id = e.caa_id
-               AND n.caa_release_mbid = e.caa_release_mbid
+               AND (n.artist_credit_mbids = e.artist_credit_mbids OR (n.artist_credit_mbids IS NULL AND e.artist_credit_mbids IS NULL))
+               AND (n.artists = e.artists OR (n.artists IS NULL AND e.artists IS NULL))
+               AND (n.caa_id = e.caa_id OR (n.caa_id IS NULL AND e.caa_id IS NULL))
+               AND (n.caa_release_mbid = e.caa_release_mbid OR (n.caa_release_mbid IS NULL AND e.caa_release_mbid IS NULL))
         """)
 
     def filter_top_full(self, table: str, k: int):
@@ -167,8 +167,8 @@ class ReleaseGroup(Entity):
             GROUP BY user_id    
             )
               SELECT agg.user_id
-                   , release_groups
-                   , release_groups_count
+                   , release_groups as data
+                   , release_groups_count as count
                 FROM aggregate_stats agg
                 JOIN entity_counts ec
                   ON agg.user_id = ec.user_id
