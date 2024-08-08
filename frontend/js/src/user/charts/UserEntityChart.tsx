@@ -28,6 +28,7 @@ import {
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
 import { getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
@@ -170,6 +171,37 @@ export default function UserEntityChart() {
 
   const listenableItems: BaseListenFormat[] =
     data?.map(userChartEntityToListen) ?? [];
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    // If the entity is an artist or recording, then we add the release name or release group name to the track name for the listen so that BrainzPlayer plays a track from the release or release group.
+    if (["release", "release-group"].includes(entity)) {
+      const listensToDispatch = listenableItems.map((listen) => {
+        const releaseName = listen.track_metadata?.release_name;
+        const releaseGroupName =
+          listen.track_metadata?.mbid_mapping?.release_group_name;
+        return {
+          ...listen,
+          track_metadata: {
+            ...listen.track_metadata,
+            track_name: releaseName || releaseGroupName || "",
+          },
+        };
+      });
+      dispatch({
+        type: "SET_AMBIENT_QUEUE",
+        data: listensToDispatch,
+      });
+      return;
+    }
+
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listenableItems,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listenableItems]);
 
   const userOrLoggedInUser: string | undefined =
     user?.name ?? currentUser?.name;
@@ -550,14 +582,6 @@ export default function UserEntityChart() {
           )}
         </Loader>
       </div>
-
-      <BrainzPlayer
-        listens={listenableItems}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

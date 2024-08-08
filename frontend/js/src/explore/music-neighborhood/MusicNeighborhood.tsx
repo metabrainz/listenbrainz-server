@@ -12,10 +12,10 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
 import SimilarArtistsGraph from "./components/SimilarArtistsGraph";
 import Panel from "./components/Panel";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import generateTransformedArtists from "./utils/generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
 import { RouteQuery } from "../../utils/Loader";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 type MusicNeighborhoodLoaderData = {
   algorithm: string;
@@ -69,6 +69,16 @@ export default function MusicNeighborhood() {
   const [loading, setLoading] = React.useState<boolean>(false);
 
   const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>([]);
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: currentTracks,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTracks]);
 
   const [artistInfo, setArtistInfo] = React.useState<ArtistInfoType | null>(
     null
@@ -342,13 +352,6 @@ export default function MusicNeighborhood() {
           />
           {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
         </div>
-        <BrainzPlayer
-          listens={currentTracks ?? []}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     </>
   );

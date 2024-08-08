@@ -61,6 +61,10 @@ import { ToastMsg } from "../../notifications/Notifications";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import { millisecondsToStr } from "../../playlists/utils";
 import AddToPlaylist from "./AddToPlaylist";
+import {
+  BrainzPlayerActionType,
+  useBrainzPlayerDispatch,
+} from "../brainzplayer/BrainzPlayerContext";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -92,14 +96,18 @@ export type ListenCardState = {
   thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
-export default class ListenCard extends React.Component<
-  ListenCardProps,
+type ListenCardPropsWithDispatch = ListenCardProps & {
+  dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
+};
+
+export class ListenCard extends React.Component<
+  ListenCardPropsWithDispatch,
   ListenCardState
 > {
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-  constructor(props: ListenCardProps) {
+  constructor(props: ListenCardPropsWithDispatch) {
     super(props);
     this.state = {
       listen: props.listen,
@@ -116,7 +124,7 @@ export default class ListenCard extends React.Component<
     oldProps: ListenCardProps,
     oldState: ListenCardState
   ) {
-    const { listen: oldListen } = oldState;
+    const { listen: oldListen } = oldProps;
     const { listen, customThumbnail } = this.props;
     if (Boolean(listen) && !isEqual(listen, oldListen)) {
       this.setState({ listen });
@@ -241,6 +249,18 @@ export default class ListenCard extends React.Component<
     );
   };
 
+  addToTopOfQueue = () => {
+    const { dispatch } = this.props;
+    const { listen } = this.state;
+    dispatch({ type: "ADD_LISTEN_TO_TOP_OF_QUEUE", data: listen });
+  };
+
+  addToBottomOfQueue = () => {
+    const { dispatch } = this.props;
+    const { listen } = this.state;
+    dispatch({ type: "ADD_LISTEN_TO_BOTTOM_OF_QUEUE", data: listen });
+  };
+
   render() {
     const {
       additionalContent,
@@ -256,6 +276,7 @@ export default class ListenCard extends React.Component<
       additionalMenuItems,
       additionalActions,
       listen: listenFromProps,
+      dispatch: dispatchProp,
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
@@ -567,6 +588,18 @@ export default class ListenCard extends React.Component<
                         }}
                       />
                     )}
+                    <ListenControl
+                      text="Play Next"
+                      icon={faPlay}
+                      title="Play Next"
+                      action={this.addToTopOfQueue}
+                    />
+                    <ListenControl
+                      text="Add to Queue"
+                      icon={faPlusCircle}
+                      title="Add to Queue"
+                      action={this.addToBottomOfQueue}
+                    />
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}
@@ -724,4 +757,9 @@ export default class ListenCard extends React.Component<
       </Card>
     );
   }
+}
+
+export default function ListenCardWrapper(props: ListenCardProps) {
+  const dispatch = useBrainzPlayerDispatch();
+  return <ListenCard {...props} dispatch={dispatch} />;
 }

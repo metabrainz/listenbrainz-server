@@ -16,7 +16,6 @@ import {
 } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -29,6 +28,7 @@ import ListenCard from "../common/listens/ListenCard";
 import { ToastMsg } from "../notifications/Notifications";
 import { RouteQuery } from "../utils/Loader";
 import { getObjectForURLSearchParams } from "../utils/utils";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export type PlayerPageProps = {
   playlist?: JSPFObject;
@@ -219,7 +219,6 @@ export default class PlayerPage extends React.Component<
 
   render() {
     const { playlist } = this.state;
-    const { APIService } = this.context;
 
     const { track: tracks } = playlist;
     if (!playlist || !playlist.track) {
@@ -244,13 +243,6 @@ export default class PlayerPage extends React.Component<
               })}
             </div>
           </div>
-          <BrainzPlayer
-            listens={tracks?.map(JSPFTrackToListen)}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
         </div>
       </div>
     );
@@ -264,6 +256,20 @@ export function PlayerPageWrapper() {
   const { data } = useQuery<PlayerPageLoaderData>(
     RouteQuery(["player", searchParamsObject], location.pathname)
   );
+
+  // BrainzPlayer
+  const dispatch = useBrainzPlayerDispatch();
+  const playlist = data?.playlist?.playlist;
+  const { track: tracks } = playlist || {};
+  React.useEffect(() => {
+    const listens = tracks?.map(JSPFTrackToListen);
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listens,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracks]);
+
   return <PlayerPage playlist={data?.playlist} />;
 }
 

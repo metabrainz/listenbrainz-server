@@ -9,7 +9,6 @@ import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
@@ -21,6 +20,7 @@ import {
   getRecordingMSID,
   getTrackName,
 } from "../../utils/utils";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -35,90 +35,47 @@ export interface MissingMBDataState {
   missingData: Array<MissingMBData>;
   deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage?: number;
-  totalPages: number;
   loading: boolean;
 }
 
-export default class MissingMBDataPage extends React.Component<
-  MissingMBDataProps,
-  MissingMBDataState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-  private expectedDataPerPage = 25;
-  private MissingMBDataTable = React.createRef<HTMLTableElement>();
+const EXPECTED_ITEMS_PER_PAGE = 25;
 
-  constructor(props: MissingMBDataProps) {
-    super(props);
-    this.state = {
-      missingData: props.missingData?.slice(0, this.expectedDataPerPage) || [],
-      currPage: 1,
-      totalPages: props.missingData
-        ? Math.ceil(props.missingData.length / this.expectedDataPerPage)
-        : 0,
-      loading: false,
-      deletedListens: [],
-    };
+export default function MissingMBDataPage() {
+  // Context
+  const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
+  const dispatch = useBrainzPlayerDispatch();
 
-    this.MissingMBDataTable = React.createRef();
-  }
+  // Loader
+  const props = useLoaderData() as MissingMBDataLoaderData;
+  const { missing_data: missingDataProps = [] } = props;
 
-  componentDidMount(): void {
-    const { currPage } = this.state;
-    window.history.replaceState(null, "", `?page=${currPage}`);
-  }
+  // State
+  const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
+    missingDataProps.slice(0, EXPECTED_ITEMS_PER_PAGE) || []
+  );
+  const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
+  const [currPage, setCurrPage] = React.useState<number>(1);
+  const totalPages = missingDataProps
+    ? Math.ceil(missingDataProps.length / EXPECTED_ITEMS_PER_PAGE)
+    : 0;
+  const [loading, setLoading] = React.useState<boolean>(false);
 
-  handleClickPrevious = () => {
-    const { missingData } = this.props;
-    const { currPage } = this.state;
-    if (currPage && currPage > 1) {
-      this.setState({ loading: true });
-      const offset = (currPage - 1) * this.expectedDataPerPage;
-      const updatedPage = currPage - 1;
-      this.setState(
-        {
-          missingData:
-            missingData?.slice(offset - this.expectedDataPerPage, offset) || [],
-          currPage: updatedPage,
-        },
-        this.afterDisplay
-      );
-      window.history.pushState(null, "", `?page=${updatedPage}`);
+  // Ref
+  const missingMBDataTableRef = React.useRef<HTMLDivElement>(null);
+
+  // Functions
+  const afterDisplay = () => {
+    if (missingMBDataTableRef?.current) {
+      missingMBDataTableRef.current.scrollIntoView({ behavior: "smooth" });
     }
+    setLoading(false);
   };
 
-  handleClickNext = () => {
-    const { missingData } = this.props;
-    const { currPage, totalPages } = this.state;
-    if (currPage && currPage < totalPages) {
-      this.setState({ loading: true });
-      const offset = currPage * this.expectedDataPerPage;
-      const updatedPage = currPage + 1;
-      this.setState(
-        {
-          missingData:
-            missingData?.slice(offset, offset + this.expectedDataPerPage) || [],
-          currPage: updatedPage,
-        },
-        this.afterDisplay
-      );
-      window.history.pushState(null, "", `?page=${updatedPage}`);
-    }
-  };
-
-  afterDisplay = () => {
-    if (this.MissingMBDataTable?.current) {
-      this.MissingMBDataTable.current.scrollIntoView({ behavior: "smooth" });
-    }
-    this.setState({ loading: false });
-  };
-
-  submitMissingData = (listen: Listen) => {
+  const submitMissingData = (listen: Listen) => {
     // This function submits data to the MusicBrainz server. We have not used
     // fetch here because the endpoint where the submision is being done
     // replies back with HTML and since we cannot redirect via fetch, we have
     // to resort to such obscure method :D
-    const { user } = this.props;
     const form = document.createElement("form");
     form.method = "post";
     form.action = "https://musicbrainz.org/release/add";
@@ -158,24 +115,19 @@ export default class MissingMBDataPage extends React.Component<
     form.remove();
   };
 
-  deleteListen = async (data: MissingMBData) => {
-    const { user } = this.props;
-    const { APIService, currentUser } = this.context;
-    const isCurrentUser = user.name === currentUser?.name;
-    if (isCurrentUser && currentUser?.auth_token) {
+  const deleteListen = async (data: MissingMBData) => {
+    if (user?.auth_token) {
       const listenedAt = new Date(data.listened_at).getTime() / 1000;
       try {
         const status = await APIService.deleteListen(
-          currentUser.auth_token,
+          user.auth_token,
           data.recording_msid,
           listenedAt
         );
         if (status === 200) {
-          this.setState((prevState) => ({
-            deletedListens: prevState.deletedListens.concat(
-              data.recording_msid
-            ),
-          }));
+          setDeletedListens((prevState) =>
+            prevState.concat(data.recording_msid)
+          );
           toast.info(
             <ToastMsg
               title="Success"
@@ -201,197 +153,210 @@ export default class MissingMBDataPage extends React.Component<
     }
   };
 
-  render() {
-    const {
-      missingData,
-      currPage,
-      totalPages,
-      loading,
-      deletedListens,
-    } = this.state;
-    const { user } = this.props;
-    const { APIService, currentUser } = this.context;
-    const isCurrentUser = user.name === currentUser?.name;
-    const missingMBDataAsListen = missingData.map((data) => {
-      return {
-        listened_at: new Date(data.listened_at).getTime() / 1000,
-        user_name: user.name,
-        track_metadata: {
-          artist_name: data.artist_name,
-          track_name: data.recording_name,
-          release_name: data?.release_name,
-          additional_info: {
-            recording_msid: data.recording_msid,
-          },
+  const handleClickPrevious = () => {
+    if (currPage && currPage > 1) {
+      setLoading(true);
+      const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
+      const updatedPage = currPage - 1;
+      setMissingData(
+        missingDataProps.slice(offset - EXPECTED_ITEMS_PER_PAGE, offset) || []
+      );
+      setCurrPage(updatedPage);
+      afterDisplay();
+      window.history.pushState(null, "", `?page=${updatedPage}`);
+    }
+  };
+
+  const handleClickNext = () => {
+    if (currPage && currPage < totalPages) {
+      setLoading(true);
+      const offset = currPage * EXPECTED_ITEMS_PER_PAGE;
+      const updatedPage = currPage + 1;
+      setMissingData(
+        missingDataProps.slice(offset, offset + EXPECTED_ITEMS_PER_PAGE) || []
+      );
+      setCurrPage(updatedPage);
+      afterDisplay();
+      window.history.pushState(null, "", `?page=${updatedPage}`);
+    }
+  };
+
+  const missingMBDataAsListen = missingData.map((data) => {
+    return {
+      listened_at: new Date(data.listened_at).getTime() / 1000,
+      user_name: user.name,
+      track_metadata: {
+        artist_name: data.artist_name,
+        track_name: data.recording_name,
+        release_name: data?.release_name,
+        additional_info: {
+          recording_msid: data.recording_msid,
         },
-      };
+      },
+    };
+  });
+
+  // Effects
+  React.useEffect(() => {
+    window.history.replaceState(null, "", `?page=${currPage}`);
+  }, []);
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: missingMBDataAsListen,
     });
-    return (
-      <>
-        <Helmet>
-          <title>Missing MusicBrainz Data of {currentUser?.name}</title>
-        </Helmet>
-        <h2 className="page-title">
-          Missing MusicBrainz Data of {currentUser?.name}
-        </h2>
-        <p>
-          <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
-          music encyclopedia that ListenBrainz uses to display information about
-          your music.
-          <br />
-          <br />
-          This page displays your top 200 (by listen count) submitted songs that
-          we haven&apos;t been able to automatically link with MusicBrainz
-          “recordings”, or that don&apos;t yet exist in MusicBrainz. Please take
-          a few minutes to link these recordings below, or to{" "}
-          <a href="https://wiki.musicbrainz.org/How_to_Contribute">
-            submit new data to MusicBrainz
-          </a>
-          .
-        </p>
-        <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
-          <div className="col-xs-12 col-md-8">
-            <div>
-              <div id="missingMBData" ref={this.MissingMBDataTable}>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                {missingData.map((data, index) => {
-                  if (
-                    deletedListens.find(
-                      (deletedMSID) => deletedMSID === data.recording_msid
-                    )
-                  ) {
-                    // If the item was deleted, don't show it to the user
-                    return null;
-                  }
-                  let additionalActions;
-                  const listen = missingMBDataAsListen[index];
-                  const additionalMenuItems = [];
-                  if (currentUser?.auth_token) {
-                    // Commenting this out for now because currently it leads to new eager users creating
-                    // a bunch of standalone recordings, and possible duplicates
-                    /* const addToMB = (
-                    <ListenControl
-                      buttonClassName="btn btn-sm"
-                      icon={faPlus}
-                      title="Add missing recording"
-                      text=""
-                      // eslint-disable-next-line react/jsx-no-bind
-                      action={this.submitMissingData.bind(this, listen)}
-                    />
-                  ); */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingMBDataAsListen]);
 
-                    const recordingMSID = getRecordingMSID(listen);
-                    const canDelete =
-                      isCurrentUser &&
-                      Boolean(listen.listened_at) &&
-                      Boolean(recordingMSID);
-
-                    if (canDelete) {
-                      additionalMenuItems.push(
-                        <ListenControl
-                          text="Delete Listen"
-                          icon={faTrashAlt}
-                          action={this.deleteListen.bind(this, data)}
-                        />
-                      );
-                    }
-
-                    if (
-                      listen?.track_metadata?.additional_info?.recording_msid
-                    ) {
-                      const linkWithMB = (
-                        <ListenControl
-                          buttonClassName="btn btn-sm btn-success"
-                          text=""
-                          title="Link with MusicBrainz"
-                          icon={faLink}
-                          action={() => {
-                            NiceModal.show(MBIDMappingModal, {
-                              listenToMap: listen,
-                            });
-                          }}
-                        />
-                      );
-                      additionalActions = linkWithMB;
-                    }
-                  }
-                  return (
-                    <ListenCard
-                      key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
-                      showTimestamp
-                      showUsername={false}
-                      // eslint-disable-next-line react/jsx-no-useless-fragment
-                      customThumbnail={<></>}
-                      // eslint-disable-next-line react/jsx-no-useless-fragment
-                      feedbackComponent={<></>}
-                      listen={missingMBDataAsListen[index]}
-                      additionalMenuItems={additionalMenuItems}
-                      additionalActions={additionalActions}
-                    />
-                  );
-                })}
+  return (
+    <>
+      <Helmet>
+        <title>Missing MusicBrainz Data of {user?.name}</title>
+      </Helmet>
+      <h2 className="page-title">Missing MusicBrainz Data of {user?.name}</h2>
+      <p>
+        <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
+        music encyclopedia that ListenBrainz uses to display information about
+        your music.
+        <br />
+        <br />
+        This page displays your top 200 (by listen count) submitted songs that
+        we haven&apos;t been able to automatically link with MusicBrainz
+        “recordings”, or that don&apos;t yet exist in MusicBrainz. Please take a
+        few minutes to link these recordings below, or to{" "}
+        <a href="https://wiki.musicbrainz.org/How_to_Contribute">
+          submit new data to MusicBrainz
+        </a>
+        .
+      </p>
+      <div className="row" style={{ display: "flex", flexWrap: "wrap" }}>
+        <div className="col-xs-12 col-md-8">
+          <div>
+            <div id="missingMBData" ref={missingMBDataTableRef}>
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
               </div>
-              <ul className="pager" style={{ display: "flex" }}>
-                <li
-                  className={`previous ${
-                    currPage && currPage <= 1 ? "hidden" : ""
-                  }`}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickPrevious}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickPrevious();
-                    }}
-                    tabIndex={0}
-                  >
-                    &larr; Previous
-                  </a>
-                </li>
-                <li
-                  className={`next ${
-                    currPage && currPage >= totalPages ? "hidden" : ""
-                  }`}
-                  style={{ marginLeft: "auto" }}
-                >
-                  <a
-                    role="button"
-                    onClick={this.handleClickNext}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") this.handleClickNext();
-                    }}
-                    tabIndex={0}
-                  >
-                    Next &rarr;
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <BrainzPlayer
-            listens={missingMBDataAsListen}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
-        </div>
-      </>
-    );
-  }
-}
+              {missingData.map((data, index) => {
+                if (
+                  deletedListens.find(
+                    (deletedMSID) => deletedMSID === data.recording_msid
+                  )
+                ) {
+                  // If the item was deleted, don't show it to the user
+                  return null;
+                }
+                let additionalActions;
+                const listen = missingMBDataAsListen[index];
+                const additionalMenuItems = [];
+                if (user?.auth_token) {
+                  // Commenting this out for now because currently it leads to new eager users creating
+                  // a bunch of standalone recordings, and possible duplicates
+                  /* const addToMB = (
+                  <ListenControl
+                    buttonClassName="btn btn-sm"
+                    icon={faPlus}
+                    title="Add missing recording"
+                    text=""
+                    // eslint-disable-next-line react/jsx-no-bind
+                    action={this.submitMissingData.bind(this, listen)}
+                  />
+                ); */
 
-export function MissingMBDataPageWrapper() {
-  const data = useLoaderData() as MissingMBDataLoaderData;
-  const { currentUser: user } = React.useContext(GlobalAppContext);
-  return <MissingMBDataPage missingData={data.missing_data} user={user} />;
+                  const recordingMSID = getRecordingMSID(listen);
+                  const canDelete =
+                    Boolean(listen.listened_at) && Boolean(recordingMSID);
+
+                  if (canDelete) {
+                    additionalMenuItems.push(
+                      <ListenControl
+                        text="Delete Listen"
+                        icon={faTrashAlt}
+                        action={() => {
+                          deleteListen(data);
+                        }}
+                      />
+                    );
+                  }
+
+                  if (listen?.track_metadata?.additional_info?.recording_msid) {
+                    const linkWithMB = (
+                      <ListenControl
+                        buttonClassName="btn btn-sm btn-success"
+                        text=""
+                        title="Link with MusicBrainz"
+                        icon={faLink}
+                        action={() => {
+                          NiceModal.show(MBIDMappingModal, {
+                            listenToMap: listen,
+                          });
+                        }}
+                      />
+                    );
+                    additionalActions = linkWithMB;
+                  }
+                }
+                return (
+                  <ListenCard
+                    key={`${data.recording_name}-${data.artist_name}-${data.listened_at}`}
+                    showTimestamp
+                    showUsername={false}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    customThumbnail={<></>}
+                    // eslint-disable-next-line react/jsx-no-useless-fragment
+                    feedbackComponent={<></>}
+                    listen={missingMBDataAsListen[index]}
+                    additionalMenuItems={additionalMenuItems}
+                    additionalActions={additionalActions}
+                  />
+                );
+              })}
+            </div>
+            <ul className="pager" style={{ display: "flex" }}>
+              <li
+                className={`previous ${
+                  currPage && currPage <= 1 ? "hidden" : ""
+                }`}
+              >
+                <a
+                  role="button"
+                  onClick={handleClickPrevious}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleClickPrevious();
+                  }}
+                  tabIndex={0}
+                >
+                  &larr; Previous
+                </a>
+              </li>
+              <li
+                className={`next ${
+                  currPage && currPage >= totalPages ? "hidden" : ""
+                }`}
+                style={{ marginLeft: "auto" }}
+              >
+                <a
+                  role="button"
+                  onClick={handleClickNext}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleClickNext();
+                  }}
+                  tabIndex={0}
+                >
+                  Next &rarr;
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }

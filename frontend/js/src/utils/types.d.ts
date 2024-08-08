@@ -64,6 +64,7 @@ declare type BaseListenFormat = {
 declare type Listen = BaseListenFormat & {
   listened_at_iso?: string | null;
   playing_now?: boolean | null;
+  inserted_at?: number;
 };
 
 declare type Recommendation = Listen & {
@@ -664,3 +665,9 @@ declare type FeedbackForUserForRecordingsRequestBody = {
   recording_mbids: string[];
   recording_msids?: string[];
 };
+
+declare type BrainzPlayerQueueItem = Listen & {
+  id: string;
+};
+
+declare type BrainzPlayerQueue = BrainzPlayerQueueItem[];

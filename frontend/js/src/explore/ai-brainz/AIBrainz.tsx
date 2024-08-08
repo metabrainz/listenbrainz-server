@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useState } from "react";
 import { Helmet } from "react-helmet";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 const totallyInnocentListen: Listen = {
   listened_at: 1654079332,
@@ -26,6 +26,11 @@ const totallyInnocentListen: Listen = {
 };
 
 function AIBrainzHeader() {
+  const dispatch = useBrainzPlayerDispatch();
+  React.useEffect(() => {
+    dispatch({ type: "SET_AMBIENT_QUEUE", data: [totallyInnocentListen] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totallyInnocentListen]);
   return (
     <Helmet>
       <title>AIBrainz</title>
@@ -462,13 +467,6 @@ export default function AIBrainzComponent(props: AIBrainzComponentProps) {
           </defs>
         </svg>
       </p>
-      <BrainzPlayer
-        listens={[totallyInnocentListen]}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

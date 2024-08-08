@@ -66,7 +66,9 @@ describe("SpotifyPlayer", () => {
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<SpotifyPlayer {...props} />);
-    expect(wrapper.getDOMNode()).toContainHTML("<div></div>");
+    expect(wrapper.getDOMNode()).toContainHTML(
+      '<div data-testid="spotify-player" />'
+    );
   });
 
   it("should play from spotify_id if it exists on the listen", async () => {

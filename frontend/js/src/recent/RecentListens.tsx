@@ -3,13 +3,12 @@
 import * as React from "react";
 import { useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import GlobalAppContext from "../utils/GlobalAppContext";
 
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import ListenCard from "../common/listens/ListenCard";
 import Card from "../components/Card";
 
 import { getTrackName } from "../utils/utils";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -28,9 +27,6 @@ export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
-
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
@@ -41,7 +37,6 @@ export default class RecentListens extends React.Component<
   render() {
     const { listens } = this.state;
     const { globalListenCount, globalUserCount } = this.props;
-    const { APIService, currentUser } = this.context;
 
     return (
       <div role="main">
@@ -90,13 +85,6 @@ export default class RecentListens extends React.Component<
             )}
           </div>
         </div>
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
@@ -104,5 +92,15 @@ export default class RecentListens extends React.Component<
 
 export function RecentListensWrapper() {
   const data = useLoaderData() as RecentListensLoaderData;
+  const listens = data.listens || [];
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listens,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
   return <RecentListens {...data} />;
 }
