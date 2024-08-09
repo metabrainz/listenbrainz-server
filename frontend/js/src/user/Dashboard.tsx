@@ -40,6 +40,7 @@ import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -556,7 +557,38 @@ export default function Listen() {
             {listens.length === 0 ? (
               <div id="spacer" />
             ) : (
-              <h3 className="header-with-line">Recent listens</h3>
+              <h3 className="header-with-line">
+                Recent listens
+                <button
+                  type="button"
+                  className="btn btn-default btn-sm"
+                  style={{ marginLeft: "10px" }}
+                  data-toggle="modal"
+                  data-target="#SyndicationFeedModal"
+                  onClick={() => {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: "Recent listens",
+                      options: [
+                        {
+                          label: "Minutes",
+                          key: "minutes",
+                          values: [
+                            { id: "10minutes", value: "10" },
+                            { id: "30minutes", value: "30" },
+                            { id: "1hour", value: "60" },
+                            { id: "2hours", value: "120" },
+                            { id: "4hours", value: "240" },
+                            { id: "8hours", value: "480" },
+                          ],
+                        },
+                      ],
+                      baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser.name}/listens`,
+                    });
+                  }}
+                >
+                  Subscribe
+                </button>
+              </h3>
             )}
             {isCurrentUsersPage && (
               <div className="dropdow add-listen-btn">
