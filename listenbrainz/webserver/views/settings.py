@@ -390,6 +390,7 @@ def missing_mb_data():
     missing_data, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
     data = {
         "missing_data": missing_data or [],
+        "last_updated": created,
     }
     return jsonify(data)
 

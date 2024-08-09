@@ -68,6 +68,7 @@ function ListenControl(props: ListenControlProps) {
         icon={icon as IconProp}
         className={iconClassName}
         size={iconSize}
+        fixedWidth
       />
     );
   }

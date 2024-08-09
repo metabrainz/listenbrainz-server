@@ -69,6 +69,7 @@
     "external-svg-loader": "^1.7.1",
     "fetch-retry": "^5.0.3",
     "file-saver": "^2.0.5",
+    "fuse.js": "^7.0.0",
     "fuzzysort": "^3.0.1",
     "he": "^1.2.0",
     "highlight.js": "^11.6.0",
