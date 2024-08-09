@@ -245,8 +245,8 @@ export default function MissingMBDataPage() {
             const releaseName = group.at(0)?.release_name ?? null;
             const multiTrackMappingButton = (
               <button
-                className="btn btn-sm btn-primary"
-                style={{ padding: "5px" }}
+                className="btn btn-link btn-icon color-orange"
+                style={{ padding: "0", height: "initial" }}
                 type="button"
                 onClick={(e) => {
                   NiceModal.show<MatchingTracksResults, any>(
@@ -267,7 +267,7 @@ export default function MissingMBDataPage() {
                 data-toggle="modal"
                 data-target="#MultiTrackMBIDMappingModal"
               >
-                <FontAwesomeIcon icon={faLink} /> x {group.length}
+                <FontAwesomeIcon icon={faLink} />
               </button>
             );
             const listenCards = group.map((groupItem) => {
@@ -341,9 +341,10 @@ export default function MissingMBDataPage() {
                 key={releaseName}
                 title={
                   <>
-                    {multiTrackMappingButton} {releaseName}
+                    {releaseName} <small>({group.length} tracks)</small>
                   </>
                 }
+                actions={multiTrackMappingButton}
                 defaultOpen={group.length === 1}
               >
                 {listenCards}
