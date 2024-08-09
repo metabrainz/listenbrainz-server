@@ -31,6 +31,7 @@ export default function SearchAlbumOrMBID({
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBReleaseGroup, searchMBRelease } = APIService;
   const dropdownRef = DropdownRef();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(defaultValue ?? "");
   const [searchResults, setSearchResults] = useState<
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
@@ -122,6 +123,7 @@ export default function SearchAlbumOrMBID({
     setInputValue("");
     setSearchResults([]);
     onSelectAlbum();
+    searchInputRef?.current?.focus();
   };
 
   useEffect(() => {
@@ -143,6 +145,7 @@ export default function SearchAlbumOrMBID({
     <div>
       <div className="input-group dropdown-search" ref={dropdownRef}>
         <input
+          ref={searchInputRef}
           type="search"
           value={inputValue}
           className="form-control"
