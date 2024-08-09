@@ -103,7 +103,7 @@ function CoverArtScrollWrapper({
 }) {
   const coverArtScrollRef = React.useRef(null);
   const previousCoverArtRef = React.useRef(null);
-  const currentCoverArtRef = React.useRef(null);
+  const currentCoverArtRef = React.useRef<HTMLDivElement>(null);
   const nextCoverArtRef = React.useRef(null);
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
@@ -217,6 +217,7 @@ function MusicPlayer(props: MusicPlayerProps) {
   // BrainzPlayer Context
   const {
     currentListen,
+    currentListenIndex,
     currentTrackName,
     currentTrackArtist,
     currentTrackAlbum,
@@ -246,10 +247,6 @@ function MusicPlayer(props: MusicPlayerProps) {
     }
   }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
 
-  const currentQueueIndex = React.useMemo(() => {
-    return queue.findIndex((track) => track.id === currentListen?.id);
-  }, [currentListen, queue]);
-
   // States to save previous and next track cover art URLs
   const [previousTrackCoverURL, setPreviousTrackCoverURL] = React.useState("");
   const [nextTrackCoverURL, setNextTrackCoverURL] = React.useState("");
@@ -258,30 +255,33 @@ function MusicPlayer(props: MusicPlayerProps) {
   React.useEffect(() => {
     const getAndSetCoverArt = async (
       track: BrainzPlayerQueueItem,
-      setCoverArt: any
+      setCoverArt: React.Dispatch<React.SetStateAction<string>>
     ) => {
       const coverArt = await getAlbumArtFromListenMetadata(
         track,
         spotifyAuth,
         APIService
       );
-      setCoverArt(coverArt);
+      setCoverArt(coverArt ?? "");
     };
 
-    if (currentQueueIndex > 0) {
-      getAndSetCoverArt(queue[currentQueueIndex - 1], setPreviousTrackCoverURL);
+    if (currentListenIndex > 0) {
+      getAndSetCoverArt(
+        queue[currentListenIndex - 1],
+        setPreviousTrackCoverURL
+      );
     } else {
       setPreviousTrackCoverURL("");
     }
 
-    if (currentQueueIndex < queue.length - 1) {
-      getAndSetCoverArt(queue[currentQueueIndex + 1], setNextTrackCoverURL);
+    if (currentListenIndex < queue.length - 1) {
+      getAndSetCoverArt(queue[currentListenIndex + 1], setNextTrackCoverURL);
     } else if (ambientQueue.length > 0) {
       getAndSetCoverArt(ambientQueue[0], setNextTrackCoverURL);
     } else {
       setNextTrackCoverURL("");
     }
-  }, [APIService, ambientQueue, currentQueueIndex, queue, spotifyAuth]);
+  }, [APIService, ambientQueue, currentListenIndex, queue, spotifyAuth]);
 
   return (
     <>
