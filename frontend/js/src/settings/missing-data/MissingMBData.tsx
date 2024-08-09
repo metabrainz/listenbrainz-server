@@ -9,7 +9,7 @@ import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import { groupBy, isNull, pick, size, sortBy } from "lodash";
+import { groupBy, isFinite, isNil, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
@@ -31,6 +31,7 @@ export type MissingMBDataProps = {
 
 type MissingMBDataLoaderData = {
   missing_data?: Array<MissingMBData>;
+  last_updated?: number | null;
 };
 
 export interface MissingMBDataState {
@@ -68,7 +69,10 @@ export default function MissingMBDataPage() {
 
   // Loader
   const props = useLoaderData() as MissingMBDataLoaderData;
-  const { missing_data: missingDataProps = [] } = props;
+  const {
+    missing_data: missingDataProps = [],
+    last_updated: lastUpdated,
+  } = props;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
@@ -222,13 +226,9 @@ export default function MissingMBDataPage() {
         </a>
         .
       </p>
-      <p>
-        Tracks are grouped by album (according to the available data) to allow
-        linking multiple listens from the same album in one go, but you can
-        still map each one separately if you wish.
-        <br />
-        Listens with no album information are shown at the very end of the list.
-      </p>
+      {!isNil(lastUpdated) && isFinite(lastUpdated) && (
+        <p>Last updated {new Date(lastUpdated * 1000).toLocaleDateString()}</p>
+      )}
       <div>
         <div id="missingMBData" ref={missingMBDataTableRef}>
           <div
