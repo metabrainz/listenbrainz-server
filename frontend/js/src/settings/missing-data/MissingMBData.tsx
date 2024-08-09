@@ -212,23 +212,22 @@ export default function MissingMBDataPage() {
       </Helmet>
       <h2 className="page-title">Missing MusicBrainz Data of {user?.name}</h2>
       <p>
-        <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
-        music encyclopedia that ListenBrainz uses to display information about
-        your music.
-        <br />
-        <br />
-        This page shows your top 200 submitted tracks that we haven&apos;t been
-        able to automatically link with MusicBrainz, or that don&apos;t yet
-        exist in MusicBrainz. Please take a few minutes to link these recordings
-        below, or to{" "}
+        Your top 1000 listens that haven&apos;t been automatically linked. Link
+        the listens below, or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
         </a>
         .
       </p>
+      <p>
+        <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
+        music encyclopedia that ListenBrainz uses to display information about
+        your music.
+      </p>
       {!isNil(lastUpdated) && isFinite(lastUpdated) && (
         <p>Last updated {new Date(lastUpdated * 1000).toLocaleDateString()}</p>
       )}
+      <br />
       <div>
         <div id="missingMBData" ref={missingMBDataTableRef}>
           <div

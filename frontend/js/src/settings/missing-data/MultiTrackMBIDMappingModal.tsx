@@ -10,7 +10,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
 import Fuse from "fuse.js";
-import { omit, size } from "lodash";
+import { groupBy, omit, size } from "lodash";
 import ListenCard from "../../common/listens/ListenCard";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -150,6 +150,7 @@ export default NiceModal.create(
       if (!selectedAlbumMBID) {
         setSelectedAlbum(undefined);
         setPotentialTracks([]);
+        setMatchingTracks({});
       } else {
         fetchTrackList(selectedAlbumMBID);
       }
@@ -211,13 +212,13 @@ export default NiceModal.create(
       >
         <div className="modal-dialog" role="document">
           <Tooltip id="musicbrainz-helptext" type="info" multiline>
-            Search for an album matching the tracks below.
+            Search for an album matching the tracks above.
             <br />
             Alternatively, you can search for a release or release-group using
             the MusicBrainz search (musicbrainz.org/search).
             <br />
             When you have found the one that matches your listens, copy its URL
-            (link) into the search box below.
+            (link) into the search box above.
           </Tooltip>
           <form className="modal-content" onSubmit={submitMBIDMapping}>
             <div className="modal-header">
@@ -230,50 +231,24 @@ export default NiceModal.create(
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="MultiTrackMBIDMappingModalLabel">
-                Link these Listens with MusicBrainz
+                Link listens
               </h4>
             </div>
             <div className="modal-body">
-              <p>
-                If ListenBrainz is unable to automatically link your listens
-                with the right MusicBrainz release, you can search by
-                album/artist name or paste a{" "}
-                <a href="https://musicbrainz.org/doc/About">
-                  MusicBrainz URL or MBID
-                </a>{" "}
-                for the correct release or release-group.
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="musicbrainz-helptext"
-                  size="sm"
-                />{" "}
-                to link these listens.
-              </p>
-              <small className="help-block">
-                Releases added to MusicBrainz within the last 4 hours may
-                temporarily look incomplete.
-                <a
-                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Click here to learn why.
-                </a>
-              </small>
-              <small className="help-block">
-                <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;
-                <a
-                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  How long until my stats reflect the change?
-                </a>
-              </small>
               <div>
-                <h4>Search</h4>
+                <p className="small help-block text-left">
+                  Search by album/artist name or paste a{" "}
+                  <a href="https://musicbrainz.org/doc/About">
+                    MusicBrainz URL or MBID
+                  </a>
+                  .
+                  <FontAwesomeIcon
+                    icon={faQuestionCircle}
+                    data-tip
+                    data-for="musicbrainz-helptext"
+                    size="sm"
+                  />
+                </p>
                 <div className="card listen-card">
                   <SearchAlbumOrMBID
                     onSelectAlbum={setSelectedAlbumMBID}
@@ -282,7 +257,7 @@ export default NiceModal.create(
                     }`}
                   />
                 </div>
-                <div className="form-check">
+                <div className="form-check mt-15">
                   <input
                     className="form-check-input"
                     id="includeArtist"
@@ -290,7 +265,11 @@ export default NiceModal.create(
                     checked={includeArtistName}
                     onChange={(e) => setIncludeArtistName(e.target.checked)}
                   />
-                  <label className="form-check-label" htmlFor="includeArtist">
+                  &nbsp;
+                  <label
+                    htmlFor="includeArtist"
+                    style={{ fontWeight: "initial" }}
+                  >
                     Include artist name when matching{" "}
                     <FontAwesomeIcon
                       icon={faQuestionCircle}
@@ -334,11 +313,10 @@ export default NiceModal.create(
                 </div>
               )}
               {hasMatches && matchingTracksEntries && (
-                <h4>
-                  Matched {matchingTracksEntries.length} of {missingData.length}{" "}
-                  listens on the release.
-                  <small>Please check that the matches are correct.</small>
-                </h4>
+                <h5>
+                  Found {matchingTracksEntries.length} matches. Please check
+                  each listen below:
+                </h5>
               )}
 
               {hasMatches && matchingTracksEntries && (
@@ -372,7 +350,7 @@ export default NiceModal.create(
                               <ListenControl
                                 buttonClassName="btn-transparent"
                                 text=""
-                                title="Remove from matches"
+                                title="Remove incorrect match"
                                 icon={faTimesCircle}
                                 iconSize="lg"
                                 action={() =>
@@ -391,14 +369,14 @@ export default NiceModal.create(
                 <>
                   {selectedAlbum ? (
                     <>
-                      <h4>Unmatched items</h4>
+                      <h5>Unlinked items</h5>
                       We could not automatically find a match for the following
                       listens:
                     </>
                   ) : (
-                    <h4>Listens to match</h4>
+                    <h5>Listens to link</h5>
                   )}
-                  <ul>
+                  <ul style={{ fontSize: "smaller" }}>
                     {unmatchedItems.map((unmatched) => (
                       <li key={unmatched.recording_name}>
                         {[unmatched.recording_name, unmatched.artist_name].join(
@@ -423,8 +401,33 @@ export default NiceModal.create(
                 className="btn btn-success"
                 disabled={!hasMatches}
               >
-                Add mapping
+                Link listens
               </button>
+              <div className="small help-block text-left">
+                <div>
+                  <FontAwesomeIcon icon={faInfoCircle} />
+                  &nbsp;
+                  <a
+                    href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    How long until my stats reflect the change?
+                  </a>
+                </div>
+                <div>
+                  <FontAwesomeIcon icon={faInfoCircle} />
+                  &nbsp;
+                  <a
+                    href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Releases added to MusicBrainz within the last 4 hours may
+                    temporarily look incomplete.
+                  </a>
+                </div>
+              </div>
             </div>
           </form>
         </div>
