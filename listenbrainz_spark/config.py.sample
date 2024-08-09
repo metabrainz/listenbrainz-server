@@ -10,11 +10,12 @@ RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
 MAXIMUM_RABBITMQ_CONNECTIONS = 100
 
-# rabbitmq exchanges and queues
-SPARK_REQUEST_EXCHANGE = "spark_request"
-SPARK_REQUEST_QUEUE = "spark_request"
-SPARK_RESULT_EXCHANGE = "spark_result"
-SPARK_RESULT_QUEUE = "spark_result"
+# redis streams
+SPARK_REQUEST_STREAM = "listenbrainz_spark:requests"
+SPARK_REQUEST_STREAM_LAST_SEEN = "listenbrainz_spark:last_seen:requests"
+SPARK_RESULT_STREAM = "listenbrainz_spark:results"
+SPARK_RESULT_STREAM_LAST_SEEN = "listenbrainz_spark:last_seen:results"
+SPARK_RESULT_STREAM_LEN = 50000
 
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1

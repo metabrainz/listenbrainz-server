@@ -42,6 +42,13 @@ REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
 
+# redis streams
+SPARK_REQUEST_STREAM = "listenbrainz_spark:requests"
+SPARK_REQUEST_STREAM_LAST_SEEN = "listenbrainz_spark:last_seen:requests"
+SPARK_RESULT_STREAM = "listenbrainz_spark:results"
+SPARK_RESULT_STREAM_LAST_SEEN = "listenbrainz_spark:last_seen:results"
+SPARK_RESULT_STREAM_LEN = 50000
+
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_PORT = 5672

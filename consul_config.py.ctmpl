@@ -169,6 +169,13 @@ PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 SPOTIFY_METADATA_QUEUE = '''{{template "KEY" "spotify_metadata_queue"}}'''
 
+# redis streams
+SPARK_REQUEST_STREAM = "listenbrainz_spark:requests"
+SPARK_REQUEST_STREAM_LAST_SEEN = "listenbrainz_spark:last_seen:requests"
+SPARK_RESULT_STREAM = "listenbrainz_spark:results"
+SPARK_RESULT_STREAM_LAST_SEEN = "listenbrainz_spark:last_seen:results"
+SPARK_RESULT_STREAM_LEN = 50000
+
 SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
 SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''

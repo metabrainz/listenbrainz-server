@@ -16,3 +16,5 @@ urllib3==1.26.19
 pandas==1.5.3
 zstandard==0.21.0
 pyarrow==14.0.1
+redis==5.0.8
+orjson==3.9.15
