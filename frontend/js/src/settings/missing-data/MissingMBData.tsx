@@ -147,6 +147,14 @@ export default function MissingMBDataPage() {
             />,
             { toastId: "deleted-track" }
           );
+          // Remove the listen from the BrainzPlayer queue
+          dispatch({
+            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+            data: {
+              track: missingDataToListen(data, user),
+              index: -1,
+            },
+          });
         }
       } catch (error) {
         toast.error(
