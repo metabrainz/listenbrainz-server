@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { HttpResponse, http } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
-import { act, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { Router } from "@remix-run/router";
 import userEvent from "@testing-library/user-event";
@@ -12,7 +12,6 @@ import {
   textContentMatcher,
 } from "../../test-utils/rtl-test-utils";
 import getSettingsRoutes from "../../../src/settings/routes";
-import Layout from "../../../src/layout";
 
 jest.unmock("react-toastify");
 
