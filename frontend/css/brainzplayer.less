@@ -247,40 +247,6 @@
     }
   }
 
-  /** Progress **/
-  .progress {
-    position: absolute;
-    height: @progress-bar-height;
-    top: -@progress-bar-height;
-    margin-bottom: 0;
-    left: 0;
-    width: 100%;
-    cursor: pointer;
-    z-index: 5;
-    transition: height, 0.2s;
-
-    .progress-bar {
-      height: 100%;
-      background-color: @primary-color;
-      border-right: 2px solid @dark-color;
-    }
-    &:hover {
-      height: @progress-bar-hover-height;
-      top: -@progress-bar-hover-height;
-    }
-
-    .progress-tooltip {
-      background: @primary-color;
-      margin-top: -4px;
-      border-radius: 24px;
-      font-size: 1em;
-      padding: 6px 12px;
-    }
-    & > ::after {
-      border-color: transparent;
-    }
-  }
-
   .no-album-art {
     height: 100%;
     background-image: url(../img/logo_big.svg);
@@ -341,14 +307,49 @@
   }
 }
 
+#brainz-player .progress,
+.music-player .progress {
+  position: absolute;
+  height: @progress-bar-height;
+  top: -@progress-bar-height;
+  margin-bottom: 0;
+  left: 0;
+  width: 100%;
+  cursor: pointer;
+  z-index: 5;
+  transition: height, 0.2s;
+
+  .progress-bar {
+    height: 100%;
+    background-color: @primary-color;
+    border-right: 2px solid @dark-color;
+  }
+  &:hover {
+    height: @progress-bar-hover-height;
+    top: -@progress-bar-hover-height;
+  }
+
+  .progress-tooltip {
+    background: @primary-color;
+    margin-top: -4px;
+    border-radius: 24px;
+    font-size: 1em;
+    padding: 6px 12px;
+  }
+  & > ::after {
+    border-color: transparent;
+  }
+}
+
 .queue {
   position: fixed;
   padding: 1em;
-  bottom: -100%;
+  bottom: calc(-100% - @brainzplayer-height - @progress-bar-height);
   transition: bottom 1s ease-in-out;
   width: 100%;
   max-width: 550px;
   height: 500px;
+  max-height: calc(100vh - @brainzplayer-height);
   background-color: #f8f8f8;
   border-top: 1px solid #ccc;
   box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
@@ -371,7 +372,6 @@
     background: #dadada;
     margin-top: 0;
   }
-
   .queue-item {
     display: flex;
     justify-content: space-between;
@@ -410,5 +410,152 @@
       justify-content: space-between;
       align-items: center;
     }
+  }
+}
+
+.music-player {
+  position: fixed;
+  z-index: 108;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  right: 0;
+  bottom: -100%;
+  transition: bottom 0.6s cubic-bezier(0.46, 0.75, 0.55, 0.97);
+  padding: 0 1.5em;
+  padding-bottom: @brainzplayer-height + @progress-bar-height;
+
+  &.open {
+    bottom: 0;
+  }
+
+  .cover-art-scroll-wrapper {
+    overflow-x: auto;
+    scroll-snap-stop: always;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    display: flex;
+    aspect-ratio: 1;
+    margin-top: auto;
+    margin-bottom: auto;
+
+    .cover-art-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      min-width: 100%;
+      margin: 0 0.5em;
+    }
+  }
+
+  .header,
+  .info {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em 0;
+    color: white;
+
+    .love,
+    .hate {
+      color: transparent;
+      stroke: white;
+      stroke-width: 1em;
+    }
+
+    .love {
+      &:hover {
+        stroke: @love-color;
+      }
+      &.loved {
+        stroke: transparent;
+        color: @love-color;
+      }
+    }
+
+    .hate {
+      &:hover {
+        stroke: @hate-color;
+      }
+      &.hated {
+        stroke: transparent;
+        color: @hate-color;
+      }
+    }
+
+    .info-text-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .text-scroll-wrapper {
+      overflow: hidden;
+      white-space: nowrap;
+
+      span {
+        display: inline-block;
+        position: relative;
+
+        &.animate {
+          animation: leftright 6s infinite alternate ease-in-out;
+        }
+      }
+    }
+
+    span {
+      color: white;
+    }
+
+    .feedback-buttons-wrapper {
+      display: flex;
+      font-size: 2.3em;
+      gap: 0.75em;
+      padding-left: 0.25em;
+    }
+  }
+
+  .player-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    margin-bottom: auto;
+
+    .play svg {
+      font-size: 4.25em !important;
+    }
+  }
+
+  .progress-bar-wrapper {
+    margin: 10px 0;
+
+    .progress {
+      position: inherit;
+      height: 10px;
+      background-color: rgba(255, 255, 255, 0.3);
+
+      .progress-bar {
+        background-color: white;
+      }
+    }
+  }
+}
+
+@keyframes leftright {
+  0%,
+  20% {
+    transform: translateX(0%);
+    left: 0%;
+  }
+  80%,
+  100% {
+    transform: translateX(-100%);
+    left: 100%;
   }
 }

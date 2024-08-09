@@ -107,8 +107,9 @@ export default function AlbumPage(): JSX.Element {
   });
   React.useEffect(() => {
     const setAverageColor = () => {
-      const averageColor = getAverageRGBOfImage(albumArtRef?.current);
-      setAlbumArtColor(averageColor);
+      getAverageRGBOfImage(albumArtRef?.current).then((averageColor) => {
+        setAlbumArtColor(averageColor);
+      });
     };
     const currentAlbumArtRef = albumArtRef.current;
     if (currentAlbumArtRef) {
