@@ -9,6 +9,7 @@ import { COLOR_LB_LIGHT_GRAY } from "../utils/constants";
 
 type AccordionProps = {
   title: string | JSX.Element;
+  actions?: JSX.Element;
   bootstrapType?:
     | "danger"
     | "warning"
@@ -20,6 +21,7 @@ type AccordionProps = {
 };
 export default function Accordion({
   title,
+  actions,
   bootstrapType = "default",
   defaultOpen,
   children,
@@ -37,14 +39,15 @@ export default function Accordion({
           tabIndex={0}
           onKeyDown={() => setIsActive(!isActive)}
         >
-          <span className="panel-title">{title}</span>
           <FontAwesomeIcon
             className="accordion-arrow"
             icon={faChevronCircleRight}
             rotation={isActive ? 90 : undefined}
             color={COLOR_LB_LIGHT_GRAY}
           />
+          <span className="panel-title">{title}</span>
         </div>
+        {actions && <span className="panel-actions">{actions}</span>}
       </div>
       {isActive && (
         <div
