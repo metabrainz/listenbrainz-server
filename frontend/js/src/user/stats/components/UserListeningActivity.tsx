@@ -246,13 +246,7 @@ export default class UserListeningActivity extends React.Component<
       numOfDaysInLastMonth
     );
 
-    const result: {
-      id: string;
-      lastRangeCount: number;
-      lastRangeTs: number;
-      thisRangeCount: number;
-      thisRangeTs: number;
-    }[] = [];
+    const result = [];
 
     const maxDays = Math.max(numOfDaysInLastMonth, numOfDaysInThisMonth);
 
@@ -261,9 +255,23 @@ export default class UserListeningActivity extends React.Component<
       const thisMonthDay = thisMonth[i] || null;
       const thisMonthCount = thisMonthDay ? thisMonthDay.listen_count : 0;
 
+      let thisMonthData = {};
+      let lastMonthData = {};
       if (thisMonthDay) {
         totalListens += thisMonthCount;
         totalDays += 1;
+
+        thisMonthData = {
+          thisRangeCount: thisMonthCount,
+          thisRangeTs: thisMonthDay.from_ts,
+        };
+      }
+
+      if (lastMonthDay) {
+        lastMonthData = {
+          lastRangeCount: lastMonthDay.listen_count,
+          lastRangeTs: lastMonthDay.from_ts,
+        };
       }
 
       const dateTS = lastMonthDay
@@ -272,14 +280,8 @@ export default class UserListeningActivity extends React.Component<
 
       result.push({
         id: dateTS.toLocaleString("en-us", dateFormat),
-        lastRangeCount: lastMonthDay ? lastMonthDay.listen_count : 0,
-        lastRangeTs: lastMonthDay
-          ? lastMonthDay.from_ts
-          : thisMonthDay.from_ts - 86400,
-        thisRangeCount: thisMonthCount,
-        thisRangeTs: thisMonthDay
-          ? thisMonthDay.from_ts
-          : lastMonthDay.from_ts + 86400,
+        ...lastMonthData,
+        ...thisMonthData,
       });
     }
 
