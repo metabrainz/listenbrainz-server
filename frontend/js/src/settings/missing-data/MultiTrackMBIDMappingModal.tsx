@@ -10,7 +10,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
 import Fuse from "fuse.js";
-import { groupBy, omit, size } from "lodash";
+import { omit, size, uniq } from "lodash";
 import ListenCard from "../../common/listens/ListenCard";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -100,7 +100,7 @@ export default NiceModal.create(
         if (!matchingTracks || !size(matchingTracks) || !auth_token) {
           return;
         }
-        const promises: Promise<any>[] = [];
+        const promises: Promise<{ status: string }>[] = [];
         const entries = Object.entries(matchingTracks);
         // eslint-disable-next-line no-restricted-syntax
         for (const [recordingMSID, trackMetadata] of entries) {
@@ -116,12 +116,78 @@ export default NiceModal.create(
           }
         }
         try {
-          await Promise.all(promises);
-          toast.success(`You linked ${entries.length} tracks!`, {
-            toastId: "linked-track",
+          const results = await Promise.allSettled(promises);
+          const successfulMappings: Array<{
+            trackName: string;
+            response: PromiseFulfilledResult<{ status: string }>;
+          }> = [];
+          const failedMappings: Array<{
+            trackName: string;
+            response: PromiseRejectedResult;
+          }> = [];
+          // Iterating with a forEach instead of for example using lodash groupBy
+          // so we can use the index, preserved by Promise.allSettled,
+          // to get the track name for display purposes
+          results.forEach((res, idx) => {
+            const trackMetadata: MatchingTracksResult = entries[idx][1];
+            if (res.status === "fulfilled") {
+              successfulMappings.push({
+                trackName: trackMetadata.title,
+                response: res,
+              });
+            } else {
+              failedMappings.push({
+                trackName: trackMetadata.title,
+                response: res,
+              });
+            }
           });
+          if (successfulMappings.length) {
+            const successList = (
+              <ul className="list-group list-group-item-success list-group-item-text">
+                {successfulMappings.map((item) => (
+                  <li>{item.trackName}</li>
+                ))}
+              </ul>
+            );
+            toast.success(
+              <ToastMsg
+                title={`You linked ${successfulMappings.length} tracks!`}
+                message={successList}
+              />,
+              {
+                toastId: "linked-track",
+              }
+            );
+          }
+          if (failedMappings.length) {
+            const failureList = (
+              <div>
+                <ul className="list-group list-group-item-danger list-group-item-text">
+                  {failedMappings.map((item) => (
+                    <li>{item.trackName}</li>
+                  ))}
+                </ul>
+                With the following errors:
+                <br />
+                {uniq(
+                  failedMappings.map((f) => f.response.reason.toString())
+                ).join(`\n`)}
+              </div>
+            );
+            toast.error(
+              <ToastMsg
+                title={`Failed to link ${failedMappings.length} tracks:`}
+                message={failureList}
+              />,
+              {
+                toastId: "failed-linked-track",
+                type: "error",
+              }
+            );
+          }
 
-          resolve(matchingTracks);
+          resolve(successfulMappings);
           closeModal();
         } catch (error) {
           handleError(error, "Error while linking listens");
