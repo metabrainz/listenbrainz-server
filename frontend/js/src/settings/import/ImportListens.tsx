@@ -4,6 +4,7 @@ import { Link, useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import LastFmImporter from "../../lastfm/LastFMImporter";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import ReactTooltip from "react-tooltip";
 
 type ImportLoaderData = {
   user_has_email: boolean;
@@ -47,17 +48,20 @@ export default function Import() {
         </div>
       )}
       <p>
-        Import your existing listen history from other databases. To submit{" "}
-        <em>new</em> listens, please visit the{" "}
-        <a href="https://listenbrainz.org/add-data/">Connect services</a> and{" "}
-        <a href="https://listenbrainz.org/settings/music-services/details/">
-          Submitting data
-        </a>{" "}
-        pages.
-        <br />
+        Import your existing listen history from other databases.{" "}
+      <ReactTooltip id="info-tooltip" place="top">
         Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
         Last.fm, and we cannot use it. Instead, we use the term{" "}
         <strong>listen</strong> for our data.
+      </ReactTooltip>
+        <br />
+        To submit{" "}
+        <em>new</em> listens, please visit the{" "}
+        <a href="https://listenbrainz.org/settings/music-services/details/">Connect services</a> and{" "}
+        <a href="https://listenbrainz.org/add-data/">
+          Submitting data
+        </a>{" "}
+        pages.
       </p>
 
       <h3>Import from Last.fm and Libre.fm</h3>
