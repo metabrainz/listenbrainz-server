@@ -324,12 +324,10 @@ export default function AddData() {
       <ul>
         <li>
           <em>
-            <a href="https://github.com/defvs/ytm-extractor">
-              ytm-extractor
-            </a>
+            <a href="https://github.com/defvs/ytm-extractor">ytm-extractor</a>
           </em>
-          , a Kotlin (Java) script to submit your YouTube Music watch history
-          to Listenbrainz
+          , a Kotlin (Java) script to submit your YouTube Music watch history to
+          Listenbrainz
         </li>
         <li>
           <em>
