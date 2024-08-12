@@ -61,7 +61,7 @@ describe("MissingMBDataPage", () => {
     // 25 groups per page
     // These albums should be grouped and sorted by size before being paginated and displayed
     expect(albumGroups).toHaveLength(25);
-    expect(albumGroups.at(0)).toHaveTextContent("x 10 Paharda (Remixes)");
+    expect(albumGroups.at(0)).toHaveTextContent("Paharda (Remixes) (10 tracks)");
     expect(albumGroups.at(1)).toHaveTextContent(
       "Trip to California (Stoner Edition)"
     );
