@@ -329,7 +329,7 @@ export default NiceModal.create(
                   <SearchAlbumOrMBID
                     onSelectAlbum={setSelectedAlbumMBID}
                     defaultValue={`${releaseName} ${
-                      missingData[0].artist_name ?? ""
+                      missingData[0].artist_name ? `artist:${missingData[0].artist_name}`: ""
                     }`}
                   />
                 </div>
