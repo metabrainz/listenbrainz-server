@@ -18,7 +18,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
 import { Link } from "react-router-dom";
-import tinycolor from "tinycolor2";
+import * as tinycolor from "tinycolor2";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
