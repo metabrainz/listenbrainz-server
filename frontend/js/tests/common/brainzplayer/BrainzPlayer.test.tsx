@@ -17,6 +17,7 @@ import {
 } from "../../../src/common/brainzplayer/BrainzPlayerContext";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
+import IntersectionObserver from "../../__mocks__/intersection-observer";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -116,27 +117,7 @@ describe("BrainzPlayer", () => {
       href: "http://nevergonnagiveyouup.com",
     } as Window["location"];
 
-    global.IntersectionObserver = class IntersectionObserver {
-      root = null;
-      rootMargin = "";
-      thresholds = [];
-
-      observe() {
-        return null;
-      }
-
-      disconnect() {
-        return null;
-      }
-
-      takeRecords() {
-        return [];
-      }
-
-      unobserve() {
-        return null;
-      }
-    };
+    global.IntersectionObserver = IntersectionObserver;
 
     fetchMock.enableMocks();
   });
