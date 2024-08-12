@@ -124,6 +124,10 @@ describe("BrainzPlayer", () => {
       .fn()
       .mockImplementation(intersectionObserverMock);
 
+    global.IntersectionObserver = jest
+      .fn()
+      .mockImplementation(intersectionObserverMock);
+
     fetchMock.enableMocks();
   });
 
