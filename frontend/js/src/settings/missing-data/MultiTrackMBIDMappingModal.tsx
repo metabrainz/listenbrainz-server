@@ -150,7 +150,7 @@ export default NiceModal.create(
           if (failedMappings.length) {
             const failureList = (
               <div>
-                <ul className="list-group list-group-item-danger list-group-item-text">
+                <ul className="list-group list-group-item-danger list-group-item-text list-unstyled">
                   {failedMappings.map((item) => (
                     <li>{item.track.title}</li>
                   ))}
