@@ -164,7 +164,9 @@ export default NiceModal.create(
             );
             toast.error(
               <ToastMsg
-                title={`Failed to link ${failedMappings.length} tracks:`}
+                title={`Failed to link ${failedMappings.length} track${
+                  failedMappings.length > 1 ? "s" : ""
+                }:`}
                 message={failureList}
               />,
               {
@@ -184,7 +186,9 @@ export default NiceModal.create(
             );
             toast.success(
               <ToastMsg
-                title={`You linked ${successfulMappings.length} tracks!`}
+                title={`You linked ${successfulMappings.length} track${
+                  failedMappings.length > 1 ? "s" : ""
+                }!`}
                 message={successList}
               />,
               {
@@ -288,7 +292,7 @@ export default NiceModal.create(
       >
         <div className="modal-dialog" role="document">
           <Tooltip id="musicbrainz-helptext" type="info" multiline>
-            Search for an album matching the tracks above.
+            Search for an album matching the listens above.
             <br />
             Alternatively, you can search for a release or release-group using
             the MusicBrainz search (musicbrainz.org/search).
@@ -329,7 +333,9 @@ export default NiceModal.create(
                   <SearchAlbumOrMBID
                     onSelectAlbum={setSelectedAlbumMBID}
                     defaultValue={`${releaseName} ${
-                      missingData[0].artist_name ? `artist:${missingData[0].artist_name}`: ""
+                      missingData[0].artist_name
+                        ? `artist:${missingData[0].artist_name}`
+                        : ""
                     }`}
                   />
                 </div>
