@@ -116,17 +116,27 @@ describe("BrainzPlayer", () => {
       href: "http://nevergonnagiveyouup.com",
     } as Window["location"];
 
-    const intersectionObserverMock = () => ({
-      observe: () => null,
-      unobserve: () => null,
-    });
-    window.IntersectionObserver = jest
-      .fn()
-      .mockImplementation(intersectionObserverMock);
+    global.IntersectionObserver = class IntersectionObserver {
+      root = null;
+      rootMargin = "";
+      thresholds = [];
 
-    global.IntersectionObserver = jest
-      .fn()
-      .mockImplementation(intersectionObserverMock);
+      observe() {
+        return null;
+      }
+
+      disconnect() {
+        return null;
+      }
+
+      takeRecords() {
+        return [];
+      }
+
+      unobserve() {
+        return null;
+      }
+    };
 
     fetchMock.enableMocks();
   });
