@@ -118,54 +118,41 @@ export default NiceModal.create(
         try {
           const results = await Promise.allSettled(promises);
           const successfulMappings: Array<{
-            trackName: string;
+            recordingMSID: string;
+            track: MatchingTracksResult;
             response: PromiseFulfilledResult<{ status: string }>;
           }> = [];
           const failedMappings: Array<{
-            trackName: string;
+            recordingMSID: string;
+            track: MatchingTracksResult;
             response: PromiseRejectedResult;
           }> = [];
           // Iterating with a forEach instead of for example using lodash groupBy
           // so we can use the index, preserved by Promise.allSettled,
           // to get the track name for display purposes
           results.forEach((res, idx) => {
+            const recordingMSID = entries[idx][0];
             const trackMetadata: MatchingTracksResult = entries[idx][1];
             if (res.status === "fulfilled") {
               successfulMappings.push({
-                trackName: trackMetadata.title,
+                recordingMSID,
+                track: trackMetadata,
                 response: res,
               });
             } else {
               failedMappings.push({
-                trackName: trackMetadata.title,
+                recordingMSID,
+                track: trackMetadata,
                 response: res,
               });
             }
           });
-          if (successfulMappings.length) {
-            const successList = (
-              <ul className="list-group list-group-item-success list-group-item-text">
-                {successfulMappings.map((item) => (
-                  <li>{item.trackName}</li>
-                ))}
-              </ul>
-            );
-            toast.success(
-              <ToastMsg
-                title={`You linked ${successfulMappings.length} tracks!`}
-                message={successList}
-              />,
-              {
-                toastId: "linked-track",
-              }
-            );
-          }
           if (failedMappings.length) {
             const failureList = (
               <div>
                 <ul className="list-group list-group-item-danger list-group-item-text">
                   {failedMappings.map((item) => (
-                    <li>{item.trackName}</li>
+                    <li>{item.track.title}</li>
                   ))}
                 </ul>
                 With the following errors:
@@ -187,7 +174,30 @@ export default NiceModal.create(
             );
           }
 
-          resolve(successfulMappings);
+          if (successfulMappings.length) {
+            const successList = (
+              <ul className="list-group list-group-item-success list-group-item-text">
+                {successfulMappings.map((item) => (
+                  <li>{item.track.title}</li>
+                ))}
+              </ul>
+            );
+            toast.success(
+              <ToastMsg
+                title={`You linked ${successfulMappings.length} tracks!`}
+                message={successList}
+              />,
+              {
+                toastId: "linked-track",
+              }
+            );
+            const returnValue: MatchingTracksResults = {};
+            successfulMappings.forEach(({ recordingMSID, track }) => {
+              returnValue[recordingMSID] = track;
+            });
+            resolve(returnValue);
+          }
+
           closeModal();
         } catch (error) {
           handleError(error, "Error while linking listens");
