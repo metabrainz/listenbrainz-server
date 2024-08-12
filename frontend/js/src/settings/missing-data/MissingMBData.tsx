@@ -23,6 +23,7 @@ import MultiTrackMBIDMappingModal, {
 } from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { getListenFromTrack } from "../../user/components/AddListenModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -262,11 +263,34 @@ export default function MissingMBDataPage() {
                       missingData: group,
                       releaseName,
                     }
-                  ).then((matchingTracks) => {
+                  ).then((matchedTracks) => {
+                    Object.entries(matchedTracks).forEach(
+                      ([recordingMsid, track]) => {
+                        // For deleting items from the BrainzPlayer queue, we need to use
+                        // the metadata it was created from rather than the matched track metadata
+                        const itemBeforeMatching = group.find(
+                          ({ recording_msid }) =>
+                            recordingMsid === recording_msid
+                        );
+                        if (itemBeforeMatching) {
+                          // Remove the listen from the BrainzPlayer queue
+                          dispatch({
+                            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+                            data: {
+                              track: missingDataToListen(
+                                itemBeforeMatching,
+                                user
+                              ),
+                              index: -1,
+                            },
+                          });
+                        }
+                      }
+                    );
                     // Remove successfully matched items from the page
                     setMissingData((prevValue) =>
                       prevValue.filter(
-                        (md) => !matchingTracks[md.recording_msid]
+                        (md) => !matchedTracks[md.recording_msid]
                       )
                     );
                   });
@@ -314,8 +338,23 @@ export default function MissingMBDataPage() {
                       title="Link with MusicBrainz"
                       icon={faLink}
                       action={() => {
-                        NiceModal.show(MBIDMappingModal, {
+                        NiceModal.show<TrackMetadata, any>(MBIDMappingModal, {
                           listenToMap: listen,
+                        }).then(({ recording_msid }) => {
+                          // Remove the listen from the BrainzPlayer queue
+                          dispatch({
+                            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+                            data: {
+                              track: listen,
+                              index: -1,
+                            },
+                          });
+                          // Remove successfully matched item from the page
+                          setMissingData((prevValue) =>
+                            prevValue.filter(
+                              (md) => md.recording_msid !== recording_msid
+                            )
+                          );
                         });
                       }}
                     />
