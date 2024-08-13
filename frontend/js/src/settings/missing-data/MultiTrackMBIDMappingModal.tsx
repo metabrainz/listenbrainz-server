@@ -42,7 +42,7 @@ export default NiceModal.create(
   ({ missingData, releaseName }: MultiTrackMBIDMappingModalProps) => {
     const modal = useModal();
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
-    const { lookupMBRelease } = APIService;
+    const { lookupMBRelease, submitMBIDMapping } = APIService;
     const { auth_token } = currentUser;
 
     const { resolve, visible } = modal;
@@ -106,7 +106,7 @@ export default NiceModal.create(
       []
     );
 
-    const submitMBIDMapping = React.useCallback(
+    const submitMBIDMappingCallback = React.useCallback(
       async (event: React.FormEvent) => {
         event.preventDefault();
 
@@ -120,11 +120,7 @@ export default NiceModal.create(
           const recordingMBID = trackMetadata.recording.id;
           if (recordingMBID) {
             promises.push(
-              APIService.submitMBIDMapping(
-                auth_token,
-                recordingMSID,
-                recordingMBID
-              )
+              submitMBIDMapping(auth_token, recordingMSID, recordingMBID)
             );
           }
         }
@@ -220,7 +216,14 @@ export default NiceModal.create(
           handleError(error, "Error while linking listens");
         }
       },
-      [auth_token, closeModal, resolve, APIService, matchingTracks, handleError]
+      [
+        auth_token,
+        closeModal,
+        resolve,
+        submitMBIDMapping,
+        matchingTracks,
+        handleError,
+      ]
     );
 
     React.useEffect(() => {
@@ -337,7 +340,7 @@ export default NiceModal.create(
             When you have found the one that matches your listens, copy its URL
             (link) into the search box above.
           </Tooltip>
-          <form className="modal-content" onSubmit={submitMBIDMapping}>
+          <form className="modal-content" onSubmit={submitMBIDMappingCallback}>
             <div className="modal-header">
               <button
                 type="button"
