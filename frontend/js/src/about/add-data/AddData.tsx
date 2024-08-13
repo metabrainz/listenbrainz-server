@@ -27,6 +27,15 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://github.com/ciderapp">Cider</a>
+          </em>
+          , a cross-platform Apple Music player:{" "}
+          <a href="https://marketplace.cider.sh/plugins/10">
+            <code>plugin</code>
+          </a>
+        </li>
+        <li>
+          <em>
             <a href="https://cmus.github.io/">cmus</a>
           </em>
           , a console-based music player for Unix-like operating systems:{" "}
@@ -315,12 +324,10 @@ export default function AddData() {
       <ul>
         <li>
           <em>
-            <a href="https://github.com/defvs/ytm-extractor">
-              ytm-extractor
-            </a>
+            <a href="https://github.com/defvs/ytm-extractor">ytm-extractor</a>
           </em>
-          , a Kotlin (Java) script to submit your YouTube Music watch history
-          to Listenbrainz
+          , a Kotlin (Java) script to submit your YouTube Music watch history to
+          Listenbrainz
         </li>
         <li>
           <em>
