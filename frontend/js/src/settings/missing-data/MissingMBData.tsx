@@ -353,7 +353,10 @@ export default function MissingMBDataPage() {
                           // Remove successfully matched item from the page
                           setMissingData((prevValue) =>
                             prevValue.filter(
-                              (md) => md.recording_msid !== recording_msid
+                              (md) =>
+                                md.recording_msid !==
+                                listen.track_metadata.additional_info
+                                  ?.recording_msid
                             )
                           );
                         });
