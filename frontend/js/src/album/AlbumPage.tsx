@@ -24,11 +24,11 @@ import {
   getAverageRGBOfImage,
   getReviewEventContent,
 } from "../utils/utils";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import { RouteQuery } from "../utils/Loader";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -191,6 +191,16 @@ export default function AlbumPage(): JSX.Element {
     listensFromAlbumRecordings
   );
 
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listensFromAlbumsRecordingsFlattened,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listensFromAlbumsRecordingsFlattened]);
+
   const filteredTags = chain(releaseGroupTags)
     .sortBy("count")
     .value()
@@ -334,8 +344,7 @@ export default function AlbumPage(): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
-                        payload: listensFromAlbumsRecordingsFlattened,
+                        brainzplayer_event: "play-ambient-queue",
                       },
                       window.location.origin
                     );
@@ -468,13 +477,6 @@ export default function AlbumPage(): JSX.Element {
           )}
         </div>
       </div>
-      <BrainzPlayer
-        listens={listensFromAlbumsRecordingsFlattened}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

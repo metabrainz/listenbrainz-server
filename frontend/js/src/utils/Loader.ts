@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs, Params } from "react-router-dom";
 import { json } from "react-router-dom";
-import _ from "lodash";
+import { isEmpty } from "lodash";
 import queryClient from "./QueryClient";
 import { getObjectForURLSearchParams } from "./utils";
 
@@ -50,7 +50,7 @@ export const RouteQueryLoader = (
 
   // Add params to the keys
   const paramsObject = { ...params };
-  if (!_.isEmpty(paramsObject)) keys.push(paramsObject);
+  if (!isEmpty(paramsObject)) keys.push(paramsObject);
 
   if (includeSearchParams) {
     // Add search params to the keys
