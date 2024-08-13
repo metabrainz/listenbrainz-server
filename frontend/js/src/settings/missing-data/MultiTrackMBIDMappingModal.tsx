@@ -159,7 +159,7 @@ export default NiceModal.create(
           if (failedMappings.length) {
             const failureList = (
               <div>
-                <ul className="list-group list-group-item-danger list-group-item-text list-unstyled">
+                <ul className="list-group list-group-item-text list-unstyled">
                   {failedMappings.map((item) => (
                     <li>{item.track.title}</li>
                   ))}
@@ -180,14 +180,14 @@ export default NiceModal.create(
               />,
               {
                 toastId: "failed-linked-track",
-                type: "error",
+                theme: "colored",
               }
             );
           }
 
           if (successfulMappings.length) {
             const successList = (
-              <ul className="list-group list-group-item-success list-group-item-text">
+              <ul className="list-group list-group-item-text">
                 {successfulMappings.map((item) => (
                   <li>{item.track.title}</li>
                 ))}
@@ -202,6 +202,7 @@ export default NiceModal.create(
               />,
               {
                 toastId: "linked-track",
+                theme: "colored",
               }
             );
             const returnValue: MatchingTracksResults = {};
