@@ -371,7 +371,8 @@ export default function RecommendationsPage() {
         data: listensFromJSPFTracks,
       });
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPlaylist]);
 
   return (
     <div id="recommendations" role="main">

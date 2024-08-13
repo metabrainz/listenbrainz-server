@@ -544,6 +544,14 @@ export default function BrainzPlayer() {
     });
   };
 
+  const stopPlayerStateTimer = React.useCallback((): void => {
+    debouncedCheckProgressAndSubmitListen.flush();
+    if (playerStateTimerID.current) {
+      clearInterval(playerStateTimerID.current);
+    }
+    playerStateTimerID.current = null;
+  }, [debouncedCheckProgressAndSubmitListen]);
+
   const playNextTrack = (invert: boolean = false): void => {
     if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
@@ -586,7 +594,7 @@ export default function BrainzPlayer() {
       return;
     }
 
-    // If the nextListenIndex is greater than the queue length, i.e. the queue has endes, then there are two possibilities:
+    // If the nextListenIndex is greater than the queue length, i.e. the queue has ended, then there are three possibilities:
     // 1. If there are listens in the ambient queue, then play the first listen in the ambient queue.
     //    In this case, we'll move the first listen from the ambient queue to the main queue and play it.
     // 2. If there are no listens in the ambient queue, then play the first listen in the main queue.
@@ -611,6 +619,11 @@ export default function BrainzPlayer() {
         );
         return;
       }
+    } else if (queueRepeatMode === QueueRepeatModes.off) {
+      // 3. If there are no listens in the ambient queue and the queue repeat mode is off, then stop the player
+      stopPlayerStateTimer();
+      reinitializeWindowTitle();
+      return;
     }
 
     // If there are no listens in the ambient queue, then play the first listen in the main queue
@@ -690,14 +703,6 @@ export default function BrainzPlayer() {
     playerPaused,
     invalidateDataSource,
   ]);
-
-  const stopPlayerStateTimer = React.useCallback((): void => {
-    debouncedCheckProgressAndSubmitListen.flush();
-    if (playerStateTimerID.current) {
-      clearInterval(playerStateTimerID.current);
-    }
-    playerStateTimerID.current = null;
-  }, [debouncedCheckProgressAndSubmitListen]);
 
   /* Updating the progress bar without calling any API to check current player state */
   const updatePlayerProgressBar = (): void => {
