@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
-import { useLoaderData, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 
@@ -11,6 +11,7 @@ import NiceModal from "@ebay/nice-modal-react";
 
 import { groupBy, isFinite, isNil, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useQuery } from "@tanstack/react-query";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
@@ -23,6 +24,7 @@ import MultiTrackMBIDMappingModal, {
 } from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { RouteQuery } from "../../utils/Loader";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
@@ -66,13 +68,13 @@ export default function MissingMBDataPage() {
   // Context
   const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
   const dispatch = useBrainzPlayerDispatch();
-
+  const location = useLocation();
   // Loader
-  const props = useLoaderData() as MissingMBDataLoaderData;
-  const {
-    missing_data: missingDataProps = [],
-    last_updated: lastUpdated,
-  } = props;
+  const { data: loaderData } = useQuery<MissingMBDataLoaderData>(
+    RouteQuery(["missing-data"], location.pathname)
+  );
+  const { missing_data: missingDataProps = [], last_updated: lastUpdated } =
+    loaderData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
@@ -190,17 +192,17 @@ export default function MissingMBDataPage() {
 
   // Effects
   React.useEffect(() => {
-    // Only run once
-    setSearchParams({ page: currPage.toString() });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setSearchParams]);
-
-  React.useEffect(() => {
-    // Prevent arbitrary pagination to a non-existing page
-    if (currPage > totalPages) {
-      setSearchParams({ page: "1" });
+    // Set the ?page search param in URL on startup if not set, as well as
+    // constrain pagination to existing pages, forcing navigation to first page if needed
+    if (!pageSearchParam || currPage > totalPages) {
+      setSearchParams(
+        { page: "1" },
+        { preventScrollReset: true, replace: true }
+      );
     }
-  }, [currPage, setSearchParams, totalPages]);
+    // Only run once on startup
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // BrainzPlayer
   React.useEffect(() => {
