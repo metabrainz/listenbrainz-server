@@ -78,7 +78,7 @@ export default function DeleteAccount() {
           This will permanently delete all ListenBrainz data for user {name}.
         </b>
       </p>
-      
+
       <button
         id="btn-delete-user"
         className="btn btn-danger btn-lg"
