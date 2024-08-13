@@ -33,7 +33,7 @@ export type MissingMBDataProps = {
 
 type MissingMBDataLoaderData = {
   missing_data?: Array<MissingMBData>;
-  last_updated?: number | null;
+  last_updated?: string | null;
 };
 
 export interface MissingMBDataState {
@@ -234,8 +234,8 @@ export default function MissingMBDataPage() {
         music encyclopedia that ListenBrainz uses to display information about
         your music.
       </p>
-      {!isNil(lastUpdated) && isFinite(lastUpdated) && (
-        <p>Last updated {new Date(lastUpdated * 1000).toLocaleDateString()}</p>
+      {!isNil(lastUpdated) && (
+        <p>Last updated {new Date(lastUpdated).toLocaleDateString()}</p>
       )}
       <br />
       <div>
