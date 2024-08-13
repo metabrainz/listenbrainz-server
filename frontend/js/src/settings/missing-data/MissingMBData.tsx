@@ -23,7 +23,6 @@ import MultiTrackMBIDMappingModal, {
 } from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
-import { getListenFromTrack } from "../../user/components/AddListenModal";
 
 export type MissingMBDataProps = {
   missingData?: Array<MissingMBData>;
