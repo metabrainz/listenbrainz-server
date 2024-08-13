@@ -35,6 +35,9 @@ export type MultiTrackMBIDMappingModalProps = {
   missingData: Array<MissingMBData>;
 };
 
+// https://lucene.apache.org/core/7_7_2/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Escaping_Special_Characters
+const lucineSpecialCharRegex = /[+\-!(){}[\]^"~*?:\\/]|(?:&{2})|(?:\|{2})/gm;
+
 export default NiceModal.create(
   ({ missingData, releaseName }: MultiTrackMBIDMappingModalProps) => {
     const modal = useModal();
@@ -47,7 +50,17 @@ export default NiceModal.create(
     const [matchingTracks, setMatchingTracks] = React.useState<
       MatchingTracksResults
     >();
-    const [includeArtistName, setIncludeArtistName] = React.useState(false);
+    const [
+      includeArtistNameSearch,
+      setIncludeArtistNameSearch,
+    ] = React.useState(true);
+    const [includeArtistNameMatch, setIncludeArtistNameMatch] = React.useState(
+      false
+    );
+    const [
+      escapeSpecialCharacters,
+      setEscapeSpecialCharacters,
+    ] = React.useState(false);
     const [selectedAlbumMBID, setSelectedAlbumMBID] = React.useState<string>();
     const [selectedAlbum, setSelectedAlbum] = React.useState<
       MBReleaseWithMetadata
@@ -248,7 +261,7 @@ export default NiceModal.create(
       const newMatchingTracks: MatchingTracksResults = {};
       missingData.forEach((missingDataItem) => {
         let stringToSearch = missingDataItem.recording_name;
-        if (includeArtistName) {
+        if (includeArtistNameMatch) {
           stringToSearch += ` ${missingDataItem.artist_name}`;
         }
         const matches = fuzzysearch.search(stringToSearch);
@@ -264,7 +277,7 @@ export default NiceModal.create(
         }
       });
       setMatchingTracks(newMatchingTracks);
-    }, [includeArtistName, missingData, potentialTracks]);
+    }, [includeArtistNameMatch, missingData, potentialTracks]);
 
     const removeItemFromMatches = (recordingMSID: string) => {
       setMatchingTracks((currentMatchingTracks) =>
@@ -280,6 +293,30 @@ export default NiceModal.create(
     const hasMatches = Boolean(matchingTracksEntries?.length);
     const unmatchedItems =
       missingData.filter((md) => !matchingTracks?.[md.recording_msid]) ?? [];
+
+    // We may need to escape or replace the Lucene search special characters
+    // + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /     as described in
+    // https://lucene.apache.org/core/7_7_2/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Escaping_Special_Characters
+    const escapedReleaseName = releaseName?.replace(
+      lucineSpecialCharRegex,
+      "\\$&"
+    );
+    const escapedArtistName = missingData[0]?.artist_name?.replace(
+      lucineSpecialCharRegex,
+      "\\$&"
+    );
+    let searchTerm = escapeSpecialCharacters ? escapedReleaseName : releaseName;
+    if (
+      includeArtistNameSearch &&
+      (missingData[0]?.artist_name ||
+        (escapeSpecialCharacters && escapedArtistName))
+    ) {
+      searchTerm += ` artist:(${
+        escapeSpecialCharacters
+          ? escapedArtistName
+          : missingData[0]?.artist_name
+      })`;
+    }
 
     return (
       <div
@@ -331,28 +368,27 @@ export default NiceModal.create(
                 </p>
                 <div className="card listen-card">
                   <SearchAlbumOrMBID
+                    key={searchTerm}
                     onSelectAlbum={setSelectedAlbumMBID}
-                    defaultValue={`${releaseName} ${
-                      missingData[0].artist_name
-                        ? `artist:(${missingData[0].artist_name})`
-                        : ""
-                    }`}
+                    defaultValue={searchTerm ?? ""}
                   />
                 </div>
                 <div className="form-check mt-15">
                   <input
                     className="form-check-input"
-                    id="includeArtist"
+                    id="includeArtistSearch"
                     type="checkbox"
-                    checked={includeArtistName}
-                    onChange={(e) => setIncludeArtistName(e.target.checked)}
+                    checked={includeArtistNameSearch}
+                    onChange={(e) =>
+                      setIncludeArtistNameSearch(e.target.checked)
+                    }
                   />
                   &nbsp;
                   <label
-                    htmlFor="includeArtist"
+                    htmlFor="includeArtistSearch"
                     style={{ fontWeight: "initial" }}
                   >
-                    Include artist name when matching{" "}
+                    Include artist name when searching{" "}
                     <FontAwesomeIcon
                       icon={faQuestionCircle}
                       data-tip
@@ -365,6 +401,45 @@ export default NiceModal.create(
                   Depending on the data we have available, including the artist
                   name can result in worse matching. Tick this checkbox if you
                   have a poor matching rate.
+                </Tooltip>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    id="escapeSpecialCharacters"
+                    type="checkbox"
+                    checked={escapeSpecialCharacters}
+                    onChange={(e) =>
+                      setEscapeSpecialCharacters(e.target.checked)
+                    }
+                  />
+                  &nbsp;
+                  <label
+                    htmlFor="escapeSpecialCharacters"
+                    style={{ fontWeight: "initial" }}
+                  >
+                    Preserve special characters{" "}
+                    <FontAwesomeIcon
+                      icon={faQuestionCircle}
+                      data-tip
+                      data-for="escapeSpecialCharactersHepl"
+                      size="sm"
+                    />{" "}
+                  </label>
+                </div>
+                <Tooltip id="escapeSpecialCharactersHepl" type="info">
+                  Escape special characters such as{" "}
+                  <span className="code-block">
+                    ( ) [ ] ! * ~ ^ &quot; ~ ? \ / || &&
+                  </span>
+                  to preserve them in the search term.
+                  <br />
+                  Otherwise those characters may be ignored.
+                  <br />
+                  For example, to search for an album by the band
+                  &quot;!!!&quot;,
+                  <br />
+                  you will need to escape the characters like so:{" "}
+                  <pre>artist:(\!\!\!)</pre>
                 </Tooltip>
               </div>
               <hr />
@@ -395,57 +470,56 @@ export default NiceModal.create(
                 </div>
               )}
               {hasMatches && matchingTracksEntries && (
-                <h5>
-                  Found {matchingTracksEntries.length} matches. Please check
-                  each listen below:
-                </h5>
-              )}
-
-              {hasMatches && matchingTracksEntries && (
-                <div className="mt-15">
-                  {matchingTracksEntries.map(([recordingMSID, track]) => {
-                    return (
-                      <div
-                        key={recordingMSID}
-                        className="flex"
-                        style={{ alignItems: "center" }}
-                      >
-                        <q>{track.searchString}</q>
-                        <FontAwesomeIcon
-                          icon={faArrowRightLong}
-                          style={{ flex: "0 1 50px" }}
-                        />
-                        <div style={{ flex: "2 1 0%" }}>
-                          <ListenCard
-                            key={recordingMSID}
-                            compact
-                            listen={getListenFromTrack(
-                              track,
-                              new Date(0),
-                              selectedAlbum
-                            )}
-                            showTimestamp={false}
-                            showUsername={false}
-                            // eslint-disable-next-line react/jsx-no-useless-fragment
-                            feedbackComponent={<></>}
-                            additionalActions={
-                              <ListenControl
-                                buttonClassName="btn-transparent"
-                                text=""
-                                title="Remove incorrect match"
-                                icon={faTimesCircle}
-                                iconSize="lg"
-                                action={() =>
-                                  removeItemFromMatches(recordingMSID)
-                                }
-                              />
-                            }
+                <>
+                  <h5>
+                    Found {matchingTracksEntries.length} matches. Please check
+                    each listen below:
+                  </h5>
+                  <div className="mt-15">
+                    {matchingTracksEntries.map(([recordingMSID, track]) => {
+                      return (
+                        <div
+                          key={recordingMSID}
+                          className="flex"
+                          style={{ alignItems: "center" }}
+                        >
+                          <q>{track.searchString}</q>
+                          <FontAwesomeIcon
+                            icon={faArrowRightLong}
+                            style={{ flex: "0 1 50px" }}
                           />
+                          <div style={{ flex: "2 1 0%" }}>
+                            <ListenCard
+                              key={recordingMSID}
+                              compact
+                              listen={getListenFromTrack(
+                                track,
+                                new Date(0),
+                                selectedAlbum
+                              )}
+                              showTimestamp={false}
+                              showUsername={false}
+                              // eslint-disable-next-line react/jsx-no-useless-fragment
+                              feedbackComponent={<></>}
+                              additionalActions={
+                                <ListenControl
+                                  buttonClassName="btn-transparent"
+                                  text=""
+                                  title="Remove incorrect match"
+                                  icon={faTimesCircle}
+                                  iconSize="lg"
+                                  action={() =>
+                                    removeItemFromMatches(recordingMSID)
+                                  }
+                                />
+                              }
+                            />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
               {unmatchedItems && Boolean(unmatchedItems.length) && (
                 <>
@@ -469,6 +543,33 @@ export default NiceModal.create(
                   </ul>
                 </>
               )}
+              <div className="form-check mt-15">
+                <input
+                  className="form-check-input"
+                  id="includeArtistMatch"
+                  type="checkbox"
+                  checked={includeArtistNameMatch}
+                  onChange={(e) => setIncludeArtistNameMatch(e.target.checked)}
+                />
+                &nbsp;
+                <label
+                  htmlFor="includeArtistMatch"
+                  style={{ fontWeight: "initial" }}
+                >
+                  Include artist name when matching{" "}
+                  <FontAwesomeIcon
+                    icon={faQuestionCircle}
+                    data-tip
+                    data-for="includeArtistNameMatchHelp"
+                    size="sm"
+                  />{" "}
+                </label>
+                <Tooltip id="includeArtistNameMatchHelp" type="info" multiline>
+                  Depending on the data we have available, including the artist
+                  name can result in worse matching. Tick this checkbox if you
+                  have a poor matching rate.
+                </Tooltip>
+              </div>
             </div>
             <div className="modal-footer">
               <button
