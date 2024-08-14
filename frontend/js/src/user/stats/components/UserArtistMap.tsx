@@ -91,7 +91,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
   };
 
   return (
-    <Card className="user-stats-card">
+    <Card className="user-stats-card" data-testid="user-stats-map">
       <div className="row">
         <div className="col-md-9 col-xs-6">
           <h3 style={{ marginLeft: 20 }}>
@@ -154,6 +154,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
             style={{
               minHeight: "inherit",
             }}
+            data-testid="error-message"
           >
             <span style={{ fontSize: 24 }} className="text-center">
               <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}

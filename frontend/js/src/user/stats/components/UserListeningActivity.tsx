@@ -409,7 +409,10 @@ export default function UserListeningActivity(
   const { perRange } = rangeMap[range] || {};
 
   return (
-    <Card style={{ marginTop: 20, minHeight: 400 }}>
+    <Card
+      style={{ marginTop: 20, minHeight: 400 }}
+      data-testid="listening-activity"
+    >
       <div className="row">
         <div className="col-xs-10">
           <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
@@ -432,7 +435,11 @@ export default function UserListeningActivity(
 
       <Loader isLoading={loading}>
         {hasError && (
-          <div className="flex-center" style={{ minHeight: "inherit" }}>
+          <div
+            className="flex-center"
+            style={{ minHeight: "inherit" }}
+            data-testid="error-message"
+          >
             <span style={{ fontSize: 24 }} className="text-center">
               <FontAwesomeIcon
                 icon={faExclamationCircle as IconProp}
