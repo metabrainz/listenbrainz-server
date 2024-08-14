@@ -44,12 +44,9 @@ describe("UserDailyActivity", () => {
   let server: SetupServerApi;
   beforeAll(async () => {
     const handlers = [
-      http.get(
-        "/1/stats/user/foobar/daily-activity?range=week",
-        async (path) => {
-          return HttpResponse.json(userDailyActivityResponse);
-        }
-      ),
+      http.get("/1/stats/user/foobar/daily-activity", async (path) => {
+        return HttpResponse.json(userDailyActivityResponse);
+      }),
     ];
     server = setupServer(...handlers);
     server.listen();

@@ -48,56 +48,32 @@ describe.each([
     let server: SetupServerApi;
     beforeAll(async () => {
       const handlers = [
-        http.get(
-          "/1/stats/user/test_user/artists?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userArtists);
-          }
-        ),
-        http.get(
-          "/1/stats/user/test_user/releases?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userReleases);
-          }
-        ),
-        http.get(
-          "/1/stats/user/test_user/release-groups?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userReleaseGroups);
-          }
-        ),
-        http.get(
-          "/1/stats/user/test_user/recordings?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userRecordings);
-          }
-        ),
+        http.get("/1/stats/user/test_user/artists", async (path) => {
+          return HttpResponse.json(userArtists);
+        }),
+        http.get("/1/stats/user/test_user/releases", async (path) => {
+          return HttpResponse.json(userReleases);
+        }),
+        http.get("/1/stats/user/test_user/release-groups", async (path) => {
+          return HttpResponse.json(userReleaseGroups);
+        }),
+        http.get("/1/stats/user/test_user/recordings", async (path) => {
+          return HttpResponse.json(userRecordings);
+        }),
       ];
       const sitewideHandlers = [
-        http.get(
-          "/`1/stats/sitewide/artists?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userArtists);
-          }
-        ),
-        http.get(
-          "/1/stats/sitewide/releases?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userReleases);
-          }
-        ),
-        http.get(
-          "/1/stats/sitewide/release-groups?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userReleaseGroups);
-          }
-        ),
-        http.get(
-          "/1/stats/sitewide/recordings?offset=0&range=week&count=10",
-          async (path) => {
-            return HttpResponse.json(userRecordings);
-          }
-        ),
+        http.get("/`1/stats/sitewide/artists", async (path) => {
+          return HttpResponse.json(userArtists);
+        }),
+        http.get("/1/stats/sitewide/releases", async (path) => {
+          return HttpResponse.json(userReleases);
+        }),
+        http.get("/1/stats/sitewide/release-groups", async (path) => {
+          return HttpResponse.json(userReleaseGroups);
+        }),
+        http.get("/1/stats/sitewide/recordings", async (path) => {
+          return HttpResponse.json(userRecordings);
+        }),
       ];
       server = setupServer(...handlers, ...sitewideHandlers);
       server.listen();
