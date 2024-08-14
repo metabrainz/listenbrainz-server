@@ -73,7 +73,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   const entityTextOnCard = `${terminology}s`;
   if (hasError) {
     return (
-      <Card className="mt-15">
+      <Card className="mt-15" data-testid="error-message">
         <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
         <div className="text-center">
           <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
@@ -84,10 +84,10 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   }
 
   return (
-    <Card className="mt-15">
+    <Card className="mt-15" data-testid={`top-${entity}`}>
       <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
       <Loader isLoading={loading}>
-        <div style={{ padding: "1em" }}>
+        <div style={{ padding: "1em" }} data-testid={`top-${entity}-list`}>
           {entity === "artist" &&
             Object.keys(data).length > 0 &&
             (data as UserArtistsResponse).payload.artists.map(
