@@ -128,7 +128,7 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
   }, [rawData]);
 
   return (
-    <Card className="user-stats-card">
+    <Card className="user-stats-card" data-testid="user-daily-activity">
       <div className="row">
         <div className="col-xs-10">
           <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
