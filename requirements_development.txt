@@ -6,3 +6,4 @@ pytest-cov==3.0.0
 requests-mock==1.9.3
 pytest-subtests==0.8.0
 python-socketio[client]
+lxml==5.2.2

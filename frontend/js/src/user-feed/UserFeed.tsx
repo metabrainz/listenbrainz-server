@@ -32,7 +32,6 @@ import {
   InfiniteData,
 } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import ListenCard from "../common/listens/ListenCard";
 import {
   preciseTimestamp,
@@ -45,6 +44,7 @@ import {
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -150,6 +150,9 @@ function getEventTypePhrase(event: TimelineEvent): string {
 type UserFeedLoaderData = UserFeedPageProps;
 export default function UserFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const dispatch = useBrainzPlayerDispatch();
+
+  const prevListens = React.useRef<Listen[]>([]);
 
   const params = useParams();
   const queryClient = useQueryClient();
@@ -191,6 +194,34 @@ export default function UserFeedPage() {
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
   // Flatten the pages of events from the infite query
   const events = pages?.map((page) => page.events).flat();
+
+  const listens = events
+    ?.filter(isEventListenable)
+    .map((event) => event?.metadata) as Listen[];
+
+  React.useEffect(() => {
+    // Since we're using infinite queries, we need to manually set the ambient queue and also ensure
+    // that only the newly fetched listens are added to the botom of the queue.
+    // But on first load, we need to add replace the entire queue with the listens
+
+    if (!prevListens.current?.length) {
+      dispatch({
+        type: "SET_AMBIENT_QUEUE",
+        data: listens,
+      });
+    } else {
+      const newListens = listens.filter(
+        (listen) => !prevListens.current?.includes(listen)
+      );
+      dispatch({
+        type: "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
+        data: newListens,
+      });
+    }
+
+    prevListens.current = listens;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
 
   const changeEventVisibility = React.useCallback(
     async (event: TimelineEvent) => {
@@ -369,6 +400,7 @@ export default function UserFeedPage() {
     }
     if (
       (event.event_type === EventType.RECORDING_PIN ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
         event.event_type === EventType.RECORDING_RECOMMENDATION) &&
       event.user_name !== currentUser.name
     ) {
@@ -523,10 +555,6 @@ export default function UserFeedPage() {
     );
   };
 
-  const listens = events
-    ?.filter(isEventListenable)
-    .map((event) => event?.metadata) as Listen[];
-
   return (
     <>
       <Helmet>
@@ -624,13 +652,6 @@ export default function UserFeedPage() {
           <UserSocialNetwork user={currentUser} />
         </div>
       </div>
-      <BrainzPlayer
-        listens={listens}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </>
   );
 }

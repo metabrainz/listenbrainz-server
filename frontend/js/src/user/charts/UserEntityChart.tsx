@@ -1,10 +1,18 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as React from "react";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
+  faAngleLeft,
+  faAngleRight,
+  faExclamationCircle,
+  faHeadphones,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import { BarItemProps } from "@nivo/bar";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
@@ -15,10 +23,16 @@ import Pill from "../../components/Pill";
 import {
   getAllStatRanges,
   getChartEntityDetails,
+  getEntityLink,
   isInvalidStatRange,
   userChartEntityToListen,
 } from "../stats/utils";
 import ListenCard from "../../common/listens/ListenCard";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
+import { getStatsArtistLink } from "../../utils/utils";
+import { useMediaQuery } from "../../explore/fresh-releases/utils";
+import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -38,6 +52,58 @@ export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
 
 const ROWS_PER_PAGE = 25;
 
+// @ts-ignore - Not sure why it does not accept UserEntityDatum,
+// but BarDatum does not represent the actual data format we have.
+function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
+  const { bar } = barProps;
+  const { x, y, width, height, data } = bar;
+  let title = `#${data.data.idx} (${data.data.count} listen${
+    data.data.count === 1 ? "" : "s"
+  }) | ${data.data.entity}`;
+  if (data.data.artist) {
+    title += ` - ${data.data.artist}`;
+  }
+
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <rect
+        width={width}
+        height={height}
+        fill={data.fill}
+        strokeWidth="0"
+        rx="0"
+      />
+      <foreignObject style={{ width: Math.max(170, width), height }}>
+        <div className="graph-bar flex" title={title}>
+          <div className="position">
+            {data.data.count}
+            <br />
+            <FontAwesomeIcon icon={faHeadphones} />
+          </div>
+          <div className="graph-bar-text">
+            <div className="graph-bar-entity ellipsis-2-lines">
+              {getEntityLink(
+                data.data.entityType,
+                data.data.entity,
+                data.data.entityMBID
+              )}
+            </div>
+            {data.data.artist && (
+              <div className="graph-bar-artist ellipsis">
+                {getStatsArtistLink(
+                  data.data.artists,
+                  data.data.artist,
+                  data.data.artistMBID
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </foreignObject>
+    </g>
+  );
+}
+
 export default function UserEntityChart() {
   const loaderData = useLoaderData() as UserEntityChartLoaderData;
   const { user, entity, terminology, range, currPage } = loaderData;
@@ -48,9 +114,6 @@ export default function UserEntityChart() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = React.useState(true);
-  const [listenContainerHeight, setListenContainerHeight] = React.useState<
-    number | undefined
-  >(undefined);
   const [hasError, setHasError] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState("");
 
@@ -61,6 +124,8 @@ export default function UserEntityChart() {
   const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
   const ranges = getAllStatRanges();
+
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -87,7 +152,6 @@ export default function UserEntityChart() {
           entity,
           ROWS_PER_PAGE
         );
-
         setData(entityData);
         setMaxListens(fetchedData.maxListens);
         setTotalPages(fetchedData.totalPages);
@@ -105,19 +169,39 @@ export default function UserEntityChart() {
     fetchData();
   }, [APIService, currPage, entity, range, user, loaderData, navigate]);
 
-  const listenContainer = React.useRef<HTMLDivElement>(null);
+  const listenableItems: BaseListenFormat[] =
+    data?.map(userChartEntityToListen) ?? [];
 
-  const handleResize = () => {
-    setListenContainerHeight(listenContainer.current?.offsetHeight);
-  };
+  const dispatch = useBrainzPlayerDispatch();
 
   React.useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  });
+    // If the entity is an artist or recording, then we add the release name or release group name to the track name for the listen so that BrainzPlayer plays a track from the release or release group.
+    if (["release", "release-group"].includes(entity)) {
+      const listensToDispatch = listenableItems.map((listen) => {
+        const releaseName = listen.track_metadata?.release_name;
+        const releaseGroupName =
+          listen.track_metadata?.mbid_mapping?.release_group_name;
+        return {
+          ...listen,
+          track_metadata: {
+            ...listen.track_metadata,
+            track_name: releaseName || releaseGroupName || "",
+          },
+        };
+      });
+      dispatch({
+        type: "SET_AMBIENT_QUEUE",
+        data: listensToDispatch,
+      });
+      return;
+    }
 
-  const listenableItems: BaseListenFormat[] =
-    data?.map(userChartEntityToListen).reverse() ?? [];
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listenableItems,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listenableItems]);
 
   const userOrLoggedInUser: string | undefined =
     user?.name ?? currentUser?.name;
@@ -125,6 +209,7 @@ export default function UserEntityChart() {
   const userStatsTitle =
     user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
+  const attributesForLinks = `?range=${range}`;
   return (
     <div role="main">
       <Helmet>
@@ -134,92 +219,83 @@ export default function UserEntityChart() {
       </Helmet>
       <div style={{ marginTop: "1em", minHeight: 500 }}>
         <Loader isLoading={loading}>
-          <div className="row">
-            <div className="col-xs-12">
-              <Pill active={terminology === "artist"} type="secondary">
-                <Link
-                  to="../top-artists/"
-                  relative="route"
-                  className="user-charts-pill"
-                  replace
-                >
-                  Artists
-                </Link>
-              </Pill>
-              <Pill active={terminology === "album"} type="secondary">
-                <Link
-                  to="../top-albums/"
-                  relative="route"
-                  className="user-charts-pill"
-                  replace
-                >
-                  Albums
-                </Link>
-              </Pill>
-              <Pill active={terminology === "track"} type="secondary">
-                <Link
-                  to="../top-tracks/"
-                  relative="route"
-                  className="user-charts-pill"
-                  replace
-                >
-                  Tracks
-                </Link>
-              </Pill>
-            </div>
+          <div>
+            <Pill active={terminology === "artist"} type="secondary">
+              <Link
+                to={`../top-artists/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Artists
+              </Link>
+            </Pill>
+            <Pill active={terminology === "album"} type="secondary">
+              <Link
+                to={`../top-albums/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Albums
+              </Link>
+            </Pill>
+            <Pill active={terminology === "track"} type="secondary">
+              <Link
+                to={`../top-tracks/${attributesForLinks}`}
+                relative="route"
+                className="user-charts-pill"
+              >
+                Tracks
+              </Link>
+            </Pill>
           </div>
-          <div className="row">
-            <div className="col-xs-12">
-              <h3>
-                Top{" "}
-                <span style={{ textTransform: "capitalize" }}>
-                  {terminology ? `${terminology}s` : ""}
-                </span>{" "}
-                of {range !== "all_time" ? "the" : ""}
-                <span className="dropdown" style={{ fontSize: 22 }}>
-                  <button
-                    className="dropdown-toggle btn-transparent capitalize-bold"
-                    data-toggle="dropdown"
-                    type="button"
-                  >
-                    {ranges.get(range)}
-                    <span className="caret" />
-                  </button>
-                  <ul className="dropdown-menu" role="menu">
-                    {Array.from(ranges, ([stat_type, stat_name]) => {
-                      return (
-                        <li key={`${stat_type}-${stat_name}`}>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=1&range=${stat_type}`,
-                            }}
-                            role="button"
-                          >
-                            {stat_name}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </span>
-                {range !== "all_time" &&
-                  !hasError &&
-                  `(${startDate?.toLocaleString("en-us", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })} - ${endDate?.toLocaleString("en-us", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })})`}
-              </h3>
-            </div>
-          </div>
+          <h3>
+            Top{" "}
+            <span style={{ textTransform: "capitalize" }}>
+              {terminology ? `${terminology}s` : ""}
+            </span>{" "}
+            of {range !== "all_time" ? "the" : ""}
+            <span className="dropdown" style={{ fontSize: 22 }}>
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                {ranges.get(range)}
+                <span className="caret" />
+              </button>
+              <ul className="dropdown-menu" role="menu">
+                {Array.from(ranges, ([stat_type, stat_name]) => {
+                  return (
+                    <li key={`${stat_type}-${stat_name}`}>
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=1&range=${stat_type}`,
+                        }}
+                        role="button"
+                      >
+                        {stat_name}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </span>
+            {range !== "all_time" &&
+              !hasError &&
+              `(${startDate?.toLocaleString("en-us", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })} - ${endDate?.toLocaleString("en-us", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })})`}
+          </h3>
           {hasError && (
-            <div className="row mt-15 mb-15">
-              <div className="col-xs-12 text-center">
+            <div className="mt-15 mb-15">
+              <div className="text-center">
                 <span style={{ fontSize: 24 }}>
                   <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
                   {errorMessage}
@@ -229,60 +305,90 @@ export default function UserEntityChart() {
           )}
           {!hasError && (
             <>
-              <div className="row">
-                <div className="col-xs-12">
-                  <h4 style={{ textTransform: "capitalize" }}>
-                    {terminology} count - <b>{entityCount}</b>
-                  </h4>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-xs-6" ref={listenContainer}>
-                  {data
-                    ?.slice()
-                    .reverse()
-                    .map((datum, index) => {
-                      const listen = listenableItems[index];
-                      const listenDetails = getChartEntityDetails(datum);
-                      return (
-                        <ListenCard
-                          key={`${datum.idx + 1}`}
-                          listenDetails={listenDetails}
-                          listen={listen}
-                          showTimestamp={false}
-                          showUsername={false}
-                        />
-                      );
-                    })}
-                </div>
-                <div
-                  className="col-xs-6"
-                  style={{
-                    height:
-                      listenContainerHeight ?? `${65 * (data?.length ?? 1)}px`,
-                    paddingLeft: 0,
-                  }}
-                >
-                  <Bar data={data} maxValue={maxListens} />
-                </div>
-              </div>
-              {terminology === "album" && (
-                <div className="row">
-                  <div className="col-xs-12">
-                    <small>
-                      <sup>*</sup>The listen count denotes the number of times
-                      you have listened to a recording from the release group.
-                    </small>
-                  </div>
-                </div>
+              {entityCount && (
+                <h4>
+                  <span style={{ textTransform: "capitalize" }}>
+                    {terminology}
+                  </span>
+                  &nbsp;count - <b>{entityCount} total</b>
+                  {entityCount > 1000 && (
+                    <span className="small">
+                      &nbsp;(showing the first 1000)
+                    </span>
+                  )}
+                </h4>
               )}
-              <div className="row">
-                <div className="col-xs-12">
-                  <ul className="pager">
+              <div
+                className="row bar-chart"
+                style={{
+                  minHeight: `calc(${Math.min(data.length, 25)} * 4.5em)`,
+                }}
+              >
+                <Bar
+                  isMobileSize={isMobile}
+                  data={[...data].reverse()}
+                  isInteractive={false}
+                  maxValue={maxListens}
+                  layout="horizontal"
+                  barComponent={CustomBarComponent}
+                  labelTextColor={COLOR_LB_ASPHALT}
+                  margin={{
+                    bottom: 40,
+                    top: 40,
+                    left: isMobile ? 5 : 15,
+                    right: isMobile ? 30 : 15,
+                  }}
+                  defs={[
+                    {
+                      id: "barGradient",
+                      type: "linearGradient",
+                      colors: [
+                        {
+                          offset: 10,
+                          color: "antiquewhite",
+                        },
+                        {
+                          offset: 90,
+                          color: COLOR_LB_ORANGE,
+                        },
+                      ],
+                      y2: "90vw",
+                      gradientTransform: "rotate(-90)",
+                      gradientUnits: "userSpaceOnUse",
+                    },
+                  ]}
+                  fill={[{ match: "*", id: "barGradient" }]}
+                  // labelPosition="start" // Upcoming nivo release, see https://github.com/plouc/nivo/pull/2585
+                />
+              </div>
+              {totalPages > 1 && (
+                <div className="text-center">
+                  <ul className="pagination">
                     <li
                       className={`previous ${
                         !(prevPage > 0) ? "disabled" : ""
                       }`}
+                      title="First page"
+                    >
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=1&range=${range}`,
+                        }}
+                        role="button"
+                      >
+                        <FontAwesomeIcon
+                          icon={faAngleDoubleLeft}
+                          size="sm"
+                          style={{ verticalAlign: "middle" }}
+                        />
+                      </Link>
+                    </li>
+                    <li
+                      className={`previous ${
+                        !(prevPage > 0) ? "disabled" : ""
+                      }`}
+                      title="Previous page"
                     >
                       <Link
                         to={{
@@ -291,13 +397,84 @@ export default function UserEntityChart() {
                         }}
                         role="button"
                       >
-                        &larr; Previous
+                        <FontAwesomeIcon
+                          icon={faAngleLeft}
+                          size="sm"
+                          style={{ verticalAlign: "middle" }}
+                        />{" "}
+                        Previous
                       </Link>
                     </li>
+                    {currPage > 3 && (
+                      <li>
+                        <span>...</span>
+                      </li>
+                    )}
+                    {currPage > 2 && currPage - 2 < totalPages && (
+                      <li>
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${currPage - 2}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          {currPage - 2}
+                        </Link>
+                      </li>
+                    )}
+                    {currPage > 1 && currPage - 1 < totalPages && (
+                      <li>
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${currPage - 1}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          {currPage - 1}
+                        </Link>
+                      </li>
+                    )}
+                    <li title="Current page" className="active">
+                      <span>page {currPage}</span>
+                    </li>
+                    {currPage + 1 <= totalPages && (
+                      <li>
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${currPage + 1}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          {currPage + 1}
+                        </Link>
+                      </li>
+                    )}
+                    {currPage + 2 <= totalPages && (
+                      <li>
+                        <Link
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=${currPage + 2}&range=${range}`,
+                          }}
+                          role="button"
+                        >
+                          {currPage + 2}
+                        </Link>
+                      </li>
+                    )}
+                    {currPage + 2 < totalPages && (
+                      <li>
+                        <span>...</span>
+                      </li>
+                    )}
                     <li
                       className={`next ${
                         !(nextPage <= totalPages) ? "disabled" : ""
                       }`}
+                      title="Next page"
                     >
                       <Link
                         to={{
@@ -306,24 +483,105 @@ export default function UserEntityChart() {
                         }}
                         role="button"
                       >
-                        Next &rarr;
+                        Next{" "}
+                        <FontAwesomeIcon
+                          icon={faAngleRight}
+                          size="sm"
+                          style={{ verticalAlign: "middle" }}
+                        />
+                      </Link>
+                    </li>
+                    <li
+                      className={`next ${
+                        !(nextPage <= totalPages) ? "disabled" : ""
+                      }`}
+                      title="Last page"
+                    >
+                      <Link
+                        to={{
+                          pathname: window.location.pathname,
+                          search: `?page=${totalPages}&range=${range}`,
+                        }}
+                        role="button"
+                      >
+                        <FontAwesomeIcon
+                          icon={faAngleDoubleRight}
+                          size="sm"
+                          style={{ verticalAlign: "middle" }}
+                        />
                       </Link>
                     </li>
                   </ul>
                 </div>
-              </div>
+              )}
+
+              {(entity === "artist" || entity === "recording") && (
+                <div className="top-entity-listencards">
+                  {data?.slice().map((datum, index) => {
+                    const listen = listenableItems[index];
+                    const listenDetails = getChartEntityDetails(datum);
+                    const listenCountComponent = (
+                      <span className="badge badge-info">
+                        {datum.count}
+                        &nbsp;
+                        <FontAwesomeIcon icon={faHeadphones} />
+                      </span>
+                    );
+                    return (
+                      <ListenCard
+                        key={`${datum.idx + 1}`}
+                        listenDetails={listenDetails}
+                        listen={listen}
+                        showTimestamp={false}
+                        showUsername={false}
+                        additionalActions={listenCountComponent}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {(entity === "release" || entity === "release-group") && (
+                <>
+                  <p className="small">
+                    <sup>*</sup>The listen count denotes the number of times you
+                    have listened to a recording from the release group.
+                  </p>
+                  <div className="release-cards-grid top-entity-grid">
+                    {data?.slice().map((datum, index) => {
+                      return (
+                        <ReleaseCard
+                          key={datum.entity + datum.entityMBID}
+                          releaseName={datum.entity}
+                          releaseGroupMBID={
+                            entity === "release-group"
+                              ? datum.entityMBID
+                              : datum.releaseGroupMBID
+                          }
+                          releaseMBID={datum.releaseMBID}
+                          artistMBIDs={
+                            datum.artistMBID ??
+                            datum.artists?.map((a) => a.artist_mbid) ??
+                            []
+                          }
+                          artistCredits={datum.artists}
+                          artistCreditName={datum.artist as string}
+                          listenCount={datum.count}
+                          caaID={datum.caaID ?? null}
+                          caaReleaseMBID={datum.caaReleaseMBID ?? null}
+                          showListens
+                          showReleaseTitle
+                          showArtist
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
           )}
         </Loader>
       </div>
-
-      <BrainzPlayer
-        listens={listenableItems}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

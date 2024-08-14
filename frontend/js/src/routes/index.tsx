@@ -81,17 +81,7 @@ const getIndexRoutes = (): RouteObject[] => {
           path: "playlist/:playlistID/",
           lazy: async () => {
             const PlaylistPage = await import("../playlists/Playlist");
-            return { Component: PlaylistPage.PlaylistPageWrapper };
-          },
-          loader: RouteLoader,
-        },
-        {
-          path: "listening-now/",
-          lazy: async () => {
-            const PlayingNowPage = await import(
-              "../metadata-viewer/MetadataViewerPage"
-            );
-            return { Component: PlayingNowPage.PlayingNowPageWrapper };
+            return { Component: PlaylistPage.default };
           },
           loader: RouteLoader,
         },

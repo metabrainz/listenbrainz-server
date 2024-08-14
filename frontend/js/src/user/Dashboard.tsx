@@ -23,7 +23,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import UserSocialNetwork from "./components/follow/UserSocialNetwork";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";
@@ -39,6 +38,7 @@ import {
 } from "../utils/utils";
 import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
 
 export type ListensProps = {
@@ -71,6 +71,7 @@ export default function Listen() {
     queryFn,
     staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
   });
+  const dispatch = useBrainzPlayerDispatch();
 
   const {
     listens = [],
@@ -440,6 +441,14 @@ export default function Listen() {
     allListenables = [listenablePin, ...listens];
   }
 
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: allListenables,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allListenables]);
+
   const isNewestButtonDisabled = listens[0]?.listened_at >= latestListenTs;
   const isNewerButtonDisabled =
     !previousListenTs || previousListenTs >= latestListenTs;
@@ -687,13 +696,6 @@ export default function Listen() {
           )}
         </div>
       </div>
-      <BrainzPlayer
-        listens={allListenables}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

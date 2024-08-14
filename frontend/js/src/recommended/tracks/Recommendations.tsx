@@ -8,9 +8,7 @@ import { useLocation, useParams, useSearchParams } from "react-router-dom";
 
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import APIServiceClass from "../../utils/APIService";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import {
   fullLocalizedDateFromTimestampOrISODate,
@@ -24,6 +22,7 @@ import ListenCard from "../../common/listens/ListenCard";
 import RecommendationFeedbackComponent from "../../common/listens/RecommendationFeedbackComponent";
 import { ToastMsg } from "../../notifications/Notifications";
 import { RouteQuery } from "../../utils/Loader";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -43,52 +42,47 @@ export interface RecommendationsState {
   recommendationFeedbackMap: RecommendationFeedbackMap;
 }
 
-export default class Recommendations extends React.Component<
-  RecommendationsProps,
-  RecommendationsState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+export default function Recommendations() {
+  const expectedRecommendationsPerPage = 25;
 
-  private recommendationsTable = React.createRef<HTMLTableElement>();
+  // Context
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const dispatch = useBrainzPlayerDispatch();
 
-  private APIService!: APIServiceClass;
+  // Loader Data
+  const location = useLocation();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const { data: props } = useQuery<RecommendationsLoaderData>(
+    RouteQuery(
+      ["recommendation", params, searchParamsObject],
+      location.pathname
+    )
+  );
 
-  private expectedRecommendationsPerPage = 25;
+  const { recommendations: recommendationProps, errorMsg, user, lastUpdated } =
+    props || {};
 
-  constructor(props: RecommendationsProps) {
-    super(props);
-    this.state = {
-      recommendations:
-        props.recommendations?.slice(0, this.expectedRecommendationsPerPage) ||
-        [],
-      loading: false,
-      currRecPage: 1,
-      totalRecPages: props.recommendations
-        ? Math.ceil(
-            props.recommendations.length / this.expectedRecommendationsPerPage
-          )
-        : 0,
-      recommendationFeedbackMap: {},
-    };
+  // State
+  const [recommendations, setRecommendations] = React.useState<
+    Array<Recommendation>
+  >(recommendationProps?.slice(0, expectedRecommendationsPerPage) || []);
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const [currRecPage, setCurrRecPage] = React.useState<number>(1);
+  const [
+    recommendationFeedbackMap,
+    setRecommendationFeedbackMap,
+  ] = React.useState<RecommendationFeedbackMap>({});
 
-    this.recommendationsTable = React.createRef();
-  }
+  // Ref
+  const recommendationsTableRef = React.useRef<HTMLDivElement>(null);
+  const totalRecPages = recommendationProps
+    ? Math.ceil(recommendationProps.length / expectedRecommendationsPerPage)
+    : 0;
 
-  componentDidMount(): void {
-    const { user } = this.props;
-    const { currRecPage } = this.state;
-    const { APIService, currentUser } = this.context;
-    this.APIService = APIService;
-    if (currentUser?.name === user?.name) {
-      this.loadFeedback();
-    }
-    window.history.replaceState(null, "", `?page=${currRecPage}`);
-  }
-
-  getFeedback = async () => {
-    const { user } = this.props;
-    const { recommendations } = this.state;
+  // Functions
+  const getFeedback = async () => {
     const recordings: string[] = [];
 
     if (recommendations && recommendations.length > 0 && user?.name) {
@@ -99,7 +93,7 @@ export default class Recommendations extends React.Component<
         }
       });
       try {
-        const data = await this.APIService.getFeedbackForUserForRecommendations(
+        const data = await APIService.getFeedbackForUserForRecommendations(
           user?.name,
           recordings.join(",")
         );
@@ -117,205 +111,193 @@ export default class Recommendations extends React.Component<
     return [];
   };
 
-  loadFeedback = async () => {
-    const feedback = await this.getFeedback();
+  const loadFeedback = async () => {
+    const feedback = await getFeedback();
     if (!feedback) {
       return;
     }
-    const recommendationFeedbackMap: RecommendationFeedbackMap = {};
+    const newRecommendationFeedbackMap: RecommendationFeedbackMap = {};
     feedback.forEach((fb: RecommendationFeedbackResponse) => {
-      recommendationFeedbackMap[fb.recording_mbid] = fb.rating;
+      newRecommendationFeedbackMap[fb.recording_mbid] = fb.rating;
     });
-    this.setState({ recommendationFeedbackMap });
+    setRecommendationFeedbackMap(newRecommendationFeedbackMap);
   };
 
-  updateFeedback = (
+  const updateFeedback = (
     recordingMbid: string,
     rating: ListenFeedBack | RecommendationFeedBack | null
   ) => {
-    this.setState((state) => ({
-      recommendationFeedbackMap: {
-        ...state.recommendationFeedbackMap,
-        [recordingMbid]: rating as RecommendationFeedBack,
-      },
+    setRecommendationFeedbackMap((state) => ({
+      ...state,
+      [recordingMbid]: rating as RecommendationFeedBack,
     }));
   };
 
-  getFeedbackForRecordingMbid = (
+  const getFeedbackForRecordingMbid = (
     recordingMbid?: string | null
   ): RecommendationFeedBack | null => {
-    const { recommendationFeedbackMap } = this.state;
     return recordingMbid
       ? get(recommendationFeedbackMap, recordingMbid, null)
       : null;
   };
 
-  handleClickPrevious = () => {
-    const { recommendations } = this.props;
-    const { currRecPage } = this.state;
-
-    if (currRecPage && currRecPage > 1) {
-      this.setState({ loading: true });
-      const offset = (currRecPage - 1) * this.expectedRecommendationsPerPage;
-      const updatedRecPage = currRecPage - 1;
-      this.setState(
-        {
-          recommendations:
-            recommendations?.slice(
-              offset - this.expectedRecommendationsPerPage,
-              offset
-            ) || [],
-          currRecPage: updatedRecPage,
-        },
-        this.afterRecommendationsDisplay
-      );
-      window.history.pushState(null, "", `?page=${updatedRecPage}`);
-    }
-  };
-
-  handleClickNext = () => {
-    const { recommendations } = this.props;
-    const { currRecPage, totalRecPages } = this.state;
-
-    if (currRecPage && currRecPage < totalRecPages) {
-      this.setState({ loading: true });
-      const offset = currRecPage * this.expectedRecommendationsPerPage;
-      const updatedRecPage = currRecPage + 1;
-      this.setState(
-        {
-          recommendations:
-            recommendations?.slice(
-              offset,
-              offset + this.expectedRecommendationsPerPage
-            ) || [],
-          currRecPage: updatedRecPage,
-        },
-        this.afterRecommendationsDisplay
-      );
-      window.history.pushState(null, "", `?page=${updatedRecPage}`);
-    }
-  };
-
-  afterRecommendationsDisplay() {
-    const { currentUser } = this.context;
-    const { user } = this.props;
+  const afterRecommendationsDisplay = () => {
     if (currentUser?.name === user?.name) {
-      this.loadFeedback();
+      loadFeedback();
     }
-    if (this.recommendationsTable?.current) {
-      this.recommendationsTable.current.scrollIntoView({ behavior: "smooth" });
+    if (recommendationsTableRef?.current) {
+      recommendationsTableRef.current.scrollIntoView({ behavior: "smooth" });
     }
-    this.setState({ loading: false });
-  }
+    setLoading(false);
+  };
 
-  render() {
-    const {
-      currentRecommendation,
-      recommendations,
-      loading,
-      currRecPage,
-      totalRecPages,
-    } = this.state;
-    const { user, errorMsg, lastUpdated } = this.props;
-    const { APIService, currentUser } = this.context;
-    const isCurrentUser =
-      Boolean(currentUser?.name) && currentUser?.name === user?.name;
+  const handleClickPrevious = () => {
+    if (currRecPage && currRecPage > 1) {
+      setLoading(true);
+      const offset = (currRecPage - 1) * expectedRecommendationsPerPage;
+      const updatedRecPage = currRecPage - 1;
+      setCurrRecPage(updatedRecPage);
+      setRecommendations(
+        recommendationProps?.slice(
+          offset - expectedRecommendationsPerPage,
+          offset
+        ) || []
+      );
+      afterRecommendationsDisplay();
+      window.history.pushState(null, "", `?page=${updatedRecPage}`);
+    }
+  };
 
-    return (
-      <div role="main">
-        <Helmet>
-          <title>{`User - ${user?.name}`}</title>
-        </Helmet>
-        {errorMsg ? (
-          <div>
-            <h2>Error</h2>
-            <p>{errorMsg}</p>
+  const handleClickNext = () => {
+    if (currRecPage && currRecPage < totalRecPages) {
+      setLoading(true);
+      const offset = currRecPage * expectedRecommendationsPerPage;
+      const updatedRecPage = currRecPage + 1;
+      setCurrRecPage(updatedRecPage);
+      setRecommendations(
+        recommendationProps?.slice(
+          offset,
+          offset + expectedRecommendationsPerPage
+        ) || []
+      );
+      afterRecommendationsDisplay();
+      window.history.pushState(null, "", `?page=${updatedRecPage}`);
+    }
+  };
+
+  // Effects
+  React.useEffect(() => {
+    if (currentUser?.name === user?.name) {
+      loadFeedback();
+    }
+    window.history.replaceState(null, "", `?page=${currRecPage}`);
+  }, [currentUser]);
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: recommendations,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recommendations]);
+
+  return (
+    <div role="main" data-testid="recommendations">
+      <Helmet>
+        <title>{`User - ${user?.name}`}</title>
+      </Helmet>
+      {errorMsg ? (
+        <div>
+          <h2>Error</h2>
+          <p>{errorMsg}</p>
+        </div>
+      ) : (
+        <>
+          <div
+            style={{
+              marginTop: "20px",
+            }}
+          >
+            <p>
+              Your raw tracks playlist was last updated on <b>{lastUpdated}</b>.
+            </p>
           </div>
-        ) : (
-          <>
-            <div
-              style={{
-                marginTop: "20px",
-              }}
-            >
-              <p>
-                Your raw tracks playlist was last updated on{" "}
-                <b>{lastUpdated}</b>.
-              </p>
-            </div>
-            <div className="row">
-              <div className="col-md-8">
-                <div>
-                  <div
-                    style={{
-                      height: 0,
-                      position: "sticky",
-                      top: "50%",
-                      zIndex: 1,
-                    }}
-                  >
-                    <Loader isLoading={loading} />
-                  </div>
-                  <div
-                    id="recommendations"
-                    ref={this.recommendationsTable}
-                    style={{ opacity: loading ? "0.4" : "1" }}
-                  >
-                    {recommendations.map((recommendation) => {
-                      const recordingMBID = getRecordingMBID(recommendation);
-                      const recommendationFeedbackComponent = (
-                        <RecommendationFeedbackComponent
-                          updateFeedbackCallback={this.updateFeedback}
-                          listen={recommendation}
-                          currentFeedback={this.getFeedbackForRecordingMbid(
-                            recordingMBID
-                          )}
-                        />
-                      );
-                      // Backwards compatible support for various timestamp property names
-                      let discoveryTimestamp:
-                        | string
-                        | number
-                        | undefined
-                        | null = recommendation.latest_listened_at;
-                      if (!discoveryTimestamp) {
-                        discoveryTimestamp = recommendation.listened_at_iso;
-                      }
-                      if (
-                        !discoveryTimestamp &&
-                        isInteger(recommendation.listened_at)
-                      ) {
-                        // Transfrom unix timestamp in JS milliseconds timestamp
-                        discoveryTimestamp = recommendation.listened_at * 1000;
-                      }
-                      const customTimestamp = discoveryTimestamp ? (
-                        <span
-                          className="listen-time"
-                          title={fullLocalizedDateFromTimestampOrISODate(
-                            discoveryTimestamp
-                          )}
-                        >
-                          Last listened at
-                          <br />
-                          {preciseTimestamp(discoveryTimestamp)}
-                        </span>
-                      ) : (
-                        <span className="listen-time">Not listened to yet</span>
-                      );
-                      return (
-                        <ListenCard
-                          key={`${getTrackName(recommendation)}-${getArtistName(
-                            recommendation
-                          )}`}
-                          customTimestamp={customTimestamp}
-                          showTimestamp
-                          showUsername={false}
-                          feedbackComponent={recommendationFeedbackComponent}
-                          listen={recommendation}
-                        />
-                      );
-                    })}
-                  </div>
+          <div className="row">
+            <div className="col-md-8">
+              <div>
+                <div
+                  style={{
+                    height: 0,
+                    position: "sticky",
+                    top: "50%",
+                    zIndex: 1,
+                  }}
+                >
+                  <Loader isLoading={loading} />
+                </div>
+                <div
+                  id="recommendations"
+                  data-testid="recommendations-table"
+                  ref={recommendationsTableRef}
+                  style={{ opacity: loading ? "0.4" : "1" }}
+                >
+                  {recommendations.map((recommendation) => {
+                    const recordingMBID = getRecordingMBID(recommendation);
+                    const recommendationFeedbackComponent = (
+                      <RecommendationFeedbackComponent
+                        updateFeedbackCallback={updateFeedback}
+                        listen={recommendation}
+                        currentFeedback={getFeedbackForRecordingMbid(
+                          recordingMBID
+                        )}
+                      />
+                    );
+                    // Backwards compatible support for various timestamp property names
+                    let discoveryTimestamp: string | number | undefined | null =
+                      recommendation.latest_listened_at;
+                    if (!discoveryTimestamp) {
+                      discoveryTimestamp = recommendation.listened_at_iso;
+                    }
+                    if (
+                      !discoveryTimestamp &&
+                      isInteger(recommendation.listened_at)
+                    ) {
+                      // Transfrom unix timestamp in JS milliseconds timestamp
+                      discoveryTimestamp = recommendation.listened_at * 1000;
+                    }
+                    const customTimestamp = discoveryTimestamp ? (
+                      <span
+                        className="listen-time"
+                        title={fullLocalizedDateFromTimestampOrISODate(
+                          discoveryTimestamp
+                        )}
+                      >
+                        Last listened at
+                        <br />
+                        {preciseTimestamp(discoveryTimestamp)}
+                      </span>
+                    ) : (
+                      <span className="listen-time">Not listened to yet</span>
+                    );
+                    return (
+                      <ListenCard
+                        key={`${getTrackName(recommendation)}-${getArtistName(
+                          recommendation
+                        )}`}
+                        customTimestamp={customTimestamp}
+                        showTimestamp
+                        showUsername={false}
+                        feedbackComponent={recommendationFeedbackComponent}
+                        listen={recommendation}
+                      />
+                    );
+                  })}
+                </div>
+                <nav
+                  role="navigation"
+                  aria-label="Pagination"
+                  style={{ maxWidth: "none" }}
+                >
                   <ul className="pager" style={{ display: "flex" }}>
                     <li
                       className={`previous ${
@@ -324,11 +306,16 @@ export default class Recommendations extends React.Component<
                     >
                       <a
                         role="button"
-                        onClick={this.handleClickPrevious}
+                        onClick={handleClickPrevious}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickPrevious();
+                          if (e.key === "Enter") handleClickPrevious();
                         }}
                         tabIndex={0}
+                        aria-disabled={Boolean(currRecPage && currRecPage <= 1)}
+                        aria-label={`Go to page ${Math.max(
+                          currRecPage - 1,
+                          0
+                        )}`}
                       >
                         &larr; Previous
                       </a>
@@ -343,45 +330,31 @@ export default class Recommendations extends React.Component<
                     >
                       <a
                         role="button"
-                        onClick={this.handleClickNext}
+                        onClick={handleClickNext}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNext();
+                          if (e.key === "Enter") handleClickNext();
                         }}
                         tabIndex={0}
+                        aria-disabled={Boolean(
+                          currRecPage && currRecPage >= totalRecPages
+                        )}
+                        aria-label={`Go to page ${Math.min(
+                          currRecPage + 1,
+                          totalRecPages
+                        )}`}
                       >
                         Next &rarr;
                       </a>
                     </li>
                   </ul>
-                </div>
-
-                <br />
+                </nav>
               </div>
-              <BrainzPlayer
-                listens={recommendations}
-                listenBrainzAPIBaseURI={APIService.APIBaseURI}
-                refreshSpotifyToken={APIService.refreshSpotifyToken}
-                refreshYoutubeToken={APIService.refreshYoutubeToken}
-                refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-              />
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-}
 
-export function RecommendationsPageWrapper() {
-  const location = useLocation();
-  const params = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const searchParamsObject = getObjectForURLSearchParams(searchParams);
-  const { data } = useQuery<RecommendationsLoaderData>(
-    RouteQuery(
-      ["recommendation", params, searchParamsObject],
-      location.pathname
-    )
+              <br />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
-  return <Recommendations {...data} />;
 }

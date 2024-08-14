@@ -4,11 +4,11 @@ import * as React from "react";
 
 import { useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import UserPins from "./components/UserPins";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getListenablePin } from "../../utils/utils";
 import UserFeedback from "./components/UserFeedback";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 export type UserTasteProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -22,15 +22,6 @@ type UserTasteLoaderData = UserTasteProps;
 
 export default class UserTaste extends React.Component<UserTasteProps> {
   static contextType = GlobalAppContext;
-  static RecordingMetadataToListenFormat = (
-    feedbackItem: FeedbackResponseWithTrackMetadata
-  ): Listen => {
-    return {
-      listened_at: feedbackItem.created ?? 0,
-      track_metadata: { ...feedbackItem.track_metadata },
-    };
-  };
-
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   render() {
@@ -41,19 +32,7 @@ export default class UserTaste extends React.Component<UserTasteProps> {
       pins,
       totalPinsCount,
     } = this.props;
-    const { APIService, currentUser } = this.context;
-    const listensFromFeedback: BaseListenFormat[] =
-      feedback
-        // remove feedback items for which track metadata wasn't found. this usually means bad
-        // msid or mbid data was submitted by the user.
-        ?.filter((item) => item?.track_metadata)
-        .map((feedbackItem) =>
-          UserTaste.RecordingMetadataToListenFormat(feedbackItem)
-        ) ?? [];
-    const listensFromPins = pins.map((pin) => {
-      return getListenablePin(pin);
-    });
-    const listenables = [...listensFromFeedback, ...listensFromPins];
+    const { currentUser } = this.context;
     return (
       <div role="main">
         <Helmet>
@@ -73,13 +52,6 @@ export default class UserTaste extends React.Component<UserTasteProps> {
             <UserPins user={user} pins={pins} totalCount={totalPinsCount} />
           </div>
         </div>
-        <BrainzPlayer
-          listens={listenables}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
@@ -87,5 +59,38 @@ export default class UserTaste extends React.Component<UserTasteProps> {
 
 export function UserTastesWrapper() {
   const data = useLoaderData() as UserTasteLoaderData;
+  const { feedback, pins } = data;
+
+  const RecordingMetadataToListenFormat = (
+    feedbackItem: FeedbackResponseWithTrackMetadata
+  ): Listen => {
+    return {
+      listened_at: feedbackItem.created ?? 0,
+      track_metadata: { ...feedbackItem.track_metadata },
+    };
+  };
+
+  const listensFromFeedback: BaseListenFormat[] =
+    feedback
+      // remove feedback items for which track metadata wasn't found. this usually means bad
+      // msid or mbid data was submitted by the user.
+      ?.filter((item) => item?.track_metadata)
+      .map((feedbackItem) => RecordingMetadataToListenFormat(feedbackItem)) ??
+    [];
+  const listensFromPins = pins.map((pin) => {
+    return getListenablePin(pin);
+  });
+  const listenables = [...listensFromFeedback, ...listensFromPins];
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listenables,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listenables]);
+
   return <UserTaste {...data} />;
 }

@@ -1,23 +1,31 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
+import { mount, shallow } from "enzyme";
 
 import { act } from "react-dom/test-utils";
 import { Link } from "react-router-dom";
-import SpotifyPlayer, {
-  SpotifyPlayerProps,
-  SpotifyPlayerState,
-} from "../../../src/common/brainzplayer/SpotifyPlayer";
+import SpotifyPlayer from "../../../src/common/brainzplayer/SpotifyPlayer";
 import APIService from "../../../src/utils/APIService";
-import {
-  DataSourceProps,
-  DataSourceTypes,
-} from "../../../src/common/brainzplayer/BrainzPlayer";
+import { DataSourceTypes } from "../../../src/common/brainzplayer/BrainzPlayer";
+import GlobalAppContext from "../../../src/utils/GlobalAppContext";
+import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 
-const props = {
-  spotifyUser: {
+// Create a new instance of GlobalAppContext
+const defaultContext = {
+  APIService: new APIService("foo"),
+  websocketsUrl: "",
+  youtubeAuth: {} as YoutubeUser,
+  spotifyAuth: {
     access_token: "heyo",
     permission: ["user-read-currently-playing"] as SpotifyPermission[],
   },
+  currentUser: {} as ListenBrainzUser,
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIService("foo"),
+    { name: "Fnord" }
+  ),
+};
+
+const props = {
   refreshSpotifyToken: new APIService("base-uri").refreshSpotifyToken,
   show: true,
   playerPaused: false,
@@ -58,7 +66,9 @@ describe("SpotifyPlayer", () => {
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<SpotifyPlayer {...props} />);
-    expect(wrapper.getDOMNode()).toContainHTML("<div></div>");
+    expect(wrapper.getDOMNode()).toContainHTML(
+      '<div data-testid="spotify-player" />'
+    );
   });
 
   it("should play from spotify_id if it exists on the listen", async () => {
@@ -113,7 +123,7 @@ describe("SpotifyPlayer", () => {
         ...props,
         onInvalidateDataSource,
       };
-      expect(SpotifyPlayer.hasPermissions(mockProps.spotifyUser)).toEqual(
+      expect(SpotifyPlayer.hasPermissions(defaultContext.spotifyAuth)).toEqual(
         false
       );
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
@@ -138,10 +148,18 @@ describe("SpotifyPlayer", () => {
       const mockProps = {
         ...props,
         onInvalidateDataSource,
-        spotifyUser,
       };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
-      const instance = wrapper.instance();
+      const wrapper = mount(
+        <GlobalAppContext.Provider
+          value={{
+            ...defaultContext,
+            spotifyAuth: spotifyUser,
+          }}
+        >
+          <SpotifyPlayer {...mockProps} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.find(SpotifyPlayer).instance() as SpotifyPlayer;
 
       expect.assertions(2);
       expect(instance.props.onInvalidateDataSource).not.toHaveBeenCalled();
@@ -163,11 +181,19 @@ describe("SpotifyPlayer", () => {
       const mockProps = {
         ...props,
         onInvalidateDataSource,
-        spotifyUser,
         checkSpotifyToken,
       };
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
-      const instance = wrapper.instance();
+      const wrapper = mount(
+        <GlobalAppContext.Provider
+          value={{
+            ...defaultContext,
+            spotifyAuth: spotifyUser,
+          }}
+        >
+          <SpotifyPlayer {...mockProps} />
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper.find(SpotifyPlayer).instance() as SpotifyPlayer;
 
       instance.handleAccountError();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);

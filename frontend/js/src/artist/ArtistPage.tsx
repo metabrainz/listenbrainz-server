@@ -14,7 +14,6 @@ import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getReviewEventContent } from "../utils/utils";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -30,6 +29,7 @@ import type {
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
@@ -109,6 +109,16 @@ export default function ArtistPage(): JSX.Element {
 
   const listensFromPopularRecordings =
     popularRecordings?.map(popularRecordingToListen) ?? [];
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listensFromPopularRecordings,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listensFromPopularRecordings]);
 
   const filteredTags = chain(artist?.tag?.artist)
     .sortBy("count")
@@ -284,8 +294,7 @@ export default function ArtistPage(): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
-                        payload: listensFromPopularRecordings,
+                        brainzplayer_event: "play-ambient-queue",
                       },
                       window.location.origin
                     );
@@ -448,13 +457,6 @@ export default function ArtistPage(): JSX.Element {
           )}
         </div>
       </div>
-      <BrainzPlayer
-        listens={listensFromPopularRecordings}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

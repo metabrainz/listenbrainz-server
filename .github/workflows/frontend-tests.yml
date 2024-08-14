@@ -38,7 +38,7 @@ jobs:
     # We do not use this to install node but only to register problem matchers
     # so that eslint annotations work.
     - name: Setup Node.js environment to enable annotations
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
 
     - name: Build frontend containers
       run: ./test.sh fe -b

@@ -1,6 +1,22 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "react-toastify";
-import { differenceBy, padStart, sortBy, uniqBy, without } from "lodash";
+import {
+  differenceBy,
+  identity,
+  isFinite,
+  padStart,
+  sortBy,
+  uniq,
+  uniqBy,
+  without,
+} from "lodash";
 import { formatDuration } from "date-fns";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-regular-svg-icons";
@@ -22,28 +38,56 @@ type MBReleaseWithMetadata = MusicBrainzRelease &
   WithArtistCredits &
   WithReleaseGroup;
 
+/* Allows sorting a selection of tracks based on the original order of that track in the multiple media
+  We cannot just order by the position attribute because it is repeated for each medium (each medium will have a track 1).
+  Courtesy of Shl for this elegant solution: https://stackoverflow.com/a/62298591/4904467
+*/
+function sortByArray<T, U>({
+  source,
+  by,
+  sourceTransformer = identity,
+}: {
+  source: T[];
+  by: U[];
+  sourceTransformer?: (item: T) => U;
+}) {
+  const indexesByElements = new Map(by.map((item, idx) => [item, idx]));
+  const orderedResult = sortBy(source, (p) =>
+    indexesByElements.get(sourceTransformer(p))
+  );
+  return orderedResult;
+}
+
 type TrackRowProps = {
   track: MBTrackWithAC;
   isChecked: boolean;
-  onClickCheckbox: (track: MBTrackWithAC, checked: boolean) => void;
+  onClickCheckbox: (
+    track: MBTrackWithAC,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => void;
 };
 
 function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
+  const trackDuration = track.length ?? track.recording.length;
   return (
     <div className="add-album-track">
       <input
         type="checkbox"
-        onChange={(e) => {
-          onClickCheckbox(track, e.target.checked);
+        onChange={(event) => {
+          onClickCheckbox(track, event);
         }}
         checked={isChecked}
       />
       <strong className="small track-number">
-        {padStart(track.position.toString(), 2, "0")}
+        {isFinite(Number(track.number))
+          ? padStart(track.position.toString(), 2, "0")
+          : track.number}
       </strong>
       <span>{track.title}</span>
-      <span className={`duration ${!track.length ? "default-duration" : ""}`}>
-        {millisecondsToStr(track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000)}
+      <span className={`duration ${!trackDuration ? "default-duration" : ""}`}>
+        {millisecondsToStr(
+          trackDuration ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000
+        )}
       </span>
     </div>
   );
@@ -58,6 +102,14 @@ export default function AddAlbumListens({
   const [selectedAlbum, setSelectedAlbum] = useState<MBReleaseWithMetadata>();
   const [selectedTracks, setSelectedTracks] = useState<Array<MBTrackWithAC>>(
     []
+  );
+
+  // No need to store that one in the state
+  const lastChecked = useRef<MBTrackWithAC>();
+  const allTracks: MBTrackWithAC[] = useMemo(
+    () =>
+      selectedAlbum?.media.map((m) => m.tracks as MBTrackWithAC[]).flat() ?? [],
+    [selectedAlbum]
   );
 
   useEffect(() => {
@@ -99,18 +151,46 @@ export default function AddAlbumListens({
   }, [selectedAlbumMBID, lookupMBRelease]);
 
   const onTrackSelectionChange = React.useCallback(
-    (track: MBTrackWithAC, isChecked: boolean) => {
+    (track: MBTrackWithAC, event: ChangeEvent<HTMLInputElement>) => {
       setSelectedTracks((prevSelectedTracks) => {
-        let newSelection: MBTrackWithAC[];
-        if (isChecked) {
-          newSelection = sortBy([...prevSelectedTracks, track], "position");
+        let newSelection: MBTrackWithAC[] = [];
+        const isChecked = event.target.checked;
+        // @ts-ignore nativeEvent.shiftKey exists for there input events,
+        // but the react types define a very basic Event type which does not have shiftKey
+        const shiftKey = Boolean(event.nativeEvent.shiftKey!);
+        if (shiftKey && lastChecked?.current !== track) {
+          const lastIndex = allTracks!.findIndex(
+            (t) => t === lastChecked.current
+          );
+          const thisIndex = allTracks!.findIndex((t) => t === track);
+
+          if (lastIndex > thisIndex) {
+            const trackRange = allTracks!.slice(thisIndex, lastIndex + 1);
+            newSelection = isChecked
+              ? uniq([...trackRange, ...prevSelectedTracks])
+              : without(prevSelectedTracks, ...trackRange);
+          } else if (thisIndex > lastIndex) {
+            const trackRange = allTracks!.slice(lastIndex, thisIndex + 1);
+            newSelection = isChecked
+              ? uniq([...prevSelectedTracks, ...trackRange])
+              : without(prevSelectedTracks, ...trackRange);
+          }
+        } else if (isChecked) {
+          newSelection = [...prevSelectedTracks, track];
         } else {
           newSelection = without(prevSelectedTracks, track);
         }
-        return newSelection;
+        lastChecked.current = track;
+        // return sortBy(newSelection, mediumPosition, "position");
+        // Sort according to the original order of the track, fix for multiple medium
+        return sortByArray({
+          source: newSelection,
+          by: allTracks.map((t) => t.id),
+          sourceTransformer: (t) => t.id,
+        });
       });
     },
-    []
+    [allTracks]
   );
 
   const toggleSelectionAllMediumTracks = React.useCallback(
@@ -133,7 +213,7 @@ export default function AddAlbumListens({
   );
 
   const allDurations = selectedAlbum?.media.flatMap((medium) =>
-    medium.tracks.map((track) => track.length)
+    medium.tracks.map((track) => track.length ?? track.recording.length)
   );
   const showDefaultDuration = !allDurations?.every(Boolean);
 
@@ -176,7 +256,7 @@ export default function AddAlbumListens({
             </div>
             {showDefaultDuration && (
               <div
-                className="default-duration small"
+                className="default-duration heading small"
                 title={`When no duration is available a default of ${defaultDuration} will be used`}
               >
                 default {defaultDuration}
@@ -192,7 +272,9 @@ export default function AddAlbumListens({
                     const mediumTime = medium.tracks
                       .map(
                         (track) =>
-                          track.length ?? DEFAULT_TRACK_LENGTH_SECONDS * 1000
+                          track.length ??
+                          track.recording.length ??
+                          DEFAULT_TRACK_LENGTH_SECONDS * 1000
                       )
                       ?.reduce((total, duration) => total + duration, 0);
 

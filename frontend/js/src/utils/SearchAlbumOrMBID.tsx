@@ -12,6 +12,7 @@ import React, {
 import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
+import DropdownRef from "./Dropdown";
 
 const RELEASE_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const RELEASE_GROUP_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release-group\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
@@ -29,40 +30,12 @@ export default function SearchAlbumOrMBID({
 }: SearchTrackOrMBIDProps) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBReleaseGroup, searchMBRelease } = APIService;
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = React.useRef<HTMLSelectElement>(null);
+  const dropdownRef = DropdownRef();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(defaultValue ?? "");
   const [searchResults, setSearchResults] = useState<
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
   >([]);
-  const [selectedIndex, setSelectedIndex] = React.useState(-1);
-
-  useEffect(() => {
-    // autoFocus property on the input element does not work
-    // We need to wait for the modal animated transition to finish
-    // and trigger the focus manually.
-    setTimeout(() => {
-      inputRef?.current?.focus();
-    }, 600);
-  }, []);
-
-  const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    if (event.key === "ArrowDown") {
-      setSelectedIndex((prevIndex) =>
-        prevIndex < searchResults.length - 1 ? prevIndex + 1 : prevIndex
-      );
-    } else if (event.key === "ArrowUp") {
-      setSelectedIndex((prevIndex) =>
-        prevIndex > 0 ? prevIndex - 1 : prevIndex
-      );
-    } else if (event.key === "Enter" && selectedIndex >= 0) {
-      onSelectAlbum(searchResults[selectedIndex].id);
-      inputRef.current?.blur();
-    }
-  };
-
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
       if (!error) {
@@ -146,18 +119,11 @@ export default function SearchAlbumOrMBID({
     [onSelectAlbum]
   );
 
-  useEffect(() => {
-    if (selectedIndex >= 0 && dropdownRef.current) {
-      const option = dropdownRef.current.options[selectedIndex];
-      option.scrollIntoView({ block: "nearest" });
-    }
-  }, [selectedIndex]);
-
   const reset = () => {
     setInputValue("");
     setSearchResults([]);
     onSelectAlbum();
-    setSelectedIndex(-1);
+    searchInputRef?.current?.focus();
   };
 
   useEffect(() => {
@@ -177,8 +143,9 @@ export default function SearchAlbumOrMBID({
 
   return (
     <div>
-      <div className="input-group album-search">
+      <div className="input-group dropdown-search" ref={dropdownRef}>
         <input
+          ref={searchInputRef}
           type="search"
           value={inputValue}
           className="form-control"
@@ -189,9 +156,7 @@ export default function SearchAlbumOrMBID({
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
           required
-          ref={inputRef}
           aria-haspopup={Boolean(searchResults?.length)}
-          onKeyDown={handleKeyDown}
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
@@ -200,7 +165,7 @@ export default function SearchAlbumOrMBID({
         </span>
         {Boolean(searchResults?.length) && (
           <select
-            className="album-search-dropdown"
+            className="dropdown-search-suggestions"
             onChange={(e) => {
               if (!e.currentTarget.value) {
                 // clicked on "no more options"
@@ -209,10 +174,8 @@ export default function SearchAlbumOrMBID({
               selectSearchResult(e.currentTarget.value);
               e.target.blur();
             }}
-            onKeyDown={handleKeyDown}
             size={Math.min(searchResults.length + 1, 8)}
             tabIndex={-1}
-            ref={dropdownRef}
           >
             {searchResults.map((release, index) => {
               let releaseInfoString = `(${release.media
@@ -248,12 +211,6 @@ export default function SearchAlbumOrMBID({
                   value={release.id}
                   data-release-info={releaseInfoString}
                   title={releaseTitleAndArtist}
-                  style={
-                    index === selectedIndex
-                      ? { backgroundColor: "#353070", color: "white" }
-                      : {}
-                  }
-                  aria-selected={index === selectedIndex}
                 >
                   {releaseTitleAndArtist}
                 </option>

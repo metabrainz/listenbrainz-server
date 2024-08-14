@@ -83,7 +83,7 @@ def get_fresh_releases():
             ts_conn, release_date, days, sort, past, future
         )
     except Exception as e:
-        current_app.logger.error("Server failed to get latest release: {}".format(e))
+        current_app.logger.error("Server failed to get latest release: {}".format(e), exc_info=True)
         raise APIInternalServerError("Server failed to get latest release")
 
     return jsonify({

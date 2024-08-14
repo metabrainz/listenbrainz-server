@@ -68,7 +68,7 @@ const getSettingsRoutes = (): RouteObject[] => {
           loader: RouteLoader,
           lazy: async () => {
             const MissingMBData = await import("../missing-data/MissingMBData");
-            return { Component: MissingMBData.MissingMBDataPageWrapper };
+            return { Component: MissingMBData.default };
           },
         },
         {

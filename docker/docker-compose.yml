@@ -85,6 +85,7 @@ services:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
+      - lb_db
       - rabbitmq
 
   background_tasks:
@@ -94,6 +95,7 @@ services:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
+      - lb_db
       - rabbitmq
 
   spotify_reader:
@@ -103,6 +105,7 @@ services:
     command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
     depends_on:
       - redis
+      - lb_db
       - rabbitmq
 
   websockets:
@@ -114,6 +117,7 @@ services:
       - "8102:8102"
     depends_on:
       - redis
+      - lb_db
       - rabbitmq
 
   static_builder:

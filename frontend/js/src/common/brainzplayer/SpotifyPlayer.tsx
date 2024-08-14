@@ -18,6 +18,7 @@ import {
   getArtistName,
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
@@ -34,7 +35,6 @@ const fixSpotifyPlayerStyleIssue = () => {
 };
 
 export type SpotifyPlayerProps = DataSourceProps & {
-  spotifyUser?: SpotifyUser;
   refreshSpotifyToken: () => Promise<string>;
 };
 
@@ -48,6 +48,7 @@ export type SpotifyPlayerState = {
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
   implements DataSourceType {
+  static contextType = GlobalAppContext;
   static hasPermissions = (spotifyUser?: SpotifyUser) => {
     if (!spotifyUser) {
       return false;
@@ -109,11 +110,11 @@ export default class SpotifyPlayer
   private authenticationRetries = 0;
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
 
-    this.accessToken = props.spotifyUser?.access_token || "";
     this.state = {
       durationMs: 0,
     };
@@ -122,9 +123,15 @@ export default class SpotifyPlayer
       leading: true,
       trailing: false,
     });
+  }
+
+  async componentDidMount(): Promise<void> {
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
+
+    this.accessToken = spotifyUser?.access_token || "";
 
     // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
-    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
+    if (SpotifyPlayer.hasPermissions(spotifyUser)) {
       window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
       loadScriptAsync(document, "https://sdk.scdn.co/spotify-player.js");
     } else {
@@ -287,12 +294,12 @@ export default class SpotifyPlayer
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    const { spotifyUser } = this.props;
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
     return SpotifyPlayer.hasPermissions(spotifyUser);
   };
 
   datasourceRecordsListens = (): boolean => {
-    const { spotifyUser } = this.props;
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
     if (!spotifyUser?.permission) {
       return false;
     }
@@ -428,6 +435,7 @@ export default class SpotifyPlayer
       return;
     }
     const { refreshSpotifyToken } = this.props;
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
 
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
@@ -436,6 +444,9 @@ export default class SpotifyPlayer
           const userToken = await refreshSpotifyToken();
           this.accessToken = userToken;
           this.authenticationRetries = 0;
+          if (spotifyUser) {
+            spotifyUser.access_token = userToken;
+          }
           authCallback(userToken);
         } catch (error) {
           handleError(error, "Error connecting to Spotify");
@@ -604,6 +615,6 @@ export default class SpotifyPlayer
     if (!show) {
       return null;
     }
-    return <div>{this.getAlbumArt()}</div>;
+    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
   }
 }

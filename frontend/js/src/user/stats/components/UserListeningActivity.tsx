@@ -210,7 +210,15 @@ export default function UserListeningActivity(
     const startOfLastMonth = new Date(
       unprocessedData.payload.listening_activity[0].from_ts * 1000
     );
+
+    const endOfThisMonth = new Date(
+        unprocessedData.payload.listening_activity[
+            unprocessedData.payload.listening_activity.length - 1
+        ].from_ts * 1000
+      );
+
     const numOfDaysInLastMonth = getNumberOfDaysInMonth(startOfLastMonth);
+    const numOfDaysInThisMonth = getNumberOfDaysInMonth(endOfThisMonth);
 
     const lastMonth = unprocessedData.payload.listening_activity.slice(
       0,
@@ -220,9 +228,17 @@ export default function UserListeningActivity(
       numOfDaysInLastMonth
     );
 
-    const result = lastMonth.map((lastMonthDay, index) => {
-      const thisMonthDay = thisMonth[index];
+    const result = [];
+
+    const maxDays = Math.max(numOfDaysInLastMonth, numOfDaysInThisMonth);
+
+    for (let i = 0; i < maxDays; i += 1) {
+      const lastMonthDay = lastMonth[i] || null;
+      const thisMonthDay = thisMonth[i] || null;
+      const thisMonthCount = thisMonthDay ? thisMonthDay.listen_count : 0;
+
       let thisMonthData = {};
+      let lastMonthData = {};
       if (thisMonthDay) {
         const thisMonthCount = thisMonthDay.listen_count;
         totalListensForMonth += thisMonthCount;
@@ -234,15 +250,23 @@ export default function UserListeningActivity(
         };
       }
 
-      const lastMonthCount = lastMonthDay.listen_count;
-      const lastMonthDate = new Date(lastMonthDay.from_ts * 1000);
-      return {
-        id: lastMonthDate.toLocaleString("en-us", dateFormat),
-        lastRangeCount: lastMonthCount,
-        lastRangeTs: lastMonthDay.from_ts,
+      if (lastMonthDay) {
+        lastMonthData = {
+          lastRangeCount: lastMonthDay.listen_count,
+          lastRangeTs: lastMonthDay.from_ts,
+        };
+      }
+
+      const dateTS = lastMonthDay
+        ? new Date(lastMonthDay.from_ts * 1000)
+        : new Date(thisMonthDay.from_ts * 1000);
+
+      result.push({
+        id: dateTS.toLocaleString("en-us", dateFormat),
+        ...lastMonthData,
         ...thisMonthData,
-      };
-    });
+      });
+    }
 
     setAvgListens(
       totalListensForMonth > 0 ? Math.ceil(totalListensForMonth / totalDays) : 0

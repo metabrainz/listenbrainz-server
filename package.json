@@ -52,8 +52,7 @@
     "@nivo/network": "^0.81.0",
     "@nivo/tooltip": "^0.81.0",
     "@react-spring/web": "^9.7.3",
-    "@sentry/react": "^7.17.4",
-    "@sentry/tracing": "^7.17.4",
+    "@sentry/react": "^8.19.0",
     "@tanstack/react-query": "^5.28.4",
     "@tanstack/react-query-devtools": "^5.28.6",
     "@types/react-datetime-picker": "^3.4.1",
@@ -95,13 +94,14 @@
     "react-simple-star-rating": "^4.0.0",
     "react-sortablejs": "^6.1.4",
     "react-toastify": "^8.2.0",
-    "react-tooltip": "^4.2.21",
+    "react-tooltip": "^4.5.1",
     "react-youtube": "^7.12.0",
     "socket.io-client": "^4.5.4",
     "sortablejs": "^1.12.0",
     "swiper": "^8.4.4",
     "time-ago": "^0.2.1",
-    "tinycolor2": "^1.4.2"
+    "tinycolor2": "^1.4.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.5",

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -28,7 +28,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   React.useEffect(() => {
     async function getUserPlaylistsFromSpotify() {
       try {
-        const response = await APIService.importPlaylistToSpotify(
+        const response = await APIService.importPlaylistFromSpotify(
           currentUser?.auth_token
         );
 
@@ -110,10 +110,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   return (
     <div
       className={`modal fade ${modal.visible ? "in" : ""}`}
-      id="ImportSpotifyPlaylistModal"
+      id="ImportMusicServicePlaylistModal"
       tabIndex={-1}
       role="dialog"
-      aria-labelledby="ImportSpotifyPlaylistLabel"
+      aria-labelledby="ImportMusicServicePlaylistLabel"
       data-backdrop="static"
     >
       <div className="modal-dialog" role="document">
@@ -130,7 +130,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
             </button>
             <h4
               className="modal-title"
-              id="ImportSpotifyPlaylistLabel"
+              id="ImportMusicServicePlaylistLabel"
               style={{ textAlign: "center" }}
             >
               Import playlist from Spotify

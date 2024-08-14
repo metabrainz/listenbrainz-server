@@ -10,18 +10,19 @@ import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import Card from "../../components/Card";
 import { COLOR_WHITE } from "../../utils/constants";
 import { ToastMsg } from "../../notifications/Notifications";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 export default function HueSound() {
   const { colorURLParam } = useParams();
   const navigate = useNavigate();
   const { APIService } = React.useContext(GlobalAppContext);
   const { lookupReleaseFromColor } = APIService;
+  const dispatch = useBrainzPlayerDispatch();
   const [loading, setLoading] = React.useState(false);
   const [colorReleases, setColorReleases] = React.useState<ColorReleaseItem[]>(
     []
@@ -36,6 +37,19 @@ export default function HueSound() {
     const hexValue = tinycolor(rgbValue).toHex();
     navigate(`/explore/huesound/${hexValue}`);
   };
+
+  const selectedReleaseTracks = selectedRelease?.recordings ?? [];
+  React.useEffect(() => {
+    if (!selectedReleaseTracks?.length) {
+      return;
+    }
+    selectedReleaseTracks?.shift();
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: selectedReleaseTracks,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedReleaseTracks]);
 
   React.useEffect(() => {
     if (!tinycolor(colorURLParam).isValid()) {
@@ -74,7 +88,6 @@ export default function HueSound() {
     );
   }, []);
 
-  const selectedReleaseTracks = selectedRelease?.recordings ?? [];
   return (
     <div role="main">
       <Helmet>
@@ -198,13 +211,6 @@ export default function HueSound() {
                 )}
               </div>
             </div>
-            <BrainzPlayer
-              listens={selectedReleaseTracks}
-              listenBrainzAPIBaseURI={APIService.APIBaseURI}
-              refreshSpotifyToken={APIService.refreshSpotifyToken}
-              refreshYoutubeToken={APIService.refreshYoutubeToken}
-              refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-            />
           </div>
         )}
       </div>

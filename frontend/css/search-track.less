@@ -1,5 +1,6 @@
 .track-search-dropdown,
-.album-search-dropdown {
+.album-search-dropdown,
+.dropdown-search-suggestions {
   display: none; // hidden by default
   position: absolute;
   width: calc(100% - 55px);
@@ -45,6 +46,7 @@
   }
 }
 .track-search:focus-within .track-search-dropdown,
-.album-search:focus-within .album-search-dropdown {
+.album-search:focus-within .album-search-dropdown,
+.dropdown-search:focus-within .dropdown-search-suggestions {
   display: block; // show when parent container is focused
 }
