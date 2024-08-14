@@ -37,12 +37,14 @@ export default NiceModal.create(
     initialBlurbContent,
   }: PinRecordingModalProps) => {
     const modal = useModal();
-    const isUpdate = Boolean(rowId);
     const [blurbContent, setBlurbContent] = React.useState(
       initialBlurbContent ?? ""
     );
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
+
+    const isCurrentUser = recordingToPin?.user_name === currentUser?.name;
+    const isUpdate = Boolean(rowId) && isCurrentUser;
 
     const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
@@ -125,7 +127,12 @@ export default NiceModal.create(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         try {
-          if (rowId && recordingToPin && currentUser?.auth_token) {
+          if (
+            rowId &&
+            recordingToPin &&
+            currentUser?.auth_token &&
+            isCurrentUser
+          ) {
             await APIService.updatePinRecordingBlurbContent(
               currentUser.auth_token,
               rowId,
@@ -140,7 +147,16 @@ export default NiceModal.create(
           handleError(error, "Error while updating pinned recording");
         }
       },
-      [recordingToPin, blurbContent]
+      [
+        rowId,
+        recordingToPin,
+        currentUser.auth_token,
+        isCurrentUser,
+        APIService,
+        blurbContent,
+        modal,
+        handleError,
+      ]
     );
     const { track_name, artist_name } = recordingToPin.track_metadata;
 
@@ -182,6 +198,7 @@ export default NiceModal.create(
               </p>
               <div className="form-group">
                 <textarea
+                  disabled={!isCurrentUser}
                   className="form-control"
                   id="blurb-content"
                   placeholder="Let your followers know why you are showcasing this track..."
