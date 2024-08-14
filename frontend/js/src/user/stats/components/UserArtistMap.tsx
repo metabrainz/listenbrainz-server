@@ -9,7 +9,6 @@ import _ from "lodash";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import Choropleth from "./Choropleth";
-import { isInvalidStatRange } from "../utils";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
@@ -36,13 +35,6 @@ export default function UserArtistMap(props: UserArtistMapProps) {
     queryKey: ["user-artist-map", range, user?.name],
     queryFn: async () => {
       try {
-        if (!range || isInvalidStatRange(range)) {
-          return {
-            data: {},
-            hasError: true,
-            errorMessage: `Invalid range: ${range}`,
-          };
-        }
         const queryData = await APIService.getUserArtistMap(user?.name, range);
         return {
           data: queryData,

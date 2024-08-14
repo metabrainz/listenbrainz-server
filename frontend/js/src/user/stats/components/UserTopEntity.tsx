@@ -7,11 +7,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import {
-  getChartEntityDetails,
-  isInvalidStatRange,
-  userChartEntityToListen,
-} from "../utils";
+import { getChartEntityDetails, userChartEntityToListen } from "../utils";
 import ListenCard from "../../../common/listens/ListenCard";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
@@ -39,14 +35,6 @@ export default function UserTopEntity(props: UserTopEntityProps) {
     queryKey: ["user-top-entity", entity, range, user?.name],
     queryFn: async () => {
       try {
-        if (!range || isInvalidStatRange(range)) {
-          return {
-            data: {},
-            loading: false,
-            hasError: true,
-            errorMessage: `Invalid range: ${range}`,
-          };
-        }
         const queryData = await APIService.getUserEntity(
           user?.name,
           entity,

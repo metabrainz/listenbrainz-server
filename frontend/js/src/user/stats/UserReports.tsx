@@ -14,7 +14,7 @@ import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
-import { getAllStatRanges } from "./utils";
+import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export type UserReportsProps = {
@@ -41,11 +41,15 @@ export default function UserReports(props: UserReportsProps) {
   const range = searchParams.get("range") as UserStatsAPIRange;
 
   React.useEffect(() => {
-    if (!range || !getAllStatRanges().has(range)) {
+    if (!range || isInvalidStatRange(range)) {
       setSearchParams({ range: "week" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range]);
+
+  if (!range || isInvalidStatRange(range)) {
+    return null;
+  }
 
   const handleRangeChange = (newRange: UserStatsAPIRange) => {
     setSearchParams({ range: newRange });

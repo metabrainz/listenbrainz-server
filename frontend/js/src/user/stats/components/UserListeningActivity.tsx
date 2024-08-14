@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../../../components/Loader";
-import { isInvalidStatRange } from "../utils";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
@@ -47,13 +46,6 @@ export default function UserListeningActivity(
     queryKey: ["userListeningActivity", user?.name, range],
     queryFn: async () => {
       try {
-        if (!range || isInvalidStatRange(range)) {
-          return {
-            data: {} as UserListeningActivityResponse,
-            hasError: true,
-            errorMessage: `Invalid range: ${range}`,
-          };
-        }
         const queryData = await APIService.getUserListeningActivity(
           user?.name,
           range
@@ -212,10 +204,10 @@ export default function UserListeningActivity(
     );
 
     const endOfThisMonth = new Date(
-        unprocessedData.payload.listening_activity[
-            unprocessedData.payload.listening_activity.length - 1
-        ].from_ts * 1000
-      );
+      unprocessedData.payload.listening_activity[
+        unprocessedData.payload.listening_activity.length - 1
+      ].from_ts * 1000
+    );
 
     const numOfDaysInLastMonth = getNumberOfDaysInMonth(startOfLastMonth);
     const numOfDaysInThisMonth = getNumberOfDaysInMonth(endOfThisMonth);
@@ -235,7 +227,6 @@ export default function UserListeningActivity(
     for (let i = 0; i < maxDays; i += 1) {
       const lastMonthDay = lastMonth[i] || null;
       const thisMonthDay = thisMonth[i] || null;
-      const thisMonthCount = thisMonthDay ? thisMonthDay.listen_count : 0;
 
       let thisMonthData = {};
       let lastMonthData = {};

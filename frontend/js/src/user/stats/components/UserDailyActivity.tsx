@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../../../components/Loader";
-import { isInvalidStatRange } from "../utils";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
@@ -34,13 +33,6 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
     queryKey: ["userDailyActivity", user.name, range],
     queryFn: async () => {
       try {
-        if (!range || isInvalidStatRange(range)) {
-          return {
-            data: {} as UserDailyActivityResponse,
-            hasError: true,
-            errorMessage: `Invalid range: ${range}`,
-          };
-        }
         const queryData = await APIService.getUserDailyActivity(
           user.name,
           range
