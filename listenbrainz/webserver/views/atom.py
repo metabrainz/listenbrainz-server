@@ -1,5 +1,4 @@
 from datetime import datetime, date, timedelta, timezone
-import uuid
 from feedgen.feed import FeedGenerator
 from flask import Blueprint, Response, current_app, request, render_template, url_for
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
@@ -25,6 +24,12 @@ from listenbrainz.webserver.views.api_tools import (
 )
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.art.cover_art_generator import (
+    MIN_IMAGE_SIZE,
+    MAX_IMAGE_SIZE,
+    MIN_DIMENSION,
+    MAX_DIMENSION,
+)
 
 DEFAULT_MINUTES_OF_LISTENS = 60
 MAX_MINUTES_OF_LISTENS = 7 * 24 * 60  # a week
@@ -34,6 +39,17 @@ RECOMMENDATION_TYPES = (
     "weekly-jams",
     "weekly-exploration",
 )
+STATS_RANGE_DESCRIPTIONS = {
+    StatisticsRange.this_week.value: "This Week's",
+    StatisticsRange.this_month.value: "This Month's",
+    StatisticsRange.this_year.value: "This Year's",
+    StatisticsRange.week.value: "Weekly",
+    StatisticsRange.month.value: "Monthly",
+    StatisticsRange.quarter.value: "Quarterly",
+    StatisticsRange.half_yearly.value: "Half Yearly",
+    StatisticsRange.year.value: "Yearly",
+    StatisticsRange.all_time.value: "All Time",
+}
 
 
 atom_bp = Blueprint("atom", __name__)
@@ -68,18 +84,7 @@ def _get_stats_feed_title(user_name: str, entity: str, stats_range: str) -> str:
         "release_groups": "Top Albums",
         "recordings": "Top Tracks",
     }
-    _stats_range_descriptions = {
-        StatisticsRange.this_week.value: "This Week's",
-        StatisticsRange.this_month.value: "This Month's",
-        StatisticsRange.this_year.value: "This Year's",
-        StatisticsRange.week.value: "Weekly",
-        StatisticsRange.month.value: "Monthly",
-        StatisticsRange.quarter.value: "Quarterly",
-        StatisticsRange.half_yearly.value: "Half Yearly",
-        StatisticsRange.year.value: "Yearly",
-        StatisticsRange.all_time.value: "All Time",
-    }
-    return f"{_stats_range_descriptions[stats_range]} {_entity_descriptions[entity]} for {user_name} - ListenBrainz"
+    return f"{STATS_RANGE_DESCRIPTIONS[stats_range]} {_entity_descriptions[entity]} for {user_name} - ListenBrainz"
 
 
 def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
@@ -101,6 +106,34 @@ def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
     elif stats_range in [StatisticsRange.all_time.value]:
         return "All Time"
     assert False, f"Invalid stats_range: {stats_range}"
+
+
+def _get_cover_art_feed_title(
+    user_name: str, stats_range: str, art_type: str, custom_name: str = None
+) -> str:
+    """
+    Generate feed titles specifically for cover art feeds.
+    """
+    art_titles = {
+        "designer-top-5": "Designer Top 5",
+        "designer-top-10": "Designer Top 10",
+        "lps-on-the-floor": "LPs on the Floor",
+        "grid-stats": "Album Grid",
+        "grid-stats-special": "Album Grid Alt",
+    }
+
+    range_description = STATS_RANGE_DESCRIPTIONS.get(
+        stats_range, stats_range.capitalize()
+    )
+
+    if art_type == "grid":
+        title = "Grid Cover Art"
+    elif art_type == "custom" and custom_name in art_titles:
+        title = art_titles[custom_name]
+    else:
+        assert False, f"Invalid art_type: {art_type}"
+
+    return f"{range_description} {title} for {user_name} - ListenBrainz"
 
 
 def _init_feed(id, title, self_url, alternate_url):
@@ -743,4 +776,205 @@ def get_recommendation(user_name):
 
     atomfeed = fg.atom_str(pretty=True)
 
+    return Response(atomfeed, mimetype="application/atom+xml")
+
+
+@atom_bp.route("/user/<user_name>/stats/art/grid")
+@crossdomain
+@ratelimit()
+def get_cover_art_grid_stats(user_name):
+    """
+    Get cover art grid stats for a user.
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``month``
+    :type range: ``str``
+    :param dimension: Optional, dimension of the grid, defaults to 4
+    :type dimension: ``int``
+    :param layout: Optional, layout of the grid, defaults to 0
+    :type layout: ``int``
+    :param image_size: Optional, size of the image, defaults to 750
+    :type image_size: ``int``
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 204: Statistics for the user haven't been calculated.
+    :statuscode 400: Bad request
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/atom+xml*
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise NotFound("User not found")
+
+    range = request.args.get("range", default="month")
+    if not _is_valid_range(range):
+        return BadRequest(f"Invalid range value: {range}")
+
+    try:
+        dimension = int(request.args.get("dimension", 4))
+        layout = int(request.args.get("layout", 0))
+        image_size = int(request.args.get("image_size", 750))
+    except ValueError:
+        return BadRequest("Dimension, layout, and image_size must be integers.")
+
+    if not (MIN_DIMENSION <= dimension <= MAX_DIMENSION):
+        return BadRequest(
+            f"Dimension must be between {MIN_DIMENSION} and {MAX_DIMENSION}."
+        )
+
+    if not (MIN_IMAGE_SIZE <= image_size <= MAX_IMAGE_SIZE):
+        return BadRequest(
+            f"Image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}."
+        )
+
+    # Generate the data URL for the art
+    data_url = _external_url_for(
+        "art_api_v1.cover_art_grid_stats",
+        user_name=user_name,
+        time_range=range,
+        dimension=dimension,
+        layout=layout,
+        image_size=image_size,
+    )
+
+    fg = _init_feed(
+        _external_url_for(".get_cover_art_grid_stats", user_name=user_name),
+        _get_cover_art_feed_title(user_name, range, art_type="grid"),
+        _external_url_for("user.stats", user_name=user_name),
+        _external_url_for(".get_cover_art_grid_stats", user_name=user_name),
+    )
+
+    entity_list, to_ts, last_updated = _get_entity_stats(
+        user["id"],
+        "releases",
+        range,
+        1,  # Fetch a single stat to get last_updated
+    )
+    if entity_list is None:
+        return Response(
+            status=204, response="Statistics for the user haven't been calculated."
+        )
+
+    if _is_daily_updated_stats(range):
+        t = last_updated
+    else:
+        t = to_ts
+    dt = datetime.fromtimestamp(t)
+    t_with_tz = dt.replace(tzinfo=timezone.utc)
+
+    fe = fg.add_entry()
+    fe.id(
+        f"{_external_url_for('.get_cover_art_grid_stats', user_name=user_name)}/{range}/{t}"
+    )
+    fe.title(_get_stats_entry_title(range, to_ts - 60) + " (Stats Art Grid)")
+
+    content = render_template(
+        "atom/stat_art.html",
+        data_url=data_url,
+    )
+    fe.content(content=content, type="html")
+    fe.published(t_with_tz)
+    fe.updated(t_with_tz)
+
+    atomfeed = fg.atom_str(pretty=True)
+    return Response(atomfeed, mimetype="application/atom+xml")
+
+
+@atom_bp.route("/user/<user_name>/stats/art/custom")
+@crossdomain
+@ratelimit()
+def get_cover_art_custom_stats(user_name):
+    """
+    Get custom cover art stats for a user.
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``month``
+    :param custom_name: Optional, name of the custom art, defaults to ``designer-top-5``
+    :type custom_name: ``str``
+    :type range: ``str``
+    :param image_size: Optional, size of the image, defaults to 750
+    :type image_size: ``int``
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 204: Statistics for the user haven't been calculated.
+    :statuscode 400: Bad request
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/atom+xml*
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise NotFound("User not found")
+
+    range = request.args.get("range", default="month")
+    if not _is_valid_range(range):
+        return BadRequest(f"Invalid range value: {range}")
+
+    try:
+        custom_name = request.args.get("custome_name", "designer-top-5")
+        image_size = int(request.args.get("image_size", 750))
+    except ValueError:
+        return BadRequest("Image size must be an integer.")
+
+    if custom_name not in ["designer-top-5", "designer-top-10", "lps-on-the-floor"]:
+        return BadRequest(f"Invalid custom name: {custom_name}")
+
+    if not (MIN_IMAGE_SIZE <= image_size <= MAX_IMAGE_SIZE):
+        return BadRequest(
+            f"Image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}."
+        )
+
+    data_url = _external_url_for(
+        "art_api_v1.cover_art_custom_stats",
+        custom_name=custom_name,
+        user_name=user_name,
+        time_range=range,
+        image_size=image_size,
+    )
+
+    fg = _init_feed(
+        _external_url_for(".get_cover_art_custom_stats", user_name=user_name),
+        _get_cover_art_feed_title(
+            user_name, range, art_type="custom", custom_name=custom_name
+        ),
+        _external_url_for("user.stats", user_name=user_name),
+        _external_url_for(".get_cover_art_custom_stats", user_name=user_name),
+    )
+
+    if custom_name == "designer-top-5":
+        entity_list, to_ts, last_updated = _get_entity_stats(
+            user["id"],
+            "artists",
+            range,
+            1,
+        )
+    else:
+        entity_list, to_ts, last_updated = _get_entity_stats(
+            user["id"],
+            "releases",
+            range,
+            1,
+        )
+    if entity_list is None:
+        return Response(
+            status=204, response="Statistics for the user haven't been calculated."
+        )
+
+    if _is_daily_updated_stats(range):
+        t = last_updated
+    else:
+        t = to_ts
+    dt = datetime.fromtimestamp(t)
+    t_with_tz = dt.replace(tzinfo=timezone.utc)
+
+    fe = fg.add_entry()
+    fe.id(
+        f"{_external_url_for('.get_cover_art_custom_stats', user_name=user_name)}/{range}/{t}"
+    )
+    fe.title(_get_stats_entry_title(range, to_ts - 60))
+
+    content = render_template(
+        "atom/stat_art.html",
+        data_url=data_url,
+    )
+    fe.content(content=content, type="html")
+    fe.published(t_with_tz)
+    fe.updated(t_with_tz)
+
+    atomfeed = fg.atom_str(pretty=True)
     return Response(atomfeed, mimetype="application/atom+xml")
