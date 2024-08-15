@@ -38,6 +38,20 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
+const setQueryData = (
+  userName: string | undefined,
+  range: string,
+  data: any
+) => {
+  const queryKey = ["userListeningActivity", userName, range];
+  queryClient.ensureQueryData({
+    queryKey,
+    queryFn: () => {
+      return data;
+    },
+  });
+};
+
 const getResponse = (range: string) => {
   let response;
   switch (range) {
@@ -91,16 +105,10 @@ describe.each([
     server.close();
   });
   it("renders correctly for week", async () => {
-    const queryKey = ["userListeningActivity", props.user?.name, "week"];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userListeningActivityResponseWeek,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
+    setQueryData(props.user?.name, "week", {
+      data: userListeningActivityResponseWeek,
+      hasError: false,
+      errorMessage: "",
     });
 
     renderWithProviders(
@@ -125,16 +133,10 @@ describe.each([
   });
 
   it("renders correctly for month", async () => {
-    const queryKey = ["userListeningActivity", props.user?.name, "month"];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userListeningActivityResponseMonth,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
+    setQueryData(props.user?.name, "month", {
+      data: userListeningActivityResponseMonth,
+      hasError: false,
+      errorMessage: "",
     });
 
     renderWithProviders(
@@ -159,16 +161,10 @@ describe.each([
   });
 
   it("renders correctly for year", async () => {
-    const queryKey = ["userListeningActivity", props.user?.name, "year"];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userListeningActivityResponseYear,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
+    setQueryData(props.user?.name, "year", {
+      data: userListeningActivityResponseYear,
+      hasError: false,
+      errorMessage: "",
     });
 
     renderWithProviders(
@@ -193,16 +189,10 @@ describe.each([
   });
 
   it("renders correctly for all_time", async () => {
-    const queryKey = ["userListeningActivity", props.user?.name, "all_time"];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userListeningActivityResponseAllTime,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
+    setQueryData(props.user?.name, "all_time", {
+      data: userListeningActivityResponseAllTime,
+      hasError: false,
+      errorMessage: "",
     });
 
     renderWithProviders(
@@ -228,18 +218,11 @@ describe.each([
 
   it("displays error message when API call fails", async () => {
     const errorMessage = "API Error";
-    const queryKey = ["userListeningActivity", props.user?.name, "week"];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: {},
-          hasError: true,
-          errorMessage,
-        };
-      },
+    setQueryData(props.user?.name, "week", {
+      data: {},
+      hasError: true,
+      errorMessage,
     });
-
     renderWithProviders(
       <ResponsiveContext.Provider value={{ width: 800 }}>
         <UserListeningActivity {...props} />

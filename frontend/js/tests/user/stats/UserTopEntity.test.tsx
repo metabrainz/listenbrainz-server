@@ -40,6 +40,21 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
+const setQueryData = (
+  userName: string | undefined,
+  entity: Entity,
+  range: string,
+  data: any
+) => {
+  const queryKey = ["user-top-entity", entity, range, userName];
+  queryClient.ensureQueryData({
+    queryKey,
+    queryFn: () => {
+      return data;
+    },
+  });
+};
+
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
@@ -83,17 +98,10 @@ describe.each([
       queryClient.clear();
     });
     it("renders correctly for artist", async () => {
-      const queryKey = ["user-top-entity", "artist", "week", props.user?.name];
-      queryClient.ensureQueryData({
-        queryKey,
-        queryFn: () => {
-          return {
-            data: userArtists,
-            loading: false,
-            hasError: false,
-            errorMessage: "",
-          };
-        },
+      setQueryData(props.user?.name, "artist", "week", {
+        data: userArtists,
+        hasError: false,
+        errorMessage: "",
       });
       renderWithProviders(
         <UserTopEntity {...props} />,
@@ -113,17 +121,10 @@ describe.each([
     });
 
     it("renders correctly for release", async () => {
-      const queryKey = ["user-top-entity", "release", "week", props.user?.name];
-      queryClient.ensureQueryData({
-        queryKey,
-        queryFn: () => {
-          return {
-            data: userReleases,
-            loading: false,
-            hasError: false,
-            errorMessage: "",
-          };
-        },
+      setQueryData(props.user?.name, "release", "week", {
+        data: userReleases,
+        hasError: false,
+        errorMessage: "",
       });
       renderWithProviders(
         <UserTopEntity {...props} entity="release" terminology="release" />,
@@ -143,22 +144,10 @@ describe.each([
     });
 
     it("renders correctly for release group", async () => {
-      const queryKey = [
-        "user-top-entity",
-        "release-group",
-        "week",
-        props.user?.name,
-      ];
-      queryClient.ensureQueryData({
-        queryKey,
-        queryFn: () => {
-          return {
-            data: userReleaseGroups,
-            loading: false,
-            hasError: false,
-            errorMessage: "",
-          };
-        },
+      setQueryData(props.user?.name, "release-group", "week", {
+        data: userReleaseGroups,
+        hasError: false,
+        errorMessage: "",
       });
       renderWithProviders(
         <UserTopEntity
@@ -184,22 +173,10 @@ describe.each([
     });
 
     it("renders correctly for recording", async () => {
-      const queryKey = [
-        "user-top-entity",
-        "recording",
-        "week",
-        props.user?.name,
-      ];
-      queryClient.ensureQueryData({
-        queryKey,
-        queryFn: () => {
-          return {
-            data: userRecordings,
-            loading: false,
-            hasError: false,
-            errorMessage: "",
-          };
-        },
+      setQueryData(props.user?.name, "recording", "week", {
+        data: userRecordings,
+        hasError: false,
+        errorMessage: "",
       });
       renderWithProviders(
         <UserTopEntity {...props} entity="recording" terminology="track" />,
@@ -220,17 +197,10 @@ describe.each([
 
     it("displays error message when API call fails", async () => {
       const errorMessage = "API Error";
-
-      queryClient.ensureQueryData({
-        queryKey: ["user-top-entity", "artist", "week", props.user?.name],
-        queryFn: () => {
-          return {
-            data: {},
-            hasError: true,
-            errorMessage,
-            loading: false,
-          };
-        },
+      setQueryData(props.user?.name, "artist", "week", {
+        data: {},
+        hasError: true,
+        errorMessage,
       });
 
       renderWithProviders(

@@ -31,7 +31,7 @@ const queryClient = new QueryClient({
   },
 });
 const queryKey = ["userDailyActivity", props.user.name, "week"];
-// preload data
+
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );

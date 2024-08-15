@@ -40,6 +40,20 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
+const setQueryData = (
+  userName: string | undefined,
+  range: string,
+  data: any
+) => {
+  const queryKey = ["user-stats-map", range, userName];
+  queryClient.ensureQueryData({
+    queryKey,
+    queryFn: () => {
+      return data;
+    },
+  });
+};
+
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
@@ -66,16 +80,10 @@ describe.each([
   });
 
   it("renders correctly", async () => {
-    const queryKey = ["user-stats-map", "week", props.user?.name];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userArtistMapResponse,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
+    setQueryData(props.user?.name, "week", {
+      data: userArtistMapResponse,
+      hasError: false,
+      errorMessage: "",
     });
     renderWithProviders(
       <UserArtistMap {...props} />,
@@ -98,16 +106,10 @@ describe.each([
   // eslint-disable-next-line jest/no-disabled-tests
   xit("displays error message when API call fails", async () => {
     const errorMessage = "API Error";
-    const queryKey = ["user-stats-map", "week", props.user?.name];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: {},
-          hasError: true,
-          errorMessage,
-        };
-      },
+    setQueryData(props.user?.name, "week", {
+      data: {},
+      hasError: true,
+      errorMessage,
     });
 
     renderWithProviders(
@@ -128,17 +130,12 @@ describe.each([
   });
 
   it("renders choropleth with processed data", async () => {
-    const queryKey = ["user-stats-map", "week", props.user?.name];
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userArtistMapResponse,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
+    setQueryData(props.user?.name, "week", {
+      data: userArtistMapResponse,
+      hasError: false,
+      errorMessage: "",
     });
+
     renderWithProviders(
       <UserArtistMap {...props} />,
       {},
