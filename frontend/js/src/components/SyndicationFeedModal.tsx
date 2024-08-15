@@ -54,7 +54,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
 
   const handleCopyClick = () => {
     navigator.clipboard.writeText(buildLink()).then(() => {
-      setCopyButtonText("Done ✅");
+      setCopyButtonText("Copied");
 
       setTimeout(() => {
         setCopyButtonText("Copy");
@@ -125,9 +125,9 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
                 />
                 <button
                   type="button"
-                  className="btn btn-default"
+                  className="btn btn-info btn-sm"
                   onClick={handleCopyClick}
-                  style={{ minWidth: "100px" }}
+                  style={{ minWidth: "100px", height: "34px" }}
                 >
                   {copyButtonText}
                 </button>
