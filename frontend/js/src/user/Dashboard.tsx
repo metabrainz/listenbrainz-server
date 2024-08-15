@@ -3,10 +3,14 @@
 import * as _ from "lodash";
 import * as React from "react";
 
-import NiceModal from "@ebay/nice-modal-react";
+import NiceModal, { hide } from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCompactDisc,
+  faTrashAlt,
+  faSquareRss,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
@@ -557,38 +561,7 @@ export default function Listen() {
             {listens.length === 0 ? (
               <div id="spacer" />
             ) : (
-              <h3 className="header-with-line">
-                Recent listens
-                <button
-                  type="button"
-                  className="btn btn-default btn-sm"
-                  style={{ marginLeft: "10px" }}
-                  data-toggle="modal"
-                  data-target="#SyndicationFeedModal"
-                  onClick={() => {
-                    NiceModal.show(SyndicationFeedModal, {
-                      feedTitle: "Recent listens",
-                      options: [
-                        {
-                          label: "Minutes",
-                          key: "minutes",
-                          values: [
-                            { id: "10minutes", value: "10" },
-                            { id: "30minutes", value: "30" },
-                            { id: "1hour", value: "60" },
-                            { id: "2hours", value: "120" },
-                            { id: "4hours", value: "240" },
-                            { id: "8hours", value: "480" },
-                          ],
-                        },
-                      ],
-                      baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser.name}/listens`,
-                    });
-                  }}
-                >
-                  Subscribe
-                </button>
-              </h3>
+              <h3 className="header-with-line">Recent listens</h3>
             )}
             {isCurrentUsersPage && (
               <div className="dropdow add-listen-btn">
@@ -678,7 +651,35 @@ export default function Listen() {
                     &larr; Newer
                   </Link>
                 </li>
-                <li className="date-time-picker">
+                <li className="feed-button-and-date-time-picker">
+                  <FontAwesomeIcon
+                    icon={faSquareRss}
+                    size="lg"
+                    className="feed-button"
+                    data-toggle="modal"
+                    data-target="#SyndicationFeedModal"
+                    style={{ height: "24px" }}
+                    onClick={() => {
+                      NiceModal.show(SyndicationFeedModal, {
+                        feedTitle: "Recent listens",
+                        options: [
+                          {
+                            label: "Minutes",
+                            key: "minutes",
+                            values: [
+                              { id: "10minutes", value: "10" },
+                              { id: "30minutes", value: "30" },
+                              { id: "1hour", value: "60" },
+                              { id: "2hours", value: "120" },
+                              { id: "4hours", value: "240" },
+                              { id: "8hours", value: "480" },
+                            ],
+                          },
+                        ],
+                        baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser.name}/listens`,
+                      });
+                    }}
+                  />
                   <DateTimePicker
                     onChange={onChangeDateTimePicker}
                     value={dateTimePickerValue}
