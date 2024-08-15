@@ -26,9 +26,8 @@ export type UserReportsState = {
   user?: ListenBrainzUser;
 };
 
-type UserReportsLoaderData = UserReportsProps;
-
-export default function UserReports(props: UserReportsProps) {
+export default function UserReports() {
+  const props = useLoaderData() as UserReportsProps;
   const { user = undefined } = props;
 
   // Context
@@ -63,7 +62,7 @@ export default function UserReports(props: UserReportsProps) {
     user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
   return (
-    <div>
+    <div data-testid="User Reports">
       <Helmet>
         <title>{userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats</title>
       </Helmet>
@@ -76,6 +75,7 @@ export default function UserReports(props: UserReportsProps) {
                 active={range === stat_type}
                 type="secondary"
                 onClick={() => handleRangeChange(stat_type)}
+                data-testid={`range-${stat_type}`}
               >
                 {stat_name}
               </Pill>
@@ -162,9 +162,4 @@ export default function UserReports(props: UserReportsProps) {
       </section>
     </div>
   );
-}
-
-export function UserReportsWrapper() {
-  const data = useLoaderData() as UserReportsLoaderData;
-  return <UserReports user={data?.user} />;
 }
