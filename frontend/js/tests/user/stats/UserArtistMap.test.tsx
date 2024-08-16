@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import UserArtistMap, {
   UserArtistMapProps,
 } from "../../../src/user/stats/components/UserArtistMap";
-// import APIError from "../../../src/utils/APIError";
 import * as userArtistMapResponse from "../../__mocks__/userArtistMap.json";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
@@ -40,20 +39,6 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-const setQueryData = (
-  userName: string | undefined,
-  range: string,
-  data: any
-) => {
-  const queryKey = ["user-stats-map", range, userName];
-  queryClient.ensureQueryData({
-    queryKey,
-    queryFn: () => {
-      return data;
-    },
-  });
-};
-
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
@@ -61,11 +46,33 @@ describe.each([
   let server: SetupServerApi;
   beforeAll(async () => {
     const handlers = [
-      http.get("/1/stats/user/foobar/artist-map", async (path) => {
-        return HttpResponse.json(userArtistMapResponse);
+      http.get("/1/stats/user/foobar/artist-map", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistMapResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
       }),
-      http.get("/1/stats/sitewide/artist-map", async (path) => {
-        return HttpResponse.json(userArtistMapResponse);
+      http.get("/1/stats/sitewide/artist-map", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistMapResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
       }),
     ];
     server = setupServer(...handlers);
@@ -80,11 +87,6 @@ describe.each([
   });
 
   it("renders correctly", async () => {
-    setQueryData(props.user?.name, "week", {
-      data: userArtistMapResponse,
-      hasError: false,
-      errorMessage: "",
-    });
     renderWithProviders(
       <UserArtistMap {...props} />,
       {},
@@ -102,18 +104,9 @@ describe.each([
     expect(screen.getByTestId("Choropleth")).toBeInTheDocument();
   });
 
-  // TODO: Fix this test
-  // eslint-disable-next-line jest/no-disabled-tests
-  xit("displays error message when API call fails", async () => {
-    const errorMessage = "API Error";
-    setQueryData(props.user?.name, "week", {
-      data: {},
-      hasError: true,
-      errorMessage,
-    });
-
+  it("displays error message when API call fails", async () => {
     renderWithProviders(
-      <UserArtistMap {...props} />,
+      <UserArtistMap {...{ ...props, range: "month" }} />,
       {},
       {
         wrapper: reactQueryWrapper,
@@ -125,17 +118,11 @@ describe.each([
       expect(screen.getByTestId("error-message")).toBeInTheDocument();
     });
 
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(screen.getByText("Failed to fetch data")).toBeInTheDocument();
     expect(screen.queryByTestId("Choropleth")).not.toBeInTheDocument();
   });
 
   it("renders choropleth with processed data", async () => {
-    setQueryData(props.user?.name, "week", {
-      data: userArtistMapResponse,
-      hasError: false,
-      errorMessage: "",
-    });
-
     renderWithProviders(
       <UserArtistMap {...props} />,
       {},
