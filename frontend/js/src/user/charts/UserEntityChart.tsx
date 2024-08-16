@@ -7,12 +7,14 @@ import {
   faAngleRight,
   faExclamationCircle,
   faHeadphones,
+  faSquareRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { BarItemProps } from "@nivo/bar";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
@@ -33,6 +35,7 @@ import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
 import { getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
 import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -292,6 +295,43 @@ export default function UserEntityChart() {
                 month: "long",
                 year: "numeric",
               })})`}
+            <FontAwesomeIcon
+              icon={faSquareRss}
+              size="lg"
+              className="feed-button"
+              style={{ marginLeft: "10px" }}
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Top ${terminology}s`,
+                  options: [
+                    {
+                      label: "Range",
+                      key: "range",
+                      type: "dropdown",
+                      values: Array.from(ranges, ([stat_type, stat_name]) => ({
+                        id: stat_type,
+                        value: stat_type,
+                        displayValue: stat_name,
+                      })),
+                    },
+                    {
+                      label: "Count",
+                      key: "count",
+                      type: "number",
+                      values: [
+                        { id: "10", value: "10" },
+                        { id: "20", value: "20" },
+                        { id: "50", value: "50" },
+                        { id: "100", value: "100" },
+                      ],
+                    },
+                  ],
+                  baseUrl: `https://listenbrainz.org/syndication-feed/user/${user?.name}/stats/top-${terminology}s`,
+                });
+              }}
+            />
           </h3>
           {hasError && (
             <div className="mt-15 mb-15">
