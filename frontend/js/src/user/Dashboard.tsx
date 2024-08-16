@@ -666,13 +666,38 @@ export default function Listen() {
                           {
                             label: "Minutes",
                             key: "minutes",
+                            type: "dropdown",
                             values: [
-                              { id: "10minutes", value: "10" },
-                              { id: "30minutes", value: "30" },
-                              { id: "1hour", value: "60" },
-                              { id: "2hours", value: "120" },
-                              { id: "4hours", value: "240" },
-                              { id: "8hours", value: "480" },
+                              {
+                                id: "10minutes",
+                                value: "10",
+                                displayValue: "10 minutes",
+                              },
+                              {
+                                id: "30minutes",
+                                value: "30",
+                                displayValue: "30 minutes",
+                              },
+                              {
+                                id: "1hour",
+                                value: "60",
+                                displayValue: "1 hour",
+                              },
+                              {
+                                id: "2hours",
+                                value: "120",
+                                displayValue: "2 hours",
+                              },
+                              {
+                                id: "4hours",
+                                value: "240",
+                                displayValue: "4 hours",
+                              },
+                              {
+                                id: "8hours",
+                                value: "480",
+                                displayValue: "8 hours",
+                              },
                             ],
                           },
                         ],

@@ -7,7 +7,9 @@ type SyndicationFeedModalProps = {
   options: {
     label: string;
     key: string;
-    values: { id: string; value: string }[];
+    type: "dropdown" | "number";
+    values: { id: string; value: string; displayValue?: string }[];
+    defaultIndex?: number;
   }[];
   baseUrl: string;
 };
@@ -28,7 +30,8 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
 
   const initialSelectedOptions: SelectedOptions = options.reduce(
     (acc: SelectedOptions, option) => {
-      acc[option.key] = option.values[0].value;
+      const defaultIndex = option.defaultIndex ?? 0;
+      acc[option.key] = option.values[defaultIndex].value;
       return acc;
     },
     {}
@@ -96,20 +99,33 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
             {options.map((option) => (
               <div className="form-group" key={option.key}>
                 <label htmlFor={option.key}>{option.label}</label>
-                <select
-                  className="form-control"
-                  id={option.key}
-                  onChange={(e) =>
-                    handleOptionChange(option.key, e.target.value)
-                  }
-                  defaultValue={initialSelectedOptions[option.key]}
-                >
-                  {option.values.map((value) => (
-                    <option key={value.id} value={value.value}>
-                      {value.value}
-                    </option>
-                  ))}
-                </select>
+                {option.type === "dropdown" && (
+                  <select
+                    className="form-control"
+                    id={option.key}
+                    onChange={(e) =>
+                      handleOptionChange(option.key, e.target.value)
+                    }
+                    defaultValue={selectedOptions[option.key]}
+                  >
+                    {option.values.map((value) => (
+                      <option key={value.id} value={value.value}>
+                        {value.displayValue || value.value}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {option.type === "number" && (
+                  <input
+                    type="number"
+                    className="form-control"
+                    id={option.key}
+                    value={selectedOptions[option.key]}
+                    onChange={(e) =>
+                      handleOptionChange(option.key, e.target.value)
+                    }
+                  />
+                )}
               </div>
             ))}
             <div className="form-group">
