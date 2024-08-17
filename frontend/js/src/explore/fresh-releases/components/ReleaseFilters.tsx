@@ -1,8 +1,13 @@
 import * as React from "react";
-import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronDown,
+  faChevronUp,
+  faSquareRss,
+} from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as _ from "lodash";
+import NiceModal from "@ebay/nice-modal-react";
 import Switch from "../../../components/Switch";
 import SideBar from "../../../components/Sidebar";
 import type {
@@ -10,7 +15,12 @@ import type {
   DisplaySettings,
   filterRangeOption,
 } from "../FreshReleases";
-import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
+import {
+  PAGE_TYPE_SITEWIDE,
+  PAGE_TYPE_USER,
+  filterRangeOptions,
+} from "../FreshReleases";
+import SyndicationFeedModal from "../../../components/SyndicationFeedModal";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -32,6 +42,7 @@ type ReleaseFiltersProps = {
   setShowFutureReleases: React.Dispatch<React.SetStateAction<boolean>>;
   releaseCardGridRef: React.RefObject<HTMLDivElement>;
   pageType: string;
+  currentUser: ListenBrainzUser;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
@@ -51,6 +62,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     setShowFutureReleases,
     releaseCardGridRef,
     pageType,
+    currentUser,
   } = props;
 
   const [checkedList, setCheckedList] = React.useState<
@@ -221,6 +233,42 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           Check out all releases worldwide, or just from artists you&apos;ve
           listened to before, with &apos;for you&apos;.
         </p>
+        <FontAwesomeIcon
+          icon={faSquareRss}
+          size="lg"
+          className="feed-button"
+          data-toggle="modal"
+          data-target="#SyndicationFeedModal"
+          style={{ color: "#fff" }}
+          onClick={() => {
+            if (pageType === PAGE_TYPE_SITEWIDE) {
+              NiceModal.show(SyndicationFeedModal, {
+                feedTitle: `Site-wide Fresh Releases`,
+                options: [
+                  {
+                    label: "Days",
+                    key: "days",
+                    type: "number",
+                    values: [
+                      { id: "3", value: "3" },
+                      { id: "7", value: "7" },
+                      { id: "14", value: "14" },
+                      { id: "30", value: "30" },
+                    ],
+                    defaultIndex: 0, // Default to 3 days
+                  },
+                ],
+                baseUrl: `https://listenbrainz.org/syndication-feed/fresh-releases`,
+              });
+            } else if (pageType === PAGE_TYPE_USER) {
+              NiceModal.show(SyndicationFeedModal, {
+                feedTitle: `User-specific Fresh Releases`,
+                options: [],
+                baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser.name}/fresh-releases`,
+              });
+            }
+          }}
+        />
       </div>
       <div className="sidenav-content-grid">
         <div
