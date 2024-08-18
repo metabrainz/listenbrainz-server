@@ -1,9 +1,12 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce } from "lodash";
+import { debounce, max, min } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -13,6 +16,7 @@ import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -416,6 +420,24 @@ export default function ArtCreator() {
               Check out the #ListenbrainzMonday tag on your social platform of
               choice!
             </p>
+            <FontAwesomeIcon
+              icon={faSquareRss}
+              size="lg"
+              className="feed-button"
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              style={{ color: "#fff" }}
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Stats Art`,
+                  options: [],
+                  baseUrl:
+                    style.type === "grid"
+                      ? `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+                      : `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
+                });
+              }}
+            />
           </div>
           <div className="basic-settings-container">
             <div className="sidenav-content-grid">

@@ -2,13 +2,15 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import * as React from "react";
 import { useState } from "react";
 
-type SyndicationFeedModalProps = {
+export type SyndicationFeedModalProps = {
   feedTitle: string;
   options: {
     label: string;
     key: string;
-    type: "dropdown" | "number";
+    type: "dropdown" | "number" | string;
     values: { id: string; value: string; displayValue?: string }[];
+    min?: number;
+    max?: number;
     defaultIndex?: number;
   }[];
   baseUrl: string;
@@ -121,6 +123,8 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
                     className="form-control"
                     id={option.key}
                     value={selectedOptions[option.key]}
+                    min={option.min}
+                    max={option.max}
                     onChange={(e) =>
                       handleOptionChange(option.key, e.target.value)
                     }
