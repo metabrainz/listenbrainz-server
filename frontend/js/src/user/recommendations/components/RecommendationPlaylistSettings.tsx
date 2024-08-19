@@ -6,6 +6,7 @@ import {
   faCog,
   faPlayCircle,
   faSave,
+  faSquareRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
@@ -15,6 +16,7 @@ import { preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import ListenPayloadModal from "../../../common/listens/ListenPayloadModal";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
+import SyndicationFeedModal from "../../../components/SyndicationFeedModal";
 
 export type RecommendationPlaylistSettingsProps = {
   playlist: JSPFPlaylist;
@@ -117,6 +119,28 @@ export default function RecommendationPlaylistSettings({
             </button>
             <PlaylistMenu playlist={playlist} />
           </span>
+          <button
+            className="btn btn-icon btn-info"
+            style={{ marginLeft: "10px" }}
+            onClick={() => {
+              const sourcePatch =
+                extension?.additional_metadata?.algorithm_metadata.source_patch;
+
+              NiceModal.show(SyndicationFeedModal, {
+                feedTitle: `Recommendations`,
+                options: [],
+                baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/recommendations?recommendation_type=${sourcePatch}`,
+              });
+            }}
+            data-toggle="modal"
+            data-target="#SyndicationFeedModal"
+            type="button"
+          >
+            <FontAwesomeIcon
+              icon={faSquareRss}
+              title="Subscribe to syndication feed"
+            />
+          </button>
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
