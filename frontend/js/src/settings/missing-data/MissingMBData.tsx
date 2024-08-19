@@ -9,7 +9,7 @@ import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import { groupBy, isFinite, isNil, isNull, pick, size, sortBy } from "lodash";
+import { groupBy, isNil, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import Loader from "../../components/Loader";
