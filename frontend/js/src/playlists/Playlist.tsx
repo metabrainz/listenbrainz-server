@@ -4,7 +4,11 @@ import { saveAs } from "file-saver";
 import { findIndex } from "lodash";
 import * as React from "react";
 
-import { faCog, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCog,
+  faPlusCircle,
+  faSquareRss,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -16,6 +20,7 @@ import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
 import { Link, useLoaderData, useNavigate } from "react-router-dom";
 import { formatDuration, intervalToDuration } from "date-fns";
+import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -32,6 +37,7 @@ import {
   PLAYLIST_URI_PREFIX,
 } from "./utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
@@ -356,6 +362,25 @@ export default function PlaylistPage() {
                 <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
                   {playlist.creator}
                 </Link>
+                {customFields?.public && (
+                  <FontAwesomeIcon
+                    icon={faSquareRss}
+                    size="lg"
+                    className="feed-button"
+                    data-toggle="modal"
+                    data-target="#SyndicationFeedModal"
+                    style={{ marginLeft: "10px" }}
+                    onClick={() => {
+                      NiceModal.show(SyndicationFeedModal, {
+                        feedTitle: `Playlist`,
+                        options: [],
+                        baseUrl: `https://listenbrainz.org/syndication-feed/playlist/${getPlaylistId(
+                          playlist
+                        )}`,
+                      });
+                    }}
+                  />
+                )}
               </small>
             </h1>
             <div className="info">
