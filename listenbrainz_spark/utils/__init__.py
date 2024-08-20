@@ -184,6 +184,7 @@ def get_intermediate_stats_df(start: datetime, end: datetime):
 
     query = dedent(f"""\
         select listened_at
+             , created
              , user_id
              , recording_msid
              , artist_name
