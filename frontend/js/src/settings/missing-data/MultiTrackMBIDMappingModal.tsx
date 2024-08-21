@@ -341,7 +341,7 @@ export default NiceModal.create(
             When you have found the one that matches your listens, copy its URL
             (link) into the search box above.
           </Tooltip>
-          <div className="modal-content" >
+          <div className="modal-content">
             <div className="modal-header">
               <button
                 type="button"
