@@ -1,6 +1,9 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import * as React from "react";
 import { HTMLInputTypeAttribute, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
+import Tooltip from "react-tooltip";
 
 export type SyndicationFeedModalProps = {
   feedTitle: string;
@@ -12,6 +15,7 @@ export type SyndicationFeedModalProps = {
     min?: number;
     max?: number;
     defaultIndex?: number;
+    tooltip?: string;
   }[];
   baseUrl: string;
 };
@@ -100,7 +104,19 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
           <div className="modal-body">
             {options.map((option) => (
               <div className="form-group" key={option.key}>
-                <label htmlFor={option.key}>{option.label}</label>
+                <label htmlFor={option.key}>
+                  {option.label}
+                  {option.tooltip && (
+                    <>
+                      &nbsp;
+                      <FontAwesomeIcon
+                        icon={faCircleQuestion}
+                        data-tip={option.tooltip}
+                      />
+                      <Tooltip place="right" type="dark" effect="solid" />
+                    </>
+                  )}
+                </label>
                 {option.type === "dropdown" && (
                   <select
                     className="form-control"

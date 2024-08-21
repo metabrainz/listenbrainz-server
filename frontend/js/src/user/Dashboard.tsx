@@ -670,9 +670,11 @@ export default function Listen() {
                         feedTitle: "Recent listens",
                         options: [
                           {
-                            label: "Minutes",
+                            label: "Time range",
                             key: "minutes",
                             type: "dropdown",
+                            tooltip:
+                              "Length of time to include in the feed. For example, 30 minutes means the feed will include listens from the last 30 minutes and ideally you could also set the refresh interval of your feed reader to 30 minutes.",
                             values: [
                               {
                                 id: "10minutes",
