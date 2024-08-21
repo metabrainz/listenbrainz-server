@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { HttpResponse, http } from "msw";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SetupServerApi, setupServer } from "msw/node";
 import { screen } from "@testing-library/react";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
@@ -18,6 +19,23 @@ jest.unmock("react-toastify");
 const user = userEvent.setup();
 const routes = getSettingsRoutes();
 
+const pageData = {
+  missing_data: missingDataProps.missingData,
+};
+// React-Query setup
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+const queryKey = ["missing-data"];
+
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
+
 describe("MissingMBDataPage", () => {
   let server: SetupServerApi;
   let router: Router;
@@ -27,9 +45,7 @@ describe("MissingMBDataPage", () => {
     // Mock the server responses
     const handlers = [
       http.post("/settings/missing-data/", ({ request }) => {
-        return HttpResponse.json({
-          missing_data: missingDataProps.missingData,
-        });
+        return HttpResponse.json(pageData);
       }),
     ];
     server = setupServer(...handlers);
@@ -38,6 +54,13 @@ describe("MissingMBDataPage", () => {
     // See https://github.com/mswjs/msw/issues/1653#issuecomment-1781867559
     router = createMemoryRouter(routes, {
       initialEntries: ["/settings/missing-data/"],
+    });
+  });
+  beforeEach(async () => {
+    await queryClient.ensureQueryData({
+      queryKey,
+      queryFn: () => Promise.resolve(pageData),
+      initialData: pageData,
     });
   });
 
@@ -51,7 +74,9 @@ describe("MissingMBDataPage", () => {
       {
         currentUser: missingDataProps.user,
       },
-      undefined,
+      {
+        wrapper: reactQueryWrapper,
+      },
       false
     );
     await screen.findByText(
@@ -75,7 +100,9 @@ describe("MissingMBDataPage", () => {
       {
         currentUser: missingDataProps.user,
       },
-      undefined,
+      {
+        wrapper: reactQueryWrapper,
+      },
       false
     );
     await screen.findByText("Paharda (Remixes)", { exact: false });
