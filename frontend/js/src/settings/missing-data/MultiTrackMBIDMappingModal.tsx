@@ -341,7 +341,7 @@ export default NiceModal.create(
             When you have found the one that matches your listens, copy its URL
             (link) into the search box above.
           </Tooltip>
-          <form className="modal-content" onSubmit={submitMBIDMappingCallback}>
+          <div className="modal-content" >
             <div className="modal-header">
               <button
                 type="button"
@@ -587,6 +587,7 @@ export default NiceModal.create(
                 type="submit"
                 className="btn btn-success"
                 disabled={!hasMatches}
+                onClick={submitMBIDMappingCallback}
               >
                 Link listens
               </button>
@@ -616,7 +617,7 @@ export default NiceModal.create(
                 </div>
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     );
