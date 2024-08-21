@@ -5,8 +5,11 @@ import {
   faClone,
   faDownload,
   faUser,
+  faSquareRss,
+  faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { on } from "process";
 import * as React from "react";
 
 type IconTrayProps = {
@@ -16,6 +19,7 @@ type IconTrayProps = {
   onClickCopyCode: React.MouseEventHandler;
   onClickCopyURL: React.MouseEventHandler;
   onClickCopyAlt: React.MouseEventHandler;
+  onClickCopyFeedUrl: React.MouseEventHandler;
 };
 
 function IconTray(props: IconTrayProps) {
@@ -26,6 +30,7 @@ function IconTray(props: IconTrayProps) {
     onClickCopyCode,
     onClickCopyURL,
     onClickCopyAlt,
+    onClickCopyFeedUrl,
   } = props;
   const browserHasClipboardAPI = "clipboard" in navigator;
   return (
@@ -48,6 +53,15 @@ function IconTray(props: IconTrayProps) {
           onClick={onClickDownload}
         >
           <FontAwesomeIcon icon={faDownload} fixedWidth />
+        </button>
+        <button
+          type="button"
+          className="btn btn-icon btn-info"
+          data-toggle="modal"
+          data-target="#SyndicationFeedModal"
+          onClick={onClickCopyFeedUrl}
+        >
+          <FontAwesomeIcon icon={faRss} fixedWidth />
         </button>
         {browserHasClipboardAPI && (
           <button

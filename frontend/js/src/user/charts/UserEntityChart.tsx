@@ -296,10 +296,9 @@ export default function UserEntityChart() {
                 year: "numeric",
               })})`}
             <FontAwesomeIcon
+              role="button"
               icon={faSquareRss}
-              size="lg"
-              className="feed-button"
-              style={{ marginLeft: "10px" }}
+              style={{ marginLeft: "10px", color: "#353070" }}
               data-toggle="modal"
               data-target="#SyndicationFeedModal"
               onClick={() => {

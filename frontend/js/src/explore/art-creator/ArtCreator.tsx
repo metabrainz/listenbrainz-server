@@ -338,6 +338,17 @@ export default function ArtCreator() {
     }
   }, [previewSVGRef]);
 
+  const onClickCopyFeedUrl = useCallback(() => {
+    NiceModal.show(SyndicationFeedModal, {
+      feedTitle: `Stats Art`,
+      options: [],
+      baseUrl:
+        style.type === "grid"
+          ? `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+          : `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
+    });
+  }, [currentUser, style, gridSize, gridLayout, timeRange]);
+
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
@@ -397,6 +408,7 @@ export default function ArtCreator() {
             onClickCopyCode={onClickCopyCode}
             onClickCopyURL={onClickCopyURL}
             onClickCopyAlt={onClickCopyAlt}
+            onClickCopyFeedUrl={onClickCopyFeedUrl}
           />
           <Preview
             key={previewUrl}
@@ -420,24 +432,6 @@ export default function ArtCreator() {
               Check out the #ListenbrainzMonday tag on your social platform of
               choice!
             </p>
-            <FontAwesomeIcon
-              icon={faSquareRss}
-              size="lg"
-              className="feed-button"
-              data-toggle="modal"
-              data-target="#SyndicationFeedModal"
-              style={{ color: "#fff" }}
-              onClick={() => {
-                NiceModal.show(SyndicationFeedModal, {
-                  feedTitle: `Stats Art`,
-                  options: [],
-                  baseUrl:
-                    style.type === "grid"
-                      ? `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
-                      : `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
-                });
-              }}
-            />
           </div>
           <div className="basic-settings-container">
             <div className="sidenav-content-grid">

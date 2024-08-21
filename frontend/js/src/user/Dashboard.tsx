@@ -10,6 +10,7 @@ import {
   faCompactDisc,
   faTrashAlt,
   faSquareRss,
+  faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
@@ -652,13 +653,18 @@ export default function Listen() {
                   </Link>
                 </li>
                 <li className="feed-button-and-date-time-picker">
-                  <FontAwesomeIcon
-                    icon={faSquareRss}
-                    size="lg"
-                    className="feed-button"
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-info btn-sm"
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                     data-toggle="modal"
                     data-target="#SyndicationFeedModal"
-                    style={{ height: "24px" }}
                     onClick={() => {
                       NiceModal.show(SyndicationFeedModal, {
                         feedTitle: "Recent listens",
@@ -701,10 +707,12 @@ export default function Listen() {
                             ],
                           },
                         ],
-                        baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser.name}/listens`,
+                        baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/listens`,
                       });
                     }}
-                  />
+                  >
+                    <FontAwesomeIcon icon={faRss} size="xs" />
+                  </button>
                   <DateTimePicker
                     onChange={onChangeDateTimePicker}
                     value={dateTimePickerValue}

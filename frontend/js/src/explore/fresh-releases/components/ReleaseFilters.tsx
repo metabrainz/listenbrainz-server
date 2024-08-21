@@ -235,12 +235,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           listened to before, with &apos;for you&apos;.
         </p>
         <FontAwesomeIcon
+          role="button"
           icon={faSquareRss}
           size="lg"
-          className="feed-button"
           data-toggle="modal"
           data-target="#SyndicationFeedModal"
-          style={{ color: "#fff" }}
           onClick={() => {
             if (pageType === PAGE_TYPE_SITEWIDE) {
               NiceModal.show(SyndicationFeedModal, {
