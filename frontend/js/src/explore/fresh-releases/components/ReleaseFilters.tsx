@@ -21,6 +21,7 @@ import {
   filterRangeOptions,
 } from "../FreshReleases";
 import SyndicationFeedModal from "../../../components/SyndicationFeedModal";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -42,7 +43,6 @@ type ReleaseFiltersProps = {
   setShowFutureReleases: React.Dispatch<React.SetStateAction<boolean>>;
   releaseCardGridRef: React.RefObject<HTMLDivElement>;
   pageType: string;
-  currentUser: ListenBrainzUser;
 };
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
@@ -62,8 +62,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     setShowFutureReleases,
     releaseCardGridRef,
     pageType,
-    currentUser,
   } = props;
+
+  const { currentUser } = React.useContext(GlobalAppContext);
 
   const [checkedList, setCheckedList] = React.useState<
     Array<string | undefined>

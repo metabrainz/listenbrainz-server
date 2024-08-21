@@ -422,7 +422,6 @@ export default function FreshReleases() {
           setShowFutureReleases={setShowFutureReleases}
           releaseCardGridRef={releaseCardGridRef}
           pageType={pageType}
-          currentUser={currentUser}
         />
       </div>
     </>

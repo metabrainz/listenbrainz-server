@@ -168,7 +168,6 @@ describe("FreshReleases", () => {
         setShowFutureReleases={setShowFutureReleases}
         releaseCardGridRef={releaseCardGridRef}
         pageType="sitewide"
-        currentUser={user}
       />
     );
 
