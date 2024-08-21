@@ -1,13 +1,13 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import * as React from "react";
-import { useState } from "react";
+import { HTMLInputTypeAttribute, useState } from "react";
 
 export type SyndicationFeedModalProps = {
   feedTitle: string;
   options: {
     label: string;
     key: string;
-    type: "dropdown" | "number" | string;
+    type: HTMLInputTypeAttribute;
     values: { id: string; value: string; displayValue?: string }[];
     min?: number;
     max?: number;
