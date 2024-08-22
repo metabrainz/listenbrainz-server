@@ -6,7 +6,7 @@ from listenbrainz_spark.utils import get_listens_from_dump
 
 logger = logging.getLogger(__name__)
 
-TOP_LISTENS_LIMIT = 200
+TOP_LISTENS_LIMIT = 1000
 
 
 def get_missing_mb_data():

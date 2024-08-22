@@ -1,4 +1,4 @@
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import React, {
@@ -52,6 +52,7 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
   );
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRefLocal = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
 
   // Allow parents to focus on input
   useImperativeHandle(
@@ -68,7 +69,9 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
 
   // Autofocus once on load
   useEffect(() => {
-    inputRefLocal?.current?.focus();
+    setTimeout(() => {
+      inputRefLocal?.current?.focus();
+    }, 500);
   }, []);
 
   const handleError = useCallback(
@@ -107,6 +110,8 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
             setSearchResults(parsedResponse);
           } catch (error) {
             handleError(error);
+          } finally {
+            setLoading(false);
           }
         },
         THROTTLE_MILLISECONDS,
@@ -168,6 +173,8 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
               "Could not find recording"
             );
             setInputValue("");
+          } finally {
+            setLoading(false);
           }
           setSearchResults([]);
         },
@@ -207,6 +214,7 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
     if (!inputValue) {
       return;
     }
+    setLoading(true);
     const isValidUUID = RECORDING_MBID_REGEXP.test(inputValue);
     if (isValidUUID) {
       throttledHandleValidMBID(inputValue);
@@ -234,7 +242,11 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
-            <FontAwesomeIcon icon={faTimesCircle} />
+            {loading ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={faTimesCircle} />
+            )}
           </button>
         </span>
         {Boolean(searchResults?.length) && (

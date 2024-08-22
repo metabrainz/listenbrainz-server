@@ -33,7 +33,7 @@ interface AddAlbumListensProps {
   onPayloadChange: (listens: Listen[]) => void;
 }
 
-type MBReleaseWithMetadata = MusicBrainzRelease &
+export type MBReleaseWithMetadata = MusicBrainzRelease &
   WithMedia &
   WithArtistCredits &
   WithReleaseGroup;
@@ -67,7 +67,7 @@ type TrackRowProps = {
   ) => void;
 };
 
-function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
+export function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
   const trackDuration = track.length ?? track.recording.length;
   return (
     <div className="add-album-track">
