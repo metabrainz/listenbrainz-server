@@ -93,7 +93,7 @@ describe("Listens page", () => {
       http.get("/1/user/*/followers", async (path) =>
         HttpResponse.json({ followers: [] })
       ),
-      http.get("/1/user/iliekcomputers/similar-users", async (path) => {
+      http.get("/1/user/*/similar-users", async (path) => {
         HttpResponse.json({ payload: [] });
       }),
       http.get("/1/user/*/listen-count", async (path) =>
@@ -110,8 +110,8 @@ describe("Listens page", () => {
     server = setupServer(...handlers);
     server.listen();
   });
-  afterEach(() => {
-    queryClient.cancelQueries();
+  afterEach(async () => {
+    await queryClient.cancelQueries();
     queryClient.clear();
   });
   afterAll(() => {
