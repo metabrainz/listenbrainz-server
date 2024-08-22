@@ -1293,6 +1293,19 @@ export default class APIService {
     return response.json();
   };
 
+  importPlaylistFromSoundCloud = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/soundcloud`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   importSpotifyPlaylistTracks = async (
     userToken: string,
     playlistID: string
@@ -1314,6 +1327,22 @@ export default class APIService {
     playlistID: string
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/playlist/apple_music/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importSoundCloudPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/soundcloud/${playlistID}/tracks`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -1683,6 +1712,22 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
       body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/soundcloud`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
     });
     await this.checkStatus(response);
     return response.json();
