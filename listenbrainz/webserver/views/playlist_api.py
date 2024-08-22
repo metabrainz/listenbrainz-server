@@ -929,8 +929,8 @@ def import_playlist_from_music_service(service):
     }
 
     if service not in supported_services:
-        raise APIBadRequest(f"Service '{service}' is not supported."
-                            f" Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
+        raise APIBadRequest(f"Service {service} is not supported. "
+                            f"Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
 
     service_class = supported_services[service]()
     if service == "spotify":
