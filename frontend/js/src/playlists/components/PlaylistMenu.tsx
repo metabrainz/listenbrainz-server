@@ -1,19 +1,28 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable react/jsx-no-comment-textnodes */
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
-import {faItunesNote, faSoundcloud, faSpotify} from "@fortawesome/free-brands-svg-icons";
-import {faCopy, faFileExport, faPen, faTrashAlt,} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {saveAs} from "file-saver";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import {
+  faItunesNote,
+  faSoundcloud,
+  faSpotify,
+} from "@fortawesome/free-brands-svg-icons";
+import {
+  faCopy,
+  faFileExport,
+  faPen,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { saveAs } from "file-saver";
 import * as React from "react";
-import {useContext} from "react";
-import {toast} from "react-toastify";
+import { useContext } from "react";
+import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
-import {Link} from "react-router-dom";
-import {noop} from "lodash";
-import {ToastMsg} from "../../notifications/Notifications";
+import { Link } from "react-router-dom";
+import { noop } from "lodash";
+import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import {getPlaylistId, isPlaylistOwner} from "../utils";
+import { getPlaylistId, isPlaylistOwner } from "../utils";
 import CreateOrEditPlaylistModal from "./CreateOrEditPlaylistModal";
 import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
@@ -257,6 +266,7 @@ function PlaylistMenu({
   const enableSpotifyExport =
     isLoggedIn && spotifyAuth?.permission?.includes("playlist-modify-public");
   const enableAppleMusicExport = isLoggedIn && appleAuth?.music_user_token;
+  const enableSoundCloudExport = isLoggedIn && soundcloudAuth;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"
@@ -341,22 +351,19 @@ function PlaylistMenu({
           Music
         </a>
       </li>
-      {soundcloudAuth && (
-        <>
-          <li role="separator" className="divider" />
-          <li>
-            <a
-              id="exportPlaylistToSoundCloud"
-              role="button"
-              href="#"
-              onClick={() => handlePlaylistExport(exportToSoundcloud)}
-            >
-              <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
-              SoundCloud
-            </a>
-          </li>
-        </>
-      )}
+      <li className={enableSoundCloudExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToSoundCloud"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableSoundCloudExport && handlePlaylistExport(exportToSoundcloud)
+          }
+        >
+          <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
+          SoundCloud
+        </a>
+      </li>
       <li role="separator" className="divider" />
       <li>
         <a
