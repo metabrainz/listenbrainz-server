@@ -436,10 +436,10 @@ export default NiceModal.create(
                 </div>
                 <Tooltip id="escapeSpecialCharactersHepl" type="info">
                   Escape special characters such as{" "}
-                  <span className="code-block">
+                  <span className="code-block strong">
                     ( ) [ ] ! * ~ ^ &quot; ~ ? \ / || &&
                   </span>
-                  to preserve them in the search term.
+                  &nbsp;to preserve them in the search term.
                   <br />
                   Otherwise those characters may be ignored.
                   <br />
