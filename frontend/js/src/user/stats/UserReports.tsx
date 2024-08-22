@@ -28,7 +28,7 @@ export type UserReportsState = {
 
 export default function UserReports() {
   const props = useLoaderData() as UserReportsProps;
-  const { user = undefined } = props;
+  const { user = undefined } = props ?? {};
 
   // Context
   const { currentUser } = React.useContext(GlobalAppContext);

@@ -32,6 +32,7 @@ const getUserRoutes = (): RouteObject[] => {
                 return { Component: UserReports.default };
               },
               loader: RouteLoader,
+              shouldRevalidate: () => false,
             },
             {
               path: "top-artists/",

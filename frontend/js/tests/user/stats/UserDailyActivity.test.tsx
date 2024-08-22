@@ -121,7 +121,6 @@ describe("UserDailyActivity", () => {
     });
 
     const heatmap = screen.getByTestId("heatmap");
-    expect(heatmap).toBeInTheDocument();
     // eslint-disable-next-line testing-library/no-node-access
     expect(heatmap.querySelectorAll("g")).toHaveLength(227);
   });

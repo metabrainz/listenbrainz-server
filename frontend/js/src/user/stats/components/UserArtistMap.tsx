@@ -86,10 +86,6 @@ export default function UserArtistMap(props: UserArtistMapProps) {
     }
   }, [rawData, selectedMetric]);
 
-  const changeSelectedMetric = (newSelectedMetric: "artist" | "listen") => {
-    setSelectedMetric(newSelectedMetric);
-  };
-
   return (
     <Card className="user-stats-card" data-testid="user-stats-map">
       <div className="row">
@@ -116,7 +112,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
               >
                 <button
                   type="button"
-                  onClick={() => changeSelectedMetric("listen")}
+                  onClick={() => setSelectedMetric("listen")}
                 >
                   Listens
                 </button>
@@ -126,7 +122,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
               >
                 <button
                   type="button"
-                  onClick={() => changeSelectedMetric("artist")}
+                  onClick={() => setSelectedMetric("artist")}
                 >
                   Artists
                 </button>

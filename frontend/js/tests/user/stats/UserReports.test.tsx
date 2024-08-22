@@ -3,7 +3,7 @@ import * as React from "react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { HttpResponse, http } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
@@ -122,8 +122,19 @@ describe("UserReports", () => {
       // Click on the month pill
       await user.click(rangePill);
 
+      // Check if the month pill is selected
+      expect(rangePill).toHaveClass("active");
+
       // Check if the URL is updated
       expect(mockSearchParam).toEqual({ range: "month" });
+
+      // Check if new data is fetched
+      const newQueryKey = ["user-top-entity", "artist", "month", "foobar"];
+      await waitFor(() => {
+        // Wait for data to be successfully loaded
+        const state = queryClient.getQueryState(newQueryKey);
+        expect(state?.status === "success").toBeTruthy();
+      });
     });
 
     it("should navigate to week if invalid range is provided", async () => {

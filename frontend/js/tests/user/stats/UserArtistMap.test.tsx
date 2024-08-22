@@ -101,7 +101,6 @@ describe.each([
     });
 
     expect(screen.getByTestId("user-stats-map")).toBeInTheDocument();
-    expect(screen.getByTestId("Choropleth")).toBeInTheDocument();
   });
 
   it("displays error message when API call fails", async () => {
@@ -138,7 +137,6 @@ describe.each([
 
     // Check if the choropleth is rendered correctly
     const choropleth = screen.getByTestId("Choropleth");
-    expect(choropleth).toBeInTheDocument();
     // eslint-disable-next-line testing-library/no-node-access
     expect(choropleth.querySelectorAll("g")).toHaveLength(8);
   });
