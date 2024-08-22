@@ -6,7 +6,8 @@ from urllib3 import Retry
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.webserver.errors import APIForbidden
 
-SOUNDCLOUD_URL='https://api.soundcloud.com'
+SOUNDCLOUD_URL = 'https://api.soundcloud.com'
+
 
 class SoundCloud:
 
