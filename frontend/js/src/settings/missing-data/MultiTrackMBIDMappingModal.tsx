@@ -78,6 +78,10 @@ export default NiceModal.create(
       )?.[0];
       backdrop?.parentElement?.removeChild(backdrop);
       setTimeout(modal.remove, 200);
+      // Reset
+      setSelectedAlbumMBID(undefined);
+      setEscapeSpecialCharacters(false);
+      setIncludeArtistNameSearch(true);
     }, [modal]);
 
     React.useEffect(() => {
