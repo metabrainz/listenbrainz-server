@@ -187,7 +187,7 @@ export default NiceModal.create(
 
           if (successfulMappings.length) {
             const successList = (
-              <ul className="list-group list-group-item-text">
+              <ul className="list-group list-group-item-text list-unstyled">
                 {successfulMappings.map((item) => (
                   <li>{item.track.title}</li>
                 ))}
@@ -196,7 +196,7 @@ export default NiceModal.create(
             toast.success(
               <ToastMsg
                 title={`You linked ${successfulMappings.length} track${
-                  failedMappings.length > 1 ? "s" : ""
+                  successfulMappings.length > 1 ? "s" : ""
                 }!`}
                 message={successList}
               />,
