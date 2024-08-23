@@ -115,6 +115,9 @@ class _StatsDataset(SparkDataset):
 
     def __init__(self, stats_type):
         super().__init__(stats_type)
+        # doing empirical testing for various numbers of workers, no speedup
+        # was observed by raising workers to more than 2 because the bottleneck
+        # shifted to stats generation in spark
         self.workers = 2
         self.executor = ThreadPoolExecutor(max_workers=self.workers)
 
