@@ -12,9 +12,6 @@ from listenbrainz.spark.handlers import (
     handle_dump_imported,
     handle_model,
     handle_recommendations,
-    handle_user_daily_activity,
-    handle_user_entity,
-    handle_user_listening_activity,
     handle_sitewide_entity,
     notify_artist_relation_import,
     notify_mapping_import,
@@ -30,7 +27,6 @@ from listenbrainz.spark.handlers import (
     handle_yim_listens_per_day,
     handle_yim_listen_counts,
     handle_fresh_releases,
-    handle_entity_listener,
     handle_yim_listening_time,
     handle_yim_new_artists_discovered_count,
     handle_yim_artist_map,
@@ -40,7 +36,8 @@ from listenbrainz.spark.handlers import (
     handle_yim_playlists,
     handle_yim_playlists_end, handle_echo
 )
-from listenbrainz.spark.spark_dataset import CouchDbDataset
+from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
+    ListeningActivityStatsDataset, EntityListenerStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset
 from listenbrainz.db.tags import TagsDataset
@@ -77,6 +74,17 @@ class BackgroundJobProcessor:
         self.internal_message_queue = Queue()
         self.internal_message_ack_queue = Queue()
 
+        self.datasets = [
+            CouchDbDataset,
+            UserEntityStatsDataset,
+            DailyActivityStatsDataset,
+            ListeningActivityStatsDataset,
+            EntityListenerStatsDataset,
+            SimilarRecordingsDataset,
+            SimilarArtistsDataset,
+            TagsDataset,
+            *get_all_popularity_datasets()
+        ]
         self.response_handlers = {}
         self.register_handlers()
 
@@ -113,6 +121,14 @@ class BackgroundJobProcessor:
                 except Empty:
                     self.app.logger.debug("Empty internal message queue")
 
+            self.stop()
+
+
+    def stop(self):
+        """ Stop running spark reader and associated handlers """
+        for dataset in self.datasets:
+            dataset.handle_shutdown()
+
     def start(self):
         """ Start running the background job processor in its own thread """
         self.thread = Thread(target=self.run, name="SparkReaderBackgroundJobProcessor")
@@ -120,22 +136,11 @@ class BackgroundJobProcessor:
 
     def register_handlers(self):
         """ Register handlers for the Spark reader """
-        datasets = [
-            CouchDbDataset,
-            SimilarRecordingsDataset,
-            SimilarArtistsDataset,
-            TagsDataset,
-            *get_all_popularity_datasets()
-        ]
-        for dataset in datasets:
+        for dataset in self.datasets:
             self.response_handlers.update(dataset.get_handlers())
 
         self.response_handlers.update({
             "echo": handle_echo,
-            "user_entity": handle_user_entity,
-            "entity_listener": handle_entity_listener,
-            "user_listening_activity": handle_user_listening_activity,
-            "user_daily_activity": handle_user_daily_activity,
             "sitewide_entity": handle_sitewide_entity,
             "sitewide_listening_activity": handle_sitewide_listening_activity,
             "fresh_releases": handle_fresh_releases,
