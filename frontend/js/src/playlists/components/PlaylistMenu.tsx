@@ -223,11 +223,10 @@ function PlaylistMenu({
         playlistID
       );
     } else {
-      // TODO
-      // result = await APIService.exportJSPFPlaylistToSoundCloud(
-      //   auth_token,
-      //   playlist
-      // );
+      result = await APIService.exportJSPFPlaylistToSoundCloud(
+        auth_token,
+        playlist
+      );
     }
     const { external_url } = result;
     toast.success(
