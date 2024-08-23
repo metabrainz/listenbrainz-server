@@ -3,17 +3,16 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../../../utils/APIService";
+import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../../../components/Loader";
-import { isInvalidStatRange } from "../utils";
 import { COLOR_BLACK } from "../../../utils/constants";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserDailyActivityProps = {
   range: UserStatsAPIRange;
   user: ListenBrainzUser;
-  apiUrl: string;
 };
 
 export type UserDailyActivityState = {
@@ -23,71 +22,45 @@ export type UserDailyActivityState = {
   hasError: boolean;
 };
 
-export default class UserDailyActivity extends React.Component<
-  UserDailyActivityProps,
-  UserDailyActivityState
-> {
-  APIService: APIService;
+export default function UserDailyActivity(props: UserDailyActivityProps) {
+  const { APIService } = React.useContext(GlobalAppContext);
 
-  constructor(props: UserDailyActivityProps) {
-    super(props);
+  // Props
+  const { range, user } = props;
 
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
-
-    this.state = {
-      data: [],
-      loading: false,
-      errorMessage: "",
-      hasError: false,
-    };
-  }
-
-  componentDidUpdate(prevProps: UserDailyActivityProps) {
-    const { range: prevRange, user: prevUser } = prevProps;
-    const { range: currRange, user: currUser } = this.props;
-    if (prevRange !== currRange || prevUser !== currUser) {
-      if (isInvalidStatRange(currRange)) {
-        this.setState({
-          loading: false,
+  // Load the Data
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: ["userDailyActivity", user.name, range],
+    queryFn: async () => {
+      try {
+        const queryData = await APIService.getUserDailyActivity(
+          user.name,
+          range
+        );
+        return {
+          data: queryData,
+          hasError: false,
+          errorMessage: "",
+        };
+      } catch (error) {
+        return {
+          data: {} as UserDailyActivityResponse,
           hasError: true,
-          errorMessage: `Invalid range: ${currRange}`,
-        });
-      } else {
-        this.loadData();
+          errorMessage: error.message,
+        };
       }
-    }
-  }
+    },
+  });
 
-  getData = async (): Promise<UserDailyActivityResponse> => {
-    const { range, user } = this.props;
-    try {
-      const data = await this.APIService.getUserDailyActivity(user.name, range);
-      return data;
-    } catch (error) {
-      this.setState({
-        loading: false,
-        hasError: true,
-        errorMessage: error.message,
-      });
-    }
-    return {} as UserDailyActivityResponse;
-  };
+  const {
+    data: rawData = {} as UserDailyActivityResponse,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
 
-  loadData = async (): Promise<void> => {
-    this.setState({
-      hasError: false,
-      loading: true,
-    });
-    const data = await this.getData();
-    this.setState({
-      data: this.processData(data),
-      loading: false,
-    });
-  };
-
-  processData = (data: UserDailyActivityResponse): UserDailyActivityData => {
+  const processData = (
+    unProcessedData: UserDailyActivityResponse
+  ): UserDailyActivityData => {
     const weekdays = [
       "Monday",
       "Tuesday",
@@ -99,14 +72,14 @@ export default class UserDailyActivity extends React.Component<
     ];
 
     const result: UserDailyActivityData = [];
-    if (!data?.payload) {
+    if (!unProcessedData?.payload) {
       return result;
     }
 
     const tzOffset = -Math.floor(new Date().getTimezoneOffset() / 60);
 
     weekdays.forEach((day) => {
-      const dayData = data.payload.daily_activity[day];
+      const dayData = unProcessedData.payload.daily_activity[day];
       let hourData: any = [];
 
       hourData = dayData.map((elem) => {
@@ -124,7 +97,7 @@ export default class UserDailyActivity extends React.Component<
     });
 
     const average = Array(24).fill(0);
-    Object.values(data.payload.daily_activity).forEach((dayData) => {
+    Object.values(unProcessedData.payload.daily_activity).forEach((dayData) => {
       dayData.forEach((hourData) => {
         average[hourData.hour] += hourData.listen_count;
       });
@@ -147,54 +120,57 @@ export default class UserDailyActivity extends React.Component<
     return result;
   };
 
-  render() {
-    const { data, loading, hasError, errorMessage } = this.state;
+  const [data, setData] = React.useState<UserDailyActivityData>([]);
+  React.useEffect(() => {
+    if (rawData && rawData?.payload) {
+      setData(processData(rawData));
+    }
+  }, [rawData]);
 
-    return (
-      <Card className="user-stats-card">
-        <div className="row">
-          <div className="col-xs-10">
-            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Daily Activity
-            </h3>
-          </div>
-          <div className="col-xs-2 text-right">
-            <h4 style={{ marginTop: 20 }}>
-              <a href="#daily-activity">
-                <FontAwesomeIcon
-                  icon={faLink as IconProp}
-                  size="sm"
-                  color={COLOR_BLACK}
-                  style={{ marginRight: 20 }}
-                />
-              </a>
-            </h4>
-          </div>
+  return (
+    <Card className="user-stats-card" data-testid="user-daily-activity">
+      <div className="row">
+        <div className="col-xs-10">
+          <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+            Daily Activity
+          </h3>
         </div>
-        <Loader isLoading={loading}>
-          {hasError ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "inherit",
-              }}
-            >
-              <span style={{ fontSize: 24 }}>
-                <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                {errorMessage}
-              </span>
+        <div className="col-xs-2 text-right">
+          <h4 style={{ marginTop: 20 }}>
+            <a href="#daily-activity">
+              <FontAwesomeIcon
+                icon={faLink as IconProp}
+                size="sm"
+                color={COLOR_BLACK}
+                style={{ marginRight: 20 }}
+              />
+            </a>
+          </h4>
+        </div>
+      </div>
+      <Loader isLoading={loading}>
+        {hasError ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "inherit",
+            }}
+          >
+            <span style={{ fontSize: 24 }}>
+              <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+              {errorMessage}
+            </span>
+          </div>
+        ) : (
+          <div className="row">
+            <div className="col-xs-12">
+              <HeatMap data={data} />
             </div>
-          ) : (
-            <div className="row">
-              <div className="col-xs-12">
-                <HeatMap data={data} />
-              </div>
-            </div>
-          )}
-        </Loader>
-      </Card>
-    );
-  }
+          </div>
+        )}
+      </Loader>
+    </Card>
+  );
 }

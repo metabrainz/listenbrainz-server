@@ -29,9 +29,10 @@ const getUserRoutes = (): RouteObject[] => {
               index: true,
               lazy: async () => {
                 const UserReports = await import("../stats/UserReports");
-                return { Component: UserReports.UserReportsWrapper };
+                return { Component: UserReports.default };
               },
               loader: RouteLoader,
+              shouldRevalidate: () => false,
             },
             {
               path: "top-artists/",

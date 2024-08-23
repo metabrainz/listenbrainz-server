@@ -257,7 +257,7 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
   return (
     <>
       {artists.map((artist) => (
-        <>
+        <React.Fragment key={artist.artist_mbid}>
           <Link
             to={`/artist/${artist.artist_mbid}/`}
             title={artist.artist_credit_name}
@@ -265,7 +265,7 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
             {artist.artist_credit_name}
           </Link>
           {artist.join_phrase}
-        </>
+        </React.Fragment>
       ))}
     </>
   );

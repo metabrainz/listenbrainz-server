@@ -270,7 +270,11 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   );
 
   return (
-    <div ref={refContainer} className="stats-full-width-graph user-artist-map">
+    <div
+      ref={refContainer}
+      className="stats-full-width-graph user-artist-map"
+      data-testid="Choropleth"
+    >
       <ResponsiveChoropleth
         data={data}
         features={worldCountries.features}
