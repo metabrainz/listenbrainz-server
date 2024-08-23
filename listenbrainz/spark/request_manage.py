@@ -5,7 +5,7 @@ from datetime import date
 import click
 import orjson
 from kombu import Connection
-from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
+from redis.client import Redis
 
 from listenbrainz.troi.weekly_playlists import get_users_for_weekly_playlists
 from listenbrainz.utils import get_fallback_connection_name
@@ -49,41 +49,28 @@ def _prepare_query_message(query, **params):
     if query not in possible_queries:
         raise InvalidSparkRequestError(query)
 
-    message = {'query': possible_queries[query]['name']}
     required_params = set(possible_queries[query]['params'])
     given_params = set(params.keys())
     if required_params != given_params:
         raise InvalidSparkRequestError
 
-    if params:
-        message['params'] = {}
-        for key, value in params.items():
-            message['params'][key] = value
-
-    return orjson.dumps(message)
+    message = {
+        b"query": query,
+        b"params": orjson.dumps(params or {}),
+    }
+    return message
 
 
 def send_request_to_spark_cluster(query, **params):
     app = create_app()
     with app.app_context():
+        redis_conn = Redis(
+            app.config["REDIS_HOST"],
+            app.config["REDIS_PORT"],
+            client_name=get_fallback_connection_name()
+        )
         message = _prepare_query_message(query, **params)
-        connection = Connection(
-            hostname=app.config["RABBITMQ_HOST"],
-            userid=app.config["RABBITMQ_USERNAME"],
-            port=app.config["RABBITMQ_PORT"],
-            password=app.config["RABBITMQ_PASSWORD"],
-            virtual_host=app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
-        )
-        producer = connection.Producer()
-        spark_request_exchange = Exchange(app.config["SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
-        producer.publish(
-            message,
-            routing_key="",
-            exchange=spark_request_exchange,
-            delivery_mode=PERSISTENT_DELIVERY_MODE,
-            declare=[spark_request_exchange]
-        )
+        redis_conn.xadd(app.config["SPARK_REQUEST_STREAM"], message)
 
 
 @cli.command(name="request_user_stats")

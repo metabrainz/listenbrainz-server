@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import time
 
-from kombu import Connection, Message, Consumer, Exchange, Queue
-from kombu.mixins import ConsumerMixin
+from redis.client import Redis
 
 from listenbrainz.spark.background import BackgroundJobProcessor
 from listenbrainz.utils import get_fallback_connection_name
@@ -11,67 +10,56 @@ from listenbrainz.webserver import create_app
 PREFETCH_COUNT = 1000
 
 
-class SparkReader(ConsumerMixin):
+class SparkReader:
 
     def __init__(self, app):
         self.app = app
-        self.connection: Connection | None = None
-        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
-        self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
-                                        durable=True)
-        self.response_handlers = {}
+        self.redis_conn: Redis | None = None
         self.processor: BackgroundJobProcessor | None = None
+        self.last_seen_id = b"0-0"
 
-    def callback(self, message: Message):
-        """ Handle the data received from the queue and insert into the database accordingly. """
-        self.app.logger.debug("Received a message, adding to internal processing queue...")
-        self.processor.enqueue(message)
+    def run(self):
+        while True:
+            streams = self.redis_conn.xread(
+                {self.app.config["SPARK_RESULT_STREAM"]: self.last_seen_id},
+                count=PREFETCH_COUNT,
+                block=5000
+            )
+            if not streams:
+                continue
 
-    def on_iteration(self):
-        """ Executed periodically in the main consumption loop by kombu, we check for completed messages here
-         and acknowledge them. """
-        for message in self.processor.pending_acks():
-            message.ack()
+            self.app.logger.info('Received a request!')
+            messages = streams[0][1]
+            message_id, body = messages[0]
+            with self.app.app_context():
+                self.processor.process_message(body)
 
-    def get_consumers(self, _, channel):
-        return [Consumer(
-            channel,
-            prefetch_count=PREFETCH_COUNT,
-            queues=[self.spark_result_queue],
-            on_message=lambda msg: self.callback(msg)
-        )]
+            self.last_seen_id = message_id
+            self.redis_conn.xtrim(self.app.config["SPARK_RESULT_STREAM"], minid=self.last_seen_id)
+            self.redis_conn.set(self.app.config["SPARK_RESULT_STREAM_LAST_SEEN"], self.last_seen_id)
+            self.app.logger.info('Request done!')
 
-    def init_rabbitmq_connection(self):
-        self.connection = Connection(
-            hostname=self.app.config["RABBITMQ_HOST"],
-            userid=self.app.config["RABBITMQ_USERNAME"],
-            port=self.app.config["RABBITMQ_PORT"],
-            password=self.app.config["RABBITMQ_PASSWORD"],
-            virtual_host=self.app.config["RABBITMQ_VHOST"],
-            transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+    def init_redis_connection(self):
+        self.redis_conn = Redis(
+            self.app.config["REDIS_HOST"],
+            self.app.config["REDIS_PORT"],
+            client_name=get_fallback_connection_name()
         )
+        self.last_seen_id = self.redis_conn.get(self.app.config["SPARK_RESULT_STREAM_LAST_SEEN"]) or b"0-0"
 
     def start(self):
         """ initiates RabbitMQ connection and starts consuming from the queue """
         while True:
             try:
                 self.app.logger.info("Spark consumer has started!")
-                self.init_rabbitmq_connection()
-
+                self.init_redis_connection()
                 self.processor = BackgroundJobProcessor(self.app)
-                self.processor.start()
-
                 self.run()
-                self.processor.terminate()
             except KeyboardInterrupt:
                 self.app.logger.error("Keyboard interrupt!")
-                if self.processor is not None:
-                    self.processor.terminate()
                 break
             except Exception:
                 self.app.logger.error("Error in SparkReader:", exc_info=True)
-                if self.processor is not None:
-                    self.processor.terminate()
                 time.sleep(3)
 
 

@@ -21,9 +21,8 @@ import socket
 import time
 import logging
 
-from kombu import Exchange, Queue, Message, Connection, Consumer
-from kombu.entity import PERSISTENT_DELIVERY_MODE
-from kombu.mixins import ConsumerProducerMixin
+import orjson
+from redis.client import Redis
 
 import listenbrainz_spark
 import listenbrainz_spark.query_map
@@ -35,20 +34,16 @@ RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 
 logger = logging.getLogger(__name__)
 
 
-class RequestConsumer(ConsumerProducerMixin):
+class RequestConsumer:
 
     def __init__(self):
-        self.connection = None
-
-        self.spark_result_exchange = Exchange(config.SPARK_RESULT_EXCHANGE, "fanout", durable=False)
-        self.spark_result_queue = Queue(config.SPARK_REQUEST_QUEUE, exchange=self.spark_result_exchange, durable=True)
-        self.spark_request_exchange = Exchange(config.SPARK_REQUEST_EXCHANGE, "fanout", durable=False)
-        self.spark_request_queue = Queue(config.SPARK_REQUEST_QUEUE, exchange=self.spark_request_exchange, durable=True)
+        self.redis_conn: Redis | None = None
+        self.last_seen_id = None
 
     def get_result(self, request):
         try:
-            query = request['query']
-            params = request.get('params', {})
+            query = request[b"query"].decode("utf-8")
+            params = orjson.loads(request.get(b"params", "{}"))
         except Exception:
             logger.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
             return None
@@ -85,13 +80,14 @@ class RequestConsumer(ConsumerProducerMixin):
         avg_size_of_message = 0
         for message in messages:
             num_of_messages += 1
-            body = json.dumps(message)
+            body = orjson.dumps(message)
             avg_size_of_message += len(body)
-            self.producer.publish(
-                exchange=self.spark_result_exchange,
-                routing_key='',
-                body=body,
-                properties=PERSISTENT_DELIVERY_MODE,
+
+            self.redis_conn.xadd(
+                config.SPARK_RESULT_STREAM,
+                {b"result": body},
+                maxlen=config.SPARK_RESULT_STREAM_LEN,
+                approximate=True
             )
 
         if num_of_messages:
@@ -101,36 +97,40 @@ class RequestConsumer(ConsumerProducerMixin):
         else:
             logger.info("No messages calculated")
 
-    def callback(self, message: Message):
-        request = json.loads(message.body)
-        logger.info('Received a request!')
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
-        logger.info('Request done!')
-
-    def get_consumers(self, _, channel):
-        return [
-            Consumer(channel, queues=[self.spark_request_queue], no_ack=True, on_message=lambda x: self.callback(x))
-        ]
-
-    def init_rabbitmq_connection(self):
+    def init_redis_connection(self):
         connection_name = "spark-request-consumer-" + socket.gethostname()
-        self.connection = Connection(
-            hostname=config.RABBITMQ_HOST,
-            userid=config.RABBITMQ_USERNAME,
-            port=config.RABBITMQ_PORT,
-            password=config.RABBITMQ_PASSWORD,
-            virtual_host=config.RABBITMQ_VHOST,
-            transport_options={"client_properties": {"connection_name": connection_name}}
-        )
+        self.redis_conn = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, client_name=connection_name)
+        self.last_seen_id = self.redis_conn.get(config.SPARK_REQUEST_STREAM_LAST_SEEN) or b"0-0"
+
+    def run(self):
+        while True:
+            streams = self.redis_conn.xread(
+                {config.SPARK_REQUEST_STREAM: self.last_seen_id},
+                count=1,
+                block=5000
+            )
+            if not streams:
+                continue
+
+            logger.info('Received a request!')
+            messages = streams[0][1]
+            message_id, body = messages[0]
+
+            messages = self.get_result(body)
+            if messages:
+                self.push_to_result_queue(messages)
+
+            self.last_seen_id = message_id
+            self.redis_conn.xtrim(config.SPARK_REQUEST_STREAM, minid=self.last_seen_id, approximate=False)
+            self.redis_conn.set(config.SPARK_REQUEST_STREAM_LAST_SEEN, self.last_seen_id)
+            logger.info('Request done!')
 
     def start(self, app_name):
         while True:
             try:
                 logger.info('Request consumer started!')
                 listenbrainz_spark.init_spark_session(app_name)
-                self.init_rabbitmq_connection()
+                self.init_redis_connection()
                 self.run()
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)

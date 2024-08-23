@@ -30,6 +30,6 @@ class RequestConsumerTestCase(SparkNewTestCase):
         mock_get_query_handler.return_value = mock_query_handler
 
         # assert that we get the correct result
-        self.assertEqual(self.consumer.get_result({'query': 'i_know_what_this_means'}), {'result': 'ok'})
+        self.assertEqual(self.consumer.get_result({b'query': b'i_know_what_this_means'}), {'result': 'ok'})
         mock_get_query_handler.assert_called_once()
         mock_query_handler.assert_called_once()

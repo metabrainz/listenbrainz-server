@@ -1,7 +1,5 @@
 import json
 import logging
-from queue import Queue, Empty
-from threading import Thread
 
 import orjson
 import sentry_sdk
@@ -72,51 +70,8 @@ class BackgroundJobProcessor:
 
     def __init__(self, app):
         self.app = app
-        self.thread = None
-        self.done = False
-        self.internal_message_queue = Queue()
-        self.internal_message_ack_queue = Queue()
-
         self.response_handlers = {}
         self.register_handlers()
-
-    def terminate(self):
-        """ Stop the background job processor and its thread """
-        self.done = True
-        self.thread.join()
-
-    def enqueue(self, message):
-        """ Add a message for processing to internal queue """
-        self.internal_message_queue.put(message, block=False)
-
-    def pending_acks(self):
-        """ Add a processed message to internal queue for acknowledging the message to rabbitmq. """
-        messages = []
-        while True:
-            try:
-                message = self.internal_message_ack_queue.get(block=False)
-                messages.append(message)
-            except Empty:
-                break
-        return messages
-
-    def run(self):
-        """ Infinite loop that keeps processing messages enqueued in the internal message queue and puts them on
-         ack queue if successfully processed.
-        """
-        with self.app.app_context():
-            while not self.done:
-                try:
-                    message = self.internal_message_queue.get(block=True, timeout=5)
-                    self.process_message(message)
-                    self.internal_message_ack_queue.put(message)
-                except Empty:
-                    self.app.logger.debug("Empty internal message queue")
-
-    def start(self):
-        """ Start running the background job processor in its own thread """
-        self.thread = Thread(target=self.run, name="SparkReaderBackgroundJobProcessor")
-        self.thread.start()
 
     def register_handlers(self):
         """ Register handlers for the Spark reader """
@@ -170,7 +125,7 @@ class BackgroundJobProcessor:
     def process_message(self, message):
         """ Process a message received by the spark reader """
         try:
-            response = orjson.loads(message.body)
+            response = orjson.loads(message[b"result"])
         except Exception:
             self.app.logger.error("Error processing message: %s", message)
             return
