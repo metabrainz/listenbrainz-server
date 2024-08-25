@@ -581,7 +581,7 @@ export default function UserFeedPage() {
                   key: "minutes",
                   type: "dropdown",
                   tooltip:
-                    "Length of time to include in the feed. For example, 30 minutes means the feed will include events from the last 30 minutes.",
+                    "Select the time range for the feed. For example, choosing '30 minutes' will include events that occurred within the last 30 minutes. The feed updates dynamically based on the selected time range.",
                   values: [
                     {
                       id: "10minutes",

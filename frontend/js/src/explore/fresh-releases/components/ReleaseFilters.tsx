@@ -256,7 +256,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                       { id: "14", value: "14" },
                       { id: "30", value: "30" },
                     ],
-                    defaultIndex: 0, // Default to 3 days
+                    defaultIndex: 0,
+                    tooltip:
+                      "Select how many days of past releases to include in the feed, starting from today. Only releases that have already been published will be included.",
                   },
                 ],
                 baseUrl: `${getBaseUrl()}/syndication-feed/fresh-releases`,
