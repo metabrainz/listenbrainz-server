@@ -17,6 +17,7 @@ import {
   faEyeSlash,
   faComments,
   faPaperPlane,
+  faSquareRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -31,6 +32,7 @@ import {
   useInfiniteQuery,
   InfiniteData,
 } from "@tanstack/react-query";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenCard from "../common/listens/ListenCard";
 import {
@@ -45,6 +47,7 @@ import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -562,6 +565,60 @@ export default function UserFeedPage() {
       </Helmet>
       <div className="listen-header">
         <h3 className="header-with-line">Latest activity</h3>
+        <FontAwesomeIcon
+          role="button"
+          icon={faSquareRss}
+          size="2x"
+          data-toggle="modal"
+          data-target="#SyndicationFeedModal"
+          onClick={() => {
+            NiceModal.show(SyndicationFeedModal, {
+              feedTitle: `Latest activity`,
+              options: [
+                {
+                  label: "Time range",
+                  key: "minutes",
+                  type: "dropdown",
+                  tooltip:
+                    "Length of time to include in the feed. For example, 30 minutes means the feed will include events from the last 30 minutes.",
+                  values: [
+                    {
+                      id: "10minutes",
+                      value: "10",
+                      displayValue: "10 minutes",
+                    },
+                    {
+                      id: "30minutes",
+                      value: "30",
+                      displayValue: "30 minutes",
+                    },
+                    {
+                      id: "1hour",
+                      value: "60",
+                      displayValue: "1 hour",
+                    },
+                    {
+                      id: "2hours",
+                      value: "120",
+                      displayValue: "2 hours",
+                    },
+                    {
+                      id: "4hours",
+                      value: "240",
+                      displayValue: "4 hours",
+                    },
+                    {
+                      id: "8hours",
+                      value: "480",
+                      displayValue: "8 hours",
+                    },
+                  ],
+                },
+              ],
+              baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/events`,
+            });
+          }}
+        />
       </div>
       <div className="row">
         <div className="col-md-7 col-xs-12">
