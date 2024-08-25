@@ -12,7 +12,7 @@ import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
-import { preciseTimestamp } from "../../../utils/utils";
+import { getBaseUrl, preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import ListenPayloadModal from "../../../common/listens/ListenPayloadModal";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
@@ -129,7 +129,9 @@ export default function RecommendationPlaylistSettings({
               NiceModal.show(SyndicationFeedModal, {
                 feedTitle: `Recommendations`,
                 options: [],
-                baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/recommendations?recommendation_type=${sourcePatch}`,
+                baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                  currentUser?.name
+                }/recommendations?recommendation_type=${sourcePatch}`,
               });
             }}
             data-toggle="modal"

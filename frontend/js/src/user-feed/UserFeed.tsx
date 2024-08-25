@@ -42,6 +42,7 @@ import {
   getReviewEventContent,
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
+  getBaseUrl,
 } from "../utils/utils";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../common/listens/ListenControl";
@@ -615,7 +616,9 @@ export default function UserFeedPage() {
                   ],
                 },
               ],
-              baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/events`,
+              baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                currentUser?.name
+              }/events`,
             });
           }}
         />

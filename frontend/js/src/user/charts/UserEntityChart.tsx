@@ -32,7 +32,7 @@ import {
 import ListenCard from "../../common/listens/ListenCard";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
-import { getStatsArtistLink } from "../../utils/utils";
+import { getBaseUrl, getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
 import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
@@ -327,7 +327,9 @@ export default function UserEntityChart() {
                       ],
                     },
                   ],
-                  baseUrl: `https://listenbrainz.org/syndication-feed/user/${user?.name}/stats/top-${terminology}s`,
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    user?.name
+                  }/stats/top-${terminology}s`,
                 });
               }}
             />

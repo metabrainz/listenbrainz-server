@@ -22,6 +22,7 @@ import {
 } from "../FreshReleases";
 import SyndicationFeedModal from "../../../components/SyndicationFeedModal";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { getBaseUrl } from "../../../utils/utils";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -258,13 +259,15 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                     defaultIndex: 0, // Default to 3 days
                   },
                 ],
-                baseUrl: `https://listenbrainz.org/syndication-feed/fresh-releases`,
+                baseUrl: `${getBaseUrl()}/syndication-feed/fresh-releases`,
               });
             } else if (pageType === PAGE_TYPE_USER) {
               NiceModal.show(SyndicationFeedModal, {
                 feedTitle: `User-specific Fresh Releases`,
                 options: [],
-                baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser.name}/fresh-releases`,
+                baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                  currentUser.name
+                }/fresh-releases`,
               });
             }
           }}

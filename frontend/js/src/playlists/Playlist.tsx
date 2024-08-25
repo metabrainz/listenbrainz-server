@@ -38,6 +38,7 @@ import {
 } from "./utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { getBaseUrl } from "../utils/utils";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
@@ -374,7 +375,7 @@ export default function PlaylistPage() {
                       NiceModal.show(SyndicationFeedModal, {
                         feedTitle: `Playlist`,
                         options: [],
-                        baseUrl: `https://listenbrainz.org/syndication-feed/playlist/${getPlaylistId(
+                        baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
                           playlist
                         )}`,
                       });

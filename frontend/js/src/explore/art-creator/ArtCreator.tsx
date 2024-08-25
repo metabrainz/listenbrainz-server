@@ -17,6 +17,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
+import { getBaseUrl } from "../../utils/utils";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -344,8 +345,12 @@ export default function ArtCreator() {
       options: [],
       baseUrl:
         style.type === "grid"
-          ? `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
-          : `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
+          ? `${getBaseUrl()}/syndication-feed/user/${
+              currentUser?.name
+            }/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+          : `${getBaseUrl()}/syndication-feed/user/${
+              currentUser?.name
+            }/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
     });
   }, [currentUser, style, gridSize, gridLayout, timeRange]);
 

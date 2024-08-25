@@ -36,6 +36,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "./components/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
+  getBaseUrl,
   getListenablePin,
   getListenCardKey,
   getObjectForURLSearchParams,
@@ -709,7 +710,9 @@ export default function Listen() {
                             ],
                           },
                         ],
-                        baseUrl: `https://listenbrainz.org/syndication-feed/user/${currentUser?.name}/listens`,
+                        baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                          currentUser?.name
+                        }/listens`,
                       });
                     }}
                   >
