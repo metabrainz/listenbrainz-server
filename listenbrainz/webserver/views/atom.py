@@ -218,12 +218,14 @@ def get_listens(user_name):
 
         content = render_template(
             "atom/listens.html",
-            user_page_url=_external_url_for("user.index", path="", user_name=user_name),
+            user_page_url=_external_url_for(
+                "user.index", path="", user_name=user_name),
             user_name=user_name,
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
             track_name=track_name,
             recording_mbid=recording_mbid,
-            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for(
+                "artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_name,
         )
@@ -264,7 +266,8 @@ def get_fresh_releases():
             ts_conn, date.today(), days, "release_date", True, False
         )
     except Exception as e:
-        current_app.logger.error("Server failed to get latest release: {}".format(e))
+        current_app.logger.error(
+            "Server failed to get latest release: {}".format(e))
         return InternalServerError("Server failed to get latest release")
 
     fg = _init_feed(
@@ -296,7 +299,8 @@ def get_fresh_releases():
             release_mb_page_base_url="https://musicbrainz.org/release/",
             release_name=release_name,
             release_mbid=release_mbid,
-            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for(
+                "artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
             expore_fresh_releases_url=_external_url_for(
@@ -373,7 +377,8 @@ def get_user_fresh_releases(user_name):
             release_mb_page_base_url="https://musicbrainz.org/release/",
             release_name=release_name,
             release_mbid=release_mbid,
-            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for(
+                "artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
             explore_fresh_releases_url=_external_url_for(
@@ -663,10 +668,13 @@ def get_playlist_recordings(playlist_mbid):
     fetch_playlist_recording_metadata(playlist)
 
     fg = _init_feed(
-        _external_url_for(".get_playlist_recordings", playlist_mbid=playlist_mbid),
+        _external_url_for(".get_playlist_recordings",
+                          playlist_mbid=playlist_mbid),
         playlist.name,
-        _external_url_for(".get_playlist_recordings", playlist_mbid=playlist_mbid),
-        _external_url_for("playlist.load_playlist", playlist_mbid=playlist_mbid),
+        _external_url_for(".get_playlist_recordings",
+                          playlist_mbid=playlist_mbid),
+        _external_url_for("playlist.load_playlist",
+                          playlist_mbid=playlist_mbid),
     )
 
     for recording in playlist.recordings:
@@ -687,7 +695,8 @@ def get_playlist_recordings(playlist_mbid):
             artist_credit=recording.artist_credit,
             artist_mbid=recording.artist_mbids[0] if recording.artist_mbids else None,
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
-            artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+            artist_page_base_url=_external_url_for(
+                "artist.artist_page", path=""),
         )
         fe.content(
             content=content,
@@ -756,7 +765,8 @@ def get_recommendation(user_name):
         f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
         f"{'Weekly Jams' if recommendation_type == 'weekly-jams' else 'Weekly Exploration'} for {user_name}",
         f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
-        _external_url_for("user.recommendation_playlists", user_name=user_name),
+        _external_url_for("user.recommendation_playlists",
+                          user_name=user_name),
     )
 
     fe = fg.add_entry()
@@ -1115,7 +1125,8 @@ def get_user_events(user_name):
     to_ts = datetime.now()
     from_ts = to_ts - timedelta(minutes=minutes)
 
-    users_following = db_user_relationship.get_following_for_user(db_conn, user["id"])
+    users_following = db_user_relationship.get_following_for_user(
+        db_conn, user["id"])
 
     user_events = get_feed_events_for_user(
         user=user,
