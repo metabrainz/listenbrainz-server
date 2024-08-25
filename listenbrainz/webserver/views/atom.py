@@ -1,6 +1,8 @@
 from datetime import datetime, date, timedelta, timezone
 from feedgen.feed import FeedGenerator
 from flask import Blueprint, Response, current_app, request, render_template, url_for
+import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz.db.model.user_timeline_event import UserTimelineEventType
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from brainzutils.ratelimit import ratelimit
 import listenbrainz.db.user as db_user
@@ -21,6 +23,9 @@ from data.model.user_entity import EntityRecord
 from listenbrainz.webserver.views.api_tools import (
     DEFAULT_ITEMS_PER_GET,
     MAX_ITEMS_PER_GET,
+)
+from listenbrainz.webserver.views.user_timeline_event_api import (
+    get_feed_events_for_user,
 )
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 import listenbrainz.db.playlist as db_playlist
@@ -50,6 +55,7 @@ STATS_RANGE_DESCRIPTIONS = {
     StatisticsRange.year.value: "Yearly",
     StatisticsRange.all_time.value: "All Time",
 }
+DEFAULT_MINUTES_OF_EVENTS = 60
 
 
 atom_bp = Blueprint("atom", __name__)
@@ -975,6 +981,202 @@ def get_cover_art_custom_stats(user_name):
     fe.content(content=content, type="html")
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
+
+    atomfeed = fg.atom_str(pretty=True)
+    return Response(atomfeed, mimetype="application/atom+xml")
+
+
+# def _prepare_data_for_event_feed(events):
+#     feed_data = []
+
+#     for event in events:
+#         base_data = {
+#             "user_name": event.user_name,
+#             "event_type": event.event_type.value,
+#             "created": event.created,
+#         }
+
+#         if event.event_type == UserTimelineEventType.FOLLOW:
+#             feed_data.append({
+#                 **base_data,
+#                 "user_name_0": event.metadata.user_name_0,
+#                 "user_name_1": event.metadata.user_name_1,
+#                 "relationship_type": event.metadata.relationship_type,
+#             })
+
+#         elif event.event_type == UserTimelineEventType.LISTEN:
+#             feed_data.append({
+#                 **base_data,
+#                 "track_name": event.metadata.track_metadata.track_name,
+#                 "artist_name": event.metadata.track_metadata.artist_name,
+#                 "recording_mbid": event.metadata.track_metadata.additional_info.recording_mbid,
+#                 "artist_mbid": event.metadata.track_metadata.additional_info.artist_mbids[0] if event.metadata.track_metadata.additional_info.artist_mbids else None,
+#             })
+
+#         elif event.event_type == UserTimelineEventType.RECORDING_PIN:
+#             feed_data.append({
+#                 **base_data,
+#                 "track_name": event.metadata.track_metadata.track_name,
+#                 "artist_name": event.metadata.track_metadata.artist_name,
+#                 "blurb_content": event.metadata.blurb_content,
+#                 "recording_mbid": event.metadata.track_metadata.additional_info.recording_mbid,
+#                 "artist_mbid": event.metadata.track_metadata.additional_info.artist_mbids[0] if event.metadata.track_metadata.additional_info.artist_mbids else None,
+#             })
+
+#         elif event.event_type == UserTimelineEventType.CRITIQUEBRAINZ_REVIEW:
+#             feed_data.append({
+#                 **base_data,
+#                 "entity_name": event.metadata.entity_name,
+#                 "review_mbid": event.metadata.review_id,
+#                 "entity_type": event.metadata.entity_type,
+#                 "rating": event.metadata.rating,
+#                 "text": event.metadata.text,
+#             })
+
+#         elif event.event_type == UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION:
+#             feed_data.append({
+#                 **base_data,
+#                 "track_name": event.metadata.track_metadata.track_name,
+#                 "artist_name": event.metadata.track_metadata.artist_name,
+#                 "blurb_content": event.metadata.blurb_content,
+#                 "users": event.metadata.users,
+#                 "recording_mbid": event.metadata.track_metadata.additional_info.recording_mbid,
+#                 "artist_mbid": event.metadata.track_metadata.additional_info.artist_mbids[0] if event.metadata.track_metadata.additional_info.artist_mbids else None,
+#             })
+
+#         elif event.event_type == UserTimelineEventType.NOTIFICATION:
+#             feed_data.append({
+#                 **base_data,
+#                 "message": event.metadata.message,
+#             })
+
+#     return feed_data
+
+
+def _generate_event_title(event):
+    if event.event_type == UserTimelineEventType.RECORDING_RECOMMENDATION:
+        track_name = event.metadata.track_metadata.track_name
+        artist_name = event.metadata.track_metadata.artist_name
+        return f"{event.user_name} recommended {track_name} by {artist_name}"
+
+    elif event.event_type == UserTimelineEventType.FOLLOW:
+        followed_user = event.metadata.user_name_1
+        return f"{event.user_name} started following {followed_user}"
+
+    elif event.event_type == UserTimelineEventType.LISTEN:
+        track_name = event.metadata.track_metadata.track_name
+        artist_name = event.metadata.track_metadata.artist_name
+        return f"{event.user_name} listened to {track_name} by {artist_name}"
+
+    elif event.event_type == UserTimelineEventType.NOTIFICATION:
+        return f"Notification!"
+
+    elif event.event_type == UserTimelineEventType.RECORDING_PIN:
+        track_name = event.metadata.track_metadata.track_name
+        artist_name = event.metadata.track_metadata.artist_name
+        return f"{event.user_name} pinned {track_name} by {artist_name}"
+
+    elif event.event_type == UserTimelineEventType.CRITIQUEBRAINZ_REVIEW:
+        entity_name = event.metadata.entity_name
+        return f"{event.user_name} reviewed {entity_name} on CritiqueBrainz"
+
+    elif event.event_type == UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION:
+        track_name = event.metadata.track_metadata.track_name
+        artist_name = event.metadata.track_metadata.artist_name
+        return f"{event.user_name} recommended {track_name} by {artist_name} to friends"
+
+    else:
+        return f"Event for {event.user_name}"
+
+
+@atom_bp.route("/user/<user_name>/events", methods=["GET"])
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def get_user_events(user_name):
+    """
+    Get events feed for a user.
+
+    :param minutes: The time interval in minutes from current time to fetch events for.
+                    Default is 60 minutes.
+    :statuscode 200: The feed was successfully generated.
+    :statuscode 404: User not found.
+    :resheader Content-Type: *application/atom+xml*
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        return NotFound("User not found")
+
+    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_EVENTS, type=int)
+
+    if minutes < 1 or minutes > 10080:
+        return BadRequest("Value of minutes is out of range")
+
+    to_ts = datetime.now()
+    from_ts = to_ts - timedelta(minutes=minutes)
+
+    users_following = db_user_relationship.get_following_for_user(db_conn, user["id"])
+
+    user_events = get_feed_events_for_user(
+        user=user,
+        followed_users=users_following,
+        min_ts=int(from_ts.timestamp()),
+        max_ts=int(to_ts.timestamp()),
+        count=MAX_ITEMS_PER_GET,
+    )
+
+    fg = _init_feed(
+        _external_url_for(".get_user_events", user_name=user_name),
+        f"Events for {user_name} - ListenBrainz",
+        _external_url_for("user.index", path="", user_name=user_name),
+        _external_url_for(".get_user_events", user_name=user_name),
+    )
+
+    user_page_url = _external_url_for("user.index", user_name=user_name)
+    user_page_base_url = _external_url_for("user.index", user_name="")[:-1]
+    artist_page_base_url = _external_url_for("artist.artist_page", path="")
+    recording_mb_page_base_url = "https://musicbrainz.org/recording/"
+
+    for event in user_events:
+        current_app.logger.debug(f"Event: {event}")
+        fe = fg.add_entry()
+        fe.id(
+            f"{_external_url_for('.get_user_events', user_name=user_name)}/{event.created}/{event.id}"
+        )
+
+        title = _generate_event_title(event)
+        fe.title(title)
+
+        if event.event_type == UserTimelineEventType.RECORDING_RECOMMENDATION:
+            template_name = "atom/recording_recommendation_event.html"
+        elif event.event_type == UserTimelineEventType.FOLLOW:
+            template_name = "atom/follow_event.html"
+        elif event.event_type == UserTimelineEventType.LISTEN:
+            template_name = "atom/listen_event.html"
+        elif event.event_type == UserTimelineEventType.NOTIFICATION:
+            template_name = "atom/notification_event.html"
+        elif event.event_type == UserTimelineEventType.RECORDING_PIN:
+            template_name = "atom/recording_pin_event.html"
+        elif event.event_type == UserTimelineEventType.CRITIQUEBRAINZ_REVIEW:
+            template_name = "atom/cb_review_event.html"
+        elif (
+            event.event_type == UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION
+        ):
+            template_name = "atom/personal_recommendation_event.html"
+        else:
+            assert False, f"Invalid event type: {event.event_type}"
+
+        content = render_template(
+            template_name,
+            event=event,
+            user_page_url=user_page_url,
+            user_page_base_url=user_page_base_url,
+            artist_page_base_url=artist_page_base_url,
+            recording_mb_page_base_url=recording_mb_page_base_url,
+        )
+        fe.content(content=content, type="html")
+        fe.published(datetime.fromtimestamp(event.created, tz=timezone.utc))
+        fe.updated(datetime.fromtimestamp(event.created, tz=timezone.utc))
 
     atomfeed = fg.atom_str(pretty=True)
     return Response(atomfeed, mimetype="application/atom+xml")
