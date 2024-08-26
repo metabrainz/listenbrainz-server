@@ -58,7 +58,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
 
   const buildLink = () => {
     const queryParams = new URLSearchParams(selectedOptions).toString();
-    return `${baseUrl}?${queryParams}`;
+    return queryParams ? `${baseUrl}?${queryParams}` : baseUrl;
   };
 
   const handleCopyClick = () => {
