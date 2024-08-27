@@ -11,7 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import { noop } from "lodash";
+import { noop, throttle } from "lodash";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import ProgressBar from "./ProgressBar";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -107,6 +107,43 @@ function CoverArtScrollWrapper({
   const nextCoverArtRef = React.useRef(null);
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
+  // Debounce the playNextTrack and playPreviousTrack functions
+  const [isChangingTrack, setIsChangingTrack] = React.useState(false);
+
+  const throttledPlayNextTrack = React.useMemo(
+    () =>
+      throttle(() => {
+        if (!isChangingTrack) {
+          setIsChangingTrack(true);
+          playNextTrack();
+        }
+      }, 500),
+    [playNextTrack, isChangingTrack]
+  );
+
+  const throttledPlayPreviousTrack = React.useMemo(
+    () =>
+      throttle(() => {
+        if (!isChangingTrack) {
+          setIsChangingTrack(true);
+          playPreviousTrack();
+        }
+      }, 500),
+    [playPreviousTrack, isChangingTrack]
+  );
+
+  React.useEffect(() => {
+    setIsChangingTrack(false);
+    // Scroll the current cover art into view
+    if (currentCoverArtRef.current) {
+      currentCoverArtRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [currentTrackCoverURL]);
+
   React.useEffect(() => {
     const options = {
       root: coverArtScrollRef.current,
@@ -117,9 +154,9 @@ function CoverArtScrollWrapper({
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           if (entry.target === previousCoverArtRef.current) {
-            playPreviousTrack();
+            throttledPlayPreviousTrack();
           } else if (entry.target === nextCoverArtRef.current) {
-            playNextTrack();
+            throttledPlayNextTrack();
           }
         }
       });
@@ -139,13 +176,15 @@ function CoverArtScrollWrapper({
       if (previousElem) observer.unobserve(previousElem);
       if (currentElem) observer.unobserve(currentElem);
       if (nextElem) observer.unobserve(nextElem);
+      throttledPlayNextTrack.cancel();
+      throttledPlayPreviousTrack.cancel();
     };
   }, [
     previousTrackCoverURL,
     currentTrackCoverURL,
     nextTrackCoverURL,
-    playPreviousTrack,
-    playNextTrack,
+    throttledPlayPreviousTrack,
+    throttledPlayNextTrack,
   ]);
 
   return (
