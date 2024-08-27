@@ -963,6 +963,7 @@ def import_playlist_from_music_service(service):
         elif service == "soundcloud":
             soundcloud = SoundCloud(token["access_token"])
             playlists = soundcloud.get("https://api.soundcloud.com/me/playlists/")
+            print(token["access_token"])
             return jsonify(playlists)
 
     except requests.exceptions.HTTPError as exc:
