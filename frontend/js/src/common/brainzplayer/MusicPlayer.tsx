@@ -107,7 +107,7 @@ function CoverArtScrollWrapper({
   const nextCoverArtRef = React.useRef(null);
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
-  // Debounce the playNextTrack and playPreviousTrack functions
+  // Throttle the playNextTrack and playPreviousTrack functions
   const [isChangingTrack, setIsChangingTrack] = React.useState(false);
 
   const throttledPlayNextTrack = React.useMemo(
