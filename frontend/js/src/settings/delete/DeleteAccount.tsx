@@ -66,19 +66,19 @@ export default function DeleteAccount() {
       </Helmet>
       <h3 className="page-title">Delete account: {name}</h3>
       <p>
-        <b>
-          This will permanently delete all ListenBrainz data for user {name}.
-        </b>
-      </p>
-
-      <p>
-        <b>The data will not be recoverable.</b> Please consider exporting your
+        <b>Deleted data is not recoverable.</b> Consider exporting your
         ListenBrainz data before deleting your account.
       </p>
 
       <ExportButtons />
       <br />
       <p className="text-brand text-danger">This cannot be undone!</p>
+      <p>
+        <b>
+          This will permanently delete all ListenBrainz data for user {name}.
+        </b>
+      </p>
+
       <button
         id="btn-delete-user"
         className="btn btn-danger btn-lg"

@@ -1,4 +1,4 @@
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import React, {
@@ -33,6 +33,7 @@ export default function SearchAlbumOrMBID({
   const dropdownRef = DropdownRef();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(defaultValue ?? "");
+  const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
   >([]);
@@ -58,10 +59,11 @@ export default function SearchAlbumOrMBID({
         async (searchString: string) => {
           try {
             const { releases } = await searchMBRelease(searchString);
-
             setSearchResults(releases);
           } catch (error) {
             handleError(error);
+          } finally {
+            setLoading(false);
           }
         },
         THROTTLE_MILLISECONDS,
@@ -104,6 +106,8 @@ export default function SearchAlbumOrMBID({
               "Could not find album"
             );
             setInputValue("");
+          } finally {
+            setLoading(false);
           }
         },
         THROTTLE_MILLISECONDS,
@@ -123,6 +127,7 @@ export default function SearchAlbumOrMBID({
     setInputValue("");
     setSearchResults([]);
     onSelectAlbum();
+    setLoading(false);
     searchInputRef?.current?.focus();
   };
 
@@ -130,6 +135,7 @@ export default function SearchAlbumOrMBID({
     if (!inputValue) {
       return;
     }
+    setLoading(true);
     const isValidUUID =
       RELEASE_MBID_REGEXP.test(inputValue) ||
       RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
@@ -140,6 +146,13 @@ export default function SearchAlbumOrMBID({
       throttledSearchRelease(inputValue);
     }
   }, [inputValue, throttledHandleValidMBID, throttledSearchRelease]);
+
+  // Autofocus once on load
+  useEffect(() => {
+    setTimeout(() => {
+      searchInputRef?.current?.focus();
+    }, 500);
+  }, []);
 
   return (
     <div>
@@ -160,7 +173,11 @@ export default function SearchAlbumOrMBID({
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
-            <FontAwesomeIcon icon={faTimesCircle} />
+            {loading ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={faTimesCircle} />
+            )}
           </button>
         </span>
         {Boolean(searchResults?.length) && (

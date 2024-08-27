@@ -15,7 +15,7 @@ class SoundCloudMetadataIndex(BulkInsertTable):
     """
 
     def get_post_process_queries(self):
-        pass
+        return []
 
     def process_row_complete(self):
         pass
@@ -28,7 +28,7 @@ class SoundCloudMetadataIndex(BulkInsertTable):
         return [("id",                               "SERIAL"),
                 ("artist_id",                        "TEXT NOT NULL"),
                 ("track_id",                         "TEXT NOT NULL"),
-                ("combined_lookup",                  "TEXT NOT NULL"),
+                ("combined_lookup_without_album",    "TEXT NOT NULL"),
                 ("score",                            "INTEGER NOT NULL")]
 
     def get_insert_queries(self):

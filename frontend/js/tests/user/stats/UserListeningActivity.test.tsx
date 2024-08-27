@@ -1,374 +1,242 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
-import { act } from "react-dom/test-utils";
 import { ResponsiveBar } from "@nivo/bar";
 import { Context as ResponsiveContext } from "react-responsive";
+import { screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SetupServerApi, setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
 import UserListeningActivity, {
   UserListeningActivityProps,
-  UserListeningActivityState,
 } from "../../../src/user/stats/components/UserListeningActivity";
-import APIError from "../../../src/utils/APIError";
 import * as userListeningActivityResponseWeek from "../../__mocks__/userListeningActivityWeek.json";
 import * as userListeningActivityResponseMonth from "../../__mocks__/userListeningActivityMonth.json";
 import * as userListeningActivityResponseYear from "../../__mocks__/userListeningActivityYear.json";
 import * as userListeningActivityResponseAllTime from "../../__mocks__/userListeningActivityAllTime.json";
-import * as userListeningActivityProcessedDataWeek from "../../__mocks__/userListeningActivityProcessDataWeek.json";
-import * as userListeningActivityProcessedDataMonth from "../../__mocks__/userListeningActivityProcessDataMonth.json";
-import * as userListeningActivityProcessedDataYear from "../../__mocks__/userListeningActivityProcessDataYear.json";
-import * as userListeningActivityProcessedDataAllTime from "../../__mocks__/userListeningActivityProcessDataAllTime.json";
-import { waitForComponentToPaint } from "../../test-utils";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const userProps: UserListeningActivityProps = {
   user: {
     name: "foobar",
   },
   range: "week",
-  apiUrl: "barfoo",
 };
 
 const sitewideProps: UserListeningActivityProps = {
   range: "week",
-  apiUrl: "barfoo",
+};
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
+
+const setQueryData = (
+  userName: string | undefined,
+  range: string,
+  data: any
+) => {
+  const queryKey = ["userListeningActivity", userName, range];
+  queryClient.ensureQueryData({
+    queryKey,
+    queryFn: () => {
+      return data;
+    },
+  });
+};
+
+const getResponse = (range: string) => {
+  let response;
+  switch (range) {
+    case "week":
+      response = userListeningActivityResponseWeek;
+      break;
+    case "month":
+      response = userListeningActivityResponseMonth;
+      break;
+    case "year":
+      response = userListeningActivityResponseYear;
+      break;
+    case "all_time":
+      response = userListeningActivityResponseAllTime;
+      break;
+    default:
+      response = {};
+  }
+  return HttpResponse.json(response);
 };
 
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
-  describe("UserListeningActivity", () => {
-    it("renders correctly for week", async () => {
-      const wrapper = mount<UserListeningActivity>(
-        <ResponsiveContext.Provider value={{ width: 700 }}>
-          <UserListeningActivity {...props} />
-        </ResponsiveContext.Provider>
-      );
-      await act(async () => {
-        wrapper.setState({
-          data: userListeningActivityProcessedDataWeek,
-          thisRangePeriod: { start: 1591574400, end: 1592092800 },
-          lastRangePeriod: { start: 1590969600, end: 1591488000 },
-          totalListens: 70,
-          avgListens: 10,
-        });
-      });
-
-      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
-      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
-      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per day");
+  let server: SetupServerApi;
+  beforeAll(async () => {
+    const handlers = [
+      http.get(
+        "/1/stats/user/foobar/listening-activity",
+        async ({ request }) => {
+          const url = new URL(request.url);
+          const range = url.searchParams.get("range");
+          return getResponse(range as string);
+        }
+      ),
+      http.get("/1/stats/sitewide/listening-activity", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+        return getResponse(range as string);
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+  });
+  afterEach(() => {
+    queryClient.cancelQueries();
+    queryClient.clear();
+  });
+  afterAll(() => {
+    server.close();
+  });
+  it("renders correctly for week", async () => {
+    setQueryData(props.user?.name, "week", {
+      data: userListeningActivityResponseWeek,
+      hasError: false,
+      errorMessage: "",
     });
 
-    it("renders correctly for month", async () => {
-      const wrapper = mount<UserListeningActivity>(
-        <ResponsiveContext.Provider value={{ width: 800 }}>
-          <UserListeningActivity {...{ ...props, range: "month" }} />
-        </ResponsiveContext.Provider>
-      );
-      await act(async () => {
-        wrapper.setState({
-          data: userListeningActivityProcessedDataMonth,
-          thisRangePeriod: { start: 1590969600 },
-          lastRangePeriod: { start: 1588291200 },
-          totalListens: 70,
-          avgListens: 10,
-        });
-      });
+    renderWithProviders(
+      <ResponsiveContext.Provider value={{ width: 700 }}>
+        <UserListeningActivity {...props} />
+      </ResponsiveContext.Provider>,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
-      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
-      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per day");
+    await waitFor(() => {
+      expect(screen.getByTestId("listening-activity-bar")).toBeInTheDocument();
     });
 
-    it("renders correctly for year", async () => {
-      const wrapper = mount<UserListeningActivity>(
-        <ResponsiveContext.Provider value={{ width: 800 }}>
-          <UserListeningActivity {...{ ...props, range: "year" }} />
-        </ResponsiveContext.Provider>
-      );
-      await act(async () => {
-        wrapper.setState({
-          data: userListeningActivityProcessedDataYear,
-          thisRangePeriod: { start: 1577836800 },
-          lastRangePeriod: { start: 1546300800 },
-          totalListens: 70,
-          avgListens: 10,
-        });
-      });
+    expect(screen.getByTestId("listening-activity")).toBeInTheDocument();
 
-      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
-      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
-      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per month");
-    });
-
-    it("renders correctly for all_time", async () => {
-      const wrapper = mount<UserListeningActivity>(
-        <ResponsiveContext.Provider value={{ width: 800 }}>
-          <UserListeningActivity {...{ ...props, range: "all_time" }} />
-        </ResponsiveContext.Provider>
-      );
-
-      await act(async () => {
-        wrapper.setState({
-          data: userListeningActivityProcessedDataAllTime,
-          thisRangePeriod: {},
-          lastRangePeriod: {},
-          totalListens: 70,
-          avgListens: 10,
-        });
-      });
-
-      expect(wrapper.find(ResponsiveBar)).toHaveLength(1);
-      expect(wrapper.getDOMNode()).toHaveTextContent("70 Listens");
-      expect(wrapper.getDOMNode()).toHaveTextContent("10 Listens per year");
-    });
-
-    it("renders corectly when range is invalid", async () => {
-      const wrapper = mount<UserListeningActivity>(
-        <UserListeningActivity
-          {...props}
-          range={"invalid_range" as UserStatsAPIRange}
-        />
-      );
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state().hasError).toBeTruthy();
-      expect(wrapper.find(ResponsiveBar)).toHaveLength(0);
-      expect(wrapper.getDOMNode()).toHaveTextContent(
-        "Invalid range: invalid_range"
-      );
-    });
+    // Expect the total listens and average listens per day to be displayed
+    expect(screen.getByText("141")).toBeInTheDocument();
+    expect(screen.getByText("21")).toBeInTheDocument();
   });
 
-  describe("componentDidUpdate", () => {
-    it("it sets correct state if range is incorrect", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      await act(async () => {
-        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state()).toMatchObject({
-        loading: false,
-        hasError: true,
-        errorMessage: "Invalid range: invalid_range",
-      });
+  it("renders correctly for month", async () => {
+    setQueryData(props.user?.name, "month", {
+      data: userListeningActivityResponseMonth,
+      hasError: false,
+      errorMessage: "",
     });
 
-    it("calls loadData once if range is valid", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      instance.loadData = jest.fn();
-      await act(async () => {
-        wrapper.setProps({ range: "month" });
-      });
-
-      expect(instance.loadData).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("getData", () => {
-    it("calls getUserListeningActivity with correct params", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
-      spy.mockImplementation(() =>
-        Promise.resolve(
-          userListeningActivityResponseWeek as UserListeningActivityResponse
-        )
-      );
-      await act(async () => {
-        await instance.getData();
-      });
-
-      expect(spy).toHaveBeenCalledWith(props?.user?.name, "week");
-    });
-
-    it("sets state correctly if data is not calculated", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
-      const noContentError = new APIError("NO CONTENT");
-      noContentError.response = {
-        status: 204,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(noContentError));
-      await act(async () => {
-        await instance.getData();
-      });
-
-      expect(wrapper.state()).toMatchObject({
-        loading: false,
-        hasError: true,
-        errorMessage: "NO CONTENT",
-      });
-    });
-  });
-
-  describe("getNumberOfDaysInMonth", () => {
-    it("calculates correctly for non leap February", () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      expect(instance.getNumberOfDaysInMonth(new Date(2019, 1, 1))).toEqual(28);
-    });
-
-    it("calculates correctly for leap February", () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      expect(instance.getNumberOfDaysInMonth(new Date(2020, 1, 1))).toEqual(29);
-    });
-
-    it("calculates correctly for December", () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      expect(instance.getNumberOfDaysInMonth(new Date(2020, 11, 1))).toEqual(
-        31
-      );
-    });
-
-    it("calculates correctly for November", () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      expect(instance.getNumberOfDaysInMonth(new Date(2020, 10, 1))).toEqual(
-        30
-      );
-    });
-  });
-
-  describe("processData", () => {
-    it("processes data correctly for week", () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const result = instance.processData(
-        userListeningActivityResponseWeek as UserListeningActivityResponse
-      );
-
-      expect(result).toEqual(userListeningActivityProcessedDataWeek);
-    });
-
-    it("processes data correctly for month", () => {
-      const wrapper = shallow<UserListeningActivity>(
+    renderWithProviders(
+      <ResponsiveContext.Provider value={{ width: 700 }}>
         <UserListeningActivity {...{ ...props, range: "month" }} />
-      );
-      const instance = wrapper.instance();
+      </ResponsiveContext.Provider>,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      const result = instance.processData(
-        userListeningActivityResponseMonth as UserListeningActivityResponse
-      );
-
-      expect(result).toEqual(userListeningActivityProcessedDataMonth);
+    await waitFor(() => {
+      expect(screen.getByTestId("listening-activity-bar")).toBeInTheDocument();
     });
 
-    it("processes data correctly for year", () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...{ ...props, range: "year" }} />
-      );
-      const instance = wrapper.instance();
+    expect(screen.getByTestId("listening-activity")).toBeInTheDocument();
 
-      const result = instance.processData(
-        userListeningActivityResponseYear as UserListeningActivityResponse
-      );
-
-      expect(result).toEqual(userListeningActivityProcessedDataYear);
-    });
-
-    it("processes data correctly for all_time", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...{ ...props, range: "all_time" }} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(Date.prototype, "getFullYear");
-      spy.mockImplementationOnce(() =>
-        new Date(
-          userListeningActivityResponseAllTime.payload.to_ts * 1000
-        ).getFullYear()
-      );
-      let result;
-      await act(async () => {
-        result = instance.processData(
-          userListeningActivityResponseAllTime as UserListeningActivityResponse
-        );
-      });
-
-      expect(result).toEqual(userListeningActivityProcessedDataAllTime);
-    });
-    it("returns an empty array if no payload", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...{ ...props, range: "year" }} />
-      );
-      const instance = wrapper.instance();
-      let result;
-      await act(async () => {
-        // When stats haven't been calculated, processData is called with an empty object
-        result = instance.processData({} as UserListeningActivityResponse);
-      });
-
-      expect(result).toEqual([]);
-    });
+    // Expect the total listens and average listens per day to be displayed
+    expect(screen.getByText("359")).toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
   });
 
-  describe("loadData", () => {
-    it("calls getData once", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      instance.getData = jest.fn();
-      instance.processData = jest.fn();
-      await act(async () => {
-        await instance.loadData();
-      });
-
-      expect(instance.getData).toHaveBeenCalledTimes(1);
+  it("renders correctly for year", async () => {
+    setQueryData(props.user?.name, "year", {
+      data: userListeningActivityResponseYear,
+      hasError: false,
+      errorMessage: "",
     });
 
-    it("set state correctly", async () => {
-      const wrapper = shallow<UserListeningActivity>(
-        <UserListeningActivity {...props} />
-      );
-      const instance = wrapper.instance();
+    renderWithProviders(
+      <ResponsiveContext.Provider value={{ width: 800 }}>
+        <UserListeningActivity {...{ ...props, range: "year" }} />
+      </ResponsiveContext.Provider>,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      instance.getData = jest
-        .fn()
-        .mockImplementationOnce(() =>
-          Promise.resolve(userListeningActivityResponseWeek)
-        );
-
-      await act(async () => {
-        await instance.loadData();
-      });
-
-      expect(wrapper.state()).toMatchObject({
-        data: userListeningActivityProcessedDataWeek,
-        loading: false,
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId("listening-activity-bar")).toBeInTheDocument();
     });
+
+    expect(screen.getByTestId("listening-activity")).toBeInTheDocument();
+
+    // Expect the total listens and average listens per month to be displayed
+    expect(screen.getByText("3580")).toBeInTheDocument();
+    expect(screen.getByText("597")).toBeInTheDocument();
+  });
+
+  it("renders correctly for all_time", async () => {
+    setQueryData(props.user?.name, "all_time", {
+      data: userListeningActivityResponseAllTime,
+      hasError: false,
+      errorMessage: "",
+    });
+
+    renderWithProviders(
+      <ResponsiveContext.Provider value={{ width: 800 }}>
+        <UserListeningActivity {...{ ...props, range: "all_time" }} />
+      </ResponsiveContext.Provider>,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("listening-activity-bar")).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("listening-activity")).toBeInTheDocument();
+
+    // Expect the total listens and average listens per year to be displayed
+    expect(screen.getByText("3845")).toBeInTheDocument();
+    expect(screen.getByText("168")).toBeInTheDocument();
+  });
+
+  it("displays error message when API call fails", async () => {
+    const errorMessage = "API Error";
+    setQueryData(props.user?.name, "week", {
+      data: {},
+      hasError: true,
+      errorMessage,
+    });
+    renderWithProviders(
+      <ResponsiveContext.Provider value={{ width: 800 }}>
+        <UserListeningActivity {...props} />
+      </ResponsiveContext.Provider>,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("error-message")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
 });

@@ -4,17 +4,16 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../../../utils/APIService";
+import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../../../components/Loader";
-import { isInvalidStatRange } from "../utils";
 import { COLOR_BLACK } from "../../../utils/constants";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
-  apiUrl: string;
 };
 
 export type UserListeningActivityState = {
@@ -34,13 +33,45 @@ export type UserListeningActivityState = {
   hasError: boolean;
 };
 
-export default class UserListeningActivity extends React.Component<
-  UserListeningActivityProps,
-  UserListeningActivityState
-> {
-  APIService: APIService;
+export default function UserListeningActivity(
+  props: UserListeningActivityProps
+) {
+  const { APIService } = React.useContext(GlobalAppContext);
 
-  rangeMap = {
+  // Props
+  const { range, user } = props;
+
+  // Fetch data
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: ["userListeningActivity", user?.name, range],
+    queryFn: async () => {
+      try {
+        const queryData = await APIService.getUserListeningActivity(
+          user?.name,
+          range
+        );
+        return {
+          data: queryData,
+          hasError: false,
+          errorMessage: "",
+        };
+      } catch (error) {
+        return {
+          data: {} as UserListeningActivityResponse,
+          hasError: true,
+          errorMessage: error.message,
+        };
+      }
+    },
+  });
+
+  const {
+    data: rawData = {} as UserListeningActivityResponse,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const rangeMap = {
     week: {
       dateFormat: {
         weekday: "short",
@@ -92,57 +123,19 @@ export default class UserListeningActivity extends React.Component<
     },
   };
 
-  constructor(props: UserListeningActivityProps) {
-    super(props);
+  const [data, setData] = React.useState<UserListeningActivityData>([]);
+  const [totalListens, setTotalListens] = React.useState<number>(0);
+  const [avgListens, setAvgListens] = React.useState<number>(0);
+  const [lastRangePeriod, setLastRangePeriod] = React.useState<{
+    start?: number;
+    end?: number;
+  }>({});
+  const [thisRangePeriod, setThisRangePeriod] = React.useState<{
+    start?: number;
+    end?: number;
+  }>({});
 
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
-    const isInvalidRange = isInvalidStatRange(props.range);
-
-    this.state = {
-      data: [],
-      lastRangePeriod: {},
-      thisRangePeriod: {},
-      totalListens: 0,
-      avgListens: 0,
-      loading: false,
-      hasError: isInvalidRange,
-      errorMessage: isInvalidRange ? `Invalid range: ${props.range}` : "",
-    };
-  }
-
-  componentDidUpdate(prevProps: UserListeningActivityProps) {
-    const { range: prevRange, user: prevUser } = prevProps;
-    const { range: currRange, user: currUser } = this.props;
-    if (prevRange !== currRange || prevUser !== currUser) {
-      if (isInvalidStatRange(currRange)) {
-        this.setState({
-          loading: false,
-          hasError: true,
-          errorMessage: `Invalid range: ${currRange}`,
-        });
-      } else {
-        this.loadData();
-      }
-    }
-  }
-
-  getData = async (): Promise<UserListeningActivityResponse> => {
-    const { range, user } = this.props;
-    try {
-      return await this.APIService.getUserListeningActivity(user?.name, range);
-    } catch (error) {
-      this.setState({
-        loading: false,
-        hasError: true,
-        errorMessage: error.message,
-      });
-    }
-    return {} as UserListeningActivityResponse;
-  };
-
-  getNumberOfDaysInMonth = (month: Date): number => {
+  const getNumberOfDaysInMonth = (month: Date): number => {
     return new Date(
       month.getUTCFullYear(),
       month.getUTCMonth() + 1,
@@ -150,42 +143,22 @@ export default class UserListeningActivity extends React.Component<
     ).getDate();
   };
 
-  processData = (
-    data: UserListeningActivityResponse
+  const processWeek = (
+    unprocessedData: UserListeningActivityResponse
   ): UserListeningActivityData => {
-    const { range } = this.props;
-    let result = [] as UserListeningActivityData;
-    if (!data?.payload) {
-      return result;
-    }
-    if (range === "week" || range === "this_week") {
-      result = this.processWeek(data);
-    } else if (range === "month" || range === "this_month") {
-      result = this.processMonth(data);
-    } else if (range === "year" || range === "this_year") {
-      result = this.processYear(data);
-    } else if (range === "all_time") {
-      result = this.processAllTime(data);
-    }
-    return result;
-  };
-
-  processWeek = (
-    data: UserListeningActivityResponse
-  ): UserListeningActivityData => {
-    const { dateFormat } = this.rangeMap.week;
-    let totalListens = 0;
+    const { dateFormat } = rangeMap.week;
+    let totalListensForWeek = 0;
     let totalDays = 0;
 
-    const lastWeek = data.payload.listening_activity.slice(0, 7);
-    const thisWeek = data.payload.listening_activity.slice(7);
+    const lastWeek = unprocessedData.payload.listening_activity.slice(0, 7);
+    const thisWeek = unprocessedData.payload.listening_activity.slice(7);
 
     const result = lastWeek.map((lastWeekDay, index) => {
       const thisWeekDay = thisWeek[index];
       let thisWeekData = {};
       if (thisWeekDay) {
         const thisWeekCount = thisWeekDay.listen_count;
-        totalListens += thisWeekCount;
+        totalListensForWeek += thisWeekCount;
         totalDays += 1;
 
         thisWeekData = {
@@ -203,46 +176,47 @@ export default class UserListeningActivity extends React.Component<
       };
     });
 
-    this.setState({
-      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalDays) : 0,
-      lastRangePeriod: {
-        start: lastWeek?.[0]?.from_ts,
-        end: lastWeek?.[6]?.from_ts,
-      },
-      thisRangePeriod: {
-        start: thisWeek?.[0]?.from_ts,
-        end: thisWeek?.[totalDays - 1]?.from_ts,
-      },
-      totalListens,
+    setAvgListens(
+      totalListensForWeek > 0 ? Math.ceil(totalListensForWeek / totalDays) : 0
+    );
+    setLastRangePeriod({
+      start: lastWeek?.[0]?.from_ts,
+      end: lastWeek?.[6]?.from_ts,
     });
+    setThisRangePeriod({
+      start: thisWeek?.[0]?.from_ts,
+      end: thisWeek?.[totalDays - 1]?.from_ts,
+    });
+    setTotalListens(totalListensForWeek);
 
     return result;
   };
 
-  processMonth = (
-    data: UserListeningActivityResponse
+  const processMonth = (
+    unprocessedData: UserListeningActivityResponse
   ): UserListeningActivityData => {
-    const { dateFormat } = this.rangeMap.month;
-    let totalListens = 0;
+    const { dateFormat } = rangeMap.month;
+    let totalListensForMonth = 0;
     let totalDays = 0;
 
     const startOfLastMonth = new Date(
-      data.payload.listening_activity[0].from_ts * 1000
+      unprocessedData.payload.listening_activity[0].from_ts * 1000
     );
+
     const endOfThisMonth = new Date(
-      data.payload.listening_activity[
-        data.payload.listening_activity.length - 1
+      unprocessedData.payload.listening_activity[
+        unprocessedData.payload.listening_activity.length - 1
       ].from_ts * 1000
     );
 
-    const numOfDaysInLastMonth = this.getNumberOfDaysInMonth(startOfLastMonth);
-    const numOfDaysInThisMonth = this.getNumberOfDaysInMonth(endOfThisMonth);
+    const numOfDaysInLastMonth = getNumberOfDaysInMonth(startOfLastMonth);
+    const numOfDaysInThisMonth = getNumberOfDaysInMonth(endOfThisMonth);
 
-    const lastMonth = data.payload.listening_activity.slice(
+    const lastMonth = unprocessedData.payload.listening_activity.slice(
       0,
       numOfDaysInLastMonth
     );
-    const thisMonth = data.payload.listening_activity.slice(
+    const thisMonth = unprocessedData.payload.listening_activity.slice(
       numOfDaysInLastMonth
     );
 
@@ -253,12 +227,12 @@ export default class UserListeningActivity extends React.Component<
     for (let i = 0; i < maxDays; i += 1) {
       const lastMonthDay = lastMonth[i] || null;
       const thisMonthDay = thisMonth[i] || null;
-      const thisMonthCount = thisMonthDay ? thisMonthDay.listen_count : 0;
 
       let thisMonthData = {};
       let lastMonthData = {};
       if (thisMonthDay) {
-        totalListens += thisMonthCount;
+        const thisMonthCount = thisMonthDay.listen_count;
+        totalListensForMonth += thisMonthCount;
         totalDays += 1;
 
         thisMonthData = {
@@ -285,36 +259,36 @@ export default class UserListeningActivity extends React.Component<
       });
     }
 
-    this.setState({
-      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalDays) : 0,
-      lastRangePeriod: {
-        start: lastMonth?.[0]?.from_ts,
-      },
-      thisRangePeriod: {
-        start: thisMonth?.[0]?.from_ts,
-      },
-      totalListens,
+    setAvgListens(
+      totalListensForMonth > 0 ? Math.ceil(totalListensForMonth / totalDays) : 0
+    );
+    setLastRangePeriod({
+      start: lastMonth?.[0]?.from_ts,
     });
+    setThisRangePeriod({
+      start: thisMonth?.[0]?.from_ts,
+    });
+    setTotalListens(totalListensForMonth);
 
     return result;
   };
 
-  processYear = (
-    data: UserListeningActivityResponse
+  const processYear = (
+    unprocessedData: UserListeningActivityResponse
   ): UserListeningActivityData => {
-    const { dateFormat } = this.rangeMap.year;
-    let totalListens = 0;
+    const { dateFormat } = rangeMap.year;
+    let totalListensForYear = 0;
     let totalMonths = 0;
 
-    const lastYear = data.payload.listening_activity.slice(0, 12);
-    const thisYear = data.payload.listening_activity.slice(12);
+    const lastYear = unprocessedData.payload.listening_activity.slice(0, 12);
+    const thisYear = unprocessedData.payload.listening_activity.slice(12);
 
     const result = lastYear.map((lastYearMonth, index) => {
       const thisYearMonth = thisYear[index];
       let thisYearData = {};
       if (thisYearMonth) {
         const thisYearCount = thisYearMonth.listen_count;
-        totalListens += thisYearCount;
+        totalListensForYear += thisYearCount;
         totalMonths += 1;
 
         thisYearData = {
@@ -332,32 +306,32 @@ export default class UserListeningActivity extends React.Component<
       };
     });
 
-    this.setState({
-      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalMonths) : 0,
-      lastRangePeriod: {
-        start: lastYear?.[0]?.from_ts,
-      },
-      thisRangePeriod: {
-        start: thisYear?.[0]?.from_ts,
-      },
-      totalListens,
+    setAvgListens(
+      totalListensForYear > 0 ? Math.ceil(totalListensForYear / totalMonths) : 0
+    );
+    setLastRangePeriod({
+      start: lastYear?.[0]?.from_ts,
     });
+    setThisRangePeriod({
+      start: thisYear?.[0]?.from_ts,
+    });
+    setTotalListens(totalListensForYear);
 
     return result;
   };
 
-  processAllTime = (
-    data: UserListeningActivityResponse
+  const processAllTime = (
+    unprocessedData: UserListeningActivityResponse
   ): UserListeningActivityData => {
-    const { dateFormat } = this.rangeMap.all_time;
-    let totalListens = 0;
+    const { dateFormat } = rangeMap.all_time;
+    let totalListensForAllTime = 0;
     let totalYears = 0;
     const allTimeData = [];
     const currYear = new Date().getFullYear();
     let encounteredNonEmptyYear: boolean = false;
 
     for (let i = 2002; i <= currYear; i += 1) {
-      const yearData = data.payload.listening_activity.filter(
+      const yearData = unprocessedData.payload.listening_activity.filter(
         (year) => year.time_range === String(i)
       )[0];
       totalYears += 1;
@@ -377,7 +351,7 @@ export default class UserListeningActivity extends React.Component<
           });
         }
 
-        totalListens += yearData.listen_count;
+        totalListensForAllTime += yearData.listen_count;
       } else {
         const date = new Date(`${i}-01-01T00:00:00.000+00:00`);
         allTimeData.push({
@@ -391,161 +365,176 @@ export default class UserListeningActivity extends React.Component<
       }
     }
 
-    this.setState({
-      avgListens: totalListens > 0 ? Math.ceil(totalListens / totalYears) : 0,
-      totalListens,
-    });
+    setAvgListens(
+      totalListensForAllTime > 0
+        ? Math.ceil(totalListensForAllTime / totalYears)
+        : 0
+    );
+    setTotalListens(totalListensForAllTime);
 
     return allTimeData;
   };
 
-  loadData = async (): Promise<void> => {
-    this.setState({
-      hasError: false,
-      loading: true,
-    });
-    const data = await this.getData();
-    this.setState({
-      data: this.processData(data),
-      loading: false,
-    });
+  const processData = (
+    unprocessedData: UserListeningActivityResponse
+  ): UserListeningActivityData => {
+    if (!unprocessedData?.payload) {
+      return [] as UserListeningActivityData;
+    }
+    if (!unprocessedData?.payload) {
+      return [] as UserListeningActivityData;
+    }
+    if (range === "week" || range === "this_week") {
+      return processWeek(unprocessedData);
+    }
+    if (range === "month" || range === "this_month") {
+      return processMonth(unprocessedData);
+    }
+    if (range === "year" || range === "this_year") {
+      return processYear(unprocessedData);
+    }
+    if (range === "all_time") {
+      return processAllTime(unprocessedData);
+    }
+    return [];
   };
 
-  render() {
-    const {
-      data,
-      totalListens,
-      avgListens,
-      lastRangePeriod,
-      thisRangePeriod,
-      loading,
-      hasError,
-      errorMessage,
-    } = this.state;
-    const { range } = this.props;
-    const { perRange } = this.rangeMap[range] || {};
+  React.useEffect(() => {
+    if (rawData && rawData?.payload) {
+      setData(processData(rawData));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawData]);
 
-    return (
-      <Card style={{ marginTop: 20, minHeight: 400 }}>
-        <div className="row">
-          <div className="col-xs-10">
-            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Listening Activity
-            </h3>
-          </div>
-          <div className="col-xs-2 text-right">
-            <h4 style={{ marginTop: 20 }}>
-              <a href="#listening-activity">
-                <FontAwesomeIcon
-                  icon={faLink as IconProp}
-                  size="sm"
-                  color={COLOR_BLACK}
-                  style={{ marginRight: 20 }}
-                />
-              </a>
-            </h4>
-          </div>
+  const { perRange } = rangeMap[range] || {};
+
+  return (
+    <Card
+      style={{ marginTop: 20, minHeight: 400 }}
+      data-testid="listening-activity"
+    >
+      <div className="row">
+        <div className="col-xs-10">
+          <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+            Listening Activity
+          </h3>
         </div>
-
-        <Loader isLoading={loading}>
-          {hasError && (
-            <div className="flex-center" style={{ minHeight: "inherit" }}>
-              <span style={{ fontSize: 24 }} className="text-center">
-                <FontAwesomeIcon
-                  icon={faExclamationCircle as IconProp}
-                  size="2x"
-                />{" "}
-                {errorMessage}
-              </span>
-            </div>
-          )}
-          {!hasError && (
-            <>
-              <BarDualTone
-                data={data}
-                range={range}
-                showLegend={range !== "all_time"}
-                lastRangePeriod={lastRangePeriod}
-                thisRangePeriod={thisRangePeriod}
+        <div className="col-xs-2 text-right">
+          <h4 style={{ marginTop: 20 }}>
+            <a href="#listening-activity">
+              <FontAwesomeIcon
+                icon={faLink as IconProp}
+                size="sm"
+                color={COLOR_BLACK}
+                style={{ marginRight: 20 }}
               />
-              <div className="row mt-5 mb-15">
-                <MediaQuery minWidth={768}>
-                  <div className="col-md-6 text-center">
-                    <span
-                      style={{
-                        fontSize: 30,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {totalListens}
-                    </span>
-                    <span>
-                      <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
-                    </span>
-                  </div>
-                  <div className="col-md-6 text-center">
-                    <span
-                      style={{
-                        fontSize: 30,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {avgListens}
-                    </span>
-                    <span style={{ fontSize: 24 }}>
-                      &nbsp;Listens per {perRange}
-                    </span>
-                  </div>
-                </MediaQuery>
-                <MediaQuery maxWidth={767}>
-                  <div
-                    className="col-xs-12"
-                    style={{ display: "flex", justifyContent: "center" }}
+            </a>
+          </h4>
+        </div>
+      </div>
+
+      <Loader isLoading={loading}>
+        {hasError && (
+          <div
+            className="flex-center"
+            style={{ minHeight: "inherit" }}
+            data-testid="error-message"
+          >
+            <span style={{ fontSize: 24 }} className="text-center">
+              <FontAwesomeIcon
+                icon={faExclamationCircle as IconProp}
+                size="2x"
+              />{" "}
+              {errorMessage}
+            </span>
+          </div>
+        )}
+        {!hasError && (
+          <>
+            <BarDualTone
+              data={data}
+              range={range}
+              showLegend={range !== "all_time"}
+              lastRangePeriod={lastRangePeriod}
+              thisRangePeriod={thisRangePeriod}
+            />
+            <div className="row mt-5 mb-15">
+              <MediaQuery minWidth={768}>
+                <div className="col-md-6 text-center">
+                  <span
+                    style={{
+                      fontSize: 30,
+                      fontWeight: "bold",
+                    }}
                   >
-                    <table style={{ width: "90%" }}>
-                      <tbody>
-                        <tr>
-                          <td
-                            style={{
-                              textAlign: "end",
-                              fontSize: 28,
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {totalListens}
-                          </td>
-                          <td>
-                            <span style={{ fontSize: 22, textAlign: "start" }}>
-                              &nbsp;Listens
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            style={{
-                              width: "30%",
-                              textAlign: "end",
-                              fontSize: 28,
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {avgListens}
-                          </td>
-                          <td>
-                            <span style={{ fontSize: 22, textAlign: "start" }}>
-                              &nbsp;Listens per {perRange}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </MediaQuery>
-              </div>
-            </>
-          )}
-        </Loader>
-      </Card>
-    );
-  }
+                    {totalListens}
+                  </span>
+                  <span>
+                    <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
+                  </span>
+                </div>
+                <div className="col-md-6 text-center">
+                  <span
+                    style={{
+                      fontSize: 30,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {avgListens}
+                  </span>
+                  <span style={{ fontSize: 24 }}>
+                    &nbsp;Listens per {perRange}
+                  </span>
+                </div>
+              </MediaQuery>
+              <MediaQuery maxWidth={767}>
+                <div
+                  className="col-xs-12"
+                  style={{ display: "flex", justifyContent: "center" }}
+                >
+                  <table style={{ width: "90%" }}>
+                    <tbody>
+                      <tr>
+                        <td
+                          style={{
+                            textAlign: "end",
+                            fontSize: 28,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {totalListens}
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 22, textAlign: "start" }}>
+                            &nbsp;Listens
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          style={{
+                            width: "30%",
+                            textAlign: "end",
+                            fontSize: 28,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {avgListens}
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 22, textAlign: "start" }}>
+                            &nbsp;Listens per {perRange}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </MediaQuery>
+            </div>
+          </>
+        )}
+      </Loader>
+    </Card>
+  );
 }

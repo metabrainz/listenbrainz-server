@@ -4,17 +4,17 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-import APIService from "../../../utils/APIService";
+import { useQuery } from "@tanstack/react-query";
+import _ from "lodash";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import Choropleth from "./Choropleth";
-import { isInvalidStatRange } from "../utils";
 import { COLOR_BLACK } from "../../../utils/constants";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
-  apiUrl: string;
 };
 
 export type UserArtistMapState = {
@@ -25,96 +25,43 @@ export type UserArtistMapState = {
   selectedMetric: "artist" | "listen";
 };
 
-export default class UserArtistMap extends React.Component<
-  UserArtistMapProps,
-  UserArtistMapState
-> {
-  APIService: APIService;
+export default function UserArtistMap(props: UserArtistMapProps) {
+  const { APIService } = React.useContext(GlobalAppContext);
 
-  rawData: UserArtistMapResponse;
+  // Props
+  const { user, range } = props;
 
-  constructor(props: UserArtistMapProps) {
-    super(props);
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
-
-    this.state = {
-      data: [],
-      loading: false,
-      errorMessage: "",
-      hasError: false,
-      selectedMetric: "artist",
-    };
-
-    this.rawData = {} as UserArtistMapResponse;
-  }
-
-  componentDidUpdate(prevProps: UserArtistMapProps) {
-    const { range: prevRange, user: prevUser } = prevProps;
-    const { range: currRange, user: currUser } = this.props;
-    if (prevRange !== currRange || prevUser !== currUser) {
-      if (isInvalidStatRange(currRange)) {
-        this.setState({
-          loading: false,
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: ["user-artist-map", range, user?.name],
+    queryFn: async () => {
+      try {
+        const queryData = await APIService.getUserArtistMap(user?.name, range);
+        return {
+          data: queryData,
+          hasError: false,
+          errorMessage: "",
+        };
+      } catch (error) {
+        return {
+          data: {},
           hasError: true,
-          errorMessage: `Invalid range: ${currRange}`,
-        });
-      } else {
-        this.loadData();
+          errorMessage: error.message,
+        };
       }
-    }
-  }
+    },
+  });
 
-  changeSelectedMetric = (
-    newSelectedMetric: "artist" | "listen",
-    event?: React.MouseEvent<HTMLElement>
-  ) => {
-    if (event) {
-      event.preventDefault();
-    }
+  const { data: rawData = {}, hasError = false, errorMessage = "" } =
+    loaderData || {};
 
-    this.setState({
-      selectedMetric: newSelectedMetric,
-      data: this.processData(this.rawData, newSelectedMetric),
-    });
-  };
-
-  loadData = async (): Promise<void> => {
-    const { selectedMetric } = this.state;
-    this.setState({
-      hasError: false,
-      loading: true,
-    });
-    this.rawData = await this.getData();
-    this.setState({
-      data: this.processData(this.rawData, selectedMetric),
-      loading: false,
-    });
-  };
-
-  getData = async (): Promise<UserArtistMapResponse> => {
-    const { range, user } = this.props;
-    try {
-      return await this.APIService.getUserArtistMap(user?.name, range);
-    } catch (error) {
-      this.setState({
-        loading: false,
-        hasError: true,
-        errorMessage: error.message,
-      });
-    }
-    return {} as UserArtistMapResponse;
-  };
-
-  processData = (
-    data: UserArtistMapResponse,
-    selectedMetric: "artist" | "listen"
+  const processData = (
+    selectedMetric: "artist" | "listen",
+    unprocessedData?: UserArtistMapResponse
   ): UserArtistMapData => {
-    if (!data?.payload) {
+    if (!unprocessedData?.payload) {
       return [];
     }
-    return data.payload.artist_map.map((country) => {
+    return unprocessedData.payload.artist_map.map((country) => {
       return {
         id: country.country,
         value:
@@ -126,99 +73,94 @@ export default class UserArtistMap extends React.Component<
     });
   };
 
-  render() {
-    const {
-      selectedMetric,
-      data,
-      errorMessage,
-      hasError,
-      loading,
-    } = this.state;
+  const [selectedMetric, setSelectedMetric] = React.useState<
+    "artist" | "listen"
+  >("artist");
 
-    return (
-      <Card className="user-stats-card">
-        <div className="row">
-          <div className="col-md-9 col-xs-6">
-            <h3 style={{ marginLeft: 20 }}>
-              <span className="capitalize-bold">Artist Origins</span>
-              <small>&nbsp;Click on a country to see more details</small>
-            </h3>
-          </div>
-          <div
-            className="col-md-2 col-xs-4 text-right"
-            style={{ marginTop: 20 }}
-          >
-            <span>Rank by</span>
-            <span className="dropdown">
-              <button
-                className="dropdown-toggle btn-transparent capitalize-bold"
-                data-toggle="dropdown"
-                type="button"
+  const [data, setData] = React.useState<UserArtistMapData>([]);
+
+  React.useEffect(() => {
+    if (rawData && rawData?.payload) {
+      const newProcessedData = processData(selectedMetric, rawData);
+      setData(newProcessedData);
+    }
+  }, [rawData, selectedMetric]);
+
+  return (
+    <Card className="user-stats-card" data-testid="user-stats-map">
+      <div className="row">
+        <div className="col-md-9 col-xs-6">
+          <h3 style={{ marginLeft: 20 }}>
+            <span className="capitalize-bold">Artist Origins</span>
+            <small>&nbsp;Click on a country to see more details</small>
+          </h3>
+        </div>
+        <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
+          <span>Rank by</span>
+          <span className="dropdown">
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              {selectedMetric}s
+              <span className="caret" />
+            </button>
+            <ul className="dropdown-menu" role="menu">
+              <li
+                className={selectedMetric === "listen" ? "active" : undefined}
               >
-                {selectedMetric}s
-                <span className="caret" />
-              </button>
-              <ul className="dropdown-menu" role="menu">
-                <li
-                  className={selectedMetric === "listen" ? "active" : undefined}
+                <button
+                  type="button"
+                  onClick={() => setSelectedMetric("listen")}
                 >
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) =>
-                      this.changeSelectedMetric("listen", event)
-                    }
-                  >
-                    Listens
-                  </a>
-                </li>
-                <li
-                  className={selectedMetric === "artist" ? "active" : undefined}
+                  Listens
+                </button>
+              </li>
+              <li
+                className={selectedMetric === "artist" ? "active" : undefined}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedMetric("artist")}
                 >
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) =>
-                      this.changeSelectedMetric("artist", event)
-                    }
-                  >
-                    Artists
-                  </a>
-                </li>
-              </ul>
+                  Artists
+                </button>
+              </li>
+            </ul>
+          </span>
+        </div>
+        <div className="col-md-1 col-xs-2 text-right">
+          <h4 style={{ marginTop: 20 }}>
+            <a href="#artist-origin">
+              <FontAwesomeIcon
+                icon={faLink as IconProp}
+                size="sm"
+                color={COLOR_BLACK}
+                style={{ marginRight: 20 }}
+              />
+            </a>
+          </h4>
+        </div>
+      </div>
+      <Loader isLoading={loading}>
+        {hasError ? (
+          <div
+            className="flex-center"
+            style={{
+              minHeight: "inherit",
+            }}
+            data-testid="error-message"
+          >
+            <span style={{ fontSize: 24 }} className="text-center">
+              <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+              {errorMessage}
             </span>
           </div>
-          <div className="col-md-1 col-xs-2 text-right">
-            <h4 style={{ marginTop: 20 }}>
-              <a href="#artist-origin">
-                <FontAwesomeIcon
-                  icon={faLink as IconProp}
-                  size="sm"
-                  color={COLOR_BLACK}
-                  style={{ marginRight: 20 }}
-                />
-              </a>
-            </h4>
-          </div>
-        </div>
-        <Loader isLoading={loading}>
-          {hasError ? (
-            <div
-              className="flex-center"
-              style={{
-                minHeight: "inherit",
-              }}
-            >
-              <span style={{ fontSize: 24 }} className="text-center">
-                <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                {errorMessage}
-              </span>
-            </div>
-          ) : (
-            <Choropleth data={data} selectedMetric={selectedMetric} />
-          )}
-        </Loader>
-      </Card>
-    );
-  }
+        ) : (
+          <Choropleth data={data} selectedMetric={selectedMetric} />
+        )}
+      </Loader>
+    </Card>
+  );
 }
