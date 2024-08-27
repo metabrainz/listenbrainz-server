@@ -26,6 +26,7 @@ const props = {
 describe("BrainzPlayerUI", () => {
   beforeAll(() => {
     global.IntersectionObserver = IntersectionObserver;
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
   });
   it("renders", () => {
     const wrapper = mount(

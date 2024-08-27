@@ -118,6 +118,7 @@ describe("BrainzPlayer", () => {
     } as Window["location"];
 
     global.IntersectionObserver = IntersectionObserver;
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
     fetchMock.enableMocks();
   });
