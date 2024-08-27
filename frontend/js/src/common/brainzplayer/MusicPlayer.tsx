@@ -102,81 +102,65 @@ function CoverArtScrollWrapper({
   playPreviousTrack: () => void;
   playNextTrack: () => void;
 }) {
-  const coverArtScrollRef = React.useRef(null);
-  const previousCoverArtRef = React.useRef(null);
+  const coverArtScrollRef = React.useRef<HTMLDivElement>(null);
+  const previousCoverArtRef = React.useRef<HTMLDivElement>(null);
   const currentCoverArtRef = React.useRef<HTMLDivElement>(null);
-  const nextCoverArtRef = React.useRef(null);
+  const nextCoverArtRef = React.useRef<HTMLDivElement>(null);
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
-  // Throttle the playNextTrack and playPreviousTrack functions
   const [isChangingTrack, setIsChangingTrack] = React.useState(false);
 
+  const handleTrackChange = React.useCallback(
+    (changeTrack: () => void) => {
+      if (!isChangingTrack) {
+        setIsChangingTrack(true);
+        changeTrack();
+      }
+    },
+    [isChangingTrack]
+  );
+
   const throttledPlayNextTrack = React.useMemo(
-    () =>
-      throttle(() => {
-        if (!isChangingTrack) {
-          setIsChangingTrack(true);
-          playNextTrack();
-        }
-      }, 500),
-    [playNextTrack, isChangingTrack]
+    () => throttle(() => handleTrackChange(playNextTrack), 500),
+    [handleTrackChange, playNextTrack]
   );
 
   const throttledPlayPreviousTrack = React.useMemo(
-    () =>
-      throttle(() => {
-        if (!isChangingTrack) {
-          setIsChangingTrack(true);
-          playPreviousTrack();
-        }
-      }, 500),
-    [playPreviousTrack, isChangingTrack]
+    () => throttle(() => handleTrackChange(playPreviousTrack), 500),
+    [handleTrackChange, playPreviousTrack]
   );
 
   React.useEffect(() => {
     setIsChangingTrack(false);
-    // Scroll the current cover art into view
-    if (currentCoverArtRef.current) {
-      currentCoverArtRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    }
+    currentCoverArtRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
   }, [currentTrackCoverURL]);
 
   React.useEffect(() => {
-    const options = {
-      root: coverArtScrollRef.current,
-      threshold: 0.5,
-    };
-
-    const callback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          if (entry.target === previousCoverArtRef.current) {
-            throttledPlayPreviousTrack();
-          } else if (entry.target === nextCoverArtRef.current) {
-            throttledPlayNextTrack();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (entry.target === previousCoverArtRef.current) {
+              throttledPlayPreviousTrack();
+            } else if (entry.target === nextCoverArtRef.current) {
+              throttledPlayNextTrack();
+            }
           }
-        }
-      });
-    };
+        });
+      },
+      { root: coverArtScrollRef.current, threshold: 0.5 }
+    );
 
-    const observer = new IntersectionObserver(callback, options);
-
-    const previousElem = previousCoverArtRef.current;
-    const currentElem = currentCoverArtRef.current;
-    const nextElem = nextCoverArtRef.current;
-
-    if (previousElem) observer.observe(previousElem);
-    if (currentElem) observer.observe(currentElem);
-    if (nextElem) observer.observe(nextElem);
+    [previousCoverArtRef, currentCoverArtRef, nextCoverArtRef].forEach(
+      (ref) => ref.current && observer.observe(ref.current)
+    );
 
     return () => {
-      if (previousElem) observer.unobserve(previousElem);
-      if (currentElem) observer.unobserve(currentElem);
-      if (nextElem) observer.unobserve(nextElem);
+      observer.disconnect();
       throttledPlayNextTrack.cancel();
       throttledPlayPreviousTrack.cancel();
     };
@@ -188,18 +172,24 @@ function CoverArtScrollWrapper({
     throttledPlayNextTrack,
   ]);
 
+  const renderCoverArt = (
+    url: string | undefined,
+    ref: React.RefObject<HTMLDivElement>
+  ) =>
+    url && (
+      <div className="cover-art cover-art-wrapper" ref={ref}>
+        <img
+          alt="coverart"
+          className="img-responsive"
+          src={url}
+          crossOrigin="anonymous"
+        />
+      </div>
+    );
+
   return (
     <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
-      {previousTrackCoverURL && (
-        <div className="cover-art cover-art-wrapper" ref={previousCoverArtRef}>
-          <img
-            alt="coverart"
-            className="img-responsive"
-            src={previousTrackCoverURL}
-            crossOrigin="anonymous"
-          />
-        </div>
-      )}
+      {renderCoverArt(previousTrackCoverURL, previousCoverArtRef)}
       <div className="cover-art cover-art-wrapper" ref={currentCoverArtRef}>
         <img
           alt="coverart"
@@ -209,16 +199,7 @@ function CoverArtScrollWrapper({
           ref={musicPlayerCoverArtRef}
         />
       </div>
-      {nextTrackCoverURL && (
-        <div className="cover-art cover-art-wrapper" ref={nextCoverArtRef}>
-          <img
-            alt="coverart"
-            className="img-responsive"
-            src={nextTrackCoverURL}
-            crossOrigin="anonymous"
-          />
-        </div>
-      )}
+      {renderCoverArt(nextTrackCoverURL, nextCoverArtRef)}
     </div>
   );
 }
