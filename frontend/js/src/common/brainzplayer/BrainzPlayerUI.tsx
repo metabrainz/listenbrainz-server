@@ -35,6 +35,7 @@ import {
 } from "./BrainzPlayerContext";
 import Queue from "./Queue";
 import MusicPlayer from "./MusicPlayer";
+import { FeedbackValue } from "./utils";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -403,11 +404,16 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 title="Love"
                 onClick={
                   isPlayingATrack
-                    ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                    ? () =>
+                        submitFeedback(
+                          currentListenFeedback === FeedbackValue.LIKE
+                            ? FeedbackValue.NEUTRAL
+                            : FeedbackValue.LIKE
+                        )
                     : undefined
                 }
                 className={`love ${
-                  currentListenFeedback === 1 ? " loved" : ""
+                  currentListenFeedback === FeedbackValue.LIKE ? " loved" : ""
                 }${!isPlayingATrack ? " disabled" : ""}`}
               />
               <FontAwesomeIcon
@@ -416,11 +422,17 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 onClick={
                   isPlayingATrack
                     ? () =>
-                        submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                        submitFeedback(
+                          currentListenFeedback === FeedbackValue.DISLIKE
+                            ? FeedbackValue.NEUTRAL
+                            : FeedbackValue.DISLIKE
+                        )
                     : undefined
                 }
                 className={`hate ${
-                  currentListenFeedback === -1 ? " hated" : ""
+                  currentListenFeedback === FeedbackValue.DISLIKE
+                    ? " hated"
+                    : ""
                 }${!isPlayingATrack ? " disabled" : ""}`}
               />
             </>

@@ -18,6 +18,7 @@ import { millisecondsToStr } from "../../playlists/utils";
 import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { FeedbackValue } from "./utils";
 
 type PlaybackControlButtonProps = {
   className: string;
@@ -276,13 +277,21 @@ function MusicPlayer(props: MusicPlayerProps) {
 
   const submitLikeFeedback = React.useCallback(() => {
     if (isPlayingATrack) {
-      submitFeedback(currentListenFeedback === 1 ? 0 : 1);
+      submitFeedback(
+        currentListenFeedback === FeedbackValue.LIKE
+          ? FeedbackValue.NEUTRAL
+          : FeedbackValue.LIKE
+      );
     }
   }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
 
   const submitDislikeFeedback = React.useCallback(() => {
     if (isPlayingATrack) {
-      submitFeedback(currentListenFeedback === -1 ? 0 : -1);
+      submitFeedback(
+        currentListenFeedback === FeedbackValue.DISLIKE
+          ? FeedbackValue.NEUTRAL
+          : FeedbackValue.DISLIKE
+      );
     }
   }, [currentListenFeedback, isPlayingATrack, submitFeedback]);
 
@@ -374,17 +383,17 @@ function MusicPlayer(props: MusicPlayerProps) {
           <FontAwesomeIcon
             icon={faHeart}
             title="Love"
-            className={`love ${currentListenFeedback === 1 ? " loved" : ""}${
-              !isPlayingATrack ? " disabled" : ""
-            }`}
+            className={`love ${
+              currentListenFeedback === FeedbackValue.LIKE ? " loved" : ""
+            }${!isPlayingATrack ? " disabled" : ""}`}
             onClick={submitLikeFeedback}
           />
           <FontAwesomeIcon
             icon={faHeartCrack}
             title="Hate"
-            className={`hate ${currentListenFeedback === -1 ? " hated" : ""}${
-              !isPlayingATrack ? " disabled" : ""
-            }`}
+            className={`hate ${
+              currentListenFeedback === FeedbackValue.DISLIKE ? " hated" : ""
+            }${!isPlayingATrack ? " disabled" : ""}`}
             onClick={submitDislikeFeedback}
           />
         </div>
