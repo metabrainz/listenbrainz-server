@@ -758,6 +758,8 @@ def get_recommendation(user_name):
         return Response(
             status=204, response="Recommedation for the user haven't been generated."
         )
+        
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist.mbid, True)
 
     fetch_playlist_recording_metadata(playlist)
 
