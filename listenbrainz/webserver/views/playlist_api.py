@@ -12,7 +12,7 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_PLAYLIST_PERMISSIONS
 from listenbrainz.domain.apple import AppleService
-from listenbrainz.troi.export import export_to_spotify
+from listenbrainz.troi.export import export_to_spotify, export_to_apple_music
 from listenbrainz.troi.import_ms import import_from_spotify, import_from_apple_music
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.metadata_cache.apple.client import Apple
@@ -860,22 +860,33 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service != "spotify":
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+    if service != "spotify" and service != "soundcloud" and service != "apple_music":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify, apple music, soundcloud'.")
 
-    spotify_service = SpotifyService()
-    token = spotify_service.get_user(user["id"], refresh=True)
+    if service == "spotify":
+        spotify_service = SpotifyService()
+        token = spotify_service.get_user(user["id"], refresh=True)
+    elif service == "soundcloud":
+        soundcloud_service = SoundCloudService()
+        token = soundcloud_service.get_user(user["id"])
+    elif service == "apple_music":
+        apple_service = AppleService()
+        token = apple_service.get_user(user["id"])
+
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
 
-    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+    if service == 'spotify' and not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
 
     is_public = parse_boolean_arg("is_public", True)
     try:
-        url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
+        if service == "spotify":
+            url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
+        elif service == "apple_music":
+            url = export_to_apple_music(user["auth_token"], token["access_token"], token["refresh_token"], is_public, playlist_mbid=playlist_mbid)
         return jsonify({"external_url": url})
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
@@ -1023,15 +1034,20 @@ def export_playlist_jspf(service):
     """
     user = validate_auth_header()
 
-    if service != "spotify":
+    if service != "spotify" and service != "apple_music":
         raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
 
-    spotify_service = SpotifyService()
-    token = spotify_service.get_user(user["id"], refresh=True)
+    if service == "spotify":
+        spotify_service = SpotifyService()
+        token = spotify_service.get_user(user["id"], refresh=True)
+    elif service == "soundcloud":
+        apple_service = AppleService()
+        token = apple_service.get_user(user["id"])
+
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
 
-    if not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+    if service=='spotify' and not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
@@ -1039,7 +1055,10 @@ def export_playlist_jspf(service):
     is_public = parse_boolean_arg("is_public", True)
     jspf = request.json
     try:
-        url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)
+        if service == "spotify":
+            url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)
+        elif service == "apple_music":
+            url = export_to_apple_music(user["auth_token"], token["access_token"], token["refresh_token"], is_public, jspf=jspf)
         return jsonify({"external_url": url})
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
