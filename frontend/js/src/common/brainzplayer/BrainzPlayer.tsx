@@ -242,10 +242,12 @@ export default function BrainzPlayer() {
   listenSubmittedRef.current = listenSubmitted;
   const currentListenIndexRef = React.useRef(currentListenIndex);
   currentListenIndexRef.current = currentListenIndex;
+  const playerPausedRef = React.useRef(playerPaused);
+  playerPausedRef.current = playerPaused;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
-    if (!playerPaused) {
+    if (!playerPausedRef.current) {
       // Some old browsers may allow to set a custom message, but this is deprecated.
       event.preventDefault();
       // eslint-disable-next-line no-param-reassign
@@ -793,12 +795,12 @@ export default function BrainzPlayer() {
       },
       () => {
         updateWindowTitleWithTrackName();
-        if (!playerPaused) {
+        if (!playerPausedRef.current) {
           submitNowPlayingToListenBrainz();
         }
       }
     );
-    if (playerPaused) {
+    if (playerPausedRef.current) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
