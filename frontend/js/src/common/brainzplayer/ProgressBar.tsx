@@ -20,11 +20,12 @@ const EVENT_TYPE_MOUSEMOVE: string = "mousemove";
 const MOUSE_THROTTLE_DELAY: number = 300;
 
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
-const TOOLTIP_TOP_OFFSET: number = 102;
+const TOOLTIP_TOP_OFFSET: number = 39;
 
 function ProgressBar(props: ProgressBarProps) {
   const { durationMs, progressMs, seekToPositionMs } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
+  const progressBarRef = React.useRef<HTMLDivElement>(null);
   const progressPercentage = Number(
     ((progressMs * 100) / durationMs).toFixed(2)
   );
@@ -53,6 +54,14 @@ function ProgressBar(props: ProgressBarProps) {
       const percentPos = relativeClickXPos / progressBarWidth;
       const positionMs = Math.round(durationMs * percentPos);
       const positionTime = millisecondsToStr(positionMs);
+
+      const isMobile = /Mobi/.test(navigator.userAgent);
+
+      if (isMobile) {
+        setTipContent(positionTime);
+        seekToPositionMs(positionMs);
+        return;
+      }
 
       if (event.type === EVENT_TYPE_MOUSEMOVE) {
         setTipContent(positionTime);
@@ -106,6 +115,7 @@ function ProgressBar(props: ProgressBarProps) {
       aria-valuenow={progressPercentage}
       tabIndex={0}
       data-tip={tipContent}
+      ref={progressBarRef}
     >
       <div
         className="progress-bar"
@@ -118,8 +128,11 @@ function ProgressBar(props: ProgressBarProps) {
         getContent={() => tipContent}
         globalEventOff="click"
         overridePosition={({ left, top }) => {
-          // eslint-disable-next-line no-param-reassign
-          top = document.documentElement.clientHeight - TOOLTIP_TOP_OFFSET;
+          const progressBarBoundingRect = progressBarRef.current?.getBoundingClientRect();
+          if (progressBarBoundingRect) {
+            // eslint-disable-next-line no-param-reassign
+            top = progressBarBoundingRect.top - TOOLTIP_TOP_OFFSET;
+          }
           return { left, top };
         }}
       />

@@ -160,6 +160,7 @@ export default function BrainzPlayer() {
     queue,
     ambientQueue,
     queueRepeatMode,
+    currentTrackCoverURL,
   } = useBrainzPlayerContext();
 
   const dispatch = useBrainzPlayerDispatch();
@@ -790,6 +791,7 @@ export default function BrainzPlayer() {
         currentTrackArtist: artist!,
         currentTrackAlbum: album,
         currentTrackURL: trackURL,
+        currentTrackCoverURL: artwork?.[0]?.src,
       },
       () => {
         updateWindowTitleWithTrackName();
@@ -996,6 +998,7 @@ export default function BrainzPlayer() {
           dataSourceRefs[currentDataSourceIndex]?.current?.name
         }
         clearQueue={clearQueue}
+        currentTrackCoverURL={currentTrackCoverURL}
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
