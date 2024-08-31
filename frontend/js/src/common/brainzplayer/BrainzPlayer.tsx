@@ -244,6 +244,8 @@ export default function BrainzPlayer() {
   currentListenIndexRef.current = currentListenIndex;
   const playerPausedRef = React.useRef(playerPaused);
   playerPausedRef.current = playerPaused;
+  const continuousPlaybackTimeRef = React.useRef(continuousPlaybackTime);
+  continuousPlaybackTimeRef.current = continuousPlaybackTime;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -463,7 +465,7 @@ export default function BrainzPlayer() {
         durationMs - SUBMIT_LISTEN_UPDATE_INTERVAL
       );
     }
-    if (continuousPlaybackTime >= playbackTimeRequired) {
+    if (continuousPlaybackTimeRef.current >= playbackTimeRequired) {
       const listen = getListenMetadataToSubmit();
       dispatch({ listenSubmitted: true });
       await submitListenToListenBrainz("single", listen);
