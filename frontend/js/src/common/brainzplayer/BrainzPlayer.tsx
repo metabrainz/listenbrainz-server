@@ -871,15 +871,20 @@ export default function BrainzPlayer() {
     );
   };
 
-  const playAmbientQueue = (): void => {
+  const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
     // 1. Clear the items in the queue after the current playing track
     const currentPlayingListenIndex = currentListenIndexRef.current;
     dispatch(
       {
-        type: "CLEAR_QUEUE_AFTER_CURRENT",
+        type: "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE",
+        data: tracks,
+        isActivated: true,
       },
       async () => {
-        while (queueRef.current.length !== currentPlayingListenIndex + 1) {
+        while (
+          queueRef.current.length !== currentPlayingListenIndex + 1 &&
+          isActivatedRef.current
+        ) {
           // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
@@ -933,7 +938,7 @@ export default function BrainzPlayer() {
         togglePlay();
         break;
       case "play-ambient-queue":
-        playAmbientQueue();
+        playAmbientQueue(payload);
         break;
       default:
       // do nothing
