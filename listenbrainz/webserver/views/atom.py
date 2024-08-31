@@ -1034,95 +1034,97 @@ def _generate_event_title(event):
         return f"Event for {event.user_name}"
 
 
-@atom_bp.route("/user/<user_name>/events", methods=["GET"])
-@crossdomain
-@ratelimit()
-@api_listenstore_needed
-def get_user_events(user_name):
-    """
-    Get events feed for a user.
+# Commented out as new OAuth is not merged yet. Once merged, update this function to use the new OAuth API to 
+# authenticate the user and then fetch the user's events feed.
+# @atom_bp.route("/user/<user_name>/events", methods=["GET"])
+# @crossdomain
+# @ratelimit()
+# @api_listenstore_needed
+# def get_user_events(user_name):
+#     """
+#     Get events feed for a user.
 
-    :param minutes: The time interval in minutes from current time to fetch events for.
-                    Default is 60 minutes.
-    :statuscode 200: The feed was successfully generated.
-    :statuscode 404: User not found.
-    :resheader Content-Type: *application/atom+xml*
-    """
-    user = db_user.get_by_mb_id(db_conn, user_name)
-    if user is None:
-        return NotFound("User not found")
+#     :param minutes: The time interval in minutes from current time to fetch events for.
+#                     Default is 60 minutes.
+#     :statuscode 200: The feed was successfully generated.
+#     :statuscode 404: User not found.
+#     :resheader Content-Type: *application/atom+xml*
+#     """
+#     user = db_user.get_by_mb_id(db_conn, user_name)
+#     if user is None:
+#         return NotFound("User not found")
 
-    minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_EVENTS, type=int)
+#     minutes = request.args.get("minutes", DEFAULT_MINUTES_OF_EVENTS, type=int)
 
-    if minutes < 1 or minutes > 10080:
-        return BadRequest("Value of minutes is out of range")
+#     if minutes < 1 or minutes > 10080:
+#         return BadRequest("Value of minutes is out of range")
 
-    to_ts = datetime.now()
-    from_ts = to_ts - timedelta(minutes=minutes)
+#     to_ts = datetime.now()
+#     from_ts = to_ts - timedelta(minutes=minutes)
 
-    users_following = db_user_relationship.get_following_for_user(
-        db_conn, user["id"])
+#     users_following = db_user_relationship.get_following_for_user(
+#         db_conn, user["id"])
 
-    user_events = get_feed_events_for_user(
-        user=user,
-        followed_users=users_following,
-        min_ts=int(from_ts.timestamp()),
-        max_ts=int(to_ts.timestamp()),
-        count=MAX_ITEMS_PER_GET,
-    )
+#     user_events = get_feed_events_for_user(
+#         user=user,
+#         followed_users=users_following,
+#         min_ts=int(from_ts.timestamp()),
+#         max_ts=int(to_ts.timestamp()),
+#         count=MAX_ITEMS_PER_GET,
+#     )
 
-    fg = _init_feed(
-        _external_url_for(".get_user_events", user_name=user_name),
-        f"Events for {user_name} - ListenBrainz",
-        _external_url_for("user.index", path="", user_name=user_name),
-        _external_url_for(".get_user_events", user_name=user_name),
-    )
+#     fg = _init_feed(
+#         _external_url_for(".get_user_events", user_name=user_name),
+#         f"Events for {user_name} - ListenBrainz",
+#         _external_url_for("user.index", path="", user_name=user_name),
+#         _external_url_for(".get_user_events", user_name=user_name),
+#     )
 
-    user_page_url = _external_url_for("user.index", user_name=user_name)
-    user_page_base_url = _external_url_for("user.index", user_name="")[:-1]
-    artist_page_base_url = _external_url_for("artist.artist_page", path="")
-    recording_mb_page_base_url = "https://musicbrainz.org/recording/"
+#     user_page_url = _external_url_for("user.index", user_name=user_name)
+#     user_page_base_url = _external_url_for("user.index", user_name="")[:-1]
+#     artist_page_base_url = _external_url_for("artist.artist_page", path="")
+#     recording_mb_page_base_url = "https://musicbrainz.org/recording/"
 
-    for event in user_events:
-        current_app.logger.debug(f"Event: {event}")
-        fe = fg.add_entry()
-        fe.id(
-            f"{_external_url_for('.get_user_events', user_name=user_name)}/{event.created}/{event.id}"
-        )
+#     for event in user_events:
+#         current_app.logger.debug(f"Event: {event}")
+#         fe = fg.add_entry()
+#         fe.id(
+#             f"{_external_url_for('.get_user_events', user_name=user_name)}/{event.created}/{event.id}"
+#         )
 
-        title = _generate_event_title(event)
-        fe.title(title)
+#         title = _generate_event_title(event)
+#         fe.title(title)
 
-        if event.event_type == UserTimelineEventType.RECORDING_RECOMMENDATION:
-            template_name = "atom/recording_recommendation_event.html"
-        elif event.event_type == UserTimelineEventType.FOLLOW:
-            template_name = "atom/follow_event.html"
-        elif event.event_type == UserTimelineEventType.LISTEN:
-            template_name = "atom/listen_event.html"
-        elif event.event_type == UserTimelineEventType.NOTIFICATION:
-            template_name = "atom/notification_event.html"
-        elif event.event_type == UserTimelineEventType.RECORDING_PIN:
-            template_name = "atom/recording_pin_event.html"
-        elif event.event_type == UserTimelineEventType.CRITIQUEBRAINZ_REVIEW:
-            template_name = "atom/cb_review_event.html"
-        elif (
-            event.event_type == UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION
-        ):
-            template_name = "atom/personal_recommendation_event.html"
-        else:
-            assert False, f"Invalid event type: {event.event_type}"
+#         if event.event_type == UserTimelineEventType.RECORDING_RECOMMENDATION:
+#             template_name = "atom/recording_recommendation_event.html"
+#         elif event.event_type == UserTimelineEventType.FOLLOW:
+#             template_name = "atom/follow_event.html"
+#         elif event.event_type == UserTimelineEventType.LISTEN:
+#             template_name = "atom/listen_event.html"
+#         elif event.event_type == UserTimelineEventType.NOTIFICATION:
+#             template_name = "atom/notification_event.html"
+#         elif event.event_type == UserTimelineEventType.RECORDING_PIN:
+#             template_name = "atom/recording_pin_event.html"
+#         elif event.event_type == UserTimelineEventType.CRITIQUEBRAINZ_REVIEW:
+#             template_name = "atom/cb_review_event.html"
+#         elif (
+#             event.event_type == UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION
+#         ):
+#             template_name = "atom/personal_recommendation_event.html"
+#         else:
+#             assert False, f"Invalid event type: {event.event_type}"
 
-        content = render_template(
-            template_name,
-            event=event,
-            user_page_url=user_page_url,
-            user_page_base_url=user_page_base_url,
-            artist_page_base_url=artist_page_base_url,
-            recording_mb_page_base_url=recording_mb_page_base_url,
-        )
-        fe.content(content=content, type="html")
-        fe.published(datetime.fromtimestamp(event.created, tz=timezone.utc))
-        fe.updated(datetime.fromtimestamp(event.created, tz=timezone.utc))
+#         content = render_template(
+#             template_name,
+#             event=event,
+#             user_page_url=user_page_url,
+#             user_page_base_url=user_page_base_url,
+#             artist_page_base_url=artist_page_base_url,
+#             recording_mb_page_base_url=recording_mb_page_base_url,
+#         )
+#         fe.content(content=content, type="html")
+#         fe.published(datetime.fromtimestamp(event.created, tz=timezone.utc))
+#         fe.updated(datetime.fromtimestamp(event.created, tz=timezone.utc))
 
-    atomfeed = fg.atom_str(pretty=True)
-    return Response(atomfeed, mimetype="application/atom+xml")
+#     atomfeed = fg.atom_str(pretty=True)
+#     return Response(atomfeed, mimetype="application/atom+xml")

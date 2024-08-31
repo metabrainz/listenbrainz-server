@@ -566,6 +566,8 @@ export default function UserFeedPage() {
       </Helmet>
       <div className="listen-header">
         <h3 className="header-with-line">Latest activity</h3>
+        {/* Commented out as new OAuth is not merged yet. */}
+        {/*
         <FontAwesomeIcon
           role="button"
           icon={faSquareRss}
@@ -622,6 +624,7 @@ export default function UserFeedPage() {
             });
           }}
         />
+        */}
       </div>
       <div className="row">
         <div className="col-md-7 col-xs-12">
