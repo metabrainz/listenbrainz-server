@@ -163,6 +163,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             select extract(year from listened_at) as year
                  , extract(month from listened_at) as month
                  , listened_at
+                 , created
                  , user_id
                  , recording_msid
                  , artist_name
