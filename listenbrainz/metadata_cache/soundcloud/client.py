@@ -1,10 +1,6 @@
 import requests
-from requests import RequestException
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
-
-from listenbrainz.domain.soundcloud import SoundCloudService
-from listenbrainz.webserver.errors import APIForbidden
 
 SOUNDCLOUD_URL = 'https://api.soundcloud.com'
 
