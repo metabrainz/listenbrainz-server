@@ -127,11 +127,15 @@ def lb_radio_artist(mode: str, seed_artist: str, max_similar_artists: int, num_r
 
     # Now select the actual similar artist offsets to pick
     artist_indexes = []
-    for i in range(max_similar_artists):
-        try:
-            artist_indexes.append(randint((i * steps + offset), ((i + 1) * steps + offset)))
-        except IndexError:
-            break
+    if max_similar_artists > 0:
+        for i in range(max_similar_artists):
+            try:
+                artist_indexes.append(randint((i * steps + offset), ((i + 1) * steps + offset)))
+            except IndexError:
+                break
+    else:
+        # Provide a row id that does not exist
+        artist_indexes = [0]
 
     # Pass the calculated args above to postgres and run the query
     with ts_conn.connection.cursor(cursor_factory=DictCursor) as curs:

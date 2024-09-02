@@ -844,6 +844,9 @@ const getAlbumArtFromListenMetadata = async (
   spotifyUser?: SpotifyUser,
   APIService?: APIServiceClass
 ): Promise<string | undefined> => {
+  if (!listen) {
+    return undefined;
+  }
   // if spotifyListen
   if (
     SpotifyPlayer.isListenFromThisService(listen) &&
