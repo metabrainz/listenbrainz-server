@@ -45,12 +45,13 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
           <ToastMsg
             title="Error loading playlists"
             message={
-              error?.message === "Forbidden" ? (
+              error?.message === "Unauthorized" ? (
                 <>
                   Session has expired. Please reconnect to{" "}
-                  <Link to="/settings/music-services/details/">Soundcloud</Link>
-                  .
+                  <Link to="/settings/music-services/details/">Soundcloud</Link>.
                 </>
+              ) : error?.message === "Not Found" ? (
+                "The requested resource was not found."
               ) : (
                 error?.message ?? error
               )
@@ -101,7 +102,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
           message={
             <>
               Imported
-              <a href={newPlaylist.identifier}> {playlistName}</a>
+              <Link to={newPlaylist.identifier}> {playlistName}</Link>
             </>
           }
         />,
