@@ -11,7 +11,6 @@ import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
-import { useMediaQuery } from "./utils";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -144,14 +143,6 @@ export default function FreshReleases() {
       [setting]: !displaySettings[setting],
     });
   };
-
-  const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
-  let pillRowStyle = {};
-  if (screenMd) {
-    pillRowStyle = { justifyContent: "center" };
-  } else if (!isLoggedIn) {
-    pillRowStyle = { justifyContent: "flex-end" };
-  }
 
   const queryKey =
     pageType === PAGE_TYPE_SITEWIDE
@@ -294,31 +285,30 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div className="fresh-releases-pill-row" style={pillRowStyle}>
-            {isLoggedIn ? (
-              <div className="fresh-releases-row">
-                <Pill
-                  id="sitewide-releases"
-                  data-testid="sitewide-releases-pill"
-                  onClick={() => {
-                    setPageType(PAGE_TYPE_SITEWIDE);
-                    setSort("release_date");
-                  }}
-                  active={pageType === PAGE_TYPE_SITEWIDE}
-                  type="secondary"
-                >
-                  All
-                </Pill>
-                <Pill
-                  id="user-releases"
-                  onClick={() => setPageType(PAGE_TYPE_USER)}
-                  active={pageType === PAGE_TYPE_USER}
-                  type="secondary"
-                >
-                  For You
-                </Pill>
-              </div>
-            ) : null}
+          <div className="fresh-releases-pill-row">
+            <div className="fresh-releases-row">
+              <Pill
+                id="sitewide-releases"
+                data-testid="sitewide-releases-pill"
+                onClick={() => {
+                  setPageType(PAGE_TYPE_SITEWIDE);
+                  setSort("release_date");
+                }}
+                active={pageType === PAGE_TYPE_SITEWIDE}
+                type="secondary"
+              >
+                All
+              </Pill>
+              <Pill
+                id="user-releases"
+                onClick={() => setPageType(PAGE_TYPE_USER)}
+                active={pageType === PAGE_TYPE_USER}
+                type="secondary"
+                disabled={!isLoggedIn}
+              >
+                For You
+              </Pill>
+            </div>
             <div className="fresh-releases-row">
               <span>Sort By:</span>{" "}
               <div className="input-group">
