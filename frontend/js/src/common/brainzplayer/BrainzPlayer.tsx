@@ -243,10 +243,14 @@ export default function BrainzPlayer() {
   listenSubmittedRef.current = listenSubmitted;
   const currentListenIndexRef = React.useRef(currentListenIndex);
   currentListenIndexRef.current = currentListenIndex;
+  const playerPausedRef = React.useRef(playerPaused);
+  playerPausedRef.current = playerPaused;
+  const continuousPlaybackTimeRef = React.useRef(continuousPlaybackTime);
+  continuousPlaybackTimeRef.current = continuousPlaybackTime;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
-    if (!playerPaused) {
+    if (!playerPausedRef.current) {
       // Some old browsers may allow to set a custom message, but this is deprecated.
       event.preventDefault();
       // eslint-disable-next-line no-param-reassign
@@ -462,7 +466,7 @@ export default function BrainzPlayer() {
         durationMs - SUBMIT_LISTEN_UPDATE_INTERVAL
       );
     }
-    if (continuousPlaybackTime >= playbackTimeRequired) {
+    if (continuousPlaybackTimeRef.current >= playbackTimeRequired) {
       const listen = getListenMetadataToSubmit();
       dispatch({ listenSubmitted: true });
       await submitListenToListenBrainz("single", listen);
@@ -795,12 +799,12 @@ export default function BrainzPlayer() {
       },
       () => {
         updateWindowTitleWithTrackName();
-        if (!playerPaused) {
+        if (!playerPausedRef.current) {
           submitNowPlayingToListenBrainz();
         }
       }
     );
-    if (playerPaused) {
+    if (playerPausedRef.current) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
@@ -869,15 +873,20 @@ export default function BrainzPlayer() {
     );
   };
 
-  const playAmbientQueue = (): void => {
+  const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
     // 1. Clear the items in the queue after the current playing track
     const currentPlayingListenIndex = currentListenIndexRef.current;
     dispatch(
       {
-        type: "CLEAR_QUEUE_AFTER_CURRENT",
+        type: "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE",
+        data: tracks,
+        isActivated: true,
       },
       async () => {
-        while (queueRef.current.length !== currentPlayingListenIndex + 1) {
+        while (
+          queueRef.current.length !== currentPlayingListenIndex + 1 &&
+          isActivatedRef.current
+        ) {
           // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
@@ -931,7 +940,7 @@ export default function BrainzPlayer() {
         togglePlay();
         break;
       case "play-ambient-queue":
-        playAmbientQueue();
+        playAmbientQueue(payload);
         break;
       default:
       // do nothing

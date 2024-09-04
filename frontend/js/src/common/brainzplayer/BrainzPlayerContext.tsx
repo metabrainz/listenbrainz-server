@@ -74,7 +74,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "SET_PLAYBACK_TIMER"
     | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
-    | "CLEAR_QUEUE_AFTER_CURRENT"
+    | "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE"
     | "MOVE_AMBIENT_QUEUE_ITEM"
     | "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE"
     | "REMOVE_TRACK_FROM_QUEUE"
@@ -100,7 +100,7 @@ function valueReducer(
         return { ...state, ...action };
       }
       const data = action.data as BrainzPlayerQueue;
-      const { type, data: _, ...restActions } = action;
+      const { data: _, ...restActions } = action;
       const newQueue = [...data].map(listenOrJSPFTrackToQueueItem);
       if (data.length !== 0) {
         return {
@@ -287,12 +287,17 @@ function valueReducer(
         ambientQueue: [...ambientQueue, trackToAdd],
       };
     }
-    case "CLEAR_QUEUE_AFTER_CURRENT": {
+    case "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE": {
       const { currentListenIndex, queue } = state;
       const updatedQueue = queue.slice(0, currentListenIndex + 1);
+      const data = action.data as BrainzPlayerQueue;
+      const { data: _, ...restActions } = action;
+      const newAmbientQueue = [...data].map(listenOrJSPFTrackToQueueItem);
       return {
         ...state,
+        ...restActions,
         queue: updatedQueue,
+        ambientQueue: newAmbientQueue,
       };
     }
     case "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE": {
