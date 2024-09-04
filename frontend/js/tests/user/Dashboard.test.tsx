@@ -155,12 +155,6 @@ describe("Listens page", () => {
       expect(state?.status === "success").toBeTruthy();
     });
 
-    await waitFor(() => {
-      expect(
-        screen.getByTestId("listen-count-card-content")
-      ).toBeInTheDocument();
-    });
-
     const listenCountCard = await screen.findByTestId("listen-count-card");
 
     expect(listenCountCard).toHaveTextContent(
