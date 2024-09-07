@@ -6,8 +6,9 @@ from datetime import datetime, date, time, timedelta
 from pathlib import Path
 
 import orjson
+from brainzutils.mail import send_mail
 from dateutil.relativedelta import relativedelta
-from flask import current_app
+from flask import current_app, render_template
 from sqlalchemy import text
 
 from listenbrainz.db import user as db_user
@@ -15,6 +16,16 @@ from listenbrainz.webserver import timescale_connection
 
 BATCH_SIZE = 1000
 USER_DATA_EXPORT_AVAILABILITY = timedelta(days=30)  # how long should a user data export be saved for on our servers
+
+
+def update_export_progress(db_conn, export_id, progress):
+    """ Update progress for user data export """
+    db_conn.execute(text("""
+        UPDATE user_data_export
+           SET progress = :progress
+         WHERE id = :export_id
+    """), {"export_id": export_id, "progress": progress})
+    db_conn.commit()
 
 
 def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
@@ -63,7 +74,7 @@ def export_query_to_jsonl(conn, file_path, query, **kwargs):
     return rowcount
 
 
-def export_listens_for_time_range(conn, file_path, user_id: int, start_time: datetime, end_time: datetime):
+def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: datetime, end_time: datetime):
     """ Export user's listens for a given time period. """
     query = """
         SELECT jsonb_build_object(
@@ -78,11 +89,12 @@ def export_listens_for_time_range(conn, file_path, user_id: int, start_time: dat
            AND user_id = :user_id
       ORDER BY listened_at ASC
     """
-    return export_query_to_jsonl(conn, file_path, query, user_id=user_id, start_time=start_time, end_time=end_time)
+    return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id, start_time=start_time, end_time=end_time)
 
 
-def export_listens_for_user(ts_conn, tmp_dir: str, user_id: int) -> list[str]:
+def export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir: str, user_id: int) -> list[str]:
     """ Export user's listens to files organized by year and month in jsonl format. """
+    update_export_progress(db_conn, export_id, "Exporting user listens")
     files = []
     min_ts, max_ts = timescale_connection._ts.get_timestamps_for_user(user_id)
     time_ranges = get_time_ranges_for_listens(min_ts, max_ts)
@@ -91,6 +103,8 @@ def export_listens_for_user(ts_conn, tmp_dir: str, user_id: int) -> list[str]:
         year_dir = os.path.join(tmp_dir, "listens", str(time_range["year"]))
         os.makedirs(year_dir, exist_ok=True)
         for period in time_range["months"]:
+            period_str = datetime.strftime(period["start"], "%Y-%m-%d") + " " + datetime.strftime(period["end"], "%Y-%m-%d")
+            update_export_progress(db_conn, export_id, f"Exporting listens for the period {period_str}")
             file_path = os.path.join(year_dir, f"{period['month']}.jsonl")
 
             rowcount = export_listens_for_time_range(ts_conn, file_path, user_id, period["start"], period["end"])
@@ -100,8 +114,9 @@ def export_listens_for_user(ts_conn, tmp_dir: str, user_id: int) -> list[str]:
     return files
 
 
-def export_feedback_for_user(db_conn, tmp_dir: str, user_id: int) -> str | None:
+def export_feedback_for_user(export_id, db_conn, tmp_dir: str, user_id: int) -> str | None:
     """ Export user's feedback to a file in jsonl format. """
+    update_export_progress(db_conn, export_id, "Exporting user feedback")
     file_path = os.path.join(tmp_dir, "feedback.jsonl")
     query = """
         SELECT jsonb_build_object(
@@ -124,8 +139,9 @@ def export_feedback_for_user(db_conn, tmp_dir: str, user_id: int) -> str | None:
     return None
 
 
-def export_pinned_recordings_for_user(db_conn, tmp_dir: str, user_id: int) -> str | None:
+def export_pinned_recordings_for_user(export_id, db_conn, tmp_dir: str, user_id: int) -> str | None:
     """ Export user's pinned recordings to a file in jsonl format. """
+    update_export_progress(db_conn, export_id, "Exporting user pinned recordings")
     file_path = os.path.join(tmp_dir, "pinned_recording.jsonl")
     query = """
         SELECT jsonb_build_object(
@@ -150,8 +166,9 @@ def export_pinned_recordings_for_user(db_conn, tmp_dir: str, user_id: int) -> st
     return None
 
 
-def export_info_for_user(tmp_dir, user):
+def export_info_for_user(export_id, db_conn, tmp_dir, user):
     """ Export user's info to a file in json format. """
+    update_export_progress(db_conn, export_id, "Exporting user info")
     file_path = os.path.join(tmp_dir, "user.json")
     with open(file_path, "wb") as file:
         file.write(orjson.dumps({"user_id": user["id"], "username": user["musicbrainz_id"]}))
@@ -159,58 +176,97 @@ def export_info_for_user(tmp_dir, user):
     return file_path
 
 
-def export_user(db_conn, ts_conn, user_id: int):
+def export_user(db_conn, ts_conn, user_id: int, metadata):
     """ Export all data for the given user in a zip archive """
     user = db_user.get(db_conn, user_id)
     if user is None:
-        current_app.logger.info("User with id: %s does not exist, skipping export.", user_id)
+        current_app.logger.error("User with id: %s does not exist, skipping export.", user_id)
         return
+
+    result = db_conn.execute(text("""
+        SELECT *
+          FROM user_data_export
+         WHERE id = :export_id
+    """), {"export_id": metadata["export_id"]})
+    export = result.first()
+    if export is None:
+        current_app.logger.error("No export with export_id: %s, skipping.", metadata["export_id"])
+        return
+
+    export_id = export.id
 
     archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
     dest_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], archive_name)
+
+    db_conn.execute(text("""
+         UPDATE user_data_export
+            SET
+                filename = :filename
+              , status = 'in_progress'
+              , progress = :progress
+          WHERE id = :export_id    
+    """), {
+        "export_id": export_id,
+        "filename": archive_name,
+        "progress": "Starting export",
+    })
+    db_conn.commit()
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         archive_path = os.path.join(tmp_dir, archive_name)
         with zipfile.ZipFile(archive_path, "w") as archive:
             all_files = []
 
-            user_file = export_info_for_user(tmp_dir, user)
+            user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
             all_files.append(user_file)
 
-            listen_files = export_listens_for_user(ts_conn, tmp_dir, user_id)
+            listen_files = export_listens_for_user(export_id, db_conn, ts_conn, tmp_dir, user_id)
             all_files.extend(listen_files)
 
-            feedback_file = export_feedback_for_user(db_conn, tmp_dir, user_id)
+            feedback_file = export_feedback_for_user(export_id, db_conn, tmp_dir, user_id)
             if feedback_file:
                 all_files.append(feedback_file)
 
-            pinned_recording_file = export_pinned_recordings_for_user(db_conn, tmp_dir, user_id)
+            pinned_recording_file = export_pinned_recordings_for_user(export_id, db_conn, tmp_dir, user_id)
             if pinned_recording_file:
                 all_files.append(pinned_recording_file)
 
+            update_export_progress(db_conn, export_id, "Writing export files")
             for file in all_files:
                 archive.write(file, arcname=os.path.relpath(file, tmp_dir))
 
+        update_export_progress(db_conn, export_id, "Finalizing user data export")
         shutil.move(archive_path, dest_path)
 
     created = datetime.now()
     available_until = created + USER_DATA_EXPORT_AVAILABILITY
     db_conn.execute(text("""
-        INSERT INTO user_data_export (user_id, filename, available_until, created)
-             VALUES (:user_id, :filename, :available_until, :created)
-        ON CONFLICT (user_id)
-          DO UPDATE
-                SET available_until = EXCLUDED.available_until
-                  , filename = EXCLUDED.filename
-                  , created = EXCLUDED.created
-    """), {
-        "user_id": user_id,
-        "filename": archive_name,
-        "available_until": available_until,
-        "created": created
-    })
+        UPDATE user_data_export
+           SET progress = :progress
+             , available_until = :available_until
+             , status = 'completed'
+         WHERE id = :export_id
+    """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
     db_conn.commit()
-    # todo: send email that export is done
+
+    try:
+        notify_user_email(db_conn, user_id)
+    except Exception as e:
+        current_app.logger.error("Failed to notify user: %s", e)
+
+def notify_user_email(db_conn, user_id):
+    user = db_user.get(db_conn, user_id, fetch_email=True)
+    if user["email"] is None:
+        return
+    url = current_app.config['SERVER_ROOT_URL'] + '/settings/export/'
+    content = render_template('emails/export_completed.txt', username=user["musicbrainz_id"], url=url)
+    send_mail(
+        subject='ListenBrainz Spotify Importer Error',
+        text=content,
+        recipients=[user["email"]],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
 
 
 def cleanup_old_exports(db_conn):

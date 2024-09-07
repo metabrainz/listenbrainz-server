@@ -1,0 +1,106 @@
+import json
+import os
+
+from flask import Blueprint, current_app, jsonify, send_file
+from flask_login import current_user
+from psycopg2 import DatabaseError
+from sqlalchemy import text
+
+from listenbrainz.webserver import db_conn
+from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest
+from listenbrainz.webserver.login import api_login_required
+
+export_bp = Blueprint("export", __name__)
+
+
+@export_bp.route("/", methods=["POST"])
+@api_login_required
+@web_listenstore_needed
+def create_export_task():
+    """ Add a request to export the user data to an archive in background. """
+    try:
+        query = """
+            INSERT INTO user_data_export (user_id, type, status, progress)
+                 VALUES (:user_id, :type, 'waiting', :progress)
+            ON CONFLICT (user_id, type) WHERE status = 'waiting' DO NOTHING
+              RETURNING id
+        """
+        result = db_conn.execute(text(query), {
+            "user_id": current_user.id,
+            "type": "export_all_user_data",
+            "progress": "Your data export will start soon."
+        })
+        export = result.first()
+
+        if export is not None:
+            query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
+            result = db_conn.execute(text(query), {
+                "user_id": current_user.id,
+                "task": "export_all_user_data",
+                "metadata": json.dumps({"export_id": export.id})
+            })
+            task = result.first()
+            if task is not None:
+                db_conn.commit()
+                return jsonify({"success": True, "export_id": export.id})
+
+        # task already exists in queue, rollback new entry
+        db_conn.rollback()
+        raise APIBadRequest(message="Data export already requested.")
+
+    except DatabaseError:
+        current_app.logger.error('Error while exporting user data: %s', current_user.musicbrainz_id, exc_info=True)
+        raise APIInternalServerError(f'Error while exporting user data {current_user.musicbrainz_id}, please try again later.')
+
+
+@export_bp.route("/<export_id>/", methods=["GET"])
+@api_login_required
+@web_listenstore_needed
+def get_export_task(export_id):
+    """ Retrieve the requested export's data if it belongs to the specified user """
+    result = db_conn.execute(
+        text("SELECT * FROM user_data_export WHERE user_id = :user_id AND export_id = :export_id"),
+        {"user_id": current_user.id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is None:
+        raise APINotFound("Export not found")
+    return jsonify(row)
+
+
+@export_bp.route("/list/", methods=["GET"])
+@api_login_required
+@web_listenstore_needed
+def list_export_tasks():
+    """ Retrieve the all export tasks for the current user """
+    result = db_conn.execute(
+        text("SELECT * FROM user_data_export WHERE user_id = :user_id ORDER BY created DESC"),
+        {"user_id": current_user.id}
+    )
+    rows = result.mappings().all()
+    return jsonify([{
+        "export_id": row.id,
+        "type": row.type,
+        "available_until": row.available_until.isoformat() if row.available_until is not None else None,
+        "created": row.created.isoformat(),
+        "progress": row.progress,
+        "status": row.status,
+    } for row in rows])
+
+
+@export_bp.route("/download/<export_id>/", methods=["POST"])
+@api_login_required
+@web_listenstore_needed
+def download_export_archive(export_id):
+    """ Download the requested export if it is complete and belongs to the specified user """
+    result = db_conn.execute(
+        text("SELECT filename FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id"),
+        {"user_id": current_user.id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is None:
+        raise APINotFound("Export not found")
+
+    file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename))
+    return send_file(file_path, mimetype="application/zip", as_attachment=True)

@@ -33,8 +33,6 @@ from listenbrainz.webserver.login import api_login_required
 
 settings_bp = Blueprint("settings", __name__)
 
-EXPORT_FETCH_COUNT = 5000
-
 
 @settings_bp.route("/resettoken/", methods=["POST"])
 @api_login_required
@@ -104,36 +102,6 @@ def import_data():
     }
 
     return jsonify(data)
-
-
-@settings_bp.route("/export/", methods=["POST"])
-@api_login_required
-@web_listenstore_needed
-def export_data():
-    """ Add a request to export the user data to an archive in background. """
-    try:
-        add_task(current_user.id, "export_user")
-        return jsonify({"success": True})
-    except Exception:
-        current_app.logger.error('Error while exporting user data: %s', current_user.musicbrainz_id, exc_info=True)
-        raise APIInternalServerError(f'Error while exporting user data {current_user.musicbrainz_id}, please try again later.')
-
-
-@settings_bp.route("/export/archive/", methods=["POST"])
-@api_login_required
-@web_listenstore_needed
-def download_export_archive():
-    """ Add a request to export the user data to an archive in background. """
-    result = db_conn.execute(
-        text("SELECT filename FROM user_data_export WHERE user_id = :user_id"),
-        {"user_id": current_user.id}
-    )
-    row = result.first()
-    if row is None:
-        raise APINotFound("No export found for user.")
-
-    file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename))
-    return send_file(file_path, mimetype="application/zip", as_attachment=True)
 
 
 @settings_bp.route('/delete/', methods=['POST'])
