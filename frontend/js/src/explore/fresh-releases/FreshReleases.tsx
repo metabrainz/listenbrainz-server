@@ -4,6 +4,7 @@ import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import ReleaseFilters from "./components/ReleaseFilters";
@@ -104,6 +105,7 @@ type FreshReleasesData = {
 
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
@@ -278,6 +280,18 @@ export default function FreshReleases() {
     message = `0/${releases.length} releases match your filters.`;
   }
 
+  const handleLoginRedirect = () => {
+    toast.error(
+      <ToastMsg
+        title="You must be logged in to view personalized releases"
+        message="Please log in to view personalized releases"
+      />,
+      { toastId: "login-error" }
+    );
+
+    navigate("/login");
+  };
+
   return (
     <>
       <Helmet>
@@ -301,10 +315,16 @@ export default function FreshReleases() {
               </Pill>
               <Pill
                 id="user-releases"
-                onClick={() => setPageType(PAGE_TYPE_USER)}
+                onClick={() => {
+                  if (isLoggedIn) {
+                    setPageType(PAGE_TYPE_USER);
+                  } else {
+                    handleLoginRedirect();
+                  }
+                }}
                 active={pageType === PAGE_TYPE_USER}
                 type="secondary"
-                disabled={!isLoggedIn}
+                className={isLoggedIn ? "" : "disabled"}
               >
                 For You
               </Pill>
