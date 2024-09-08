@@ -147,9 +147,11 @@ def artist_entity(artist_mbid):
             )
     except IndexError:
         similar_artists = []
-    
+
     try:
-        top_release_group_color = popularity.get_top_release_groups_for_artist(db_conn, ts_conn, artist_mbid, 1)[0]["release_color"]
+        top_release_group_color = popularity.get_top_release_groups_for_artist(
+            db_conn, ts_conn, artist_mbid, 1
+        )[0]["release_color"]
     except IndexError:
         top_release_group_color = None
 
