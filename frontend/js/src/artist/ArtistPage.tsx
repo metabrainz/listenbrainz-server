@@ -9,7 +9,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import { Link, useLoaderData, useLocation, useParams } from "react-router-dom";
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -30,12 +36,17 @@ import type {
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
   releaseGroups: ReleaseGroup[];
-  similarArtists: SimilarArtist[];
+  similarArtists: {
+    artists: SimilarArtist[];
+    topReleaseGroupColor: ReleaseColor | undefined;
+    topRecordingColor: ReleaseColor | undefined;
+  };
   listeningStats: ListeningStats;
   coverArt?: string;
 };
@@ -57,6 +68,8 @@ export default function ArtistPage(): JSX.Element {
     listeningStats,
     coverArt: coverArtSVG,
   } = data || {};
+
+  const navigate = useNavigate();
 
   const {
     total_listen_count: listenCount,
@@ -132,6 +145,17 @@ export default function ArtistPage(): JSX.Element {
   const bigNumberFormatter = Intl.NumberFormat(undefined, {
     notation: "compact",
   });
+
+  const artistGraphNodeInfo = {
+    artist_mbid: artist?.artist_mbid,
+    name: artist?.name,
+  } as ArtistNodeInfo;
+
+  const onArtistChange = (artist_mbid: string) => {
+    navigate(`/artist/${artist_mbid}`);
+  };
+
+  const graphParentElementRef = React.useRef<HTMLDivElement>(null);
 
   const getReleaseCard = (rg: ReleaseGroup) => {
     return (
@@ -395,68 +419,47 @@ export default function ArtistPage(): JSX.Element {
             </div>
           </div>
         )}
-        <div className="similarity">
-          <h3 className="header-with-line">Similar artists</h3>
-          <div className="artists">
-            {sortBy(similarArtists, "score")
-              .reverse()
-              .map((similarArtist) => {
-                const listenDetails = (
-                  <div>
-                    <Link to={`/artist/${similarArtist.artist_mbid}/`}>
-                      {similarArtist.name}
-                    </Link>
-                  </div>
-                );
-                const artistAsListen: BaseListenFormat = {
-                  listened_at: 0,
-                  track_metadata: {
-                    artist_name: similarArtist.name,
-                    track_name: "",
-                  },
-                };
-                return (
-                  <ListenCard
-                    key={similarArtist.artist_mbid}
-                    listenDetails={listenDetails}
-                    listen={artistAsListen}
-                    showTimestamp={false}
-                    showUsername={false}
-                    // no thumbnail for artist entities
-                    // eslint-disable-next-line react/jsx-no-useless-fragment
-                    customThumbnail={<></>}
-                    // eslint-disable-next-line react/jsx-no-useless-fragment
-                    feedbackComponent={<></>}
-                    compact
-                  />
-                );
-              })}
+      </div>
+
+      {similarArtists && similarArtists.artists && (
+        <>
+          <h3 className="header-with-line">Similar Artists</h3>
+          <div className="similarity">
+            <SimilarArtistComponent
+              onArtistChange={onArtistChange}
+              artistGraphNodeInfo={artistGraphNodeInfo}
+              similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
+              topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
+              topRecordingReleaseColor={similarArtists.topRecordingColor}
+              similarArtistsLimit={18}
+              graphParentElementRef={graphParentElementRef}
+            />
           </div>
-        </div>
-        <div className="reviews">
-          <h3 className="header-with-line">Reviews</h3>
-          {reviews?.length ? (
-            <>
-              {reviews.slice(0, 3).map(getReviewEventContent)}
-              <a
-                href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
-                className="critiquebrainz-button btn btn-link"
-              >
-                More on CritiqueBrainz…
-              </a>
-            </>
-          ) : (
-            <>
-              <p>Be the first to review this artist on CritiqueBrainz</p>
-              <a
-                href={`https://critiquebrainz.org/review/write/artist/${artist?.artist_mbid}`}
-                className="btn btn-outline"
-              >
-                Add my review
-              </a>
-            </>
-          )}
-        </div>
+        </>
+      )}
+      <div className="reviews">
+        <h3 className="header-with-line">Reviews</h3>
+        {reviews?.length ? (
+          <>
+            {reviews.slice(0, 3).map(getReviewEventContent)}
+            <a
+              href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
+              className="critiquebrainz-button btn btn-link"
+            >
+              More on CritiqueBrainz…
+            </a>
+          </>
+        ) : (
+          <>
+            <p>Be the first to review this artist on CritiqueBrainz</p>
+            <a
+              href={`https://critiquebrainz.org/review/write/artist/${artist?.artist_mbid}`}
+              className="btn btn-outline"
+            >
+              Add my review
+            </a>
+          </>
+        )}
       </div>
     </div>
   );
