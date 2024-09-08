@@ -15,7 +15,7 @@ export default function Pill(props: React.PropsWithChildren<PillProps>) {
     children,
     type,
     style: propStyle,
-    className: propClassName,
+    className: propClassName = "",
     ...buttonProps
   } = props;
 
