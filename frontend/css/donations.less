@@ -1,0 +1,30 @@
+#donations-page {
+    background: @homepage-background;
+}
+
+#donations-tiers {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 1em;
+    align-items: center;
+    .tier {
+        padding: 1em;
+        flex: 1;
+        height: 68vh;
+        scale:1;
+        &:hover{
+            height:70vh;
+            scale: 1.1;
+        }
+        background: fadeout(white,20%);
+        transition: scale 0.4s ease-out;
+    }
+    .tier-heading {
+        text-align: center;
+        min-height: 150px;
+        margin-bottom: 1em;
+        padding-bottom: 1em;
+        border-bottom: 1px solid @gray;
+    }
+}
