@@ -12,6 +12,7 @@ import tinycolor from "tinycolor2";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   getRelIconLink,
   ListeningStats,
@@ -29,6 +30,7 @@ import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import CBReviewModal from "../cb-review/CBReviewModal";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -62,6 +64,7 @@ export default function AlbumPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams() as { albumMBID: string };
+  const { albumMBID } = params;
   const { data } = useQuery<AlbumPageProps>(
     RouteQuery(["album", params], location.pathname)
   );
@@ -468,16 +471,32 @@ export default function AlbumPage(): JSX.Element {
               </a>
             </>
           ) : (
-            <>
-              <p>Be the first to review this album on CritiqueBrainz</p>
-              <a
-                href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
-                className="btn btn-outline"
-              >
-                Add my review
-              </a>
-            </>
+            <p>Be the first to review this album on CritiqueBrainz</p>
           )}
+          <button
+            type="button"
+            className="btn btn-info"
+            data-toggle="modal"
+            data-target="#CBReviewModal"
+            onClick={() => {
+              NiceModal.show(CBReviewModal, {
+                entityToReview: [
+                  {
+                    type: "release_group",
+                    mbid: albumMBID,
+                    name: album.name,
+                  },
+                  {
+                    type: "artist",
+                    mbid: artist.artists[0].artist_mbid,
+                    name: artist.artists[0].name,
+                  },
+                ],
+              });
+            }}
+          >
+            Add my review
+          </button>
         </div>
       </div>
     </div>

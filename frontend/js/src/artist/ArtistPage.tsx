@@ -18,6 +18,7 @@ import {
 } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
@@ -37,6 +38,7 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
+import CBReviewModal from "../cb-review/CBReviewModal";
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
@@ -454,18 +456,27 @@ export default function ArtistPage(): JSX.Element {
             </a>
           </>
         ) : (
-          <>
-            <p>Be the first to review this artist on CritiqueBrainz</p>
-            <a
-              href={`https://critiquebrainz.org/review/write/artist/${artist?.artist_mbid}`}
-              className="btn btn-outline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Add my review
-            </a>
-          </>
+          <p>Be the first to review this artist on CritiqueBrainz</p>
         )}
+        <button
+          type="button"
+          className="btn btn-info"
+          data-toggle="modal"
+          data-target="#CBReviewModal"
+          onClick={() => {
+            NiceModal.show(CBReviewModal, {
+              entityToReview: [
+                {
+                  type: "artist",
+                  mbid: artistMBID,
+                  name: artist?.name,
+                },
+              ],
+            });
+          }}
+        >
+          Add my review
+        </button>
       </div>
     </div>
   );
