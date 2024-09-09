@@ -151,6 +151,11 @@
       flex-basis: 300px;
     }
     .reviews {
+      .review-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
       .critiquebrainz-button {
         margin-top: 2em;
       }
@@ -191,14 +196,57 @@
 }
 
 .review {
-  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  transition: box-shadow 0.3s ease;
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .review-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .rating-stars {
+      margin-left: 8px;
+    }
+    .review-card-header-author {
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
   .text {
     max-height: 10em;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+
+    display: -webkit-box;
+    line-clamp: 4;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
   }
-  .read-more {
-    text-align: initial;
+  .review-card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+    .read-more-link {
+      text-decoration: none;
+      transition: color 0.3s ease;
+      color: #353070;
+
+      &:hover {
+        color: #4a4a8c;
+      }
+    }
   }
 }
 

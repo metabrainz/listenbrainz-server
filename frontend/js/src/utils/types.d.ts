@@ -539,6 +539,7 @@ type CritiqueBrainzReview = {
   languageCode?: string;
   rating?: number;
   user_name?: string;
+  published_on?: string;
 };
 
 type CritiqueBrainzReviewAPI = {

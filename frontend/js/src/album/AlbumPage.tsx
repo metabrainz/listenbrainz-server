@@ -457,7 +457,9 @@ export default function AlbumPage(): JSX.Element {
           <h3 className="header-with-line">Reviews</h3>
           {reviews?.length ? (
             <>
-              {reviews.slice(0, 3).map(getReviewEventContent)}
+              <div className="review-cards">
+                {reviews.slice(0, 3).map(getReviewEventContent)}
+              </div>
               <a
                 href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
                 className="critiquebrainz-button btn btn-link"

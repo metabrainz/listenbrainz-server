@@ -421,7 +421,7 @@ export default function ArtistPage(): JSX.Element {
         )}
       </div>
 
-      {similarArtists && similarArtists.artists && (
+      {similarArtists && similarArtists.artists.length > 0 ? (
         <>
           <h3 className="header-with-line">Similar Artists</h3>
           <div className="similarity">
@@ -436,15 +436,19 @@ export default function ArtistPage(): JSX.Element {
             />
           </div>
         </>
-      )}
+      ) : null}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
         {reviews?.length ? (
           <>
-            {reviews.slice(0, 3).map(getReviewEventContent)}
+            <div className="review-cards">
+              {reviews.slice(0, 3).map(getReviewEventContent)}
+            </div>
             <a
               href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
               className="critiquebrainz-button btn btn-link"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               More on CritiqueBrainz…
             </a>
@@ -455,6 +459,8 @@ export default function ArtistPage(): JSX.Element {
             <a
               href={`https://critiquebrainz.org/review/write/artist/${artist?.artist_mbid}`}
               className="btn btn-outline"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Add my review
             </a>
