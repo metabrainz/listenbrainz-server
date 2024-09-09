@@ -190,7 +190,9 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                      LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
                                      LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
                                  , rgpt.name AS type
-                                 , array_agg(rgst.name ORDER BY rgst.name) AS secondary_types
+                                 , array_agg(DISTINCT rgst.name ORDER BY rgst.name)
+                                     FILTER (WHERE rgst.name IS NOT NULL)
+                                   AS secondary_types
                                  , jsonb_agg(jsonb_build_object(
                                         'artist_mbid', a2.gid::TEXT,
                                         'artist_credit_name', acn2.name,
@@ -209,7 +211,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON rg.type = rgpt.id
                          LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj
                                 ON rgstj.release_group = rg.id
-                            LEFT JOIN musicbrainz.release_group_secondary_type rgst
+                         LEFT JOIN musicbrainz.release_group_secondary_type rgst
                                 ON rgst.id = rgstj.secondary_type
                          LEFT JOIN rg_cover_art rgca
                                 ON rgca.release_group = rg.id
