@@ -281,7 +281,7 @@ export default function FreshReleases() {
   }
 
   const handleLoginRedirect = () => {
-    toast.error(
+    toast.warning(
       <ToastMsg
         title="You must be logged in to view personalized releases"
         message="Please log in to view personalized releases"
