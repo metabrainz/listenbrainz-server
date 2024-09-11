@@ -77,11 +77,17 @@ def get_global_props():
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 
-    brainzplayer_props = db_usersetting.get_brainzplayer_prefs(
+    brainzplayer_props = (db_usersetting.
+    get_brainzplayer_prefs(
                 db_conn, current_user.id
-            ) if current_user.is_authenticated else None
+            )) if current_user.is_authenticated else None
     if brainzplayer_props is not None:
         props["user_preferences"] = brainzplayer_props
+
+    flair_props = db_usersetting.get_flair(db_conn, current_user.id) \
+        if current_user.is_authenticated else None
+    if flair_props is not None:
+        props["flair"] = flair_props
 
     return orjson.dumps(props).decode("utf-8")
 
@@ -97,3 +103,7 @@ def parse_boolean_arg(name, default=None):
         raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
 
     return True if value == "true" else False
+
+"""
+curl 'https://beta-api.listenbrainz.org/1/settings/timezone' -X POST -H 'Authorization: Token 3d7d6a5d-2fc1-4faa-9e89-00c061cfc97b' -H 'Content-Type: application/json;charset=UTF-8' --data-raw '{"flair":"hello, world!"}'
+"""
