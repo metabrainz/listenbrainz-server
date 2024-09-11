@@ -4,15 +4,35 @@ from flask import Blueprint, jsonify, request
 from jsonschema import validate, exceptions
 
 import listenbrainz.db.user_setting as db_usersetting
+from listenbrainz.db.donation import is_user_donor
 from listenbrainz.troi.daily_jams import SPOTIFY_EXPORT_PREFERENCE
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest
+from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest, APIForbidden
 from listenbrainz.webserver.views.api_tools import (
     validate_auth_header,
 )
 
 user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
+
+
+@user_settings_api_bp.route("/flair", methods=["POST"])
+@crossdomain
+@ratelimit()
+def update_flair():
+    """ Update a given user's flair
+
+    To remove a user's flair, pass {"flair": null}.
+    """
+    user = validate_auth_header()
+    if "flair" not in request.json:
+        raise APIBadRequest("Missing flair")
+
+    if not is_user_donor(meb_conn, user["musicbrainz_row_id"]):
+        raise APIForbidden("User is not a donor")
+
+    db_usersetting.update_flair(db_conn, user["id"], request.json["flair"])
+    return jsonify({"success": True})
 
 
 @user_settings_api_bp.route('/timezone', methods=["POST", "OPTIONS"])
