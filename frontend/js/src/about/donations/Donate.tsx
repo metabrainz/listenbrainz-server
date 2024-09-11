@@ -195,7 +195,7 @@ export default function Data() {
             <br />
             <br />
             While it takes real-world money to keep us going, all our data is
-            open-srouce and free for everyone.
+            open-source and free for everyone.
             <br />
             Commercial users are expected to contribute back and support us, but
             it&apos;s not enough to fund the new features you want.
