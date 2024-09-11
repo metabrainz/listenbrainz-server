@@ -38,9 +38,12 @@ export default function Data() {
                 <b>Free for everyone</b>
               </h2>
             </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>All website features, for free, forever</b>
+            <div>
+              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />
+              <b style={{ marginLeft: "0.5em" }}>
+                All website features, for free, forever
+              </b>
+              <br />
             </div>
           </div>
           <div className="tier card">
@@ -61,23 +64,36 @@ export default function Data() {
                 Donate
               </button>
             </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>All website features, for free, forever</b>
-            </div>
-
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>User flair</b>
-              <br />
-              <small>
-                Add a special effect to your username on the website
-              </small>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>Our eternal gratitude</b>
-            </div>
+            <ul className="fa-ul">
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>All website features, for free, forever</b>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>User flair</b>
+                <br />
+                <small>
+                  Add a special effect to your username on the website
+                </small>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Our eternal gratitude</b>
+              </li>
+            </ul>
           </div>
           <div className="tier card">
             <div className="tier-heading">
@@ -97,28 +113,45 @@ export default function Data() {
                 Donate
               </button>
             </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>All website features, for free, forever</b>
-            </div>
+            <ul className="fa-ul">
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>All website features, for free, forever</b>
+              </li>
 
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>User flair</b>
-              <br />
-              <small>
-                Add a special effect to your username on the website
-              </small>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>Our eternal gratitude</b>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />
-              &nbsp;
-              <b>Inner sense of peace and accomplishment</b>
-            </div>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>User flair</b>
+                <br />
+                <small>
+                  Add a special effect to your username on the website
+                </small>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Our eternal gratitude</b>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Inner sense of peace and accomplishment</b>
+              </li>
+            </ul>
           </div>
           <div className="tier card">
             <div className="tier-heading">
@@ -138,48 +171,71 @@ export default function Data() {
                 Donate
               </button>
             </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>All website features, for free, forever</b>
-            </div>
+            <ul className="fa-ul">
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>All website features, for free, forever</b>
+              </li>
 
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>User flair</b>
-              <br />
-              <small>
-                Add a special effect to your username on the website
-              </small>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />{" "}
-              <b>Our eternal gratitude</b>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />
-              &nbsp;
-              <b>Inner sense of peace and accomplishment</b>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />
-              &nbsp;
-              <b>Make your momma proud</b>
-              <br />
-              <small>Or maybe show her you haven&apos;t changed</small>
-            </div>
-            <div className="perk">
-              <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />
-              &nbsp;
-              <b>Bragging rights</b>
-              <br />
-              <small>
-                When we have taken over the world, you can proudly say
-                <i>
-                  &ldquo;I helped our music recommendation overlords get to
-                  where they are today&rdquo;
-                </i>
-              </small>
-            </div>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>User flair</b>
+                <br />
+                <small>
+                  Add a special effect to your username on the website
+                </small>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Our eternal gratitude</b>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Inner sense of peace and accomplishment</b>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Make your momma proud</b>
+                <br />
+                <small>Or maybe show her you haven&apos;t changed</small>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>Bragging rights</b>
+                <br />
+                <small>
+                  When we have taken over the world, you can proudly say
+                  <i>
+                    &ldquo;I helped our music recommendation overlords get to
+                    where they are today&rdquo;
+                  </i>
+                </small>
+              </li>
+            </ul>
           </div>
         </div>
         <div className="donations-page-footer">
