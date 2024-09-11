@@ -51,7 +51,13 @@ export default function Data() {
                 donation
               </h2>
               <br />
-              <button type="button" className="btn btn-primary">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() =>
+                  window.open("https://metabrainz.org/donate", "_blank")
+                }
+              >
                 Donate
               </button>
             </div>
@@ -81,7 +87,13 @@ export default function Data() {
                 donation
               </h2>
               <br />
-              <button type="button" className="btn btn-primary">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() =>
+                  window.open("https://metabrainz.org/donate", "_blank")
+                }
+              >
                 Donate
               </button>
             </div>
@@ -116,7 +128,13 @@ export default function Data() {
                 donation
               </h2>
               <br />
-              <button type="button" className="btn btn-primary">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() =>
+                  window.open("https://metabrainz.org/donate", "_blank")
+                }
+              >
                 Donate
               </button>
             </div>
