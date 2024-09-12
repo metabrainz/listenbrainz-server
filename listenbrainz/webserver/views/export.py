@@ -60,13 +60,21 @@ def create_export_task():
 def get_export_task(export_id):
     """ Retrieve the requested export's data if it belongs to the specified user """
     result = db_conn.execute(
-        text("SELECT * FROM user_data_export WHERE user_id = :user_id AND export_id = :export_id"),
+        text("SELECT * FROM user_data_export WHERE user_id = :user_id AND id = :export_id"),
         {"user_id": current_user.id, "export_id": export_id}
     )
     row = result.first()
     if row is None:
         raise APINotFound("Export not found")
-    return jsonify(row)
+    return jsonify({
+        "export_id": row.id,
+        "type": row.type,
+        "available_until": row.available_until.isoformat() if row.available_until is not None else None,
+        "created": row.created.isoformat(),
+        "progress": row.progress,
+        "status": row.status,
+        "filename": row.filename,
+    })
 
 
 @export_bp.route("/list/", methods=["GET"])
@@ -86,6 +94,7 @@ def list_export_tasks():
         "created": row.created.isoformat(),
         "progress": row.progress,
         "status": row.status,
+        "filename": row.filename,
     } for row in rows])
 
 
