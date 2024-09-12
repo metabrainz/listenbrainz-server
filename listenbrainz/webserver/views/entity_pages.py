@@ -143,10 +143,22 @@ def artist_entity(artist_mbid):
                 ts_curs,
                 [artist_mbid],
                 "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30",
-                15
+                18
             )
     except IndexError:
         similar_artists = []
+
+    try:
+        top_release_group_color = popularity.get_top_release_groups_for_artist(
+            db_conn, ts_conn, artist_mbid, 1
+        )[0]["release_color"]
+    except IndexError:
+        top_release_group_color = None
+
+    try:
+        top_recording_color = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 1)[0]["release_color"]
+    except IndexError:
+        top_recording_color = None
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
@@ -176,7 +188,11 @@ def artist_entity(artist_mbid):
     data = {
         "artist": artist,
         "popularRecordings": popular_recordings,
-        "similarArtists": similar_artists,
+        "similarArtists": {
+            "artists": similar_artists,
+            "topReleaseGroupColor": top_release_group_color,
+            "topRecordingColor": top_recording_color
+        },
         "listeningStats": listening_stats,
         "releaseGroups": release_groups,
         "coverArt": cover_art

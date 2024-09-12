@@ -1005,20 +1005,27 @@ export function getReviewEventContent(
   const userName =
     _.get(eventMetadata, "user_name") ??
     _.get(eventMetadata, "user.display_name");
+  const publishedOn = _.get(eventMetadata, "published_on");
   return (
     <div className="review">
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
-        <div className="rating-container">
-          <b>Rating: </b>
-          <Rating
-            readonly
-            onClick={() => {}}
-            className="rating-stars"
-            ratingValue={eventMetadata.rating}
-            transition
-            size={20}
-            iconsCount={5}
-          />
+        <div className="review-card-header">
+          <div>
+            <b>Rating: </b>
+            <Rating
+              readonly
+              onClick={() => {}}
+              className="rating-stars"
+              ratingValue={eventMetadata.rating}
+              transition
+              size={20}
+              iconsCount={5}
+            />
+          </div>
+          <span className="review-card-header-author">
+            {publishedOn &&
+              ` on ${preciseTimestamp(publishedOn, "includeYear")}`}
+          </span>
         </div>
       )}
       <div className="text">
@@ -1029,13 +1036,13 @@ export function getReviewEventContent(
           {additionalContent}
         </ReactMarkdown>
       </div>
-      <div className="author read-more">
+      <div className="review-card-footer">
         by {userName}
         <a
           href={`https://critiquebrainz.org/review/${reviewID}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="pull-right"
+          className="pull-right read-more-link"
         >
           Read on CritiqueBrainz
         </a>
