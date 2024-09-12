@@ -57,9 +57,13 @@ function renderExport(ex: Export) {
         <h4 className="alert-heading">Export ready to download</h4>
         <p>
           Your zip file is ready to download:
+          <br />
           <a href={`/export/download/${ex.export_id}/`} download>
             Download {ex.filename ?? `${ex.export_id}.zip`}
           </a>
+          <br />
+        </p>
+        <p>
           <b>
             Note: the file will be deleted automatically after 30 days
             {ex.available_until &&
