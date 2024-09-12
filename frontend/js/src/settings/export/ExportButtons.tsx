@@ -1,89 +1,246 @@
 import * as React from "react";
 
 import { toast } from "react-toastify";
+import { startCase } from "lodash";
+import { format } from "date-fns";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronCircleRight } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
 
-export const downloadFile = async (url: string) => {
-  const response = await fetch(url, {
-    method: "POST",
-  });
-  if (!response.ok) {
-    const jsonBody = await response.json();
-    throw jsonBody?.error;
-  }
-  const fileData = await response.blob();
-  const filename = response.headers
-    ?.get("Content-Disposition")
-    ?.split(";")[1]
-    .trim()
-    .split("=")[1];
-  const downloadUrl = URL.createObjectURL(fileData);
-  const link = document.createElement("a");
-  link.href = downloadUrl;
-  link.setAttribute("download", filename!);
-  link.click();
-  URL.revokeObjectURL(downloadUrl);
+enum ExportType {
+  allUserData = "export_all_user_data",
+}
+enum ExportStatus {
+  inProgress = "in_progress",
+  waiting = "waiting",
+  complete = "completed",
+  failed = "failed",
+}
+type Export = {
+  export_id: number;
+  type: ExportType;
+  available_until: string | null;
+  created: string;
+  progress: string;
+  filename: string | null;
+  status: ExportStatus;
 };
 
-export default function ExportButtons({ listens = true, feedback = true }) {
+function renderExport(ex: Export) {
+  const extraInfo = (
+    <p>
+      <details>
+        <summary>
+          <FontAwesomeIcon icon={faChevronCircleRight} size="sm" /> Details
+        </summary>
+        <dl className="row">
+          <dt className="col-sm-4">Requested on</dt>
+          <dd className="col-sm-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-sm-4">Status</dt>
+          <dd className="col-sm-8">{startCase(ex.status)}</dd>
+          <dt className="col-sm-4">Type</dt>
+          <dd className="col-sm-8">{startCase(ex.type)}</dd>
+          <dt className="col-sm-4">Export ID</dt>
+          <dd className="col-sm-8">{ex.export_id}</dd>
+        </dl>
+      </details>
+    </p>
+  );
+  if (ex.status === ExportStatus.complete) {
+    return (
+      <div
+        className="mt-15 alert alert-success"
+        role="alert"
+        style={{ maxWidth: "fit-content" }}
+      >
+        <h4 className="alert-heading">Export ready to download</h4>
+        <p>
+          Your zip file is ready to download:
+          <a href={`/export/download/${ex.export_id}/`} download>
+            Download {ex.filename ?? `${ex.export_id}.zip`}
+          </a>
+          <b>
+            Note: the file will be deleted automatically after 30 days
+            {ex.available_until &&
+              ` (${format(ex.available_until, "PPPPpppp")})`}
+          </b>
+        </p>
+        {extraInfo}
+      </div>
+    );
+  }
+  if (ex.status === ExportStatus.failed) {
+    return (
+      <div
+        className="mt-15 alert alert-danger"
+        role="alert"
+        style={{ maxWidth: "fit-content" }}
+      >
+        <h4 className="alert-heading">Export failed</h4>
+        <p>
+          There was an error creating an export of your data.
+          <br />
+          Please try again and contact us if the issue persists.
+        </p>
+        {extraInfo}
+      </div>
+    );
+  }
+  /* const percentage = `${ex.progress}%`;
+  const progressBar = (
+    <div className="progress">
+      <div
+        className="progress-bar bg-success"
+        role="progressbar"
+        aria-valuenow={ex.progress}
+        style={{ width: percentage }}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        {percentage}
+      </div>
+    </div>
+  ); */
+  return (
+    <div
+      className="mt-15 alert alert-info"
+      role="alert"
+      style={{ maxWidth: "fit-content" }}
+    >
+      <h4 className="alert-heading">{ex.progress}</h4>
+      {/* {ex.status !== ExportStatus.waiting && progressBar} */}
+      <p>
+        Once the export is prepared for you, you can come back to this page to
+        download the zip file.
+        <br />
+        You can close this page while your download is being prepared.
+      </p>
+      {extraInfo}
+    </div>
+  );
+}
+
+export default function ExportButtons({ listens = true, feedback = false }) {
   const [loading, setLoading] = React.useState(false);
-  const [errorMessage, setErrorMessage] = React.useState();
-  const downloadListens = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const [exports, setExports] = React.useState<Array<Export>>([]);
+  const [fetchedExport, setFetchedExport] = React.useState<Export>();
+  const [exportId, setExportId] = React.useState<number>();
+
+  React.useEffect(() => {
+    // Fetch the list of exports in progress in background tasks or finished
+    async function getExportsInProgress() {
+      try {
+        const response = await fetch("/export/list/", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of exports
+        const results = await response.json();
+        setExports(results);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error getting your exports in progress."
+            message={`Please try again and contact us if the issue persists.
+          ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
     setLoading(true);
-    setErrorMessage(undefined);
+    getExportsInProgress();
+  }, []);
+
+  React.useEffect(() => {
+    // Fetch the list of exports in progress in background tasks or finished
+    async function fetchExport() {
+      try {
+        const response = await fetch(`/export/${exportId}/`, {
+          method: "GET",
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of exports
+        const result = await response.json();
+        setFetchedExport(result);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error getting your exports in progress."
+            message={`Please try again and contact us if the issue persists.
+          ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (exportId) {
+      setLoading(true);
+      fetchExport();
+    }
+  }, [exportId]);
+
+  const hasAnExportInProgress =
+    exports.findIndex((exp) => exp.type === ExportType.allUserData) !== -1;
+
+  const createExport = React.useCallback(async () => {
     try {
-      await downloadFile("/settings/export/");
+      const response = await fetch("/export/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+
+      const data = await response.json();
+      const { export_id } = data;
+      setExportId(export_id);
     } catch (error) {
-      setErrorMessage(error.toString());
       toast.error(
         <ToastMsg
-          title="Error"
-          message={`Failed to download listens: ${error}`}
+          title="TThere was an error creating an export of your data"
+          message={`Please try again and contact us if the issue persists.
+          ${error}`}
         />
       );
     }
-    setLoading(false);
-  };
-
-  const downloadFeedback = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setLoading(true);
-    setErrorMessage(undefined);
-    try {
-      await downloadFile("/settings/export-feedback/");
-    } catch (error) {
-      setErrorMessage(error.toString());
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message={`Failed to download feedback: ${error}`}
-        />
-      );
-    }
-    setLoading(false);
-  };
+  }, [setExportId]);
 
   return (
     <>
       {listens && (
         <>
-          <p>Export and download your listen history in JSON format:</p>
-          <form onSubmit={downloadListens}>
+          <p>
+            Export and download your listen history and your feedback
+            (love/hate) in JSON format:
+          </p>
+          <form onSubmit={createExport}>
             <button
               className="btn btn-warning btn-lg"
               type="submit"
-              disabled={loading}
+              disabled={hasAnExportInProgress}
             >
-              Download listens
+              Export listens
             </button>
           </form>
           <br />
         </>
       )}
-      {feedback && (
+      {/* {feedback && (
         <>
           <p>
             Export and download your recording feedback (your loved and hated
@@ -99,46 +256,10 @@ export default function ExportButtons({ listens = true, feedback = true }) {
             </button>
           </form>{" "}
         </>
-      )}
-      {loading && (
-        <div
-          className="mt-15 alert alert-info"
-          role="alert"
-          style={{ maxWidth: "fit-content" }}
-        >
-          <h4 className="alert-heading">Download started</h4>
-          <p className="flex">
-            <Loader isLoading={loading} style={{ margin: "0 1em" }} />
-            Please keep this page open while your download is being prepared.
-            This can take up to a minute.
-          </p>
-        </div>
-      )}
-      {errorMessage && (
-        <div
-          className="mt-15 alert alert-danger alert-dismissable"
-          role="alert"
-          style={{ maxWidth: "fit-content" }}
-        >
-          <button
-            type="button"
-            className="close"
-            onClick={() => {
-              setErrorMessage(undefined);
-            }}
-            aria-label="Close"
-          >
-            <span aria-hidden="true">&times;</span>
-          </button>
-          <h4 className="alert-heading">Download failed </h4>
-          <p>
-            Something went wrong with your download. Please try again or let us
-            know if the issue persists.
-          </p>
-          <hr />
-          <p className="mb-0">{errorMessage}</p>
-        </div>
-      )}
+      )} */}
+      <Loader isLoading={loading} style={{ margin: "0 1em" }} />
+      {fetchedExport && renderExport(fetchedExport)}
+      {exports && exports.map(renderExport)}
     </>
   );
 }
