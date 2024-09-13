@@ -8,6 +8,8 @@ from sqlalchemy import create_engine, NullPool, text
 
 engine: Optional[sqlalchemy.engine.Engine] = None
 
+FLAIR_MONTHLY_DONATION_THRESHOLD = 5
+
 
 def init_meb_db_connection(connect_str):
     """Initializes database connection using the specified Flask app."""
@@ -51,9 +53,9 @@ def get_flairs_for_donors(db_conn, donors):
     donors_with_flair = []
     for donor in donors:
         donation = {
-            "amount": float(donor.amount),
+            "donation": float(donor.donation),
             "currency": donor.currency,
-            "donation_time": donor.payment_date.isoformat(),
+            "donated_at": donor.payment_date.isoformat(),
             "show_flair": donor.show_flair,
         }
         user = lb_users.get(donor.editor_id)
@@ -81,7 +83,13 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
              , payment_date
              -- check if the donation itself is eligible for flair
              -- convert days to month because by default timestamp subtraction is in days
-             , bool_or(((amount + fee) / (EXTRACT(days from now() - payment_date) / 30)) >= :threshold) OVER (PARTITION BY editor_id) AS show_flair
+             , bool_or(
+                    (
+                        (amount + fee)
+                       / ceiling(EXTRACT(days from now() - payment_date) / 30.0)
+                    )
+                    >= :threshold
+               ) OVER (PARTITION BY editor_id) AS show_flair
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
@@ -90,7 +98,11 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
          LIMIT :count
         OFFSET :offset
     """
-    results = meb_conn.execute(text(query), {"count": count, "offset": offset})
+    results = meb_conn.execute(text(query), {
+        "count": count,
+        "offset": offset,
+        "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
+    })
     donors = results.all()
 
     return get_flairs_for_donors(db_conn, donors)
@@ -107,7 +119,13 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
              , payment_date
              -- check if the donation itself is eligible for flair
              -- convert days to month because by default timestamp subtraction is in days
-             , ((amount + fee) / (EXTRACT(days from now() - payment_date) / 30) >= :threshold) AS is_donation_eligible
+             , (
+                 (
+                    (amount + fee) 
+                   / ceiling(EXTRACT(days from now() - payment_date) / 30.0)
+                 )
+                 >= :threshold
+               ) AS is_donation_eligible
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
@@ -128,7 +146,11 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
         OFFSET :offset 
     """
 
-    results = meb_conn.execute(text(query), {"count": count, "offset": offset})
+    results = meb_conn.execute(text(query), {
+        "count": count,
+        "offset": offset,
+        "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
+    })
     donors = results.all()
 
     return get_flairs_for_donors(db_conn, donors)
@@ -137,10 +159,21 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
 def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
     """ Check if the user with the given musicbrainz row id is a donor and has enough donations to be eligible for flair """
     query = """
-        SELECT coalesce(bool_or((amount + fee) / (EXTRACT(days from now() - payment_date) / 30) >= :threshold), 'f') AS show_flair
+        SELECT coalesce(
+                    bool_or(
+                        (
+                            (amount + fee)
+                           / ceiling(EXTRACT(days from now() - payment_date) / 30.0)
+                        )
+                        >= :threshold)
+                    , 'f'
+                ) AS show_flair
           FROM payment
          WHERE editor_id = :editor_id
     """
-    result = meb_conn.execute(text(query), {"editor_id": musicbrainz_row_id})
+    result = meb_conn.execute(text(query), {
+        "editor_id": musicbrainz_row_id,
+        "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
+    })
     row = result.first()
     return row is not None and row.show_flair
