@@ -87,9 +87,10 @@ def get_global_props():
         if flair_props is not None:
             props["flair"] = flair_props
 
-        show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.id)
-        if show_flair is not None:
-            props["show_flair"] = show_flair
+        if meb_conn:
+            show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.id)
+            if show_flair is not None:
+                props["show_flair"] = show_flair
 
     return orjson.dumps(props).decode("utf-8")
 

@@ -41,7 +41,7 @@ def _get_ts_conn():
 
 def _get_meb_conn():
     _meb_conn = getattr(g, "_meb_conn", None)
-    if _meb_conn is None:
+    if donation.engine is not None and _meb_conn is None:
         _meb_conn = g._meb_conn = donation.engine.connect()
     return _meb_conn
 

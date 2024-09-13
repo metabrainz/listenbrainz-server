@@ -25,7 +25,8 @@ def init_meb_db_connection(connect_str):
 
 
 def get_flairs_for_donors(db_conn, donors):
-    """ Get flairs for donors. """
+    """ Given a list of donors, add information about the user's musicbrainz username and whether the user is a listenbrainz
+     user and returns the updated list. """
     musicbrainz_row_ids = {d.editor_id for d in donors}
 
     query = """
@@ -74,7 +75,7 @@ def get_flairs_for_donors(db_conn, donors):
 
 
 def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
-    """ Get a list of recent donors with their flairs """
+    """ Returns a list of recent donors with their flairs """
     query = """
         SELECT editor_name
              , editor_id
@@ -109,7 +110,7 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
 
 
 def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
-    """ Get a list of biggest donors with their flairs """
+    """ Returns a list of biggest donors with their flairs """
     query = """
         WITH select_donations AS (
         SELECT editor_name
@@ -157,7 +158,8 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
 
 
 def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
-    """ Check if the user with the given musicbrainz row id is a donor and has enough donations to be eligible for flair """
+    """ Check if the user with the given musicbrainz row id is a donor and has enough recent
+     donations to be eligible for flair """
     query = """
         SELECT coalesce(
                     bool_or(
