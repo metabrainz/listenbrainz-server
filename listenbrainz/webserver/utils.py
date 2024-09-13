@@ -5,10 +5,11 @@ import orjson
 from flask import current_app, request
 from flask_login import current_user
 
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
     get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user
 import listenbrainz.db.user_setting as db_usersetting
+import listenbrainz.db.donation as db_donation
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'The listens were rejected because the user does not has not provided an email. ' \
@@ -77,17 +78,18 @@ def get_global_props():
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 
-    brainzplayer_props = (db_usersetting.
-    get_brainzplayer_prefs(
-                db_conn, current_user.id
-            )) if current_user.is_authenticated else None
-    if brainzplayer_props is not None:
-        props["user_preferences"] = brainzplayer_props
+    if current_user.is_authenticated:
+        brainzplayer_props = db_usersetting.get_brainzplayer_prefs(db_conn, current_user.id)
+        if brainzplayer_props is not None:
+            props["user_preferences"] = brainzplayer_props
 
-    flair_props = db_usersetting.get_flair(db_conn, current_user.id) \
-        if current_user.is_authenticated else None
-    if flair_props is not None:
-        props["flair"] = flair_props
+        flair_props = db_usersetting.get_flair(db_conn, current_user.id)
+        if flair_props is not None:
+            props["flair"] = flair_props
+
+        show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.id)
+        if show_flair is not None:
+            props["show_flair"] = show_flair
 
     return orjson.dumps(props).decode("utf-8")
 
@@ -103,7 +105,3 @@ def parse_boolean_arg(name, default=None):
         raise APIBadRequest("Invalid %s argument: %s. Must be 'true' or 'false'" % (name, value))
 
     return True if value == "true" else False
-
-"""
-curl 'https://beta-api.listenbrainz.org/1/settings/timezone' -X POST -H 'Authorization: Token 3d7d6a5d-2fc1-4faa-9e89-00c061cfc97b' -H 'Content-Type: application/json;charset=UTF-8' --data-raw '{"flair":"hello, world!"}'
-"""

@@ -54,6 +54,7 @@ def get_flairs_for_donors(db_conn, donors):
             "amount": float(donor.amount),
             "currency": donor.currency,
             "donation_time": donor.payment_date.isoformat(),
+            "show_flair": donor.show_flair,
         }
         user = lb_users.get(donor.editor_id)
         if user:
@@ -75,12 +76,16 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
     query = """
         SELECT editor_name
              , editor_id
-             , amount
+             , (amount + fee) as donation
              , currency
              , payment_date
+             -- check if the donation itself is eligible for flair
+             -- convert days to month because by default timestamp subtraction is in days
+             , bool_or(((amount + fee) / (EXTRACT(days from now() - payment_date) / 30)) >= :threshold) OVER (PARTITION BY editor_id) AS show_flair
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
+           AND payment_date >= (NOW() - INTERVAL '1 year')
       ORDER BY payment_date DESC
          LIMIT :count
         OFFSET :offset
@@ -94,20 +99,33 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
 def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
     """ Get a list of biggest donors with their flairs """
     query = """
+        WITH select_donations AS (
         SELECT editor_name
              , editor_id
+             , (amount + fee) as donation
              , currency
-             , sum(amount) as amount
-             , max(payment_date) AS payment_date
+             , payment_date
+             -- check if the donation itself is eligible for flair
+             -- convert days to month because by default timestamp subtraction is in days
+             , ((amount + fee) / (EXTRACT(days from now() - payment_date) / 30) >= :threshold) AS is_donation_eligible
           FROM payment
          WHERE editor_id IS NOT NULL
            AND is_donation = 't'
+           AND payment_date >= (NOW() - INTERVAL '1 year')
+        )
+        SELECT editor_name
+             , editor_id
+             , currency
+             , max(payment_date) as payment_date
+             , sum(donation) as donation
+             , bool_or(is_donation_eligible) AS show_flair
+          FROM select_donations
       GROUP BY editor_name
              , editor_id
              , currency
-      ORDER BY amount DESC
+      ORDER BY donation DESC
          LIMIT :count
-        OFFSET :offset
+        OFFSET :offset 
     """
 
     results = meb_conn.execute(text(query), {"count": count, "offset": offset})
@@ -116,9 +134,13 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
     return get_flairs_for_donors(db_conn, donors)
 
 
-def is_user_donor(meb_conn, musicbrainz_row_id: int):
-    """ Check if the user with the given musicbrainz row id is a donor """
-    query = "SELECT EXISTS(SELECT 1 FROM payment WHERE editor_id = :editor_id) AS is_donor"
+def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
+    """ Check if the user with the given musicbrainz row id is a donor and has enough donations to be eligible for flair """
+    query = """
+        SELECT coalesce(bool_or((amount + fee) / (EXTRACT(days from now() - payment_date) / 30) >= :threshold), 'f') AS show_flair
+          FROM payment
+         WHERE editor_id = :editor_id
+    """
     result = meb_conn.execute(text(query), {"editor_id": musicbrainz_row_id})
     row = result.first()
-    return row is not None and row.is_donor
+    return row is not None and row.show_flair

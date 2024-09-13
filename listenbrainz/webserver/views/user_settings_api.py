@@ -4,11 +4,10 @@ from flask import Blueprint, jsonify, request
 from jsonschema import validate, exceptions
 
 import listenbrainz.db.user_setting as db_usersetting
-from listenbrainz.db.donation import is_user_donor
 from listenbrainz.troi.daily_jams import SPOTIFY_EXPORT_PREFERENCE
-from listenbrainz.webserver import db_conn, meb_conn
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest, APIForbidden
+from listenbrainz.webserver.errors import APIInternalServerError, APIBadRequest
 from listenbrainz.webserver.views.api_tools import (
     validate_auth_header,
 )
@@ -27,9 +26,6 @@ def update_flair():
     user = validate_auth_header()
     if "flair" not in request.json:
         raise APIBadRequest("Missing flair")
-
-    if not is_user_donor(meb_conn, user["musicbrainz_row_id"]):
-        raise APIForbidden("User is not a donor")
 
     db_usersetting.update_flair(db_conn, user["id"], request.json["flair"])
     return jsonify({"success": True})
