@@ -97,6 +97,9 @@ function Navbar() {
           <NavLink to="/explore/" onClick={toggleSidebar}>
             Explore
           </NavLink>
+          <NavLink to="/donors/" onClick={toggleSidebar}>
+            Donors
+          </NavLink>
         </div>
 
         <div className="navbar-bottom">
