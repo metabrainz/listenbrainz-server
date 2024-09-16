@@ -106,7 +106,7 @@ class TimescaleListenStore:
         result = ts_conn.execute(sqlalchemy.text(query), {"user_ids": list(missing_user_ids)})
         data = result.fetchall()
         listen_count.update({row.user_id: row.count for row in data})
-        cache.set_many({REDIS_USER_LISTEN_COUNT + str(row.user_id): row.count for row in data}, 
+        cache.set_many({REDIS_USER_LISTEN_COUNT + str(row.user_id): row.count for row in data},
                        expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return listen_count
 

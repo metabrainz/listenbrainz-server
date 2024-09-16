@@ -11,6 +11,7 @@ import listenbrainz.db.playlist as db_playlist
 DEFAULT_DONOR_COUNT = 25
 donors_bp = Blueprint("donors", __name__)
 
+
 @donors_bp.route("/",  defaults={'path': ''})
 @donors_bp.route('/<path:path>/')
 def donors(path):
