@@ -985,7 +985,7 @@ def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Pl
     return playlist
 
 
-def get_playlist_count(ts_conn, creator_ids: List[str]):
+def get_playlist_count(ts_conn, creator_ids: List[str]) -> dict:
     query = text("""
         SELECT creator_id, COUNT(*) as count
           FROM playlist.playlist
@@ -993,4 +993,4 @@ def get_playlist_count(ts_conn, creator_ids: List[str]):
       GROUP BY creator_id
     """)
     result = ts_conn.execute(query, {"creator_ids": tuple(creator_ids)})
-    return result.fetchall()
+    return {row[0]: row[1] for row in result.fetchall()}
