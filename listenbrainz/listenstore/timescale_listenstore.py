@@ -95,16 +95,18 @@ class TimescaleListenStore:
         cached_count_map = cache.get_many([REDIS_USER_LISTEN_COUNT + str(user_id) for user_id in user_ids])
         # Extract the user_ids for which we don't have cached counts. cached_cout is a dict of key-value pairs
         # where key is the cache key and value is the cached value. We need to extract the user_id from the cache key.
-        listen_count = {int(key.split(".")[1]): value for key, value in cached_count_map.items()}
+        listen_count = {int(key.split(".")[1]): value for key, value in cached_count_map.items()
+                        if value is not None}
         missing_user_ids = set(user_ids) - set(listen_count.keys())
 
         if not missing_user_ids:
             return listen_count
 
         query = "SELECT user_id, count, created FROM listen_user_metadata WHERE user_id = ANY(:user_ids)"
-        result = ts_conn.execute(sqlalchemy.text(query), {"user_ids": missing_user_ids})
-        listen_count.update({row.user_id: row.count for row in result})
-        cache.set_many({REDIS_USER_LISTEN_COUNT + str(row.user_id): row.count for row in result}, 
+        result = ts_conn.execute(sqlalchemy.text(query), {"user_ids": list(missing_user_ids)})
+        data = result.fetchall()
+        listen_count.update({row.user_id: row.count for row in data})
+        cache.set_many({REDIS_USER_LISTEN_COUNT + str(row.user_id): row.count for row in data}, 
                        expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return listen_count
 

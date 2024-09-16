@@ -121,7 +121,7 @@ function Donors() {
                 {donor.currency === "usd" ? "$" : "€"}
                 {donor.donation}
               </p>
-              {donor.musicbrainz_id && donor.is_listenbrainz_user && (
+              {donor.musicbrainz_id && donor.is_listenbrainz_user ? (
                 <div className="recent-listens">
                   {donor.listenCount && (
                     <Link
@@ -142,7 +142,7 @@ function Donors() {
                     </Link>
                   )}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         ))}
