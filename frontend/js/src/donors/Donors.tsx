@@ -17,7 +17,6 @@ import Loader from "../components/Loader";
 type DonorLoaderData = {
   data: {
     id: number;
-    name: string;
     donated_at: string;
     donation: number;
     currency: "usd" | "eur";
@@ -93,20 +92,18 @@ function Donors() {
         {donors?.map((donor) => (
           <div key={donor.id} className="donor-card">
             <div className="donor-info">
-              <p className="donation-amount">
-                {donor.musicbrainz_id}{" "}
-                {donor.musicbrainz_id ? (
-                  <>
-                    &#040;
+              <p className="donation-user">
+                {donor.musicbrainz_id &&
+                  (donor.is_listenbrainz_user ? (
                     <Link
                       to={`/user/${donor.musicbrainz_id}`}
                       className="donor-name"
                     >
                       {donor.musicbrainz_id}
                     </Link>
-                    &#041;
-                  </>
-                ) : null}
+                  ) : (
+                    <span>{donor.musicbrainz_id}</span>
+                  ))}
               </p>
               <p className="donation-date">
                 <FontAwesomeIcon icon={faCalendar} />
@@ -123,7 +120,7 @@ function Donors() {
               </p>
               {donor.musicbrainz_id && donor.is_listenbrainz_user ? (
                 <div className="recent-listens">
-                  {donor.listenCount && (
+                  {donor.listenCount ? (
                     <Link
                       className="listen-item"
                       to={`/user/${donor.musicbrainz_id}/stats/?range=all_time`}
@@ -131,8 +128,8 @@ function Donors() {
                       <FontAwesomeIcon icon={faMusic} />
                       {formatListenCount(donor.listenCount)} Listens
                     </Link>
-                  )}
-                  {donor.playlistCount && (
+                  ) : null}
+                  {donor.playlistCount ? (
                     <Link
                       className="listen-item"
                       to={`/user/${donor.musicbrainz_id}/playlists/`}
@@ -140,7 +137,7 @@ function Donors() {
                       <FontAwesomeIcon icon={faListAlt} />
                       {formatListenCount(donor.playlistCount)} Playlists
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               ) : null}
             </div>
