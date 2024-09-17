@@ -71,28 +71,30 @@ function Donors() {
 
   return (
     <div role="main" id="donors">
-      <h1 className="header-with-line">Donations</h1>
-      <div className="btn-group" role="group" aria-label="Sort by">
-        <Pill
-          type="secondary"
-          active={sort === "date"}
-          onClick={() => handleSortBy("date")}
-        >
-          Date
-        </Pill>
-        <Pill
-          type="secondary"
-          active={sort === "amount"}
-          onClick={() => handleSortBy("amount")}
-        >
-          Amount
-        </Pill>
+      <div className="listen-header">
+        <h2 className="header-with-line">Donations</h2>
+        <div className="flex" role="group" aria-label="Sort by">
+          <Pill
+            type="secondary"
+            active={sort === "date"}
+            onClick={() => handleSortBy("date")}
+          >
+            Date
+          </Pill>
+          <Pill
+            type="secondary"
+            active={sort === "amount"}
+            onClick={() => handleSortBy("amount")}
+          >
+            Amount
+          </Pill>
+        </div>
       </div>
       <Loader isLoading={isLoading}>
         {donors?.map((donor) => (
           <div key={donor.id} className="donor-card">
             <div className="donor-info">
-              <p className="donation-user">
+              <div className="donation-user">
                 {donor.musicbrainz_id &&
                   (donor.is_listenbrainz_user ? (
                     <Link
@@ -104,14 +106,14 @@ function Donors() {
                   ) : (
                     <span>{donor.musicbrainz_id}</span>
                   ))}
-              </p>
-              <p className="donation-date">
+              </div>
+              <div className="donation-date">
                 <FontAwesomeIcon icon={faCalendar} />
                 <p>
                   Donation Date:{" "}
                   {new Date(donor.donated_at).toLocaleDateString()}
                 </p>
-              </p>
+              </div>
             </div>
             <div className="donor-stats">
               <p className="donation-amount">
