@@ -109,10 +109,10 @@ function Donors() {
               </div>
               <div className="donation-date">
                 <FontAwesomeIcon icon={faCalendar} />
-                <p>
+                <span>
                   Donation Date:{" "}
                   {new Date(donor.donated_at).toLocaleDateString()}
-                </p>
+                </span>
               </div>
             </div>
             <div className="donor-stats">
