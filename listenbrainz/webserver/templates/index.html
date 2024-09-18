@@ -1,3 +1,5 @@
+{% from 'macros.html' import print_message %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -51,6 +53,12 @@
 </head>
 
 <body>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {{ print_message(message, category) }}
+    {% endfor %}
+  {% endwith %}
 
 <div id="react-container">
   {%- block content -%}

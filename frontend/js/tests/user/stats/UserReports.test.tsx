@@ -1,173 +1,155 @@
 import * as React from "react";
-import { shallow, ShallowWrapper } from "enzyme";
 
-import UserReports, {
-  UserReportsProps,
-  UserReportsState,
-} from "../../../src/user/stats/UserReports";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { HttpResponse, http } from "msw";
+import { SetupServerApi, setupServer } from "msw/node";
+import { screen, waitFor } from "@testing-library/react";
 
-const userProps: UserReportsProps = {
-  user: {
-    name: "test_user",
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
+import UserReports from "../../../src/user/stats/UserReports";
+
+const router = createMemoryRouter(
+  [
+    {
+      path: "/user/:userName/stats",
+      element: <UserReports />,
+      loader: () => ({
+        user: {
+          name: "foobar",
+        },
+      }),
+    },
+  ],
+  {
+    initialEntries: ["/user/foobar/stats/?range=week"],
+  }
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
   },
-  apiUrl: "foobar",
-  navigate: jest.fn(),
-};
+});
 
-const sitewideProps: UserReportsProps = {
-  apiUrl: "foobar",
-  navigate: jest.fn(),
-};
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
-describe.each([
-  ["User Stats", userProps],
-  ["Sitewide Stats", sitewideProps],
-])("%s", (name, props) => {
+const apiRoutes = [
+  "/1/stats/user/foobar/listening-activity",
+  "1/stats/user/foobar/artists",
+  "/1/stats/user/foobar/release-groups",
+  "/1/stats/user/foobar/recordings",
+  "/1/stats/user/foobar/daily-activity",
+  "/1/stats/user/foobar/artist-map",
+];
+
+let mockSearchParam = { range: "week" };
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useSearchParams: () => {
+    const [params, setParams] = React.useState(
+      new URLSearchParams(mockSearchParam)
+    );
+    return [
+      params,
+      (newParams: typeof mockSearchParam) => {
+        mockSearchParam = newParams;
+        setParams(new URLSearchParams(newParams));
+      },
+    ];
+  },
+}));
+
+const user = userEvent.setup();
+
+describe("UserReports", () => {
+  let server: SetupServerApi;
+  beforeAll(async () => {
+    const handlers = apiRoutes.map((route) => {
+      return http.get(route, async (path) => {
+        return HttpResponse.json({});
+      });
+    });
+    server = setupServer(...handlers);
+    server.listen();
+  });
+  afterEach(() => {
+    queryClient.cancelQueries();
+    queryClient.clear();
+  });
+
+  afterAll(() => {
+    server.close();
+  });
+
   describe("UserReports", () => {
-    describe("ComponentDidMount", () => {
-      it('adds event listener for "popstate" event', () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
+    it("Check if component is being rendered", () => {
+      renderWithProviders(
+        <RouterProvider router={router} />,
+        {},
+        {
+          wrapper: reactQueryWrapper,
+        },
+        false
+      );
 
-        const spy = jest.spyOn(window, "addEventListener");
-        spy.mockImplementationOnce(() => {});
-        instance.syncStateWithURL = jest.fn();
-        instance.componentDidMount();
+      // Check if the component is rendered correctly
+      expect(screen.getByTestId("User Reports")).toBeInTheDocument();
 
-        expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
-      });
+      // The week pill should be selected by default
+      const weekPill = screen.getByTestId("range-week");
+      expect(weekPill).toHaveClass("active");
+    });
 
-      it("calls getURLParams once", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
+    it("should navigate on range change", async () => {
+      renderWithProviders(
+        <RouterProvider router={router} />,
+        {},
+        {
+          wrapper: reactQueryWrapper,
+        },
+        false
+      );
 
-        instance.getURLParams = jest.fn();
-        instance.syncStateWithURL = jest.fn();
-        instance.componentDidMount();
+      const rangePill = screen.getByTestId("range-month");
+      expect(rangePill).toBeInTheDocument();
 
-        expect(instance.getURLParams).toHaveBeenCalledTimes(1);
-      });
+      // Click on the month pill
+      await user.click(rangePill);
 
-      it("calls replaceState with correct parameters", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
+      // Check if the month pill is selected
+      expect(rangePill).toHaveClass("active");
 
-        const spy = jest.spyOn(window.history, "replaceState");
-        spy.mockImplementationOnce(() => {});
-        instance.getURLParams = jest.fn().mockImplementationOnce(() => "week");
-        instance.syncStateWithURL = jest.fn();
-        instance.componentDidMount();
+      // Check if the URL is updated
+      expect(mockSearchParam).toEqual({ range: "month" });
 
-        expect(spy).toHaveBeenCalledWith(null, "", "?range=week");
-      });
-
-      it("calls syncStateWithURL", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        instance.syncStateWithURL = jest.fn();
-        instance.componentDidMount();
-
-        expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+      // Check if new data is fetched
+      const newQueryKey = ["user-top-entity", "artist", "month", "foobar"];
+      await waitFor(() => {
+        // Wait for data to be successfully loaded
+        const state = queryClient.getQueryState(newQueryKey);
+        expect(state?.status === "success").toBeTruthy();
       });
     });
 
-    describe("componentWillUnmount", () => {
-      it('removes "popstate" event listener', () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
+    it("should navigate to week if invalid range is provided", async () => {
+      mockSearchParam = { range: "invalid" };
+      renderWithProviders(
+        <RouterProvider router={router} />,
+        {},
+        {
+          wrapper: reactQueryWrapper,
+        },
+        false
+      );
 
-        const spy = jest.spyOn(window, "removeEventListener");
-        spy.mockImplementationOnce(() => {});
-        instance.syncStateWithURL = jest.fn();
-        instance.componentWillUnmount();
-
-        expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
-      });
-    });
-
-    describe("changeRange", () => {
-      it("calls setURLParams with correct parameters", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        instance.setURLParams = jest.fn();
-        instance.syncStateWithURL = jest.fn();
-        instance.changeRange("year");
-
-        expect(instance.setURLParams).toHaveBeenCalledWith("year");
-      });
-
-      it("calls syncStateWithURL once", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        instance.syncStateWithURL = jest.fn();
-        instance.changeRange("year");
-
-        expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
-      });
-    });
-
-    describe("syncStateWithUrl", () => {
-      it("calls getURLParams once", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        instance.getURLParams = jest.fn();
-        instance.syncStateWithURL();
-
-        expect(instance.getURLParams).toHaveBeenCalledTimes(1);
-      });
-
-      it("sets state correcty", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        instance.getURLParams = jest.fn().mockImplementationOnce(() => "month");
-        instance.syncStateWithURL();
-
-        expect(wrapper.state("range")).toEqual("month");
-      });
-    });
-
-    describe("getURLParams", () => {
-      it("gets default parameters if none are provided in the URL", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        window.location = {
-          href: "https://foobar.org",
-        } as Window["location"];
-        const range = instance.getURLParams();
-
-        expect(range).toEqual("week");
-      });
-
-      it("gets parameters if provided in the URL", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        window.location = {
-          href: "https://foobar.org?range=year",
-        } as Window["location"];
-        const range = instance.getURLParams();
-
-        expect(range).toEqual("year");
-      });
-    });
-
-    describe("setURLParams", () => {
-      it("sets URL parameters", () => {
-        const wrapper = shallow<UserReports>(<UserReports {...props} />);
-        const instance = wrapper.instance();
-
-        const spy = jest.spyOn(window.history, "pushState");
-        spy.mockImplementationOnce(() => {});
-
-        instance.setURLParams("all_time");
-        expect(spy).toHaveBeenCalledWith(null, "", "?range=all_time");
-      });
+      // Check if the URL is updated
+      expect(mockSearchParam).toEqual({ range: "week" });
     });
   });
 });

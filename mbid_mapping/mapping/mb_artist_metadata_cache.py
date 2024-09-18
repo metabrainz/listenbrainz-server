@@ -80,7 +80,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
 
         release_groups = []
         if row["release_groups"]:
-            for release_group_mbid, release_group_name, artist_credit_name, date, type, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
+            for release_group_mbid, release_group_name, artist_credit_name, date, type, secondary_types, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
                 release_group = {
                     "name": release_group_name,
                     "mbid": release_group_mbid,
@@ -91,6 +91,8 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                     release_group["date"] = date
                 if type is not None:
                     release_group["type"] = type
+                if secondary_types is not None:
+                    release_group["secondary_types"] = secondary_types
                 if caa_id is not None:
                     release_group["caa_id"] = caa_id
                 if caa_release_mbid is not None:
@@ -188,6 +190,9 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                      LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
                                      LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
                                  , rgpt.name AS type
+                                 , array_agg(DISTINCT rgst.name ORDER BY rgst.name)
+                                     FILTER (WHERE rgst.name IS NOT NULL)
+                                   AS secondary_types
                                  , jsonb_agg(jsonb_build_object(
                                         'artist_mbid', a2.gid::TEXT,
                                         'artist_credit_name', acn2.name,
@@ -204,6 +209,10 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON rgm.id = rg.id
                          LEFT JOIN musicbrainz.release_group_primary_type rgpt
                                 ON rg.type = rgpt.id
+                         LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj
+                                ON rgstj.release_group = rg.id
+                         LEFT JOIN musicbrainz.release_group_secondary_type rgst
+                                ON rgst.id = rgstj.secondary_type
                          LEFT JOIN rg_cover_art rgca
                                 ON rgca.release_group = rg.id
                         -- need a second join to artist_credit_name/artist to gather other release group artists' names

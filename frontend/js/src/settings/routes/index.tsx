@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
 
 const getSettingsRoutes = (): RouteObject[] => {
@@ -65,7 +65,7 @@ const getSettingsRoutes = (): RouteObject[] => {
         },
         {
           path: "missing-data/",
-          loader: RouteLoader,
+          loader: RouteQueryLoader("missing-data"),
           lazy: async () => {
             const MissingMBData = await import("../missing-data/MissingMBData");
             return { Component: MissingMBData.default };

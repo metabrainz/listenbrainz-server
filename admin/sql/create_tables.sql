@@ -203,7 +203,8 @@ CREATE TABLE user_setting (
     user_id                INTEGER NOT NULL, --FK to "user".id
     timezone_name          TEXT,
     troi                   JSONB, -- troi related prefs
-    brainzplayer           JSONB -- brainzplayer related prefs
+    brainzplayer           JSONB, -- brainzplayer related prefs
+    flair                  JSONB
 );
 
 ALTER TABLE user_setting

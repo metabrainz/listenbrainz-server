@@ -1,247 +1,143 @@
 import * as React from "react";
-import { ReactWrapper, mount, shallow, ShallowWrapper } from "enzyme";
 
-import { act } from "react-dom/test-utils";
+import { screen, waitFor } from "@testing-library/react";
+import { SetupServerApi, setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import UserArtistMap, {
   UserArtistMapProps,
-  UserArtistMapState,
 } from "../../../src/user/stats/components/UserArtistMap";
-import APIError from "../../../src/utils/APIError";
 import * as userArtistMapResponse from "../../__mocks__/userArtistMap.json";
-import * as userArtistMapProcessedDataArtist from "../../__mocks__/userArtistMapProcessDataArtist.json";
-import * as userArtistMapProcessedDataListen from "../../__mocks__/userArtistMapProcessDataListen.json";
-import { waitForComponentToPaint } from "../../test-utils";
-import CustomChoropleth from "../../../src/user/stats/components/Choropleth";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const userProps: UserArtistMapProps = {
   user: {
     name: "foobar",
   },
   range: "week",
-  apiUrl: "barfoo",
 };
 
 const sitewideProps: UserArtistMapProps = {
   range: "week",
-  apiUrl: "barfoo",
 };
+
+jest.mock("@nivo/core", () => ({
+  ...jest.requireActual("@nivo/core"),
+  ResponsiveWrapper: ({ children }: any) =>
+    children({ width: 400, height: 400 }),
+}));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
 ])("%s", (name, props) => {
-  describe("UserArtistMap", () => {
-    it("renders correctly", async () => {
-      const wrapper = shallow<UserArtistMap>(
-        <UserArtistMap {...{ ...props, range: "all_time" }} />
-      );
-      await act(() => {
-        wrapper.setState({
-          selectedMetric: "artist",
-          data: userArtistMapProcessedDataArtist,
-          loading: false,
-        });
-      });
-      await waitForComponentToPaint(wrapper);
+  let server: SetupServerApi;
+  beforeAll(async () => {
+    const handlers = [
+      http.get("/1/stats/user/foobar/artist-map", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
 
-      expect(wrapper.find(".user-stats-card")).toHaveLength(1);
-      expect(wrapper.find(CustomChoropleth)).toHaveLength(1);
-    });
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistMapResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
+      }),
+      http.get("/1/stats/sitewide/artist-map", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
 
-    it("renders corectly when range is invalid", async () => {
-      const wrapper = mount<UserArtistMap>(<UserArtistMap {...props} />);
-      await act(() => {
-        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.getDOMNode()).toHaveTextContent(
-        "Invalid range: invalid_range"
-      );
-      expect(wrapper.find(CustomChoropleth)).toHaveLength(0);
-    });
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistMapResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+  });
+  afterEach(() => {
+    queryClient.cancelQueries();
+    queryClient.clear();
+  });
+  afterAll(() => {
+    server.close();
   });
 
-  describe("componentDidUpdate", () => {
-    it("it sets correct state if range is incorrect", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
+  it("renders correctly", async () => {
+    renderWithProviders(
+      <UserArtistMap {...props} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      await act(() => {
-        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state()).toMatchObject({
-        loading: false,
-        hasError: true,
-        errorMessage: "Invalid range: invalid_range",
-      });
+    // Wait for loading to finish
+    await waitFor(() => {
+      expect(screen.getByTestId("Choropleth")).toBeInTheDocument();
     });
 
-    it("calls loadData once if range is valid", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      instance.loadData = jest.fn();
-      await act(() => {
-        wrapper.setProps({ range: "month" });
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.loadData).toHaveBeenCalledTimes(1);
-    });
+    expect(screen.getByTestId("user-stats-map")).toBeInTheDocument();
   });
 
-  describe("getData", () => {
-    it("calls getUserArtistMap with correct params", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
+  it("displays error message when API call fails", async () => {
+    renderWithProviders(
+      <UserArtistMap {...{ ...props, range: "month" }} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
-      spy.mockImplementation(() =>
-        Promise.resolve(userArtistMapResponse as UserArtistMapResponse)
-      );
-      const result = await instance.getData();
-
-      expect(spy).toHaveBeenCalledWith(props?.user?.name, "week");
-      expect(result).toEqual(userArtistMapResponse);
+    // Wait for loading to finish
+    await waitFor(() => {
+      expect(screen.getByTestId("error-message")).toBeInTheDocument();
     });
 
-    it("sets state correctly if data is not calculated", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
-      const noContentError = new APIError("NO CONTENT");
-      noContentError.response = {
-        status: 204,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(noContentError));
-      await act(async () => {
-        await instance.getData();
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(wrapper.state()).toMatchObject({
-        loading: false,
-        hasError: true,
-        errorMessage: "NO CONTENT",
-      });
-    });
+    expect(screen.getByText("Failed to fetch data")).toBeInTheDocument();
+    expect(screen.queryByTestId("Choropleth")).not.toBeInTheDocument();
   });
 
-  describe("processData", () => {
-    it("processes data correctly for all_time", () => {
-      const wrapper = shallow<UserArtistMap>(
-        <UserArtistMap {...{ ...props, range: "all_time" }} />
-      );
-      const instance = wrapper.instance();
+  it("renders choropleth with processed data", async () => {
+    renderWithProviders(
+      <UserArtistMap {...props} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      const result = instance.processData(
-        userArtistMapResponse as UserArtistMapResponse,
-        "artist"
-      );
-
-      expect(result).toEqual(userArtistMapProcessedDataArtist);
+    // Wait for loading to finish
+    await waitFor(() => {
+      expect(screen.getByTestId("Choropleth")).toBeInTheDocument();
     });
 
-    it("processes data correctly for listen", () => {
-      const wrapper = shallow<UserArtistMap>(
-        <UserArtistMap {...{ ...props, range: "all_time" }} />
-      );
-      const instance = wrapper.instance();
-
-      const result = instance.processData(
-        userArtistMapResponse as UserArtistMapResponse,
-        "listen"
-      );
-
-      expect(result).toEqual(userArtistMapProcessedDataListen);
-    });
-    it("returns an empty array if no payload", () => {
-      const wrapper = shallow<UserArtistMap>(
-        <UserArtistMap {...{ ...props, range: "all_time" }} />
-      );
-      const instance = wrapper.instance();
-
-      // When stats haven't been calculated, processData is called with an empty object
-      const result = instance.processData(
-        {} as UserArtistMapResponse,
-        "listen"
-      );
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe("changeSelectedMetric", () => {
-    it('sets state correctly for "artist"', async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      instance.rawData = userArtistMapResponse as UserArtistMapResponse;
-
-      await act(async () => {
-        instance.changeSelectedMetric("artist");
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state()).toMatchObject({
-        data: userArtistMapProcessedDataArtist,
-        selectedMetric: "artist",
-      });
-    });
-
-    it('sets state correctly for "listen"', async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      instance.rawData = userArtistMapResponse as UserArtistMapResponse;
-
-      await act(async () => {
-        instance.changeSelectedMetric("listen");
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(wrapper.state()).toMatchObject({
-        data: userArtistMapProcessedDataListen,
-        selectedMetric: "listen",
-      });
-    });
-  });
-
-  describe("loadData", () => {
-    it("calls getData once", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      const spy = jest.fn();
-      instance.getData = spy;
-      instance.processData = jest.fn();
-      await act(async () => {
-        await instance.loadData();
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-    });
-
-    it("set state correctly", async () => {
-      const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
-      const instance = wrapper.instance();
-
-      instance.getData = jest
-        .fn()
-        .mockImplementationOnce(() => Promise.resolve(userArtistMapResponse));
-      await act(async () => {
-        await instance.loadData();
-      });
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.rawData).toMatchObject(userArtistMapResponse);
-
-      expect(wrapper.state()).toMatchObject({
-        data: userArtistMapProcessedDataArtist,
-        loading: false,
-      });
-    });
+    // Check if the choropleth is rendered correctly
+    const choropleth = screen.getByTestId("Choropleth");
+    // eslint-disable-next-line testing-library/no-node-access
+    expect(choropleth.querySelectorAll("g")).toHaveLength(8);
   });
 });
