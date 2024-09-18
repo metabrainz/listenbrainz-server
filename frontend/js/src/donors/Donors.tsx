@@ -98,13 +98,22 @@ function Donors() {
                 {donor.musicbrainz_id &&
                   (donor.is_listenbrainz_user ? (
                     <Link
-                      to={`/user/${donor.musicbrainz_id}`}
+                      to={`${
+                        !donor.is_listenbrainz_user && "https://musicbrainz.org"
+                      }/user/${donor.musicbrainz_id}`}
                       className="donor-name"
                     >
                       {donor.musicbrainz_id}
                     </Link>
                   ) : (
-                    <span>{donor.musicbrainz_id}</span>
+                    <Link
+                      to={`https://musicbrainz.org/user/${donor.musicbrainz_id}`}
+                      className="donor-name"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {donor.musicbrainz_id}
+                    </Link>
                   ))}
               </div>
               <div className="donation-date">
