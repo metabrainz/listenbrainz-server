@@ -87,7 +87,7 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
              , bool_or(
                     (
                         (amount + fee)
-                       / ceiling(EXTRACT(days from now() - payment_date) / 30.0)
+                       / GREATEST(ceiling(EXTRACT(days from now() - payment_date) / 30.0), 1)
                     )
                     >= :threshold
                ) OVER (PARTITION BY editor_id) AS show_flair
@@ -123,7 +123,7 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
              , (
                  (
                     (amount + fee) 
-                   / ceiling(EXTRACT(days from now() - payment_date) / 30.0)
+                   / GREATEST(ceiling(EXTRACT(days from now() - payment_date) / 30.0), 1)
                  )
                  >= :threshold
                ) AS is_donation_eligible
