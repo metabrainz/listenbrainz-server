@@ -306,7 +306,7 @@ export default function UserEntityChart() {
                   feedTitle: `Top ${terminology}s`,
                   options: [
                     {
-                      label: "Range",
+                      label: "Time range",
                       key: "range",
                       type: "dropdown",
                       values: Array.from(ranges, ([stat_type, stat_name]) => ({
