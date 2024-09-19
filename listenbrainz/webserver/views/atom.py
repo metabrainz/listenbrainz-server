@@ -670,7 +670,7 @@ def get_playlist_recordings(playlist_mbid):
     fg = _init_feed(
         _external_url_for(".get_playlist_recordings",
                           playlist_mbid=playlist_mbid),
-        playlist.name,
+        playlist.name + " - ListenBrainz",
         _external_url_for(".get_playlist_recordings",
                           playlist_mbid=playlist_mbid),
         _external_url_for("playlist.load_playlist",
