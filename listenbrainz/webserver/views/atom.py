@@ -1075,7 +1075,7 @@ def _generate_event_title(event):
 
 #     fg = _init_feed(
 #         _external_url_for(".get_user_events", user_name=user_name),
-#         f"Events for {user_name} - ListenBrainz",
+#         f"Feeds for {user_name} - ListenBrainz",
 #         _external_url_for("user.index", path="", user_name=user_name),
 #         _external_url_for(".get_user_events", user_name=user_name),
 #     )
