@@ -18,6 +18,7 @@ import {
   faComments,
   faPaperPlane,
   faSquareRss,
+  faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -567,11 +568,16 @@ export default function UserFeedPage() {
       <div className="listen-header">
         <h3 className="header-with-line">Latest activity</h3>
         {/* Commented out as new OAuth is not merged yet. */}
-        {/*
-        <FontAwesomeIcon
-          role="button"
-          icon={faSquareRss}
-          size="2x"
+        {/* <button
+          type="button"
+          className="btn btn-icon btn-info btn-sm"
+          style={{
+            width: "24px",
+            height: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
           data-toggle="modal"
           data-target="#SyndicationFeedModal"
           onClick={() => {
@@ -623,8 +629,9 @@ export default function UserFeedPage() {
               }/events`,
             });
           }}
-        />
-        */}
+        >
+          <FontAwesomeIcon icon={faRss} size="xs" />
+        </button> */}
       </div>
       <div className="row">
         <div className="col-md-7 col-xs-12">

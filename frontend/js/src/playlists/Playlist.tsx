@@ -337,25 +337,57 @@ export default function PlaylistPage() {
             <h1 className="title">
               <div>
                 {playlist.title}
-                <span className="dropdown pull-right">
-                  <button
-                    className="btn btn-info dropdown-toggle"
-                    type="button"
-                    id="playlistOptionsDropdown"
-                    data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="true"
+                <div className="pull-right">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
                   >
-                    <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
-                    &nbsp;Options
-                  </button>
-                  <PlaylistMenu
-                    playlist={playlist}
-                    onPlaylistSaved={onPlaylistSave}
-                    onPlaylistDeleted={onDeletePlaylist}
-                    disallowEmptyPlaylistExport
-                  />
-                </span>
+                    <span className="dropdown">
+                      <button
+                        className="btn btn-info dropdown-toggle"
+                        type="button"
+                        id="playlistOptionsDropdown"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="true"
+                      >
+                        <FontAwesomeIcon
+                          icon={faCog as IconProp}
+                          title="Options"
+                        />
+                        &nbsp;Options
+                      </button>
+                      <PlaylistMenu
+                        playlist={playlist}
+                        onPlaylistSaved={onPlaylistSave}
+                        onPlaylistDeleted={onDeletePlaylist}
+                        disallowEmptyPlaylistExport
+                      />
+                    </span>
+                    {customFields?.public && (
+                      <FontAwesomeIcon
+                        role="button"
+                        icon={faSquareRss}
+                        size="2xs"
+                        className="feed-button"
+                        data-toggle="modal"
+                        data-target="#SyndicationFeedModal"
+                        style={{ marginLeft: "10px", color: "#353070" }}
+                        onClick={() => {
+                          NiceModal.show(SyndicationFeedModal, {
+                            feedTitle: `Playlist`,
+                            options: [],
+                            baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
+                              playlist
+                            )}`,
+                          });
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
               <small>
                 {customFields?.public ? "Public " : "Private "}
@@ -363,25 +395,6 @@ export default function PlaylistPage() {
                 <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
                   {playlist.creator}
                 </Link>
-                {customFields?.public && (
-                  <FontAwesomeIcon
-                    icon={faSquareRss}
-                    size="lg"
-                    className="feed-button"
-                    data-toggle="modal"
-                    data-target="#SyndicationFeedModal"
-                    style={{ marginLeft: "10px" }}
-                    onClick={() => {
-                      NiceModal.show(SyndicationFeedModal, {
-                        feedTitle: `Playlist`,
-                        options: [],
-                        baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
-                          playlist
-                        )}`,
-                      });
-                    }}
-                  />
-                )}
               </small>
             </h1>
             <div className="info">
