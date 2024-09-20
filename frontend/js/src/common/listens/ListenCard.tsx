@@ -758,14 +758,14 @@ export default function ListenCardWrapper(props: ListenCardProps) {
   const { data } = useQuery({
     queryKey: ["album-art", albumArtQueryKey, albumArtDisabled],
     queryFn: async () => {
+      if (albumArtDisabled) {
+        return {
+          data: undefined,
+          hasError: false,
+          errorMessage: "",
+        };
+      }
       try {
-        if (albumArtDisabled) {
-          return {
-            data: undefined,
-            hasError: false,
-            errorMessage: "",
-          };
-        }
         const albumArtSrc = await getAlbumArtFromListenMetadata(
           listen,
           spotifyAuth,
