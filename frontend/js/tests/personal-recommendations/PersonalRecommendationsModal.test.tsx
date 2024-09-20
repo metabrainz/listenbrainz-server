@@ -12,6 +12,7 @@ import GlobalAppContext, {
 } from "../../src/utils/GlobalAppContext";
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import { ReactQueryWrapper } from "../test-react-query";
 
 const listenToPersonallyRecommend: Listen = {
   listened_at: 1605927742,
@@ -76,10 +77,13 @@ describe("PersonalRecommendationModal", () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
+            <ReactQueryWrapper>
+
             <PersonalRecommendationModal
               {...niceModalProps}
               listenToPersonallyRecommend={listenToPersonallyRecommend}
-            />
+              />
+              </ReactQueryWrapper>
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );
