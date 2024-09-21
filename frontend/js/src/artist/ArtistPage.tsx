@@ -7,7 +7,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
+import { chain, isEmpty, isUndefined, partition, orderBy } from "lodash";
 import { sanitize } from "dompurify";
 import {
   Link,
@@ -84,9 +84,27 @@ export default function ArtistPage(): JSX.Element {
     WikipediaExtract
   >();
 
-  const [albumsByThisArtist, alsoAppearsOn] = partition(
+  const releaseGroupsSorted = orderBy(
     releaseGroups,
+    [
+      "type",
+      "secondary_types",
+      (rg) => rg.date || "",
+      "total_listen_count",
+      "name",
+    ],
+    ["asc", "asc", "desc", "desc", "asc"]
+  );
+
+  const [rgsByThisArtist, alsoAppearsOn] = partition(
+    releaseGroupsSorted,
     (rg) => rg.artists[0].artist_mbid === artist?.artist_mbid
+  );
+
+  const albumsRGs = rgsByThisArtist.filter((rg) => rg.type === "Album");
+  const singleRGs = rgsByThisArtist.filter((rg) => rg.type === "Single");
+  const otherRGs = rgsByThisArtist.filter(
+    (rg) => rg.type !== "Album" && rg.type !== "Single"
   );
 
   React.useEffect(() => {
@@ -407,12 +425,30 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="albums full-width scroll-start">
-          <h3 className="header-with-line">Albums</h3>
-          <div className="cover-art-container dragscroll">
-            {albumsByThisArtist.map(getReleaseCard)}
+        {albumsRGs && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Albums</h3>
+            <div className="cover-art-container dragscroll">
+              {albumsRGs.map(getReleaseCard)}
+            </div>
           </div>
-        </div>
+        )}
+        {singleRGs && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Singles</h3>
+            <div className="cover-art-container dragscroll">
+              {singleRGs.map(getReleaseCard)}
+            </div>
+          </div>
+        )}
+        {otherRGs && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Singles</h3>
+            <div className="cover-art-container dragscroll">
+              {otherRGs.map(getReleaseCard)}
+            </div>
+          </div>
+        )}
         {Boolean(alsoAppearsOn?.length) && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">Also appears on</h3>
