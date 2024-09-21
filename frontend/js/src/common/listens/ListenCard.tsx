@@ -747,46 +747,34 @@ export default function ListenCardWrapper(props: ListenCardProps) {
   );
   const { listen, customThumbnail } = props;
 
-  const albumArtQueryKey = getAlbumArtFromListenMetadataKey(
-    listen,
-    spotifyAuth
+  const albumArtQueryKey = React.useMemo(
+    () => getAlbumArtFromListenMetadataKey(listen, spotifyAuth),
+    [listen, spotifyAuth]
   );
 
   const albumArtDisabled =
-    customThumbnail || !listen || userPreferences?.saveData;
+    Boolean(customThumbnail) || !listen || userPreferences?.saveData;
 
-  const { data } = useQuery({
+  const { data: thumbnailSrc } = useQuery({
     queryKey: ["album-art", albumArtQueryKey, albumArtDisabled],
     queryFn: async () => {
       if (albumArtDisabled) {
-        return {
-          data: undefined,
-          hasError: false,
-          errorMessage: "",
-        };
+        return undefined;
       }
       try {
-        const albumArtSrc = await getAlbumArtFromListenMetadata(
+        return await getAlbumArtFromListenMetadata(
           listen,
           spotifyAuth,
           APIService
         );
-        return {
-          data: albumArtSrc,
-          hasError: false,
-          errorMessage: "",
-        };
       } catch (error) {
-        return {
-          data: undefined,
-          hasError: true,
-          errorMessage: error.message,
-        };
+        return undefined;
       }
     },
+    staleTime: 1000 * 60 * 60 * 12,
+    gcTime: 1000 * 60 * 60 * 12,
   });
 
-  const thumbnailSrc = data?.data;
   return (
     <ListenCard {...props} dispatch={dispatch} thumbnailSrc={thumbnailSrc} />
   );
