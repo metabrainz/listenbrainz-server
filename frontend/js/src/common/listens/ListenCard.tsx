@@ -759,16 +759,19 @@ export default function ListenCardWrapper(props: ListenCardProps) {
     queryKey: ["album-art", albumArtQueryKey, albumArtDisabled],
     queryFn: async () => {
       if (albumArtDisabled) {
-        return undefined;
+        return "";
       }
       try {
-        return await getAlbumArtFromListenMetadata(
+        const albumArtURL = await getAlbumArtFromListenMetadata(
           listen,
           spotifyAuth,
           APIService
         );
+        return albumArtURL ?? "";
       } catch (error) {
-        return undefined;
+        // eslint-disable-next-line no-console
+        console.error("Error fetching album art", error);
+        return "";
       }
     },
     staleTime: 1000 * 60 * 60 * 12,
