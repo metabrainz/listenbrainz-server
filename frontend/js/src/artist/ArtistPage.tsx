@@ -19,7 +19,6 @@ import {
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -55,7 +54,6 @@ export type ArtistPageProps = {
 
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
-  const { APIService } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams() as { artistMBID: string };
   const { artistMBID } = params;
@@ -87,13 +85,13 @@ export default function ArtistPage(): JSX.Element {
   const releaseGroupsSorted = orderBy(
     releaseGroups,
     [
-      "type",
       "secondary_types",
       (rg) => rg.date || "",
       "total_listen_count",
+      "type",
       "name",
     ],
-    ["asc", "asc", "desc", "desc", "asc"]
+    ["asc", "desc", "desc", "asc", "asc"]
   );
 
   const [rgsByThisArtist, alsoAppearsOn] = partition(
@@ -101,11 +99,9 @@ export default function ArtistPage(): JSX.Element {
     (rg) => rg.artists[0].artist_mbid === artist?.artist_mbid
   );
 
-  const albumsRGs = rgsByThisArtist.filter((rg) => rg.type === "Album");
-  const singleRGs = rgsByThisArtist.filter((rg) => rg.type === "Single");
-  const otherRGs = rgsByThisArtist.filter(
-    (rg) => rg.type !== "Album" && rg.type !== "Single"
-  );
+  const rgGroups = chain(rgsByThisArtist).groupBy("type").value();
+  const otherRgs = rgGroups.Other ?? [];
+  otherRgs.push(...(rgGroups.Broadcast ?? []));
 
   React.useEffect(() => {
     async function fetchReviews() {
@@ -425,27 +421,35 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        {albumsRGs && (
+        {rgGroups.Album && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">Albums</h3>
             <div className="cover-art-container dragscroll">
-              {albumsRGs.map(getReleaseCard)}
+              {rgGroups.Album.map(getReleaseCard)}
             </div>
           </div>
         )}
-        {singleRGs && (
+        {rgGroups.Single && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">Singles</h3>
             <div className="cover-art-container dragscroll">
-              {singleRGs.map(getReleaseCard)}
+              {rgGroups.Single.map(getReleaseCard)}
             </div>
           </div>
         )}
-        {otherRGs && (
+        {rgGroups.EP && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Singles</h3>
+            <h3 className="header-with-line">EPs</h3>
             <div className="cover-art-container dragscroll">
-              {otherRGs.map(getReleaseCard)}
+              {rgGroups.EP.map(getReleaseCard)}
+            </div>
+          </div>
+        )}
+        {otherRgs && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Others</h3>
+            <div className="cover-art-container dragscroll">
+              {otherRgs.map(getReleaseCard)}
             </div>
           </div>
         )}
