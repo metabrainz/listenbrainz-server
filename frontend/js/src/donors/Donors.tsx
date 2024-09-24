@@ -98,9 +98,7 @@ function Donors() {
                 {donor.musicbrainz_id &&
                   (donor.is_listenbrainz_user ? (
                     <Link
-                      to={`${
-                        !donor.is_listenbrainz_user && "https://musicbrainz.org"
-                      }/user/${donor.musicbrainz_id}`}
+                      to={`/user/${donor.musicbrainz_id}`}
                       className="donor-name"
                     >
                       {donor.musicbrainz_id}
