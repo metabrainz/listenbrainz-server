@@ -107,7 +107,18 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
     })
     donors = results.all()
 
-    return get_flairs_for_donors(db_conn, donors)
+    total_count_query = """
+        SELECT COUNT(*)
+          FROM payment
+         WHERE editor_id IS NOT NULL
+           AND is_donation = 't'
+           AND payment_date >= (NOW() - INTERVAL '1 year')
+    """
+
+    result = meb_conn.execute(text(total_count_query))
+    total_count = result.scalar()
+
+    return get_flairs_for_donors(db_conn, donors), total_count
 
 
 def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
@@ -156,7 +167,28 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
     })
     donors = results.all()
 
-    return get_flairs_for_donors(db_conn, donors)
+    total_count_query = """
+        WITH select_donations AS (
+      SELECT editor_id
+           , currency
+        FROM payment
+        WHERE editor_id IS NOT NULL
+          AND is_donation = 't'
+          AND payment_date >= (NOW() - INTERVAL '1 year')
+        )
+       SELECT COUNT(*)
+        FROM (
+            SELECT editor_id
+                 , currency
+              FROM select_donations
+          GROUP BY editor_id, currency
+        ) AS total_count;
+    """
+
+    result = meb_conn.execute(text(total_count_query))
+    total_count = result.scalar()
+
+    return get_flairs_for_donors(db_conn, donors), total_count
 
 
 def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
