@@ -17,11 +17,11 @@ export default function Data() {
       />
       <div>
         <div className="donations-page-header">
-          <h1>
+          <h2>
             Money can&apos;t buy happiness, but it can buy
             <br />
             <span style={{ fontWeight: 600 }}>LISTENBRAINZ HOSTING</span>
-          </h1>
+          </h2>
           <p>
             ListenBrainz is a free, open-source and non-profit project.
             <br />
@@ -49,30 +49,18 @@ export default function Data() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-                <b>5$</b>
-                <br />
-                donation
-              </h2>
-              <br />
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={() =>
                   window.open("https://metabrainz.org/donate", "_blank")
                 }
-              >
-                Donate
+                >
+                Donate $5
               </button>
+              </h2>
             </div>
             <ul className="fa-ul">
-              <li className="perk">
-                <FontAwesomeIcon
-                  listItem
-                  icon={faCheck}
-                  color={COLOR_LB_GREEN}
-                />
-                <b>All website features, for free, forever</b>
-              </li>
               <li className="perk">
                 <FontAwesomeIcon
                   listItem
@@ -98,11 +86,6 @@ export default function Data() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-                <b>20$</b>
-                <br />
-                donation
-              </h2>
-              <br />
               <button
                 type="button"
                 className="btn btn-primary"
@@ -110,19 +93,11 @@ export default function Data() {
                   window.open("https://metabrainz.org/donate", "_blank")
                 }
               >
-                Donate
+                Donate $20
               </button>
+                </h2>
             </div>
             <ul className="fa-ul">
-              <li className="perk">
-                <FontAwesomeIcon
-                  listItem
-                  icon={faCheck}
-                  color={COLOR_LB_GREEN}
-                />
-                <b>All website features, for free, forever</b>
-              </li>
-
               <li className="perk">
                 <FontAwesomeIcon
                   listItem
@@ -156,11 +131,6 @@ export default function Data() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-                <b>50$</b>
-                <br />
-                donation
-              </h2>
-              <br />
               <button
                 type="button"
                 className="btn btn-primary"
@@ -168,19 +138,11 @@ export default function Data() {
                   window.open("https://metabrainz.org/donate", "_blank")
                 }
               >
-                Donate
+                Donate $50
               </button>
+              </h2>
             </div>
             <ul className="fa-ul">
-              <li className="perk">
-                <FontAwesomeIcon
-                  listItem
-                  icon={faCheck}
-                  color={COLOR_LB_GREEN}
-                />
-                <b>All website features, for free, forever</b>
-              </li>
-
               <li className="perk">
                 <FontAwesomeIcon
                   listItem
@@ -215,9 +177,7 @@ export default function Data() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>Make your momma proud</b>
-                <br />
-                <small>Or maybe show her you haven&apos;t changed</small>
+                <b>Make your family proud</b>
               </li>
               <li className="perk">
                 <FontAwesomeIcon
@@ -225,15 +185,15 @@ export default function Data() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>Bragging rights</b>
-                <br />
-                <small>
-                  When we have taken over the world, you can proudly say
-                  <i>
-                    &ldquo;I helped our music recommendation overlords get to
-                    where they are today&rdquo;
-                  </i>
-                </small>
+                <b>Instant street cred</b>
+              </li>
+              <li className="perk">
+                <FontAwesomeIcon
+                  listItem
+                  icon={faCheck}
+                  color={COLOR_LB_GREEN}
+                />
+                <b>De-shittify the internet</b>
               </li>
             </ul>
           </div>
@@ -248,13 +208,6 @@ export default function Data() {
             no “Pro++” features.
             <br />
             <b>All features are free for everyone.</b>
-            <br />
-            <br />
-            While it takes real-world money to keep us going, all our data is
-            open-source and free for everyone.
-            <br />
-            Commercial users are expected to contribute back and support us, but
-            it&apos;s not enough to fund the new features you want.
             <br />
             <br />
             By donating —either once or regularly— you&apos;ll join thousands of
