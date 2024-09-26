@@ -255,7 +255,7 @@ export default function AddData() {
               OngakuKiroku
             </a>
           </em>
-          , a ListenBrainz scrobbler for Swinsian and Music.app on macOS devices
+          , a ListenBrainz submitter for Swinsian and Music.app on macOS devices
         </li>
         <li>
           <em>
@@ -264,6 +264,13 @@ export default function AddData() {
             </a>
           </em>
           , a universal Linux scrobbler for MPRIS enabled players
+        </li>
+        <li>
+          <em>
+            <a href="https://scrobblerad.io/">ScrobbleRadio</a>
+          </em>
+          , a streaming radio player and listen submitter for a curated list
+          of global radio stations
         </li>
         <li>
           <em>
