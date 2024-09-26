@@ -80,5 +80,32 @@
 }
 
 #donors {
-  margin-top: 1.5em;
+  margin-top: 15px;
+  .donations-page-header {
+    .donation-header-text {
+      position: relative;
+      color: @white;
+      font-size: 16px;
+    }
+    a {
+      color: @black;
+      font-weight: bold;
+      margin-left: 2em;
+      &.btn{
+        border-radius: @border-radius-base;
+      }
+    }
+    opacity: 0.85;
+    border-radius: @border-radius-large;
+    background: @homepage-background;
+    padding: 3em 2em;
+    position: relative;
+    text-align: center;
+    margin-bottom: 2em;
+    overflow: hidden;
+    canvas {
+      position: absolute;
+      opacity: 0.5;
+    }
+  }
 }
