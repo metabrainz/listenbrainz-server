@@ -4,7 +4,7 @@ import * as React from "react";
 import { COLOR_LB_GREEN } from "../../utils/constants";
 import Blob from "../../home/Blob";
 
-export default function Data() {
+export default function Donate() {
   return (
     <div id="donations-page">
       <Blob width={250} height={250} randomness={1.5} className="blob" />
@@ -17,19 +17,9 @@ export default function Data() {
       />
       <div>
         <div className="donations-page-header">
-          <h2>
-            Money can&apos;t buy happiness, but it can buy
-            <br />
-            <span style={{ fontWeight: 600 }}>LISTENBRAINZ HOSTING</span>
-          </h2>
-          <p>
-            ListenBrainz is a free, open-source and non-profit project.
-            <br />
-            If you enjoy it, you can help us survive and thrive with your
-            donations.
-            <br />
-            At our scale, every contribution matters.
-          </p>
+          Money can&apos;t buy happiness, but it can buy
+          <br />
+          <span style={{ fontWeight: 600 }}>LISTENBRAINZ HOSTING</span>
         </div>
         <div id="donations-tiers">
           <div className="tier card text-center">
@@ -49,15 +39,15 @@ export default function Data() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() =>
-                  window.open("https://metabrainz.org/donate", "_blank")
-                }
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() =>
+                    window.open("https://metabrainz.org/donate", "_blank")
+                  }
                 >
-                Donate $5
-              </button>
+                  Donate $5
+                </button>
               </h2>
             </div>
             <ul className="fa-ul">
@@ -86,16 +76,16 @@ export default function Data() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() =>
-                  window.open("https://metabrainz.org/donate", "_blank")
-                }
-              >
-                Donate $20
-              </button>
-                </h2>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() =>
+                    window.open("https://metabrainz.org/donate", "_blank")
+                  }
+                >
+                  Donate $20
+                </button>
+              </h2>
             </div>
             <ul className="fa-ul">
               <li className="perk">
@@ -131,15 +121,15 @@ export default function Data() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() =>
-                  window.open("https://metabrainz.org/donate", "_blank")
-                }
-              >
-                Donate $50
-              </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() =>
+                    window.open("https://metabrainz.org/donate", "_blank")
+                  }
+                >
+                  Donate $50
+                </button>
               </h2>
             </div>
             <ul className="fa-ul">
@@ -213,6 +203,8 @@ export default function Data() {
             By donating —either once or regularly— you&apos;ll join thousands of
             music lovers in helping us build an honest, unbiased and
             community-driven space for music discovery.
+            <br />
+            At our scale, every contribution matters.
           </p>
         </div>
       </div>
