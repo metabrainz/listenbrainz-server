@@ -1,7 +1,8 @@
 from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify
 
-from listenbrainz.db.donation import get_recent_donors, get_biggest_donors
+from listenbrainz.db.donation import get_recent_donors, get_biggest_donors, are_users_eligible_donors
+from listenbrainz.db.user_setting import get_all_flairs
 from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.views.api_tools import _parse_int_arg
@@ -38,3 +39,19 @@ def biggest_donors():
 
     donors, _ = get_biggest_donors(meb_conn, db_conn, count, offset)
     return jsonify(donors)
+
+
+@donor_api_bp.route("/all-flairs", methods=["GET", "OPTIONS"])
+@crossdomain
+@ratelimit()
+def all_flairs():
+    """ Get flairs (including expired ones) for all users """
+    users_with_flair = get_all_flairs(db_conn)
+    eligible_donors = are_users_eligible_donors(meb_conn, [u.musicbrainz_row_id for u in users_with_flair])
+
+    result = {
+        r.musicbrainz_id: r.flair
+        for r in users_with_flair
+        if r.musicbrainz_row_id in eligible_donors and eligible_donors[r.musicbrainz_row_id]
+    }
+    return jsonify(result)
