@@ -486,9 +486,16 @@
 #navigation.pager {
   display: flex;
   flex-wrap: wrap;
-  & > .date-time-picker {
+  & > .feed-button-and-date-time-picker {
     flex: 1;
     order: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .feed-button {
+      margin-right: 10px;
+    }
 
     @media (max-width: @screen-phone) {
       // on phones, put the datepicker below the arrow nav
