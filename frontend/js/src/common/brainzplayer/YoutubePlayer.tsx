@@ -24,6 +24,7 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type YoutubePlayerState = {
   currentListen?: Listen;
@@ -117,6 +118,7 @@ export default class YoutubePlayer
   public name = "youtube";
   public domainName = "youtube.com";
   public icon = faYoutube;
+  public iconColor = dataSourcesInfo.youtube.color;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 

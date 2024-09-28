@@ -65,6 +65,7 @@ import {
   BrainzPlayerActionType,
   useBrainzPlayerDispatch,
 } from "../brainzplayer/BrainzPlayerContext";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -603,6 +604,7 @@ export class ListenCard extends React.Component<
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}
+                        iconColor={dataSourcesInfo.spotify.color}
                         title="Open in Spotify"
                         text="Open in Spotify"
                         key="Open in Spotify"
@@ -616,6 +618,7 @@ export class ListenCard extends React.Component<
                     {youtubeURL && (
                       <ListenControl
                         icon={faYoutube}
+                        iconColor={dataSourcesInfo.youtube.color}
                         title="Open in YouTube"
                         text="Open in YouTube"
                         key="Open in YouTube"
@@ -629,6 +632,7 @@ export class ListenCard extends React.Component<
                     {soundcloudURL && (
                       <ListenControl
                         icon={faSoundcloud}
+                        iconColor={dataSourcesInfo.soundcloud.color}
                         title="Open in Soundcloud"
                         text="Open in Soundcloud"
                         key="Open in Soundcloud"

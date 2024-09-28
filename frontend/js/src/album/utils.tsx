@@ -19,7 +19,7 @@ import {
   faTwitter,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { compact } from "lodash";
+import { dataSourcesInfo } from "../settings/brainzplayer/BrainzPlayerSettings";
 
 export type SimilarArtist = {
   artist_mbid: string;
@@ -68,6 +68,7 @@ export type ListeningStats = {
 
 export function getRelIconLink(relName: string, relValue: string) {
   let icon;
+  let color;
   switch (relName) {
     case "streaming":
     case "free streaming":
@@ -82,21 +83,26 @@ export function getRelIconLink(relName: string, relValue: string) {
     case "youtube":
     case "youtube music":
       icon = faYoutube;
+      color = dataSourcesInfo.youtube.color;
       break;
     case "soundcloud":
       icon = faSoundcloud;
+      color = dataSourcesInfo.soundcloud.color;
       break;
     case "official homepage":
       icon = faHomeAlt;
       break;
     case "bandcamp":
       icon = faBandcamp;
+      color = "#629AA9";
       break;
     case "last.fm":
       icon = faLastfm;
+      color = "#D51007";
       break;
     case "apple music":
       icon = faApple;
+      color = dataSourcesInfo.appleMusic.color;
       break;
     case "get the music":
     case "purchase for mail-order":
@@ -112,8 +118,10 @@ export function getRelIconLink(relName: string, relValue: string) {
         icon = faFacebook;
       } else if (/twitter/.test(relValue) || /x.com/.test(relValue)) {
         icon = faTwitter;
+        color = "#55ACEE";
       } else if (/soundcloud/.test(relValue)) {
         icon = faSoundcloud;
+        color = dataSourcesInfo.soundcloud.color;
       } else {
         icon = faCircleNodes;
       }
@@ -131,7 +139,7 @@ export function getRelIconLink(relName: string, relValue: string) {
       target="_blank"
       rel="noopener noreferrer"
     >
-      <FontAwesomeIcon icon={icon} fixedWidth />
+      <FontAwesomeIcon icon={icon} fixedWidth color={color} />
     </a>
   );
 }
