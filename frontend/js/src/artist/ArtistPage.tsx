@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
+  faMusic,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
@@ -19,6 +20,7 @@ import {
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import NiceModal from "@ebay/nice-modal-react";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -38,6 +40,34 @@ import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import CBReviewModal from "../cb-review/CBReviewModal";
+import Pill from "../components/Pill";
+
+function GetSortingButtons({
+  sort,
+  setSort,
+}: {
+  sort: "release_date" | "total_listen_count";
+  setSort: (sort: "release_date" | "total_listen_count") => void;
+}): JSX.Element {
+  return (
+    <div className="flex" role="group" aria-label="Sort by">
+      <Pill
+        type="secondary"
+        active={sort === "release_date"}
+        onClick={() => setSort("release_date")}
+      >
+        <FontAwesomeIcon icon={faCalendar} />
+      </Pill>
+      <Pill
+        type="secondary"
+        active={sort === "total_listen_count"}
+        onClick={() => setSort("total_listen_count")}
+      >
+        <FontAwesomeIcon icon={faMusic} />
+      </Pill>
+    </div>
+  );
+}
 
 interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
   secondary_types: string[];
@@ -88,12 +118,16 @@ export default function ArtistPage(): JSX.Element {
     WikipediaExtract
   >();
 
+  const [sort, setSort] = React.useState<"release_date" | "total_listen_count">(
+    "release_date"
+  );
+
   const releaseGroupsSorted = orderBy(
     releaseGroups,
     [
       "secondary_types",
-      (rg) => rg.date || "",
-      "total_listen_count",
+      sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
+      sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
       "type",
       "name",
     ],
@@ -426,7 +460,10 @@ export default function ArtistPage(): JSX.Element {
         </div>
         {rgGroups.Album && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Albums</h3>
+            <div className="listen-header">
+              <h3 className="header-with-line">Albums</h3>
+              <GetSortingButtons sort={sort} setSort={setSort} />
+            </div>
             <div
               className={`cover-art-container dragscroll ${
                 rgGroups.Album.length <= COVER_ART_SINGLE_ROW_COUNT
@@ -440,7 +477,10 @@ export default function ArtistPage(): JSX.Element {
         )}
         {rgGroups.Single && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Singles</h3>
+            <div className="listen-header">
+              <h3 className="header-with-line">Singles</h3>
+              <GetSortingButtons sort={sort} setSort={setSort} />
+            </div>
             <div
               className={`cover-art-container dragscroll ${
                 rgGroups.Single.length <= COVER_ART_SINGLE_ROW_COUNT
@@ -454,7 +494,10 @@ export default function ArtistPage(): JSX.Element {
         )}
         {rgGroups.EP && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">EPs</h3>
+            <div className="listen-header">
+              <h3 className="header-with-line">EPs</h3>
+              <GetSortingButtons sort={sort} setSort={setSort} />
+            </div>
             <div
               className={`cover-art-container dragscroll ${
                 rgGroups.EP.length <= COVER_ART_SINGLE_ROW_COUNT
@@ -468,7 +511,10 @@ export default function ArtistPage(): JSX.Element {
         )}
         {rgGroups.Broadcast && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Broadcasts</h3>
+            <div className="listen-header">
+              <h3 className="header-with-line">Broadcasts</h3>
+              <GetSortingButtons sort={sort} setSort={setSort} />
+            </div>
             <div
               className={`cover-art-container dragscroll ${
                 rgGroups.Broadcast.length <= COVER_ART_SINGLE_ROW_COUNT
@@ -482,7 +528,10 @@ export default function ArtistPage(): JSX.Element {
         )}
         {rgGroups.Other && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Others</h3>
+            <div className="listen-header">
+              <h3 className="header-with-line">Others</h3>
+              <GetSortingButtons sort={sort} setSort={setSort} />
+            </div>
             <div
               className={`cover-art-container dragscroll ${
                 rgGroups.Other.length <= COVER_ART_SINGLE_ROW_COUNT
@@ -496,7 +545,10 @@ export default function ArtistPage(): JSX.Element {
         )}
         {rgCompilations && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Compilations</h3>
+            <div className="listen-header">
+              <h3 className="header-with-line">Compilations</h3>
+              <GetSortingButtons sort={sort} setSort={setSort} />
+            </div>
             <div
               className={`cover-art-container dragscroll ${
                 rgCompilations.length <= COVER_ART_SINGLE_ROW_COUNT
