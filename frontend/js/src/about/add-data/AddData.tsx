@@ -269,8 +269,8 @@ export default function AddData() {
           <em>
             <a href="https://scrobblerad.io/">ScrobbleRadio</a>
           </em>
-          , a streaming radio player and listen submitter for a curated list
-          of global radio stations
+          , a streaming radio player and listen submitter for a curated list of
+          global radio stations
         </li>
         <li>
           <em>
