@@ -4,32 +4,6 @@ from listenbrainz import db
 import sqlalchemy
 
 
-def get_active_users_to_process(db_conn) -> List[dict]:
-    """ Returns a list of users whose listens should be imported from Spotify.
-    """
-    result = db_conn.execute(sqlalchemy.text("""
-        SELECT external_service_oauth.user_id
-             , "user".musicbrainz_id
-             , "user".musicbrainz_row_id
-             , access_token
-             , refresh_token
-             , listens_importer.last_updated
-             , token_expires
-             , scopes
-             , latest_listened_at
-             , error_message
-          FROM external_service_oauth
-          JOIN "user"
-            ON "user".id = external_service_oauth.user_id
-          JOIN listens_importer
-            ON listens_importer.external_service_oauth_id = external_service_oauth.id
-         WHERE external_service_oauth.service = 'spotify'
-           AND error_message IS NULL
-      ORDER BY latest_listened_at DESC NULLS LAST
-    """))
-    return [row for row in result.mappings()]
-
-
 def get_user_import_details(db_conn, user_id: int) -> Optional[dict]:
     """ Return user's spotify linking details to display on connect services page
 

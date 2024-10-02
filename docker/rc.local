@@ -43,6 +43,13 @@ then
     rm -f /etc/service/spotify_reader/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
+then
+    log Enabling last.fm importer
+    rm -f /etc/service/lastfm_importer/down
+fi
+
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-${DEPLOY_ENV}" ]
 then
     log Enabling spark reader
