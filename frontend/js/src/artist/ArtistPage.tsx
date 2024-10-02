@@ -39,10 +39,14 @@ import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerCont
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import CBReviewModal from "../cb-review/CBReviewModal";
 
+interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
+  secondary_types: string[];
+}
+
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroup[];
+  releaseGroups: ReleaseGroupWithSecondaryTypes[];
   similarArtists: {
     artists: SimilarArtist[];
     topReleaseGroupColor: ReleaseColor | undefined;
@@ -51,6 +55,8 @@ export type ArtistPageProps = {
   listeningStats: ListeningStats;
   coverArt?: string;
 };
+
+const COVER_ART_SINGLE_ROW_COUNT = 8;
 
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
@@ -94,14 +100,11 @@ export default function ArtistPage(): JSX.Element {
     ["asc", "desc", "desc", "asc", "asc"]
   );
 
-  const [rgsByThisArtist, alsoAppearsOn] = partition(
+  const [rgWithoutCompilations, rgCompilations] = partition(
     releaseGroupsSorted,
-    (rg) => rg.artists[0].artist_mbid === artist?.artist_mbid
+    (rg) => rg?.secondary_types?.includes("Compilation")
   );
-
-  const rgGroups = chain(rgsByThisArtist).groupBy("type").value();
-  const otherRgs = rgGroups.Other ?? [];
-  otherRgs.push(...(rgGroups.Broadcast ?? []));
+  const rgGroups = chain(rgWithoutCompilations).groupBy("type").value();
 
   React.useEffect(() => {
     async function fetchReviews() {
@@ -424,7 +427,13 @@ export default function ArtistPage(): JSX.Element {
         {rgGroups.Album && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">Albums</h3>
-            <div className="cover-art-container dragscroll">
+            <div
+              className={`cover-art-container dragscroll ${
+                rgGroups.Album.length <= COVER_ART_SINGLE_ROW_COUNT
+                  ? "single-row"
+                  : ""
+              }`}
+            >
               {rgGroups.Album.map(getReleaseCard)}
             </div>
           </div>
@@ -432,7 +441,13 @@ export default function ArtistPage(): JSX.Element {
         {rgGroups.Single && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">Singles</h3>
-            <div className="cover-art-container dragscroll">
+            <div
+              className={`cover-art-container dragscroll ${
+                rgGroups.Single.length <= COVER_ART_SINGLE_ROW_COUNT
+                  ? "single-row"
+                  : ""
+              }`}
+            >
               {rgGroups.Single.map(getReleaseCard)}
             </div>
           </div>
@@ -440,24 +455,56 @@ export default function ArtistPage(): JSX.Element {
         {rgGroups.EP && (
           <div className="albums full-width scroll-start">
             <h3 className="header-with-line">EPs</h3>
-            <div className="cover-art-container dragscroll">
+            <div
+              className={`cover-art-container dragscroll ${
+                rgGroups.EP.length <= COVER_ART_SINGLE_ROW_COUNT
+                  ? "single-row"
+                  : ""
+              }`}
+            >
               {rgGroups.EP.map(getReleaseCard)}
             </div>
           </div>
         )}
-        {otherRgs && (
+        {rgGroups.Broadcast && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Others</h3>
-            <div className="cover-art-container dragscroll">
-              {otherRgs.map(getReleaseCard)}
+            <h3 className="header-with-line">Broadcasts</h3>
+            <div
+              className={`cover-art-container dragscroll ${
+                rgGroups.Broadcast.length <= COVER_ART_SINGLE_ROW_COUNT
+                  ? "single-row"
+                  : ""
+              }`}
+            >
+              {rgGroups.Broadcast.map(getReleaseCard)}
             </div>
           </div>
         )}
-        {Boolean(alsoAppearsOn?.length) && (
+        {rgGroups.Other && (
           <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Also appears on</h3>
-            <div className="cover-art-container dragscroll">
-              {alsoAppearsOn.map(getReleaseCard)}
+            <h3 className="header-with-line">Others</h3>
+            <div
+              className={`cover-art-container dragscroll ${
+                rgGroups.Other.length <= COVER_ART_SINGLE_ROW_COUNT
+                  ? "single-row"
+                  : ""
+              }`}
+            >
+              {rgGroups.Other.map(getReleaseCard)}
+            </div>
+          </div>
+        )}
+        {rgCompilations && (
+          <div className="albums full-width scroll-start">
+            <h3 className="header-with-line">Compilations</h3>
+            <div
+              className={`cover-art-container dragscroll ${
+                rgCompilations.length <= COVER_ART_SINGLE_ROW_COUNT
+                  ? "single-row"
+                  : ""
+              }`}
+            >
+              {rgCompilations.map(getReleaseCard)}
             </div>
           </div>
         )}
