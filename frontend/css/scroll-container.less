@@ -1,5 +1,19 @@
 .horizontal-scroll-container {
   position: relative;
+
+  .horizontal-scroll {
+    .small-scrollbar();
+    &.no-scrollbar {
+      overflow-x: scroll;
+      /* Hide the scrollbar: */
+      -ms-overflow-style: none; /* Internet Explorer and Edge */
+      scrollbar-width: none; /* Firefox */
+      &::-webkit-scrollbar {
+        /* Chrome, Safari and Opera */
+        display: none;
+      }
+    }
+  }
   // hide overflow behind button with gradient to indicate there's more
   .nav-button {
     position: absolute;
@@ -41,22 +55,26 @@
     display: none;
   }
 }
+@scrollbar-background-color: #f5f5f5;
+@scrollbar-thumb-color: darken(@scrollbar-background-color, 10%);
+@scrollbar-thumb-color-dark: darken(@scrollbar-thumb-color, 15%);
 
 .small-scrollbar {
   scrollbar-width: unset;
+  padding-bottom: 1em;
   &::-webkit-scrollbar {
     height: 5px;
-    display:block;
+    display: block;
   }
   &::-webkit-scrollbar-track {
-    background-color: #f5f5f5;
-    border-radius:5px;
+    background-color: @scrollbar-background-color;
+    border-radius: 5px;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: #e6e6e6;
-    border-radius:5px;
+    background-color: @scrollbar-thumb-color;
+    border-radius: 5px;
   }
   &:hover::-webkit-scrollbar-thumb {
-    background-color: #ccc;
+    background-color: @scrollbar-thumb-color-dark;
   }
 }

@@ -12,7 +12,7 @@ type HorizontalScrollContainerProps = {
 };
 
 export default function HorizontalScrollContainer({
-  showScrollbar,
+  showScrollbar = true,
   scrollContainerCssClass,
   children,
 }: PropsWithChildren<HorizontalScrollContainerProps>) {
@@ -71,9 +71,9 @@ export default function HorizontalScrollContainer({
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
       <div
-        className={`horizontal-scroll dragscroll ${
-          scrollContainerCssClass ?? ""
-        } ${showScrollbar ? "small-scrollbar" : ""}`}
+        className={`horizontal-scroll ${scrollContainerCssClass ?? ""} ${
+          showScrollbar ? "small-scrollbar" : "no-scrollbar"
+        }`}
         onScroll={throttledOnScroll}
         ref={scrollContainerRef}
       >

@@ -347,7 +347,10 @@ export default function RecommendationsPage() {
           </p>
         </div>
       ) : (
-        <HorizontalScrollContainer scrollContainerCssClass="playlists-masonry">
+        <HorizontalScrollContainer
+          scrollContainerCssClass="playlists-masonry"
+          showScrollbar={false}
+        >
           {playlists.map((playlist, index) => {
             const extension = getPlaylistExtension(playlist);
             const sourcePatch =
