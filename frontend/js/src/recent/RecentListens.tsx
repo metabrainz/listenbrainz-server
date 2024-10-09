@@ -9,11 +9,13 @@ import Card from "../components/Card";
 
 import { getTrackName } from "../utils/utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import RecentDonorsCard from "./components/RecentDonors";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
   globalListenCount: number;
   globalUserCount: string;
+  recentDonors: Array<DonationInfoWithPinnedRecording>;
 };
 
 type RecentListensLoaderData = RecentListensProps;
@@ -36,7 +38,7 @@ export default class RecentListens extends React.Component<
 
   render() {
     const { listens } = this.state;
-    const { globalListenCount, globalUserCount } = this.props;
+    const { globalListenCount, globalUserCount, recentDonors } = this.props;
 
     return (
       <div role="main">
@@ -61,6 +63,9 @@ export default class RecentListens extends React.Component<
                 <br />
                 <small className="text-muted">users</small>
               </div>
+            </Card>
+            <Card className="card-user-sn hidden-xs hidden-sm">
+              <RecentDonorsCard donors={recentDonors} />
             </Card>
           </div>
           <div className="col-md-8 col-md-pull-4">

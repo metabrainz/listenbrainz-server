@@ -91,7 +91,7 @@
       color: @black;
       font-weight: bold;
       margin-left: 2em;
-      &.btn{
+      &.btn {
         border-radius: @border-radius-base;
       }
     }
@@ -106,6 +106,31 @@
     canvas {
       position: absolute;
       opacity: 0.5;
+    }
+  }
+}
+
+.recent-donor-card {
+  gap: 1rem;
+  > div {
+    width: 150px;
+  }
+  .user-link {
+    word-wrap: break-word;
+  }
+  .donor-pinned-recording {
+    display: flex;
+    align-items: center;
+    background: #edf2f7;
+    gap: 0.5rem;
+    margin-left: auto;
+    border-radius: 10px;
+    .text {
+      color: #6b7280;
+      text-wrap: wrap;
+    }
+    svg {
+      color: #353070;
     }
   }
 }
