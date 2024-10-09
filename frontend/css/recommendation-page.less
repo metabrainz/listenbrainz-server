@@ -4,37 +4,6 @@
 }
 /* stylelint-enable */
 
-.playlists-masonry-container {
-  position: relative;
-  // hide overflow behind button with gradient to indicate there's more
-  .nav-button {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 55px;
-    border: none;
-    font-size: 2em;
-    color: @light-grey;
-    z-index: 1;
-    opacity: 1;
-    transition: opacity 300ms linear;
-    &.backward {
-      background: linear-gradient(to right, @white 10%, transparent);
-      text-align: left;
-      left: 0;
-    }
-    &.forward {
-      background: linear-gradient(to left, @white 10%, transparent);
-      right: 0;
-      text-align: right;
-    }
-  }
-  &.scroll-start .nav-button.backward,
-  &.scroll-end& .nav-button.forward {
-    opacity: 0;
-    pointer-events: none;
-  }
-}
 .playlists-masonry {
   width: 100%;
   display: grid;

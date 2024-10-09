@@ -1,0 +1,62 @@
+.horizontal-scroll-container {
+  position: relative;
+  // hide overflow behind button with gradient to indicate there's more
+  .nav-button {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 55px;
+    border: none;
+    font-size: 2em;
+    color: @light-grey;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 300ms linear;
+    &.backward {
+      background: linear-gradient(to right, @white 10%, transparent);
+      text-align: left;
+      left: 0;
+    }
+    &.forward {
+      background: linear-gradient(to left, @white 10%, transparent);
+      right: 0;
+      text-align: right;
+    }
+  }
+  &.scroll-start .nav-button.backward,
+  &.scroll-end& .nav-button.forward {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.dragscroll {
+  /* We user the dragscroll library to handle dragging to scroll */
+  overflow-x: scroll;
+  /* But we want to hide the scrollbar: */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    /* Chrome, Safari and Opera */
+    display: none;
+  }
+}
+
+.small-scrollbar {
+  scrollbar-width: unset;
+  &::-webkit-scrollbar {
+    height: 5px;
+    display:block;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: #f5f5f5;
+    border-radius:5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #e6e6e6;
+    border-radius:5px;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+  }
+}
