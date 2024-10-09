@@ -5,18 +5,37 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import React, { PropsWithChildren } from "react";
+import { useDraggable } from "react-use-draggable-scroll-safe";
 
 type HorizontalScrollContainerProps = {
   showScrollbar?: Boolean;
+  enableDragScroll?: Boolean;
   scrollContainerCssClass?: string;
 };
 
 export default function HorizontalScrollContainer({
   showScrollbar = true,
+  enableDragScroll = true,
   scrollContainerCssClass,
   children,
 }: PropsWithChildren<HorizontalScrollContainerProps>) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const { events } = useDraggable(scrollContainerRef, {
+    applyRubberBandEffect: true,
+  });
+
+  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (event) => {
+    // Call the dragScrolluse-draggable-safe hook event
+    events.onMouseDown(event);
+    // Set our own class to allow for snap-scroll
+    (event.target as HTMLDivElement)?.parentElement?.classList.add("dragging");
+  };
+  const onMouseUp: React.MouseEventHandler<HTMLDivElement> = (event) => {
+    (event.target as HTMLDivElement)?.parentElement?.classList.remove(
+      "dragging"
+    );
+  };
 
   const onScroll: React.ReactEventHandler<HTMLDivElement> = (event) => {
     const element = event.target as HTMLDivElement;
@@ -67,6 +86,7 @@ export default function HorizontalScrollContainer({
         className="nav-button backward"
         type="button"
         onClick={manualScroll}
+        tabIndex={0}
       >
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
@@ -75,7 +95,11 @@ export default function HorizontalScrollContainer({
           showScrollbar ? "small-scrollbar" : "no-scrollbar"
         }`}
         onScroll={throttledOnScroll}
+        onMouseDown={enableDragScroll ? onMouseDown : undefined}
+        onMouseUp={enableDragScroll ? onMouseUp : undefined}
         ref={scrollContainerRef}
+        role="grid"
+        tabIndex={-2}
       >
         {children}
       </div>
@@ -83,6 +107,7 @@ export default function HorizontalScrollContainer({
         className="nav-button forward"
         type="button"
         onClick={manualScroll}
+        tabIndex={0}
       >
         <FontAwesomeIcon icon={faChevronRight} />
       </button>
