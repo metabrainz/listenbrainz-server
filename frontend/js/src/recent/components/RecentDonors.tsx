@@ -15,6 +15,10 @@ type RecentDonorsCardProps = {
 function RecentDonorsCard(props: RecentDonorsCardProps) {
   const { donors } = props;
 
+  if (!donors || donors.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <h3 className="text-center" style={{ marginTop: "10px" }}>

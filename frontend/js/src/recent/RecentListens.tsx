@@ -57,14 +57,14 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">songs played</small>
               </div>
             </Card>
-            <Card id="listen-count-card">
+            <Card id="listen-count-card" className="card-user-sn">
               <div>
                 {globalUserCount ?? "-"}
                 <br />
                 <small className="text-muted">users</small>
               </div>
             </Card>
-            <Card className="card-user-sn hidden-xs hidden-sm">
+            <Card className="hidden-xs hidden-sm">
               <RecentDonorsCard donors={recentDonors} />
             </Card>
           </div>
