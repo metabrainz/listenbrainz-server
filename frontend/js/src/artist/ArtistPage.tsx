@@ -122,6 +122,10 @@ export default function ArtistPage(): JSX.Element {
     "release_date"
   );
 
+  const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
+    false
+  );
+
   const rgGroups = groupBy(
     releaseGroups,
     (rg) =>
@@ -375,7 +379,7 @@ export default function ArtistPage(): JSX.Element {
         />
       </div>
       <div className="entity-page-content">
-        <div className="tracks">
+        <div className={`tracks ${expandPopularTracks ? "expanded" : ""}`}>
           <div className="header">
             <h3 className="header-with-line">
               Popular tracks
@@ -420,11 +424,15 @@ export default function ArtistPage(): JSX.Element {
               />
             );
           })}
-          {/* <div className="read-more">
-            <button type="button" className="btn btn-outline">
-              See more…
+          <div className="read-more">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setExpandPopularTracks((prevValue) => !prevValue)}
+            >
+              See {expandPopularTracks ? "less" : "more"}
             </button>
-          </div> */}
+          </div>
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
