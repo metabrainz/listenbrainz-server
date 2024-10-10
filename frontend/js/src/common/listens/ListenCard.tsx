@@ -28,9 +28,11 @@ import NiceModal from "@ebay/nice-modal-react";
 import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
+  getAlbumArtFromListenMetadataKey,
   getArtistLink,
   getArtistMBIDs,
   getArtistName,
@@ -94,10 +96,10 @@ export type ListenCardProps = {
 export type ListenCardState = {
   listen: Listen;
   isCurrentlyPlaying: boolean;
-  thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
 type ListenCardPropsWithDispatch = ListenCardProps & {
+  thumbnailSrc?: string;
   dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
 };
 
@@ -118,7 +120,6 @@ export class ListenCard extends React.Component<
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    await this.getCoverArt();
   }
 
   async componentDidUpdate(
@@ -130,31 +131,10 @@ export class ListenCard extends React.Component<
     if (Boolean(listen) && !isEqual(listen, oldListen)) {
       this.setState({ listen });
     }
-    if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
-      await this.getCoverArt();
-    }
   }
 
   componentWillUnmount() {
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
-  }
-
-  async getCoverArt() {
-    const { spotifyAuth, APIService, userPreferences } = this.context;
-    if (userPreferences?.saveData === true) {
-      return;
-    }
-    const { listen } = this.state;
-    const albumArtSrc = await getAlbumArtFromListenMetadata(
-      listen,
-      spotifyAuth,
-      APIService
-    );
-    if (albumArtSrc) {
-      this.setState({ thumbnailSrc: albumArtSrc });
-    } else {
-      this.setState({ thumbnailSrc: undefined });
-    }
   }
 
   playListen = () => {
@@ -278,9 +258,10 @@ export class ListenCard extends React.Component<
       additionalActions,
       listen: listenFromProps,
       dispatch: dispatchProp,
+      thumbnailSrc,
       ...otherProps
     } = this.props;
-    const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { listen, isCurrentlyPlaying } = this.state;
     const { currentUser } = this.context;
     const isLoggedIn = !isEmpty(currentUser);
 
@@ -765,5 +746,43 @@ export class ListenCard extends React.Component<
 
 export default function ListenCardWrapper(props: ListenCardProps) {
   const dispatch = useBrainzPlayerDispatch();
-  return <ListenCard {...props} dispatch={dispatch} />;
+  const { spotifyAuth, APIService, userPreferences } = React.useContext(
+    GlobalAppContext
+  );
+  const { listen, customThumbnail } = props;
+
+  const albumArtQueryKey = React.useMemo(
+    () => getAlbumArtFromListenMetadataKey(listen, spotifyAuth),
+    [listen, spotifyAuth]
+  );
+
+  const albumArtDisabled =
+    Boolean(customThumbnail) || !listen || userPreferences?.saveData;
+
+  const { data: thumbnailSrc } = useQuery({
+    queryKey: ["album-art", albumArtQueryKey, albumArtDisabled],
+    queryFn: async () => {
+      if (albumArtDisabled) {
+        return "";
+      }
+      try {
+        const albumArtURL = await getAlbumArtFromListenMetadata(
+          listen,
+          spotifyAuth,
+          APIService
+        );
+        return albumArtURL ?? "";
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error fetching album art", error);
+        return "";
+      }
+    },
+    staleTime: 1000 * 60 * 60 * 12,
+    gcTime: 1000 * 60 * 60 * 12,
+  });
+
+  return (
+    <ListenCard {...props} dispatch={dispatch} thumbnailSrc={thumbnailSrc} />
+  );
 }

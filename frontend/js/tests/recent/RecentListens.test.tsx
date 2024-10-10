@@ -21,6 +21,7 @@ import RecentListens, {
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 import ListenCard from "../../src/common/listens/ListenCard";
+import { ReactQueryWrapper } from "../test-react-query";
 // import Card from "../../src/components/Card";
 // import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
 
@@ -98,7 +99,9 @@ describe("Recentlistens", () => {
     const wrapper = mount<RecentListens>(
       <GlobalAppContext.Provider value={mountOptions.context}>
         <BrowserRouter>
-          <RecentListens {...props} />
+          <ReactQueryWrapper>
+            <RecentListens {...props} />
+          </ReactQueryWrapper>
         </BrowserRouter>
       </GlobalAppContext.Provider>
     );
