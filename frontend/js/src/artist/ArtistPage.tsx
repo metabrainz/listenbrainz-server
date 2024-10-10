@@ -124,7 +124,8 @@ export default function ArtistPage(): JSX.Element {
   const rgGroups = groupBy(
     releaseGroups,
     (rg) =>
-      (rg.type ?? "Other") + (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
+      (rg.type ?? "Other") +
+      (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
   );
 
   const sortReleaseGroups = (
@@ -139,15 +140,6 @@ export default function ArtistPage(): JSX.Element {
       ],
       ["desc", "desc", "asc"]
     );
-
-  if (rgGroups.undefined) {
-    if (rgGroups.Other) {
-      rgGroups.Other.push(...rgGroups.undefined);
-    } else {
-      rgGroups.Other = rgGroups.undefined;
-    }
-    delete rgGroups.undefined;
-  }
 
   const typeOrder = ["Album", "Single", "EP", "Broadcast", "Other"];
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
