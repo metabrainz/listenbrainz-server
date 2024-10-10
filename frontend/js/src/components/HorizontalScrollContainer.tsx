@@ -54,6 +54,11 @@ export default function HorizontalScrollContainer({
     if (!element || !parent) {
       return;
     }
+    // Don't expect so big a scroll before showing nav arrows on smaller screen sizes
+    const requiredMinimumScrollAmount = Math.min(
+      MANUAL_SCROLL_AMOUNT / 2,
+      element.clientWidth / 2
+    );
 
     // Set up appropriate CSS classes to show or hide nav buttons
     if (element.scrollWidth <= element.clientWidth) {
@@ -62,14 +67,14 @@ export default function HorizontalScrollContainer({
     parent.classList.remove("scroll-end");
     parent.classList.remove("scroll-start");
 
-    if (element.scrollLeft < MANUAL_SCROLL_AMOUNT) {
-      // We are at the beginning of the container and haven't scrolled more than MANUAL_SCROLL_AMOUNT
+    if (element.scrollLeft < requiredMinimumScrollAmount) {
+      // We are at the beginning of the container and haven't scrolled more than requiredMinimumScrollAmount
       parent.classList.add("scroll-start");
     } else if (
-      // We have scrolled to the end of the container, i.e. there is less than MANUAL_SCROLL_AMOUNT before the end of the scroll
+      // We have scrolled to the end of the container, i.e. there is less than requiredMinimumScrollAmount before the end of the scroll
       // (with a 2px adjustement)
       element.scrollWidth - element.scrollLeft - element.clientWidth <=
-      MANUAL_SCROLL_AMOUNT - 2
+      requiredMinimumScrollAmount - 2
     ) {
       parent.classList.add("scroll-end");
     }
