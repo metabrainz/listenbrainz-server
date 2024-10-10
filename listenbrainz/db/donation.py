@@ -162,22 +162,38 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
 def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
     """ Check if the user with the given musicbrainz row id is a donor and has enough recent
      donations to be eligible for flair """
+    result = are_users_eligible_donors(meb_conn, [musicbrainz_row_id])
+    return result.get(musicbrainz_row_id, False)
+
+
+def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
+    """ Check if the users with the given musicbrainz row ids are donors and have enough recent
+    donations to be eligible for flair """
     query = """
-        SELECT coalesce(
-                    bool_or(
-                        (
-                            (amount + fee)
-                           / ceiling(EXTRACT(days from now() - payment_date) / 30.0)
+        SELECT editor_id
+             , (
+                SELECT coalesce(
+                            bool_or(
+                                (
+                                    (amount + fee)
+                                   / GREATEST(ceiling(EXTRACT(days from now() - payment_date) / 30.0), 1)
+                                )
+                                >= :threshold)
+                            , 'f'
                         )
-                        >= :threshold)
-                    , 'f'
-                ) AS show_flair
-          FROM payment
-         WHERE editor_id = :editor_id
+                  FROM payment
+                 WHERE editor_id = e.editor_id
+                   AND is_donation = 't'
+                   AND (anonymous != 't' OR anonymous IS NULL)
+                   AND payment_date >= (NOW() - INTERVAL '1 year')
+               ) AS show_flair
+          FROM unnest(:editor_ids) as e (editor_id)
     """
     result = meb_conn.execute(text(query), {
-        "editor_id": musicbrainz_row_id,
+        "editor_ids": musicbrainz_row_ids,
         "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
     })
-    row = result.first()
-    return row is not None and row.show_flair
+    eligibility_map = {}
+    for row in result.all():
+        eligibility_map[row.editor_id] = row.show_flair
+    return eligibility_map
