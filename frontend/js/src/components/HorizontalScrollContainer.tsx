@@ -48,31 +48,28 @@ export default function HorizontalScrollContainer({
     []
   );
 
-  const onScroll: React.ReactEventHandler<HTMLElement> = React.useCallback(
-    (event) => {
-      const element = scrollContainerRef?.current;
-      const parent = element?.parentElement;
-      if (!element || !parent) {
-        return;
-      }
+  const onScroll = React.useCallback(() => {
+    const element = scrollContainerRef?.current;
+    const parent = element?.parentElement;
+    if (!element || !parent) {
+      return;
+    }
 
-      parent.classList.remove("scroll-end");
-      parent.classList.remove("scroll-start");
+    parent.classList.remove("scroll-end");
+    parent.classList.remove("scroll-start");
 
-      if (element.scrollLeft < MANUAL_SCROLL_AMOUNT) {
-        // We are at the beginning of the container and haven't scrolled more than MANUAL_SCROLL_AMOUNT
-        parent.classList.add("scroll-start");
-      } else if (
-        // We have scrolled to the end of the container, i.e. there is less than MANUAL_SCROLL_AMOUNT before the end of the scroll
-        // (with a 2px adjustement)
-        element.scrollWidth - element.scrollLeft - element.clientWidth <=
-        MANUAL_SCROLL_AMOUNT - 2
-      ) {
-        parent.classList.add("scroll-end");
-      }
-    },
-    []
-  );
+    if (element.scrollLeft < MANUAL_SCROLL_AMOUNT) {
+      // We are at the beginning of the container and haven't scrolled more than MANUAL_SCROLL_AMOUNT
+      parent.classList.add("scroll-start");
+    } else if (
+      // We have scrolled to the end of the container, i.e. there is less than MANUAL_SCROLL_AMOUNT before the end of the scroll
+      // (with a 2px adjustement)
+      element.scrollWidth - element.scrollLeft - element.clientWidth <=
+      MANUAL_SCROLL_AMOUNT - 2
+    ) {
+      parent.classList.add("scroll-end");
+    }
+  }, []);
 
   const throttledOnScroll = React.useMemo(
     () => throttle(onScroll, 400, { leading: true }),
@@ -99,13 +96,18 @@ export default function HorizontalScrollContainer({
       }
       // Also call the onScroll (throttled) event to ensure
       // the expected CSS classes are applied to the container
-      throttledOnScroll(event);
+      throttledOnScroll();
     },
     [throttledOnScroll]
   );
 
+  React.useEffect(() => {
+    // Run once on startup to set up expected CSS classes applied to the container
+    onScroll();
+  }, []);
+
   return (
-    <div className="horizontal-scroll-container scroll-start">
+    <div className="horizontal-scroll-container">
       <button
         className="nav-button backward"
         type="button"
