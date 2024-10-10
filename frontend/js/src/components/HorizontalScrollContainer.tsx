@@ -10,13 +10,13 @@ import { useDraggable } from "react-use-draggable-scroll-safe";
 type HorizontalScrollContainerProps = {
   showScrollbar?: Boolean;
   enableDragScroll?: Boolean;
-  scrollContainerCssClass?: string;
+  className?: string;
 };
 
 export default function HorizontalScrollContainer({
   showScrollbar = true,
   enableDragScroll = true,
-  scrollContainerCssClass,
+  className,
   children,
 }: PropsWithChildren<HorizontalScrollContainerProps>) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -91,9 +91,9 @@ export default function HorizontalScrollContainer({
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
       <div
-        className={`horizontal-scroll ${scrollContainerCssClass ?? ""} ${
+        className={`horizontal-scroll ${
           showScrollbar ? "small-scrollbar" : "no-scrollbar"
-        }`}
+        } ${className ?? ""}`}
         onScroll={throttledOnScroll}
         onMouseDown={enableDragScroll ? onMouseDown : undefined}
         onMouseUp={enableDragScroll ? onMouseUp : undefined}

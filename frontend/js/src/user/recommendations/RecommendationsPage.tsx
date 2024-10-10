@@ -348,7 +348,7 @@ export default function RecommendationsPage() {
         </div>
       ) : (
         <HorizontalScrollContainer
-          scrollContainerCssClass="playlists-masonry"
+          className="playlists-masonry"
           showScrollbar={false}
         >
           {playlists.map((playlist, index) => {
