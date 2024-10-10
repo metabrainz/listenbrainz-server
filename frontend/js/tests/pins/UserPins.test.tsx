@@ -16,11 +16,20 @@ import UserPins, {
 } from "../../src/user/taste/components/UserPins";
 import PinnedRecordingCard from "../../src/user/components/PinnedRecordingCard";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
+import { ReactQueryWrapper } from "../test-react-query";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
+function UserPinsWithWrapper(props: UserPinsProps) {
+  return (
+    <ReactQueryWrapper>
+      <UserPins {...props} />
+    </ReactQueryWrapper>
+  );
+}
 
 // typescript doesn't recognise string literal values
 const props = {
@@ -66,14 +75,14 @@ const mountOptions: { context: GlobalAppContextT } = {
 
 describe("UserPins", () => {
   it("renders correctly", () => {
-    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+    const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
     expect(wrapper.find("#pinned-recordings")).toHaveLength(1);
     expect(wrapper.getDOMNode()).toHaveTextContent("Lorde");
     expect(wrapper.getDOMNode()).toHaveTextContent("400 Lux");
   });
 
   it("renders the correct number of pinned recordings", () => {
-    const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
+    const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
 
     const wrapperElement = wrapper.find("#pinned-recordings");
     const pinnedRecordings = wrapperElement.find(PinnedRecordingCard);
@@ -83,26 +92,28 @@ describe("UserPins", () => {
   describe("handleLoadMore", () => {
     describe("handleClickOlder", () => {
       it("does nothing if page >= maxPage", async () => {
-        const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-        const instance = wrapper.instance();
+        const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
+        const userPinWrapper = wrapper.find(UserPins);
+        const instance = userPinWrapper.instance() as UserPins;
 
         const spy = jest.fn().mockImplementation(() => {});
         instance.getPinsFromAPI = spy;
         await act(() => {
-          wrapper.setState({ maxPage: 1 });
+          userPinWrapper.setState({ maxPage: 1 });
         });
 
         await act(async () => {
           await instance.handleLoadMore();
         });
 
-        expect(wrapper.state("loading")).toBeFalsy();
+        expect(userPinWrapper.state("loading")).toBeFalsy();
         expect(spy).not.toHaveBeenCalled();
       });
 
       it("calls the API to get next page", async () => {
-        const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-        const instance = wrapper.instance();
+        const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
+        const userPinWrapper = wrapper.find(UserPins);
+        const instance = userPinWrapper.instance() as UserPins;
 
         const apiSpy = jest
           .fn()
@@ -119,10 +130,10 @@ describe("UserPins", () => {
         expect(getPinsFromAPISpy).toHaveBeenCalledWith(2);
         expect(apiSpy).toHaveBeenCalledWith(props.user.name, 25, 25);
 
-        expect(wrapper.state("loading")).toBeFalsy();
-        expect(wrapper.state("page")).toEqual(2);
+        expect(userPinWrapper.state("loading")).toBeFalsy();
+        expect(userPinWrapper.state("page")).toEqual(2);
         // result should be combined previous pins and new pins
-        expect(wrapper.state("pins")).toEqual([
+        expect(userPinWrapper.state("pins")).toEqual([
           ...props.pins,
           ...APIPinsPageTwo.pinned_recordings,
         ]);
@@ -132,21 +143,23 @@ describe("UserPins", () => {
 
   describe("removePinFromPinsList", () => {
     it("updates the listens state after removing particular pin", async () => {
-      const wrapper = mount<UserPins>(<UserPins {...props} />, mountOptions);
-      const instance = wrapper.instance();
+      const wrapper = mount(<UserPinsWithWrapper {...props} />, mountOptions);
+      const userPinWrapper = wrapper.find(UserPins);
+      const instance = userPinWrapper.instance() as UserPins;
+
       await act(() => {
-        wrapper.setState({ pins: props.pins });
+        userPinWrapper.setState({ pins: props.pins });
       });
 
-      expect(wrapper.state("pins")).toHaveLength(25);
+      expect(userPinWrapper.state("pins")).toHaveLength(25);
 
       const expectedNewFirstPin = props.pins[1];
       await act(() => {
         instance.removePinFromPinsList(props.pins[0]);
       });
 
-      expect(wrapper.state("pins")).toHaveLength(24);
-      expect(wrapper.state("pins")[0].recording_msid).toEqual(
+      expect(userPinWrapper.state("pins")).toHaveLength(24);
+      expect(userPinWrapper.state("pins")[0].recording_msid).toEqual(
         expectedNewFirstPin.recording_msid
       );
     });
