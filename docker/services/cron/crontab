@@ -61,3 +61,6 @@ MAILTO=""
 
 # run weekly cron job to update popularity datasets
 0 10 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_popularity >> /logs/popularity_datasets.log 2>&1
+
+# delete old and expired user data exports
+0 11 * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete-old-user-data-exports >> /logs/user_data_exports.log 2>&1
