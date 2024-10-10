@@ -13,6 +13,9 @@ type HorizontalScrollContainerProps = {
   className?: string;
 };
 
+// How many pixels do the arrow buttons scroll?
+const MANUAL_SCROLL_AMOUNT = 500;
+
 export default function HorizontalScrollContainer({
   showScrollbar = true,
   enableDragScroll = true,
@@ -24,68 +27,100 @@ export default function HorizontalScrollContainer({
   const { events } = useDraggable(scrollContainerRef, {
     applyRubberBandEffect: true,
   });
+  const { onMouseDown: draggableOnMouseDown } = events;
 
-  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    // Call the dragScrolluse-draggable-safe hook event
-    events.onMouseDown(event);
-    // Set our own class to allow for snap-scroll
-    (event.target as HTMLDivElement)?.parentElement?.classList.add("dragging");
-  };
-  const onMouseUp: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    (event.target as HTMLDivElement)?.parentElement?.classList.remove(
-      "dragging"
-    );
-  };
+  const onMouseDown: React.MouseEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      // Call the use-draggable-scroll-safe hook event
+      draggableOnMouseDown(event);
+      // Set our own class to allow for snap-scroll
+      (event.target as HTMLElement)?.parentElement?.classList.add("dragging");
+    },
+    [draggableOnMouseDown]
+  );
 
-  const onScroll: React.ReactEventHandler<HTMLDivElement> = (event) => {
-    const element = event.target as HTMLDivElement;
-    const parent = element.parentElement;
+  const onMouseUp: React.MouseEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      (event.target as HTMLElement)?.parentElement?.classList.remove(
+        "dragging"
+      );
+    },
+    []
+  );
+
+  const onScroll = React.useCallback(() => {
+    const element = scrollContainerRef?.current;
+    const parent = element?.parentElement;
     if (!element || !parent) {
       return;
     }
-    // calculate horizontal scroll percentage
-    const scrollPercentage =
-      (100 * element.scrollLeft) / (element.scrollWidth - element.clientWidth);
+    // Don't expect so big a scroll before showing nav arrows on smaller screen sizes
+    const requiredMinimumScrollAmount = Math.min(
+      MANUAL_SCROLL_AMOUNT / 2,
+      element.clientWidth / 2
+    );
 
-    if (scrollPercentage > 95) {
-      parent.classList.add("scroll-end");
-      parent.classList.remove("scroll-start");
-    } else if (scrollPercentage < 5) {
+    // Set up appropriate CSS classes to show or hide nav buttons
+    if (element.scrollWidth <= element.clientWidth) {
+      parent.classList.add("no-scroll");
+    }
+    parent.classList.remove("scroll-end");
+    parent.classList.remove("scroll-start");
+
+    if (element.scrollLeft < requiredMinimumScrollAmount) {
+      // We are at the beginning of the container and haven't scrolled more than requiredMinimumScrollAmount
       parent.classList.add("scroll-start");
-      parent.classList.remove("scroll-end");
-    } else {
-      parent.classList.remove("scroll-end");
-      parent.classList.remove("scroll-start");
+    } else if (
+      // We have scrolled to the end of the container, i.e. there is less than requiredMinimumScrollAmount before the end of the scroll
+      // (with a 2px adjustement)
+      element.scrollWidth - element.scrollLeft - element.clientWidth <=
+      requiredMinimumScrollAmount - 2
+    ) {
+      parent.classList.add("scroll-end");
     }
-  };
+  }, []);
 
-  const manualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
-    if (!scrollContainerRef?.current) {
-      return;
-    }
-    if (event?.currentTarget.classList.contains("forward")) {
-      scrollContainerRef.current.scrollBy({
-        left: 300,
-        top: 0,
-        behavior: "smooth",
-      });
-    } else {
-      scrollContainerRef.current.scrollBy({
-        left: -300,
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-  };
+  const throttledOnScroll = React.useMemo(
+    () => throttle(onScroll, 400, { leading: true }),
+    [onScroll]
+  );
 
-  const throttledOnScroll = throttle(onScroll, 400, { leading: true });
+  const onManualScroll: React.ReactEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      if (!scrollContainerRef?.current) {
+        return;
+      }
+      if (event?.currentTarget.classList.contains("forward")) {
+        scrollContainerRef.current.scrollBy({
+          left: MANUAL_SCROLL_AMOUNT,
+          top: 0,
+          behavior: "smooth",
+        });
+      } else {
+        scrollContainerRef.current.scrollBy({
+          left: -MANUAL_SCROLL_AMOUNT,
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+      // Also call the onScroll (throttled) event to ensure
+      // the expected CSS classes are applied to the container
+      throttledOnScroll();
+    },
+    [throttledOnScroll]
+  );
+
+  React.useEffect(() => {
+    // Run once on startup to set up expected CSS classes applied to the container
+    onScroll();
+  }, []);
 
   return (
-    <div className="horizontal-scroll-container scroll-start">
+    <div className="horizontal-scroll-container">
       <button
         className="nav-button backward"
         type="button"
-        onClick={manualScroll}
+        onClick={onManualScroll}
         tabIndex={0}
       >
         <FontAwesomeIcon icon={faChevronLeft} />
@@ -106,7 +141,7 @@ export default function HorizontalScrollContainer({
       <button
         className="nav-button forward"
         type="button"
-        onClick={manualScroll}
+        onClick={onManualScroll}
         tabIndex={0}
       >
         <FontAwesomeIcon icon={faChevronRight} />

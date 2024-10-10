@@ -117,19 +117,21 @@
       min-height: 150px;
       min-width: 0;
       .artist-page& {
-        max-height: 520px;
+        max-height: 500px;
         overflow-y: hidden;
         border-bottom-style: inset;
         position: relative;
-        &::after {
-          content: "";
-          background-image: @white-gradient;
-          position: absolute;
-          bottom: 0;
-          height: 8em;
-          width: 100%;
+        &.expanded {
+          max-height: initial;
+          padding-bottom: 4em;
         }
       }
+
+      .read-more {
+        bottom: 0;
+        padding: 1em 0;
+      }
+
       .album-page& .listen-card .track-position {
         flex: 0 3em;
         align-self: center;
