@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
-  faMusic,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
@@ -42,7 +41,7 @@ import SimilarArtistComponent from "../explore/music-neighborhood/components/Sim
 import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 
-function GetSortingButtons({
+function SortingButtons({
   sort,
   setSort,
 }: {
@@ -63,7 +62,7 @@ function GetSortingButtons({
         active={sort === "total_listen_count"}
         onClick={() => setSort("total_listen_count")}
       >
-        <FontAwesomeIcon icon={faMusic} />
+        <FontAwesomeIcon icon={faHeadphones} />
       </Pill>
     </div>
   );
@@ -462,7 +461,7 @@ export default function ArtistPage(): JSX.Element {
           <div className="albums full-width scroll-start">
             <div className="listen-header">
               <h3 className="header-with-line">Albums</h3>
-              <GetSortingButtons sort={sort} setSort={setSort} />
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
@@ -479,7 +478,7 @@ export default function ArtistPage(): JSX.Element {
           <div className="albums full-width scroll-start">
             <div className="listen-header">
               <h3 className="header-with-line">Singles</h3>
-              <GetSortingButtons sort={sort} setSort={setSort} />
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
@@ -496,7 +495,7 @@ export default function ArtistPage(): JSX.Element {
           <div className="albums full-width scroll-start">
             <div className="listen-header">
               <h3 className="header-with-line">EPs</h3>
-              <GetSortingButtons sort={sort} setSort={setSort} />
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
@@ -513,7 +512,7 @@ export default function ArtistPage(): JSX.Element {
           <div className="albums full-width scroll-start">
             <div className="listen-header">
               <h3 className="header-with-line">Broadcasts</h3>
-              <GetSortingButtons sort={sort} setSort={setSort} />
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
@@ -530,7 +529,7 @@ export default function ArtistPage(): JSX.Element {
           <div className="albums full-width scroll-start">
             <div className="listen-header">
               <h3 className="header-with-line">Others</h3>
-              <GetSortingButtons sort={sort} setSort={setSort} />
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
@@ -547,7 +546,7 @@ export default function ArtistPage(): JSX.Element {
           <div className="albums full-width scroll-start">
             <div className="listen-header">
               <h3 className="header-with-line">Compilations</h3>
-              <GetSortingButtons sort={sort} setSort={setSort} />
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
