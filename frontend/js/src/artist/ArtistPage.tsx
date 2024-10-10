@@ -475,7 +475,7 @@ export default function ArtistPage(): JSX.Element {
           )}
         </div>
         {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
-          <div className="albums full-width scroll-start">
+          <div className="albums">
             <div className="listen-header">
               <h3 className="header-with-line">{type}</h3>
               <SortingButtons sort={sort} setSort={setSort} />
