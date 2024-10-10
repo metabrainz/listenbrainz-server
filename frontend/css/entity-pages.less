@@ -169,6 +169,9 @@
         justify-items: center;
         grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
         grid-template-rows: repeat(2, 1fr);
+        &.single-row {
+          grid-template-rows: repeat(1, 1fr);
+        }
         .cover-art {
           aspect-ratio: 1;
           background: lightgrey;
