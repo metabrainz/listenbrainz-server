@@ -40,6 +40,7 @@ import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerCont
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 
 function SortingButtons({
   sort,
@@ -479,13 +480,13 @@ export default function ArtistPage(): JSX.Element {
               <h3 className="header-with-line">{type}</h3>
               <SortingButtons sort={sort} setSort={setSort} />
             </div>
-            <div
-              className={`cover-art-container dragscroll ${
+            <HorizontalScrollContainer
+              className={`cover-art-container ${
                 rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
               }`}
             >
               {rgGroup.map(getReleaseCard)}
-            </div>
+            </HorizontalScrollContainer>
           </div>
         ))}
       </div>
