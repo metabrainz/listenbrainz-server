@@ -27,58 +27,82 @@ export default function HorizontalScrollContainer({
   const { events } = useDraggable(scrollContainerRef, {
     applyRubberBandEffect: true,
   });
+  const { onMouseDown: draggableOnMouseDown } = events;
 
-  const onMouseDown: React.MouseEventHandler<HTMLElement> = (event) => {
-    // Call the use-draggable-scroll-safe hook event
-    events.onMouseDown(event);
-    // Set our own class to allow for snap-scroll
-    (event.target as HTMLElement)?.parentElement?.classList.add("dragging");
-  };
-  const onMouseUp: React.MouseEventHandler<HTMLElement> = (event) => {
-    (event.target as HTMLElement)?.parentElement?.classList.remove("dragging");
-  };
+  const onMouseDown: React.MouseEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      // Call the use-draggable-scroll-safe hook event
+      draggableOnMouseDown(event);
+      // Set our own class to allow for snap-scroll
+      (event.target as HTMLElement)?.parentElement?.classList.add("dragging");
+    },
+    [draggableOnMouseDown]
+  );
 
-  const onScroll: React.ReactEventHandler<HTMLElement> = (event) => {
-    const element = event.target as HTMLElement;
-    const parent = element.parentElement;
-    if (!element || !parent) {
-      return;
-    }
+  const onMouseUp: React.MouseEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      (event.target as HTMLElement)?.parentElement?.classList.remove(
+        "dragging"
+      );
+    },
+    []
+  );
 
-    if (element.scrollWidth - element.scrollLeft >= MANUAL_SCROLL_AMOUNT) {
-      parent.classList.add("scroll-end");
-      parent.classList.remove("scroll-start");
-    } else if (element.scrollLeft <= MANUAL_SCROLL_AMOUNT) {
-      parent.classList.add("scroll-start");
+  const onScroll: React.ReactEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      const element = scrollContainerRef?.current;
+      const parent = element?.parentElement;
+      if (!element || !parent) {
+        return;
+      }
+
       parent.classList.remove("scroll-end");
-    } else {
-      parent.classList.remove("scroll-end");
       parent.classList.remove("scroll-start");
-    }
-  };
-  const throttledOnScroll = throttle(onScroll, 400, { leading: true });
 
-  const onManualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
-    if (!scrollContainerRef?.current) {
-      return;
-    }
-    if (event?.currentTarget.classList.contains("forward")) {
-      scrollContainerRef.current.scrollBy({
-        left: MANUAL_SCROLL_AMOUNT,
-        top: 0,
-        behavior: "smooth",
-      });
-    } else {
-      scrollContainerRef.current.scrollBy({
-        left: -MANUAL_SCROLL_AMOUNT,
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-    // Also call the onScroll (throttled) event to ensure
-    // the expected CSS classes are applied to the container
-    throttledOnScroll(event);
-  };
+      if (element.scrollLeft < MANUAL_SCROLL_AMOUNT) {
+        // We are at the beginning of the container and haven't scrolled more than MANUAL_SCROLL_AMOUNT
+        parent.classList.add("scroll-start");
+      } else if (
+        // We have scrolled to the end of the container, i.e. there is less than MANUAL_SCROLL_AMOUNT before the end of the scroll
+        // (with a 2px adjustement)
+        element.scrollWidth - element.scrollLeft - element.clientWidth <=
+        MANUAL_SCROLL_AMOUNT - 2
+      ) {
+        parent.classList.add("scroll-end");
+      }
+    },
+    []
+  );
+
+  const throttledOnScroll = React.useMemo(
+    () => throttle(onScroll, 400, { leading: true }),
+    [onScroll]
+  );
+
+  const onManualScroll: React.ReactEventHandler<HTMLElement> = React.useCallback(
+    (event) => {
+      if (!scrollContainerRef?.current) {
+        return;
+      }
+      if (event?.currentTarget.classList.contains("forward")) {
+        scrollContainerRef.current.scrollBy({
+          left: MANUAL_SCROLL_AMOUNT,
+          top: 0,
+          behavior: "smooth",
+        });
+      } else {
+        scrollContainerRef.current.scrollBy({
+          left: -MANUAL_SCROLL_AMOUNT,
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+      // Also call the onScroll (throttled) event to ensure
+      // the expected CSS classes are applied to the container
+      throttledOnScroll(event);
+    },
+    [throttledOnScroll]
+  );
 
   return (
     <div className="horizontal-scroll-container scroll-start">
