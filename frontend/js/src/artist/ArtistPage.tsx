@@ -7,7 +7,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, partition, orderBy } from "lodash";
+import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
 import { sanitize } from "dompurify";
 import {
   Link,
@@ -121,23 +121,47 @@ export default function ArtistPage(): JSX.Element {
     "release_date"
   );
 
-  const releaseGroupsSorted = orderBy(
+  const rgGroups = groupBy(
     releaseGroups,
-    [
-      "secondary_types",
-      sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
-      sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
-      "type",
-      "name",
-    ],
-    ["asc", "desc", "desc", "asc", "asc"]
+    (rg) =>
+      rg.type + (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
   );
 
-  const [rgWithoutCompilations, rgCompilations] = partition(
-    releaseGroupsSorted,
-    (rg) => rg?.secondary_types?.includes("Compilation")
-  );
-  const rgGroups = chain(rgWithoutCompilations).groupBy("type").value();
+  const sortReleaseGroups = (
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypes[]
+  ) =>
+    orderBy(
+      releaseGroupsInput,
+      [
+        sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
+        sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
+        "name",
+      ],
+      ["desc", "desc", "asc"]
+    );
+
+  if (rgGroups.undefined) {
+    if (rgGroups.Other) {
+      rgGroups.Other.push(...rgGroups.undefined);
+    } else {
+      rgGroups.Other = rgGroups.undefined;
+    }
+    delete rgGroups.undefined;
+  }
+
+  const typeOrder = ["Album", "Single", "EP", "Broadcast", "Other"];
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
+    (type) => typeOrder.indexOf(type.split(" + ")[0]),
+    (type) => type.split(" + ")[1] ?? "",
+  ]);
+
+  const groupedReleaseGroups: Record<
+    string,
+    ReleaseGroupWithSecondaryTypes[]
+  > = {};
+  sortedRgGroupsKeys.forEach((type) => {
+    groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
+  });
 
   React.useEffect(() => {
     async function fetchReviews() {
@@ -457,108 +481,21 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        {rgGroups.Album && (
+        {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
           <div className="albums full-width scroll-start">
             <div className="listen-header">
-              <h3 className="header-with-line">Albums</h3>
+              <h3 className="header-with-line">{type}</h3>
               <SortingButtons sort={sort} setSort={setSort} />
             </div>
             <div
               className={`cover-art-container dragscroll ${
-                rgGroups.Album.length <= COVER_ART_SINGLE_ROW_COUNT
-                  ? "single-row"
-                  : ""
+                rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
               }`}
             >
-              {rgGroups.Album.map(getReleaseCard)}
+              {rgGroup.map(getReleaseCard)}
             </div>
           </div>
-        )}
-        {rgGroups.Single && (
-          <div className="albums full-width scroll-start">
-            <div className="listen-header">
-              <h3 className="header-with-line">Singles</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
-            </div>
-            <div
-              className={`cover-art-container dragscroll ${
-                rgGroups.Single.length <= COVER_ART_SINGLE_ROW_COUNT
-                  ? "single-row"
-                  : ""
-              }`}
-            >
-              {rgGroups.Single.map(getReleaseCard)}
-            </div>
-          </div>
-        )}
-        {rgGroups.EP && (
-          <div className="albums full-width scroll-start">
-            <div className="listen-header">
-              <h3 className="header-with-line">EPs</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
-            </div>
-            <div
-              className={`cover-art-container dragscroll ${
-                rgGroups.EP.length <= COVER_ART_SINGLE_ROW_COUNT
-                  ? "single-row"
-                  : ""
-              }`}
-            >
-              {rgGroups.EP.map(getReleaseCard)}
-            </div>
-          </div>
-        )}
-        {rgGroups.Broadcast && (
-          <div className="albums full-width scroll-start">
-            <div className="listen-header">
-              <h3 className="header-with-line">Broadcasts</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
-            </div>
-            <div
-              className={`cover-art-container dragscroll ${
-                rgGroups.Broadcast.length <= COVER_ART_SINGLE_ROW_COUNT
-                  ? "single-row"
-                  : ""
-              }`}
-            >
-              {rgGroups.Broadcast.map(getReleaseCard)}
-            </div>
-          </div>
-        )}
-        {rgGroups.Other && (
-          <div className="albums full-width scroll-start">
-            <div className="listen-header">
-              <h3 className="header-with-line">Others</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
-            </div>
-            <div
-              className={`cover-art-container dragscroll ${
-                rgGroups.Other.length <= COVER_ART_SINGLE_ROW_COUNT
-                  ? "single-row"
-                  : ""
-              }`}
-            >
-              {rgGroups.Other.map(getReleaseCard)}
-            </div>
-          </div>
-        )}
-        {rgCompilations && (
-          <div className="albums full-width scroll-start">
-            <div className="listen-header">
-              <h3 className="header-with-line">Compilations</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
-            </div>
-            <div
-              className={`cover-art-container dragscroll ${
-                rgCompilations.length <= COVER_ART_SINGLE_ROW_COUNT
-                  ? "single-row"
-                  : ""
-              }`}
-            >
-              {rgCompilations.map(getReleaseCard)}
-            </div>
-          </div>
-        )}
+        ))}
       </div>
 
       {similarArtists && similarArtists.artists.length > 0 ? (
