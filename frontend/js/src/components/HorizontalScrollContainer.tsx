@@ -55,6 +55,10 @@ export default function HorizontalScrollContainer({
       return;
     }
 
+    // Set up appropriate CSS classes to show or hide nav buttons
+    if (element.scrollWidth <= element.clientWidth) {
+      parent.classList.add("no-scroll");
+    }
     parent.classList.remove("scroll-end");
     parent.classList.remove("scroll-start");
 

@@ -48,6 +48,10 @@
     opacity: 0;
     pointer-events: none;
   }
+  // Hide arrow buttons when the container does not overflow (class added with javascript)
+  &.no-scroll .nav-button {
+    display: none;
+  }
 }
 
 .dragscroll {
