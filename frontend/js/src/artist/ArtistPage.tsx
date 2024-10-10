@@ -124,7 +124,7 @@ export default function ArtistPage(): JSX.Element {
   const rgGroups = groupBy(
     releaseGroups,
     (rg) =>
-      rg.type + (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
+      (rg.type ?? "Other") + (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
   );
 
   const sortReleaseGroups = (
