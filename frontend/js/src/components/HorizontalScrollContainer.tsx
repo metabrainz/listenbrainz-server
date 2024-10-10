@@ -13,6 +13,9 @@ type HorizontalScrollContainerProps = {
   className?: string;
 };
 
+// How many pixels do the arrow buttons scroll?
+const MANUAL_SCROLL_AMOUNT = 500;
+
 export default function HorizontalScrollContainer({
   showScrollbar = true,
   enableDragScroll = true,
@@ -25,32 +28,27 @@ export default function HorizontalScrollContainer({
     applyRubberBandEffect: true,
   });
 
-  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    // Call the dragScrolluse-draggable-safe hook event
+  const onMouseDown: React.MouseEventHandler<HTMLElement> = (event) => {
+    // Call the use-draggable-scroll-safe hook event
     events.onMouseDown(event);
     // Set our own class to allow for snap-scroll
-    (event.target as HTMLDivElement)?.parentElement?.classList.add("dragging");
+    (event.target as HTMLElement)?.parentElement?.classList.add("dragging");
   };
-  const onMouseUp: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    (event.target as HTMLDivElement)?.parentElement?.classList.remove(
-      "dragging"
-    );
+  const onMouseUp: React.MouseEventHandler<HTMLElement> = (event) => {
+    (event.target as HTMLElement)?.parentElement?.classList.remove("dragging");
   };
 
-  const onScroll: React.ReactEventHandler<HTMLDivElement> = (event) => {
-    const element = event.target as HTMLDivElement;
+  const onScroll: React.ReactEventHandler<HTMLElement> = (event) => {
+    const element = event.target as HTMLElement;
     const parent = element.parentElement;
     if (!element || !parent) {
       return;
     }
-    // calculate horizontal scroll percentage
-    const scrollPercentage =
-      (100 * element.scrollLeft) / (element.scrollWidth - element.clientWidth);
 
-    if (scrollPercentage > 95) {
+    if (element.scrollWidth - element.scrollLeft >= MANUAL_SCROLL_AMOUNT) {
       parent.classList.add("scroll-end");
       parent.classList.remove("scroll-start");
-    } else if (scrollPercentage < 5) {
+    } else if (element.scrollLeft <= MANUAL_SCROLL_AMOUNT) {
       parent.classList.add("scroll-start");
       parent.classList.remove("scroll-end");
     } else {
@@ -58,34 +56,36 @@ export default function HorizontalScrollContainer({
       parent.classList.remove("scroll-start");
     }
   };
+  const throttledOnScroll = throttle(onScroll, 400, { leading: true });
 
-  const manualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
+  const onManualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
     if (!scrollContainerRef?.current) {
       return;
     }
     if (event?.currentTarget.classList.contains("forward")) {
       scrollContainerRef.current.scrollBy({
-        left: 300,
+        left: MANUAL_SCROLL_AMOUNT,
         top: 0,
         behavior: "smooth",
       });
     } else {
       scrollContainerRef.current.scrollBy({
-        left: -300,
+        left: -MANUAL_SCROLL_AMOUNT,
         top: 0,
         behavior: "smooth",
       });
     }
+    // Also call the onScroll (throttled) event to ensure
+    // the expected CSS classes are applied to the container
+    throttledOnScroll(event);
   };
-
-  const throttledOnScroll = throttle(onScroll, 400, { leading: true });
 
   return (
     <div className="horizontal-scroll-container scroll-start">
       <button
         className="nav-button backward"
         type="button"
-        onClick={manualScroll}
+        onClick={onManualScroll}
         tabIndex={0}
       >
         <FontAwesomeIcon icon={faChevronLeft} />
@@ -106,7 +106,7 @@ export default function HorizontalScrollContainer({
       <button
         className="nav-button forward"
         type="button"
-        onClick={manualScroll}
+        onClick={onManualScroll}
         tabIndex={0}
       >
         <FontAwesomeIcon icon={faChevronRight} />

@@ -1,10 +1,16 @@
 .horizontal-scroll-container {
   position: relative;
 
+  .horizontal-scroll-container.dragging .horizontal-scroll * {
+    // Prevent text selection and interactions when the user is actively dragging to scroll
+    pointer-events: none;
+    user-select: none;
+}
+
   .horizontal-scroll {
+    overflow-x: auto;
     .small-scrollbar();
     &.no-scrollbar {
-      overflow-x: scroll;
       /* Hide the scrollbar: */
       -ms-overflow-style: none; /* Internet Explorer and Edge */
       scrollbar-width: none; /* Firefox */
