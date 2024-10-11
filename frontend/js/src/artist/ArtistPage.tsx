@@ -40,6 +40,7 @@ import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerCont
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 
 function SortingButtons({
   sort,
@@ -119,6 +120,10 @@ export default function ArtistPage(): JSX.Element {
 
   const [sort, setSort] = React.useState<"release_date" | "total_listen_count">(
     "release_date"
+  );
+
+  const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
+    false
   );
 
   const rgGroups = groupBy(
@@ -374,7 +379,7 @@ export default function ArtistPage(): JSX.Element {
         />
       </div>
       <div className="entity-page-content">
-        <div className="tracks">
+        <div className={`tracks ${expandPopularTracks ? "expanded" : ""}`}>
           <div className="header">
             <h3 className="header-with-line">
               Popular tracks
@@ -419,11 +424,15 @@ export default function ArtistPage(): JSX.Element {
               />
             );
           })}
-          {/* <div className="read-more">
-            <button type="button" className="btn btn-outline">
-              See more…
+          <div className="read-more">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setExpandPopularTracks((prevValue) => !prevValue)}
+            >
+              See {expandPopularTracks ? "less" : "more"}
             </button>
-          </div> */}
+          </div>
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
@@ -474,18 +483,18 @@ export default function ArtistPage(): JSX.Element {
           )}
         </div>
         {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
-          <div className="albums full-width scroll-start">
+          <div className="albums">
             <div className="listen-header">
               <h3 className="header-with-line">{type}</h3>
               <SortingButtons sort={sort} setSort={setSort} />
             </div>
-            <div
-              className={`cover-art-container dragscroll ${
+            <HorizontalScrollContainer
+              className={`cover-art-container ${
                 rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
               }`}
             >
               {rgGroup.map(getReleaseCard)}
-            </div>
+            </HorizontalScrollContainer>
           </div>
         ))}
       </div>

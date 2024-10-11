@@ -1,10 +1,16 @@
 .horizontal-scroll-container {
   position: relative;
 
+  .horizontal-scroll-container.dragging .horizontal-scroll * {
+    // Prevent text selection and interactions when the user is actively dragging to scroll
+    pointer-events: none;
+    user-select: none;
+  }
+
   .horizontal-scroll {
+    overflow-x: auto;
     .small-scrollbar();
     &.no-scrollbar {
-      overflow-x: scroll;
       /* Hide the scrollbar: */
       -ms-overflow-style: none; /* Internet Explorer and Edge */
       scrollbar-width: none; /* Firefox */
@@ -23,17 +29,17 @@
     border: none;
     font-size: 2em;
     color: @light-grey;
-    z-index: 1;
+    z-index: 2;
     opacity: 1;
     transition: opacity 300ms linear;
     &.backward {
       background: linear-gradient(to right, @white 10%, transparent);
       text-align: left;
-      left: 0;
+      left: -1px;
     }
     &.forward {
       background: linear-gradient(to left, @white 10%, transparent);
-      right: 0;
+      right: -1px;
       text-align: right;
     }
   }
@@ -41,6 +47,10 @@
   &.scroll-end& .nav-button.forward {
     opacity: 0;
     pointer-events: none;
+  }
+  // Hide arrow buttons when the container does not overflow (class added with javascript)
+  &.no-scroll .nav-button {
+    display: none;
   }
 }
 
