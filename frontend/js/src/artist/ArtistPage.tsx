@@ -126,11 +126,11 @@ export default function ArtistPage(): JSX.Element {
     false
   );
 
+  // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
+  // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
   const rgGroups = groupBy(
     releaseGroups,
-    (rg) =>
-      (rg.type ?? "Other") +
-      (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
+    (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
   );
 
   const sortReleaseGroups = (
@@ -146,10 +146,19 @@ export default function ArtistPage(): JSX.Element {
       ["desc", "desc", "asc"]
     );
 
-  const typeOrder = ["Album", "Single", "EP", "Broadcast", "Other"];
+  const typeOrder = [
+    "Album",
+    "Single",
+    "EP",
+    "Live",
+    "Compilation",
+    "Remix",
+    "Broadcast",
+    "Other",
+  ];
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
-    (type) => typeOrder.indexOf(type.split(" + ")[0]),
-    (type) => type.split(" + ")[1] ?? "",
+    (type) => typeOrder.indexOf(type),
+    "type",
   ]);
 
   const groupedReleaseGroups: Record<
