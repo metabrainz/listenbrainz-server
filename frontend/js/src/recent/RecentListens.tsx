@@ -64,7 +64,7 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">users</small>
               </div>
             </Card>
-            <Card className="hidden-xs hidden-sm">
+            <Card className="hidden-xs card-user-sn">
               <RecentDonorsCard donors={recentDonors} />
             </Card>
           </div>

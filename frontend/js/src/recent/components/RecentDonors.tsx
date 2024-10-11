@@ -23,6 +23,10 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
     <>
       <h3 className="text-center" style={{ marginTop: "10px" }}>
         Recent Donors
+        <br />
+        <small>
+          <Link to="/donors/">See all donations</Link>
+        </small>
       </h3>
       <div className="similar-users-list">
         {donors &&
