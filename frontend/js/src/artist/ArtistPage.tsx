@@ -156,10 +156,10 @@ export default function ArtistPage(): JSX.Element {
     "Broadcast",
     "Other",
   ];
-  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
-    (type) => typeOrder.indexOf(type),
-    "type",
-  ]);
+  const last = Object.keys(rgGroups).length;
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
+    typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
+  );
 
   const groupedReleaseGroups: Record<
     string,
