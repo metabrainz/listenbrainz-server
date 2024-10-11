@@ -57,6 +57,7 @@ const props = {
   userPinnedRecording,
   globalListenCount,
   globalUserCount,
+  recentDonors: [],
 };
 
 // Create a new instance of GlobalAppContext

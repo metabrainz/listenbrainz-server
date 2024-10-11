@@ -18,11 +18,14 @@ from data.model.user_entity import EntityRecord
 from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import flash, db_conn
+from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user_relationship as db_user_relationship
+from listenbrainz.db.donation import get_recent_donors
+from listenbrainz.db.pinned_recording import get_current_pin_for_users
+from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
@@ -136,10 +139,37 @@ def recent_listens():
     except DatabaseException as e:
         user_count = 'Unknown'
 
+    recent_donors, _ = get_recent_donors(meb_conn, db_conn, 25, 0)
+
+    # Get MusicBrainz IDs for donors who are ListenBrainz users
+    musicbrainz_ids = [donor["musicbrainz_id"]
+                       for donor in recent_donors
+                       if donor.get('is_listenbrainz_user')]
+
+    # Fetch donor info only if there are valid MusicBrainz IDs
+    donors_info = db_user.get_many_users_by_mb_id(db_conn, musicbrainz_ids) if musicbrainz_ids else {}
+    donor_ids = [donor_info.id for donor_info in donors_info.values()]
+
+    # Get current pinned recordings
+    pinned_recordings_data = {}
+    if donor_ids:
+        pinned_recordings = get_current_pin_for_users(db_conn, donor_ids)
+        if pinned_recordings:
+            pinned_recordings_metadata = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
+            # Map recordings by user_id for quick lookup
+            pinned_recordings_data = {recording.user_id: dict(recording)
+                                      for recording in pinned_recordings_metadata}
+
+    # Add pinned recordings to recent donors
+    for donor in recent_donors:
+        donor_info = donors_info.get(donor["musicbrainz_id"])
+        donor["pinnedRecording"] = pinned_recordings_data.get(donor_info.id) if donor_info else None
+
     props = {
         "listens": recent,
         "globalListenCount": listen_count,
-        "globalUserCount": user_count
+        "globalUserCount": user_count,
+        "recentDonors": recent_donors,
     }
 
     return jsonify(props)
