@@ -31,11 +31,15 @@ const globalContext: GlobalAppContextT = {
 describe("ListenCountCard", () => {
   it("renders correctly when listen count is not zero", () => {
     const wrapper = mount(<ListenCountCard user={user} listenCount={100} />);
-    expect(wrapper.getDOMNode()).toHaveTextContent("track_listener has listened to100songs so far");
+    expect(wrapper.getDOMNode()).toHaveTextContent(
+      "track_listener has listened to100songs so far"
+    );
   });
   it("renders correctly when listen count is zero or undefined", () => {
     const wrapper = mount(<ListenCountCard user={user} />);
-    expect(wrapper.getDOMNode()).toHaveTextContent("track_listener's listens counttrack_listener hasn't listened to any songs yet.")
+    expect(wrapper.getDOMNode()).toHaveTextContent(
+      "track_listener's listens counttrack_listener hasn't listened to any songs yet."
+    );
   });
   it("renders user's name instead of 'You' when visiting another user's page", () => {
     const wrapper = mount(
@@ -46,7 +50,7 @@ describe("ListenCountCard", () => {
     const countCard = wrapper.find("#listen-count-card").first().children();
     const cardDiv = countCard.children().first();
     expect(cardDiv.html()).toEqual(
-      '<div>track_listener has listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
+      '<div data-testid="listen-count-card-content">track_listener has listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
     );
   });
   it("renders 'You' when on current user's page", () => {
@@ -58,7 +62,7 @@ describe("ListenCountCard", () => {
     const countCard = wrapper.find("#listen-count-card").first().children();
     const cardDiv = countCard.children().first();
     expect(cardDiv.html()).toEqual(
-      '<div>You have listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
+      '<div data-testid="listen-count-card-content">You have listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
     );
   });
 });
