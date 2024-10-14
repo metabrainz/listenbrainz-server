@@ -8,6 +8,7 @@ import { BrowserRouter, Link } from "react-router-dom";
 import ListenCard, {
   ListenCardProps,
   ListenCardState,
+  ListenCard as ListenCardClass,
 } from "../../../src/common/listens/ListenCard";
 import * as utils from "../../../src/utils/utils";
 import APIServiceClass from "../../../src/utils/APIService";
@@ -19,11 +20,22 @@ import { waitForComponentToPaint } from "../../test-utils";
 import CBReviewModal from "../../../src/cb-review/CBReviewModal";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import Card from "../../../src/components/Card";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
+function ListenCardWithWrappers(props: ListenCardProps) {
+  return (
+    <BrowserRouter>
+      <ReactQueryWrapper>
+        <ListenCard {...props} />
+      </ReactQueryWrapper>
+    </BrowserRouter>
+  );
+}
 
 const listen: Listen = {
   listened_at: 0,
@@ -62,11 +74,7 @@ const globalProps: GlobalAppContextT = {
 
 describe("ListenCard", () => {
   it("renders correctly", () => {
-    const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...props} />
-      </BrowserRouter>
-    );
+    const wrapper = mount(<ListenCardWithWrappers {...props} />);
     const card = wrapper.find(Card);
     expect(card).toHaveLength(1);
     expect(card.getDOMNode()).toHaveClass("listen-card");
@@ -89,11 +97,9 @@ describe("ListenCard", () => {
       },
       user_name: "test",
     };
-    const wrapper = mount<ListenCard>(
+    const wrapper = mount<ListenCardClass>(
       <GlobalAppContext.Provider value={globalProps}>
-        <BrowserRouter>
-          <ListenCard {...{ ...props, listen: playingNowListen }} />
-        </BrowserRouter>
+        <ListenCardWithWrappers {...{ ...props, listen: playingNowListen }} />
       </GlobalAppContext.Provider>
     );
 
@@ -104,11 +110,7 @@ describe("ListenCard", () => {
 
   it("should render timestamp using preciseTimestamp", () => {
     const preciseTimestamp = jest.spyOn(utils, "preciseTimestamp");
-    const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...props} />
-      </BrowserRouter>
-    );
+    const wrapper = mount(<ListenCardWithWrappers {...props} />);
     expect(preciseTimestamp).toHaveBeenCalledTimes(1);
   });
 
@@ -135,9 +137,7 @@ describe("ListenCard", () => {
       user_name: "test",
     };
     const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...{ ...props, listen: differentListen }} />
-      </BrowserRouter>
+      <ListenCardWithWrappers {...{ ...props, listen: differentListen }} />
     );
     expect(
       wrapper.find('[href="https://musicbrainz.org/recording/bar"]')
@@ -156,24 +156,20 @@ describe("ListenCard", () => {
   });
 
   it("should render a play button", () => {
-    const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...props} />
-      </BrowserRouter>
-    );
-    const instance = wrapper.find(ListenCard).instance() as ListenCard;
+    const wrapper = mount(<ListenCardWithWrappers {...props} />);
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
     const playButton = wrapper.find(".play-button");
     expect(playButton).toHaveLength(1);
     expect(playButton.props().onClick).toEqual(instance.playListen);
   });
 
   it("should send an event to BrainzPlayer when playListen is called", async () => {
-    const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...props} />
-      </BrowserRouter>
-    );
-    const instance = wrapper.find(ListenCard).instance() as ListenCard;
+    const wrapper = mount(<ListenCardWithWrappers {...props} />);
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
     const postMessageSpy = jest.spyOn(window, "postMessage");
     expect(postMessageSpy).not.toHaveBeenCalled();
 
@@ -189,12 +185,10 @@ describe("ListenCard", () => {
 
   it("should do nothing when playListen is called on currently playing listen", async () => {
     const postMessageSpy = jest.spyOn(window, "postMessage");
-    const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...props} />
-      </BrowserRouter>
-    );
-    const instance = wrapper.find(ListenCard).instance() as ListenCard;
+    const wrapper = mount(<ListenCardWithWrappers {...props} />);
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
     await act(() => {
       instance.setState({ isCurrentlyPlaying: true });
     });
@@ -206,11 +200,7 @@ describe("ListenCard", () => {
   });
 
   it("should render the formatted duration_ms if present in the listen metadata", () => {
-    const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...props} />
-      </BrowserRouter>
-    );
+    const wrapper = mount(<ListenCardWithWrappers {...props} />);
     const durationElement = wrapper.find('[title="Duration"]');
     expect(durationElement).toBeDefined();
     expect(durationElement.text()).toEqual("2:03");
@@ -223,9 +213,7 @@ describe("ListenCard", () => {
     );
     set(listenWithDuration, "track_metadata.additional_info.duration", 142);
     const wrapper = mount(
-      <BrowserRouter>
-        <ListenCard {...{ ...props, listen: listenWithDuration }} />
-      </BrowserRouter>
+      <ListenCardWithWrappers {...{ ...props, listen: listenWithDuration }} />
     );
     const durationElement = wrapper.find('[title="Duration"]');
     expect(durationElement).toBeDefined();
@@ -236,12 +224,12 @@ describe("ListenCard", () => {
     it("calls API, and creates a new alert on success", async () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <BrowserRouter>
-            <ListenCard {...props} />
-          </BrowserRouter>
+          <ListenCardWithWrappers {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.find(ListenCard).instance() as ListenCard;
+      const instance = wrapper
+        .find(ListenCardClass)
+        .instance() as ListenCardClass;
 
       const spy = jest.spyOn(
         instance.context.APIService,
@@ -270,12 +258,12 @@ describe("ListenCard", () => {
             currentUser: { auth_token: undefined, name: "test" },
           }}
         >
-          <BrowserRouter>
-            <ListenCard {...props} />
-          </BrowserRouter>
+          <ListenCardWithWrappers {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.find(ListenCard).instance() as ListenCard;
+      const instance = wrapper
+        .find(ListenCardClass)
+        .instance() as ListenCardClass;
 
       const spy = jest.spyOn(
         instance.context.APIService,
@@ -289,14 +277,14 @@ describe("ListenCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount<ListenCard>(
+      const wrapper = mount<ListenCardClass>(
         <GlobalAppContext.Provider value={globalProps}>
-          <BrowserRouter>
-            <ListenCard {...props} />
-          </BrowserRouter>
+          <ListenCardWithWrappers {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.find(ListenCard).instance() as ListenCard;
+      const instance = wrapper
+        .find(ListenCardClass)
+        .instance() as ListenCardClass;
       instance.handleError = jest.fn();
 
       const error = new Error("error");
@@ -323,9 +311,7 @@ describe("ListenCard", () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
           <NiceModal.Provider>
-            <BrowserRouter>
-              <ListenCard {...props} />
-            </BrowserRouter>
+            <ListenCardWithWrappers {...props} />
           </NiceModal.Provider>
         </GlobalAppContext.Provider>
       );

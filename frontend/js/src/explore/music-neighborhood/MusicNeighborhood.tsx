@@ -1,21 +1,19 @@
 import * as React from "react";
-import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
-import { isEmpty, isEqual, kebabCase } from "lodash";
-import { useLoaderData, useLocation } from "react-router-dom";
+import { kebabCase } from "lodash";
+import { useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
-import SimilarArtistsGraph from "./components/SimilarArtistsGraph";
 import Panel from "./components/Panel";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
-import generateTransformedArtists from "./utils/generateTransformedArtists";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
 import { RouteQuery } from "../../utils/Loader";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import SimilarArtist from "./components/SimilarArtist";
 
 type MusicNeighborhoodLoaderData = {
   algorithm: string;
@@ -23,20 +21,6 @@ type MusicNeighborhoodLoaderData = {
 };
 
 const SIMILAR_ARTISTS_LIMIT_VALUE = 18;
-const BACKGROUND_ALPHA = 0.2;
-const MAXIMUM_LUMINANCE = 0.8;
-const MINIMUM_LUMINANCE = 0.2;
-
-const colorGenerator = (): [tinycolor.Instance, tinycolor.Instance] => {
-  const initialColor = tinycolor(`hsv(${Math.random() * 360}, 100%, 90%)`);
-  return [initialColor, initialColor.clone().tetrad()[1]];
-};
-const isColorTooLight = (color: tinycolor.Instance): boolean => {
-  return color.getLuminance() > MAXIMUM_LUMINANCE;
-};
-const isColorTooDark = (color: tinycolor.Instance): boolean => {
-  return color.getLuminance() < MINIMUM_LUMINANCE;
-};
 
 export default function MusicNeighborhood() {
   const location = useLocation();
@@ -46,7 +30,6 @@ export default function MusicNeighborhood() {
   const { algorithm: DEFAULT_ALGORITHM, artist_mbid: DEFAULT_ARTIST_MBID } =
     data || {};
   const BASE_URL = `https://labs.api.listenbrainz.org/similar-artists/json?algorithm=${DEFAULT_ALGORITHM}&artist_mbids=`;
-  const DEFAULT_COLORS = colorGenerator();
 
   const { APIService } = React.useContext(GlobalAppContext);
   const [similarArtistsLimit, setSimilarArtistsLimit] = React.useState(
@@ -64,11 +47,27 @@ export default function MusicNeighborhood() {
   const [artistGraphNodeInfo, setArtistGraphNodeInfo] = React.useState<
     ArtistNodeInfo
   >();
+  const [topAlbumReleaseColor, setTopAlbumReleaseColor] = React.useState<
+    ReleaseColor
+  >();
+  const [
+    topRecordingReleaseColor,
+    setTopRecordingReleaseColor,
+  ] = React.useState<ReleaseColor>();
 
-  const [colors, setColors] = React.useState(DEFAULT_COLORS);
   const [loading, setLoading] = React.useState<boolean>(false);
 
   const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>([]);
+
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: currentTracks,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTracks]);
 
   const [artistInfo, setArtistInfo] = React.useState<ArtistInfoType | null>(
     null
@@ -145,23 +144,6 @@ export default function MusicNeighborhood() {
     setSimilarArtistsList(completeSimilarArtistsList.slice(0, limit));
   };
 
-  const transformedArtists = React.useMemo(
-    () =>
-      artistGraphNodeInfo
-        ? generateTransformedArtists(
-            artistGraphNodeInfo,
-            similarArtistsList,
-            colors[0],
-            colors[1],
-            similarArtistsLimit
-          )
-        : {
-            nodes: [],
-            links: [],
-          },
-    [artistGraphNodeInfo, similarArtistsList, colors, similarArtistsLimit]
-  );
-
   const fetchArtistInfo = React.useCallback(
     async (artistMBID: string): Promise<ArtistInfoType> => {
       const [
@@ -199,70 +181,15 @@ export default function MusicNeighborhood() {
       };
       setArtistInfo(newArtistInfo);
 
-      const topAlbumReleaseColor = topAlbumsForArtist[0]?.release_color;
-      const topRecordingReleaseColor = topRecordingsForArtist[0]?.release_color;
-      let firstColor;
-      let secondColor;
-      if (!isEmpty(topAlbumReleaseColor)) {
-        const { red, green, blue } = topAlbumReleaseColor;
-        firstColor = tinycolor({ r: red, g: green, b: blue });
-      } else {
-        // Do we want to pick a color from an array of predefined colors instead of random?
-        firstColor = tinycolor.random();
-      }
-      if (
-        !isEmpty(topRecordingReleaseColor) &&
-        !isEqual(topAlbumReleaseColor, topRecordingReleaseColor)
-      ) {
-        const { red, green, blue } = topRecordingReleaseColor;
-        secondColor = tinycolor({ r: red, g: green, b: blue });
-        // We should consider using another color library that allows us to calculate color distance
-        // better using deltaE algorithms. Looks into color.js and chroma.js for example.
-        const hue1 = firstColor.toHsv().h;
-        const hue2 = secondColor.toHsv().h;
-        const distanceBetweenColors = Math.min(
-          Math.abs(hue2 - hue1),
-          360 - Math.abs(hue2 - hue1)
-        );
-        if (distanceBetweenColors < 25) {
-          // Colors are too similar, set up for picking another color below.
-          secondColor = undefined;
-        }
-      }
-      if (!secondColor) {
-        // If we don't have required release info, base the second color on the first,
-        // randomly picking one of the tetrad complementary colors.
-        const randomTetradColor = Math.round(Math.random() * (3 - 1) + 1);
-        secondColor = tinycolor(firstColor).clone().tetrad()[randomTetradColor];
-      }
-
-      // Adjust the colors if they are too light or too dark
-      [firstColor, secondColor].forEach((color) => {
-        if (isColorTooLight(color)) {
-          color.darken(20).saturate(30);
-        } else if (isColorTooDark(color)) {
-          color.lighten(20).saturate(30);
-        }
-      });
-
-      setColors([firstColor, secondColor]);
+      setTopAlbumReleaseColor(topAlbumsForArtist[0]?.release_color ?? null);
+      setTopRecordingReleaseColor(
+        topRecordingsForArtist[0]?.release_color ?? null
+      );
 
       return newArtistInfo;
     },
     [APIService]
   );
-
-  const backgroundGradient = React.useMemo(() => {
-    const releaseHue = colors[0]
-      .clone()
-      .setAlpha(BACKGROUND_ALPHA)
-      .toRgbString();
-    const recordingHue = colors[1]
-      .clone()
-      .setAlpha(BACKGROUND_ALPHA)
-      .toRgbString();
-    return `linear-gradient(180deg, ${releaseHue} 0%, ${recordingHue} 100%)`;
-  }, [colors]);
 
   const onArtistChange = React.useCallback(
     async (artistMBID: string) => {
@@ -334,21 +261,17 @@ export default function MusicNeighborhood() {
           </div>
         </div>
         <div className="artist-similarity-graph-panel-container">
-          <SimilarArtistsGraph
+          <SimilarArtist
             onArtistChange={onArtistChange}
-            data={transformedArtists}
-            background={backgroundGradient}
+            artistGraphNodeInfo={artistGraphNodeInfo}
+            similarArtistsList={similarArtistsList}
+            topAlbumReleaseColor={topAlbumReleaseColor}
+            topRecordingReleaseColor={topRecordingReleaseColor}
+            similarArtistsLimit={similarArtistsLimit}
             graphParentElementRef={graphParentElementRef}
           />
           {artistInfo && <Panel artistInfo={artistInfo} loading={loading} />}
         </div>
-        <BrainzPlayer
-          listens={currentTracks ?? []}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     </>
   );

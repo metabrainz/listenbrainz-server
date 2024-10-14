@@ -5,7 +5,6 @@ import * as React from "react";
 import { useState } from "react";
 import { useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import Loader from "../../components/Loader";
 import {
   JSPFTrackToListen,
@@ -15,6 +14,7 @@ import {
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { LBRadioFeedback, Playlist } from "./components/Playlist";
 import Prompt, { Modes } from "./components/Prompt";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
 type LBRadioLoaderData = {
   mode: Modes;
@@ -110,6 +110,16 @@ export default function LBRadio() {
     [setJspfPlaylist, setFeedback, APIService]
   );
 
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jspfPlaylist?.playlist?.track]);
+
   return (
     <div role="main">
       <Helmet>
@@ -133,13 +143,6 @@ export default function LBRadio() {
           </Loader>
         </div>
       </div>
-      <BrainzPlayer
-        listens={jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen) ?? []}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }

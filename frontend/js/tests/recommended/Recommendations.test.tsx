@@ -1,406 +1,234 @@
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
 
-import { act } from "react-dom/test-utils";
-import { BrowserRouter } from "react-router-dom";
+import { Router } from "@remix-run/router";
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
+import { SetupServerApi, setupServer } from "msw/node";
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import * as recommendationProps from "../__mocks__/recommendations.json";
 
-import Recommendations, {
-  RecommendationsProps,
-  RecommendationsState,
-} from "../../src/recommended/tracks/Recommendations";
-import * as recommendationPropsOne from "../__mocks__/recommendationPropsOne.json";
+import getRecommendationsRoutes from "../../src/recommended/tracks/routes";
+import {
+  renderWithProviders,
+  textContentMatcher,
+} from "../test-utils/rtl-test-utils";
+import { RecommendationsProps } from "../../src/recommended/tracks/Recommendations";
 
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../src/utils/GlobalAppContext";
-import APIService from "../../src/utils/APIService";
-import { waitForComponentToPaint } from "../test-utils";
-import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import ListenCard from "../../src/common/listens/ListenCard";
+const { recommendations, user: userProp, lastUpdated } = recommendationProps;
 
-// Font Awesome generates a random hash ID for each icon everytime.
-// Mocking Math.random() fixes this
-// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+const user = userEvent.setup();
 
-const {
+const routes = getRecommendationsRoutes();
+
+const fetchedProps: RecommendationsProps = {
   recommendations,
-  profileUrl,
-  spotify,
-  youtube,
-  user,
-} = recommendationProps;
-
-const props = {
-  recommendations,
-  profileUrl,
-  spotify: spotify as SpotifyUser,
-  youtube: youtube as YoutubeUser,
-  user,
+  user: userProp,
+  lastUpdated,
 };
 
-// Create a new instance of GlobalAppContext
-const mountOptions: { context: GlobalAppContextT } = {
-  context: {
-    APIService: new APIService("foo"),
-    websocketsUrl: "",
-    youtubeAuth: youtube as YoutubeUser,
-    spotifyAuth: spotify as SpotifyUser,
-    currentUser: user,
-    recordingFeedbackManager: new RecordingFeedbackManager(
-      new APIService("foo"),
-      { name: "Fnord" }
-    ),
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
   },
-};
+});
+const queryKey = ["recommendation", { userName: userProp.name }, {}];
+// preload data
+queryClient.ensureQueryData({ queryKey, queryFn: () => fetchedProps });
 
-const propsOne = {
-  ...recommendationPropsOne,
-};
-
-const feedback = {
-  feedback: [
-    {
-      rating: "love",
-      user_id: "vansika",
-      recording_mbid: "cdae1a9e-de70-46b1-9189-5d857bc40c67",
-    },
-    {
-      rating: "hate",
-      user_id: "vansika",
-      recording_mbid: "96b34c7d-d9fc-4db8-a94f-abc9fa3a6759",
-    },
-  ],
-};
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 describe("Recommendations", () => {
-  it("renders correctly on the recommendations page", () => {
-    const wrapper = mount<Recommendations>(
-      <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: props.user }}
-      >
-        <BrowserRouter>
-          <Recommendations {...props} />
-        </BrowserRouter>
-      </GlobalAppContext.Provider>
+  let router: Router;
+  let server: SetupServerApi;
+  const recAPIFeedbackSpy = jest.fn();
+  beforeAll(async () => {
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+
+    const handlers = [
+      http.post("/recommended/tracks/vansika/raw/", ({ request }) => {
+        return HttpResponse.json(fetchedProps);
+      }),
+      http.get("/1/recommendation/feedback/user/vansika/*", ({ request }) => {
+        recAPIFeedbackSpy();
+        return HttpResponse.json({
+          count: 2,
+          feedback: [
+            {
+              created: 1634807734,
+              rating: "hate",
+              recording_mbid: "7ff2815b-2461-4c95-8497-a2476c631c5d",
+            },
+            {
+              created: 1611223134,
+              rating: "love",
+              recording_mbid: "24a7952a-c435-4b7b-8c57-f346b4a29f9f",
+            },
+          ],
+          offset: 0,
+          total_count: 2,
+          user_name: "vansika",
+        });
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+    // Create the router *after* MSW mock server is set up
+    // See https://github.com/mswjs/msw/issues/1653#issuecomment-1781867559
+    router = createMemoryRouter(routes, {
+      initialEntries: ["/recommended/tracks/vansika/raw/"],
+    });
+
+  });
+
+  afterEach(jest.clearAllMocks);
+
+  afterAll(() => {
+    queryClient.cancelQueries();
+    server.close();
+  });
+
+  it("renders correctly on the recommendations page", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      undefined,
+      { wrapper: reactQueryWrapper },
+      false
     );
-    expect(wrapper.find("#recommendations")).toHaveLength(1);
-    expect(wrapper.find(ListenCard)).toHaveLength(25);
-  });
-  describe("componentDidMount", () => {
-    it('calls loadFeedback if user is the currentUser"', async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider
-          value={{ ...mountOptions.context, currentUser: props.user }}
-        >
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      instance.loadFeedback = jest.fn();
-
-      instance.componentDidMount();
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
+    screen.getByText("vansika");
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
     });
-
-    it("does not call loadFeedback if user is not the currentUser", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider
-          value={{ ...mountOptions.context, currentUser: { name: "foobar" } }}
-        >
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      instance.loadFeedback = jest.fn();
-
-      instance.componentDidMount();
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
+    screen.getByText(
+      textContentMatcher(
+        "Your raw tracks playlist was last updated on 20 May 2024."
+      )
+    );
+    screen.getByTestId("recommendations");
+    screen.getByTestId("recommendations-table");
+    await waitFor(() => {
+      expect(screen.getAllByTestId("listen")).toHaveLength(25);
     });
+    screen.getByText("Gila Monster");
   });
 
-  describe("getFeedback", () => {
-    it("calls the API correctly", async () => {
-      const wrapper = mount<Recommendations>(
-        <BrowserRouter>
-          <Recommendations {...(propsOne as RecommendationsProps)} />
-        </BrowserRouter>
-      );
-
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      const spy = jest.fn().mockImplementation(() => {
-        return Promise.resolve(feedback);
-      });
-      // eslint-disable-next-line dot-notation
-      instance["APIService"].getFeedbackForUserForRecommendations = spy;
-
-      const result = await instance.getFeedback();
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        "vansika",
-        "cdae1a9e-de70-46b1-9189-5d857bc40c67,96b34c7d-d9fc-4db8-a94f-abc9fa3a6759"
-      );
-      expect(result).toEqual(feedback.feedback);
+  it('calls loadFeedback if user is the currentUser"', async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {
+        currentUser: recommendationProps.user,
+      },
+      {wrapper: reactQueryWrapper},
+      false
+    );
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
     });
+    expect(recAPIFeedbackSpy).toHaveBeenCalledTimes(1);
   });
 
-  describe("loadFeedback", () => {
-    it("updates the recommendationFeedbackMap state", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-
-      instance.getFeedback = jest.fn().mockResolvedValue(feedback.feedback);
-
-      await waitForComponentToPaint(wrapper);
-      await act(async () => {
-        await instance.loadFeedback();
-      });
-
-      expect(instance.state.recommendationFeedbackMap).toMatchObject({
-        "cdae1a9e-de70-46b1-9189-5d857bc40c67": "love",
-        "96b34c7d-d9fc-4db8-a94f-abc9fa3a6759": "hate",
-      });
+  it("does not call loadFeedback if user is not the currentUser", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {
+        currentUser: { name: "tarzan" },
+      },
+      {wrapper: reactQueryWrapper},
+      false
+    );
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
     });
+    // Ensure feedback elements are not present
+    expect(recAPIFeedbackSpy).not.toHaveBeenCalled();
   });
 
-  describe("getFeedbackForRecordingMbid", () => {
-    it("returns the feedback after fetching from recommendationFeedbackMap state", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
+  /* it("updates the recommendation feedback when clicked", async () => {
+    renderWithProviders(
+    <RouterProvider router={router} />,
+    {
+      currentUser: recommendationProps.user,
+    },
+    undefined,
+    false
+  );
+    // Ensure feedback elements are not present for a certain track
+    // const recommendationFeedbackMap: RecommendationFeedbackMap = {
+    //   "973e5620-829d-46dd-89a8-760d87076287": "like",
+    // };
+    // Defined a server handler for the feedback update endpoint
+    // Then click on a feedback button
+    // Then check that the feedback has changed
+  }); */
 
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-
-      const recommendationFeedbackMap: RecommendationFeedbackMap = {
-        "973e5620-829d-46dd-89a8-760d87076287": "hate",
-      };
-      await waitForComponentToPaint(wrapper);
-      await act(() => {
-        instance.setState({ recommendationFeedbackMap });
-      });
-
-      const res = await instance.getFeedbackForRecordingMbid(
-        "973e5620-829d-46dd-89a8-760d87076287"
-      );
-
-      expect(res).toEqual("hate");
+  it("has working navigation", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      undefined,
+      { wrapper: reactQueryWrapper },
+      false
+    );
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status).toEqual("success");
     });
+    const trackFromFirstPage = recommendations[0].track_metadata.track_name;
+    const trackFromSecondPage = recommendations[25].track_metadata.track_name;
+    const trackFromThirdPage = recommendations[50].track_metadata.track_name;
+    // First page
+    screen.getByText(trackFromFirstPage);
+    expect(screen.queryByText(trackFromSecondPage)).toBeNull();
+    expect(screen.queryByText(trackFromThirdPage)).toBeNull();
 
-    it("returns null if the recording is not in recommendationFeedbackMap state", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
+    const navButtons = screen.getByRole("navigation");
+    const nextButton = within(navButtons).getByText("Next", { exact: false });
+    // Second page
+    await user.click(nextButton);
+    screen.getByText(trackFromSecondPage);
+    expect(screen.queryByText(trackFromFirstPage)).toBeNull();
+    expect(screen.queryByText(trackFromThirdPage)).toBeNull();
 
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
+    // Third page
+    await user.click(nextButton);
+    screen.getByText(trackFromThirdPage);
+    expect(screen.queryByText(trackFromFirstPage)).toBeNull();
+    expect(screen.queryByText(trackFromSecondPage)).toBeNull();
+    // No fourth page, should do nothing
+    await user.click(nextButton);
+    screen.getByText(trackFromThirdPage);
+    expect(screen.queryByText(trackFromFirstPage)).toBeNull();
+    expect(screen.queryByText(trackFromSecondPage)).toBeNull();
 
-      const res = await instance.getFeedbackForRecordingMbid(
-        "073e5620-829d-46dd-89a8-760d87076287"
-      );
-
-      expect(res).toEqual(null);
+    const prevButton = within(navButtons).getByText("Previous", {
+      exact: false,
     });
-  });
-
-  describe("updateFeedback", () => {
-    it("updates the recommendationFeedbackMap state for particular recording", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-
-      const recommendationFeedbackMap: RecommendationFeedbackMap = {
-        "973e5620-829d-46dd-89a8-760d87076287": "like",
-      };
-      await act(async () => {
-        instance.setState({ recommendationFeedbackMap });
-      });
-      await instance.updateFeedback(
-        "973e5620-829d-46dd-89a8-760d87076287",
-        "love"
-      );
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.state.recommendationFeedbackMap).toMatchObject({
-        "973e5620-829d-46dd-89a8-760d87076287": "love",
-      });
-    });
-  });
-
-  describe("handleClickPrevious", () => {
-    beforeAll(() => {
-      window.HTMLElement.prototype.scrollIntoView = jest.fn();
-    });
-
-    it("doesn't do anything if already on first page", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      instance.afterRecommendationsDisplay = jest.fn();
-
-      await instance.handleClickPrevious();
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.state.loading).toBeFalsy();
-      expect(instance.state.currRecPage).toEqual(1);
-      expect(instance.state.totalRecPages).toEqual(3);
-      expect(instance.state.recommendations).toEqual(
-        props.recommendations.slice(0, 25)
-      );
-      expect(instance.afterRecommendationsDisplay).toHaveBeenCalledTimes(0);
-    });
-
-    it("go to the previous page if not on first page", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      const afterRecommendationsDisplaySpy = jest.spyOn(
-        instance,
-        "afterRecommendationsDisplay"
-      );
-      await act(async () => {
-        instance.setState({
-          currRecPage: 3,
-          recommendations: props.recommendations.slice(50, 73),
-        });
-      });
-
-      await instance.handleClickPrevious();
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.state.loading).toBeFalsy();
-      expect(instance.state.currRecPage).toEqual(2);
-      expect(instance.state.totalRecPages).toEqual(3);
-      expect(instance.state.recommendations).toEqual(
-        props.recommendations.slice(25, 50)
-      );
-      expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("handleClickNext", () => {
-    it("doesn't do anything if already on last page", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      const afterRecommendationsDisplaySpy = jest.spyOn(
-        instance,
-        "afterRecommendationsDisplay"
-      );
-      await act(async () => {
-        instance.setState({
-          currRecPage: 3,
-          recommendations: props.recommendations.slice(50, 74),
-        });
-      });
-
-      await instance.handleClickNext();
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.state.loading).toBeFalsy();
-      expect(instance.state.currRecPage).toEqual(3);
-      expect(instance.state.totalRecPages).toEqual(3);
-      expect(instance.state.recommendations).toEqual(
-        props.recommendations.slice(50, 73)
-      );
-      expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(0);
-    });
-
-    it("go to the next page if not on last page", async () => {
-      const wrapper = mount<Recommendations>(
-        <GlobalAppContext.Provider value={mountOptions.context}>
-          <BrowserRouter>
-            <Recommendations {...props} />
-          </BrowserRouter>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(Recommendations)
-        .instance() as Recommendations;
-      const afterRecommendationsDisplaySpy = jest.spyOn(
-        instance,
-        "afterRecommendationsDisplay"
-      );
-      await act(async () => {
-        instance.setState({
-          currRecPage: 2,
-          recommendations: props.recommendations.slice(25, 50),
-        });
-      });
-
-      await instance.handleClickNext();
-      await waitForComponentToPaint(wrapper);
-
-      expect(instance.state.loading).toBeFalsy();
-      expect(instance.state.currRecPage).toEqual(3);
-      expect(instance.state.recommendations).toEqual(
-        props.recommendations.slice(50, 73)
-      );
-      expect(afterRecommendationsDisplaySpy).toHaveBeenCalledTimes(1);
-    });
+    // Second page
+    await user.click(prevButton);
+    screen.getByText(trackFromSecondPage);
+    expect(screen.queryByText(trackFromFirstPage)).toBeNull();
+    expect(screen.queryByText(trackFromThirdPage)).toBeNull();
+    // First page
+    await user.click(prevButton);
+    screen.getByText(trackFromFirstPage);
+    expect(screen.queryByText(trackFromSecondPage)).toBeNull();
+    expect(screen.queryByText(trackFromThirdPage)).toBeNull();
+    // clicking again should do nothing
+    await user.click(prevButton);
+    screen.getByText(trackFromFirstPage);
+    expect(screen.queryByText(trackFromSecondPage)).toBeNull();
+    expect(screen.queryByText(trackFromThirdPage)).toBeNull();
   });
 });

@@ -8,7 +8,7 @@
   flex: 0 0 250px;
   max-height: 100vh;
   overflow-y: auto;
-  z-index: 9998;
+  z-index: 109;
   right: 0;
   background: #f3f3f3;
 
@@ -30,6 +30,7 @@
     transition: right 0.3s ease-in-out;
     &.open {
       right: 0;
+      z-index: 112;
     }
   }
 
@@ -86,7 +87,7 @@
 
 .toggle-sidebar-button {
   position: fixed;
-  bottom: 20px;
+  bottom: 20px + @brainzplayer-height;
   right: 20px;
   z-index: 9999;
   width: 64px;

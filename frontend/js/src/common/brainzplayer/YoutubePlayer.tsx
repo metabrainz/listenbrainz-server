@@ -24,6 +24,7 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type YoutubePlayerState = {
   currentListen?: Listen;
@@ -117,6 +118,7 @@ export default class YoutubePlayer
   public name = "youtube";
   public domainName = "youtube.com";
   public icon = faYoutube;
+  public iconColor = dataSourcesInfo.youtube.color;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
@@ -391,7 +393,10 @@ export default class YoutubePlayer
           bottom: -draggableBoundPadding,
         }}
       >
-        <div className={`youtube-wrapper${!show ? " hidden" : ""}`}>
+        <div
+          className={`youtube-wrapper${!show ? " hidden" : ""}`}
+          data-testid={`youtube-wrapper${!show ? " hidden" : ""}`}
+        >
           <button className="btn btn-sm youtube-drag-handle" type="button">
             <FontAwesomeIcon icon={faArrowsAlt} />
           </button>

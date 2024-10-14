@@ -1,10 +1,12 @@
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import React, {
+  forwardRef,
   useCallback,
   useContext,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -37,11 +39,10 @@ type SearchTrackOrMBIDProps = {
   expectedPayload: PayloadType;
 } & ConditionalReturnValue;
 
-export default function SearchTrackOrMBID({
-  onSelectRecording,
-  expectedPayload,
-  defaultValue,
-}: SearchTrackOrMBIDProps) {
+const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
+  { onSelectRecording, expectedPayload, defaultValue }: SearchTrackOrMBIDProps,
+  inputRefForParent
+) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRecording } = APIService;
   const dropdownRef = DropdownRef();
@@ -50,6 +51,28 @@ export default function SearchTrackOrMBID({
     []
   );
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const inputRefLocal = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Allow parents to focus on input
+  useImperativeHandle(
+    inputRefForParent,
+    () => {
+      return {
+        focus() {
+          inputRefLocal?.current?.focus();
+        },
+      };
+    },
+    []
+  );
+
+  // Autofocus once on load
+  useEffect(() => {
+    setTimeout(() => {
+      inputRefLocal?.current?.focus();
+    }, 500);
+  }, []);
 
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
@@ -87,6 +110,8 @@ export default function SearchTrackOrMBID({
             setSearchResults(parsedResponse);
           } catch (error) {
             handleError(error);
+          } finally {
+            setLoading(false);
           }
         },
         THROTTLE_MILLISECONDS,
@@ -148,6 +173,8 @@ export default function SearchTrackOrMBID({
               "Could not find recording"
             );
             setInputValue("");
+          } finally {
+            setLoading(false);
           }
           setSearchResults([]);
         },
@@ -180,12 +207,14 @@ export default function SearchTrackOrMBID({
     setInputValue("");
     setSearchResults([]);
     setSelectedIndex(-1);
+    inputRefLocal?.current?.focus();
   };
 
   useEffect(() => {
     if (!inputValue) {
       return;
     }
+    setLoading(true);
     const isValidUUID = RECORDING_MBID_REGEXP.test(inputValue);
     if (isValidUUID) {
       throttledHandleValidMBID(inputValue);
@@ -199,6 +228,7 @@ export default function SearchTrackOrMBID({
     <div>
       <div className="input-group dropdown-search" ref={dropdownRef}>
         <input
+          ref={inputRefLocal}
           type="search"
           value={inputValue}
           className="form-control"
@@ -212,7 +242,11 @@ export default function SearchTrackOrMBID({
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
-            <FontAwesomeIcon icon={faTimesCircle} />
+            {loading ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={faTimesCircle} />
+            )}
           </button>
         </span>
         {Boolean(searchResults?.length) && (
@@ -261,4 +295,6 @@ export default function SearchTrackOrMBID({
       </div>
     </div>
   );
-}
+});
+
+export default SearchTrackOrMBID;

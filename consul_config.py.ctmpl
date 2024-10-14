@@ -31,15 +31,14 @@ REMEMBER_COOKIE_HTTPONLY = True
 {{if service "pgbouncer-master"}}
 {{with index (service "pgbouncer-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/postgres"
+SQLALCHEMY_METABRAINZ_URI = "postgresql://metabrainz:metabrainz@{{.Address}}:{{.Port}}/metabrainz_db"
 {{end}}
 {{else}}
 SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 POSTGRES_ADMIN_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
+SQLALCHEMY_METABRAINZ_URI = "SERVICEDOESNOTEXIST_pgbouncer-master"
 {{end}}
-
 
 IS_MUSICBRAINZ_UP = {{template "KEY_JSON" "musicbrainz_up"}}
 # Use a key '$musicbrainz_up' in consul (json boolean true or false) to decide if we connect to musicbrainz.

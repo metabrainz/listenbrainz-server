@@ -20,7 +20,7 @@ class AppleService(ExternalService):
         self.apple_music_team_id = current_app.config["APPLE_MUSIC_TEAM_ID"]
 
     def fetch_access_token(self):
-        """ Generate an Apple Music JWT token for use with Apple Music API.
+        """ Generate an Apple Music JWT developer token for use with Apple Music API.
         Returns:
             a dict with the following keys
             {

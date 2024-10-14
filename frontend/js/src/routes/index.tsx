@@ -81,7 +81,7 @@ const getIndexRoutes = (): RouteObject[] => {
           path: "playlist/:playlistID/",
           lazy: async () => {
             const PlaylistPage = await import("../playlists/Playlist");
-            return { Component: PlaylistPage.PlaylistPageWrapper };
+            return { Component: PlaylistPage.default };
           },
           loader: RouteLoader,
         },
@@ -96,7 +96,7 @@ const getIndexRoutes = (): RouteObject[] => {
               index: true,
               lazy: async () => {
                 const UserReports = await import("../user/stats/UserReports");
-                return { Component: UserReports.StatisticsPage };
+                return { Component: UserReports.default };
               },
             },
             {

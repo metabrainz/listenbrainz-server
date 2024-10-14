@@ -215,7 +215,7 @@ def build_apple_metadata_index(use_lb_conn):
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
-def build_apple_metadata_index(use_lb_conn):
+def build_soundcloud_metadata_index(use_lb_conn):
     """
         Build the Soundcloud Music metadata index that LB uses
     """

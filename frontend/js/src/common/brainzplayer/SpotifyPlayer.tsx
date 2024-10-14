@@ -19,6 +19,7 @@ import {
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
@@ -104,6 +105,7 @@ export default class SpotifyPlayer
   public name = "spotify";
   public domainName = "spotify.com";
   public icon = faSpotify;
+  public iconColor = dataSourcesInfo.spotify.color;
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
@@ -615,6 +617,6 @@ export default class SpotifyPlayer
     if (!show) {
       return null;
     }
-    return <div>{this.getAlbumArt()}</div>;
+    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
   }
 }

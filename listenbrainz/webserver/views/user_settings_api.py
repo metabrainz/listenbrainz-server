@@ -15,6 +15,22 @@ from listenbrainz.webserver.views.api_tools import (
 user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 
 
+@user_settings_api_bp.route("/flair", methods=["POST"])
+@crossdomain
+@ratelimit()
+def update_flair():
+    """ Update a given user's flair
+
+    To remove a user's flair, pass {"flair": null}.
+    """
+    user = validate_auth_header()
+    if "flair" not in request.json:
+        raise APIBadRequest("Missing flair")
+
+    db_usersetting.update_flair(db_conn, user["id"], request.json["flair"])
+    return jsonify({"success": True})
+
+
 @user_settings_api_bp.route('/timezone', methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()

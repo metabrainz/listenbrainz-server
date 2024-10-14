@@ -1,176 +1,134 @@
 import * as React from "react";
-import { mount } from "enzyme";
 
-import { act } from "react-dom/test-utils";
+import { HttpResponse, http } from "msw";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SetupServerApi, setupServer } from "msw/node";
+import { screen } from "@testing-library/react";
+import { RouterProvider, createMemoryRouter } from "react-router-dom";
+import { Router } from "@remix-run/router";
+import userEvent from "@testing-library/user-event";
 import * as missingDataProps from "../../__mocks__/missingMBDataProps.json";
 import {
-  youtube,
-  spotify,
-  user,
-} from "../../__mocks__/missingMBDataProps.json";
+  renderWithProviders,
+  textContentMatcher,
+} from "../../test-utils/rtl-test-utils";
+import getSettingsRoutes from "../../../src/settings/routes";
 
-import MissingMBDataPage from "../../../src/settings/missing-data/MissingMBData";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../src/utils/GlobalAppContext";
-import APIService from "../../../src/utils/APIService";
-import { waitForComponentToPaint } from "../../test-utils";
-import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-import { BrowserRouter } from "react-router-dom";
+jest.unmock("react-toastify");
 
-// Font Awesome generates a random hash ID for each icon everytime.
-// // Mocking Math.random() fixes this
-// // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+const user = userEvent.setup();
+const routes = getSettingsRoutes();
 
-const props = {
-  ...missingDataProps,
+const pageData = {
+  missing_data: missingDataProps.missingData,
 };
-
-// Create a new instance of GlobalAppContext
-const mountOptions: { context: GlobalAppContextT } = {
-  context: {
-    APIService: new APIService("foo"),
-    websocketsUrl: "",
-    youtubeAuth: youtube as YoutubeUser,
-    spotifyAuth: spotify as SpotifyUser,
-    currentUser: user,
-    recordingFeedbackManager: new RecordingFeedbackManager(
-      new APIService("foo"),
-      { name: "Fnord" }
-    ),
+// React-Query setup
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
   },
-};
+});
+const queryKey = ["missing-data"];
+
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 describe("MissingMBDataPage", () => {
-  it("renders the missing musicbrainz data page correctly", () => {
-    const wrapper = mount<MissingMBDataPage>(
-      <GlobalAppContext.Provider
-        value={{ ...mountOptions.context, currentUser: props.user }}
-      >
-        <BrowserRouter>
-          <MissingMBDataPage {...props} />
-        </BrowserRouter>
-      </GlobalAppContext.Provider>
+  let server: SetupServerApi;
+  let router: Router;
+  beforeAll(async () => {
+    window.scrollTo = jest.fn();
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    // Mock the server responses
+    const handlers = [
+      http.post("/settings/missing-data/", ({ request }) => {
+        return HttpResponse.json(pageData);
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+    // Create the router *after* MSW mock server is set up
+    // See https://github.com/mswjs/msw/issues/1653#issuecomment-1781867559
+    router = createMemoryRouter(routes, {
+      initialEntries: ["/settings/missing-data/"],
+    });
+  });
+  beforeEach(async () => {
+    await queryClient.ensureQueryData({
+      queryKey,
+      queryFn: () => Promise.resolve(pageData),
+      initialData: pageData,
+    });
+  });
+
+  afterAll(() => {
+    server.close();
+  });
+
+  it("renders the missing musicbrainz data page correctly", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {
+        currentUser: missingDataProps.user,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      },
+      false
     );
-    expect(wrapper.find("#missingMBData")).toHaveLength(1);
+    await screen.findByText(
+      textContentMatcher("Missing MusicBrainz Data of riksucks")
+    );
+    const albumGroups = await screen.findAllByRole("heading", { level: 3 });
+    // 25 groups per page
+    // These albums should be grouped and sorted by size before being paginated and displayed
+    expect(albumGroups).toHaveLength(25);
+    expect(albumGroups.at(0)).toHaveTextContent(
+      "Paharda (Remixes) (10 tracks)"
+    );
+    expect(albumGroups.at(1)).toHaveTextContent(
+      "Trip to California (Stoner Edition)"
+    );
   });
 
-  xdescribe("handleClickPrevious", () => {
-    beforeAll(() => {
-      window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  it("has working navigation", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {
+        currentUser: missingDataProps.user,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      },
+      false
+    );
+    await screen.findByText("Paharda (Remixes)", { exact: false });
+    // Check that items from bigger groups get sorted and displayed
+    // on the first page despite being at the bottom of the data array
+    await screen.findByText("Trip to California (Stoner Edition)", {
+      exact: false,
     });
-    it("doesn't do anything if on the first page", async () => {
-      const wrapper = mount<MissingMBDataPage>(
-        <GlobalAppContext.Provider
-          value={{ ...mountOptions.context, currentUser: props.user }}
-        >
-          <MissingMBDataPage {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      instance.afterDisplay = jest.fn();
-      await act(() => {
-        instance.handleClickPrevious();
-      });
+    expect(
+      screen.queryByText("Broadchurch (Music From The Original TV Series)")
+    ).toBeNull();
 
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currPage")).toEqual(1);
-      expect(wrapper.state("totalPages")).toEqual(3);
-      expect(wrapper.state("missingData")).toEqual(
-        props.missingData.slice(0, 25)
-      );
-      expect(instance.afterDisplay).toHaveBeenCalledTimes(0);
-    });
+    const nextButton = screen.getByText("Next →", { exact: false });
+    await user.click(nextButton);
+    expect(
+      screen.queryByText(textContentMatcher("Paharda (Remixes)"), {
+        exact: false,
+      })
+    ).toBeNull();
+    await screen.findByText("Broadchurch (Music From The Original TV Series)");
 
-    it("goes to previous (first) page when on second page", async () => {
-      const wrapper = mount<MissingMBDataPage>(
-        <GlobalAppContext.Provider
-          value={{ ...mountOptions.context, currentUser: props.user }}
-        >
-          <MissingMBDataPage {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const afterDisplaySpy = jest.spyOn(instance, "afterDisplay");
-      await act(() => {
-        wrapper.setState({
-          currPage: 2,
-          missingData: props.missingData.slice(25, 50),
-        });
-      });
-
-      await act(() => {
-        instance.handleClickPrevious();
-      });
-
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currPage")).toEqual(1);
-      expect(wrapper.state("totalPages")).toEqual(3);
-      expect(wrapper.state("missingData")).toEqual(
-        props.missingData.slice(0, 25)
-      );
-      expect(afterDisplaySpy).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  xdescribe("handleClickNext", () => {
-    beforeAll(() => {
-      window.HTMLElement.prototype.scrollIntoView = jest.fn();
-    });
-    it("doesn't do anything if on the last page", async () => {
-      const wrapper = mount<MissingMBDataPage>(
-        <GlobalAppContext.Provider
-          value={{ ...mountOptions.context, currentUser: props.user }}
-        >
-          <MissingMBDataPage {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      instance.afterDisplay = jest.fn();
-
-      await act(() => {
-        wrapper.setState({
-          currPage: 3,
-          missingData: props.missingData.slice(50, 73),
-        });
-      });
-
-      await act(() => {
-        instance.handleClickNext();
-      });
-
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currPage")).toEqual(3);
-      expect(wrapper.state("totalPages")).toEqual(3);
-      expect(wrapper.state("missingData")).toEqual(
-        props.missingData.slice(50, 73)
-      );
-      expect(instance.afterDisplay).toHaveBeenCalledTimes(0);
-    });
-
-    it("goes to next page when on first page", async () => {
-      const wrapper = mount<MissingMBDataPage>(
-        <GlobalAppContext.Provider
-          value={{ ...mountOptions.context, currentUser: props.user }}
-        >
-          <MissingMBDataPage {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper.instance();
-      const afterDisplaySpy = jest.spyOn(instance, "afterDisplay");
-
-      await act(() => {
-        instance.handleClickNext();
-      });
-
-      expect(wrapper.state("loading")).toBeFalsy();
-      expect(wrapper.state("currPage")).toEqual(2);
-      expect(wrapper.state("totalPages")).toEqual(3);
-      expect(wrapper.state("missingData")).toEqual(
-        props.missingData.slice(25, 50)
-      );
-      expect(afterDisplaySpy).toHaveBeenCalledTimes(1);
-    });
+    const prevButton = screen.getByText("Previous", { exact: false });
+    await user.click(prevButton);
+    await screen.findByText("Paharda (Remixes)", { exact: false });
+    expect(
+      screen.queryByText("Broadchurch (Music From The Original TV Series)")
+    ).toBeNull();
   });
 });

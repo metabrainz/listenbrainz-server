@@ -11,7 +11,7 @@ from flask_login import current_user
 from werkzeug.local import LocalProxy
 
 from listenbrainz import db
-from listenbrainz.db import create_test_database_connect_strings, timescale
+from listenbrainz.db import create_test_database_connect_strings, timescale, donation
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
 
 API_PREFIX = '/1'
@@ -39,8 +39,16 @@ def _get_ts_conn():
     return _ts_conn
 
 
+def _get_meb_conn():
+    _meb_conn = getattr(g, "_meb_conn", None)
+    if donation.engine is not None and _meb_conn is None:
+        _meb_conn = g._meb_conn = donation.engine.connect()
+    return _meb_conn
+
+
 db_conn = LocalProxy(_get_db_conn)
 ts_conn = LocalProxy(_get_ts_conn)
+meb_conn = LocalProxy(_get_meb_conn)
 
 
 def load_config(app):
@@ -123,6 +131,8 @@ def create_app(debug=None):
     else:
         db.init_db_connection(app.config["SQLALCHEMY_DATABASE_URI"])
         timescale.init_db_connection(app.config["SQLALCHEMY_TIMESCALE_URI"])
+        if app.config.get("SQLALCHEMY_METABRAINZ_URI", None):
+            donation.init_meb_db_connection(app.config["SQLALCHEMY_METABRAINZ_URI"])
 
     @app.teardown_request
     def close_connection(exception):
@@ -403,6 +413,9 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.popularity_api import popularity_api_bp
     app.register_blueprint(popularity_api_bp, url_prefix=API_PREFIX+"/popularity")
+
+    from listenbrainz.webserver.views.donor_api import donor_api_bp
+    app.register_blueprint(donor_api_bp, url_prefix=API_PREFIX+"/donors")
 
     from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp
     app.register_blueprint(artist_bp, url_prefix='/artist')
