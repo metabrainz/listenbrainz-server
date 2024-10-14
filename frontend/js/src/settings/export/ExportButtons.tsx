@@ -58,10 +58,15 @@ function renderExport(ex: Export) {
         <p>
           Your zip file is ready to download:
           <br />
-          <a href={`/export/download/${ex.export_id}/`} download>
-            Download {ex.filename ?? `${ex.export_id}.zip`}
-          </a>
-          <br />
+          <form action={`/export/download/${ex.export_id}/`} method="post">
+            <button
+              type="submit"
+              name="download_export"
+              className="btn btn-link"
+            >
+              Download {ex.filename ?? `${ex.export_id}.zip`}
+            </button>
+          </form>
         </p>
         <p>
           <b>
