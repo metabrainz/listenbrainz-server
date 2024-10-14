@@ -138,7 +138,7 @@ describe("Dashboard page", () => {
     expect(screen.getAllByTestId("listen")).toHaveLength(26);
   });
 
-  it("fetches the user's listen count", async () => {
+  it("shows the user's listen count component", async () => {
     renderWithProviders(
       <Listens />,
       {
@@ -154,12 +154,10 @@ describe("Dashboard page", () => {
       const state = queryClient.getQueryState(queryKey);
       expect(state?.status === "success").toBeTruthy();
     });
-
-    const listenCountCard = await screen.findByTestId("listen-count-card");
-
-    expect(listenCountCard).toHaveTextContent(
-      "You have listened to42songs so far"
-    );
+    
+    // Ensure we show a listen count card component, but don't test the contents
+    // Tests for it are in ListenCountCard.test.tsx
+    screen.getByTestId("listen-count-card");
   });
 
   it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
