@@ -81,7 +81,7 @@ jest.mock("react-router-dom", () => ({
   },
 }));
 
-describe("Listens page", () => {
+describe("Dashboard page", () => {
   jest.setTimeout(10000);
   let server: SetupServerApi;
   beforeAll(async () => {
@@ -94,7 +94,6 @@ describe("Listens page", () => {
         HttpResponse.json({ followers: [] })
       ),
       http.get("/1/user/*/similar-users", async (path) => {
-        console.log("=============similar-users =============");
         HttpResponse.json({ payload: [] });
       }),
       http.get("/1/user/*/listen-count", async (path) =>
@@ -593,205 +592,205 @@ describe("Listens page", () => {
         expect(olderButton).toHaveAttribute("href", "/?max_ts=1586440536");
       });
     });
-  });
 
-  describe("handleClickNewer", () => {
-    it("newer button should be disabled if there is no newer listens timestamp", async () => {
-      renderWithProviders(
-        <Listens />,
-        {
-          currentUser,
-        },
-        {
-          wrapper: reactQueryWrapper,
-        }
-      );
+    describe("handleClickNewer", () => {
+      it("newer button should be disabled if there is no newer listens timestamp", async () => {
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
 
-      await waitFor(() => {
-        // Wait for data to be successfully loaded
-        const state = queryClient.getQueryState(queryKey);
-        expect(state?.status === "success").toBeTruthy();
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        // button should be disabled if last previousListenTs >= earliest timestamp
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+        expect(newerButton).toHaveAttribute("aria-disabled", "true");
       });
 
-      // button should be disabled if last previousListenTs >= earliest timestamp
-      const newerButton = await screen.findByLabelText(
-        "Navigate to more recent listens"
-      );
-      expect(newerButton).toHaveAttribute("aria-disabled", "true");
+      it("newer button should have a link to newer listen page", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              latestListenTs: new Date("2021-09-14T03:16:16.161Z").getTime(),
+            });
+          })
+        );
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const newerButton = await screen.findByLabelText(
+          "Navigate to more recent listens"
+        );
+
+        expect(newerButton).toHaveAttribute("aria-disabled", "false");
+        expect(newerButton).toHaveAttribute("href", "/?min_ts=1586523524");
+      });
     });
 
-    it("newer button should have a link to newer listen page", async () => {
-      server.use(
-        http.post("/", async (path) => {
-          return HttpResponse.json({
-            ...props,
-            latestListenTs: new Date("2021-09-14T03:16:16.161Z").getTime(),
-          });
-        })
-      );
-      renderWithProviders(
-        <Listens />,
-        {
-          currentUser,
-        },
-        {
-          wrapper: reactQueryWrapper,
-        }
-      );
+    describe("handleClickOldest", () => {
+      it("does nothing if there is no older listens timestamp", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              oldestListenTs: listens[listens.length - 1].listened_at,
+            });
+          })
+        );
 
-      await waitFor(() => {
-        // Wait for data to be successfully loaded
-        const state = queryClient.getQueryState(queryKey);
-        expect(state?.status === "success").toBeTruthy();
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        // button should be disabled if last listen's listened_at <= oldestListenTs
+        const oldestButton = await screen.findByLabelText(
+          "Navigate to oldest listens"
+        );
+        expect(oldestButton).toHaveAttribute("aria-disabled", "true");
       });
 
-      const newerButton = await screen.findByLabelText(
-        "Navigate to more recent listens"
-      );
+      it("oldest button should have a link to oldest listen page", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              oldestListenTs: Math.round(
+                new Date("2019-04-09T10:12:04Z").getTime() / 1000
+              ),
+            });
+          })
+        );
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
 
-      expect(newerButton).toHaveAttribute("aria-disabled", "false");
-      expect(newerButton).toHaveAttribute("href", "/?min_ts=1586523524");
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const oldestButton = await screen.findByLabelText(
+          "Navigate to oldest listens"
+        );
+        expect(oldestButton).toHaveAttribute("aria-disabled", "false");
+        expect(oldestButton).toHaveAttribute("href", "/?min_ts=1554804723");
+      });
     });
-  });
+    describe("handleClickNewest", () => {
+      it("newest button is disabled if there is no more recent listens timestamp", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              latestListenTs: listens[0].listened_at,
+            });
+          })
+        );
 
-  describe("handleClickOldest", () => {
-    it("does nothing if there is no older listens timestamp", async () => {
-      server.use(
-        http.post("/", async (path) => {
-          return HttpResponse.json({
-            ...props,
-            oldestListenTs: listens[listens.length - 1].listened_at,
-          });
-        })
-      );
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
 
-      renderWithProviders(
-        <Listens />,
-        {
-          currentUser,
-        },
-        {
-          wrapper: reactQueryWrapper,
-        }
-      );
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
 
-      await waitFor(() => {
-        // Wait for data to be successfully loaded
-        const state = queryClient.getQueryState(queryKey);
-        expect(state?.status === "success").toBeTruthy();
+        // button should be disabled if last listen's listened_at <= oldestListenTs
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+        expect(newestButton).toHaveAttribute("aria-disabled", "true");
       });
 
-      // button should be disabled if last listen's listened_at <= oldestListenTs
-      const oldestButton = await screen.findByLabelText(
-        "Navigate to oldest listens"
-      );
-      expect(oldestButton).toHaveAttribute("aria-disabled", "true");
-    });
+      it("newest button should have a link to newest listen page", async () => {
+        const timestamp = Math.round(
+          new Date("2024-09-14T03:16:16.161Z").getTime() / 1000
+        );
 
-    it("oldest button should have a link to oldest listen page", async () => {
-      server.use(
-        http.post("/", async (path) => {
-          return HttpResponse.json({
-            ...props,
-            oldestListenTs: Math.round(
-              new Date("2019-04-09T10:12:04Z").getTime() / 1000
-            ),
-          });
-        })
-      );
-      renderWithProviders(
-        <Listens />,
-        {
-          currentUser,
-        },
-        {
-          wrapper: reactQueryWrapper,
-        }
-      );
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              latestListenTs: timestamp,
+            });
+          })
+        );
 
-      await waitFor(() => {
-        // Wait for data to be successfully loaded
-        const state = queryClient.getQueryState(queryKey);
-        expect(state?.status === "success").toBeTruthy();
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
+
+        const newestButton = await screen.findByLabelText(
+          "Navigate to most recent listens"
+        );
+
+        expect(newestButton).toHaveAttribute("href", "/");
+        expect(newestButton).toHaveAttribute("aria-disabled", "false");
       });
-
-      const oldestButton = await screen.findByLabelText(
-        "Navigate to oldest listens"
-      );
-      expect(oldestButton).toHaveAttribute("aria-disabled", "false");
-      expect(oldestButton).toHaveAttribute("href", "/?min_ts=1554804723");
-    });
-  });
-  describe("handleClickNewest", () => {
-    it("newest button is disabled if there is no more recent listens timestamp", async () => {
-      server.use(
-        http.post("/", async (path) => {
-          return HttpResponse.json({
-            ...props,
-            latestListenTs: listens[0].listened_at,
-          });
-        })
-      );
-
-      renderWithProviders(
-        <Listens />,
-        {
-          currentUser,
-        },
-        {
-          wrapper: reactQueryWrapper,
-        }
-      );
-
-      await waitFor(() => {
-        // Wait for data to be successfully loaded
-        const state = queryClient.getQueryState(queryKey);
-        expect(state?.status === "success").toBeTruthy();
-      });
-
-      // button should be disabled if last listen's listened_at <= oldestListenTs
-      const newestButton = await screen.findByLabelText(
-        "Navigate to most recent listens"
-      );
-      expect(newestButton).toHaveAttribute("aria-disabled", "true");
-    });
-
-    it("newest button should have a link to newest listen page", async () => {
-      const timestamp = Math.round(
-        new Date("2024-09-14T03:16:16.161Z").getTime() / 1000
-      );
-
-      server.use(
-        http.post("/", async (path) => {
-          return HttpResponse.json({
-            ...props,
-            latestListenTs: timestamp,
-          });
-        })
-      );
-
-      renderWithProviders(
-        <Listens />,
-        {
-          currentUser,
-        },
-        {
-          wrapper: reactQueryWrapper,
-        }
-      );
-
-      await waitFor(() => {
-        // Wait for data to be successfully loaded
-        const state = queryClient.getQueryState(queryKey);
-        expect(state?.status === "success").toBeTruthy();
-      });
-
-      const newestButton = await screen.findByLabelText(
-        "Navigate to most recent listens"
-      );
-
-      expect(newestButton).toHaveAttribute("href", "/");
-      expect(newestButton).toHaveAttribute("aria-disabled", "false");
     });
   });
 });
