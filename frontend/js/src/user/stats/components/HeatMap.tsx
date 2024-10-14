@@ -25,7 +25,10 @@ export default function Heatmap(props: HeatMapProps) {
 
   const { data } = props;
   return (
-    <div className="stats-full-width-graph user-listen-heatmap">
+    <div
+      className="stats-full-width-graph user-listen-heatmap"
+      data-testid="heatmap"
+    >
       <ResponsiveHeatMap
         data={data}
         enableLabels={false}

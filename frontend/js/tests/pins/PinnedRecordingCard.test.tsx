@@ -14,11 +14,20 @@ import GlobalAppContext, {
 import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 import ListenCard from "../../src/common/listens/ListenCard";
+import { ReactQueryWrapper } from "../test-react-query";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
+function PinnedRecordingCardWithWrapper(props: PinnedRecordingCardProps) {
+  return (
+    <ReactQueryWrapper>
+      <PinnedRecordingCard {...props} />
+    </ReactQueryWrapper>
+  );
+}
 
 const user = {
   id: 1,
@@ -64,18 +73,17 @@ const props: PinnedRecordingCardProps = {
 
 describe("PinnedRecordingCard", () => {
   it("renders correctly", () => {
-    const wrapper = mount<PinnedRecordingCard>(
-      <PinnedRecordingCard {...props} />
-    );
+    const wrapper = mount(<PinnedRecordingCardWithWrapper {...props} />);
     expect(wrapper.find(ListenCard)).toHaveLength(1);
   });
 
   describe("determineIfCurrentlyPinned", () => {
     it("returns true when pinned_until > now", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
-        <PinnedRecordingCard {...props} />
+      const componentWrapper = mount(
+        <PinnedRecordingCardWithWrapper {...props} />
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       let isPlaying;
       await act(() => {
@@ -85,12 +93,13 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("returns false when pinned_until < now", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
-        <PinnedRecordingCard
+      const componentWrapper = mount(
+        <PinnedRecordingCardWithWrapper
           {...{ ...props, pinnedRecording: expiredPinnedRecording }}
         />
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
       let isPlaying;
       await act(() => {
         isPlaying = instance.determineIfCurrentlyPinned();
@@ -101,12 +110,13 @@ describe("PinnedRecordingCard", () => {
 
   describe("unpinRecording", () => {
     it("calls API, updates currentlyPinned in state", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...props} />
+          <PinnedRecordingCardWithWrapper {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "unpinRecording");
@@ -126,12 +136,15 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props, isCurrentUser: false }} />
+          <PinnedRecordingCardWithWrapper
+            {...{ ...props, isCurrentUser: false }}
+          />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "unpinRecording");
@@ -148,17 +161,18 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
             currentUser: { auth_token: undefined, name: "test" },
           }}
         >
-          <PinnedRecordingCard {...props} />
+          <PinnedRecordingCardWithWrapper {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "unpinRecording");
@@ -175,12 +189,13 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("doesn't update currentlyPinned in state if status code is not 200", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props }} />
+          <PinnedRecordingCardWithWrapper {...{ ...props }} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "unpinRecording");
@@ -197,12 +212,13 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props }} />
+          <PinnedRecordingCardWithWrapper {...{ ...props }} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
       instance.handleError = jest.fn();
 
       const error = new Error("error");
@@ -226,12 +242,13 @@ describe("PinnedRecordingCard", () => {
 
   describe("deletePin", () => {
     it("calls API and updates isDeleted and currentlyPinned in state", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props }} />
+          <PinnedRecordingCardWithWrapper {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "deletePin");
@@ -260,12 +277,15 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props, isCurrentUser: false }} />
+          <PinnedRecordingCardWithWrapper
+            {...{ ...props, isCurrentUser: false }}
+          />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "deletePin");
@@ -282,17 +302,18 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider
           value={{
             ...globalProps,
             currentUser: { auth_token: undefined, name: "test" },
           }}
         >
-          <PinnedRecordingCard {...props} />
+          <PinnedRecordingCardWithWrapper {...props} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "deletePin");
@@ -309,12 +330,13 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("doesn't update currentlyPinned in state if status code is not 200", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props }} />
+          <PinnedRecordingCardWithWrapper {...{ ...props }} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
 
       const { APIService } = instance.context;
       const spy = jest.spyOn(APIService, "deletePin");
@@ -331,12 +353,13 @@ describe("PinnedRecordingCard", () => {
     });
 
     it("calls handleError if error is returned", async () => {
-      const wrapper = mount<PinnedRecordingCard>(
+      const componentWrapper = mount(
         <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCard {...{ ...props }} />
+          <PinnedRecordingCardWithWrapper {...{ ...props }} />
         </GlobalAppContext.Provider>
       );
-      const instance = wrapper.instance();
+      const wrapper = componentWrapper.find(PinnedRecordingCard);
+      const instance = wrapper.instance() as PinnedRecordingCard;
       instance.handleError = jest.fn();
 
       const error = new Error("error");

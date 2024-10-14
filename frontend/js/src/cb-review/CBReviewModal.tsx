@@ -26,7 +26,8 @@ import Loader from "../components/Loader";
 import { ToastMsg } from "../notifications/Notifications";
 
 export type CBReviewModalProps = {
-  listen: Listen;
+  listen?: Listen;
+  entityToReview?: ReviewableEntity[];
 };
 
 iso.registerLocale(eng); // library requires language of the language list to be initiated
@@ -39,13 +40,15 @@ const MBBaseUrl = "https://metabrainz.org"; // only used for href
 // gets all iso-639-1 languages and codes for dropdown
 const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
-export default NiceModal.create(({ listen }: CBReviewModalProps) => {
+export default NiceModal.create((props: CBReviewModalProps) => {
+  const { listen, entityToReview: entityToReviewProps } = props;
   const modal = useModal();
   const navigate = useNavigate();
 
   const closeModal = React.useCallback(() => {
     modal.hide();
     document?.body?.classList?.remove("modal-open");
+    document?.body?.getElementsByClassName("modal-backdrop")[0]?.remove();
     setTimeout(modal.remove, 200);
   }, [modal]);
 
@@ -160,6 +163,9 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
 
   React.useEffect(() => {
     /* determine entity functions */
+    if (!listen) {
+      return;
+    }
     const getAllEntities = async () => {
       if (!listen) {
         return;
@@ -234,6 +240,32 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
       handleError(err, "Please try again");
     }
   }, [listen, getGroupMBIDFromRelease, getRecordingMBIDFromTrack, handleError]);
+
+  React.useEffect(() => {
+    if (!entityToReviewProps || !entityToReviewProps.length) {
+      return;
+    }
+
+    const recordingEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "recording"
+    );
+
+    const releaseGroupEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "release_group"
+    );
+
+    const artistEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "artist"
+    );
+
+    setRecordingEntity(recordingEntityToSet!);
+    setReleaseGroupEntity(releaseGroupEntityToSet!);
+    setArtistEntity(artistEntityToSet!);
+
+    setEntityToReview(
+      recordingEntityToSet! || releaseGroupEntityToSet! || artistEntityToSet!
+    );
+  }, [entityToReviewProps]);
 
   /* input handling */
   const handleLanguageChange = React.useCallback(
@@ -433,7 +465,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     return (
       <div>
         {/* Show warning when recordingEntity is not available */}
-        {!recordingEntity && (
+        {!recordingEntity && listen && (
           <div className="alert alert-danger">
             We could not find a recording for <b>{getTrackName(listen)}</b>.
           </div>

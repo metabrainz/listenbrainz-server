@@ -257,7 +257,7 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
   return (
     <>
       {artists.map((artist) => (
-        <>
+        <React.Fragment key={artist.artist_mbid}>
           <Link
             to={`/artist/${artist.artist_mbid}/`}
             title={artist.artist_credit_name}
@@ -265,7 +265,7 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
             {artist.artist_credit_name}
           </Link>
           {artist.join_phrase}
-        </>
+        </React.Fragment>
       ))}
     </>
   );
@@ -839,11 +839,38 @@ const getAlbumArtFromSpotifyTrackID = async (
   return undefined;
 };
 
+const getAlbumArtFromListenMetadataKey = (
+  listen: BaseListenFormat,
+  spotifyUser?: SpotifyUser
+): string | undefined => {
+  if (
+    SpotifyPlayer.isListenFromThisService(listen) &&
+    SpotifyPlayer.hasPermissions(spotifyUser)
+  ) {
+    return `spotify:${SpotifyPlayer.getSpotifyTrackIDFromListen(listen)}`;
+  }
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    return `youtube:${YoutubePlayer.getVideoIDFromListen(listen)}`;
+  }
+  const userSubmittedReleaseMBID =
+    listen.track_metadata?.release_mbid ??
+    listen.track_metadata?.additional_info?.release_mbid;
+  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+
+  return `ca:${userSubmittedReleaseMBID ?? ""}:${caaId ?? ""}:${
+    caaReleaseMbid ?? ""
+  }`;
+};
+
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser,
   APIService?: APIServiceClass
 ): Promise<string | undefined> => {
+  if (!listen) {
+    return undefined;
+  }
   // if spotifyListen
   if (
     SpotifyPlayer.isListenFromThisService(listen) &&
@@ -1002,20 +1029,27 @@ export function getReviewEventContent(
   const userName =
     _.get(eventMetadata, "user_name") ??
     _.get(eventMetadata, "user.display_name");
+  const publishedOn = _.get(eventMetadata, "published_on");
   return (
     <div className="review">
       {!isUndefined(eventMetadata.rating) && isFinite(eventMetadata.rating) && (
-        <div className="rating-container">
-          <b>Rating: </b>
-          <Rating
-            readonly
-            onClick={() => {}}
-            className="rating-stars"
-            ratingValue={eventMetadata.rating}
-            transition
-            size={20}
-            iconsCount={5}
-          />
+        <div className="review-card-header">
+          <div>
+            <b>Rating: </b>
+            <Rating
+              readonly
+              onClick={() => {}}
+              className="rating-stars"
+              ratingValue={eventMetadata.rating}
+              transition
+              size={20}
+              iconsCount={5}
+            />
+          </div>
+          <span className="review-card-header-author">
+            {publishedOn &&
+              ` on ${preciseTimestamp(publishedOn, "includeYear")}`}
+          </span>
         </div>
       )}
       <div className="text">
@@ -1026,13 +1060,13 @@ export function getReviewEventContent(
           {additionalContent}
         </ReactMarkdown>
       </div>
-      <div className="author read-more">
+      <div className="review-card-footer">
         by {userName}
         <a
           href={`https://critiquebrainz.org/review/${reviewID}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="pull-right"
+          className="pull-right read-more-link"
         >
           Read on CritiqueBrainz
         </a>
@@ -1100,6 +1134,7 @@ export {
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
   getAlbumArtFromReleaseGroupMBID,
+  getAlbumArtFromListenMetadataKey,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,
