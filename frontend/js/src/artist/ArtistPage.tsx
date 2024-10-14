@@ -148,13 +148,12 @@ export default function ArtistPage(): JSX.Element {
 
   const typeOrder = [
     "Album",
-    "Single",
     "EP",
+    "Single",
     "Live",
     "Compilation",
     "Remix",
     "Broadcast",
-    "Other",
   ];
   const last = Object.keys(rgGroups).length;
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
