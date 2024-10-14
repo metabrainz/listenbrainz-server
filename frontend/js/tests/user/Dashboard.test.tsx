@@ -139,8 +139,7 @@ describe("Listens page", () => {
     expect(screen.getAllByTestId("listen")).toHaveLength(26);
   });
 
-  // eslint-disable-next-line jest/no-disabled-tests
-  xit("fetches the user's listen count", async () => {
+  it("fetches the user's listen count", async () => {
     renderWithProviders(
       <Listens />,
       {
