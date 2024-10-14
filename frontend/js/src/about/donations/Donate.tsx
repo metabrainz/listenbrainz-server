@@ -41,9 +41,12 @@ export default function Donate() {
               <h2>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-success btn-lg btn-rounded"
                   onClick={() =>
-                    window.open("https://metabrainz.org/donate", "_blank")
+                    window.open(
+                      "https://metabrainz.org/donate?amount=5",
+                      "_blank"
+                    )
                   }
                 >
                   Donate $5
@@ -78,9 +81,12 @@ export default function Donate() {
               <h2>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-success btn-lg btn-rounded"
                   onClick={() =>
-                    window.open("https://metabrainz.org/donate", "_blank")
+                    window.open(
+                      "https://metabrainz.org/donate?amount=20",
+                      "_blank"
+                    )
                   }
                 >
                   Donate $20
@@ -123,9 +129,12 @@ export default function Donate() {
               <h2>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-success btn-lg btn-rounded"
                   onClick={() =>
-                    window.open("https://metabrainz.org/donate", "_blank")
+                    window.open(
+                      "https://metabrainz.org/donate?amount=50",
+                      "_blank"
+                    )
                   }
                 >
                   Donate $50
