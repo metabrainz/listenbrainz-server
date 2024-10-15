@@ -59,6 +59,8 @@ services:
       - lb_db
     environment:
       PYTHON_TESTS_RUNNING: 1
+    volumes:
+      - ..:/code/listenbrainz:z
 
   frontend_tester:
     build:
