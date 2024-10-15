@@ -59,4 +59,6 @@ CREATE UNIQUE INDEX background_tasks_user_id_task_type_uniq_idx ON background_ta
 
 CREATE INDEX user_data_export_user_id_idx ON user_data_export (user_id);
 
+CREATE UNIQUE INDEX user_data_export_deduplicate_waiting_idx ON user_data_export (user_id, type) WHERE status = 'waiting' OR status = 'in_progress';
+
 COMMIT;

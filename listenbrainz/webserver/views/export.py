@@ -23,7 +23,9 @@ def create_export_task():
         query = """
             INSERT INTO user_data_export (user_id, type, status, progress)
                  VALUES (:user_id, :type, 'waiting', :progress)
-            ON CONFLICT (user_id, type) WHERE status = 'waiting' DO NOTHING
+            ON CONFLICT (user_id, type)
+                  WHERE status = 'waiting' OR status = 'in_progress'
+             DO NOTHING
               RETURNING id
         """
         result = db_conn.execute(text(query), {
