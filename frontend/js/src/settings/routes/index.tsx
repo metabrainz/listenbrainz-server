@@ -116,6 +116,13 @@ const getSettingsRoutes = (): RouteObject[] => {
             return { Component: DeleteAccount.default };
           },
         },
+        {
+          path: "donation/",
+          lazy: async () => {
+            const FlairSettings = await import("../donation-flairs/Flairs");
+            return { Component: FlairSettings.default };
+          },
+        },
       ],
     },
   ];
