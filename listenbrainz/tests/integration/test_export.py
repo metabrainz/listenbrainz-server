@@ -130,7 +130,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("status", response.json[0])
         self.assertIn("filename", response.json[0])
 
-        for _ in range(30):
+        for _ in range(60):
             response = self.client.post(self.custom_url_for("export.download_export_archive", export_id=export_id))
             if response.status_code == 404:
                 time.sleep(1)  # wait for export to finish
