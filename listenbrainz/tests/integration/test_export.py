@@ -139,8 +139,11 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 continue
             else:
                 break
-        for task in db_conn.execute(text("SELECT * FROM user_data_export")).all():
-            print(task)
+
+        with self.app.app_context():
+            for task in db_conn.execute(text("SELECT * FROM user_data_export")).all():
+                print(task)
+
         self.assert200(response)
         with zipfile.ZipFile(BytesIO(response.data), "r") as export_zip:
             export_zip.printdir()
