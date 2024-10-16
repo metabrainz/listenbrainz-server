@@ -289,4 +289,4 @@ REJECT_LISTENS_WITHOUT_USER_EMAIL = {{template "KEY_JSON" "reject_listens_withou
 REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without_email"}}
 
 # base directory for user data exports
-USER_DATA_EXPORT_BASE_DIR = {{template "KEY" "user_data_export_base_dir"}}
+USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
