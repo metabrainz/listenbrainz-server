@@ -127,7 +127,7 @@ def export_feedback_for_user(export_id, db_conn, tmp_dir: str, user_id: int) -> 
                   , 'score'
                   , score
                   , 'created'
-                  , extract(epoch from created)
+                  , extract(epoch from created)::integer
                )::text as line
           FROM recording_feedback
          WHERE user_id = :user_id
@@ -152,9 +152,9 @@ def export_pinned_recordings_for_user(export_id, db_conn, tmp_dir: str, user_id:
                   , 'blurb_content'
                   , blurb_content
                   , 'pinned_until'
-                  , extract(epoch from pinned_until)
+                  , extract(epoch from pinned_until)::integer
                   , 'created'
-                  , extract(epoch from created)
+                  , extract(epoch from created)::integer
                )::text as line
           FROM pinned_recording
          WHERE user_id = :user_id
@@ -254,6 +254,7 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
     except Exception as e:
         current_app.logger.error("Failed to notify user: %s", e)
 
+
 def notify_user_email(db_conn, user_id):
     user = db_user.get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
@@ -261,7 +262,7 @@ def notify_user_email(db_conn, user_id):
     url = current_app.config['SERVER_ROOT_URL'] + '/settings/export/'
     content = render_template('emails/export_completed.txt', username=user["musicbrainz_id"], url=url)
     send_mail(
-        subject='ListenBrainz Spotify Importer Error',
+        subject='ListenBrainz User Data Export',
         text=content,
         recipients=[user["email"]],
         from_name='ListenBrainz',
