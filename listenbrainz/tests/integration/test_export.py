@@ -5,6 +5,7 @@ import zipfile
 from io import BytesIO
 
 from brainzutils import cache
+from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
@@ -14,6 +15,7 @@ from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
+from listenbrainz.webserver import db_conn
 
 
 class ExportTestCase(ListenAPIIntegrationTestCase):
@@ -137,7 +139,8 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 continue
             else:
                 break
-
+        for task in db_conn.execute(text("SELECT * FROM user_data_export")).all():
+            print(task)
         self.assert200(response)
         with zipfile.ZipFile(BytesIO(response.data), "r") as export_zip:
             export_zip.printdir()
