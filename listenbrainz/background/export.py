@@ -197,6 +197,7 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
 
     archive_name =  f"listenbrainz_{user.musicbrainz_id}_{int(datetime.now().timestamp())}.zip"
     dest_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], archive_name)
+    os.makedirs(current_app.config["USER_DATA_EXPORT_BASE_DIR"], exist_ok=True)
 
     db_conn.execute(text("""
          UPDATE user_data_export
