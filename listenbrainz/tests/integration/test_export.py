@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import zipfile
 from io import BytesIO
@@ -26,6 +27,8 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
     def tearDown(self):
         with self.app.app_context():
             self.redis.flushall()
+        for archive in os.listdir(self.app.config["USER_DATA_EXPORT_BASE_DIR"]):
+            os.remove(os.path.join(self.app.config["USER_DATA_EXPORT_BASE_DIR"], archive))
         super(ExportTestCase, self).tearDown()
 
     def send_listens(self):
