@@ -183,3 +183,15 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 self.assertEqual(expected.get("recording_msid"), received.get("recording_msid"))
                 self.assertEqual(expected.get("recording_mbid"), received.get("recording_mbid"))
                 self.assertEqual(expected["score"], received["score"])
+
+        response = self.client.post(self.custom_url_for('export.delete_export_archive', export_id=export_id))
+        self.assert200(response)
+
+        response = self.client.get(self.custom_url_for('export.get_export_task', export_id=export_id))
+        self.assert404(response)
+
+        response = self.client.post(self.custom_url_for("export.download_export_archive", export_id=export_id))
+        self.assert404(response)
+
+        self.assertEqual(len(os.listdir(self.app.config["USER_DATA_EXPORT_BASE_DIR"])), 0)
+
