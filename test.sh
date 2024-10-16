@@ -241,6 +241,7 @@ if [ $DB_RUNNING -eq 1 ] ; then
     unit_setup
     echo "Running tests"
     docker_compose_run listenbrainz pytest "$@"
+    docker_compose_run logs background_tasks
     RET=$?
     unit_dcdown
     exit $RET
