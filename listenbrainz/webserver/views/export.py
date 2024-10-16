@@ -115,3 +115,22 @@ def download_export_archive(export_id):
 
     file_path = os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename))
     return send_file(file_path, mimetype="application/zip", as_attachment=True)
+
+
+
+@export_bp.route("/delete/<export_id>/", methods=["POST"])
+@api_login_required
+@web_listenstore_needed
+def delete_export_archive(export_id):
+    """ Delete the specified export archive """
+    result = db_conn.execute(
+        text("DELETE FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id RETURNING filename"),
+        {"user_id": current_user.id, "export_id": export_id}
+    )
+    row = result.first()
+    if row is not None:
+        os.remove(os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename)))
+        db_conn.commit()
+        return jsonify({"success": True})
+    else:
+        return APINotFound("Export not found")
