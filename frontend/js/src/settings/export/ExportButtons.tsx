@@ -4,7 +4,13 @@ import { toast } from "react-toastify";
 import { startCase } from "lodash";
 import { format } from "date-fns";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronCircleRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRightLong,
+  faCancel,
+  faChevronCircleRight,
+  faDownload,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
 
@@ -35,57 +41,62 @@ function renderExport(ex: Export) {
           <FontAwesomeIcon icon={faChevronCircleRight} size="sm" /> Details
         </summary>
         <dl className="row">
-          <dt className="col-sm-4">Requested on</dt>
-          <dd className="col-sm-8">{format(ex.created, "PPp")}</dd>
-          <dt className="col-sm-4">Status</dt>
-          <dd className="col-sm-8">{startCase(ex.status)}</dd>
-          <dt className="col-sm-4">Type</dt>
-          <dd className="col-sm-8">{startCase(ex.type)}</dd>
-          <dt className="col-sm-4">Export ID</dt>
-          <dd className="col-sm-8">{ex.export_id}</dd>
+          <dt className="col-xs-4">Progress</dt>
+          <dd className="col-xs-8">{ex.progress}</dd>
+          <dt className="col-xs-4">Type</dt>
+          <dd className="col-xs-8">{startCase(ex.type)}</dd>
+          <dt className="col-xs-4">Requested on</dt>
+          <dd className="col-xs-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-xs-4">Export #</dt>
+          <dd className="col-xs-8">{ex.export_id}</dd>
         </dl>
       </details>
     </p>
   );
   if (ex.status === ExportStatus.complete) {
     return (
-      <div
-        className="mt-15 alert alert-success"
-        role="alert"
-        style={{ maxWidth: "fit-content" }}
-      >
+      <div className="mt-15 alert alert-success" role="alert">
         <h4 className="alert-heading">Export ready to download</h4>
-        <p>
-          Your zip file is ready to download:
-          <br />
-          <form action={`/export/download/${ex.export_id}/`} method="post">
-            <button
-              type="submit"
-              name="download_export"
-              className="btn btn-link"
-            >
-              Download {ex.filename ?? `${ex.export_id}.zip`}
-            </button>
-          </form>
-        </p>
+        <form
+          action={`/export/download/${ex.export_id}/`}
+          method="post"
+          className="mb-10"
+        >
+          <button
+            type="submit"
+            name="download_export"
+            className="btn btn-success"
+          >
+            <FontAwesomeIcon icon={faDownload} />
+            &nbsp;Download {ex.filename ?? `${ex.export_id}.zip`}
+          </button>
+        </form>
         <p>
           <b>
             Note: the file will be deleted automatically after 30 days
-            {ex.available_until &&
-              ` (${format(ex.available_until, "PPPPpppp")})`}
+            <br />
+            {ex.available_until && (
+              <small>({format(ex.available_until, "PPPPpppp")})</small>
+            )}
           </b>
         </p>
+        <form
+          action={`/export/delete/${ex.export_id}/`}
+          method="post"
+          className="mt-10 mb-10"
+        >
+          <button type="submit" name="delete_export" className="btn btn-danger">
+            <FontAwesomeIcon icon={faTrash} />
+            &nbsp;Delete export
+          </button>
+        </form>
         {extraInfo}
       </div>
     );
   }
   if (ex.status === ExportStatus.failed) {
     return (
-      <div
-        className="mt-15 alert alert-danger"
-        role="alert"
-        style={{ maxWidth: "fit-content" }}
-      >
+      <div className="mt-15 alert alert-danger" role="alert">
         <h4 className="alert-heading">Export failed</h4>
         <p>
           There was an error creating an export of your data.
@@ -112,19 +123,32 @@ function renderExport(ex: Export) {
     </div>
   ); */
   return (
-    <div
-      className="mt-15 alert alert-info"
-      role="alert"
-      style={{ maxWidth: "fit-content" }}
-    >
-      <h4 className="alert-heading">{ex.progress}</h4>
+    <div className="mt-15 alert alert-info" role="alert">
+      <h4 className="alert-heading">
+        Export in progress
+        <br />
+      </h4>
+      <p className="text-primary">
+        <FontAwesomeIcon icon={faArrowRightLong} />
+        &nbsp;{ex.progress}
+      </p>
       {/* {ex.status !== ExportStatus.waiting && progressBar} */}
       <p>
-        Once the export is prepared for you, you can come back to this page to
-        download the zip file.
+        Once your export is ready we&apos;ll send you an email, and you can
+        return to this page to download the zip file.
         <br />
-        You can close this page while your download is being prepared.
+        Feel free to close this page while we prepare your download.
       </p>
+      <form
+        action={`/export/delete/${ex.export_id}/`}
+        method="post"
+        className="mt-10 mb-10"
+      >
+        <button type="submit" name="cancel_export" className="btn btn-warning">
+          <FontAwesomeIcon icon={faCancel} />
+          &nbsp;Cancel export
+        </button>
+      </form>
       {extraInfo}
     </div>
   );
@@ -167,7 +191,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
   }, []);
 
   React.useEffect(() => {
-    // Fetch the list of exports in progress in background tasks or finished
+    // Fetch an export after requesting a new one
     async function fetchExport() {
       try {
         const response = await fetch(`/export/${exportId}/`, {
@@ -199,7 +223,11 @@ export default function ExportButtons({ listens = true, feedback = false }) {
   }, [exportId]);
 
   const hasAnExportInProgress =
-    exports.findIndex((exp) => exp.type === ExportType.allUserData) !== -1;
+    exports.findIndex(
+      (exp) =>
+        exp.type === ExportType.allUserData &&
+        exp.status !== ExportStatus.complete
+    ) !== -1;
 
   const createExport = React.useCallback(async () => {
     try {
@@ -230,7 +258,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
   }, [setExportId]);
 
   return (
-    <>
+    <section id="export-buttons">
       {listens && (
         <>
           <p>
@@ -269,6 +297,6 @@ export default function ExportButtons({ listens = true, feedback = false }) {
       <Loader isLoading={loading} style={{ margin: "0 1em" }} />
       {fetchedExport && renderExport(fetchedExport)}
       {exports && exports.map(renderExport)}
-    </>
+    </section>
   );
 }
