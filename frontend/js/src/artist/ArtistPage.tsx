@@ -265,6 +265,8 @@ export default function ArtistPage(): JSX.Element {
     );
   };
 
+  const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+
   return (
     <div id="entity-page" className="artist-page" role="main">
       <Helmet>
@@ -494,7 +496,7 @@ export default function ArtistPage(): JSX.Element {
           )}
         </div>
         <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
-          {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
+          {releaseGroupTypesNames.map(([type, rgGroup]) => (
             <div className="albums">
               <div className="listen-header">
                 <h3 className="header-with-line">{type}</h3>
@@ -511,15 +513,17 @@ export default function ArtistPage(): JSX.Element {
               </HorizontalScrollContainer>
             </div>
           ))}
-          <div className="read-more mb-10">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => setExpandDiscography((prevValue) => !prevValue)}
-            >
-              See {expandDiscography ? "less" : "full discography"}
-            </button>
-          </div>
+          {releaseGroupTypesNames.length >= 2 && (
+            <div className="read-more mb-10">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setExpandDiscography((prevValue) => !prevValue)}
+              >
+                See {expandDiscography ? "less" : "full discography"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
