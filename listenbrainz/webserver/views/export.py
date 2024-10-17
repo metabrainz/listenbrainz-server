@@ -133,4 +133,4 @@ def delete_export_archive(export_id):
         db_conn.commit()
         return jsonify({"success": True})
     else:
-        return APINotFound("Export not found")
+        raise APINotFound("Export not found")
