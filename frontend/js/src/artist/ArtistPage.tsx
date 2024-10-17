@@ -125,6 +125,9 @@ export default function ArtistPage(): JSX.Element {
   const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
     false
   );
+  const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
+    false
+  );
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -490,21 +493,34 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
-          <div className="albums">
-            <div className="listen-header">
-              <h3 className="header-with-line">{type}</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
+        <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
+          {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
+            <div className="albums">
+              <div className="listen-header">
+                <h3 className="header-with-line">{type}</h3>
+                <SortingButtons sort={sort} setSort={setSort} />
+              </div>
+              <HorizontalScrollContainer
+                className={`cover-art-container ${
+                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                    ? "single-row"
+                    : ""
+                }`}
+              >
+                {rgGroup.map(getReleaseCard)}
+              </HorizontalScrollContainer>
             </div>
-            <HorizontalScrollContainer
-              className={`cover-art-container ${
-                rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
-              }`}
+          ))}
+          <div className="read-more mb-10">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setExpandDiscography((prevValue) => !prevValue)}
             >
-              {rgGroup.map(getReleaseCard)}
-            </HorizontalScrollContainer>
+              {expandDiscography ? "See less" : "Full discography"}
+            </button>
           </div>
-        ))}
+        </div>
       </div>
 
       {similarArtists && similarArtists.artists.length > 0 ? (

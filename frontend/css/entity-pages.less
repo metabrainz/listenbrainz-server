@@ -162,21 +162,33 @@
         margin-top: 2em;
       }
     }
-    .albums {
-      width: 100%;
-      .cover-art-container {
-        display: grid;
-        grid-gap: 2em;
-        grid-auto-flow: column;
-        justify-items: center;
-        grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
-        grid-template-rows: repeat(2, 1fr);
-        &.single-row {
-          grid-template-rows: repeat(1, 1fr);
+    .discography {
+      max-height: 860px;
+      overflow: hidden;
+      position: relative; // For the .read-more button absolute positioning
+      &.expanded {
+        max-height: fit-content;
+        .read-more {
+          position: relative;
+          bottom: 0;
         }
-        .cover-art {
-          aspect-ratio: 1;
-          background: lightgrey;
+      }
+      .albums {
+        width: 100%;
+        .cover-art-container {
+          display: grid;
+          grid-gap: 2em;
+          grid-auto-flow: column;
+          justify-items: center;
+          grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
+          grid-template-rows: repeat(2, 1fr);
+          &.single-row {
+            grid-template-rows: repeat(1, 1fr);
+          }
+          .cover-art {
+            aspect-ratio: 1;
+            background: lightgrey;
+          }
         }
       }
     }
