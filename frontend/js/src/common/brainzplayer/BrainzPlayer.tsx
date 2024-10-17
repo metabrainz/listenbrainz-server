@@ -1004,6 +1004,9 @@ export default function BrainzPlayer() {
         currentDataSourceName={
           dataSourceRefs[currentDataSourceIndex]?.current?.name
         }
+        currentDataSourceIconColor={
+          dataSourceRefs[currentDataSourceIndex]?.current?.iconColor
+        }
         clearQueue={clearQueue}
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (

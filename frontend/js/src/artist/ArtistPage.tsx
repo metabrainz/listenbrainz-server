@@ -7,7 +7,7 @@ import {
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
+import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
 import { sanitize } from "dompurify";
 import {
   Link,
@@ -19,7 +19,7 @@ import {
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -39,11 +39,44 @@ import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import CBReviewModal from "../cb-review/CBReviewModal";
+import Pill from "../components/Pill";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+
+function SortingButtons({
+  sort,
+  setSort,
+}: {
+  sort: "release_date" | "total_listen_count";
+  setSort: (sort: "release_date" | "total_listen_count") => void;
+}): JSX.Element {
+  return (
+    <div className="flex" role="group" aria-label="Sort by">
+      <Pill
+        type="secondary"
+        active={sort === "release_date"}
+        onClick={() => setSort("release_date")}
+      >
+        <FontAwesomeIcon icon={faCalendar} />
+      </Pill>
+      <Pill
+        type="secondary"
+        active={sort === "total_listen_count"}
+        onClick={() => setSort("total_listen_count")}
+      >
+        <FontAwesomeIcon icon={faHeadphones} />
+      </Pill>
+    </div>
+  );
+}
+
+interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
+  secondary_types: string[];
+}
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroup[];
+  releaseGroups: ReleaseGroupWithSecondaryTypes[];
   similarArtists: {
     artists: SimilarArtist[];
     topReleaseGroupColor: ReleaseColor | undefined;
@@ -53,9 +86,10 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
+const COVER_ART_SINGLE_ROW_COUNT = 8;
+
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
-  const { APIService } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams() as { artistMBID: string };
   const { artistMBID } = params;
@@ -84,10 +118,47 @@ export default function ArtistPage(): JSX.Element {
     WikipediaExtract
   >();
 
-  const [albumsByThisArtist, alsoAppearsOn] = partition(
-    releaseGroups,
-    (rg) => rg.artists[0].artist_mbid === artist?.artist_mbid
+  const [sort, setSort] = React.useState<"release_date" | "total_listen_count">(
+    "release_date"
   );
+
+  const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
+    false
+  );
+
+  const rgGroups = groupBy(
+    releaseGroups,
+    (rg) =>
+      (rg.type ?? "Other") +
+      (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
+  );
+
+  const sortReleaseGroups = (
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypes[]
+  ) =>
+    orderBy(
+      releaseGroupsInput,
+      [
+        sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
+        sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
+        "name",
+      ],
+      ["desc", "desc", "asc"]
+    );
+
+  const typeOrder = ["Album", "Single", "EP", "Broadcast", "Other"];
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
+    (type) => typeOrder.indexOf(type.split(" + ")[0]),
+    (type) => type.split(" + ")[1] ?? "",
+  ]);
+
+  const groupedReleaseGroups: Record<
+    string,
+    ReleaseGroupWithSecondaryTypes[]
+  > = {};
+  sortedRgGroupsKeys.forEach((type) => {
+    groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
+  });
 
   React.useEffect(() => {
     async function fetchReviews() {
@@ -308,7 +379,7 @@ export default function ArtistPage(): JSX.Element {
         />
       </div>
       <div className="entity-page-content">
-        <div className="tracks">
+        <div className={`tracks ${expandPopularTracks ? "expanded" : ""}`}>
           <div className="header">
             <h3 className="header-with-line">
               Popular tracks
@@ -353,11 +424,15 @@ export default function ArtistPage(): JSX.Element {
               />
             );
           })}
-          {/* <div className="read-more">
-            <button type="button" className="btn btn-outline">
-              See more…
+          <div className="read-more">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setExpandPopularTracks((prevValue) => !prevValue)}
+            >
+              See {expandPopularTracks ? "less" : "more"}
             </button>
-          </div> */}
+          </div>
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
@@ -407,20 +482,21 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="albums full-width scroll-start">
-          <h3 className="header-with-line">Albums</h3>
-          <div className="cover-art-container dragscroll">
-            {albumsByThisArtist.map(getReleaseCard)}
-          </div>
-        </div>
-        {Boolean(alsoAppearsOn?.length) && (
-          <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Also appears on</h3>
-            <div className="cover-art-container dragscroll">
-              {alsoAppearsOn.map(getReleaseCard)}
+        {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
+          <div className="albums">
+            <div className="listen-header">
+              <h3 className="header-with-line">{type}</h3>
+              <SortingButtons sort={sort} setSort={setSort} />
             </div>
+            <HorizontalScrollContainer
+              className={`cover-art-container ${
+                rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
+              }`}
+            >
+              {rgGroup.map(getReleaseCard)}
+            </HorizontalScrollContainer>
           </div>
-        )}
+        ))}
       </div>
 
       {similarArtists && similarArtists.artists.length > 0 ? (

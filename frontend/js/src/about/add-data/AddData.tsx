@@ -255,7 +255,7 @@ export default function AddData() {
               OngakuKiroku
             </a>
           </em>
-          , a ListenBrainz scrobbler for Swinsian and Music.app on macOS devices
+          , a ListenBrainz submitter for Swinsian and Music.app on macOS devices
         </li>
         <li>
           <em>
@@ -267,9 +267,16 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://scrobblerad.io/">ScrobbleRadio</a>
+          </em>
+          , a streaming radio player and listen submitter for a curated list of
+          global radio stations
+        </li>
+        <li>
+          <em>
             <a href="https://www.smashbits.nl/smashtunes/">SmashTunes</a>
           </em>
-          , a Mac menu bar utility for displaying the current track. Submits
+          , a Mac menu bar utility for displaying the current track, submits
           Apple Music and Spotify listens
         </li>
       </ul>
@@ -322,6 +329,13 @@ export default function AddData() {
 
       <h4>Scripts</h4>
       <ul>
+        <li>
+          <em>
+            <a href="https://github.com/UnviableFriend/phooks">phooks</a>
+          </em>
+          , a python script that submits local Plex listens using web hooks and
+          file lookups
+        </li>
         <li>
           <em>
             <a href="https://github.com/defvs/ytm-extractor">ytm-extractor</a>
