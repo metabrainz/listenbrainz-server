@@ -24,16 +24,13 @@ export default function Donate() {
         <div id="donations-tiers">
           <div className="tier card text-center">
             <div>
-              <h2>
+              <h2 style={{ marginTop: 0 }}>
                 <b>Free for everyone</b>
               </h2>
-            </div>
-            <div>
               <FontAwesomeIcon icon={faCheck} color={COLOR_LB_GREEN} />
               <b style={{ marginLeft: "0.5em" }}>
                 All website features, for free, forever
               </b>
-              <br />
             </div>
           </div>
           <div className="tier card">
