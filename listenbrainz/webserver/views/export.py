@@ -26,7 +26,7 @@ def create_export_task():
             ON CONFLICT (user_id, type)
                   WHERE status = 'waiting' OR status = 'in_progress'
              DO NOTHING
-              RETURNING id
+              RETURNING id, type, available_until, created, progress, status, filename
         """
         result = db_conn.execute(text(query), {
             "user_id": current_user.id,
@@ -45,7 +45,15 @@ def create_export_task():
             task = result.first()
             if task is not None:
                 db_conn.commit()
-                return jsonify({"success": True, "export_id": export.id})
+                return jsonify({
+                    "export_id": export.id,
+                    "type": export.type,
+                    "available_until": export.available_until.isoformat() if export.available_until is not None else None,
+                    "created": export.created.isoformat(),
+                    "progress": export.progress,
+                    "status": export.status,
+                    "filename": export.filename,
+                })
 
         # task already exists in queue, rollback new entry
         db_conn.rollback()
@@ -124,13 +132,17 @@ def download_export_archive(export_id):
 def delete_export_archive(export_id):
     """ Delete the specified export archive """
     result = db_conn.execute(
-        text("DELETE FROM user_data_export WHERE user_id = :user_id AND status = 'completed' AND id = :export_id RETURNING filename"),
+        text("DELETE FROM user_data_export WHERE user_id = :user_id AND id = :export_id RETURNING filename"),
         {"user_id": current_user.id, "export_id": export_id}
     )
     row = result.first()
     if row is not None:
-        os.remove(os.path.join(current_app.config["USER_DATA_EXPORT_BASE_DIR"], str(row.filename)))
+        db_conn.execute(
+            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'export_id')::int = :export_id"),
+            {"user_id": current_user.id, "export_id": export_id}
+        )
         db_conn.commit()
+        # file is deleted from disk by cronjob
         return jsonify({"success": True})
     else:
         raise APINotFound("Export not found")
