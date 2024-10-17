@@ -7,6 +7,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz import webserver
+from listenbrainz.background import export
 from listenbrainz.db import timescale as ts, do_not_recommend
 
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data as ts_recalculate_all_user_data, \
@@ -362,3 +363,13 @@ def refresh_top_manual_mappings():
         app.logger.info("Starting process to refresh top manual mappings")
         ts_refresh_top_manual_mappings()
         app.logger.info("Completed process to refresh top manual mappings")
+
+
+@cli.command()
+def delete_old_user_data_exports():
+    """ Delete old and expired user data exports """
+    app = create_app()
+    with app.app_context():
+        app.logger.info("Deleting old and expired user data exports")
+        export.cleanup_old_exports(webserver.db_conn)
+        app.logger.info("Completed deleting old and expired user data exports")

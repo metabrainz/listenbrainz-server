@@ -43,10 +43,23 @@ else
     DOCKER_COMPOSE_CMD="docker-compose"
 fi
 
+if [[ -f .env ]]; then
+    . .env
+    if [ -z $LB_DOCKER_USER ]; then
+        echo LB_DOCKER_USER=$(id -u) >> .env
+    fi
+    if [ -z $LB_DOCKER_GROUP ]; then
+        echo LB_DOCKER_GROUP=$(id -g) >> .env
+    fi
+else
+    echo LB_DOCKER_USER=$(id -u) >> .env
+    echo LB_DOCKER_GROUP=$(id -g) >> .env
+fi
 
 function invoke_docker_compose {
     $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
+                   --env-file .env \
                    "$@"
 }
 

@@ -3,15 +3,12 @@ import spotipy
 
 import listenbrainz.db.user as db_user
 import time
-import orjson
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService, OAUTH_TOKEN_URL
-from listenbrainz.listen import Listen
 from listenbrainz.tests.integration import IntegrationTestCase
 from unittest.mock import patch
-from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db import external_service_oauth as db_oauth, listens_importer
 
 
@@ -176,146 +173,3 @@ class SettingsViewsTestCase(IntegrationTestCase):
         response = self.client.post(self.custom_url_for('settings.refresh_service_token', service_name='spotify'))
 
         self.assertEqual(response.json, {'code': 403, 'error': 'User has revoked authorization to Spotify'})
-
-    @patch('listenbrainz.listenstore.timescale_listenstore.TimescaleListenStore.fetch_listens')
-    def test_export_streaming(self, mock_fetch_listens):
-        self.temporary_login(self.user['login_id'])
-
-        # Three example listens, with only basic data for the purpose of this test.
-        # In each listen, one of {release_artist, recording_msid}
-        # is missing.
-        listens = [
-            Listen(
-                timestamp=1539509881,
-                recording_msid='6c617681-281e-4dae-af59-8e00f93c4376',
-                data={
-                    'artist_name': 'Massive Attack',
-                    'track_name': 'The Spoils',
-                    'additional_info': {},
-                },
-            ),
-            Listen(
-                timestamp=1539441702,
-                recording_msid='7ad53fd7-5b40-4e13-b680-52716fb86d5f',
-                data={
-                    'artist_name': 'Snow Patrol',
-                    'track_name': 'Lifening',
-                    'additional_info': {},
-                },
-            ),
-            Listen(
-                timestamp=1539441531,
-                data={
-                    'artist_name': 'Muse',
-                    'track_name': 'Drones',
-                    'additional_info': {},
-                },
-            ),
-        ]
-
-        # We expect three calls to fetch_listens, and we return two, one, and
-        # zero listens in the batch. This tests that we fetch all batches.
-        mock_fetch_listens.side_effect = [(listens[0:2], 0, 0), (listens[2:3], 0, 0), ([], 0, 0)]
-
-        r = self.client.post(self.custom_url_for('settings.index', path='export'))
-        self.assert200(r)
-
-        # r.json returns None, so we decode the response manually.
-        results = orjson.loads(r.data)
-
-        self.assertDictEqual(results[0], {
-            'inserted_at': 0,
-            'listened_at': 1539509881,
-            'recording_msid': '6c617681-281e-4dae-af59-8e00f93c4376',
-            'user_name': None,
-            'track_metadata': {
-                'artist_name': 'Massive Attack',
-                'track_name': 'The Spoils',
-                'additional_info': {},
-            },
-        })
-        self.assertDictEqual(results[1], {
-            'inserted_at': 0,
-            'listened_at': 1539441702,
-            'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
-            'user_name': None,
-            'track_metadata': {
-                'artist_name': 'Snow Patrol',
-                'track_name': 'Lifening',
-                'additional_info': {},
-            },
-        })
-        self.assertDictEqual(results[2], {
-            'inserted_at': 0,
-            'listened_at': 1539441531,
-            'recording_msid': None,
-            'user_name': None,
-            'track_metadata': {
-                'artist_name': 'Muse',
-                'track_name': 'Drones',
-                'additional_info': {},
-            },
-        })
-
-    @patch('listenbrainz.db.feedback.get_feedback_for_user')
-    def test_export_feedback_streaming(self, mock_fetch_feedback):
-        self.temporary_login(self.user['login_id'])
-
-        # Three example feedback, with only basic data for the purpose of this test.
-        feedback = [
-            Feedback(
-                recording_msid='6c617681-281e-4dae-af59-8e00f93c4376',
-                score=1,
-                user_id=1,
-            ),
-            Feedback(
-                recording_msid='7ad53fd7-5b40-4e13-b680-52716fb86d5f',
-                score=1,
-                user_id=1,
-            ),
-            Feedback(
-                recording_msid='7816411a-2cc6-4e43-b7a1-60ad093c2c31',
-                score=-1,
-                user_id=1,
-            ),
-        ]
-
-        # We expect three calls to get_feedback_for_user, and we return two, one, and
-        # zero feedback in the batch. This tests that we fetch all batches.
-        mock_fetch_feedback.side_effect = [feedback[0:2], feedback[2:3], []]
-
-        r = self.client.post(self.custom_url_for('settings.index', path='export-feedback'))
-        self.assert200(r)
-
-        # r.json returns None, so we decode the response manually.
-        results = orjson.loads(r.data)
-
-        self.assertDictEqual(results[0], {
-            'recording_mbid': None,
-            'recording_msid': '6c617681-281e-4dae-af59-8e00f93c4376',
-            'score': 1,
-            'user_id': None,
-            'created': None,
-            'track_metadata': None,
-        })
-        self.assertDictEqual(results[1], {
-            'recording_mbid': None,
-            'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
-            'score': 1,
-            'user_id': None,
-            'created': None,
-            'track_metadata': None,
-        })
-        self.assertDictEqual(results[2], {
-            'recording_mbid': None,
-            'recording_msid': '7816411a-2cc6-4e43-b7a1-60ad093c2c31',
-            'score': -1,
-            'user_id': None,
-            'created': None,
-            'track_metadata': None,
-        })
-
-    def test_export_feedback_streaming_not_logged_in(self):
-        export_feedback_url = self.custom_url_for('settings.index', path='export-feedback')
-        response = self.client.post(export_feedback_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=export_feedback_url))
