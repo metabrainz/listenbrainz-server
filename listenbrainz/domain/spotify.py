@@ -194,8 +194,3 @@ class SpotifyService(ImporterService):
             user['latest_listened_at_iso'] = date_to_iso(user['latest_listened_at'])
             user['last_updated_iso'] = date_to_iso(user['last_updated'])
         return user
-
-    def get_active_users_to_process(self):
-        """ Returns a list of Spotify user instances that need their Spotify listens imported.
-        """
-        return spotify.get_active_users_to_process(db_conn)

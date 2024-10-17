@@ -1,6 +1,8 @@
 import datetime
 from typing import Optional, Union
 
+from sqlalchemy import text
+
 from data.model.external_service import ExternalServiceType
 from listenbrainz import utils
 import sqlalchemy
@@ -76,3 +78,34 @@ def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) 
         })
     row = result.fetchone()
     return row.latest_listened_at if row else None
+
+
+def get_active_users_to_process(db_conn, service, include_error=False) -> list[dict]:
+    """ Returns a list of users whose listens should be imported from the external service.
+    """
+    filters = ["external_service_oauth.service = :service"]
+    if include_error:
+        filters.append("error_message IS NULL")
+    filter_str = " AND ".join(filters)
+
+    result = db_conn.execute(text(f"""
+        SELECT external_service_oauth.user_id
+             , "user".musicbrainz_id
+             , "user".musicbrainz_row_id
+             , access_token
+             , refresh_token
+             , listens_importer.last_updated
+             , token_expires
+             , scopes
+             , latest_listened_at
+             , external_service_oauth.external_user_id
+             , error_message
+          FROM external_service_oauth
+          JOIN "user"
+            ON "user".id = external_service_oauth.user_id
+          JOIN listens_importer
+            ON listens_importer.external_service_oauth_id = external_service_oauth.id
+         WHERE {filter_str}
+      ORDER BY latest_listened_at DESC NULLS LAST
+    """), {"service": service.value})
+    return [row for row in result.mappings()]

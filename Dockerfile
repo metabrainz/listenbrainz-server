@@ -153,6 +153,12 @@ COPY ./docker/services/spotify_reader/spotify_reader.service /etc/service/spotif
 COPY ./docker/services/spotify_reader/spotify_reader.finish /etc/service/spotify_reader/finish
 RUN touch /etc/service/spotify_reader/down
 
+# Last.fm importer
+COPY ./docker/services/lastfm_importer/consul-template-lastfm-importer.conf /etc/consul-template-lastfm-importer.conf
+COPY ./docker/services/lastfm_importer/lastfm_importer.service /etc/service/lastfm_importer/run
+COPY ./docker/services/lastfm_importer/lastfm_importer.finish /etc/service/lastfm_importer/finish
+RUN touch /etc/service/lastfm_importer/down
+
 # Timescale writer
 COPY ./docker/services/timescale_writer/consul-template-timescale-writer.conf /etc/consul-template-timescale-writer.conf
 COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/timescale_writer/run
