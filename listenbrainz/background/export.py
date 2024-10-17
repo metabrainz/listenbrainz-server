@@ -241,14 +241,18 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
 
     created = datetime.now()
     available_until = created + USER_DATA_EXPORT_AVAILABILITY
-    db_conn.execute(text("""
+    result = db_conn.execute(text("""
         UPDATE user_data_export
            SET progress = :progress
              , available_until = :available_until
              , status = 'completed'
          WHERE id = :export_id
+     RETURNING id
     """), {"export_id": export_id, "available_until": available_until, "progress": "Export completed"})
     db_conn.commit()
+
+    if result.first() is None:
+        return
 
     try:
         notify_user_email(db_conn, user_id)

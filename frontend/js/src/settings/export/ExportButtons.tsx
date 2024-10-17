@@ -33,7 +33,10 @@ type Export = {
   status: ExportStatus;
 };
 
-function renderExport(ex: Export) {
+function renderExport(
+  ex: Export,
+  deleteExport: (event: React.SyntheticEvent, exportToDeleteId: number) => void
+) {
   const extraInfo = (
     <p>
       <details>
@@ -81,8 +84,7 @@ function renderExport(ex: Export) {
           </b>
         </p>
         <form
-          action={`/export/delete/${ex.export_id}/`}
-          method="post"
+          onSubmit={(e) => deleteExport(e, ex.export_id)}
           className="mt-10 mb-10"
         >
           <button type="submit" name="delete_export" className="btn btn-danger">
@@ -140,8 +142,7 @@ function renderExport(ex: Export) {
         Feel free to close this page while we prepare your download.
       </p>
       <form
-        action={`/export/delete/${ex.export_id}/`}
-        method="post"
+        onSubmit={(e) => deleteExport(e, ex.export_id)}
         className="mt-10 mb-10"
       >
         <button type="submit" name="cancel_export" className="btn btn-warning">
@@ -158,7 +159,6 @@ export default function ExportButtons({ listens = true, feedback = false }) {
   const [loading, setLoading] = React.useState(false);
   const [exports, setExports] = React.useState<Array<Export>>([]);
   const [fetchedExport, setFetchedExport] = React.useState<Export>();
-  const [exportId, setExportId] = React.useState<number>();
 
   React.useEffect(() => {
     // Fetch the list of exports in progress in background tasks or finished
@@ -190,72 +190,85 @@ export default function ExportButtons({ listens = true, feedback = false }) {
     getExportsInProgress();
   }, []);
 
-  React.useEffect(() => {
-    // Fetch an export after requesting a new one
-    async function fetchExport() {
-      try {
-        const response = await fetch(`/export/${exportId}/`, {
-          method: "GET",
-        });
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText);
-        }
-        // Expecting an array of exports
-        const result = await response.json();
-        setFetchedExport(result);
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="There was an error getting your exports in progress."
-            message={`Please try again and contact us if the issue persists.
-          ${error}`}
-          />
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (exportId) {
-      setLoading(true);
-      fetchExport();
-    }
-  }, [exportId]);
-
   const hasAnExportInProgress =
     exports.findIndex(
       (exp) =>
         exp.type === ExportType.allUserData &&
         exp.status !== ExportStatus.complete
-    ) !== -1;
+    ) !== -1 || fetchedExport !== undefined;
 
-  const createExport = React.useCallback(async () => {
-    try {
-      const response = await fetch("/export/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+  const createExport = React.useCallback(
+    async (event: React.SyntheticEvent) => {
+      event.preventDefault();
+      try {
+        const response = await fetch("/export/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      }
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
 
-      const data = await response.json();
-      const { export_id } = data;
-      setExportId(export_id);
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="TThere was an error creating an export of your data"
-          message={`Please try again and contact us if the issue persists.
+        const data = await response.json();
+        setFetchedExport(data);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error creating an export of your data"
+            message={`Please try again and contact us if the issue persists.
           ${error}`}
-        />
-      );
-    }
-  }, [setExportId]);
+          />
+        );
+      }
+    },
+    [setFetchedExport]
+  );
+
+  const deleteExport = React.useCallback(
+    async (event: React.SyntheticEvent, exportToDeleteId: number) => {
+      event.preventDefault();
+      try {
+        const response = await fetch(`/export/delete/${exportToDeleteId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        if (fetchedExport && fetchedExport.export_id === exportToDeleteId) {
+          setFetchedExport(undefined);
+        }
+        setExports((prevExports) =>
+          prevExports.filter(
+            (_export) => _export.export_id !== exportToDeleteId
+          )
+        );
+        toast.success(
+          <ToastMsg
+            title="Data export deleted successfully"
+            message="Your data export has been deleted successfully."
+          />
+        );
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error deleting the export of your data"
+            message={`Please try again and contact us if the issue persists.
+          ${error}`}
+          />
+        );
+      }
+    },
+    [fetchedExport]
+  );
 
   return (
     <section id="export-buttons">
@@ -295,8 +308,8 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         </>
       )} */}
       <Loader isLoading={loading} style={{ margin: "0 1em" }} />
-      {fetchedExport && renderExport(fetchedExport)}
-      {exports && exports.map(renderExport)}
+      {fetchedExport && renderExport(fetchedExport, deleteExport)}
+      {exports && exports.map((ex) => renderExport(ex, deleteExport))}
     </section>
   );
 }
