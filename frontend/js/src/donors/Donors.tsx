@@ -13,18 +13,10 @@ import Pagination from "../common/Pagination";
 import { getObjectForURLSearchParams } from "../utils/utils";
 import { RouteQuery } from "../utils/Loader";
 import Loader from "../components/Loader";
+import Blob from "../home/Blob";
 
 type DonorLoaderData = {
-  data: {
-    id: number;
-    donated_at: string;
-    donation: number;
-    currency: "usd" | "eur";
-    musicbrainz_id: string;
-    is_listenbrainz_user: boolean;
-    listenCount: number;
-    playlistCount: number;
-  }[];
+  data: DonationInfo[];
   totalPageCount: number;
 };
 
@@ -71,6 +63,51 @@ function Donors() {
 
   return (
     <div role="main" id="donors">
+      <div className="donations-page-header">
+        <Blob
+          seed={42}
+          blur={8}
+          width={175}
+          height={175}
+          randomness={0.4}
+          className="blob"
+          style={{ left: "50%", top: "42%" }}
+        />
+        <Blob
+          seed={13}
+          blur={8}
+          width={250}
+          height={250}
+          randomness={0.8}
+          className="blob"
+          style={{ left: "12%", top: "-60%" }}
+        />
+        <Blob
+          seed={1234}
+          blur={8}
+          width={75}
+          height={75}
+          randomness={0.9}
+          className="blob"
+          style={{ right: "18%", top: "15%" }}
+        />
+        <Blob
+          seed={123}
+          blur={8}
+          width={150}
+          height={150}
+          randomness={0.5}
+          className="blob"
+          style={{ right: "0", top: "10%" }}
+        />
+        <div className="donation-header-text">
+          Money can&apos;t buy happiness, but it can buy&nbsp;
+          <span style={{ fontWeight: 600 }}>LISTENBRAINZ HOSTING</span>
+          <Link to="/donate" className="btn btn-warning">
+            Donate
+          </Link>
+        </div>
+      </div>
       <div className="listen-header">
         <h2 className="header-with-line">Donations</h2>
         <div className="flex" role="group" aria-label="Sort by">

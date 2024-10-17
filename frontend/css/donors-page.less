@@ -80,5 +80,57 @@
 }
 
 #donors {
-  margin-top: 1.5em;
+  margin-top: 15px;
+  .donations-page-header {
+    .donation-header-text {
+      position: relative;
+      color: @white;
+      font-size: 16px;
+    }
+    a {
+      color: @black;
+      font-weight: bold;
+      margin-left: 2em;
+      &.btn {
+        border-radius: @border-radius-base;
+      }
+    }
+    opacity: 0.85;
+    border-radius: @border-radius-large;
+    background: @homepage-background;
+    padding: 3em 2em;
+    position: relative;
+    text-align: center;
+    margin-bottom: 2em;
+    overflow: hidden;
+    canvas {
+      position: absolute;
+      opacity: 0.5;
+    }
+  }
+}
+
+.recent-donor-card {
+  gap: 1rem;
+  > div {
+    width: 150px;
+  }
+  .user-link {
+    word-wrap: break-word;
+  }
+  .donor-pinned-recording {
+    display: flex;
+    align-items: center;
+    background: #edf2f7;
+    gap: 0.5rem;
+    margin-left: auto;
+    border-radius: 10px;
+    .text {
+      color: #6b7280;
+      text-wrap: wrap;
+    }
+    svg {
+      color: #353070;
+    }
+  }
 }

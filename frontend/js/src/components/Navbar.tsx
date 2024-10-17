@@ -117,7 +117,7 @@ function Navbar() {
             About
           </NavLink>
           <NavLink to="/donors/" onClick={toggleSidebar}>
-            Donors
+            Donations
           </NavLink>
           <a
             href="https://community.metabrainz.org/c/listenbrainz"
