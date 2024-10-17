@@ -3,10 +3,15 @@
 import * as _ from "lodash";
 import * as React from "react";
 
-import NiceModal from "@ebay/nice-modal-react";
+import NiceModal, { hide } from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import { faCompactDisc, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCompactDisc,
+  faTrashAlt,
+  faSquareRss,
+  faRss,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { cloneDeep, get, isEmpty, isEqual, isNil } from "lodash";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
@@ -31,6 +36,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import PinnedRecordingCard from "./components/PinnedRecordingCard";
 import {
   formatWSMessageToListen,
+  getBaseUrl,
   getListenablePin,
   getListenCardKey,
   getObjectForURLSearchParams,
@@ -40,6 +46,7 @@ import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -600,6 +607,70 @@ export default function Listen() {
                 </ul>
               </div>
             )}
+            <button
+              type="button"
+              className="btn btn-icon btn-info btn-sm"
+              style={{
+                width: "24px",
+                height: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: "Recent listens",
+                  options: [
+                    {
+                      label: "Time range",
+                      key: "minutes",
+                      type: "dropdown",
+                      tooltip:
+                        "Select the time range for the feed. For instance, choosing '30 minutes' will include listens from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                      values: [
+                        {
+                          id: "10minutes",
+                          value: "10",
+                          displayValue: "10 minutes",
+                        },
+                        {
+                          id: "30minutes",
+                          value: "30",
+                          displayValue: "30 minutes",
+                        },
+                        {
+                          id: "1hour",
+                          value: "60",
+                          displayValue: "1 hour",
+                        },
+                        {
+                          id: "2hours",
+                          value: "120",
+                          displayValue: "2 hours",
+                        },
+                        {
+                          id: "4hours",
+                          value: "240",
+                          displayValue: "4 hours",
+                        },
+                        {
+                          id: "8hours",
+                          value: "480",
+                          displayValue: "8 hours",
+                        },
+                      ],
+                    },
+                  ],
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    currentUser?.name
+                  }/listens`,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faRss} size="xs" />
+            </button>
           </div>
 
           {listens.length > 0 && (
@@ -646,7 +717,7 @@ export default function Listen() {
                     &larr; Newer
                   </Link>
                 </li>
-                <li className="date-time-picker">
+                <li className="feed-button-and-date-time-picker">
                   <DateTimePicker
                     onChange={onChangeDateTimePicker}
                     value={dateTimePickerValue}

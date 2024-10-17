@@ -1,9 +1,12 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce } from "lodash";
+import { debounce, max, min } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -13,6 +16,8 @@ import { svgToBlob, toPng } from "./utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
+import { getBaseUrl } from "../../utils/utils";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -334,6 +339,21 @@ export default function ArtCreator() {
     }
   }, [previewSVGRef]);
 
+  const onClickCopyFeedUrl = useCallback(() => {
+    NiceModal.show(SyndicationFeedModal, {
+      feedTitle: `Stats Art`,
+      options: [],
+      baseUrl:
+        style.type === "grid"
+          ? `${getBaseUrl()}/syndication-feed/user/${
+              currentUser?.name
+            }/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+          : `${getBaseUrl()}/syndication-feed/user/${
+              currentUser?.name
+            }/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
+    });
+  }, [currentUser, style, gridSize, gridLayout, timeRange]);
+
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
   const debouncedSetPreviewUrl = React.useMemo(() => {
@@ -393,6 +413,7 @@ export default function ArtCreator() {
             onClickCopyCode={onClickCopyCode}
             onClickCopyURL={onClickCopyURL}
             onClickCopyAlt={onClickCopyAlt}
+            onClickCopyFeedUrl={onClickCopyFeedUrl}
           />
           <Preview
             key={previewUrl}

@@ -5,6 +5,9 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRss, faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import ReleaseFilters from "./components/ReleaseFilters";
@@ -12,6 +15,9 @@ import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
+import { useMediaQuery } from "./utils";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
+import { getBaseUrl } from "../../utils/utils";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -370,6 +376,53 @@ export default function FreshReleases() {
                   ))}
                 </select>
               </div>
+              <button
+                type="button"
+                className="btn btn-icon btn-info btn-sm"
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                data-toggle="modal"
+                data-target="#SyndicationFeedModal"
+                onClick={() => {
+                  if (pageType === PAGE_TYPE_SITEWIDE) {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `Site-wide Fresh Releases`,
+                      options: [
+                        {
+                          label: "Days",
+                          key: "days",
+                          type: "number",
+                          values: [
+                            { id: "3", value: "3" },
+                            { id: "7", value: "7" },
+                            { id: "14", value: "14" },
+                            { id: "30", value: "30" },
+                          ],
+                          defaultIndex: 0,
+                          tooltip:
+                            "Select how many days of past releases to include in the feed, starting from today. Only releases that have already been published will be included.",
+                        },
+                      ],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/fresh-releases`,
+                    });
+                  } else if (pageType === PAGE_TYPE_USER) {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `User-specific Fresh Releases`,
+                      options: [],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                        currentUser.name
+                      }/fresh-releases`,
+                    });
+                  }
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} size="xs" />
+              </button>
             </div>
           </div>
           {isLoading ? (
