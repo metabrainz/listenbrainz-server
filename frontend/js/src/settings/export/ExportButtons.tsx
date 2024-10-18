@@ -264,9 +264,8 @@ export default function ExportButtons({ listens = true, feedback = false }) {
           throw new Error(errorText);
         }
 
-        const data = await response.json();
-        const { export_id } = data;
-        fetchExport(export_id);
+        const newExport: Export = await response.json();
+        setExports((prevExports) => [newExport, ...prevExports]);
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -277,7 +276,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         );
       }
     },
-    [fetchExport]
+    []
   );
 
   const deleteExport = React.useCallback(
