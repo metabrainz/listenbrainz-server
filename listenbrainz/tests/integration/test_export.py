@@ -10,6 +10,7 @@ from sqlalchemy import text
 import listenbrainz.db.user as db_user
 import listenbrainz.db.pinned_recording as db_pinned_rec
 import listenbrainz.db.feedback as db_feedback
+from listenbrainz.background.export import cleanup_old_exports
 from listenbrainz.db.model.feedback import Feedback
 
 from listenbrainz.db.model.pinned_recording import WritablePinnedRecording
@@ -199,5 +200,6 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
         response = self.client.post(self.custom_url_for("export.download_export_archive", export_id=export_id))
         self.assert404(response)
 
+        with self.app.app_context():
+            cleanup_old_exports(db_conn)
         self.assertEqual(len(os.listdir(self.app.config["USER_DATA_EXPORT_BASE_DIR"])), 0)
-
