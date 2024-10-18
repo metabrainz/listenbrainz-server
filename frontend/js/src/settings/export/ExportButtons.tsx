@@ -35,7 +35,8 @@ type Export = {
 
 function renderExport(
   ex: Export,
-  deleteExport: (event: React.SyntheticEvent, exportToDeleteId: number) => void
+  deleteExport: (event: React.SyntheticEvent, exportToDeleteId: number) => void,
+  fetchExport: (exportId: number) => Promise<any>
 ) {
   const extraInfo = (
     <p>
@@ -158,7 +159,6 @@ function renderExport(
 export default function ExportButtons({ listens = true, feedback = false }) {
   const [loading, setLoading] = React.useState(false);
   const [exports, setExports] = React.useState<Array<Export>>([]);
-  const [fetchedExport, setFetchedExport] = React.useState<Export>();
 
   React.useEffect(() => {
     // Fetch the list of exports in progress in background tasks or finished
@@ -190,12 +190,53 @@ export default function ExportButtons({ listens = true, feedback = false }) {
     getExportsInProgress();
   }, []);
 
+  const fetchExport = React.useCallback(
+    async function fetchExport(id: number) {
+      setLoading(true);
+      try {
+        const response = await fetch(`/export/${id}/`, {
+          method: "GET",
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of exports
+        const nexExport = await response.json();
+        setExports((prevExports) => {
+          // Replace item in exports array, or if not found there
+          // place the newly created one at the beginning
+          const existingExportIndex = prevExports.findIndex(
+            (ex) => ex.export_id === nexExport.export_id
+          );
+          if (existingExportIndex !== -1) {
+            const newArray = [...prevExports];
+            newArray.splice(existingExportIndex, 1, nexExport);
+            return newArray;
+          }
+          return [nexExport, ...prevExports];
+        });
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error getting your exports in progress."
+            message={`Please try again and contact us if the issue persists.
+        ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading]
+  );
+
   const hasAnExportInProgress =
     exports.findIndex(
       (exp) =>
         exp.type === ExportType.allUserData &&
         exp.status !== ExportStatus.complete
-    ) !== -1 || fetchedExport !== undefined;
+    ) !== -1;
 
   const createExport = React.useCallback(
     async (event: React.SyntheticEvent) => {
@@ -214,7 +255,8 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         }
 
         const data = await response.json();
-        setFetchedExport(data);
+        const { export_id } = data;
+        fetchExport(export_id);
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -225,7 +267,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         );
       }
     },
-    [setFetchedExport]
+    [fetchExport]
   );
 
   const deleteExport = React.useCallback(
@@ -242,9 +284,6 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);
-        }
-        if (fetchedExport && fetchedExport.export_id === exportToDeleteId) {
-          setFetchedExport(undefined);
         }
         setExports((prevExports) =>
           prevExports.filter(
@@ -267,7 +306,7 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         );
       }
     },
-    [fetchedExport]
+    []
   );
 
   return (
@@ -308,8 +347,8 @@ export default function ExportButtons({ listens = true, feedback = false }) {
         </>
       )} */}
       <Loader isLoading={loading} style={{ margin: "0 1em" }} />
-      {fetchedExport && renderExport(fetchedExport, deleteExport)}
-      {exports && exports.map((ex) => renderExport(ex, deleteExport))}
+      {exports &&
+        exports.map((ex) => renderExport(ex, deleteExport, fetchExport))}
     </section>
   );
 }
