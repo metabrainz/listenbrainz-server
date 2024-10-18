@@ -237,6 +237,9 @@ export default function ArtistPage(): JSX.Element {
 
   const onArtistChange = (artist_mbid: string) => {
     navigate(`/artist/${artist_mbid}`);
+    // Reset default view
+    setExpandDiscography(false);
+    setExpandPopularTracks(false);
   };
 
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
