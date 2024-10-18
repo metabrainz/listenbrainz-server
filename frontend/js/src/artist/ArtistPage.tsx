@@ -437,15 +437,19 @@ export default function ArtistPage(): JSX.Element {
               />
             );
           })}
-          <div className="read-more">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => setExpandPopularTracks((prevValue) => !prevValue)}
-            >
-              See {expandPopularTracks ? "less" : "more"}
-            </button>
-          </div>
+          {popularRecordings && popularRecordings?.length > 4 && (
+            <div className="read-more">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() =>
+                  setExpandPopularTracks((prevValue) => !prevValue)
+                }
+              >
+                See {expandPopularTracks ? "less" : "more"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
