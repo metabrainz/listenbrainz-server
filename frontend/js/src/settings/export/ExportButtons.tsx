@@ -187,9 +187,9 @@ export default function ExportButtons({ listens = true, feedback = false }) {
       } catch (error) {
         toast.error(
           <ToastMsg
-            title="There was an error getting your exports in progress."
+            title="There was an error retrieving your exports in progress"
             message={`Please try again and contact us if the issue persists.
-          ${error}`}
+            Details: ${error}`}
           />
         );
       } finally {
@@ -300,18 +300,18 @@ export default function ExportButtons({ listens = true, feedback = false }) {
             (_export) => _export.export_id !== exportToDeleteId
           )
         );
-        toast.success(
+        toast.info(
           <ToastMsg
-            title="Data export deleted successfully"
-            message="Your data export has been deleted successfully."
+            title="Your data export has been canceled"
+            message="You can request a new export at any time. If you are experiencing an issue please let us know."
           />
         );
       } catch (error) {
         toast.error(
           <ToastMsg
-            title="There was an error deleting the export of your data"
+            title="There was an error canceling your export"
             message={`Please try again and contact us if the issue persists.
-          ${error}`}
+           Details: ${error}`}
           />
         );
       }
