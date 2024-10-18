@@ -9,6 +9,7 @@ import {
   faCancel,
   faChevronCircleRight,
   faDownload,
+  faRefresh,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -134,6 +135,15 @@ function renderExport(
       <p className="text-primary">
         <FontAwesomeIcon icon={faArrowRightLong} />
         &nbsp;{ex.progress}
+        <button
+          type="button"
+          className="btn btn-sm btn-transparent"
+          onClick={() => {
+            fetchExport(ex.export_id);
+          }}
+        >
+          <FontAwesomeIcon icon={faRefresh} />
+        </button>
       </p>
       {/* {ex.status !== ExportStatus.waiting && progressBar} */}
       <p>
