@@ -125,12 +125,15 @@ export default function ArtistPage(): JSX.Element {
   const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
     false
   );
+  const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
+    false
+  );
 
+  // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
+  // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
   const rgGroups = groupBy(
     releaseGroups,
-    (rg) =>
-      (rg.type ?? "Other") +
-      (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
+    (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
   );
 
   const sortReleaseGroups = (
@@ -146,11 +149,19 @@ export default function ArtistPage(): JSX.Element {
       ["desc", "desc", "asc"]
     );
 
-  const typeOrder = ["Album", "Single", "EP", "Broadcast", "Other"];
-  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
-    (type) => typeOrder.indexOf(type.split(" + ")[0]),
-    (type) => type.split(" + ")[1] ?? "",
-  ]);
+  const typeOrder = [
+    "Album",
+    "EP",
+    "Single",
+    "Live",
+    "Compilation",
+    "Remix",
+    "Broadcast",
+  ];
+  const last = Object.keys(rgGroups).length;
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
+    typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
+  );
 
   const groupedReleaseGroups: Record<
     string,
@@ -253,6 +264,14 @@ export default function ArtistPage(): JSX.Element {
       />
     );
   };
+
+  React.useEffect(() => {
+    // Reset default view
+    setExpandDiscography(false);
+    setExpandPopularTracks(false);
+  }, [artist?.artist_mbid]);
+
+  const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
 
   return (
     <div id="entity-page" className="artist-page" role="main">
@@ -424,15 +443,19 @@ export default function ArtistPage(): JSX.Element {
               />
             );
           })}
-          <div className="read-more">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => setExpandPopularTracks((prevValue) => !prevValue)}
-            >
-              See {expandPopularTracks ? "less" : "more"}
-            </button>
-          </div>
+          {popularRecordings && popularRecordings?.length > 4 && (
+            <div className="read-more">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() =>
+                  setExpandPopularTracks((prevValue) => !prevValue)
+                }
+              >
+                See {expandPopularTracks ? "less" : "more"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
@@ -482,21 +505,36 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
-          <div className="albums">
-            <div className="listen-header">
-              <h3 className="header-with-line">{type}</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
+        <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
+          {releaseGroupTypesNames.map(([type, rgGroup]) => (
+            <div className="albums">
+              <div className="listen-header">
+                <h3 className="header-with-line">{type}</h3>
+                <SortingButtons sort={sort} setSort={setSort} />
+              </div>
+              <HorizontalScrollContainer
+                className={`cover-art-container ${
+                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                    ? "single-row"
+                    : ""
+                }`}
+              >
+                {rgGroup.map(getReleaseCard)}
+              </HorizontalScrollContainer>
             </div>
-            <HorizontalScrollContainer
-              className={`cover-art-container ${
-                rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
-              }`}
-            >
-              {rgGroup.map(getReleaseCard)}
-            </HorizontalScrollContainer>
-          </div>
-        ))}
+          ))}
+          {releaseGroupTypesNames.length >= 2 && (
+            <div className="read-more mb-10">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setExpandDiscography((prevValue) => !prevValue)}
+              >
+                See {expandDiscography ? "less" : "full discography"}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {similarArtists && similarArtists.artists.length > 0 ? (
