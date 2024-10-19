@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 
@@ -169,24 +169,6 @@ export default function MissingMBDataPage() {
           { toastId: "deleted-track-error" }
         );
       }
-    }
-  };
-
-  const handleClickPrevious = () => {
-    if (currPage && currPage > 1) {
-      setLoading(true);
-      const updatedPage = currPage - 1;
-      setSearchParams({ page: updatedPage.toString() });
-      afterDisplay();
-    }
-  };
-
-  const handleClickNext = () => {
-    if (currPage && currPage < totalPages) {
-      setLoading(true);
-      const updatedPage = currPage + 1;
-      setSearchParams({ page: updatedPage.toString() });
-      afterDisplay();
     }
   };
 
@@ -403,36 +385,26 @@ export default function MissingMBDataPage() {
           })}
         </div>
         <ul className="pager" style={{ display: "flex" }}>
-          <li
-            className={`previous ${currPage && currPage <= 1 ? "hidden" : ""}`}
-          >
-            <a
+          <li className={`previous ${currPage <= 1 ? "disabled" : ""}`}>
+            <Link
+              to={`?page=${Math.max(currPage - 1, 1)}`}
               role="button"
-              onClick={handleClickPrevious}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleClickPrevious();
-              }}
-              tabIndex={0}
+              aria-disabled={currPage >= totalPages}
             >
               &larr; Previous
-            </a>
+            </Link>
           </li>
           <li
-            className={`next ${
-              currPage && currPage >= totalPages ? "hidden" : ""
-            }`}
+            className={`next ${currPage >= totalPages ? "disabled" : ""}`}
             style={{ marginLeft: "auto" }}
           >
-            <a
+            <Link
+              to={`?page=${Math.min(currPage + 1, totalPages)}`}
               role="button"
-              onClick={handleClickNext}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleClickNext();
-              }}
-              tabIndex={0}
+              aria-disabled={currPage >= totalPages}
             >
               Next &rarr;
-            </a>
+            </Link>
           </li>
         </ul>
       </div>
