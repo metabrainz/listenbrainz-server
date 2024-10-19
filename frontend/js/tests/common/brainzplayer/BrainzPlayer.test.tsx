@@ -18,6 +18,7 @@ import {
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
 import IntersectionObserver from "../../__mocks__/intersection-observer";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -180,7 +181,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");
@@ -206,7 +209,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const queueList = screen.getByTestId("queue");
@@ -229,7 +234,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");
@@ -261,7 +268,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");
@@ -292,7 +301,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");

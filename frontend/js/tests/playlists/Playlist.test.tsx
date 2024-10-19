@@ -8,6 +8,7 @@ import {
   renderWithProviders,
   textContentMatcher,
 } from "../test-utils/rtl-test-utils";
+import { ReactQueryWrapper } from "../test-react-query";
 
 jest.mock("../../src/utils/SearchTrackOrMBID");
 
@@ -33,7 +34,14 @@ const router = createMemoryRouter(
 
 describe("PlaylistPage", () => {
   it("renders correctly", () => {
-    renderWithProviders(<RouterProvider router={router} />, {}, {}, false);
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {},
+      {
+        wrapper: ReactQueryWrapper,
+      },
+      false
+    );
     screen.getByTestId("playlist");
     const h1 = screen.getByRole("heading");
     expect(h1).toHaveTextContent("1980s flashback jams");
@@ -62,7 +70,9 @@ describe("PlaylistPage", () => {
     renderWithProviders(
       <RouterProvider router={router} />,
       alternativeContextMock,
-      {},
+      {
+        wrapper: ReactQueryWrapper,
+      },
       false
     );
     screen.getByText("Export to Spotify", { exact: false });

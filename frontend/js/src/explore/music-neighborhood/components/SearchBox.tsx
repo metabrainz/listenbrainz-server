@@ -1,10 +1,16 @@
 import React, { useMemo, useState } from "react";
-import { faSearch, faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faSearch,
+  faMinus,
+  faPlus,
+  faSpinner,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { throttle } from "lodash";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import DropdownRef from "../../../utils/Dropdown";
 
 interface SearchBoxProps {
   currentSimilarArtistsLimit: number;
@@ -29,8 +35,10 @@ function SearchBox({
   const [searchResults, setSearchResults] = useState<
     Array<ArtistTypeSearchResult>
   >([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [openDropdown, setOpenDropdown] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = React.useState<string>("");
+  const dropdownRef = DropdownRef();
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = React.useState(false);
 
   const getArtists = useMemo(() => {
     return throttle(
@@ -49,6 +57,8 @@ function SearchBox({
               />,
               { toastId: "error" }
             );
+          } finally {
+            setLoading(false);
           }
         }
       },
@@ -57,22 +67,9 @@ function SearchBox({
     );
   }, []);
 
-  // Lookup the artist based on the query
-  const handleQueryChange = async (query: string) => {
-    setSearchQuery(query);
-    if (query.length && query.trim().length) {
-      setOpenDropdown(true);
-    } else {
-      setOpenDropdown(false);
-    }
-    await getArtists(query);
-  };
-
   // Handle button click on an artist in the dropdown list
-  const handleButtonClick = (artist: ArtistTypeSearchResult) => {
-    onArtistChange(artist.id);
-    setOpenDropdown(false);
-    setSearchQuery(artist.name);
+  const handleButtonClick = (artistId: string) => {
+    onArtistChange(artistId);
   };
   const increment = () => {
     onSimilarArtistsLimitChange(currentSimilarArtistsLimit + 1);
@@ -81,39 +78,87 @@ function SearchBox({
     onSimilarArtistsLimitChange(currentSimilarArtistsLimit - 1);
   };
 
+  const reset = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setLoading(false);
+    searchInputRef?.current?.focus();
+  };
+
+  React.useEffect(() => {
+    if (!searchQuery) {
+      return;
+    }
+    setLoading(true);
+    getArtists(searchQuery);
+  }, [searchQuery, getArtists]);
+
   return (
     <>
-      <div className="input-group track-search">
-        <div className="artist-search-input">
-          <input
-            id="searchbox-artist-name"
-            type="text"
-            className="form-control"
-            name="artist_mbid"
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Artist name"
-            value={searchQuery}
-            aria-haspopup={Boolean(searchResults?.length)}
-          />
-          <button id="searchbox-icon" type="button">
-            <FontAwesomeIcon icon={faSearch} color="white" />
+      <div className="input-group dropdown-search" ref={dropdownRef}>
+        <input
+          ref={searchInputRef}
+          id="searchbox-artist-name"
+          type="search"
+          className="form-control"
+          name="artist_mbid"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Artist name"
+          value={searchQuery}
+          aria-haspopup={Boolean(searchResults?.length)}
+          required
+        />
+        <span className="input-group-btn">
+          <button
+            className="btn btn-default"
+            type="button"
+            onClick={reset}
+            id="artist-search-button"
+          >
+            {loading ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={faSearch} />
+            )}
           </button>
-        </div>
-        <div className="track-search-dropdown">
-          {openDropdown &&
-            searchResults?.map((artist) => {
+        </span>
+        {Boolean(searchResults?.length) && (
+          <select
+            className="dropdown-search-suggestions"
+            onChange={(e) => {
+              if (!e.currentTarget.value) {
+                // clicked on "no more options"
+                return;
+              }
+              setSearchQuery(e.currentTarget.selectedOptions[0].text);
+              handleButtonClick(e.currentTarget.value);
+              e.target.blur();
+            }}
+            size={Math.min(searchResults.length + 1, 8)}
+            tabIndex={-1}
+          >
+            {searchResults.map((artist, index) => {
+              const artistInfoString = `${artist.name} - ${
+                artist.country ?? "Unknown"
+              }`;
               return (
-                <button
-                  type="button"
-                  className="search-item"
+                <option
                   key={artist.id}
-                  onClick={() => handleButtonClick(artist)}
+                  value={artist.id}
+                  data-release-info={artistInfoString}
+                  title={artistInfoString}
                 >
-                  {`${artist.name} - ${artist.country ?? "Unknown"}`}
-                </button>
+                  {artistInfoString}
+                </option>
               );
             })}
-        </div>
+            {searchResults.length < 25 && (
+              <option value="" style={{ textAlign: "center", color: "gray" }}>
+                — No more options —
+              </option>
+            )}
+          </select>
+        )}
       </div>
       <div className="graph-size-input">
         <label htmlFor="artist-graph-size-input">Web Size</label>

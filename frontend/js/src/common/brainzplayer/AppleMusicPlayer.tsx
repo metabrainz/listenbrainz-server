@@ -10,6 +10,7 @@ import {
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type AppleMusicPlayerProps = DataSourceProps;
 
@@ -112,6 +113,7 @@ export default class AppleMusicPlayer
   public name = "Apple Music";
   public domainName = "music.apple.com";
   public icon = faApple;
+  public iconColor = dataSourcesInfo.appleMusic.color;
 
   appleMusicPlayer?: AppleMusicPlayerType;
   declare context: React.ContextType<typeof GlobalAppContext>;

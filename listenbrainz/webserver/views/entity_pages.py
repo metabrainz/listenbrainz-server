@@ -20,17 +20,6 @@ release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
 
 
-def get_release_group_sort_key(release_group):
-    """ Return a tuple that sorts release group by total_listen_count and then by date """
-    release_date = release_group.get("date")
-    if release_date is None:
-        release_date = datetime.min
-    else:
-        release_date = datetime.strptime(release_date, "%Y-%m-%d")
-
-    return release_group["total_listen_count"] or 0, release_date
-
-
 def get_cover_art_for_artist(release_groups):
     """ Get the cover art for an artist using a list of their release groups """
     covers = []
@@ -143,10 +132,22 @@ def artist_entity(artist_mbid):
                 ts_curs,
                 [artist_mbid],
                 "session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30",
-                15
+                18
             )
     except IndexError:
         similar_artists = []
+
+    try:
+        top_release_group_color = popularity.get_top_release_groups_for_artist(
+            db_conn, ts_conn, artist_mbid, 1
+        )[0]["release_color"]
+    except IndexError:
+        top_release_group_color = None
+
+    try:
+        top_recording_color = popularity.get_top_recordings_for_artist(db_conn, ts_conn, artist_mbid, 1)[0]["release_color"]
+    except IndexError:
+        top_recording_color = None
 
     release_group_data = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_group_data]
@@ -157,8 +158,6 @@ def artist_entity(artist_mbid):
         release_group["total_listen_count"] = pop["total_listen_count"]
         release_group["total_user_count"] = pop["total_user_count"]
         release_groups.append(release_group)
-
-    release_groups.sort(key=get_release_group_sort_key, reverse=True)
 
     listening_stats = get_entity_listener(db_conn, "artists", artist_mbid, "all_time")
     if listening_stats is None:
@@ -176,7 +175,11 @@ def artist_entity(artist_mbid):
     data = {
         "artist": artist,
         "popularRecordings": popular_recordings,
-        "similarArtists": similar_artists,
+        "similarArtists": {
+            "artists": similar_artists,
+            "topReleaseGroupColor": top_release_group_color,
+            "topRecordingColor": top_recording_color
+        },
         "listeningStats": listening_stats,
         "releaseGroups": release_groups,
         "coverArt": cover_art
