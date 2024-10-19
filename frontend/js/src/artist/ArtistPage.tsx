@@ -237,9 +237,6 @@ export default function ArtistPage(): JSX.Element {
 
   const onArtistChange = (artist_mbid: string) => {
     navigate(`/artist/${artist_mbid}`);
-    // Reset default view
-    setExpandDiscography(false);
-    setExpandPopularTracks(false);
   };
 
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
@@ -267,6 +264,12 @@ export default function ArtistPage(): JSX.Element {
       />
     );
   };
+
+  React.useEffect(() => {
+    // Reset default view
+    setExpandDiscography(false);
+    setExpandPopularTracks(false);
+  }, [artist?.artist_mbid]);
 
   const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
 
