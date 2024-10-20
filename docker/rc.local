@@ -43,7 +43,7 @@ then
     rm -f /etc/service/spotify_reader/down
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-${DEPLOY_ENV}" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-lastfm-reader-${DEPLOY_ENV}" ]
 then
     log Enabling last.fm importer
     rm -f /etc/service/lastfm_importer/down
