@@ -1,12 +1,8 @@
 import uuid
-from trace import Trace
-from typing import List
-from xml.sax import parse
 
 import requests
 from flask import current_app
 from psycopg2.extras import execute_values
-from pydantic import NoneStr
 from requests.adapters import HTTPAdapter, Retry
 from sqlalchemy import text
 
