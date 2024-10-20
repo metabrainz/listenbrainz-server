@@ -143,16 +143,16 @@ class ListensImporter(abc.ABC):
                 success += 1
             except (DatabaseException, DatabaseError, SQLAlchemyError):
                 listenbrainz.webserver.db_conn.rollback()
-                current_app.logger.error('spotify_reader could not import listens for user %s:',
+                current_app.logger.error(f'{self.name} could not import listens for user %s:',
                                          user['musicbrainz_id'], exc_info=True)
             except Exception:
-                current_app.logger.error('spotify_reader could not import listens for user %s:',
+                current_app.logger.error(f'{self.name} could not import listens for user %s:',
                                          user['musicbrainz_id'], exc_info=True)
                 failure += 1
 
             if time.monotonic() > self._metric_submission_time:
                 self._metric_submission_time += METRIC_UPDATE_INTERVAL
-                metrics.set("spotify_reader", imported_listens=self._listens_imported_since_last_update)
+                metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
                 _listens_imported_since_last_update = 0
 
         current_app.logger.info('Processed %d users successfully!', success)
