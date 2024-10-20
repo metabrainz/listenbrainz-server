@@ -44,7 +44,7 @@ export default function UserReports() {
 
   React.useEffect(() => {
     if (!range || isInvalidStatRange(range)) {
-      setSearchParams({ range: "week" });
+      setSearchParams({ range: "week" }, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range]);
