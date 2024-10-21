@@ -70,7 +70,7 @@ export default function MissingMBDataPage() {
   const dispatch = useBrainzPlayerDispatch();
   const location = useLocation();
   // Loader
-  const { data: loaderData } = useQuery<MissingMBDataLoaderData>(
+  const { data: loaderData, isLoading } = useQuery<MissingMBDataLoaderData>(
     RouteQuery(["missing-data"], location.pathname)
   );
   const { missing_data: missingDataProps = [], last_updated: lastUpdated } =
@@ -80,7 +80,6 @@ export default function MissingMBDataPage() {
   const pageSearchParam = searchParams.get("page");
 
   // State
-  const [loading, setLoading] = React.useState<boolean>(false);
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
   const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
     missingDataProps
@@ -115,16 +114,7 @@ export default function MissingMBDataPage() {
     offset + EXPECTED_ITEMS_PER_PAGE
   );
 
-  // Ref
-  const missingMBDataTableRef = React.useRef<HTMLDivElement>(null);
-
   // Functions
-  const afterDisplay = () => {
-    if (missingMBDataTableRef?.current) {
-      missingMBDataTableRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-    setLoading(false);
-  };
 
   const deleteListen = async (data: MissingMBData) => {
     if (user?.auth_token) {
@@ -221,7 +211,7 @@ export default function MissingMBDataPage() {
       )}
       <br />
       <div>
-        <div id="missingMBData" ref={missingMBDataTableRef}>
+        <div id="missingMBData">
           <div
             style={{
               height: 0,
@@ -230,7 +220,7 @@ export default function MissingMBDataPage() {
               zIndex: 1,
             }}
           >
-            <Loader isLoading={loading} />
+            <Loader isLoading={isLoading} />
           </div>
           {itemsOnThisPage.map((group) => {
             const releaseName = group.at(0)?.release_name ?? null;
