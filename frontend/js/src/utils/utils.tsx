@@ -839,6 +839,30 @@ const getAlbumArtFromSpotifyTrackID = async (
   return undefined;
 };
 
+const getAlbumArtFromListenMetadataKey = (
+  listen: BaseListenFormat,
+  spotifyUser?: SpotifyUser
+): string | undefined => {
+  if (
+    SpotifyPlayer.isListenFromThisService(listen) &&
+    SpotifyPlayer.hasPermissions(spotifyUser)
+  ) {
+    return `spotify:${SpotifyPlayer.getSpotifyTrackIDFromListen(listen)}`;
+  }
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    return `youtube:${YoutubePlayer.getVideoIDFromListen(listen)}`;
+  }
+  const userSubmittedReleaseMBID =
+    listen.track_metadata?.release_mbid ??
+    listen.track_metadata?.additional_info?.release_mbid;
+  const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
+  const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
+
+  return `ca:${userSubmittedReleaseMBID ?? ""}:${caaId ?? ""}:${
+    caaReleaseMbid ?? ""
+  }`;
+};
+
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
   spotifyUser?: SpotifyUser,
@@ -1114,6 +1138,7 @@ export {
   pinnedRecordingToListen,
   getAlbumArtFromReleaseMBID,
   getAlbumArtFromReleaseGroupMBID,
+  getAlbumArtFromListenMetadataKey,
   getAlbumArtFromListenMetadata,
   getAverageRGBOfImage,
   getAdditionalContent,

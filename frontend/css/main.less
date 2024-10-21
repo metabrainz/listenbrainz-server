@@ -38,6 +38,7 @@
 @import "release-card.less";
 @import "search.less";
 @import "accordion.less";
+@import "scroll-container.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -399,4 +400,11 @@ pre code.hljs {
   border: 2px solid #a0a0a0;
   padding: 1rem;
   border-radius: 5px;
+}
+
+#export-buttons {
+  details[open] > summary > svg {
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+  }
 }

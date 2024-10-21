@@ -20,17 +20,6 @@ release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
 
 
-def get_release_group_sort_key(release_group):
-    """ Return a tuple that sorts release group by total_listen_count and then by date """
-    release_date = release_group.get("date")
-    if release_date is None:
-        release_date = datetime.min
-    else:
-        release_date = datetime.strptime(release_date, "%Y-%m-%d")
-
-    return release_group["total_listen_count"] or 0, release_date
-
-
 def get_cover_art_for_artist(release_groups):
     """ Get the cover art for an artist using a list of their release groups """
     covers = []
@@ -169,8 +158,6 @@ def artist_entity(artist_mbid):
         release_group["total_listen_count"] = pop["total_listen_count"]
         release_group["total_user_count"] = pop["total_user_count"]
         release_groups.append(release_group)
-
-    release_groups.sort(key=get_release_group_sort_key, reverse=True)
 
     listening_stats = get_entity_listener(db_conn, "artists", artist_mbid, "all_time")
     if listening_stats is None:
