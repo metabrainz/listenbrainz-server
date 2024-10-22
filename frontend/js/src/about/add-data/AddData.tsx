@@ -416,10 +416,13 @@ export default function AddData() {
             <a href="https://yogo9.github.io/listenbrainz-recent-listens-to-playlist/">
               ListenBrainz Playlist Tool
             </a>
-          </em>
-          {" "}
+          </em>{" "}
           <em>
-            (<a href="https://github.com/YoGo9/listenbrainz-recent-listens-to-playlist">Github</a>)
+            (
+            <a href="https://github.com/YoGo9/listenbrainz-recent-listens-to-playlist">
+              Github
+            </a>
+            )
           </em>
           , a standalone tool to select recent listens from a ListenBrainz
           account and add them to a ListenBrainz playlist.
