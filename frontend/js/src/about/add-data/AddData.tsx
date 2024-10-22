@@ -411,6 +411,22 @@ export default function AddData() {
           ListenBrainz (+ Spotify). Tracks playlists changes and also allows to
           resolve tracks with local content and YouTube links.
         </li>
+        <li>
+          <em>
+            <a href="https://yogo9.github.io/listenbrainz-recent-listens-to-playlist/">
+              ListenBrainz Playlist Tool
+            </a>
+          </em>{" "}
+          <em>
+            (
+            <a href="https://github.com/YoGo9/listenbrainz-recent-listens-to-playlist">
+              Github
+            </a>
+            )
+          </em>
+          , a standalone tool to select recent listens from a ListenBrainz
+          account and add them to a ListenBrainz playlist.
+        </li>
       </ul>
 
       <h3>Other tools</h3>
