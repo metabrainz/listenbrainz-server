@@ -1120,7 +1120,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
 @requests_mock.Mocker()
 @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_spotify")
 @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_apple_music")
-def test_playlist_export(self, mock_requests, mock_export_to_spotify, mock_export_to_apple_music):
+def test_playlist_export(self, mock_requests, mock_troi_bot):
     """ Test various error cases related to exporting a playlist to spotify and apple music """
     mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
         'access_token': 'tokentoken',
@@ -1207,8 +1207,8 @@ def test_playlist_export(self, mock_requests, mock_export_to_spotify, mock_expor
             'user-read-recently-played'
         ]
     )
-
-    mock_export_to_spotify.return_value = "spotify_url"
+    mock_troi_bot.assert_not_called()
+    mock_troi_bot.return_value = "spotify_url"
 
     response = self.client.post(
         self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
@@ -1235,8 +1235,8 @@ def test_playlist_export(self, mock_requests, mock_export_to_spotify, mock_expor
         token_expires_ts=int(time.time()),
         record_listens=True
     )
-
-    mock_export_to_apple_music.return_value = "apple_music_url"
+    mock_troi_bot.assert_not_called()
+    mock_troi_bot.return_value = "apple_music_url"
 
     response = self.client.post(
         self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
