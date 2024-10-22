@@ -1105,6 +1105,10 @@ export function getObjectForURLSearchParams(
   return object;
 }
 
+export function getBaseUrl(): string {
+  return window.location.origin;
+}
+
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,

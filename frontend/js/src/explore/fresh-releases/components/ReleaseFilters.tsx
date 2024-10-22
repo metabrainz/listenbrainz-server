@@ -11,6 +11,7 @@ import type {
   filterRangeOption,
 } from "../FreshReleases";
 import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -52,6 +53,8 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     releaseCardGridRef,
     pageType,
   } = props;
+
+  const { currentUser } = React.useContext(GlobalAppContext);
 
   const [checkedList, setCheckedList] = React.useState<
     Array<string | undefined>
