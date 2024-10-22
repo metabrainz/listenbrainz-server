@@ -214,7 +214,7 @@ function PlaylistMenu({
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
   );
-  const showAppleMusicExportButton = spotifyAuth;
+  const showAppleMusicExportButton = appleAuth;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"

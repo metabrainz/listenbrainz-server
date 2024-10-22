@@ -860,15 +860,12 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service != "spotify" and service != "soundcloud" and service != "apple_music":
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+    if service != "spotify" and service != "apple_music":
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify' and 'apple_music'.")
 
     if service == "spotify":
         spotify_service = SpotifyService()
         token = spotify_service.get_user(user["id"], refresh=True)
-    elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
     elif service == "apple_music":
         apple_service = AppleService()
         token = apple_service.get_user(user["id"])
@@ -1035,12 +1032,12 @@ def export_playlist_jspf(service):
     user = validate_auth_header()
 
     if service != "spotify" and service != "apple_music":
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify'.")
+        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify' and 'apple_msuic'.")
 
     if service == "spotify":
         spotify_service = SpotifyService()
         token = spotify_service.get_user(user["id"], refresh=True)
-    elif service == "soundcloud":
+    elif service == "apple_music":
         apple_service = AppleService()
         token = apple_service.get_user(user["id"])
 
