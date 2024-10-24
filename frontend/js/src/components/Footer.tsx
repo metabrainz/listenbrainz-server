@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { faAnglesRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -50,13 +51,7 @@ export default function Footer() {
             <ul className="list-unstyled">
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
-                <a
-                  href="https://metabrainz.org/donate"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Donate
-                </a>
+                <Link to="/donate">Donate</Link>
               </li>
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}

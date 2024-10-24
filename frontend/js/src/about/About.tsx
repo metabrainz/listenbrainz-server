@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 export default function About() {
   return (
@@ -87,8 +88,7 @@ export default function About() {
       <p>
         Listenbrainz is a free open source project that is not run for profit.
         If you would like to help the project out financially, consider{" "}
-        <a href="https://metabrainz.org/donate">donating</a> to the MetaBrainz
-        Foundation.
+        <Link to="/donate">donating</Link> to the MetaBrainz Foundation.
       </p>
       <h3>Developers</h3>
       <p>
