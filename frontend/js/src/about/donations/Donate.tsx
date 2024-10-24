@@ -1,6 +1,7 @@
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { COLOR_LB_GREEN } from "../../utils/constants";
 import Blob from "../../home/Blob";
 
@@ -182,24 +183,41 @@ export default function Donate() {
             </ul>
           </div>
         </div>
-        <div className="donations-page-footer">
-          <h3>Jokes aside</h3>
-          <p>
-            Join our music network, where <b>you aren&apos;t the product</b> and
-            your personal data isn&apos;t the price you pay.
-            <br />
-            We believe everyone should have access to all features —no paywalls,
-            no “Pro++” features.
-            <br />
-            <b>All features are free for everyone.</b>
-            <br />
-            <br />
-            By donating —either once or regularly— you&apos;ll join thousands of
-            music lovers in helping us build an honest, unbiased and
-            community-driven space for music discovery.
-            <br />
-            At our scale, every contribution matters.
-          </p>
+        <div className="donations-page-footer row">
+          <h3 className="col-xs-12">Jokes aside</h3>
+          <div className="col-sm-6">
+            <p>
+              We are a{" "}
+              <a
+                href="https://metabrainz.org/projects"
+                target="_blank"
+                rel="noreferrer"
+              >
+                non-profit foundation
+              </a>{" "}
+              and we are free to build the music website of our dreams, unbiased
+              by financial deals.
+              <br />
+              One where <b>you aren&apos;t the product</b> and your personal
+              data isn&apos;t the price you pay.
+              <br />
+              <b>All features are free for everyone.</b> —no paywalls, no
+              “Pro++” features.
+            </p>
+          </div>
+          <div className="col-sm-6">
+            <p>
+              By donating —either once or regularly— you&apos;ll join thousands
+              of music lovers in helping us build an honest, unbiased and
+              community-driven space for music discovery.
+            </p>
+            <p>
+              <b>At our scale, every contribution matters.</b>
+            </p>
+            <p>
+              <Link to="/donors">See all our donors</Link>
+            </p>
+          </div>
         </div>
       </div>
       <div className="grey-wedge" />
