@@ -32,4 +32,6 @@ ALTER TABLE recommendation.do_not_recommend ADD CONSTRAINT rec_do_not_recommend_
 
 ALTER TABLE background_tasks ADD CONSTRAINT background_tasks_id_pkey PRIMARY KEY (id);
 
+ALTER TABLE user_data_export ADD CONSTRAINT user_data_export_id_pkey PRIMARY KEY (id);
+
 COMMIT;
