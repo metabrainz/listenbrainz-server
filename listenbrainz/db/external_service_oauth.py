@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional, Union
 
 from sqlalchemy import text
@@ -7,8 +8,9 @@ from listenbrainz import db, utils
 import sqlalchemy
 
 
-def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: str, refresh_token: Optional[str],
-               token_expires_ts: int, record_listens: bool, scopes: List[str], external_user_id: Optional[str] = None):
+def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token: Optional[str], refresh_token: Optional[str],
+               token_expires_ts: Optional[int], record_listens: bool, scopes: Optional[List[str]], external_user_id: Optional[str] = None,
+               latest_listened_at: Optional[datetime] = None):
     """ Add a row to the external_service_oauth table for specified user with corresponding tokens and information.
 
     Args:
@@ -21,6 +23,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
         record_listens: True if user wishes to import listens, False otherwise
         scopes: the oauth scopes
         external_user_id: the user's id in the external linked service
+        latest_listened_at: last listen import time
     """
     # regardless of whether a row is inserted or updated, the end result of the query
     # should remain the same. if not so, weird things can happen as it is likely we
@@ -29,7 +32,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     # to use the new values. any column which does not have a new value to be set should
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
-    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
+    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts) if token_expires_ts else None
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO external_service_oauth AS eso
         (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
@@ -58,20 +61,21 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
         external_service_oauth_id = result.fetchone().id
         db_conn.execute(sqlalchemy.text("""
             INSERT INTO listens_importer
-            (external_service_oauth_id, user_id, service)
+            (external_service_oauth_id, user_id, service, latest_listened_at)
             VALUES
-            (:external_service_oauth_id, :user_id, :service)
+            (:external_service_oauth_id, :user_id, :service, :latest_listened_at)
             ON CONFLICT (user_id, service) DO UPDATE SET
                 external_service_oauth_id = EXCLUDED.external_service_oauth_id,
                 user_id = EXCLUDED.user_id,
                 service = EXCLUDED.service,
                 last_updated = NULL,
-                latest_listened_at = NULL,
+                latest_listened_at = EXCLUDED.latest_listened_at,
                 error_message = NULL
             """), {
             "external_service_oauth_id": external_service_oauth_id,
             "user_id": user_id,
-            "service": service.value
+            "service": service.value,
+            "latest_listened_at": latest_listened_at,
         })
 
     db_conn.commit()

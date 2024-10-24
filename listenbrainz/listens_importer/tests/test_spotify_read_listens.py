@@ -10,7 +10,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.listens_importer import spotify_read_listens
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
 from unittest.mock import patch
 from listenbrainz.db.testing import DatabaseTestCase

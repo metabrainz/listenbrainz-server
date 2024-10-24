@@ -106,12 +106,23 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
+    command: python3 -m "listenbrainz.listens_importer.spotify"
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
       - rabbitmq
+
+  lastfm_importer:
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
+    command: python3 -m "listenbrainz.listens_importer.lastfm"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - rabbitmq
+      - lb_db
 
   websockets:
     image: web
