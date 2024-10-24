@@ -45,7 +45,21 @@ def biggest_donors():
 @crossdomain
 @ratelimit()
 def all_flairs():
-    """ Get flairs (including expired ones) for all users """
+    """ Get flairs for all eligible users.
+
+        Returns a JSON object with username as key and the flair description as value. Example:
+
+        .. code:: json
+
+            {
+                "rob": {
+                    "color": "orange"
+                },
+                "lucifer": {
+                    "emoji": "devil"
+                }
+            }
+    """
     users_with_flair = get_all_flairs(db_conn)
     eligible_donors = are_users_eligible_donors(meb_conn, [u.musicbrainz_row_id for u in users_with_flair])
 
