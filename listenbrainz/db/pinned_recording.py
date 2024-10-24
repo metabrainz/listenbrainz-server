@@ -103,6 +103,26 @@ def delete(db_conn, row_id: int, user_id: int):
     return result.rowcount == 1
 
 
+def get_current_pin_for_users(db_conn, user_ids: Iterable[int]) -> List[PinnedRecording]:
+    """ Get the currently active pinned recording for the users if they have one.
+
+        Args:
+            db_conn: database connection
+            user_ids: the row IDs of the users in the DB
+
+        Returns:
+            A list of PinnedRecording objects.
+    """
+
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT {columns}
+          FROM pinned_recording as pin
+         WHERE (user_id IN :user_ids
+           AND pinned_until >= NOW())
+        """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {"user_ids": tuple(user_ids)})
+    return [PinnedRecording(**row) if row else None for row in result.mappings()]
+
+
 def get_current_pin_for_user(db_conn, user_id: int) -> PinnedRecording:
     """ Get the currently active pinned recording for the user if they have one.
 
@@ -114,14 +134,7 @@ def get_current_pin_for_user(db_conn, user_id: int) -> PinnedRecording:
             A PinnedRecording object.
     """
 
-    result = db_conn.execute(sqlalchemy.text("""
-        SELECT {columns}
-          FROM pinned_recording as pin
-         WHERE (user_id = :user_id
-           AND pinned_until >= NOW())
-        """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {'user_id': user_id})
-    row = result.mappings().first()
-    return PinnedRecording(**row) if row else None
+    return next(iter(get_current_pin_for_users(db_conn, [user_id])), None)
 
 
 def get_pin_history_for_user(db_conn, user_id: int, count: int, offset: int) -> List[PinnedRecording]:

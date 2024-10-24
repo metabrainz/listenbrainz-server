@@ -357,6 +357,9 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.explore import explore_bp
     app.register_blueprint(explore_bp, url_prefix='/explore')
 
+    from listenbrainz.webserver.views.donors import donors_bp
+    app.register_blueprint(donors_bp, url_prefix='/donors')
+
     from listenbrainz.webserver.views.api import api_bp
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
 

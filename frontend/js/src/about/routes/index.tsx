@@ -52,6 +52,13 @@ const getAboutRoutes = (): RouteObject[] => {
         },
       ],
     },
+    {
+      path: "donate/",
+      lazy: async () => {
+        const Donate = await import("../donations/Donate");
+        return { Component: Donate.default };
+      },
+    },
   ];
   return routes;
 };

@@ -170,6 +170,13 @@ const getIndexRoutes = (): RouteObject[] => {
             return { Component: APIAuth.default };
           },
         },
+        {
+          path: "donors/",
+          lazy: async () => {
+            const Donors = await import("../donors/Donors");
+            return { Component: Donors.default };
+          },
+        },
       ],
     },
   ];

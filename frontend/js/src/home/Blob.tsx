@@ -1,10 +1,13 @@
 import * as React from "react";
 import * as blobs2Animate from "blobs/v2/animate";
+import { isUndefined } from "lodash";
 
 type BlobProps = {
   width: number;
   height: number;
   randomness: number;
+  seed?: number;
+  blur?: number;
   style?: React.CSSProperties;
 } & Pick<HTMLCanvasElement, "className">;
 
@@ -13,6 +16,8 @@ export default function Blob({
   height,
   className,
   randomness,
+  seed,
+  blur,
   style,
 }: BlobProps) {
   const blobCanvas = React.useRef<HTMLCanvasElement>(null);
@@ -24,7 +29,9 @@ export default function Blob({
     }
     const animation = blobs2Animate.canvasPath();
     const randomAngleStart = Math.random() * 360;
-
+    if (!isUndefined(blur) && Number.isFinite(blur)) {
+      ctx.filter = `blur(${blur}px)`;
+    }
     const renderAnimation: FrameRequestCallback = (time) => {
       ctx.clearRect(0, 0, width, height);
       let angle = (((time / 50) % 360) / 180) * Math.PI;
@@ -43,20 +50,26 @@ export default function Blob({
     };
     requestAnimationFrame(renderAnimation);
 
-    const size = Math.min(width, height);
-
+    let size = Math.min(width, height);
+    let offsetX = 0;
+    let offsetY = 0;
+    if (!isUndefined(blur) && Number.isFinite(blur)) {
+      size -= blur * 2;
+      offsetX = blur;
+      offsetY = blur;
+    }
     blobs2Animate.wigglePreset(
       animation,
       {
-        seed: Date.now(),
+        seed: seed ?? Date.now(),
         extraPoints: 3,
         randomness: randomness * 2,
         size,
       },
-      { offsetX: 0, offsetY: 0 },
+      { offsetX, offsetY },
       { speed: Math.random() * 1.7 }
     );
-  }, [blobCanvas, height, width, randomness]);
+  }, [blobCanvas, height, width, randomness, blur, seed]);
 
   return (
     <canvas

@@ -22,7 +22,7 @@ def recent_donors():
     count = _parse_int_arg("count", DEFAULT_DONOR_COUNT)
     offset = _parse_int_arg("offset", 0)
 
-    donors = get_recent_donors(meb_conn, db_conn, count, offset)
+    donors, _ = get_recent_donors(meb_conn, db_conn, count, offset)
     return jsonify(donors)
 
 
@@ -36,5 +36,5 @@ def biggest_donors():
     count = _parse_int_arg("count", DEFAULT_DONOR_COUNT)
     offset = _parse_int_arg("offset", 0)
 
-    donors = get_biggest_donors(meb_conn, db_conn, count, offset)
+    donors, _ = get_biggest_donors(meb_conn, db_conn, count, offset)
     return jsonify(donors)
