@@ -108,4 +108,6 @@ def get_active_users_to_process(db_conn, service, include_error=False) -> list[d
          WHERE {filter_str}
       ORDER BY latest_listened_at DESC NULLS LAST
     """), {"service": service.value})
-    return [row for row in result.mappings()]
+    users = [row for row in result.mappings()]
+    db_conn.rollback()
+    return users
