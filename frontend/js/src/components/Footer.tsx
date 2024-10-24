@@ -51,7 +51,7 @@ export default function Footer() {
             <ul className="list-unstyled">
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
-                <Link to="/donate">Donate</Link>
+                <Link to="/donate/">Donate</Link>
               </li>
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}

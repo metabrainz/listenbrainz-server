@@ -88,7 +88,7 @@ export default function About() {
       <p>
         Listenbrainz is a free open source project that is not run for profit.
         If you would like to help the project out financially, consider{" "}
-        <Link to="/donate">donating</Link> to the MetaBrainz Foundation.
+        <Link to="/donate/">donating</Link> to the MetaBrainz Foundation.
       </p>
       <h3>Developers</h3>
       <p>

@@ -201,8 +201,8 @@ export default function Donate() {
               One where <b>you aren&apos;t the product</b> and your personal
               data isn&apos;t the price you pay.
               <br />
-              <b>All features are free for everyone.</b> —no paywalls, no
-              “Pro++” features.
+              <b>All features are free for everyone</b> —no paywalls, no “Pro++”
+              features.
             </p>
           </div>
           <div className="col-sm-6">
@@ -215,7 +215,7 @@ export default function Donate() {
               <b>At our scale, every contribution matters.</b>
             </p>
             <p>
-              <Link to="/donors">See all our donors</Link>
+              <Link to="/donors/">See all our donors</Link>
             </p>
           </div>
         </div>

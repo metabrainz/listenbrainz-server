@@ -101,7 +101,7 @@ function Donors() {
       <div className="donation-header-text">
         Money can&apos;t buy happiness, but it can buy&nbsp;
         <span style={{ fontWeight: 600 }}>LISTENBRAINZ HOSTING</span>
-        <Link to="/donate" className="btn btn-warning">
+        <Link to="/donate/" className="btn btn-warning">
           Donate
         </Link>
       </div>
