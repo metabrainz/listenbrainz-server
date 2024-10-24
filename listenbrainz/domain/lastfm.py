@@ -151,6 +151,7 @@ class LastfmService(ImporterService):
     def add_new_user(self, user_id: int, token: dict) -> bool:
         external_service_oauth.save_token(
             db_conn, user_id=user_id, service=self.service, access_token=None, refresh_token=None,
-            token_expires_ts=None, record_listens=True, scopes=[], external_user_id=token["external_user_id"]
+            token_expires_ts=None, record_listens=True, scopes=[], external_user_id=token["external_user_id"],
+            latest_listened_at=token["latest_listened_at"]
         )
         return True
