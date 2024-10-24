@@ -36,18 +36,14 @@ export default function Donate() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-                <button
-                  type="button"
+                <a
                   className="btn btn-success btn-lg btn-rounded"
-                  onClick={() =>
-                    window.open(
-                      "https://metabrainz.org/donate?amount=5",
-                      "_blank"
-                    )
-                  }
+                  href="https://metabrainz.org/donate?amount=5"
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   Donate $5
-                </button>
+                </a>
               </h2>
             </div>
             <ul className="fa-ul">
@@ -76,18 +72,14 @@ export default function Donate() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-                <button
-                  type="button"
+                <a
                   className="btn btn-success btn-lg btn-rounded"
-                  onClick={() =>
-                    window.open(
-                      "https://metabrainz.org/donate?amount=20",
-                      "_blank"
-                    )
-                  }
+                  href="https://metabrainz.org/donate?amount=20"
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   Donate $20
-                </button>
+                </a>
               </h2>
             </div>
             <ul className="fa-ul">
@@ -124,18 +116,14 @@ export default function Donate() {
           <div className="tier card">
             <div className="tier-heading">
               <h2>
-                <button
-                  type="button"
+                <a
                   className="btn btn-success btn-lg btn-rounded"
-                  onClick={() =>
-                    window.open(
-                      "https://metabrainz.org/donate?amount=50",
-                      "_blank"
-                    )
-                  }
+                  href="https://metabrainz.org/donate?amount=50"
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   Donate $50
-                </button>
+                </a>
               </h2>
             </div>
             <ul className="fa-ul">
