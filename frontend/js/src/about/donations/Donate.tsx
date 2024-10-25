@@ -4,8 +4,11 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { COLOR_LB_GREEN } from "../../utils/constants";
 import Blob from "../../home/Blob";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export default function Donate() {
+  const { currentUser } = React.useContext(GlobalAppContext);
+
   return (
     <div id="donations-page">
       <Blob width={250} height={250} randomness={1.5} className="blob" />
@@ -39,7 +42,9 @@ export default function Donate() {
               <h2>
                 <a
                   className="btn btn-success btn-lg btn-rounded"
-                  href="https://metabrainz.org/donate?amount=5"
+                  href={`https://metabrainz.org/donate?amount=5&editor=${
+                    currentUser?.name ?? ""
+                  }`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -75,7 +80,9 @@ export default function Donate() {
               <h2>
                 <a
                   className="btn btn-success btn-lg btn-rounded"
-                  href="https://metabrainz.org/donate?amount=20"
+                  href={`https://metabrainz.org/donate?amount=20&editor=${
+                    currentUser?.name ?? ""
+                  }`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -119,7 +126,9 @@ export default function Donate() {
               <h2>
                 <a
                   className="btn btn-success btn-lg btn-rounded"
-                  href="https://metabrainz.org/donate?amount=50"
+                  href={`https://metabrainz.org/donate?amount=50&editor=${
+                    currentUser?.name ?? ""
+                  }`}
                   target="_blank"
                   rel="noreferrer"
                 >
