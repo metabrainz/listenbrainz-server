@@ -200,7 +200,8 @@ export default function Donate() {
               <br />
               One where <b>you aren&apos;t the product</b> and your personal
               data isn&apos;t the price you pay.
-              <br />
+            </p>
+            <p>
               <b>All features are free for everyone</b> —no paywalls, no “Pro++”
               features.
             </p>
