@@ -184,11 +184,16 @@ def music_services_details():
     apple_user = apple_service.get_user(current_user.id)
     current_apple_permissions = "listen" if apple_user and apple_user["refresh_token"] else "disable"
 
+    lastfm_service = LastfmService()
+    lastfm_user = lastfm_service.get_user(current_user.id)
+    current_lastfm_permissions = "import" if lastfm_user else "disable"
+
     data = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
         "current_apple_permissions": current_apple_permissions,
+        "current_lastfm_permissions": current_lastfm_permissions,
     }
 
     return jsonify(data)
