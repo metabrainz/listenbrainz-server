@@ -10,6 +10,7 @@ type Section = {
 
 const sections: Section[] = [
   { to: "about/", label: "About" },
+  { to: "donate/", label: "Donate" },
   { to: "current-status/", label: "Site status" },
   { to: "add-data/", label: "Submitting data" },
   { to: "data/", label: "Using our data" },
