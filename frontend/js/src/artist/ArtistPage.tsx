@@ -55,6 +55,7 @@ function SortingButtons({
         type="secondary"
         active={sort === "release_date"}
         onClick={() => setSort("release_date")}
+        title="Sort by release date"
       >
         <FontAwesomeIcon icon={faCalendar} />
       </Pill>
@@ -62,6 +63,7 @@ function SortingButtons({
         type="secondary"
         active={sort === "total_listen_count"}
         onClick={() => setSort("total_listen_count")}
+        title="Sort by listen count"
       >
         <FontAwesomeIcon icon={faHeadphones} />
       </Pill>
