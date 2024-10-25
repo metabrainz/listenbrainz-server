@@ -266,6 +266,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           {isPlayingATrack && currentDataSourceName && (
             <a
               href={trackUrl || "#"}
+              className="music-service-icon"
               aria-label={`Open in ${currentDataSourceName}`}
               title={`Open in ${currentDataSourceName}`}
               target="_blank"

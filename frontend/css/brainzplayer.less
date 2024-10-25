@@ -213,6 +213,16 @@
         stroke: #dedede !important;
         color: #dedede !important;
       }
+      &.music-service-icon {
+        max-width: 1.5em;
+        > svg {
+          // Youtube forces us to follow their branding guidelines to the letter,
+          // so we need to force a minimum height of 20px for the icon path inside the svg
+          // [poo emoji]
+          min-height: 26.7px;
+          vertical-align: middle;
+        }
+      }
     }
 
     .love,
