@@ -247,10 +247,12 @@ def music_services_connect(service_name: str):
     if "latest_listened_at" not in data:
         raise APIBadRequest("Missing 'latest_listened_at' in request.")
 
-    try:
-        latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
-    except (ValueError, TypeError):
-        raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
+    latest_listened_at = None
+    if data["latest_listened_at"] is not None:
+        try:
+            latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
+        except (ValueError, TypeError):
+            raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
 
     # TODO: make last.fm start import timestamp configurable
     service = LastfmService()
