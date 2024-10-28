@@ -413,6 +413,14 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://codeberg.org/scaglio/listenbrainz-scrobbler">
+              ListenBrainz macOS Scrobbler for Music.app
+            </a>
+          </em>
+          , a macOS Bash script to submit Music.app listens to ListenBrainz
+        </li>
+        <li>
+          <em>
             <a href="https://yogo9.github.io/listenbrainz-recent-listens-to-playlist/">
               ListenBrainz Playlist Tool
             </a>
