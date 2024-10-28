@@ -59,10 +59,11 @@ export default function Donate() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>User flair</b>
+                <b>User flair*</b>
                 <br />
                 <small>
-                  Add a special effect to your username on the website
+                  Add a special effect to your username on the website (*coming
+                  soon)
                 </small>
               </li>
               <li className="perk">
@@ -97,10 +98,11 @@ export default function Donate() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>User flair</b>
+                <b>User flair*</b>
                 <br />
                 <small>
-                  Add a special effect to your username on the website
+                  Add a special effect to your username on the website (*coming
+                  soon)
                 </small>
               </li>
               <li className="perk">
@@ -143,10 +145,11 @@ export default function Donate() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>User flair</b>
+                <b>User flair*</b>
                 <br />
                 <small>
-                  Add a special effect to your username on the website
+                  Add a special effect to your username on the website (*coming
+                  soon)
                 </small>
               </li>
               <li className="perk">
