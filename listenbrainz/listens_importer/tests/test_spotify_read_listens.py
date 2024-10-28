@@ -10,8 +10,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.domain.external_service import ExternalServiceAPIError, \
     ExternalServiceInvalidGrantError
 from listenbrainz.domain.spotify import SpotifyService
-from listenbrainz.listens_importer import spotify_read_listens
-from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
+from listenbrainz.listens_importer.spotify import SpotifyImporter
 from unittest.mock import patch
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import external_service_oauth as db_oauth
@@ -32,7 +31,9 @@ class ConvertListensTestCase(DatabaseTestCase):
     def test_parse_play_to_listen_no_isrc(self):
         data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_no_isrc.json')))
 
-        listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
+        with listenbrainz.webserver.create_app().app_context():
+            importer = SpotifyImporter()
+            listen = importer.convert_spotify_recent_play_to_listen(data)[0]
 
         expected_listen = {
             'listened_at': 1519241031.761,
@@ -66,7 +67,9 @@ class ConvertListensTestCase(DatabaseTestCase):
         # If a spotify play record has many artists, make sure they are appended
         data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_two_artists.json')))
 
-        listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
+        with listenbrainz.webserver.create_app().app_context():
+            importer = SpotifyImporter()
+            listen = importer.convert_spotify_recent_play_to_listen(data)[0]
 
         expected_listen = {
             'listened_at': 1519240503.665,
@@ -97,25 +100,27 @@ class ConvertListensTestCase(DatabaseTestCase):
 
         self.assertDictEqual(listen, expected_listen)
 
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.send_mail')
+    @patch('listenbrainz.listens_importer.base.send_mail')
     def test_notify_user(self, mock_send_mail):
         db_user.create(self.db_conn, 2, "two", "one@two.one")
         app = listenbrainz.webserver.create_app()
         app.config['SERVER_NAME'] = "test"
         with app.app_context():
-            spotify_read_listens.notify_error(musicbrainz_id="two", error='some random error')
+            importer = SpotifyImporter()
+            importer.notify_error(musicbrainz_id="two", error='some random error')
         mock_send_mail.assert_called_once()
         self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['one@two.one'])
 
     @patch('listenbrainz.domain.spotify.SpotifyService.update_user_import_status')
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.notify_error')
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.make_api_request')
+    @patch.object(SpotifyImporter, 'notify_error')
+    @patch.object(SpotifyImporter, 'make_api_request')
     def test_notification_on_api_error(self, mock_make_api_request, mock_notify_error, mock_update):
         mock_make_api_request.side_effect = ExternalServiceAPIError('api borked')
         app = listenbrainz.webserver.create_app()
         app.config['TESTING'] = False
         with app.app_context():
-            spotify_read_listens.process_all_spotify_users()
+            importer = SpotifyImporter()
+            importer.process_all_users()
             mock_notify_error.assert_called_once_with(self.user['musicbrainz_id'], 'api borked')
             mock_update.assert_called_once()
 
@@ -126,7 +131,8 @@ class ConvertListensTestCase(DatabaseTestCase):
         with listenbrainz.webserver.create_app().app_context():
             SpotifyService().update_latest_listen_ts(self.user['id'],
                                                      int(datetime(2014, 5, 13, 16, 53, 20).timestamp()))
-            spotify_read_listens.process_all_spotify_users()
+            importer = SpotifyImporter()
+            importer.process_all_users()
             mock_spotipy.return_value.current_user_playing_track.assert_called_once()
             mock_spotipy.return_value.current_user_recently_played.assert_called_once_with(limit=50, after=1400000000000)
 
@@ -137,7 +143,8 @@ class ConvertListensTestCase(DatabaseTestCase):
         mock_current_user_recently_played.return_value = None
 
         with listenbrainz.webserver.create_app().app_context():
-            spotify_read_listens.process_all_spotify_users()
+            importer = SpotifyImporter()
+            importer.process_all_users()
             mock_current_user_playing_track.assert_called_once()
             mock_current_user_recently_played.assert_called_once_with(limit=50, after=0)
 
@@ -155,5 +162,7 @@ class ConvertListensTestCase(DatabaseTestCase):
             latest_listened_at=None,
             scopes=['user-read-recently-played'],
         )
-        with self.assertRaises(ExternalServiceInvalidGrantError):
-            spotify_read_listens.process_one_user(expired_token_spotify_user, SpotifyService())
+        with (self.assertRaises(ExternalServiceInvalidGrantError),
+              listenbrainz.webserver.create_app().app_context()):
+            importer = SpotifyImporter()
+            importer.process_one_user(expired_token_spotify_user)
