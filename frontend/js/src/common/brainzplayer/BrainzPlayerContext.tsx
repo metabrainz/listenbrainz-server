@@ -81,7 +81,8 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
-    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
+    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
+    | "UPDATE_MATCHED_TRACKS";
   data?: any;
 };
 
@@ -315,6 +316,39 @@ function valueReducer(
       return {
         ...state,
         ambientQueue: [...ambientQueue, ...tracksToAdd],
+      };
+    }
+    case "UPDATE_MATCHED_TRACKS": {
+      const {
+        queueMatchedTracks,
+        ambientQueueMatchedTracks,
+        dataSource,
+      } = action.data as {
+        queueMatchedTracks: Record<string, string>;
+        ambientQueueMatchedTracks: Record<string, string>;
+        dataSource: keyof MatchedTrack;
+      };
+
+      const newQueue = state.queue.map((track) => ({
+        ...track,
+        matchedTrack: {
+          ...track.matchedTrack,
+          [dataSource]: queueMatchedTracks[track.id],
+        },
+      }));
+
+      const newAmbientQueue = state.ambientQueue.map((track) => ({
+        ...track,
+        matchedTrack: {
+          ...track.matchedTrack,
+          [dataSource]: ambientQueueMatchedTracks[track.id],
+        },
+      }));
+
+      return {
+        ...state,
+        queue: newQueue,
+        ambientQueue: newAmbientQueue,
       };
     }
     default: {

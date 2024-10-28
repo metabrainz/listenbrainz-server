@@ -16,6 +16,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import Fuse from "fuse.js";
 import {
   ToastMsg,
   createNotification,
@@ -39,11 +40,16 @@ import {
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
+import {
+  getReleaseMBID,
+  getReleaseName,
+  getTrackName,
+} from "../../utils/utils";
 
 export type DataSourceType = {
   name: string;
   icon: IconProp;
-  playListen: (listen: Listen | JSPFTrack) => void;
+  playListen: (listen: BrainzPlayerQueueItem) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
   canSearchAndPlayTracks: () => boolean;
@@ -945,6 +951,75 @@ export default function BrainzPlayer() {
     }
   };
 
+  const handleAlbumMapping = (
+    dataSource: keyof MatchedTrack,
+    releaseMBID: string,
+    album: {
+      trackName: string;
+      uri: string;
+    }[]
+  ): void => {
+    const currentQueue = queueRef.current;
+    const currentAmbientQueue = ambientQueueRef.current;
+
+    // Filter the currentQueue after the current playing track
+    const currentPlayingListenIndex = currentListenIndexRef.current;
+    const currentQueueAfterCurrent = currentQueue.slice(
+      currentPlayingListenIndex + 1
+    );
+
+    const newQueueMatchedTracks: Record<string, string> = {};
+    const newAmbientQueueMatchedTracks: Record<string, string> = {};
+
+    // Filter the tracks in the album that are not yet matched
+    const queueTracksInAlbum = currentQueueAfterCurrent.filter((track) => {
+      return (
+        getReleaseMBID(track) === releaseMBID &&
+        track.matchedTrack?.[dataSource] === undefined
+      );
+    });
+
+    const ambientQueueTracksInAlbum = currentAmbientQueue.filter((track) => {
+      return (
+        getReleaseMBID(track) === releaseMBID &&
+        track.matchedTrack?.[dataSource] === undefined
+      );
+    });
+
+    if (!queueTracksInAlbum.length && !ambientQueueTracksInAlbum.length) {
+      return;
+    }
+
+    const fuzzysearch = new Fuse(album, {
+      keys: ["trackName"],
+    });
+
+    // Find the matches for the tracks in the album
+    queueTracksInAlbum.forEach((track) => {
+      const matches = fuzzysearch.search(getTrackName(track));
+      if (matches[0]) {
+        newQueueMatchedTracks[track.id] = matches[0].item.uri;
+      }
+    });
+
+    ambientQueueTracksInAlbum.forEach((track) => {
+      const matches = fuzzysearch.search(getReleaseName(track));
+      if (matches[0]) {
+        newAmbientQueueMatchedTracks[track.id] = matches[0].item.uri;
+      }
+    });
+
+    // Update the matched tracks
+    dispatch({
+      type: "UPDATE_MATCHED_TRACKS",
+      data: {
+        dataSource,
+        queueMatchedTracks: newQueueMatchedTracks,
+        ambientQueueMatchedTracks: newAmbientQueueMatchedTracks,
+      },
+    });
+  };
+
   React.useEffect(() => {
     window.addEventListener("storage", onLocalStorageEvent);
     window.addEventListener("message", receiveBrainzPlayerMessage);
@@ -1029,6 +1104,7 @@ export default function BrainzPlayer() {
             handleError={handleError}
             handleWarning={handleWarning}
             handleSuccess={handleSuccess}
+            handleAlbumMapping={handleAlbumMapping}
           />
         )}
         {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
@@ -1095,6 +1171,7 @@ export default function BrainzPlayer() {
             handleError={handleError}
             handleWarning={handleWarning}
             handleSuccess={handleSuccess}
+            handleAlbumMapping={handleAlbumMapping}
           />
         )}
       </BrainzPlayerUI>
