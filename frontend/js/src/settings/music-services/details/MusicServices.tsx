@@ -469,8 +469,7 @@ export default function MusicServices() {
                     <div className="title">Import loved tracks</div>
                     <div className="details">
                       Can only be run manually to import your loved tracks from
-                      Last.FM. You can run it again without clreating
-                      duplicates.
+                      Last.FM. You can run it again without creating duplicates.
                     </div>
                   </label>
                 </button>
