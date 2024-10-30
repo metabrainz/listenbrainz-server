@@ -2,7 +2,7 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import { act } from "react-dom/test-utils";
-import LastFMImporterModal from "../../src/lastfm/LastFMImporterModal";
+import LibreFMImporterModal from "../../src/lastfm/LibreFMImporterModal";
 
 const props = {
   disable: false,
@@ -12,13 +12,13 @@ const props = {
 
 describe("LastFmImporterModal", () => {
   it("renders", () => {
-    const wrapper = mount(<LastFMImporterModal {...props} />);
+    const wrapper = mount(<LibreFMImporterModal {...props} />);
     expect(wrapper.find("#listen-progress-container")).toHaveLength(1);
     expect(wrapper.find("button")).toHaveLength(1);
   });
 
   it("close button is disabled/enabled based upon props", async () => {
-    const wrapper = shallow(<LastFMImporterModal {...props} />);
+    const wrapper = shallow(<LibreFMImporterModal {...props} />);
     // Test if close button is disabled
     await act(() => {
       wrapper.setProps({ disable: true });

@@ -3,14 +3,12 @@ import * as React from "react";
 import { Link, useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import ReactTooltip from "react-tooltip";
-import LastFmImporter from "../../lastfm/LastFMImporter";
+import LibreFmImporter from "../../lastfm/LibreFMImporter";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type ImportLoaderData = {
   user_has_email: boolean;
   profile_url?: string;
-  lastfm_api_url: string;
-  lastfm_api_key: string;
   librefm_api_url: string;
   librefm_api_key: string;
 };
@@ -22,8 +20,6 @@ export default function Import() {
   const {
     user_has_email: userHasEmail,
     profile_url: profileUrl,
-    lastfm_api_url: lastfmApiUrl,
-    lastfm_api_key: lastfmApiKey,
     librefm_api_url: librefmApiUrl,
     librefm_api_key: librefmApiKey,
   } = data;
@@ -68,7 +64,7 @@ export default function Import() {
         pages.
       </p>
 
-      <h3>Import from Last.fm and Libre.fm</h3>
+      <h3>Import from Libre.fm</h3>
       <p>
         The importer manually steps through your listen history and imports the
         listens one page at a time.
@@ -76,15 +72,11 @@ export default function Import() {
 
       <ul>
         <li>
-          In order for this to work, you must disable the &#34;Hide recent
-          listening information&#34; setting in your Last.fm{" "}
-          <a
-            href="https://www.last.fm/settings/privacy"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Privacy Settings
-          </a>
+          Looking to import from Last.FM instead? Connect to your LFM account on
+          the{" "}
+          <Link to="/settings/music-services/details/">
+            music services page
+          </Link>
           .
         </li>
         <li>
@@ -97,7 +89,7 @@ export default function Import() {
         </li>
         <li>
           Clicking the &quot;Import listens&quot; button will import your
-          profile without the need to open Last.fm.
+          profile without the need to open Libre.fm.
         </li>
         <li>
           Your listen counts may not be accurate for up to 24 hours after you
@@ -118,7 +110,7 @@ export default function Import() {
       </p>
 
       {userHasEmail && (
-        <LastFmImporter
+        <LibreFmImporter
           user={{
             id: currentUser.id?.toString(),
             name: currentUser.name,
@@ -126,15 +118,13 @@ export default function Import() {
           }}
           profileUrl={profileUrl}
           apiUrl={apiUrl}
-          lastfmApiUrl={lastfmApiUrl}
-          lastfmApiKey={lastfmApiKey}
           librefmApiUrl={librefmApiUrl}
           librefmApiKey={librefmApiKey}
         />
       )}
 
       <br />
-      <h4> Reset Last.fm import timestamp </h4>
+      <h4> Reset Libre.fm import timestamp </h4>
       <p>
         If you think that a import has missed listens, you can reset your
         previous import timestamp. This will cause your next import to be a
