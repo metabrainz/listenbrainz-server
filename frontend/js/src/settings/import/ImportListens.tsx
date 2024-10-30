@@ -65,20 +65,20 @@ export default function Import() {
       </p>
 
       <h3>Import from Libre.fm</h3>
+      <div className="alert alert-warning">
+        Looking to import from Last.FM instead? Connect to your LFM account on
+        the{" "}
+        <Link to="/settings/music-services/details/">
+          connect services page
+        </Link>
+        .
+      </div>
       <p>
         The importer manually steps through your listen history and imports the
         listens one page at a time.
       </p>
 
       <ul>
-        <li>
-          Looking to import from Last.FM instead? Connect to your LFM account on
-          the{" "}
-          <Link to="/settings/music-services/details/">
-            music services page
-          </Link>
-          .
-        </li>
         <li>
           Should it fail for whatever reason, it is safe to restart the import
           process.

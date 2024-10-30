@@ -20,8 +20,6 @@ const props = {
   },
   profileUrl: "http://profile",
   apiUrl: "apiUrl",
-  lastfmApiUrl: "http://ws.audioscrobbler.com/2.0/",
-  lastfmApiKey: "foobar",
   librefmApiUrl: "http://libre.fm/2.0/",
   librefmApiKey: "barfoo",
 };
@@ -53,7 +51,7 @@ describe("LastFMImporter", () => {
       instance.getNumberOfPages();
 
       expect(fetchMock).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.lastfmApiKey}&from=1&format=json`
+        `${props.librefmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&from=1&format=json`
       );
       const num = await instance.getNumberOfPages();
       expect(num).toBe(1);
@@ -90,7 +88,7 @@ describe("LastFMImporter", () => {
       instance.getTotalNumberOfScrobbles();
 
       expect(window.fetch).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getinfo&user=${instance.state.librefmUsername}&api_key=${props.lastfmApiKey}&format=json`
+        `${props.librefmApiUrl}?method=user.getinfo&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&format=json`
       );
     });
 
@@ -184,7 +182,7 @@ describe("LastFMImporter", () => {
       instance.getPage(1, RETRIES);
 
       expect(window.fetch).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.lastfmApiKey}&from=1&page=1&format=json`
+        `${props.librefmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&from=1&page=1&format=json`
       );
     });
 
@@ -208,7 +206,7 @@ describe("LastFMImporter", () => {
         // This error message is also displayed to the user
         expect(err).toEqual(
           new Error(
-            `Failed to fetch page 1 from lastfm after ${RETRIES} retries: Error: Status 503`
+            `Failed to fetch page 1 from librefm after ${RETRIES} retries: Error: Status 503`
           )
         );
       }
@@ -410,7 +408,7 @@ describe("LastFMImporter", () => {
       instance.getUserPrivacy();
 
       expect(window.fetch).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.lastfmApiKey}&format=json`
+        `${props.librefmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&format=json`
       );
     });
 
@@ -471,9 +469,9 @@ describe("LastFMImporter", () => {
   describe("LibreFmImporter Page", () => {
     it("renders", () => {
       const wrapper = mount(<LibreFmImporter {...props} />);
-      expect(wrapper.getDOMNode()).toHaveTextContent("Choose a service");
-      expect(wrapper.getDOMNode()).toHaveTextContent("Last.fm");
-      expect(wrapper.getDOMNode()).toHaveTextContent("Libre.fm");
+      expect(wrapper.getDOMNode()).toHaveTextContent(
+        "Your librefm username:Import listens"
+      );
     });
 
     it("modal renders when button clicked", () => {
