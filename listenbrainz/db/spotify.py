@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from listenbrainz import db
 import sqlalchemy
 
 

@@ -32,7 +32,7 @@ class ListensImporter(abc.ABC):
         # number of listens imported since last metric update was submitted
         self._listens_imported_since_last_update = 0
         self._metric_submission_time = time.monotonic() + METRIC_UPDATE_INTERVAL
-        self.include_error = False
+        self.exclude_error = True
 
     def notify_error(self, musicbrainz_id: str, error: str):
         """ Notifies specified user via email about error during Spotify import.
@@ -125,7 +125,7 @@ class ListensImporter(abc.ABC):
                 failure: the number of users for whom we faced errors while importing.
         """
         try:
-            users = self.service.get_active_users_to_process(self.include_error)
+            users = self.service.get_active_users_to_process(self.exclude_error)
         except DatabaseException as e:
             listenbrainz.webserver.db_conn.rollback()
             current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)

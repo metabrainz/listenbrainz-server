@@ -151,7 +151,7 @@ class LastfmImporter(ListensImporter):
         # todo: last.fm is prone to errors, especially for entire history imports. currently doing alternate passes
         #   where we ignore and reattempt
         result = super().process_all_users()
-        self.include_error = not self.include_error
+        self.exclude_error = not self.exclude_error
         return result
 
 
