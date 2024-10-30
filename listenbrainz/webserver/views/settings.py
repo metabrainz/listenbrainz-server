@@ -244,11 +244,9 @@ def music_services_connect(service_name: str):
     data = request.json
     if "external_user_id" not in data:
         raise APIBadRequest("Missing 'external_user_id' in request.")
-    if "latest_listened_at" not in data:
-        raise APIBadRequest("Missing 'latest_listened_at' in request.")
 
     latest_listened_at = None
-    if data["latest_listened_at"] is not None:
+    if data.get("latest_listened_at") is not None:
         try:
             latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
         except (ValueError, TypeError):
