@@ -10,7 +10,7 @@ const props = {
   onClose: (event: React.MouseEvent<HTMLButtonElement>) => {},
 };
 
-describe("LastFmImporterModal", () => {
+describe("LibreFMImporterModal", () => {
   it("renders", () => {
     const wrapper = mount(<LibreFMImporterModal {...props} />);
     expect(wrapper.find("#listen-progress-container")).toHaveLength(1);

@@ -24,7 +24,7 @@ const props = {
   librefmApiKey: "barfoo",
 };
 
-describe("LastFMImporter", () => {
+describe("LibreFMImporter", () => {
   describe("encodeScrobbles", () => {
     it("encodes the given scrobbles correctly", () => {
       expect(LibreFmImporter.encodeScrobbles(page)).toEqual(
