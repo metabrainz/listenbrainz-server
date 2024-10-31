@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {%- block head -%}
+    <meta charset="utf-8" />
+    <title>
+      {% block title %}{{user_name|safe}} playing now - ListenBrainz{% endblock
+      %}
+    </title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, target-densityDpi=device-dpi, minimal-ui"
+    />
+    <meta
+      name="description"
+      content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music."
+    />
+    <!-- OpenGraph meta tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ListenBrainz" />
+    <meta
+      property="og:description"
+      content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music."
+    />
+    <!--  OpenGraph image meta tags -->
+    <meta
+      property="og:image"
+      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+    />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <!--  Twitter meta tags -->
+    <meta name="twitter:title" content="ListenBrainz" />
+    <meta
+      property="twitter:description"
+      content="Track, explore, visualise and share the music you listen to.
+  Follow your favourites and discover great new music."
+    />
+    <!--  Twitter image meta tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="{{ url_for('static', filename='img/share-header.png', _external=True) }}"
+    />
+
+    <link
+      rel="icon"
+      sizes="16x16"
+      href="{{ url_for('static', filename='img/favicon-16.png') }}"
+      type="image/png"
+    />
+    <link
+      rel="icon"
+      sizes="256x256"
+      href="{{ url_for('static', filename='img/favicon-256.png') }}"
+      type="image/png"
+    />
+    <link
+      rel="icon"
+      sizes="32x32"
+      href="{{ url_for('static', filename='img/favicon-32.png') }}"
+      type="image/png"
+    />
+
+    {# The css file has a .less extension in the manifest file entry (due to its
+    original name in Webpack entry) #}
+    <link
+      href="{{ get_static_path('main.less') }}"
+      rel="stylesheet"
+      media="screen"
+    />
+    {%- endblock -%}
+  </head>
+
+  <body>
+    <div id="LB-widget" style="max-width: 650px; min-width: 350px;"></div>
+    <div id="error"></div>
+
+    <script>
+      const userName = "{{ user_name | safe }}";
+      let playingNow =
+        "{{ playing_now|tojson|safe if playing_now is not none }}";
+
+      // if we need more options (i.e. for styling), they can be passed
+      // as search params (-> '...?theme=light&color=white')
+      let url = new URL(location);
+      let refresh = false;
+      // Default to one minute if refresh is activated
+      let refreshRate = 60 * 1000;
+
+      if (url.searchParams.has("refresh")) {
+        let refreshParamValue = url.searchParams.get("refresh");
+        if (refreshParamValue === "false" || refreshParamValue === "0" || refreshParamValue === 0) {
+          refresh = false;
+        }else {
+          refresh = true;
+        }
+        if (refreshParamValue && Number.isFinite(Number(refreshParamValue))) {
+          // Don't refresh more often than every 10 seconds
+          refreshRate = Math.max(Number(refreshParamValue), 10 * 1000);
+        }
+      }
+
+      // Copying the required helper functions
+      // so as to avoid loading big JS files
+      function pad(num) {
+        return `${num}`.padStart(2, "0");
+      }
+      function millisecondsToStr(milliseconds) {
+        const asSeconds = milliseconds / 1000;
+
+        let hours;
+        let minutes = Math.floor(asSeconds / 60);
+        const seconds = Math.floor(asSeconds % 60);
+
+        if (minutes > 59) {
+          hours = Math.floor(minutes / 60);
+          minutes %= 60;
+        }
+
+        return hours
+          ? `${hours}:${pad(minutes)}:${pad(seconds)}`
+          : `${minutes}:${pad(seconds)}`;
+      }
+      function updatePage() {
+        if (!playingNow?.track_metadata) {
+          console.error("No track metadata in playingNow object: ", playingNow);
+          return;
+        }
+        const metadata = playingNow.track_metadata;
+        const releaseName =
+          metadata.release_name ?? metadata.mbid_mapping?.release_name;
+        const releaseMBID =
+          metadata.additional_info?.release_mbid ??
+          metadata.release_mbid ??
+          metadata.mbid_mapping?.release_mbid;
+        const recordingMBID =
+          metadata.additional_info?.recording_mbid ??
+          metadata.mbid_mapping?.recording_mbid;
+        const recordingName =
+          metadata.track_name ?? metadata.mbid_mapping?.recording_name;
+        const artistName = metadata.artist_name;
+        const artistMBID = metadata.mbid_mapping?.artist_mbids?.[0];
+        const duration =
+          metadata.additional_info?.duration_ms &&
+          millisecondsToStr(metadata.additional_info?.duration_ms);
+
+        const caaId = metadata.mbid_mapping?.caa_id;
+        const caaReleaseMBID = metadata.mbid_mapping?.caa_release_mbid;
+        let releaseCoverArtSrc;
+        if (caaId && caaReleaseMBID) {
+          releaseCoverArtSrc = `https://archive.org/download/mbid-${caaReleaseMBID}/mbid-${caaReleaseMBID}-${caaId}_thumb250.jpg`;
+        }
+
+        document.getElementById("LB-widget").innerHTML = `
+          <div class="card listen-card">
+            <div class="main-content">
+              <div class="listen-thumbnail">
+                <a
+                  title="${releaseName}"
+                  href="https://listenbrainz.org/release/${releaseMBID}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  ><img
+                  src="${releaseCoverArtSrc}"
+                  alt="${releaseName}"
+                /></a>
+              </div>
+              <div class="listen-details">
+                <div class="title-duration">
+                  <div title="${recordingName}" class="ellipsis-2-lines">
+                  <a
+                      href="https://musicbrainz.org/recording/${recordingMBID}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >${recordingName}</a
+                  >
+                  </div>
+                  <div class="small text-muted" title="Duration">${
+                    duration ?? ""
+                  }</div>
+                </div>
+                <div class="small text-muted ellipsis" title="${artistName}">
+                  <a title="${artistName}" href="https://listenbrainz.org/artist/${artistMBID}/"
+                  target="_blank" rel="noopener noreferrer">
+                    ${artistName}
+                  </a>
+                </div>
+              </div>
+              <div class="right-section">
+                <div class="username-and-timestamp">
+                    <a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >${userName}</a>
+                    <span class="listen-time">Listening now</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      async function fetchRecentListen() {
+        console.debug("Refreshing playing-now");
+        try {
+          let response = await fetch(
+            `https://api.listenbrainz.org/1/user/${userName}/playing-now`
+          );
+          if (response.ok) {
+            const body = await response.json();
+
+            if (!body?.payload?.listens?.length) {
+              document.getElementById(
+                "error"
+              ).innerHTML = `${userName} is not playing anything at the moment`;
+            } else {
+              playingNow = body.payload.listens[0];
+              updatePage();
+            }
+          } else {
+            throw response.statusText;
+          }
+        } catch (error) {
+          document.getElementById("error").innerHTML =
+            "Something went wrong: " + error.toString();
+        }
+      }
+      if (userName && !playingNow) {
+        fetchRecentListen();
+        if (refresh) {
+          //refresh every...
+          console.debug(`Refreshing every ${refreshRate / 1000}s`);
+          setInterval(fetchRecentListen, refreshRate);
+        }
+      }
+      if (playingNow) {
+        updatePage();
+      }
+    </script>
+  </body>
+</html>

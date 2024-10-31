@@ -347,6 +347,26 @@ def year_in_music(user_name, year: int = 2023):
         },
     })
 
+# Embeddable widgets, return HTML page to embed in an iframe
+@user_bp.route("/<user_name>/embed/playing-now", methods=['GET'])
+def embed_playing_now(user_name):
+    # Which database to use to show playing_now stream.
+    playing_now_conn = webserver.redis_connection._redis
+
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
+    playing_now = playing_now_conn.get_playing_now(user.id)
+    if playing_now:
+        playing_now = playing_now.to_api()
+
+    return render_template("embed.html", user_name=user.musicbrainz_id, playing_now=playing_now )
+
+
 
 @user_bp.route("/<user_name>/",  defaults={'path': ''})
 @user_bp.route('/<user_name>/<path:path>/')
