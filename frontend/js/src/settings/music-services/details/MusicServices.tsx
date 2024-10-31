@@ -448,7 +448,7 @@ export default function MusicServices() {
                     <div className="title">Connect to Last.FM</div>
                     <div className="details">
                       We will periodically check your Last.FM account and add
-                      your new scrobbles to ListenBRainz
+                      your new scrobbles to ListenBrainz
                     </div>
                   </label>
                 </button>
