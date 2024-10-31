@@ -275,6 +275,16 @@ export default function ArtistPage(): JSX.Element {
 
   const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
 
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
+
   return (
     <div id="entity-page" className="artist-page" role="main">
       <Helmet>
@@ -507,7 +517,11 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
           {releaseGroupTypesNames.map(([type, rgGroup]) => (
             <div className="albums">
               <div className="listen-header">
@@ -525,7 +539,7 @@ export default function ArtistPage(): JSX.Element {
               </HorizontalScrollContainer>
             </div>
           ))}
-          {releaseGroupTypesNames.length >= 2 && (
+          {showFullDiscographyButton && (
             <div className="read-more mb-10">
               <button
                 type="button"
