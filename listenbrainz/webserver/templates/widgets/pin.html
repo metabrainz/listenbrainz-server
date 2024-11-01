@@ -4,7 +4,7 @@
     {%- block head -%}
     <meta charset="utf-8" />
     <title>
-      {% block title %}{{user_name|safe}} playing now - ListenBrainz{% endblock
+      {% block title %}{{user_name|safe}}'s' pin - ListenBrainz{% endblock
       %}
     </title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -73,39 +73,21 @@
       media="screen"
     />
     {%- endblock -%}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/2.0.2/timeago.min.js" integrity="sha512-sl01o/gVwybF1FNzqO4NDRDNPJDupfN0o2+tMm4K2/nr35FjGlxlvXZ6kK6faa9zhXbnfLIXioHnExuwJdlTMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   </head>
 
   <body>
-    <div class="card listen-card" style="max-width: 650px; min-width: 350px;">
-        <div class="main-content" id="main-content">
-        </div>
+    <div class="card listen-card pinned-recording-card currently-pinned" id="pin-card" style="max-width: 650px; min-width: 350px;">
     </div>
     <div id="error"></div>
 
     <script>
       const userName = "{{ user_name | safe }}";
-      let playingNow = {{ playing_now|tojson }};
-      
-      let refresh = false;
-      // Default to one minute if refresh is activated
-      let refreshRate = 60 * 1000;
+      let pinnedRecording = {{ pinned_recording|tojson }};
 
       // More options can be passed as search parameters in the URL
       let url = new URL(location);
-
-      if (url.searchParams.has("refresh")) {
-        let refreshParamValue = url.searchParams.get("refresh");
-        if (refreshParamValue === "false" || refreshParamValue === "0" || refreshParamValue === 0) {
-          refresh = false;
-        }else {
-          refresh = true;
-        }
-        if (refreshParamValue && Number.isFinite(Number(refreshParamValue))) {
-          // Don't refresh more often than every 10 seconds
-          refreshRate = Math.max(Number(refreshParamValue), 10 * 1000);
-        }
-      }
-
+    
       // Copying the required helper functions
       // so as to avoid loading big JS files
       function pad(num) {
@@ -126,13 +108,13 @@
         return hours
           ? `${hours}:${pad(minutes)}:${pad(seconds)}`
           : `${minutes}:${pad(seconds)}`;
-      }
+      } 
       function updatePage() {
-        if (!playingNow?.track_metadata) {
-          console.error("No track metadata in playingNow object: ", playingNow);
+        if (!pinnedRecording?.track_metadata) {
+          console.error("No track metadata in pinned_recording object: ", pinnedRecording);
           return;
         }
-        const metadata = playingNow.track_metadata;
+        const metadata = pinnedRecording.track_metadata;
         const releaseName =
           metadata.release_name ?? metadata.mbid_mapping?.release_name;
         const releaseMBID =
@@ -140,6 +122,7 @@
           metadata.release_mbid ??
           metadata.mbid_mapping?.release_mbid;
         const recordingMBID =
+          pinnedRecording.recording_mbid ??
           metadata.additional_info?.recording_mbid ??
           metadata.mbid_mapping?.recording_mbid;
         const recordingName =
@@ -149,6 +132,11 @@
         const duration =
           metadata.additional_info?.duration_ms &&
           millisecondsToStr(metadata.additional_info?.duration_ms);
+        // pinnedRecording.pinned_until is also available,
+        // but not sure we want to do anything with it here
+        const pin_date = 
+          pinnedRecording.created &&
+          timeago().format(pinnedRecording.created * 1000);
 
         const caaId = metadata.mbid_mapping?.caa_id;
         const caaReleaseMBID = metadata.mbid_mapping?.caa_release_mbid;
@@ -157,69 +145,95 @@
           releaseCoverArtSrc = `https://archive.org/download/mbid-${caaReleaseMBID}/mbid-${caaReleaseMBID}-${caaId}_thumb250.jpg`;
         }
 
-        document.getElementById("main-content").innerHTML = `
-          <div class="listen-thumbnail">
-            <a
-              title="${releaseName}"
-              href="https://listenbrainz.org/release/${releaseMBID}"
-              target="_blank"
-              rel="noopener noreferrer"
-              ><img
-              src="${releaseCoverArtSrc}"
-              alt="${releaseName}"
-            /></a>
-          </div>
-          <div class="listen-details">
-            <div class="title-duration">
-              <div title="${recordingName}" class="ellipsis-2-lines">
-              <a
-                  href="https://musicbrainz.org/recording/${recordingMBID}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >${recordingName}</a
-              >
-              </div>
-              <div class="small text-muted" title="Duration">${
-                duration ?? ""
-              }</div>
+        const blurbContent = "";
+
+        if(pinnedRecording.blurb_content){
+            blurbContent = `
+                <div class="additional-content">
+                    <div class="blurb-content">
+                        "${pinnedRecording.blurb_content}"
+                    </div>
+                </div>
+            `
+        }
+
+        document.getElementById("pin-card").innerHTML = `
+            <div class="main-content">
+                ${releaseCoverArtSrc ? `<div class="listen-thumbnail">
+                    <a
+                    title="${releaseName}"
+                    href="https://listenbrainz.org/release/${releaseMBID}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    ><img
+                    src="${releaseCoverArtSrc}"
+                    alt="${releaseName}"
+                    /></a>
+                </div>` : ""}
+                <div class="listen-details">
+                    <div class="title-duration">
+                    <div title="${recordingName}" class="ellipsis-2-lines">
+                    <a
+                        href="https://musicbrainz.org/recording/${recordingMBID}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >${recordingName}</a
+                    >
+                    </div>
+                    <div class="small text-muted" title="Duration">${
+                        duration ?? ""
+                    }</div>
+                    </div>
+                    <div class="small text-muted ellipsis" title="${artistName}">
+                    ${artistMBID ? `<a title="${artistName}" href="https://listenbrainz.org/artist/${artistMBID}/"
+                    target="_blank" rel="noopener noreferrer">
+                        ${artistName}
+                    </a>` : artistName}
+                    </div>
+                </div>
+                <div class="right-section">
+                    <div class="username-and-timestamp">
+                        <a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >${userName}</a>
+                        <span class="listen-time">pinned on ListenBrainz</span>
+                    </div>
+                </div>
+                <div class="pinned-recording-icon">
+                    <span class="icon">
+                        <svg aria-hidden="true" focusable="false" style="height: 1em; vertical-align: -0.125em;" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                            <path fill="currentColor" d="M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z"></path>
+                        </svg>
+                    </span>
+                    <span class="listen-time">${pin_date ??""}</span>
+                </div>
             </div>
-            <div class="small text-muted ellipsis" title="${artistName}">
-              <a title="${artistName}" href="https://listenbrainz.org/artist/${artistMBID}/"
-              target="_blank" rel="noopener noreferrer">
-                ${artistName}
-              </a>
-            </div>
-          </div>
-          <div class="right-section">
-            <div class="username-and-timestamp">
-                <a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
-                target="_blank"
-                rel="noopener noreferrer"
-                >${userName}</a>
-                <span class="listen-time">on ListenBrainz</span>
-            </div>
-          </div>
+            ${blurbContent}
         `;
       }
-      async function fetchRecentListen() {
-        console.debug("Refreshing playing-now");
+
+      async function fetchCurrentPin() {
+        console.debug("Fetching pin");
         try {
           let response = await fetch(
-            `https://api.listenbrainz.org/1/user/${userName}/playing-now`
+            `https://api.listenbrainz.org/1/user/${userName}/pins/current/`
           );
           if (response.ok) {
             document.getElementById("error").innerHTML = "";
             const body = await response.json();
 
-            if (!body?.payload?.listens?.length) {
+            if (!body?.pinned_recording) {
               document.getElementById(
-                "main-content"
-              ).innerHTML = `<a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
+                "pin-card"
+              ).innerHTML = `<div class="main-content">
+                No current pinned track for <a title="${userName}"
+                    href="https://listenbrainz.org/user/${userName}/"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >${userName}</a> is not playing anything at the moment`;
+                >${userName}</a></div>`;
             } else {
-              playingNow = body.payload.listens[0];
+              pinnedRecording = body.pinned_recording;
               updatePage();
             }
           } else {
@@ -230,17 +244,11 @@
             "Something went wrong: " + error.toString();
         }
       }
-      if (playingNow) {
+      if (pinnedRecording) {
         updatePage();
       } else if (userName) {
-        fetchRecentListen();
-        if (refresh) {
-          //refresh every...
-          console.debug(`Refreshing every ${refreshRate / 1000}s`);
-          setInterval(fetchRecentListen, refreshRate);
-        }
+        fetchCurrentPin();
       }
-      
     </script>
   </body>
 </html>
