@@ -109,7 +109,7 @@ export default function Settings() {
           <div className="form-group">
             <h3>Flair Settings</h3>
             <p>
-              Choose which flairs do you want to use for donation in
+              Choose which flair you want your username to show to let other users know you donated.
               ListenBrainz.
             </p>
             <select
