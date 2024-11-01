@@ -76,20 +76,22 @@
   </head>
 
   <body>
-    <div id="LB-widget" style="max-width: 650px; min-width: 350px;"></div>
+    <div class="card listen-card" style="max-width: 650px; min-width: 350px;">
+        <div class="main-content" id="main-content">
+        </div>
+    </div>
     <div id="error"></div>
 
     <script>
       const userName = "{{ user_name | safe }}";
-      let playingNow =
-        "{{ playing_now|tojson|safe if playing_now is not none }}";
-
-      // if we need more options (i.e. for styling), they can be passed
-      // as search params (-> '...?theme=light&color=white')
-      let url = new URL(location);
+      let playingNow = {{ playing_now|tojson }};
+      
       let refresh = false;
       // Default to one minute if refresh is activated
       let refreshRate = 60 * 1000;
+
+      // More options can be passed as search parameters in the URL
+      let url = new URL(location);
 
       if (url.searchParams.has("refresh")) {
         let refreshParamValue = url.searchParams.get("refresh");
@@ -155,50 +157,46 @@
           releaseCoverArtSrc = `https://archive.org/download/mbid-${caaReleaseMBID}/mbid-${caaReleaseMBID}-${caaId}_thumb250.jpg`;
         }
 
-        document.getElementById("LB-widget").innerHTML = `
-          <div class="card listen-card">
-            <div class="main-content">
-              <div class="listen-thumbnail">
-                <a
-                  title="${releaseName}"
-                  href="https://listenbrainz.org/release/${releaseMBID}"
+        document.getElementById("main-content").innerHTML = `
+          <div class="listen-thumbnail">
+            <a
+              title="${releaseName}"
+              href="https://listenbrainz.org/release/${releaseMBID}"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><img
+              src="${releaseCoverArtSrc}"
+              alt="${releaseName}"
+            /></a>
+          </div>
+          <div class="listen-details">
+            <div class="title-duration">
+              <div title="${recordingName}" class="ellipsis-2-lines">
+              <a
+                  href="https://musicbrainz.org/recording/${recordingMBID}"
                   target="_blank"
                   rel="noopener noreferrer"
-                  ><img
-                  src="${releaseCoverArtSrc}"
-                  alt="${releaseName}"
-                /></a>
+                  >${recordingName}</a
+              >
               </div>
-              <div class="listen-details">
-                <div class="title-duration">
-                  <div title="${recordingName}" class="ellipsis-2-lines">
-                  <a
-                      href="https://musicbrainz.org/recording/${recordingMBID}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >${recordingName}</a
-                  >
-                  </div>
-                  <div class="small text-muted" title="Duration">${
-                    duration ?? ""
-                  }</div>
-                </div>
-                <div class="small text-muted ellipsis" title="${artistName}">
-                  <a title="${artistName}" href="https://listenbrainz.org/artist/${artistMBID}/"
-                  target="_blank" rel="noopener noreferrer">
-                    ${artistName}
-                  </a>
-                </div>
-              </div>
-              <div class="right-section">
-                <div class="username-and-timestamp">
-                    <a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >${userName}</a>
-                    <span class="listen-time">Listening now</span>
-                </div>
-              </div>
+              <div class="small text-muted" title="Duration">${
+                duration ?? ""
+              }</div>
+            </div>
+            <div class="small text-muted ellipsis" title="${artistName}">
+              <a title="${artistName}" href="https://listenbrainz.org/artist/${artistMBID}/"
+              target="_blank" rel="noopener noreferrer">
+                ${artistName}
+              </a>
+            </div>
+          </div>
+          <div class="right-section">
+            <div class="username-and-timestamp">
+                <a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >${userName}</a>
+                <span class="listen-time">on ListenBrainz</span>
             </div>
           </div>
         `;
@@ -210,12 +208,16 @@
             `https://api.listenbrainz.org/1/user/${userName}/playing-now`
           );
           if (response.ok) {
+            document.getElementById("error").innerHTML = "";
             const body = await response.json();
 
             if (!body?.payload?.listens?.length) {
               document.getElementById(
-                "error"
-              ).innerHTML = `${userName} is not playing anything at the moment`;
+                "main-content"
+              ).innerHTML = `<a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >${userName}</a> is not playing anything at the moment`;
             } else {
               playingNow = body.payload.listens[0];
               updatePage();

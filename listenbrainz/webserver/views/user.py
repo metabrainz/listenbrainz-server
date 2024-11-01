@@ -364,7 +364,7 @@ def embed_playing_now(user_name):
     if playing_now:
         playing_now = playing_now.to_api()
 
-    return render_template("embed.html", user_name=user.musicbrainz_id, playing_now=playing_now )
+    return render_template("widgets/playing_now.html", user_name=user.musicbrainz_id, playing_now=playing_now )
 
 
 
