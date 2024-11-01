@@ -161,7 +161,7 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
         service: the service for which the token should be fetched
     """
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT "user".id
+        SELECT "user".id AS user_id
              , "user".musicbrainz_id
              , "user".musicbrainz_row_id
              , eso.service
