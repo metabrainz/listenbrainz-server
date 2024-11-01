@@ -964,15 +964,13 @@ export default function BrainzPlayer() {
 
     // Filter the currentQueue after the current playing track
     const currentPlayingListenIndex = currentListenIndexRef.current;
-    const currentQueueAfterCurrent = currentQueue.slice(
-      currentPlayingListenIndex + 1
-    );
+    const upcomingQueue = currentQueue.slice(currentPlayingListenIndex + 1);
 
     const newQueueMatchedTracks: Record<string, string> = {};
     const newAmbientQueueMatchedTracks: Record<string, string> = {};
 
     // Filter the tracks in the album that are not yet matched
-    const queueTracksInAlbum = currentQueueAfterCurrent.filter((track) => {
+    const queueTracksInAlbum = upcomingQueue.filter((track) => {
       return (
         getReleaseMBID(track) === releaseMBID &&
         track.matchedTrack?.[dataSource] === undefined

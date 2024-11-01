@@ -188,11 +188,11 @@ export default class AppleMusicPlayer
         song: appleMusicId,
         startPlaying: true,
       });
-      const albumId =
-        // eslint-disable-next-line no-underscore-dangle
-        queueData._queueItems[0].item.relationships.albums.data[0].id;
+      const albumId = queueData.item(0)?.relationships?.albums?.data?.[0]?.id;
 
-      this.fetchAlbumTracksAndUpdateMappings(albumId);
+      if (albumId) {
+        this.fetchAlbumTracksAndUpdateMappings(albumId);
+      }
     } catch (error) {
       handleError(error.message, "Error playing on Apple Music");
       onTrackNotFound();
