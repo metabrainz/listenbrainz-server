@@ -20,7 +20,7 @@ export default function Settings() {
 
   const { auth_token: authToken, name } = currentUser;
 
-  const [selectedFlairs, setSelectedFlairs] = React.useState<FlairPreferences>(
+  const [selectedFlair, setSelectedFlair] = React.useState<FlairPreferences>(
     currentFlair || "default"
   );
   const [showToken, setShowToken] = React.useState(false);
@@ -68,13 +68,18 @@ export default function Settings() {
       toast.error("You must be logged in to update your preferences");
       return;
     }
-    const response = await APIService.submitFlairPreferences(
-      currentUser?.auth_token,
-      selectedFlairs
-    );
-    toast.success("Flair preferences updated successfully");
-
-    globalContext.flair = selectedFlairs;
+    try {
+      const response = await APIService.submitFlairPreferences(
+        currentUser?.auth_token,
+        selectedFlair
+      );
+      toast.success("Flair preferences updated successfully");
+      globalContext.flair = selectedFlair;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to update flair preferences:", error);
+      toast.error("Failed to update flair preferences. Please try again.");
+    }
   };
 
   return (
@@ -109,16 +114,16 @@ export default function Settings() {
           <div className="form-group">
             <h3>Flair Settings</h3>
             <p>
-              Choose which flair you want your username to show to let other users know you donated.
-              ListenBrainz.
+              Choose which flair you want your username to show to let other
+              users know you donated. ListenBrainz.
             </p>
             <select
               id="flairs"
               name="flairs"
               className="form-control flair-select"
-              value={selectedFlairs}
+              value={selectedFlair}
               onChange={(e) =>
-                setSelectedFlairs(e.target.value as FlairPreferences)
+                setSelectedFlair(e.target.value as FlairPreferences)
               }
             >
               {flairOptions.map((option) => (
