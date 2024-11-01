@@ -27,8 +27,6 @@ def update_flair():
     if "flair" not in request.json:
         raise APIBadRequest("Missing flair")
 
-    # todo: add flair validation
-
     db_usersetting.update_flair(db_conn, user["id"], request.json["flair"])
     return jsonify({"success": True})
 
