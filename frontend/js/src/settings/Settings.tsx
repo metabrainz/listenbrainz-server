@@ -20,7 +20,7 @@ export default function Settings() {
 
   const { auth_token: authToken, name } = currentUser;
 
-  const [selectedFlair, setSelectedFlair] = React.useState<FlairPreferences>(
+  const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
     currentFlair || "default"
   );
   const [showToken, setShowToken] = React.useState(false);
@@ -122,9 +122,7 @@ export default function Settings() {
               name="flairs"
               className="form-control flair-select"
               value={selectedFlair}
-              onChange={(e) =>
-                setSelectedFlair(e.target.value as FlairPreferences)
-              }
+              onChange={(e) => setSelectedFlair(e.target.value as Flair)}
             >
               {flairOptions.map((option) => (
                 <option key={option.value} value={option.value}>

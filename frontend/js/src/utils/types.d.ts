@@ -657,12 +657,7 @@ declare type BrainzPlayerSettings = {
   >;
 };
 
-declare type FlairPreferences =
-  | "default"
-  | "air"
-  | "fire"
-  | "water"
-  | "disabled";
+declare type Flair = "default" | "air" | "fire" | "water" | "disabled";
 
 declare type UserPreferences = {
   saveData?: boolean;

@@ -17,7 +17,7 @@ export type GlobalAppContextT = {
   userPreferences?: UserPreferences;
   musicbrainzGenres?: string[];
   recordingFeedbackManager: RecordingFeedbackManager;
-  flair?: FlairPreferences;
+  flair?: Flair;
 };
 const apiService = new APIService(`${window.location.origin}/1`);
 

@@ -541,7 +541,7 @@ type GlobalAppProps = {
   musicbrainz?: MetaBrainzProjectUser;
   appleMusic?: AppleMusicUser;
   user_preferences?: UserPreferences;
-  flair?: FlairPreferences;
+  flair?: Flair;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 

@@ -1457,7 +1457,7 @@ export default class APIService {
 
   submitFlairPreferences = async (
     userToken: string,
-    flair: FlairPreferences
+    flair: Flair
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/settings/flair`;
     const response = await fetch(url, {
@@ -1783,7 +1783,7 @@ export default class APIService {
     return response.json();
   };
 
-  getUserFlairs = async (): Promise<Record<string, string>> => {
+  getUserFlairs = async (): Promise<Record<string, Flair>> => {
     const url = `${this.APIBaseURI}/donors/all-flairs`;
     const response = await fetch(url);
     await this.checkStatus(response);
