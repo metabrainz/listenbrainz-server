@@ -6,6 +6,7 @@ import { Provider as NiceModalProvider } from "@ebay/nice-modal-react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
+import FlairLoader from "../utils/FlairLoader";
 
 export default function Layout({ children }: { children?: React.ReactNode }) {
   return (
@@ -25,6 +26,7 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <div className="container-react">
         <div className="container-react-main">
           <Outlet />
+          <FlairLoader />
           {children}
           <BrainzPlayer />
         </div>

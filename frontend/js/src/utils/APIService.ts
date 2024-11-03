@@ -1782,4 +1782,11 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  getUserFlairs = async (): Promise<Record<string, string>> => {
+    const url = `${this.APIBaseURI}/donors/all-flairs`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
 }
