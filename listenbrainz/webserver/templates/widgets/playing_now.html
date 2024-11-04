@@ -217,7 +217,7 @@
               ).innerHTML = `<a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >${userName}</a> is not playing anything at the moment`;
+                  >${userName}</a>&nbsp;is not playing anything at the moment`;
             } else {
               playingNow = body.payload.listens[0];
               updatePage();
