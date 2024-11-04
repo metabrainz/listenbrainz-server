@@ -134,6 +134,19 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://github.com/Mastermindzh/tidal-hifi">TIDAL</a>
+          </em>
+          , a cross-platform music player and streaming service:{" "}
+          <a href="https://github.com/uwu/neptune">
+            <code>neptune client mod</code>
+          </a>
+          +{" "}
+          <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
+            <code>ListenBrainz plugin</code>
+          </a>
+        </li>
+        <li>
+          <em>
             <a href="https://www.videolan.org/vlc/">VLC</a>
           </em>
           , cross-platform multimedia player:{" "}
