@@ -348,6 +348,8 @@ def year_in_music(user_name, year: int = 2023):
     })
 
 # Embedable widgets, return HTML page to embed in an iframe
+
+
 @user_bp.route("/<user_name>/embed/playing-now", methods=['GET'])
 def embed_playing_now(user_name):
     # Which database to use to show playing_now stream.
@@ -364,9 +366,11 @@ def embed_playing_now(user_name):
     if playing_now:
         playing_now = playing_now.to_api()
 
-    return render_template("widgets/playing_now.html", user_name=user_name, playing_now=playing_now )
+    return render_template("widgets/playing_now.html", user_name=user_name, playing_now=playing_now)
 
 # Embedable widgets, return HTML page to embed in an iframe
+
+
 @user_bp.route("/<user_name>/embed/pin", methods=['GET'])
 def embed_pin(user_name):
     # Which database to use to show playing_now stream.
@@ -380,10 +384,10 @@ def embed_pin(user_name):
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
     if pin:
-        pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
+        pin = fetch_track_metadata_for_items(
+            webserver.ts_conn, [pin])[0].to_api()
 
-    return render_template("widgets/pin.html", user_name=user_name, pinned_recording=pin )
-
+    return render_template("widgets/pin.html", user_name=user_name, pinned_recording=pin)
 
 
 @user_bp.route("/<user_name>/",  defaults={'path': ''})
