@@ -196,6 +196,12 @@ def music_services_details():
         "current_lastfm_permissions": current_lastfm_permissions,
     }
 
+    if lastfm_user:
+        data["current_lastfm_settings"] = {
+            "external_user_id": lastfm_user["external_user_id"],
+            "latest_listened_at": lastfm_user["latest_listened_at"],
+        }
+
     return jsonify(data)
 
 

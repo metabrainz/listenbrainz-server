@@ -161,20 +161,24 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
         service: the service for which the token should be fetched
     """
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT user_id
+        SELECT "user".id AS user_id
              , "user".musicbrainz_id
              , "user".musicbrainz_row_id
-             , service
+             , eso.service
              , access_token
              , refresh_token
-             , last_updated
+             , eso.last_updated
              , token_expires
              , scopes
              , external_user_id
-          FROM external_service_oauth
+             , li.latest_listened_at
+          FROM external_service_oauth eso
           JOIN "user"
-            ON "user".id = external_service_oauth.user_id
-         WHERE user_id = :user_id AND service = :service
+            ON "user".id = eso.user_id
+     LEFT JOIN listens_importer li
+            ON li.external_service_oauth_id = eso.id
+         WHERE "user".id = :user_id
+           AND eso.service = :service
         """), {
             'user_id': user_id,
             'service': service.value
