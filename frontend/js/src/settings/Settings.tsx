@@ -6,10 +6,23 @@ import { Helmet } from "react-helmet";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
+const flairOptions = [
+  { label: "Default", value: "default", className: "default" },
+  { label: "Fire", value: "fire", className: "fire" },
+  { label: "Water", value: "water", className: "water" },
+  { label: "Air", value: "air", className: "air" },
+  { label: "Disabled", value: "disabled", className: "disabled" },
+];
+
 export default function Settings() {
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const globalContext = React.useContext(GlobalAppContext);
+  const { currentUser, APIService, flair: currentFlair } = globalContext;
+
   const { auth_token: authToken, name } = currentUser;
 
+  const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
+    currentFlair || "default"
+  );
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
 
@@ -50,13 +63,82 @@ export default function Settings() {
     setShowToken(!showToken);
   };
 
+  const submitFlairPreferences = async () => {
+    if (!currentUser?.auth_token) {
+      toast.error("You must be logged in to update your preferences");
+      return;
+    }
+    try {
+      const response = await APIService.submitFlairPreferences(
+        currentUser?.auth_token,
+        selectedFlair
+      );
+      toast.success("Flair preferences updated successfully");
+      globalContext.flair = selectedFlair;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to update flair preferences:", error);
+      toast.error("Failed to update flair preferences. Please try again.");
+    }
+  };
+
   return (
     <>
       <Helmet>
-        <title>User {currentUser?.name}</title>
+        <title>User {name}</title>
       </Helmet>
       <div id="user-profile">
-        <h2 className="page-title">{name}</h2>
+        <h2 className="page-title">User Settings</h2>
+        <div>
+          <h4>Username: {name}</h4>
+          <a
+            href={`https://musicbrainz.org/user/${name}`}
+            aria-label="Edit Profile on MusicBrainz"
+            title="Edit Profile on MusicBrainz"
+            className="btn btn-outline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="/static/img/meb-icons/MusicBrainz.svg"
+              width="18"
+              height="18"
+              alt="MusicBrainz"
+              style={{ verticalAlign: "bottom" }}
+            />{" "}
+            Edit Profile on MusicBrainz
+          </a>
+        </div>
+
+        <div className="mb-15 donation-flairs-settings">
+          <div className="form-group">
+            <h3>Flair Settings</h3>
+            <p>
+              Choose which flair you want your username to show to let other
+              users know you donated. ListenBrainz.
+            </p>
+            <select
+              id="flairs"
+              name="flairs"
+              className="form-control flair-select"
+              value={selectedFlair}
+              onChange={(e) => setSelectedFlair(e.target.value as Flair)}
+            >
+              {flairOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={submitFlairPreferences}
+              className="btn btn-lg btn-info"
+              type="button"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
 
         <h3>User token</h3>
         <p>
