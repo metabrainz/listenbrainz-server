@@ -4,6 +4,7 @@ import { capitalize } from "lodash";
 import { Link, useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { format } from "date-fns";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import {
@@ -19,6 +20,10 @@ type MusicServicesLoaderData = {
   current_soundcloud_permissions: string;
   current_apple_permissions: string;
   current_lastfm_permissions: string;
+  current_lastfm_settings: {
+    external_user_id?: string;
+    latest_listened_at?: string;
+  };
 };
 
 export default function MusicServices() {
@@ -37,8 +42,20 @@ export default function MusicServices() {
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
     soundcloud: loaderData.current_soundcloud_permissions,
     appleMusic: loaderData.current_apple_permissions,
-    lastFm: loaderData.current_lastfm_permissions,
+    lastfm: loaderData.current_lastfm_permissions,
   });
+
+  const [lastfmUserId, setLastfmUserId] = React.useState(
+    loaderData.current_lastfm_settings?.external_user_id
+  );
+  const [lastfmLatestListenedAt, setLastfmLatestListenedAt] = React.useState(
+    loaderData.current_lastfm_settings?.latest_listened_at
+      ? format(
+          new Date(loaderData.current_lastfm_settings?.latest_listened_at),
+          "yyyy-MM-dd'T'HH:mm:ss"
+        )
+      : undefined
+  );
 
   const handlePermissionChange = async (
     serviceName: string,
@@ -169,15 +186,14 @@ export default function MusicServices() {
     evt: React.FormEvent<HTMLFormElement>
   ) => {
     evt.preventDefault();
-    const formData = new FormData(evt.currentTarget);
-    const username = formData.get("lastfmUsername");
-    const startdate = formData.get("lastFMStartDatetime");
     try {
       const response = await fetch(`/settings/music-services/lastfm/connect/`, {
         method: "POST",
         body: JSON.stringify({
-          external_user_id: username,
-          latest_listened_at: startdate || null,
+          external_user_id: lastfmUserId,
+          latest_listened_at: lastfmLatestListenedAt
+            ? new Date(lastfmLatestListenedAt).toISOString()
+            : null,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -418,6 +434,10 @@ export default function MusicServices() {
                     name="lastfmUsername"
                     title="Last.FM Username"
                     placeholder="Last.FM Username"
+                    value={lastfmUserId}
+                    onChange={(e) => {
+                      setLastfmUserId(e.target.value);
+                    }}
                   />
                 </div>
                 <div>
@@ -428,6 +448,10 @@ export default function MusicServices() {
                     type="datetime-local"
                     className="form-control"
                     max={new Date().toISOString()}
+                    value={lastfmLatestListenedAt}
+                    onChange={(e) => {
+                      setLastfmLatestListenedAt(e.target.value);
+                    }}
                     name="lastFMStartDatetime"
                     title="Date and time to start import at"
                   />
@@ -435,14 +459,18 @@ export default function MusicServices() {
               </div>
               <br />
               <div className="music-service-selection">
-                <button type="submit" className="music-service-option">
+                <button
+                  type="submit"
+                  className="music-service-option"
+                  style={{ width: "100%" }}
+                >
                   <input
                     readOnly
                     type="radio"
                     id="lastfm_import"
                     name="lastfm"
                     value="import"
-                    checked={permissions.lastFm === "import"}
+                    checked={permissions.lastfm === "import"}
                   />
                   <label htmlFor="lastfm_import">
                     <div className="title">Connect to Last.FM</div>
@@ -475,7 +503,7 @@ export default function MusicServices() {
                 </button>
                 <ServicePermissionButton
                   service="lastfm"
-                  current={permissions.lastFm ?? "disable"}
+                  current={permissions.lastfm ?? "disable"}
                   value="disable"
                   title="Disable"
                   details="New scrobbles won't be imported from Last.FM"
