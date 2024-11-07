@@ -3,3 +3,372 @@
     width: 300px;
   }
 }
+
+.flair {
+  /*
+    Using CSS variables allows us to modify the colors
+    on the fly for hovering/visited links instead of having to
+    overwrite styles for hover, visited, hover+visited
+  */
+  --link-color: @link-color;
+  &:hover{
+    --link-color: @link-hover-color;
+  }
+  &:visited{
+    --link-color: @link-visited-color;
+    &:hover{
+      --link-color: @link-visited-hover-color;
+    }
+  }
+
+  /* 
+    Glitchy shaking animation
+    Requires passing the parent element a data-text attribute with the username
+  */
+  &.shake {
+    position: relative;
+    &::before, &::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      animation: shake-text-effect 3s infinite;
+      color: @blue;
+    }
+  }
+  @keyframes shake-text-effect {
+    0% {
+      opacity:1;
+      left: 0px;
+      top: 0px;
+    }
+    3% {
+      left: -2px;
+      top: -2px;
+    }
+    5% {
+      left: 2px;
+      top: 0px;
+    }
+    7% {
+      left: -1px;
+      top: 2px;
+    }
+    9% {
+      left: 1px;
+      top: -1px;
+    }
+    10% {
+      left: 0px;
+      top: -2px;
+      opacity:1;
+    }
+    11%, 100% {
+      opacity:0;
+      left: 0px;
+      top: 0px;
+    }
+  }
+
+
+  /*
+    Color sweeps, with LB blue and orange color or white
+    Requires each letter separate in a span element
+  */
+  &.lb-colors-sweep, &.light-sweep {
+    > span {
+      transform-origin: 50% 50% -0.3em;
+      position: relative;
+      display: inline-block;
+      animation-timing-function: ease-in;
+      // delay each letter's animation by 0.1s compared to previous letter
+      each(range(20), {
+        &:nth-child(@{index}) {
+          animation-delay: @index * 0.1s;
+        }
+      });
+    }
+  }
+  &.lb-colors-sweep > span {
+    animation: lb-colors-sweep 3s infinite;
+  }
+  @keyframes lb-colors-sweep {
+    0%,
+    9%,
+    100% {
+      color: initial;
+    }
+    3% {
+      color: @orange;
+    }
+    6% {
+      color: @blue;
+    }
+  }
+
+  &.light-sweep > span {
+    animation: light-sweep 3s infinite;
+  }
+  @keyframes light-sweep {
+    0%,
+    9%,
+    100% {
+      color: initial;
+    }
+    3% {
+      color: @white;
+    }
+    6% {
+      color: initial;
+    }
+  }
+
+
+  /*
+    Wavy animation with each letter jumping up a bit in succession
+    Requires each letter separate in a span element
+   */
+  &.wave > span {
+    position: relative;
+    display: inline-block;
+    animation: wave 3s infinite;
+    animation-timing-function: ease-in;
+    // delay each letter's animation by 0.1s compared to previous letter
+    each(range(20), {
+      &:nth-child(@{index}) {
+        animation-delay: @index * 0.05s;
+      }
+    });
+  }
+  @keyframes wave {
+    0%,
+    6%,
+    12%,
+    100% {
+      transform: translateY(0);
+    }
+    9% {
+      transform: translateY(-3px);
+    }
+  }
+  
+  /*
+    Each letter flips vertically or horizontally one after the other in a wave
+    Requires each letter separate in a span element
+   */
+  &.flip-horizontal > span,
+  &.flip-vertical > span,
+  &.flip-3d > span {
+    position: relative;
+    display: inline-block;
+    animation-timing-function: ease-in;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
+    transform-origin: center 40%;
+    each(range(20), {
+      &:nth-child(@{index}) {
+        animation-delay: @index * 0.1s;
+      }
+    });
+  }
+  &.flip-horizontal > span{
+    animation-name: flip-horizontal;
+  }
+  &.flip-vertical > span{
+    animation-name: flip-vertical;
+  }
+  &.flip-3d > span{
+    animation-name: flip-3d;
+    transform-origin: 50% 50% -0.3em;
+  }
+
+  @keyframes flip-horizontal {
+    0%,
+    12%,
+    100% {
+    transform: rotateY(0);
+    }
+    6% {
+      transform: rotateY(360deg);
+    }
+  }
+  @keyframes flip-vertical {
+    0%,
+    12%,
+    100% {
+      transform: rotateX(0);
+    }
+    6% {
+      transform: rotateX(360deg);
+    }
+  }
+  @keyframes flip-3d {
+    0%,
+    8%,
+    100% {
+      transform: rotateX(0);
+    }
+    4% {
+      transform: rotateX(-90deg);
+    }
+    4.01% {
+      transform: rotateX(90deg);
+    }
+  }
+
+
+  /*
+    3D text with support for visited and hover colors 
+  */
+  &.extruded {
+    color: @body-bg;
+    text-shadow: 0px 0px var(--link-color),
+      -1px 1px var(--link-color),
+      -2px 2px var(--link-color),
+      -3px 3px var(--link-color),
+      -4px 4px var(--link-color),
+      -5px 5px var(--link-color),
+      -6px 6px var(--link-color);
+    -webkit-text-stroke: 0.5px var(--link-color);
+  }
+
+  /*
+    Animated underline in LB blue and orange colors swishes under the user name
+   */
+
+  &.underline {
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      transform: scaleX(0);
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(to right, @blue, @orange);
+      transform-origin: bottom right;
+      animation: underline 4s infinite;
+    }
+  }
+
+  @keyframes underline {
+    0%{
+      transform: scaleX(0);
+      transform-origin: bottom left;
+        }
+    10% {
+      transform: scaleX(1);
+        transform-origin: bottom left;
+    }
+    10.01% {
+      transform: scaleX(1);
+        transform-origin: bottom right;
+    }
+    20%, 100% {
+      transform: scaleX(0);
+        transform-origin: bottom right;
+    }
+  }
+
+  /*
+    Tornado effect: letters are rotated on the X axis one after the other 
+    Requires each letter separate in a span element
+   */
+  &.tornado > span {
+      transform-origin: 50% 50% -6px;
+      position: relative;
+      display: inline-block;
+      animation: tornado 4s infinite;
+      animation-timing-function: ease-in;
+      each(range(20), {
+        &:nth-child(@{index}) {
+          animation-delay: @index * 0.1s;
+        }
+      });
+    }
+    @keyframes tornado {
+      0%,
+      12%,
+      100% {
+        transform: rotateX(0);
+      }
+      6% {
+        transform: rotateX(360deg);
+      }
+    }
+
+
+  /*
+    Highlights the user name like a highlighter on hover, complete with highlighter yellow
+  */
+  &.highlighter {
+    &::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      inset: 0 0 0 0;
+      background: #FBF719;
+      z-index: -1;
+      transition: transform 0.3s ease;
+      transform: scaleX(0) skewX(-10deg);
+      transform-origin: bottom right;
+    }
+    &:hover::before {
+      transform: scaleX(1) skewX(-10deg);
+      transform-origin: bottom left;
+    }
+  }
+
+  /*
+    3D stereoscopic effect (like that with red/cyan glasses) on hover only
+  */
+
+  &.anaglyph {
+    transition: text-shadow 0.3s;
+    &:hover {
+      text-shadow: 0.06em -1px red,  -0.06em 1px cyan;
+    }
+  }
+
+  /*
+    The text appears sliced in two, with a drop shadow to sell the effect 
+    Requires passing the parent element a data-text attribute with the username
+  */
+  &.sliced {
+    position:relative;
+    color: transparent;
+    &::before, &::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    &::before {
+      clip-path: polygon(0% 0%, 100% 0%, 100% 48%, 0% 58%);
+      color: var(--link-color);
+    }
+    &::after {
+      clip-path: polygon(0% 60%, 100% 50%, 100% 100%, 0% 100%);
+      color: transparent;
+      background: -webkit-linear-gradient(178deg, black 53%, var(--link-color) 65%);
+      background: linear-gradient(178deg, black 50%, var(--link-color) 65%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      // offset the text slightly
+      transform: translateX(-0.05em);
+    }
+  }
+
+
+
+}
+
+
+
