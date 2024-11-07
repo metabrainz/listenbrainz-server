@@ -207,10 +207,9 @@ export default class AppleMusicPlayer
         `/v1/catalog/{{storefrontId}}/search`,
         { term: searchTerm, types: "songs" }
       );
-      const releaseName = _get(listen, "track_metadata.release_name");
-      // Remove accents from both the search term and the API results
-      const trackNameWithoutAccents = deburr(trackName);
+      const releaseName = _get(listen, "track_metadata.release_name", "");
       const releaseNameWithoutAccents = deburr(releaseName);
+      const trackNameWithoutAccents = deburr(trackName);
       const candidateMatches = response?.data?.results?.songs?.data.map(
         (candidate) => ({
           ...candidate,
@@ -221,25 +220,29 @@ export default class AppleMusicPlayer
           },
         })
       );
-      const fuzzyMatches = fuzzysort.go(
-        trackNameWithoutAccents,
-        candidateMatches,
-        {
-          key: "attributes.name",
-        }
-      );
 
-      const matchWithAlbum = fuzzyMatches.find((match) => {
-        const albumMatch = fuzzysort.single(
-          releaseNameWithoutAccents,
-          match.obj.attributes.albumName
+      let fuzzyMatches;
+      if (releaseNameWithoutAccents) {
+        // If we have a release name, search for both track and album
+        fuzzyMatches = fuzzysort.go(
+          `${trackNameWithoutAccents} ${releaseNameWithoutAccents}`,
+          candidateMatches,
+          {
+            keys: ["attributes.name", "attributes.albumName"],
+            scoreFn: (a) => {
+              const NO_MATCH = -Infinity;
+              const trackScore = a[0]?.score ?? NO_MATCH;
+              const albumScore = a[1]?.score ?? NO_MATCH;
+
+              return trackScore + (albumScore > 0 ? albumScore * 0.8 : 0);
+            },
+          }
         );
-        return albumMatch && albumMatch.score > 0.8;
-      });
-
-      if (matchWithAlbum) {
-        await this.playAppleMusicId(matchWithAlbum.obj.id);
-        return;
+      } else {
+        // Otherwise just search for track name
+        fuzzyMatches = fuzzysort.go(trackNameWithoutAccents, candidateMatches, {
+          key: "attributes.name",
+        });
       }
 
       // If no match found with album, play the best track match
@@ -249,6 +252,7 @@ export default class AppleMusicPlayer
       }
       // No good match, onTrackNotFound will be called in the code block below
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.debug("Apple Music API request failed:", error);
     }
     onTrackNotFound();
