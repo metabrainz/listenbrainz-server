@@ -122,23 +122,6 @@ export default function Import() {
           librefmApiKey={librefmApiKey}
         />
       )}
-
-      <br />
-      <h4> Reset Libre.fm import timestamp </h4>
-      <p>
-        If you think that a import has missed listens, you can reset your
-        previous import timestamp. This will cause your next import to be a
-        complete import, which will add missing listens without adding
-        duplicates to your history.
-      </p>
-
-      <p>
-        <span className="btn btn-warning">
-          <Link to="/settings/resetlatestimportts/" style={{ color: "white" }}>
-            Reset import timestamp
-          </Link>
-        </span>
-      </p>
     </>
   );
 }
