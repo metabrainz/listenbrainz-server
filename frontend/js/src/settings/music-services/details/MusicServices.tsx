@@ -43,15 +43,17 @@ export default function MusicServices() {
     lastfm: loaderData.current_lastfm_permissions,
   });
 
-  const [lastfmSettings, setLastfmSettings] = React.useState({
-    externalUserId: loaderData.current_lastfm_settings?.external_user_id,
-    latestListenedAt: loaderData.current_lastfm_settings?.latest_listened_at
+  const [lastfmUserId, setLastfmUserId] = React.useState(
+    loaderData.current_lastfm_settings?.external_user_id
+  );
+  const [lastfmLatestListenedAt, setLastfmLatestListenedAt] = React.useState(
+    loaderData.current_lastfm_settings?.latest_listened_at
       ? format(
           new Date(loaderData.current_lastfm_settings?.latest_listened_at),
           "yyyy-MM-dd'T'HH:mm:ss"
         )
-      : undefined,
-  });
+      : undefined
+  );
 
   const handlePermissionChange = async (
     serviceName: string,
@@ -186,9 +188,9 @@ export default function MusicServices() {
       const response = await fetch(`/settings/music-services/lastfm/connect/`, {
         method: "POST",
         body: JSON.stringify({
-          external_user_id: lastfmSettings?.externalUserId,
-          latest_listened_at: lastfmSettings?.latestListenedAt
-            ? new Date(lastfmSettings.latestListenedAt).toISOString()
+          external_user_id: lastfmUserId,
+          latest_listened_at: lastfmLatestListenedAt
+            ? new Date(lastfmLatestListenedAt).toISOString()
             : null,
         }),
         headers: {
@@ -387,12 +389,9 @@ export default function MusicServices() {
                     name="lastfmUsername"
                     title="Last.FM Username"
                     placeholder="Last.FM Username"
-                    value={lastfmSettings?.externalUserId}
+                    value={lastfmUserId}
                     onChange={(e) => {
-                      setLastfmSettings((prevState) => ({
-                        ...prevState,
-                        externalUserId: e.target.value,
-                      }));
+                      setLastfmUserId(e.target.value);
                     }}
                   />
                 </div>
@@ -404,12 +403,9 @@ export default function MusicServices() {
                     type="datetime-local"
                     className="form-control"
                     max={new Date().toISOString()}
-                    value={lastfmSettings?.latestListenedAt}
+                    value={lastfmLatestListenedAt}
                     onChange={(e) => {
-                      setLastfmSettings((prevState) => ({
-                        ...prevState,
-                        latestListenedAt: e.target.value,
-                      }));
+                      setLastfmLatestListenedAt(e.target.value);
                     }}
                     name="lastFMStartDatetime"
                     title="Date and time to start import at"
