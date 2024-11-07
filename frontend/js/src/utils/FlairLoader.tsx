@@ -1,15 +1,14 @@
 import * as React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { QueryObserverResult, useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "./GlobalAppContext";
 
-function FlairLoader() {
+export default function useUserFlairs() {
   const { APIService } = React.useContext(GlobalAppContext);
   const data = useQuery({
     queryKey: ["flair"],
     queryFn: () => APIService.getUserFlairs().catch(() => ({})),
     staleTime: Infinity,
   });
-  return null;
-}
 
-export default React.memo(FlairLoader);
+  return data as QueryObserverResult<Record<string, Flair>>;
+}
