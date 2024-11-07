@@ -4,6 +4,10 @@
   }
 }
 
+/* Issues with old versions of stylelint and stylelint-config-recommended-less.
+   Updating either is a breakign change, so ignore some non-existing issues in the meantime
+*/
+
 .flair {
   /*
     Using CSS variables allows us to modify the colors
@@ -86,6 +90,7 @@
       display: inline-block;
       animation-timing-function: ease-in;
       // delay each letter's animation by 0.1s compared to previous letter
+      /* stylelint-disable-next-line */
       each(range(20), {
         &:nth-child(@{index}) {
           animation-delay: @index * 0.1s;
@@ -137,6 +142,7 @@
     animation: wave 3s infinite;
     animation-timing-function: ease-in;
     // delay each letter's animation by 0.1s compared to previous letter
+    /* stylelint-disable-next-line */
     each(range(20), {
       &:nth-child(@{index}) {
         animation-delay: @index * 0.05s;
@@ -168,6 +174,7 @@
     animation-duration: 4s;
     animation-iteration-count: infinite;
     transform-origin: center 40%;
+    /* stylelint-disable-next-line */
     each(range(20), {
       &:nth-child(@{index}) {
         animation-delay: @index * 0.1s;
@@ -224,13 +231,9 @@
   */
   &.extruded {
     color: @body-bg;
-    text-shadow:
-      0px 0px var(--link-color),
-      -1px 1px var(--link-color),
-      -2px 2px var(--link-color),
-      -3px 3px var(--link-color),
-      -4px 4px var(--link-color),
-      -5px 5px var(--link-color),
+    text-shadow: 0px 0px var(--link-color), -1px 1px var(--link-color),
+      -2px 2px var(--link-color), -3px 3px var(--link-color),
+      -4px 4px var(--link-color), -5px 5px var(--link-color),
       -6px 6px var(--link-color);
     -webkit-text-stroke: 0.5px var(--link-color);
   }
@@ -285,6 +288,7 @@
     display: inline-block;
     animation: tornado 4s infinite;
     animation-timing-function: ease-in;
+    /* stylelint-disable-next-line */
     each(range(20), {
         &:nth-child(@{index}) {
           animation-delay: @index * 0.1s;
@@ -333,9 +337,7 @@
   &.anaglyph {
     transition: text-shadow 0.3s;
     &:hover {
-      text-shadow:
-        0.06em -1px red,
-        -0.06em 1px cyan;
+      text-shadow: 0.06em -1px red, -0.06em 1px cyan;
     }
   }
 
