@@ -9,6 +9,8 @@
 */
 
 .flair {
+  position: relative;
+  display: inline-block;
   /*
     Using CSS variables allows us to modify the colors
     on the fly for hovering/visited links instead of having to
@@ -30,7 +32,6 @@
     Requires passing the parent element a data-text attribute with the username
   */
   &.shake {
-    position: relative;
     &::before,
     &::after {
       content: attr(data-text);
@@ -243,13 +244,12 @@
    */
 
   &.underline {
-    position: relative;
     &::after {
       content: "";
       position: absolute;
       width: 100%;
       transform: scaleX(0);
-      height: 2px;
+      height: 1px;
       bottom: 0;
       left: 0;
       background: linear-gradient(to right, @blue, @orange);
@@ -310,6 +310,7 @@
     Highlights the user name like a highlighter on hover, complete with highlighter yellow
   */
   &.highlighter {
+    z-index: 1;
     &::before {
       content: " ";
       display: block;
@@ -346,7 +347,6 @@
     Requires passing the parent element a data-text attribute with the username
   */
   &.sliced {
-    position: relative;
     color: transparent;
     &::before,
     &::after {
