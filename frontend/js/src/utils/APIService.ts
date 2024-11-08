@@ -2,7 +2,7 @@ import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
-import { PopularRecording } from "../album/utils";
+import type { Flair } from "./constants";
 
 export default class APIService {
   APIBaseURI: string;

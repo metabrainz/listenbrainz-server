@@ -3,25 +3,21 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { startCase } from "lodash";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
-
-const flairOptions = [
-  { label: "Default", value: "default", className: "default" },
-  { label: "Fire", value: "fire", className: "fire" },
-  { label: "Water", value: "water", className: "water" },
-  { label: "Air", value: "air", className: "air" },
-  { label: "Disabled", value: "disabled", className: "disabled" },
-];
+import { FlairEnum, Flair, type FlairName } from "../utils/constants";
 
 export default function Settings() {
+  /* Cast enum keys to array so we can map them to select options */
+  const flairNames = Object.keys(FlairEnum) as FlairName[];
   const globalContext = React.useContext(GlobalAppContext);
   const { currentUser, APIService, flair: currentFlair } = globalContext;
 
   const { auth_token: authToken, name } = currentUser;
 
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
-    currentFlair || "default"
+    currentFlair ?? FlairEnum.None
   );
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
@@ -111,33 +107,48 @@ export default function Settings() {
         </div>
 
         <div className="mb-15 donation-flairs-settings">
-          <div className="form-group">
+          <form className="form-group" onSubmit={submitFlairPreferences}>
             <h3>Flair Settings</h3>
             <p>
               Choose which flair you want your username to show to let other
-              users know you donated. ListenBrainz.
+              users know you donated.
+              <br />
+              Some flairs only appear when hovering over your username.
             </p>
-            <select
-              id="flairs"
-              name="flairs"
-              className="form-control flair-select"
-              value={selectedFlair}
-              onChange={(e) => setSelectedFlair(e.target.value as Flair)}
-            >
-              {flairOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap" style={{gap:"1em", alignItems:"center"}}>
+                <select
+                  id="flairs"
+                  name="flairs"
+                  className="form-control flair-select"
+                  value={selectedFlair}
+                  onChange={(e:React.ChangeEvent<HTMLSelectElement> & { target: { value: Flair }}) => {
+                    setSelectedFlair(e.target.value);
+                  }}
+                >
+                  {flairNames.map((flairName) => (
+                    <option key={flairName} value={FlairEnum[flairName]}>
+                      {startCase(flairName)}
+                    </option>
+                  ))}
+                </select>
+              <span>
+                Preview: {
+                // eslint-disable-next-line jsx-a11y/anchor-is-valid
+                <a href="#" className={`flair ${selectedFlair}`} data-text={name}>
+                  {name.split("").map((letter, i) => (
+                    // eslint-disable-next-line react/no-array-index-key
+                    <span key={letter + i}>{letter}</span>
+                  ))}
+                </a>}
+              </span>
+            </div>
             <button
-              onClick={submitFlairPreferences}
-              className="btn btn-lg btn-info"
-              type="button"
+              className="btn btn-success mt-10"
+              type="submit"
             >
               Submit
             </button>
-          </div>
+          </form>
         </div>
 
         <h3>User token</h3>
@@ -177,7 +188,7 @@ export default function Settings() {
 
         <p>If you want to reset your token, click below</p>
         <p>
-          <span className="btn btn-info btn-lg" style={{ width: "200px" }}>
+          <span className="btn btn-warning" style={{ width: "200px" }}>
             <Link to="/settings/resettoken/" style={{ color: "white" }}>
               Reset token
             </Link>
