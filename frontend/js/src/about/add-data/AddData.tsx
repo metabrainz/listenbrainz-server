@@ -441,7 +441,7 @@ export default function AddData() {
       <ul>
       <li>
           <em>
-            <a href="https://github.com/coopw1/BrainzBotP">BrainzBot</a>
+            <a href="https://github.com/coopw1/BrainzBot">BrainzBot</a>
           </em>
           , a Discord bot that can be user-run or added to your server.
           Showcase what you're listening to, share charts, album grids,
