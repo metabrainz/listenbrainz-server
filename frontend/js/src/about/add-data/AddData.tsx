@@ -134,7 +134,7 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://github.com/Mastermindzh/tidal-hifi">TIDAL</a>
+            <a href="https://tidal.com/">TIDAL</a>
           </em>
           , a cross-platform music player and streaming service:{" "}
           <a href="https://github.com/uwu/neptune">
