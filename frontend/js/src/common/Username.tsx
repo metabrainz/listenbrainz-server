@@ -26,6 +26,7 @@ function Username({
         className={`${otherProps?.className || ""} ${
           !hideFlair ? flairType || "" : ""
         }`}
+        title={username}
       >
         {username}
       </Link>
@@ -38,6 +39,7 @@ function Username({
         className={`${otherProps?.className || ""} ${
           !hideFlair ? flairType || "" : ""
         }`}
+        title={username}
       >
         {username}
       </Element>

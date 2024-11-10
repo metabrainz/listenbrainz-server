@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { Helmet } from "react-helmet";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { RouteQuery } from "../../utils/Loader";
+import Username from "../../common/Username";
 
 export default function SimilarUsers() {
   const location = useLocation();
@@ -32,10 +33,10 @@ export default function SimilarUsers() {
             similarUsers?.map((row, index) => (
               <tr>
                 <td>
-                  <Link to={`/user/${row[0]}/`}>{row[0]}</Link>
+                  <Username username={row[0]} showLink />
                 </td>
                 <td>
-                  <Link to={`/user/${row[1]}/`}>{row[1]}</Link>
+                  <Username username={row[1]} showLink />
                 </td>
                 <td>{row[2]}</td>
               </tr>

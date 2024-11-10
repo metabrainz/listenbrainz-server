@@ -68,6 +68,7 @@ import {
   useBrainzPlayerDispatch,
 } from "../brainzplayer/BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import Username from "../Username";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -524,13 +525,8 @@ export class ListenCard extends React.Component<
           <div className="right-section">
             {(showUsername || showTimestamp) && (
               <div className="username-and-timestamp">
-                {showUsername && (
-                  <Link
-                    to={`/user/${listen.user_name}/`}
-                    title={listen.user_name ?? undefined}
-                  >
-                    {listen.user_name}
-                  </Link>
+                {showUsername && listen.user_name && (
+                  <Username username={listen.user_name} showLink />
                 )}
                 {showTimestamp && timeStampForDisplay}
               </div>

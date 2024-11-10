@@ -7,6 +7,7 @@ import {
   getTrackName,
   pinnedRecordingToListen,
 } from "../../utils/utils";
+import Username from "../../common/Username";
 
 type RecentDonorsCardProps = {
   donors: DonationInfoWithPinnedRecording[];
@@ -39,12 +40,11 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                 <div>
                   {donor.musicbrainz_id &&
                     (donor.is_listenbrainz_user ? (
-                      <Link
-                        to={`/user/${donor.musicbrainz_id}`}
+                      <Username
+                        username={donor.musicbrainz_id}
+                        showLink
                         className="user-link"
-                      >
-                        {donor.musicbrainz_id}
-                      </Link>
+                      />
                     ) : (
                       <Link
                         to={`https://musicbrainz.org/user/${donor.musicbrainz_id}`}
