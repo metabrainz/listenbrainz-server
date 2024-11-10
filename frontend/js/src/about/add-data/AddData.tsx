@@ -390,7 +390,7 @@ export default function AddData() {
             </a>
           </em>
           , a Foobar2000 plugin for submitting and retrieving playlists from
-          ListenBrainz (+ Spotify). Can retrie recommendations and submit
+          ListenBrainz (+ Spotify). Can retrieve recommendations and submit
           track feedback.
         </li>
         <li>
