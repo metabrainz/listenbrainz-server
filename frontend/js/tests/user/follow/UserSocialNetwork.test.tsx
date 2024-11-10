@@ -94,9 +94,11 @@ describe("<UserSocialNetwork />", () => {
   it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
@@ -148,11 +150,13 @@ describe("<UserSocialNetwork />", () => {
   describe("updateFollowingList", () => {
     it("updates the state when called with action follow", async () => {
       const wrapper = mount(
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -171,11 +175,13 @@ describe("<UserSocialNetwork />", () => {
 
     it("updates the state when called with action unfollow", async () => {
       const wrapper = mount(
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -194,13 +200,15 @@ describe("<UserSocialNetwork />", () => {
 
     it("only allows adding a user once", async () => {
       const wrapper = mount(
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-        </BrowserRouter>
-      </ReactQueryWrapper>
-    );
-    const instance = wrapper
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper
         .find(UserSocialNetwork)
         .instance() as UserSocialNetwork;
       await act(async () => {
@@ -220,11 +228,13 @@ describe("<UserSocialNetwork />", () => {
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
       const wrapper = mount(
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
