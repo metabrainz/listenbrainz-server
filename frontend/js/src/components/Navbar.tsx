@@ -105,6 +105,7 @@ function Navbar() {
             <>
               <Username
                 username={currentUser.name}
+                hideLink
                 elementType="div"
                 className="username"
               />

@@ -42,7 +42,6 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                     (donor.is_listenbrainz_user ? (
                       <Username
                         username={donor.musicbrainz_id}
-                        showLink
                         className="user-link"
                       />
                     ) : (

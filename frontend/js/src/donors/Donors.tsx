@@ -141,7 +141,6 @@ function Donors() {
                     <Username
                       username={donor.musicbrainz_id}
                       className="donor-name"
-                      showLink
                     />
                   ) : (
                     <Link

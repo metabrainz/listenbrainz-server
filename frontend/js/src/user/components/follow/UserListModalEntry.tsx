@@ -23,7 +23,7 @@ function UserListModalEntry(props: UserListModalEntryProps) {
   return (
     <div key={user.name}>
       <div>
-        <Username username={user.name} showLink />
+        <Username username={user.name} />
         {isUserLoggedIn && mode === "similar-users" && (
           <SimilarityScore
             similarityScore={(user as SimilarUser).similarityScore}

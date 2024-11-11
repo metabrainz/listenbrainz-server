@@ -526,7 +526,7 @@ export class ListenCard extends React.Component<
             {(showUsername || showTimestamp) && (
               <div className="username-and-timestamp">
                 {showUsername && listen.user_name && (
-                  <Username username={listen.user_name} showLink />
+                  <Username username={listen.user_name} />
                 )}
                 {showTimestamp && timeStampForDisplay}
               </div>

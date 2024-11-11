@@ -33,10 +33,10 @@ export default function SimilarUsers() {
             similarUsers?.map((row, index) => (
               <tr>
                 <td>
-                  <Username username={row[0]} showLink />
+                  <Username username={row[0]} />
                 </td>
                 <td>
-                  <Username username={row[1]} showLink />
+                  <Username username={row[1]} />
                 </td>
                 <td>{row[2]}</td>
               </tr>

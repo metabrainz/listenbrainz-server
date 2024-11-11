@@ -91,7 +91,7 @@ export default function UserSearch(props: UserSearchProps) {
               <tr key={`similar-user-${row[0]}`}>
                 <td>{index + 1}</td>
                 <td>
-                  <Username username={row[0]} showLink />
+                  <Username username={row[0]} />
                 </td>
                 {username && (
                   <td>

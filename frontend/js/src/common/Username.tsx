@@ -2,23 +2,32 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import useUserFlairs from "../utils/FlairLoader";
 
-function Username({
-  username,
-  elementType,
-  hideFlair = false,
-  showLink = false,
-  ...otherProps
-}: {
+type BaseUsernameProps = {
   username: string;
-  elementType?: keyof JSX.IntrinsicElements;
   hideFlair?: boolean;
-  showLink?: boolean;
   [key: string]: any;
-}) {
-  const Element = elementType;
+};
+
+type WithLinkProps = BaseUsernameProps & {
+  hideLink?: false;
+};
+
+type WithElementProps = BaseUsernameProps & {
+  hideLink: true;
+  elementType: keyof JSX.IntrinsicElements;
+};
+
+function Username(props: WithLinkProps | WithElementProps) {
+  const {
+    username,
+    elementType,
+    hideFlair = false,
+    hideLink = false,
+    ...otherProps
+  } = props;
   const flairType = useUserFlairs(username);
 
-  if (showLink) {
+  if (!hideLink) {
     return (
       <Link
         to={`/user/${username}/`}
@@ -32,21 +41,19 @@ function Username({
       </Link>
     );
   }
-  if (Element) {
-    return (
-      <Element
-        {...otherProps}
-        className={`${otherProps?.className || ""} ${
-          !hideFlair ? flairType || "" : ""
-        }`}
-        title={username}
-      >
-        {username}
-      </Element>
-    );
-  }
-  // eslint-disable-next-line react/jsx-no-useless-fragment
-  return <>{username}</>;
+
+  const Element = elementType;
+  return (
+    <Element
+      {...otherProps}
+      className={`${otherProps?.className || ""} ${
+        !hideFlair ? flairType || "" : ""
+      }`}
+      title={username}
+    >
+      {username}
+    </Element>
+  );
 }
 
 export default Username;

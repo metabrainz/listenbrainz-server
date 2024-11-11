@@ -442,7 +442,7 @@ export default function AlbumPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Username username={listener.user_name} showLink />
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;

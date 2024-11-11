@@ -509,21 +509,21 @@ export default function UserFeedPage() {
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following <Username username={user_name_1} showLink />
+            You are now following <Username username={user_name_1} />
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <Username username={user_name_0} showLink /> is now following you
+            <Username username={user_name_0} /> is now following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <Username username={user_name_0} showLink /> is now following{" "}
-          <Username username={user_name_1} showLink />
+          <Username username={user_name_0} /> is now following{" "}
+          <Username username={user_name_1} />
         </span>
       );
     }
@@ -545,7 +545,7 @@ export default function UserFeedPage() {
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <Username username={user_name} showLink />
+        <Username username={user_name} />
       );
     return (
       <span className="event-description-text">
