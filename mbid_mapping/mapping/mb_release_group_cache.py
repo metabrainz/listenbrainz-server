@@ -133,9 +133,16 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                 tag["genre_mbid"] = genre_mbid
             release_group_tags.append(tag)
 
+
+        date = str(row["year"] or '')
+        if row["month"] is not None:
+            date += "-%02d" % row["month"]
+        if row["day"] is not None:
+            date += "-%02d" % row["day"]
+
         release_group = {
             "name": row["release_group_name"],
-            "date": row["date"],
+            "date": date,
             "type": row["type"],
             "caa_id": row["caa_id"],
             "caa_release_mbid": row["caa_release_mbid"],
@@ -428,9 +435,9 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
                                  , rgca.caa_id
                                  , rgca.caa_release_mbid
                                  , rgpt.name AS type
-                                 , (rgm.first_release_date_year::TEXT || '-' ||
-                                    LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
-                                    LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
+                                 , rgm.first_release_date_year AS year
+                                 , rgm.first_release_date_month AS month
+                                 , rgm.first_release_date_day AS day
                                  , rec_data.mediums
                                  , rec_data.recordings_release_mbid
                               FROM musicbrainz.release_group rg
