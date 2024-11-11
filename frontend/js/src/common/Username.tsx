@@ -47,7 +47,7 @@ function Username(props: WithLinkProps | WithElementProps) {
     <Element
       {...otherProps}
       className={`${otherProps?.className || ""} ${
-        !hideFlair ? flairType || "" : ""
+        !hideFlair ? `flair ${flairType || ""}` : ""
       }`}
       title={username}
     >
