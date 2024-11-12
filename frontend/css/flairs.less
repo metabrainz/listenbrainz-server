@@ -3,9 +3,9 @@
     width: 300px;
   }
 }
-
 /* Issues with old versions of stylelint and stylelint-config-recommended-less.
-   Updating either is a breakign change, so ignore some non-existing issues in the meantime
+   Updating either is a breakign change, so ignore the issues in this file that 
+   don't result in preventing compilation
 */
 
 .flair {
@@ -85,11 +85,13 @@
   */
   &.lb-colors-sweep,
   &.light-sweep {
+    color: var(--link-color);
     > span {
       transform-origin: 50% 50% -0.3em;
       position: relative;
-      display: inline-block;
       animation-timing-function: ease-in;
+      animation-duration: 2s;
+      animation-iteration-count: infinite;
       // delay each letter's animation by 0.1s compared to previous letter
       /* stylelint-disable-next-line */
       each(range(20), {
@@ -100,13 +102,13 @@
     }
   }
   &.lb-colors-sweep > span {
-    animation: lb-colors-sweep 3s infinite;
+    animation-name: lb-colors-sweep;
   }
   @keyframes lb-colors-sweep {
     0%,
     9%,
     100% {
-      color: initial;
+      color: var(--link-color, inherit);
     }
     3% {
       color: @orange;
@@ -117,19 +119,19 @@
   }
 
   &.light-sweep > span {
-    animation: light-sweep 3s infinite;
+    animation-name: light-sweep;
   }
   @keyframes light-sweep {
     0%,
     9%,
     100% {
-      color: initial;
+      color: var(--link-color, inherit);
     }
     3% {
-      color: @white;
+      color: @gray-light;
     }
     6% {
-      color: initial;
+      color: var(--link-color, inherit);
     }
   }
 
@@ -237,6 +239,9 @@
       -4px 4px var(--link-color), -5px 5px var(--link-color),
       -6px 6px var(--link-color);
     -webkit-text-stroke: 0.5px var(--link-color);
+    &:visited {
+      color: @body-bg;
+    }
   }
 
   /*
@@ -371,7 +376,7 @@
       background-clip: text;
       -webkit-background-clip: text;
       // offset the text slightly
-      transform: translateX(-0.05em);
+      transform: translateX(-0.1em);
     }
   }
 }
