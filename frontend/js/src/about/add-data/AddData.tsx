@@ -227,7 +227,7 @@ export default function AddData() {
           </em>
           , a free and open source media center:{" "}
           <a href="https://kodi.tv/addons/matrix/service.listenbrainz">
-            ListenBrainz add-on
+            <code>ListenBrainz add-on</code>
           </a>
         </li>
         <li>
@@ -402,13 +402,9 @@ export default function AddData() {
               ListenBrainz-SMP
             </a>
           </em>
-          , a{" "}
-          <em>
-            <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for submitting and retrieving playlists from ListenBrainz (+
-          Spotify), as well as retrieving recommendations or submitting feedback
-          on tracks.
+          , a Foobar2000 plugin for submitting and retrieving playlists from
+          ListenBrainz (+ Spotify). Can retrieve recommendations and submit
+          track feedback.
         </li>
         <li>
           <em>
@@ -420,9 +416,9 @@ export default function AddData() {
           <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
-          plugin for syncing local playlists (in multiple formats) with
-          ListenBrainz (+ Spotify). Tracks playlists changes and also allows to
-          resolve tracks with local content and YouTube links.
+          plugin for syncing local playlists with ListenBrainz (+ Spotify).
+          Tracks playlists changes and resolves tracks with local content and
+          YouTube links.
         </li>
         <li>
           <em>
@@ -458,15 +454,19 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://github.com/coopw1/BrainzBot">BrainzBot</a>
+          </em>
+          , a Discord bot that can be user-run or added to your server. Showcase
+          what you&apos;re listening to, share charts, album grids, tag clouds,
+          and more.
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
           </em>
-          , a{" "}
-          <em>
-            <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for creating reports based on user listens similar to the one
-          found at Spotify. Suggested playlists use ListenBrainz recommendations
-          (without requiring listens upload to the server).
+          , a Foobar2000 plugin that creates listening reports, similar to
+          Spotify&apos;s annual report. Can utilize ListenBrainz
+          recommendations.
         </li>
       </ul>
 
