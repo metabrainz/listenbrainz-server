@@ -14,6 +14,7 @@ import { getObjectForURLSearchParams } from "../utils/utils";
 import { RouteQuery } from "../utils/Loader";
 import Loader from "../components/Loader";
 import Blob from "../home/Blob";
+import Username from "../common/Username";
 
 type DonorLoaderData = {
   data: DonationInfo[];
@@ -137,12 +138,10 @@ function Donors() {
               <div className="donation-user">
                 {donor.musicbrainz_id &&
                   (donor.is_listenbrainz_user ? (
-                    <Link
-                      to={`/user/${donor.musicbrainz_id}`}
+                    <Username
+                      username={donor.musicbrainz_id}
                       className="donor-name"
-                    >
-                      {donor.musicbrainz_id}
-                    </Link>
+                    />
                   ) : (
                     <Link
                       to={`https://musicbrainz.org/user/${donor.musicbrainz_id}`}

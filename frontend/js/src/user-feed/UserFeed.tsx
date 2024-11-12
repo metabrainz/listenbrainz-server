@@ -45,6 +45,7 @@ import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import Username from "../common/Username";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -508,23 +509,21 @@ export default function UserFeedPage() {
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following{" "}
-            <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
+            You are now following <Username username={user_name_1} />
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
-            following you
+            <Username username={user_name_0} /> is now following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
-          following <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
+          <Username username={user_name_0} /> is now following{" "}
+          <Username username={user_name_1} />
         </span>
       );
     }
@@ -546,7 +545,7 @@ export default function UserFeedPage() {
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <Link to={`/user/${user_name}/`}>{user_name}</Link>
+        <Username username={user_name} />
       );
     return (
       <span className="event-description-text">

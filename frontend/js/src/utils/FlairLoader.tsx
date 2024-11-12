@@ -2,7 +2,7 @@ import * as React from "react";
 import { QueryObserverResult, useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "./GlobalAppContext";
 
-export default function useUserFlairs() {
+export default function useUserFlairs(userName: string) {
   const { APIService } = React.useContext(GlobalAppContext);
   const data = useQuery({
     queryKey: ["flair"],
@@ -10,5 +10,8 @@ export default function useUserFlairs() {
     staleTime: Infinity,
   });
 
-  return data as QueryObserverResult<Record<string, Flair>>;
+  const { data: flairData } = data as QueryObserverResult<
+    Record<string, Flair>
+  >;
+  return flairData?.[userName];
 }
