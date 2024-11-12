@@ -404,8 +404,8 @@ export default function AddData() {
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
           plugin for syncing local playlists with ListenBrainz (+ Spotify).
-          Tracks playlists changes and resolves tracks with local content
-          and YouTube links.
+          Tracks playlists changes and resolves tracks with local content and
+          YouTube links.
         </li>
         <li>
           <em>
@@ -439,20 +439,21 @@ export default function AddData() {
         account
       </p>
       <ul>
-      <li>
+        <li>
           <em>
             <a href="https://github.com/coopw1/BrainzBot">BrainzBot</a>
           </em>
-          , a Discord bot that can be user-run or added to your server.
-          Showcase what you're listening to, share charts, album grids,
-          tag clouds, and more.
+          , a Discord bot that can be user-run or added to your server. Showcase
+          what you&apos;re listening to, share charts, album grids, tag clouds,
+          and more.
         </li>
         <li>
           <em>
             <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
           </em>
           , a Foobar2000 plugin that creates listening reports, similar to
-          Spotify's annual report. Can utilize ListenBrainz recommendations.
+          Spotify&apos;s annual report. Can utilize ListenBrainz
+          recommendations.
         </li>
       </ul>
 
