@@ -14,7 +14,7 @@ import {
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import {
   ToastMsg,
@@ -969,6 +969,18 @@ export default function BrainzPlayer() {
       stopPlayerStateTimer();
     };
   }, []);
+
+  const { pathname } = useLocation();
+
+  // Hide the player if user is on homepage and the player is not activated, and there are nothing in both the queue
+  if (
+    pathname === "/" &&
+    !isActivated &&
+    queueRef.current.length === 0 &&
+    ambientQueueRef.current.length === 0
+  ) {
+    return null;
+  }
 
   return (
     <div data-testid="brainzplayer">
