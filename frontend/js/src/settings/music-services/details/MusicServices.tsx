@@ -409,8 +409,8 @@ export default function MusicServices() {
           </div>
           <div className="panel-body">
             <p>
-              Connect to your Last.FM account to automatically add your
-              scrobbles to your ListenBrainz listens.
+              Connect to your Last.FM account to import your entire listening
+              history and automatically add your new scrobbles to ListenBrainz.
             </p>
             <p className="alert alert-warning">
               You must first disable the &#34;Hide recent listening
@@ -473,7 +473,10 @@ export default function MusicServices() {
                     checked={permissions.lastfm === "import"}
                   />
                   <label htmlFor="lastfm_import">
-                    <div className="title">Connect to Last.FM</div>
+                    <div className="title">
+                      Connect{permissions.lastfm === "import" ? "ed" : ""} to
+                      Last.FM
+                    </div>
                     <div className="details">
                       We will periodically check your Last.FM account and add
                       your new scrobbles to ListenBrainz
