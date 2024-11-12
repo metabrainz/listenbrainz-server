@@ -2,57 +2,56 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import useUserFlairs from "../utils/FlairLoader";
 
-type BaseUsernameProps = {
+interface BaseUsernameProps extends React.HTMLAttributes<HTMLElement> {
   username: string;
   hideFlair?: boolean;
-  [key: string]: any;
-};
+}
 
 type WithLinkProps = BaseUsernameProps & {
   hideLink?: false;
+  elementType?: undefined;
 };
 
 type WithElementProps = BaseUsernameProps & {
   hideLink: true;
-  elementType: keyof JSX.IntrinsicElements;
+  elementType: keyof HTMLElementTagNameMap;
 };
 
 function Username(props: WithLinkProps | WithElementProps) {
   const {
     username,
-    elementType,
+    elementType = "div",
     hideFlair = false,
     hideLink = false,
     ...otherProps
   } = props;
   const flairType = useUserFlairs(username);
+  const cssClasses = `${otherProps?.className || ""} ${
+    !hideFlair ? `flair ${flairType || ""}` : ""
+  }`;
+  const htmlContent = username;
 
   if (!hideLink) {
     return (
       <Link
         to={`/user/${username}/`}
         {...otherProps}
-        className={`${otherProps?.className || ""} ${
-          !hideFlair ? flairType || "" : ""
-        }`}
+        className={cssClasses}
         title={username}
       >
-        {username}
+        {htmlContent}
       </Link>
     );
   }
 
-  const Element = elementType;
-  return (
-    <Element
-      {...otherProps}
-      className={`${otherProps?.className || ""} ${
-        !hideFlair ? `flair ${flairType || ""}` : ""
-      }`}
-      title={username}
-    >
-      {username}
-    </Element>
+  return React.createElement(
+    elementType,
+    {
+      ...otherProps,
+      className: cssClasses,
+      title: username,
+    },
+    htmlContent
   );
 }
 
