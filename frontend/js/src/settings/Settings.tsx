@@ -19,12 +19,13 @@ function CustomOption(
   const { label, data } = props;
   return (
     <components.Option {...props}>
-      <div className="flex">
-        <span>{label}</span>{" "}
-        <span>
+      <div className="flex" style={{ gap: "1em" }}>
+        <span>{label}</span>
+        <span style={{ flex: 0.5 }}>
           <FontAwesomeIcon icon={faArrowRight} />
         </span>
         <Username
+          style={{ textAlign: "right" }}
           username={data.username}
           selectedFlair={data.value}
           hideLink
@@ -147,25 +148,27 @@ export default function Settings() {
               className="flex flex-wrap"
               style={{ gap: "1em", alignItems: "center" }}
             >
-              <Select
-                id="flairs"
-                name="flairs"
-                isMulti={false}
-                value={{
-                  value: selectedFlair,
-                  label: startCase(selectedFlair) as FlairName,
-                  username: name,
-                }}
-                onChange={(newSelection) =>
-                  setSelectedFlair(newSelection?.value ?? FlairEnum.None)
-                }
-                options={flairNames.map((flairName) => ({
-                  value: FlairEnum[flairName],
-                  label: startCase(flairName) as FlairName,
-                  username: name,
-                }))}
-                components={{ Option: CustomOption }}
-              />
+              <div style={{ flexBasis: "300px" }}>
+                <Select
+                  id="flairs"
+                  name="flairs"
+                  isMulti={false}
+                  value={{
+                    value: selectedFlair,
+                    label: startCase(selectedFlair) as FlairName,
+                    username: name,
+                  }}
+                  onChange={(newSelection) =>
+                    setSelectedFlair(newSelection?.value ?? FlairEnum.None)
+                  }
+                  options={flairNames.map((flairName) => ({
+                    value: FlairEnum[flairName],
+                    label: startCase(flairName) as FlairName,
+                    username: name,
+                  }))}
+                  components={{ Option: CustomOption }}
+                />
+              </div>
               <div
                 className="alert alert-info"
                 style={{ flex: "0 200px", textAlign: "center", margin: 0 }}
