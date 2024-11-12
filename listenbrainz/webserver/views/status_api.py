@@ -1,6 +1,8 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 import requests
 from time import sleep, time
+
 
 from kombu import Connection, Queue, Exchange
 from kombu.exceptions import KombuError
@@ -16,6 +18,7 @@ STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
 CACHE_TIME = 60 * 60                   # time in seconds we cache the fetched data
 DUMP_CACHE_TIME = 24 * 60 * 60         # time in seconds we cache the dump check
 LISTEN_COUNT_CACHE_TIME = 30 * 60      # time in seconds we cache the listen count
+PLAYLIST_CACHE_TIME = 24 * 30 * 60     # time in seconds we cache latest playlist timestamp
 
 status_api_bp = Blueprint("status_api_v1", __name__)
 
@@ -104,6 +107,33 @@ def get_stats_timestamp():
     return last_updated
 
 
+def get_playlists_timestamp():
+    """ Check to see when recommendations playlists were last generated for a "random" user. Returns unix epoch timestamp"""
+
+    cache_key = STATUS_PREFIX + ".playlist-timestamp"
+    last_updated = cache.get(cache_key)
+    if last_updated is None:
+        url = current_app.config["API_URL"] + "/1/user/rob/playlists/createdfor"  
+        while True:
+            r = requests.get(url)
+            if r.status_code == 419:
+                sleep(1)
+                continue
+
+            if r.status_code == 200:
+                break
+
+            if r.status_code in (400, 404, 503):
+                return None
+
+        last_updated = r.json()["playlists"][0]["playlist"]["date"]
+        last_updated = int(datetime.fromisoformat(last_updated).timestamp())
+        cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
+
+
+    return last_updated
+
+
 def get_incoming_listens_count():
     """ Check to see how many listens are currently in the incoming queue. Returns an unix epoch timestamp. """
     
@@ -146,6 +176,47 @@ def get_dump_timestamp():
 
     return dump_timestamp
 
+def get_service_status():
+    """ Fetch the age of the last output of various services and return a dict:
+        {
+          "dump_age": null,
+          "incoming_listen_count": 2,
+          "playlists_age": 63229,
+          "stats_age": 418605,
+          "time": 1731429303
+        }
+    """
+
+    current_ts = int(time())
+
+    dump = get_dump_timestamp()
+    if dump is None:
+        dump_age = None
+    else:
+        dump_age = current_ts - dump["created"]
+
+    listen_count = get_incoming_listens_count()
+
+    stats = get_stats_timestamp()
+    if stats is None:
+        stats_age = None
+    else:
+        stats_age = current_ts - stats
+
+    playlists = get_playlists_timestamp()
+    if playlists is None:
+        playlists_age = None
+    else:
+        playlists_age = current_ts - playlists
+
+    return {
+        "time" : current_ts,
+        "dump_age": dump_age,
+        "stats_age": stats_age,
+        "playlists_age": playlists_age,
+        "incoming_listen_count": listen_count
+    }
+
 
 @status_api_bp.route("/service-status", methods=["GET"])
 @ratelimit()
@@ -169,27 +240,4 @@ def service_status():
     :resheader Content-Type: *application/json*
     """
 
-    current_ts = int(time())
-
-    dump = get_dump_timestamp()
-    if dump is None:
-        dump_age = None
-    else:
-        dump_age = current_ts - dump["created"]
-
-    listen_count = get_incoming_listens_count()
-
-    stats = get_stats_timestamp()
-    if stats is None:
-        stats_age = None
-    else:
-        stats_age = current_ts - stats
-
-    status = {
-        "time" : current_ts,
-        "dump_age": dump_age,
-        "stats_age": stats_age,
-        "incoming_listen_count": listen_count
-    }
-
-    return jsonify(status)
+    return jsonify(get_service_status())
