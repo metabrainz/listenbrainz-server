@@ -29,7 +29,27 @@ function Username(props: WithLinkProps | WithElementProps) {
   const cssClasses = `${otherProps?.className || ""} ${
     !hideFlair ? `flair ${flairType || ""}` : ""
   }`;
-  const htmlContent = username;
+  let htmlContent: string | JSX.Element[] = username;
+  switch (flairType) {
+    /*
+      Split each letter into a span element to allow animating each letter separately
+      Only required for some animation (see the flairs.less file)
+    */
+    case "flip-3d":
+    case "flip-horizontal":
+    case "flip-vertical":
+    case "lb-colors-sweep":
+    case "light-sweep":
+    case "wave":
+    case "tornado":
+      htmlContent = username.split("").map((letter, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <span key={username + letter + i}>{letter}</span>
+      ));
+      break;
+    default:
+      break;
+  }
 
   if (!hideLink) {
     return (
@@ -38,6 +58,7 @@ function Username(props: WithLinkProps | WithElementProps) {
         {...otherProps}
         className={cssClasses}
         title={username}
+        data-text={username}
       >
         {htmlContent}
       </Link>
@@ -50,6 +71,7 @@ function Username(props: WithLinkProps | WithElementProps) {
       ...otherProps,
       className: cssClasses,
       title: username,
+      "data-text": username,
     },
     htmlContent
   );
