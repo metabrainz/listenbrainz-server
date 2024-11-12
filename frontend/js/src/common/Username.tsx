@@ -1,10 +1,13 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
 import useUserFlairs from "../utils/FlairLoader";
+import { Flair } from "../utils/constants";
 
 interface BaseUsernameProps extends React.HTMLAttributes<HTMLElement> {
   username: string;
   hideFlair?: boolean;
+  // Allow overriding the flair (for example for flair preview)
+  selectedFlair?: Flair;
 }
 
 type WithLinkProps = BaseUsernameProps & {
@@ -23,12 +26,16 @@ function Username(props: WithLinkProps | WithElementProps) {
     elementType = "div",
     hideFlair = false,
     hideLink = false,
+    selectedFlair,
     ...otherProps
   } = props;
-  const flairType = useUserFlairs(username);
+
+  const savedFlairType = useUserFlairs(username);
+  const flairType = selectedFlair ?? savedFlairType;
   const cssClasses = `${otherProps?.className || ""} ${
     !hideFlair ? `flair ${flairType || ""}` : ""
   }`;
+
   let htmlContent: string | JSX.Element[] = username;
   switch (flairType) {
     /*
