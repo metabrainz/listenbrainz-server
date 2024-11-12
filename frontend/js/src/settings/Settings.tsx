@@ -139,10 +139,8 @@ export default function Settings() {
           <form className="form-group" onSubmit={submitFlairPreferences}>
             <h3>Flair Settings</h3>
             <p>
-              Choose which flair you want your username to show to let other
-              users know you donated.
-              <br />
-              Some flairs only appear when hovering over your username.
+              Unlocked by <Link to="/donate/">donating</Link>. Some flairs are
+              only visible on hover.
             </p>
             <div
               className="flex flex-wrap"
