@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify, current_app
 import requests
 from time import sleep, time
 
-
 from kombu import Connection, Queue, Exchange
 from kombu.exceptions import KombuError
 from werkzeug.exceptions import ServiceUnavailable
@@ -15,10 +14,10 @@ from brainzutils import cache
 import listenbrainz.db.dump as db_dump
 
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
-CACHE_TIME = 60 * 60                   # time in seconds we cache the fetched data
-DUMP_CACHE_TIME = 24 * 60 * 60         # time in seconds we cache the dump check
-LISTEN_COUNT_CACHE_TIME = 30 * 60      # time in seconds we cache the listen count
-PLAYLIST_CACHE_TIME = 24 * 30 * 60     # time in seconds we cache latest playlist timestamp
+CACHE_TIME = 60 * 60  # time in seconds we cache the fetched data
+DUMP_CACHE_TIME = 24 * 60 * 60  # time in seconds we cache the dump check
+LISTEN_COUNT_CACHE_TIME = 30 * 60  # time in seconds we cache the listen count
+PLAYLIST_CACHE_TIME = 24 * 30 * 60  # time in seconds we cache latest playlist timestamp
 
 status_api_bp = Blueprint("status_api_v1", __name__)
 
@@ -50,7 +49,7 @@ def get_dump_info():
     dump_id = request.args.get("id")
     if dump_id is None:
         try:
-            dump = db_dump.get_dump_entries()[0] # return the latest dump
+            dump = db_dump.get_dump_entries()[0]  # return the latest dump
         except IndexError:
             raise APINotFound("No dump entry exists.")
     else:
@@ -113,7 +112,7 @@ def get_playlists_timestamp():
     cache_key = STATUS_PREFIX + ".playlist-timestamp"
     last_updated = cache.get(cache_key)
     if last_updated is None:
-        url = current_app.config["API_URL"] + "/1/user/rob/playlists/createdfor"  
+        url = current_app.config["API_URL"] + "/1/user/rob/playlists/createdfor"
         while True:
             r = requests.get(url)
             if r.status_code == 419:
@@ -130,27 +129,25 @@ def get_playlists_timestamp():
         last_updated = int(datetime.fromisoformat(last_updated).timestamp())
         cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
 
-
     return last_updated
 
 
 def get_incoming_listens_count():
     """ Check to see how many listens are currently in the incoming queue. Returns an unix epoch timestamp. """
-    
+
     cache_key = STATUS_PREFIX + ".incoming_listens"
     listen_count = cache.get(cache_key)
     if listen_count is None:
         current_app.logger.warn("no cached data!")
         try:
-            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout",  durable=False)
+            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
             incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=incoming_exchange, durable=True)
 
-            with Connection(
-                hostname=current_app.config["RABBITMQ_HOST"],
-                userid=current_app.config["RABBITMQ_USERNAME"],
-                port=current_app.config["RABBITMQ_PORT"],
-                password=current_app.config["RABBITMQ_PASSWORD"],
-                virtual_host=current_app.config["RABBITMQ_VHOST"]) as conn:
+            with Connection(hostname=current_app.config["RABBITMQ_HOST"],
+                            userid=current_app.config["RABBITMQ_USERNAME"],
+                            port=current_app.config["RABBITMQ_PORT"],
+                            password=current_app.config["RABBITMQ_PASSWORD"],
+                            virtual_host=current_app.config["RABBITMQ_VHOST"]) as conn:
 
                 _, listen_count, _ = incoming_queue.queue_declare(channel=conn.channel(), passive=True)
         except KombuError as err:
@@ -169,12 +166,13 @@ def get_dump_timestamp():
     dump_timestamp = cache.get(cache_key)
     if dump_timestamp is None:
         try:
-            dump_timestamp = db_dump.get_dump_entries()[0] # return the latest dump
+            dump_timestamp = db_dump.get_dump_entries()[0]  # return the latest dump
             cache.set(cache_key, dump_timestamp, DUMP_CACHE_TIME)
         except IndexError:
             return None
 
     return dump_timestamp
+
 
 def get_service_status():
     """ Fetch the age of the last output of various services and return a dict:
@@ -210,7 +208,7 @@ def get_service_status():
         playlists_age = current_ts - playlists
 
     return {
-        "time" : current_ts,
+        "time": current_ts,
         "dump_age": dump_age,
         "stats_age": stats_age,
         "playlists_age": playlists_age,
