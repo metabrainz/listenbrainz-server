@@ -1,6 +1,10 @@
 from flask import Blueprint, request, jsonify, current_app
 import requests
-from time import sleep
+from time import sleep, time
+
+from kombu import Connection, Queue, Exchange
+from kombu.exceptions import KombuError
+from werkzeug.exceptions import ServiceUnavailable
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
@@ -9,7 +13,9 @@ from brainzutils import cache
 import listenbrainz.db.dump as db_dump
 
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
-CACHE_TIME = 60 * 60  # time in seconds we cache the stats
+CACHE_TIME = 60 * 60                   # time in seconds we cache the fetched data
+DUMP_CACHE_TIME = 24 * 60 * 60         # time in seconds we cache the dump check
+LISTEN_COUNT_CACHE_TIME = 30 * 60      # time in seconds we cache the listen count
 
 status_api_bp = Blueprint("status_api_v1", __name__)
 
@@ -73,24 +79,12 @@ def _convert_timestamp_to_string_dump_format(timestamp):
     return timestamp.strftime("%Y%m%d-%H%M%S")
 
 
-@status_api_bp.route("/get-stats-info", methods=["GET"])
-@ratelimit()
-def get_stats_info():
-    """ Check to see when statistics were last generated for a "random" user. Returns JSON:
+def get_stats_timestamp():
+    """ Check to see when statistics were last generated for a "random" user. Returns unix epoch timestamp"""
 
-    .. code-block:: json
-
-        {
-            "last_updated": 19243535
-        }
-
-    :statuscode 200: You have data.
-    :resheader Content-Type: *application/json*
-    """
-
-    last_updated = cache.get(STATUS_PREFIX + ".stats")
+    cache_key = STATUS_PREFIX + ".stats-timestamp"
+    last_updated = cache.get(cache_key)
     if last_updated is None:
-        current_app.logger.warn("no cached data!")
         url = current_app.config["API_URL"] + "/1/stats/user/rob/artists"
         while True:
             r = requests.get(url)
@@ -101,8 +95,101 @@ def get_stats_info():
             if r.status_code == 200:
                 break
 
+            if r.status_code in (400, 404, 503):
+                return None
+
         last_updated = r.json()["payload"]["last_updated"]
-        cache.set(STATUS_PREFIX + ".stats", last_updated, CACHE_TIME)
+        cache.set(cache_key, last_updated, CACHE_TIME)
 
-    return jsonify({ "last_updated": last_updated })
+    return last_updated
 
+
+def get_incoming_listens_count():
+    """ Check to see how many listens are currently in the incoming queue. Returns an unix epoch timestamp. """
+    
+    cache_key = STATUS_PREFIX + ".incoming_listens"
+    listen_count = cache.get(cache_key)
+    if listen_count is None:
+        current_app.logger.warn("no cached data!")
+        try:
+            incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout",  durable=False)
+            incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=incoming_exchange, durable=True)
+
+            with Connection(
+                hostname=current_app.config["RABBITMQ_HOST"],
+                userid=current_app.config["RABBITMQ_USERNAME"],
+                port=current_app.config["RABBITMQ_PORT"],
+                password=current_app.config["RABBITMQ_PASSWORD"],
+                virtual_host=current_app.config["RABBITMQ_VHOST"]) as conn:
+
+                _, listen_count, _ = incoming_queue.queue_declare(channel=conn.channel(), passive=True)
+        except KombuError as err:
+            current_app.logger.error("RabbitMQ is currently not available. Error: %s" % (str(err)))
+            return None
+
+        cache.set(cache_key, listen_count, LISTEN_COUNT_CACHE_TIME)
+
+    return listen_count
+
+
+def get_dump_timestamp():
+    """ Check when the latst dump was generated. """
+
+    cache_key = STATUS_PREFIX + ".dump_timestamp"
+    dump_timestamp = cache.get(cache_key)
+    if dump_timestamp is None:
+        try:
+            dump_timestamp = db_dump.get_dump_entries()[0] # return the latest dump
+            cache.set(cache_key, dump_timestamp, DUMP_CACHE_TIME)
+        except IndexError:
+            return None
+
+    return dump_timestamp
+
+
+@status_api_bp.route("/service-status", methods=["GET"])
+@ratelimit()
+def service_status():
+    """ Fetch the recently updated metrics for age of stats, playlists, dumps and the number of items in the incoming
+        queue. This function returns JSON:
+
+    .. code-block:: json
+
+        {
+            "time": 155574537,   
+            "stats": {                                  
+                "seconds_since_last_update": 1204
+            },
+            "incoming_listens": {
+                "count": 1028
+            }
+        }
+
+    :statuscode 200: You have data.
+    :resheader Content-Type: *application/json*
+    """
+
+    current_ts = int(time())
+
+    dump = get_dump_timestamp()
+    if dump is None:
+        dump_age = None
+    else:
+        dump_age = current_ts - dump["created"]
+
+    listen_count = get_incoming_listens_count()
+
+    stats = get_stats_timestamp()
+    if stats is None:
+        stats_age = None
+    else:
+        stats_age = current_ts - stats
+
+    status = {
+        "time" : current_ts,
+        "dump_age": dump_age,
+        "stats_age": stats_age,
+        "incoming_listen_count": listen_count
+    }
+
+    return jsonify(status)
