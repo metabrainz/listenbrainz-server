@@ -225,8 +225,8 @@ def service_status():
     .. code-block:: json
 
         {
-            "time": 155574537,   
-            "stats": {                                  
+            "time": 155574537,
+            "stats": {
                 "seconds_since_last_update": 1204
             },
             "incoming_listens": {
