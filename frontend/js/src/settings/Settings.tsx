@@ -4,9 +4,36 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { startCase } from "lodash";
+import Select, { OptionProps, components } from "react-select";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { FlairEnum, Flair, type FlairName } from "../utils/constants";
+import { FlairEnum, Flair } from "../utils/constants";
+import type { FlairName } from "../utils/constants";
+import Username from "../common/Username";
+
+function CustomOption(
+  props: OptionProps<{ value: Flair; label: FlairName; username: string }>
+) {
+  const { label, data } = props;
+  return (
+    <components.Option {...props}>
+      <div className="flex">
+        <span>{label}</span>{" "}
+        <span>
+          <FontAwesomeIcon icon={faArrowRight} />
+        </span>
+        <Username
+          username={data.username}
+          selectedFlair={data.value}
+          hideLink
+          elementType="a"
+        />
+      </div>
+    </components.Option>
+  );
+}
 
 export default function Settings() {
   /* Cast enum keys to array so we can map them to select options */
@@ -59,7 +86,8 @@ export default function Settings() {
     setShowToken(!showToken);
   };
 
-  const submitFlairPreferences = async () => {
+  const submitFlairPreferences = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
       return;
@@ -69,7 +97,7 @@ export default function Settings() {
         currentUser?.auth_token,
         selectedFlair
       );
-      toast.success("Flair preferences updated successfully");
+      toast.success("Flair saved successfully");
       globalContext.flair = selectedFlair;
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -115,38 +143,45 @@ export default function Settings() {
               <br />
               Some flairs only appear when hovering over your username.
             </p>
-            <div className="flex flex-wrap" style={{gap:"1em", alignItems:"center"}}>
-                <select
-                  id="flairs"
-                  name="flairs"
-                  className="form-control flair-select"
-                  value={selectedFlair}
-                  onChange={(e:React.ChangeEvent<HTMLSelectElement> & { target: { value: Flair }}) => {
-                    setSelectedFlair(e.target.value);
-                  }}
-                >
-                  {flairNames.map((flairName) => (
-                    <option key={flairName} value={FlairEnum[flairName]}>
-                      {startCase(flairName)}
-                    </option>
-                  ))}
-                </select>
-              <span>
-                Preview: {
-                // eslint-disable-next-line jsx-a11y/anchor-is-valid
-                <a href="#" className={`flair ${selectedFlair}`} data-text={name}>
-                  {name.split("").map((letter, i) => (
-                    // eslint-disable-next-line react/no-array-index-key
-                    <span key={letter + i}>{letter}</span>
-                  ))}
-                </a>}
-              </span>
-            </div>
-            <button
-              className="btn btn-success mt-10"
-              type="submit"
+            <div
+              className="flex flex-wrap"
+              style={{ gap: "1em", alignItems: "center" }}
             >
-              Submit
+              <Select
+                id="flairs"
+                name="flairs"
+                isMulti={false}
+                value={{
+                  value: selectedFlair,
+                  label: startCase(selectedFlair) as FlairName,
+                  username: name,
+                }}
+                onChange={(newSelection) =>
+                  setSelectedFlair(newSelection?.value ?? FlairEnum.None)
+                }
+                options={flairNames.map((flairName) => ({
+                  value: FlairEnum[flairName],
+                  label: startCase(flairName) as FlairName,
+                  username: name,
+                }))}
+                components={{ Option: CustomOption }}
+              />
+              <div
+                className="alert alert-info"
+                style={{ flex: "0 200px", textAlign: "center", margin: 0 }}
+              >
+                Preview:&nbsp;
+                <Username
+                  username={name}
+                  selectedFlair={selectedFlair}
+                  hideLink
+                  elementType="a"
+                />
+              </div>
+            </div>
+
+            <button className="btn btn-success mt-10" type="submit">
+              Save flair
             </button>
           </form>
         </div>
