@@ -16,15 +16,21 @@
     on the fly for hovering/visited links instead of having to
     overwrite styles for hover, visited, hover+visited
   */
-  --link-color: @link-color;
-  &:hover {
-    --link-color: @link-hover-color;
-  }
-  &:visited {
-    --link-color: @link-visited-color;
+  --text-color: @text-color;
+  a& {
+    --text-color: @link-color;
     &:hover {
-      --link-color: @link-visited-hover-color;
+      --text-color: @link-hover-color;
     }
+    &:visited {
+      --text-color: @link-visited-color;
+      &:hover {
+        --text-color: @link-visited-hover-color;
+      }
+    }
+  }
+  > span {
+    display: inline;
   }
 
   /* 
@@ -85,7 +91,7 @@
   */
   &.lb-colors-sweep,
   &.light-sweep {
-    color: var(--link-color);
+    color: var(--text-color);
     > span {
       transform-origin: 50% 50% -0.3em;
       position: relative;
@@ -108,7 +114,7 @@
     0%,
     9%,
     100% {
-      color: var(--link-color, inherit);
+      color: var(--text-color, inherit);
     }
     3% {
       color: @orange;
@@ -125,13 +131,13 @@
     0%,
     9%,
     100% {
-      color: var(--link-color, inherit);
+      color: var(--text-color, inherit);
     }
     3% {
       color: @gray-light;
     }
     6% {
-      color: var(--link-color, inherit);
+      color: var(--text-color, inherit);
     }
   }
 
@@ -141,7 +147,6 @@
    */
   &.wave > span {
     position: relative;
-    display: inline-block;
     animation: wave 3s infinite;
     animation-timing-function: ease-in;
     // delay each letter's animation by 0.1s compared to previous letter
@@ -172,7 +177,6 @@
   &.flip-vertical > span,
   &.flip-3d > span {
     position: relative;
-    display: inline-block;
     animation-timing-function: ease-in;
     animation-duration: 4s;
     animation-iteration-count: infinite;
@@ -234,11 +238,11 @@
   */
   &.extruded {
     color: @body-bg;
-    text-shadow: 0px 0px var(--link-color), -1px 1px var(--link-color),
-      -2px 2px var(--link-color), -3px 3px var(--link-color),
-      -4px 4px var(--link-color), -5px 5px var(--link-color),
-      -6px 6px var(--link-color);
-    -webkit-text-stroke: 0.5px var(--link-color);
+    text-shadow: 0px 0px var(--text-color), -1px 1px var(--text-color),
+      -2px 2px var(--text-color), -3px 3px var(--text-color),
+      -4px 4px var(--text-color), -5px 5px var(--text-color),
+      -6px 6px var(--text-color);
+    -webkit-text-stroke: 0.5px var(--text-color);
     &:visited {
       color: @body-bg;
     }
@@ -290,7 +294,6 @@
   &.tornado > span {
     transform-origin: 50% 50% -6px;
     position: relative;
-    display: inline-block;
     animation: tornado 4s infinite;
     animation-timing-function: ease-in;
     /* stylelint-disable-next-line */
@@ -358,11 +361,11 @@
       content: attr(data-text);
       position: absolute;
       top: 0;
-      left: 0;
+      right: 0;
     }
     &::before {
       clip-path: polygon(0% 0%, 100% 0%, 100% 48%, 0% 58%);
-      color: var(--link-color);
+      color: var(--text-color);
     }
     &::after {
       clip-path: polygon(0% 60%, 100% 50%, 100% 100%, 0% 100%);
@@ -370,9 +373,9 @@
       background: -webkit-linear-gradient(
         178deg,
         black 53%,
-        var(--link-color) 65%
+        var(--text-color) 65%
       );
-      background: linear-gradient(178deg, black 50%, var(--link-color) 65%);
+      background: linear-gradient(178deg, black 50%, var(--text-color) 65%);
       background-clip: text;
       -webkit-background-clip: text;
       // offset the text slightly

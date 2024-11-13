@@ -26,7 +26,7 @@ function CustomOption(
           <FontAwesomeIcon icon={faArrowRight} />
         </span>
         <Username
-          style={{ textAlign: "right" }}
+          style={{ textAlign: "right", flexGrow: 0 }}
           username={data.username}
           selectedFlair={data.value}
           hideLink
