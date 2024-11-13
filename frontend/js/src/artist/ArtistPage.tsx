@@ -71,14 +71,15 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
+interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
   secondary_types: string[];
+  total_listen_count: number | null;
 }
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroupWithSecondaryTypes[];
+  releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
   similarArtists: {
     artists: SimilarArtist[];
     topReleaseGroupColor: ReleaseColor | undefined;
@@ -139,13 +140,17 @@ export default function ArtistPage(): JSX.Element {
   );
 
   const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypes[]
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
   ) =>
     orderBy(
       releaseGroupsInput,
       [
-        sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
-        sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
+        sort === "release_date"
+          ? (rg) => rg.date || ""
+          : (rg) => rg.total_listen_count ?? 0,
+        sort === "release_date"
+          ? (rg) => rg.total_listen_count ?? 0
+          : (rg) => rg.date || "",
         "name",
       ],
       ["desc", "desc", "asc"]
@@ -167,7 +172,7 @@ export default function ArtistPage(): JSX.Element {
 
   const groupedReleaseGroups: Record<
     string,
-    ReleaseGroupWithSecondaryTypes[]
+    ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
     groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
