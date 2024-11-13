@@ -12,6 +12,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { FlairEnum, Flair } from "../utils/constants";
 import type { FlairName } from "../utils/constants";
 import Username from "../common/Username";
+import queryClient from "../utils/QueryClient";
 
 function CustomOption(
   props: OptionProps<{ value: Flair; label: FlairName; username: string }>
@@ -100,6 +101,7 @@ export default function Settings() {
       );
       toast.success("Flair saved successfully");
       globalContext.flair = selectedFlair;
+      queryClient.invalidateQueries({ queryKey: ["flair"] });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to update flair preferences:", error);
