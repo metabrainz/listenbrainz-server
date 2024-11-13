@@ -3,7 +3,7 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { startCase } from "lodash";
+import { findKey, startCase } from "lodash";
 import Select, { OptionProps, components } from "react-select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
@@ -146,14 +146,16 @@ export default function Settings() {
               className="flex flex-wrap"
               style={{ gap: "1em", alignItems: "center" }}
             >
-              <div style={{ flexBasis: "300px" }}>
+              <div style={{ flexBasis: "300px", maxWidth: "400px" }}>
                 <Select
                   id="flairs"
                   name="flairs"
                   isMulti={false}
                   value={{
                     value: selectedFlair,
-                    label: startCase(selectedFlair) as FlairName,
+                    label: startCase(
+                      findKey(FlairEnum, (k) => k === selectedFlair)
+                    ) as FlairName,
                     username: name,
                   }}
                   onChange={(newSelection) =>
