@@ -237,12 +237,14 @@
     3D text with support for visited and hover colors 
   */
   &.extruded {
+    vertical-align: text-bottom;
     color: @body-bg;
-    text-shadow: 0px 0px var(--text-color), -1px 1px var(--text-color),
-      -2px 2px var(--text-color), -3px 3px var(--text-color),
-      -4px 4px var(--text-color), -5px 5px var(--text-color),
-      -6px 6px var(--text-color);
-    -webkit-text-stroke: 0.5px var(--text-color);
+    text-shadow: 0px 0px var(--text-color), -0.5px 0.5px var(--text-color),
+      -1px 1px var(--text-color), -1.5px 1.5px var(--text-color),
+      -2px 2px var(--text-color), -2.5px 2.5px var(--text-color),
+      -3px 3px var(--text-color);
+    // mostly transparent outline for increased legibility
+    -webkit-text-stroke: 0.5px rgb(from var(--text-color) r g b / 0.2);
     &:visited {
       color: @body-bg;
     }
