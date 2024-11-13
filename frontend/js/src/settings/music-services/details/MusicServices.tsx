@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { capitalize } from "lodash";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { format } from "date-fns";
@@ -33,7 +33,9 @@ export default function MusicServices() {
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
-  const { appleAuth } = React.useContext(GlobalAppContext);
+  const { appleAuth, APIService, currentUser } = React.useContext(
+    GlobalAppContext
+  );
 
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
@@ -228,6 +230,49 @@ export default function MusicServices() {
       );
     }
   };
+  const handleImportFeedback = async (
+    evt: React.MouseEvent<HTMLButtonElement>,
+    service: ImportService
+  ) => {
+    evt.preventDefault();
+    try {
+      const form = evt.currentTarget.closest("form");
+      if (!form) {
+        throw Error("Could not find a form with lastfmUsername");
+      }
+      const formData = new FormData(form);
+      const username = formData.get("lastfmUsername");
+      if (!currentUser?.auth_token || !username) {
+        throw Error("You must fill in your LastFM username above");
+      }
+      const { importFeedback } = APIService;
+      const response = await importFeedback(
+        currentUser.auth_token,
+        username.toString(),
+        service
+      );
+      const { inserted, total } = response;
+      toast.success(
+        <div>
+          Succesfully imported {inserted} out of {total} tracks feedback from{" "}
+          {capitalize(service)}
+          <br />
+          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div>
+          We were unable to import your loved tracks from {capitalize(service)},
+          please try again later.
+          <br />
+          If the problem persists please{" "}
+          <a href="mailto:support@metabrainz.org">contact us</a>.
+          <pre>{error.toString()}</pre>
+        </div>
+      );
+    }
+  };
 
   return (
     <>
@@ -364,8 +409,8 @@ export default function MusicServices() {
           </div>
           <div className="panel-body">
             <p>
-              Connect to your Last.FM account to automatically add your
-              scrobbles to your ListenBrainz listens.
+              Connect to your Last.FM account to import your entire listening
+              history and automatically add your new scrobbles to ListenBrainz.
             </p>
             <p className="alert alert-warning">
               You must first disable the &#34;Hide recent listening
@@ -428,10 +473,34 @@ export default function MusicServices() {
                     checked={permissions.lastfm === "import"}
                   />
                   <label htmlFor="lastfm_import">
-                    <div className="title">Connect to Last.FM</div>
+                    <div className="title">
+                      Connect{permissions.lastfm === "import" ? "ed" : ""} to
+                      Last.FM
+                    </div>
                     <div className="details">
                       We will periodically check your Last.FM account and add
-                      your new scrobbles to ListenBRainz
+                      your new scrobbles to ListenBrainz
+                    </div>
+                  </label>
+                </button>
+                <button
+                  type="button"
+                  className="music-service-option"
+                  onClick={(e) => handleImportFeedback(e, "lastfm")}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id="lastfm_import_loved_tracks"
+                    name="lastfm"
+                    value="loved_tracks"
+                    checked={false}
+                  />
+                  <label htmlFor="lastfm_import_loved_tracks">
+                    <div className="title">Import loved tracks</div>
+                    <div className="details">
+                      Can only be run manually to import your loved tracks from
+                      Last.FM. You can run it again without creating duplicates.
                     </div>
                   </label>
                 </button>

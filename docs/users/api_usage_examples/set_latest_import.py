@@ -6,7 +6,8 @@ import requests
 DEBUG = True
 ROOT = 'http://localhost:8100' if DEBUG else 'https://api.listenbrainz.org'
 
-def set_latest_import(timestamp, token, service="lastfm"):
+
+def set_latest_import(timestamp, token, service="librefm"):
     """Sets the time of the latest import.
 
     Args:

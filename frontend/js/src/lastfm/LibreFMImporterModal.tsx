@@ -10,7 +10,7 @@ export type ModalProps = {
   onClose(event: React.MouseEvent<HTMLButtonElement>): void;
 };
 
-function LastFMImporterModal(props: ModalProps) {
+function LibreFMImporterModal(props: ModalProps) {
   const divStyle = {
     position: "fixed",
     height: "auto",
@@ -52,4 +52,4 @@ function LastFMImporterModal(props: ModalProps) {
   );
 }
 
-export default LastFMImporterModal;
+export default LibreFMImporterModal;
