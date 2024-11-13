@@ -21,13 +21,13 @@ function CustomOption(
   const { label, data } = props;
   return (
     <components.Option {...props}>
-      <div className="flex" style={{ gap: "1em" }}>
+      <div style={{ display: "flex", gap: "1em" }}>
         <span>{label}</span>
-        <span style={{ flex: 0.5 }}>
+        <span style={{ marginLeft: "auto" }}>
           <FontAwesomeIcon icon={faArrowRight} />
         </span>
         <Username
-          style={{ textAlign: "right", flexGrow: 0 }}
+          style={{ marginLeft: "auto" }}
           username={data.username}
           selectedFlair={data.value}
           hideLink
@@ -118,7 +118,9 @@ export default function Settings() {
       <div id="user-profile">
         <h2 className="page-title">User Settings</h2>
         <div>
-          <h4>Username: {name}</h4>
+          <h4>
+            Username: <Username username={name} hideLink elementType="span" />
+          </h4>
           <a
             href={`https://musicbrainz.org/user/${name}`}
             aria-label="Edit Profile on MusicBrainz"
