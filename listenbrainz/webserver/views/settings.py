@@ -1,35 +1,29 @@
 import json
-import os.path
 from datetime import datetime
 
-import orjson
-import json
-from flask import Blueprint, Response, render_template, request, url_for, \
-    redirect, current_app, jsonify, stream_with_context, send_file
+from flask import Blueprint, render_template, request, url_for, \
+    redirect, current_app, jsonify
 from flask_login import current_user, login_required
-from sqlalchemy import text
 from werkzeug.exceptions import NotFound, BadRequest
 
-import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.background.background_tasks import add_task
-from listenbrainz.db import listens_importer
-from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
+    APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-
 
 settings_bp = Blueprint("settings", __name__)
 
@@ -65,16 +59,6 @@ def set_troi_prefs():
         "troi_prefs": current_troi_prefs,
     }
     return jsonify(data)
-
-
-@settings_bp.route("/resetlatestimportts/", methods=["POST"])
-@api_login_required
-def reset_latest_import_timestamp():
-    try:
-        listens_importer.update_latest_listened_at(db_conn, current_user.id, ExternalServiceType.LASTFM, 0)
-        return jsonify({"success": True})
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong! Unable to reset latest import timestamp right now.")
 
 
 @settings_bp.route("/import/", methods=["POST"])
@@ -161,12 +145,14 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return CritiqueBrainzService()
         elif service == ExternalServiceType.SOUNDCLOUD:
             return SoundCloudService()
+        elif service == ExternalServiceType.LASTFM:
+            return LastfmService()
         elif not exclude_apple and service == ExternalServiceType.APPLE:
             return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
     except KeyError:
-        raise NotFound("Service %s is invalid." % name)
+        raise NotFound("Service %s is invalid." % (name,))
 
 
 @settings_bp.route('/music-services/details/', methods=['POST'])
@@ -198,12 +184,23 @@ def music_services_details():
     apple_user = apple_service.get_user(current_user.id)
     current_apple_permissions = "listen" if apple_user and apple_user["refresh_token"] else "disable"
 
+    lastfm_service = LastfmService()
+    lastfm_user = lastfm_service.get_user(current_user.id)
+    current_lastfm_permissions = "import" if lastfm_user else "disable"
+
     data = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
         "current_apple_permissions": current_apple_permissions,
+        "current_lastfm_permissions": current_lastfm_permissions,
     }
+
+    if lastfm_user:
+        data["current_lastfm_settings"] = {
+            "external_user_id": lastfm_user["external_user_id"],
+            "latest_listened_at": lastfm_user["latest_listened_at"],
+        }
 
     return jsonify(data)
 
@@ -240,6 +237,34 @@ def refresh_service_token(service_name: str):
             raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
+
+
+@settings_bp.route('/music-services/<service_name>/connect/', methods=['POST'])
+@api_login_required
+def music_services_connect(service_name: str):
+    """ Connect last.fm/libre.fm account to ListenBrainz user. """
+    # TODO: add support for libre.fm
+    if service_name.lower() != "lastfm":
+        raise APINotFound("Service %s is invalid." % (service_name,))
+
+    data = request.json
+    if "external_user_id" not in data:
+        raise APIBadRequest("Missing 'external_user_id' in request.")
+
+    latest_listened_at = None
+    if data.get("latest_listened_at") is not None:
+        try:
+            latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
+        except (ValueError, TypeError):
+            raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
+
+    # TODO: make last.fm start import timestamp configurable
+    service = LastfmService()
+    service.add_new_user(current_user.id, {
+        "external_user_id": data["external_user_id"],
+        "latest_listened_at": latest_listened_at,
+    })
+    return jsonify({"success": True})
 
 
 @settings_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])

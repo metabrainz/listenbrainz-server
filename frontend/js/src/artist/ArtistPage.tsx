@@ -55,6 +55,7 @@ function SortingButtons({
         type="secondary"
         active={sort === "release_date"}
         onClick={() => setSort("release_date")}
+        title="Sort by release date"
       >
         <FontAwesomeIcon icon={faCalendar} />
       </Pill>
@@ -62,6 +63,7 @@ function SortingButtons({
         type="secondary"
         active={sort === "total_listen_count"}
         onClick={() => setSort("total_listen_count")}
+        title="Sort by listen count"
       >
         <FontAwesomeIcon icon={faHeadphones} />
       </Pill>
@@ -272,6 +274,16 @@ export default function ArtistPage(): JSX.Element {
   }, [artist?.artist_mbid]);
 
   const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
 
   return (
     <div id="entity-page" className="artist-page" role="main">
@@ -505,7 +517,11 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
           {releaseGroupTypesNames.map(([type, rgGroup]) => (
             <div className="albums">
               <div className="listen-header">
@@ -523,7 +539,7 @@ export default function ArtistPage(): JSX.Element {
               </HorizontalScrollContainer>
             </div>
           ))}
-          {releaseGroupTypesNames.length >= 2 && (
+          {showFullDiscographyButton && (
             <div className="read-more mb-10">
               <button
                 type="button"

@@ -1,5 +1,10 @@
 @dark-grey: #46433a;
 @even-darker-grey: #353070;
+@homepage-background: linear-gradient(
+  288deg,
+  @dark-grey 16.96%,
+  @even-darker-grey 98.91%
+);
 #homepage-container {
   overflow-y: auto;
   height: 100vh; // absolute fallback
@@ -16,11 +21,7 @@
   }
 
   .homepage-upper {
-    background: linear-gradient(
-      288deg,
-      @dark-grey 16.96%,
-      @even-darker-grey 98.91%
-    );
+    background: @homepage-background;
     height: 100%;
     position: relative;
     padding-left: 50px;
@@ -118,11 +119,7 @@
   }
 
   .homepage-lower {
-    background: linear-gradient(
-      288deg,
-      @dark-grey 16.96%,
-      @even-darker-grey 98.91%
-    );
+    background: @homepage-background;
     height: 100%;
     position: relative;
     padding-left: 50px;
@@ -362,7 +359,7 @@
 
   @media (max-width: @screen-sm) {
     .homepage-info {
-      bottom: 2.5em;
+      bottom: 4.5em;
     }
     .homepage-upper {
       .listen-container {
@@ -462,7 +459,7 @@
         top: 0;
       }
       .homepage-info {
-        bottom: 1.5em;
+        bottom: 4.5em;
         color: @dark-grey;
         max-width: 50%;
       }
