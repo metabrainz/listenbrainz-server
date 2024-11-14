@@ -6,7 +6,10 @@ import { Helmet } from "react-helmet";
 import { findKey, startCase } from "lodash";
 import Select, { OptionProps, components } from "react-select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRight,
+  faQuestionCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import ReactTooltip from "react-tooltip";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -142,18 +145,27 @@ export default function Settings() {
 
         <div className="mb-15 donation-flairs-settings">
           <form className="form-group" onSubmit={submitFlairPreferences}>
+            <ReactTooltip id="flair-tooltip" place="bottom" multiline>
+              Every $5 donation unlocks flairs for 1 month,
+              <br />
+              with larger donations extending the duration.
+              <br />
+              Donations stack up, adding more months
+              <br />
+              of unlocked flairs with each contribution.
+            </ReactTooltip>
             <h3>Flair Settings</h3>
             <p>
-              Unlock for a month by <Link to="/donate/">donating</Link>&nbsp;
-              <span
-                data-tip="Flairs will be unlocked for donations of at least $5,<br/>
-                for a duration of one month from the date of donation.<br/>
-                Your flair selection will be saved between donations."
-              >
-                <FontAwesomeIcon icon={faInfoCircle} size="sm" />
-              </span>
-              <ReactTooltip place="bottom" html />. Some flairs are only visible
-              on hover.
+              Unlock for a month or more by <Link to="/donate/">donating</Link>
+              &nbsp;
+              <FontAwesomeIcon
+                icon={faQuestionCircle}
+                data-tip
+                data-for="flair-tooltip"
+                size="sm"
+              />
+              .<br />
+              Some flairs are only visible on hover.
             </p>
             <div
               className="flex flex-wrap"
