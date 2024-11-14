@@ -15,7 +15,7 @@ from listenbrainz.webserver.views.api_tools import (
 user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 
 
-@user_settings_api_bp.route("/flair", methods=["POST"])
+@user_settings_api_bp.route("/flair", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def update_flair():
