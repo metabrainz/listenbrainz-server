@@ -190,7 +190,6 @@ def cron_build_all_mb_caches(ctx):
     """ Build all mb entity metadata cache and tables it depends on in production in appropriate
      databases. After building the cache, cleanup mbid_mapping table.
     """
-    ctx.invoke(update_canonical_release_data)
     ctx.invoke(cron_build_mb_metadata_cache)
     ctx.invoke(build_mb_artist_metadata_cache)
     ctx.invoke(build_mb_release_group_cache)
@@ -200,6 +199,7 @@ def cron_build_all_mb_caches(ctx):
 @click.pass_context
 def cron_update_all_mb_caches(ctx):
     """ Update all mb entity metadata cache in ListenBrainz. """
+    ctx.invoke(update_canonical_release_data)
     ctx.invoke(update_mb_metadata_cache)
     ctx.invoke(update_mb_artist_metadata_cache)
     ctx.invoke(update_mb_release_group_cache)
