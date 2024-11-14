@@ -72,14 +72,15 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
+interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
   secondary_types: string[];
+  total_listen_count: number | null;
 }
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroupWithSecondaryTypes[];
+  releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
   similarArtists: {
     artists: SimilarArtist[];
     topReleaseGroupColor: ReleaseColor | undefined;
@@ -140,13 +141,17 @@ export default function ArtistPage(): JSX.Element {
   );
 
   const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypes[]
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
   ) =>
     orderBy(
       releaseGroupsInput,
       [
-        sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
-        sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
+        sort === "release_date"
+          ? (rg) => rg.date || ""
+          : (rg) => rg.total_listen_count ?? 0,
+        sort === "release_date"
+          ? (rg) => rg.total_listen_count ?? 0
+          : (rg) => rg.date || "",
         "name",
       ],
       ["desc", "desc", "asc"]
@@ -168,7 +173,7 @@ export default function ArtistPage(): JSX.Element {
 
   const groupedReleaseGroups: Record<
     string,
-    ReleaseGroupWithSecondaryTypes[]
+    ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
     groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
@@ -275,6 +280,16 @@ export default function ArtistPage(): JSX.Element {
   }, [artist?.artist_mbid]);
 
   const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
 
   return (
     <div id="entity-page" className="artist-page" role="main">
@@ -506,7 +521,11 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
           {releaseGroupTypesNames.map(([type, rgGroup]) => (
             <div className="albums">
               <div className="listen-header">
@@ -524,7 +543,7 @@ export default function ArtistPage(): JSX.Element {
               </HorizontalScrollContainer>
             </div>
           ))}
-          {releaseGroupTypesNames.length >= 2 && (
+          {showFullDiscographyButton && (
             <div className="read-more mb-10">
               <button
                 type="button"

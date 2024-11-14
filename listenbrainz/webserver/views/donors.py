@@ -39,7 +39,7 @@ def donors_post():
     user_playlist_count = db_playlist.get_playlist_count(ts_conn, donor_ids) if donor_ids else {}
 
     for donor in donors:
-        donor_info = donors_info.get(donor["musicbrainz_id"])
+        donor_info = donors_info.get(donor["musicbrainz_id"].lower())
         if not donor_info:
             donor['listenCount'] = None
             donor['playlistCount'] = None
