@@ -5,9 +5,6 @@ MAILTO=""
 # Delete pending listens and update our listen counts, timestamps hourly
 0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete_listens >> /logs/listen_metadata.log 2>&1
 
-# Update the canonical release mapping data
-50 0,6,12,18 * * * root /usr/local/bin/python /code/listenbrainz/mbid_mapping/manage.py update-canonical-releases >> /logs/canonical_releases.log 2>&1
-
 # Generating troi daily playlists runs hourly
 0 * * * * root /usr/local/bin/python /code/listenbrainz/manage.py run-daily-jams >> /logs/troi.log 2>&1
 # Batch generate weekly playlists
