@@ -132,7 +132,13 @@ export default function FlairsSettings() {
         ) : (
           <div className="alert alert-warning">
             Flairs are currently locked; you can choose a flair below but it
-            will not be shown on the website until your next donation.
+            will not be shown on the website until your next donation.{" "}
+            <FontAwesomeIcon
+              icon={faQuestionCircle}
+              data-tip
+              data-for="flair-tooltip"
+              size="sm"
+            />
           </div>
         )}
         <div
