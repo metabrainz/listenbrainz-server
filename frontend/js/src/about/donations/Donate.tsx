@@ -1,14 +1,22 @@
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { Link } from "react-router-dom";
+import ReactTooltip from "react-tooltip";
 import { COLOR_LB_GREEN } from "../../utils/constants";
 import Blob from "../../home/Blob";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 export default function Donate() {
   const { currentUser } = React.useContext(GlobalAppContext);
-
+  const flairQuestionMarkIcon = (
+    <FontAwesomeIcon
+      icon={faQuestionCircle}
+      data-tip
+      data-for="flair-tooltip"
+      size="sm"
+    />
+  );
   return (
     <div id="donations-page">
       <Blob width={250} height={250} randomness={1.5} className="blob" />
@@ -37,6 +45,15 @@ export default function Donate() {
               </b>
             </div>
           </div>
+          <ReactTooltip id="flair-tooltip" place="bottom" multiline>
+            Every $5 donation unlocks flairs for 1 month,
+            <br />
+            with larger donations extending the duration.
+            <br />
+            Donations stack up, adding more months
+            <br />
+            of unlocked flairs with each contribution.
+          </ReactTooltip>
           <div className="tier card">
             <div className="tier-heading">
               <h2>
@@ -59,7 +76,7 @@ export default function Donate() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>User flair</b>
+                <b>User flair {flairQuestionMarkIcon}</b>
                 <br />
                 <small>
                   Add a special effect to your username on the website
@@ -97,7 +114,7 @@ export default function Donate() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>User flair</b>
+                <b>User flair {flairQuestionMarkIcon}</b>
                 <br />
                 <small>
                   Add a special effect to your username on the website
@@ -143,7 +160,7 @@ export default function Donate() {
                   icon={faCheck}
                   color={COLOR_LB_GREEN}
                 />
-                <b>User flair</b>
+                <b>User flair {flairQuestionMarkIcon}</b>
                 <br />
                 <small>
                   Add a special effect to your username on the website

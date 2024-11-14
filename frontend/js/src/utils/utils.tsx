@@ -13,6 +13,7 @@ import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
+import { Flair } from "./constants";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);

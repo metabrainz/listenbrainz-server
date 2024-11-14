@@ -55,15 +55,6 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "resetlatestimportts/",
-          lazy: async () => {
-            const ResetImportTimestamp = await import(
-              "../resetlatestimportts/ResetLatestImports"
-            );
-            return { Component: ResetImportTimestamp.default };
-          },
-        },
-        {
           path: "missing-data/",
           loader: RouteQueryLoader("missing-data"),
           lazy: async () => {

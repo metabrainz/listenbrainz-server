@@ -3,25 +3,54 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { findKey, startCase } from "lodash";
+import Select, { OptionProps, components } from "react-select";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowRight,
+  faQuestionCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import ReactTooltip from "react-tooltip";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { FlairEnum, Flair } from "../utils/constants";
+import type { FlairName } from "../utils/constants";
+import Username from "../common/Username";
+import queryClient from "../utils/QueryClient";
 
-const flairOptions = [
-  { label: "Default", value: "default", className: "default" },
-  { label: "Fire", value: "fire", className: "fire" },
-  { label: "Water", value: "water", className: "water" },
-  { label: "Air", value: "air", className: "air" },
-  { label: "Disabled", value: "disabled", className: "disabled" },
-];
+function CustomOption(
+  props: OptionProps<{ value: Flair; label: FlairName; username: string }>
+) {
+  const { label, data } = props;
+  return (
+    <components.Option {...props}>
+      <div style={{ display: "flex", gap: "1em" }}>
+        <span>{label}</span>
+        <span style={{ marginLeft: "auto" }}>
+          <FontAwesomeIcon icon={faArrowRight} />
+        </span>
+        <Username
+          style={{ marginLeft: "auto" }}
+          username={data.username}
+          selectedFlair={data.value}
+          hideLink
+          elementType="a"
+        />
+      </div>
+    </components.Option>
+  );
+}
 
 export default function Settings() {
+  /* Cast enum keys to array so we can map them to select options */
+  const flairNames = Object.keys(FlairEnum) as FlairName[];
   const globalContext = React.useContext(GlobalAppContext);
   const { currentUser, APIService, flair: currentFlair } = globalContext;
 
   const { auth_token: authToken, name } = currentUser;
 
   const [selectedFlair, setSelectedFlair] = React.useState<Flair>(
-    currentFlair || "default"
+    currentFlair ?? FlairEnum.None
   );
   const [showToken, setShowToken] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
@@ -63,7 +92,8 @@ export default function Settings() {
     setShowToken(!showToken);
   };
 
-  const submitFlairPreferences = async () => {
+  const submitFlairPreferences = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!currentUser?.auth_token) {
       toast.error("You must be logged in to update your preferences");
       return;
@@ -73,8 +103,9 @@ export default function Settings() {
         currentUser?.auth_token,
         selectedFlair
       );
-      toast.success("Flair preferences updated successfully");
+      toast.success("Flair saved successfully");
       globalContext.flair = selectedFlair;
+      queryClient.invalidateQueries({ queryKey: ["flair"] });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to update flair preferences:", error);
@@ -90,7 +121,9 @@ export default function Settings() {
       <div id="user-profile">
         <h2 className="page-title">User Settings</h2>
         <div>
-          <h4>Username: {name}</h4>
+          <h4>
+            Username: <Username username={name} hideLink elementType="span" />
+          </h4>
           <a
             href={`https://musicbrainz.org/user/${name}`}
             aria-label="Edit Profile on MusicBrainz"
@@ -111,33 +144,74 @@ export default function Settings() {
         </div>
 
         <div className="mb-15 donation-flairs-settings">
-          <div className="form-group">
+          <form className="form-group" onSubmit={submitFlairPreferences}>
+            <ReactTooltip id="flair-tooltip" place="bottom" multiline>
+              Every $5 donation unlocks flairs for 1 month,
+              <br />
+              with larger donations extending the duration.
+              <br />
+              Donations stack up, adding more months
+              <br />
+              of unlocked flairs with each contribution.
+            </ReactTooltip>
             <h3>Flair Settings</h3>
             <p>
-              Choose which flair you want your username to show to let other
-              users know you donated. ListenBrainz.
+              Unlock for a month or more by <Link to="/donate/">donating</Link>
+              &nbsp;
+              <FontAwesomeIcon
+                icon={faQuestionCircle}
+                data-tip
+                data-for="flair-tooltip"
+                size="sm"
+              />
+              .<br />
+              Some flairs are only visible on hover.
             </p>
-            <select
-              id="flairs"
-              name="flairs"
-              className="form-control flair-select"
-              value={selectedFlair}
-              onChange={(e) => setSelectedFlair(e.target.value as Flair)}
+            <div
+              className="flex flex-wrap"
+              style={{ gap: "1em", alignItems: "center" }}
             >
-              {flairOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={submitFlairPreferences}
-              className="btn btn-lg btn-info"
-              type="button"
-            >
-              Submit
+              <div style={{ flexBasis: "300px", maxWidth: "400px" }}>
+                <Select
+                  id="flairs"
+                  name="flairs"
+                  isMulti={false}
+                  value={{
+                    value: selectedFlair,
+                    label: startCase(
+                      findKey(FlairEnum, (k) => k === selectedFlair)
+                    ) as FlairName,
+                    username: name,
+                  }}
+                  onChange={(newSelection) =>
+                    setSelectedFlair(newSelection?.value ?? FlairEnum.None)
+                  }
+                  options={flairNames.map((flairName) => ({
+                    value: FlairEnum[flairName],
+                    label: startCase(flairName) as FlairName,
+                    username: name,
+                  }))}
+                  components={{ Option: CustomOption }}
+                />
+              </div>
+              <div
+                className="alert alert-info"
+                style={{ flex: "0 200px", textAlign: "center", margin: 0 }}
+              >
+                Preview:&nbsp;
+                <Username
+                  username={name}
+                  selectedFlair={selectedFlair}
+                  hideLink
+                  elementType="a"
+                />
+              </div>
+            </div>
+
+            <button className="btn btn-success mt-10" type="submit">
+              Save flair
             </button>
-          </div>
+          </form>
         </div>
 
         <h3>User token</h3>
@@ -177,7 +251,7 @@ export default function Settings() {
 
         <p>If you want to reset your token, click below</p>
         <p>
-          <span className="btn btn-info btn-lg" style={{ width: "200px" }}>
+          <span className="btn btn-warning" style={{ width: "200px" }}>
             <Link to="/settings/resettoken/" style={{ color: "white" }}>
               Reset token
             </Link>

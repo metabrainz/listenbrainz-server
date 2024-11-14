@@ -4,11 +4,10 @@ import time
 from unittest.mock import patch
 
 from flask import url_for
-from flask.testing import FlaskClient
 
 from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
-from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.listens_importer.spotify import SpotifyImporter
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.db import external_service_oauth
 
@@ -31,15 +30,17 @@ class SpotifyReaderTestCase(ListenAPIIntegrationTestCase):
         self.ctx.pop()
         super(SpotifyReaderTestCase, self).tearDown()
 
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_currently_playing')
-    @patch('listenbrainz.spotify_updater.spotify_read_listens.get_user_recently_played')
+    @patch.object(SpotifyImporter, 'get_user_currently_playing')
+    @patch.object(SpotifyImporter, 'get_user_recently_played')
     def test_spotify_recently_played_submitted(self, mock_recently_played, mock_currently_playing):
         with open(self.path_to_data_file('spotify_recently_played_submitted.json')) as f:
             mock_recently_played.return_value = json.load(f)
         mock_currently_playing.return_value = None
 
-        result = spotify_read_listens.process_all_spotify_users()
-        self.assertEqual(result, (1, 0))
+        with self.app.app_context():
+            importer = SpotifyImporter()
+            result = importer.process_all_users()
+            self.assertEqual(result, (1, 0))
 
         time.sleep(0.5)
         recalculate_all_user_data()

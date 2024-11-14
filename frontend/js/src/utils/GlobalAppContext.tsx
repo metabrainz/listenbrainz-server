@@ -1,6 +1,7 @@
 import { createContext } from "react";
 import APIService from "./APIService";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
+import { FlairEnum, FlairName, Flair } from "./constants";
 
 export type GlobalAppContextT = {
   APIService: APIService;
@@ -38,7 +39,7 @@ export const defaultGlobalContext: GlobalAppContextT = {
   userPreferences: {},
   musicbrainzGenres: [],
   recordingFeedbackManager: new RecordingFeedbackManager(apiService),
-  flair: "default",
+  flair: FlairEnum.None,
 };
 
 const GlobalAppContext = createContext<GlobalAppContextT>(defaultGlobalContext);

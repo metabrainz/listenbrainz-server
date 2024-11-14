@@ -9,10 +9,10 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import APIService from "../utils/APIService";
 import Scrobble from "../utils/Scrobble";
-import LastFMImporterModal from "./LastFMImporterModal";
+import LibreFMImporterModal from "./LibreFMImporterModal";
 import Pill from "../components/Pill";
 
-export const LASTFM_RETRIES = 3;
+export const RETRIES = 3;
 
 export type ImporterProps = {
   user: {
@@ -22,8 +22,6 @@ export type ImporterProps = {
   };
   profileUrl?: string;
   apiUrl?: string;
-  lastfmApiUrl: string;
-  lastfmApiKey: string;
   librefmApiUrl: string;
   librefmApiKey: string;
 };
@@ -31,21 +29,21 @@ export type ImporterProps = {
 export type ImporterState = {
   show: boolean;
   canClose: boolean;
-  lastfmUsername: string;
+  librefmUsername: string;
   msg?: React.ReactElement;
   service: ImportService;
 };
 
-export default class LastFmImporter extends React.Component<
+export default class LibreFmImporter extends React.Component<
   ImporterProps,
   ImporterState
 > {
   static encodeScrobbles(
     scrobbles: LastFmScrobblePage,
-    service: ImportService = "lastfm"
+    service: ImportService = "librefm"
   ): any {
     const rawScrobbles = scrobbles.recenttracks.track;
-    const parsedScrobbles = LastFmImporter.map((rawScrobble: any) => {
+    const parsedScrobbles = LibreFmImporter.map((rawScrobble: any) => {
       const scrobble = new Scrobble(rawScrobble, service);
       return scrobble.asJSONSerializable();
     }, rawScrobbles);
@@ -66,8 +64,8 @@ export default class LastFmImporter extends React.Component<
   }
 
   APIService: APIService;
-  private lastfmURL: string;
-  private lastfmKey: string;
+  private librefmURL: string;
+  private librefmKey: string;
 
   private userName: string;
   private userToken: string;
@@ -98,17 +96,17 @@ export default class LastFmImporter extends React.Component<
     this.state = {
       show: false,
       canClose: true,
-      lastfmUsername: "",
+      librefmUsername: "",
       msg: undefined,
-      service: "lastfm",
+      service: "librefm",
     };
 
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     ); // Used to access LB API
 
-    this.lastfmURL = props.lastfmApiUrl;
-    this.lastfmKey = props.lastfmApiKey;
+    this.librefmKey = props.librefmApiKey;
+    this.librefmURL = props.librefmApiUrl;
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token || "";
@@ -119,8 +117,8 @@ export default class LastFmImporter extends React.Component<
     /*
      * Get the total play count reported by Last.FM for user
      */
-    const { lastfmUsername } = this.state;
-    const url = `${this.lastfmURL}?method=user.getinfo&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
+    const { librefmUsername } = this.state;
+    const url = `${this.librefmURL}?method=user.getinfo&user=${librefmUsername}&api_key=${this.librefmKey}&format=json`;
     let wrong_username = false;
     try {
       const response = await fetch(encodeURI(url));
@@ -152,12 +150,12 @@ export default class LastFmImporter extends React.Component<
     /*
      * Get the total pages of data from last import
      */
-    const { lastfmUsername } = this.state;
+    const { librefmUsername } = this.state;
 
     const url = `${
-      this.lastfmURL
-    }?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${
-      this.lastfmKey
+      this.librefmURL
+    }?method=user.getrecenttracks&user=${librefmUsername}&api_key=${
+      this.librefmKey
     }&from=${this.latestImportTime + 1}&format=json`;
     try {
       const response = await fetch(encodeURI(url));
@@ -186,13 +184,13 @@ export default class LastFmImporter extends React.Component<
     page: number,
     retries: number
   ): Promise<Array<Listen> | undefined> {
-    const { lastfmUsername, service } = this.state;
+    const { librefmUsername, service } = this.state;
     const timeout = 3000;
 
     const url = `${
-      this.lastfmURL
-    }?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${
-      this.lastfmKey
+      this.librefmURL
+    }?method=user.getrecenttracks&user=${librefmUsername}&api_key=${
+      this.librefmKey
     }&from=${this.latestImportTime + 1}&page=${page}&format=json`;
     try {
       const response = await fetch(encodeURI(url));
@@ -209,7 +207,7 @@ export default class LastFmImporter extends React.Component<
         }
 
         // Encode the page so that it can be submitted
-        const payload = LastFmImporter.encodeScrobbles(data, service);
+        const payload = LibreFmImporter.encodeScrobbles(data, service);
         this.countReceived += payload.length;
         return payload;
       }
@@ -221,7 +219,7 @@ export default class LastFmImporter extends React.Component<
       // Retry if there is a network error
       if (retries <= 0) {
         throw new Error(
-          `Failed to fetch page ${page} from ${service} after ${LASTFM_RETRIES} retries: ${err.toString()}`
+          `Failed to fetch page ${page} from ${service} after ${RETRIES} retries: ${err.toString()}`
         );
       }
       await new Promise((resolve) => {
@@ -237,8 +235,8 @@ export default class LastFmImporter extends React.Component<
     /*
      * Determine if user's last.fm scrobbles are private
      */
-    const { lastfmUsername } = this.state;
-    const url = `${this.lastfmURL}?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
+    const { librefmUsername } = this.state;
+    const url = `${this.librefmURL}?method=user.getrecenttracks&user=${librefmUsername}&api_key=${this.librefmKey}&format=json`;
     try {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
@@ -297,20 +295,7 @@ export default class LastFmImporter extends React.Component<
   };
 
   handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ lastfmUsername: event.target.value });
-  };
-
-  handleServiceChange = (service: ImportService) => {
-    if (service === "librefm") {
-      const { librefmApiUrl, librefmApiKey } = this.props;
-      this.lastfmURL = librefmApiUrl;
-      this.lastfmKey = librefmApiKey;
-    } else {
-      const { lastfmApiUrl, lastfmApiKey } = this.props;
-      this.lastfmURL = lastfmApiUrl;
-      this.lastfmKey = lastfmApiKey;
-    }
-    this.setState({ service: service as ImportService });
+    this.setState({ librefmUsername: event.target.value });
   };
 
   handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -320,15 +305,15 @@ export default class LastFmImporter extends React.Component<
   };
 
   importFeedback = async () => {
-    const { lastfmUsername, service } = this.state;
-    if (!lastfmUsername || service !== "lastfm") {
+    const { librefmUsername, service } = this.state;
+    if (!librefmUsername || service !== "lastfm") {
       return;
     }
     const { importFeedback } = this.APIService;
     try {
       const response = await importFeedback(
         this.userToken,
-        lastfmUsername,
+        librefmUsername,
         service
       );
       const { inserted, total } = response;
@@ -379,12 +364,12 @@ export default class LastFmImporter extends React.Component<
     while (this.page > 0) {
       // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
       this.lastImportedString = "...";
-      const payload = await this.getPage(this.page, LASTFM_RETRIES); // eslint-disable-line
+      const payload = await this.getPage(this.page, RETRIES); // eslint-disable-line
 
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
-        this.lastImportedString = LastFmImporter.getlastImportedString(
+        this.lastImportedString = LibreFmImporter.getlastImportedString(
           payload[0]
         );
       }
@@ -576,40 +561,19 @@ export default class LastFmImporter extends React.Component<
   }
 
   render() {
-    const { show, canClose, lastfmUsername, msg, service } = this.state;
+    const { show, canClose, librefmUsername, msg, service } = this.state;
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>
           <dl>
-            <dd>Choose a service:</dd>
-            <dt className="btn-group" style={{ marginBottom: "1em" }}>
-              <Pill
-                id="lastfm"
-                name="service"
-                value="lastfm"
-                active={service === "lastfm"}
-                onClick={() => this.handleServiceChange("lastfm")}
-              >
-                Last.fm
-              </Pill>
-              <Pill
-                id="librefm"
-                name="service"
-                value="librefm"
-                active={service === "librefm"}
-                onClick={() => this.handleServiceChange("librefm")}
-              >
-                Libre.fm
-              </Pill>
-            </dt>
             <dd>Your {service} username:</dd>
             <dt>
               <input
                 type="text"
                 className="form-control"
                 onChange={this.handleChange}
-                value={lastfmUsername}
-                name="lastfmUsername"
+                value={librefmUsername}
+                name="librefmUsername"
                 placeholder="Username"
                 size={30}
               />
@@ -619,23 +583,13 @@ export default class LastFmImporter extends React.Component<
           <button
             className="btn btn-success"
             type="submit"
-            disabled={!lastfmUsername}
+            disabled={!librefmUsername}
           >
             Import listens
           </button>
-          {service === "lastfm" && (
-            <button
-              className="btn btn-success"
-              type="button"
-              disabled={!lastfmUsername}
-              onClick={this.importFeedback}
-            >
-              <FontAwesomeIcon icon={faHeart as IconProp} /> Import loved tracks
-            </button>
-          )}
         </form>
         {show && (
-          <LastFMImporterModal onClose={this.toggleModal} disable={!canClose}>
+          <LibreFMImporterModal onClose={this.toggleModal} disable={!canClose}>
             <img
               src="/static/img/listenbrainz-logo.svg"
               height="75"
@@ -646,7 +600,7 @@ export default class LastFmImporter extends React.Component<
             <br />
             <div>{msg}</div>
             <br />
-          </LastFMImporterModal>
+          </LibreFMImporterModal>
         )}
       </div>
     );
