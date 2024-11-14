@@ -6,7 +6,7 @@ import subprocess
 
 import click
 
-from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
+from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
 from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
@@ -23,6 +23,7 @@ from mapping.mb_release_group_cache import create_mb_release_group_cache, \
 from mapping.spotify_metadata_index import create_spotify_metadata_index
 from mapping.apple_metadata_index import create_apple_metadata_index
 from similar.tag_similarity import create_tag_similarity
+
 
 
 @click.group()
@@ -47,6 +48,14 @@ def canonical_data(use_lb_conn):
     """
     create_canonical_musicbrainz_data(use_lb_conn)
 
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_canonical_releases(use_lb_conn):
+    """
+        Update only the canonical releases table
+    """
+    update_canonical_release_data(use_lb_conn)
 
 @cli.command()
 def test_mapping():
@@ -190,6 +199,7 @@ def cron_build_all_mb_caches(ctx):
 @click.pass_context
 def cron_update_all_mb_caches(ctx):
     """ Update all mb entity metadata cache in ListenBrainz. """
+    ctx.invoke(update_canonical_release_data)
     ctx.invoke(update_mb_metadata_cache)
     ctx.invoke(update_mb_artist_metadata_cache)
     ctx.invoke(update_mb_release_group_cache)
