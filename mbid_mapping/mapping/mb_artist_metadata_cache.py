@@ -248,6 +248,7 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                             rgd.artist_credit_name, 
                                             rgd.date,
                                             rgd.type,
+                                            rgd.secondary_types,
                                             rgd.release_group_artists,
                                             rgd.caa_id,
                                             rgd.caa_release_mbid

@@ -1,12 +1,8 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
+import { mount, shallow } from "enzyme";
 import fetchMock from "jest-fetch-mock";
 import { act } from "react-dom/test-utils";
-import LastFmImporter, {
-  LASTFM_RETRIES,
-  ImporterState,
-  ImporterProps,
-} from "../../src/lastfm/LastFMImporter";
+import LibreFmImporter, { RETRIES } from "../../src/lastfm/LibreFMImporter";
 // Mock data to test functions
 import * as page from "../__mocks__/page.json";
 import * as getInfo from "../__mocks__/getInfo.json";
@@ -14,9 +10,8 @@ import * as getInfoNoPlayCount from "../__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
 import * as encodeScrobbleOutput from "../__mocks__/encodeScrobbleOutput.json";
 import * as lastFMPrivateUser from "../__mocks__/lastFMPrivateUser.json";
-import { waitForComponentToPaint } from "../test-utils";
 
-jest.useFakeTimers({advanceTimers: true});
+jest.useFakeTimers({ advanceTimers: true });
 const props = {
   user: {
     id: "id",
@@ -25,45 +20,42 @@ const props = {
   },
   profileUrl: "http://profile",
   apiUrl: "apiUrl",
-  lastfmApiUrl: "http://ws.audioscrobbler.com/2.0/",
-  lastfmApiKey: "foobar",
   librefmApiUrl: "http://libre.fm/2.0/",
   librefmApiKey: "barfoo",
 };
 
-describe("LastFMImporter", () => {
+describe("LibreFMImporter", () => {
   describe("encodeScrobbles", () => {
     it("encodes the given scrobbles correctly", () => {
-      expect(LastFmImporter.encodeScrobbles(page)).toEqual(
+      expect(LibreFmImporter.encodeScrobbles(page)).toEqual(
         encodeScrobbleOutput
       );
     });
   });
 
-  let instance: LastFmImporter;
+  let instance: LibreFmImporter;
 
   describe("getNumberOfPages", () => {
-    beforeAll(()=>{
+    beforeAll(() => {
       fetchMock.enableMocks();
       // Mock function for fetch
       fetchMock.mockResponse(JSON.stringify(page));
-    })
+    });
     beforeEach(() => {
-      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LibreFmImporter>(<LibreFmImporter {...props} />);
       instance = wrapper.instance();
-      instance.setState({ lastfmUsername: "dummyUser" });
+      instance.setState({ librefmUsername: "dummyUser" });
     });
 
     it("should call with the correct url", async () => {
       instance.getNumberOfPages();
 
       expect(fetchMock).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&from=1&format=json`
+        `${props.librefmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&from=1&format=json`
       );
       const num = await instance.getNumberOfPages();
       expect(num).toBe(1);
     });
-
 
     it("should return -1 if there is an error", async () => {
       // Mock function for failed fetch
@@ -80,9 +72,9 @@ describe("LastFMImporter", () => {
 
   describe("getTotalNumberOfScrobbles", () => {
     beforeEach(() => {
-      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LibreFmImporter>(<LibreFmImporter {...props} />);
       instance = wrapper.instance();
-      instance.setState({ lastfmUsername: "dummyUser" });
+      instance.setState({ librefmUsername: "dummyUser" });
       // Mock function for fetch
       window.fetch = jest.fn().mockImplementation(() => {
         return Promise.resolve({
@@ -96,7 +88,7 @@ describe("LastFMImporter", () => {
       instance.getTotalNumberOfScrobbles();
 
       expect(window.fetch).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getinfo&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&format=json`
+        `${props.librefmApiUrl}?method=user.getinfo&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&format=json`
       );
     });
 
@@ -146,7 +138,9 @@ describe("LastFMImporter", () => {
           json: () => Promise.resolve({ message: "User not found", error: 6 }),
         })
       );
-      instance.setState({ lastfmUsername: "nonexistentusernamedonttryathome" });
+      instance.setState({
+        librefmUsername: "nonexistentusernamedonttryathome",
+      });
 
       await expect(instance.getTotalNumberOfScrobbles()).rejects.toThrowError(
         "User not found"
@@ -172,9 +166,9 @@ describe("LastFMImporter", () => {
     });
 
     beforeEach(() => {
-      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LibreFmImporter>(<LibreFmImporter {...props} />);
       instance = wrapper.instance();
-      instance.setState({ lastfmUsername: "dummyUser" });
+      instance.setState({ librefmUsername: "dummyUser" });
       // Mock function for fetch
       window.fetch = jest.fn().mockImplementation(() => {
         return Promise.resolve({
@@ -185,10 +179,10 @@ describe("LastFMImporter", () => {
     });
 
     it("should call with the correct url", () => {
-      instance.getPage(1, LASTFM_RETRIES);
+      instance.getPage(1, RETRIES);
 
       expect(window.fetch).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&from=1&page=1&format=json`
+        `${props.librefmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&from=1&page=1&format=json`
       );
     });
 
@@ -204,15 +198,15 @@ describe("LastFMImporter", () => {
       const getPageSpy = jest.spyOn(instance, "getPage");
       let finalValue;
       try {
-        finalValue = await instance.getPage(1, LASTFM_RETRIES);
+        finalValue = await instance.getPage(1, RETRIES);
       } catch (err) {
-        expect(getPageSpy).toHaveBeenCalledTimes(1 + LASTFM_RETRIES);
+        expect(getPageSpy).toHaveBeenCalledTimes(1 + RETRIES);
         expect(finalValue).toBeUndefined();
 
         // This error message is also displayed to the user
         expect(err).toEqual(
           new Error(
-            `Failed to fetch page 1 from lastfm after ${LASTFM_RETRIES} retries: Error: Status 503`
+            `Failed to fetch page 1 from librefm after ${RETRIES} retries: Error: Status 503`
           )
         );
       }
@@ -242,7 +236,7 @@ describe("LastFMImporter", () => {
         });
 
       const getPageSpy = jest.spyOn(instance, "getPage");
-      const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+      const finalValue = await instance.getPage(1, RETRIES);
 
       expect(getPageSpy).toHaveBeenCalledTimes(3);
       expect(finalValue).toEqual(encodeScrobbleOutput);
@@ -257,7 +251,7 @@ describe("LastFMImporter", () => {
         });
       });
       const getPageSpy = jest.spyOn(instance, "getPage");
-      const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+      const finalValue = await instance.getPage(1, RETRIES);
 
       expect(getPageSpy).toHaveBeenCalledTimes(1);
       expect(finalValue).toEqual(undefined);
@@ -272,7 +266,7 @@ describe("LastFMImporter", () => {
         });
       });
       const getPageSpy = jest.spyOn(instance, "getPage");
-      const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+      const finalValue = await instance.getPage(1, RETRIES);
 
       expect(getPageSpy).toHaveBeenCalledTimes(1);
       expect(finalValue).toEqual(undefined);
@@ -296,7 +290,7 @@ describe("LastFMImporter", () => {
         });
 
       const getPageSpy = jest.spyOn(instance, "getPage");
-      const finalValue = await instance.getPage(1, LASTFM_RETRIES);
+      const finalValue = await instance.getPage(1, RETRIES);
 
       expect(getPageSpy).toHaveBeenCalledTimes(2);
       expect(finalValue).toEqual(encodeScrobbleOutput);
@@ -304,19 +298,19 @@ describe("LastFMImporter", () => {
 
     it("should call encodeScrobbles", async () => {
       // Mock function for encodeScrobbles
-      LastFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
+      LibreFmImporter.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
 
-      const data = await instance.getPage(1, LASTFM_RETRIES);
-      expect(LastFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
+      const data = await instance.getPage(1, RETRIES);
+      expect(LibreFmImporter.encodeScrobbles).toHaveBeenCalledTimes(1);
       expect(data).toEqual(["foo", "bar"]);
     });
   });
 
   describe("submitPage", () => {
     beforeEach(() => {
-      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LibreFmImporter>(<LibreFmImporter {...props} />);
       instance = wrapper.instance();
-      instance.setState({ lastfmUsername: "dummyUser" });
+      instance.setState({ librefmUsername: "dummyUser" });
       instance.getRateLimitDelay = jest.fn().mockImplementation(() => 0);
       instance.APIService.submitListens = jest.fn().mockImplementation(() => {
         return Promise.resolve({
@@ -394,9 +388,9 @@ describe("LastFMImporter", () => {
 
   describe("getUserPrivacy", () => {
     beforeEach(() => {
-      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LibreFmImporter>(<LibreFmImporter {...props} />);
       instance = wrapper.instance();
-      instance.setState({ lastfmUsername: "dummyUser" });
+      instance.setState({ librefmUsername: "dummyUser" });
 
       // Needed for startImport
       instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
@@ -414,7 +408,7 @@ describe("LastFMImporter", () => {
       instance.getUserPrivacy();
 
       expect(window.fetch).toHaveBeenCalledWith(
-        `${props.lastfmApiUrl}?method=user.getrecenttracks&user=${instance.state.lastfmUsername}&api_key=${props.lastfmApiKey}&format=json`
+        `${props.librefmApiUrl}?method=user.getrecenttracks&user=${instance.state.librefmUsername}&api_key=${props.librefmApiKey}&format=json`
       );
     });
 
@@ -472,30 +466,30 @@ describe("LastFMImporter", () => {
     });
   });
 
-  describe("LastFmImporter Page", () => {
+  describe("LibreFmImporter Page", () => {
     it("renders", () => {
-      const wrapper = mount(<LastFmImporter {...props} />);
-      expect(wrapper.getDOMNode()).toHaveTextContent("Choose a service");
-      expect(wrapper.getDOMNode()).toHaveTextContent("Last.fm");
-      expect(wrapper.getDOMNode()).toHaveTextContent("Libre.fm");
+      const wrapper = mount(<LibreFmImporter {...props} />);
+      expect(wrapper.getDOMNode()).toHaveTextContent(
+        "Your librefm username:Import listens"
+      );
     });
 
     it("modal renders when button clicked", () => {
-      const wrapper = shallow(<LastFmImporter {...props} />);
+      const wrapper = shallow(<LibreFmImporter {...props} />);
       // Simulate submiting the form
       wrapper.find("form").simulate("submit", {
         preventDefault: () => null,
       });
 
       // Test if the show property has been set to true
-      expect(wrapper.exists("LastFMImporterModal")).toBe(true);
+      expect(wrapper.exists("LibreFMImporterModal")).toBe(true);
     });
 
     it("submit button is disabled when input is empty", () => {
-      const wrapper = shallow(<LastFmImporter {...props} />);
+      const wrapper = shallow(<LibreFmImporter {...props} />);
       act(() => {
         // Make sure that the input is empty
-        wrapper.setState({ lastfmUsername: "" });
+        wrapper.setState({ librefmUsername: "" });
       });
 
       // Test if button is disabled
@@ -504,7 +498,7 @@ describe("LastFMImporter", () => {
 
     it("should properly convert latest imported timestamp to string", () => {
       // Check getlastImportedString() and formatting
-      const data = LastFmImporter.encodeScrobbles(page);
+      const data = LibreFmImporter.encodeScrobbles(page);
       const lastImportedDate = new Date(data[0].listened_at * 1000);
       const msg = lastImportedDate.toLocaleString("en-US", {
         month: "short",
@@ -515,16 +509,18 @@ describe("LastFMImporter", () => {
         hour12: true,
       });
 
-      expect(LastFmImporter.getlastImportedString(data[0])).toMatch(msg);
-      expect(LastFmImporter.getlastImportedString(data[0])).not.toHaveLength(0);
+      expect(LibreFmImporter.getlastImportedString(data[0])).toMatch(msg);
+      expect(LibreFmImporter.getlastImportedString(data[0])).not.toHaveLength(
+        0
+      );
     });
   });
 
   describe("importLoop", () => {
     beforeEach(() => {
-      const wrapper = shallow<LastFmImporter>(<LastFmImporter {...props} />);
+      const wrapper = shallow<LibreFmImporter>(<LibreFmImporter {...props} />);
       instance = wrapper.instance();
-      instance.setState({ lastfmUsername: "dummyUser" });
+      instance.setState({ librefmUsername: "dummyUser" });
       // needed for startImport
       instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
         return Promise.resolve(0);
