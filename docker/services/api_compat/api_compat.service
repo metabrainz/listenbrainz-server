@@ -1,4 +1,13 @@
 #!/bin/bash
 
-sleep 1
+set -x
+
+UWSGI_PID_FILE=/tmp/uwsgi-api-compat.pid
+if [ -e "$UWSGI_PID_FILE" ]; then
+  UWSGI_PID=`cat "$UWSGI_PID_FILE"`
+  echo "Previous uwsgi master process pid file detected, killing process $UWSGI_PID..."
+  kill -TERM "$UWSGI_PID"
+  sleep 5
+fi
+
 exec run-consul-template -config /etc/consul-template-api-compat.conf
