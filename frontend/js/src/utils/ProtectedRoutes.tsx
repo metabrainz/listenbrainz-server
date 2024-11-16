@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import GlobalAppContext from "./GlobalAppContext";
 
 function ProtectedRoutes() {
@@ -10,9 +10,9 @@ function ProtectedRoutes() {
   const urlEncodedPathname = encodeURIComponent(pathname);
 
   return currentUser?.name ? (
-    <div />
+    <Outlet />
   ) : (
-    <Navigate to={`/login/?next=${urlEncodedPathname}`} />
+    <Navigate to={`/login/?next=${urlEncodedPathname}`} replace />
   );
 }
 
