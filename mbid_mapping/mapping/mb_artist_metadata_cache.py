@@ -80,15 +80,21 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
 
         release_groups = []
         if row["release_groups"]:
-            for release_group_mbid, release_group_name, artist_credit_name, date, type, secondary_types, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
+            for release_group_mbid, release_group_name, artist_credit_name, year, month, day, type, secondary_types, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
                 release_group = {
                     "name": release_group_name,
                     "mbid": release_group_mbid,
                     "artist_credit_name": artist_credit_name,
                     "artists": release_group_artists
                 }
-                if date is not None:
+                if year is not None:
+                    date = str(year)
+                    if month is not None:
+                        date += "-%02d" % month
+                    if day is not None:
+                        date += "-%02d" % day
                     release_group["date"] = date
+
                 if type is not None:
                     release_group["type"] = type
                 if secondary_types is not None:
@@ -186,9 +192,9 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                  , ac.name AS artist_credit_name
                                  , rgca.caa_id AS caa_id
                                  , rgca.caa_release_mbid::TEXT AS caa_release_mbid
-                                 , (rgm.first_release_date_year::TEXT || '-' ||
-                                     LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
-                                     LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
+                                 , rgm.first_release_date_year AS year
+                                 , rgm.first_release_date_month AS month
+                                 , rgm.first_release_date_day AS day
                                  , rgpt.name AS type
                                  , array_agg(DISTINCT rgst.name ORDER BY rgst.name)
                                      FILTER (WHERE rgst.name IS NOT NULL)
@@ -246,13 +252,15 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                             rgd.release_group_mbid,
                                             rgd.release_group_name,
                                             rgd.artist_credit_name, 
-                                            rgd.date,
+                                            rgd.year,
+                                            rgd.month,
+                                            rgd.day,
                                             rgd.type,
                                             rgd.secondary_types,
                                             rgd.release_group_artists,
                                             rgd.caa_id,
                                             rgd.caa_release_mbid
-                                        ) ORDER BY rgd.date
+                                        ) ORDER BY rgd.year, rgd.month, rgd.day
                                    )
                                     -- if the artist has no release groups, left join will cause a NULL row to be
                                     -- added to the array, filter ensures that it is removed
