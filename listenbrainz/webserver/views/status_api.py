@@ -10,8 +10,10 @@ from werkzeug.exceptions import ServiceUnavailable
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
-
+from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.db.playlist import get_recommendation_playlists_for_user
 import listenbrainz.db.dump as db_dump
+from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
 CACHE_TIME = 60 * 60  # time in seconds we cache the fetched data
@@ -87,20 +89,10 @@ def get_stats_timestamp():
     cache_key = STATUS_PREFIX + ".stats-timestamp"
     last_updated = cache.get(cache_key)
     if last_updated is None:
-        url = current_app.config["API_URL"] + "/1/stats/user/rob/artists"
-        while True:
-            r = requests.get(url)
-            if r.status_code == 419:
-                sleep(1)
-                continue
+        last_updated = get_entity_stats_last_updated("rob", "artists", "total_artist_count")
+        if last_updated is None:
+            return None
 
-            if r.status_code == 200:
-                break
-
-            if r.status_code in (400, 404, 503):
-                return None
-
-        last_updated = r.json()["payload"]["last_updated"]
         cache.set(cache_key, last_updated, CACHE_TIME)
 
     return last_updated
@@ -112,20 +104,11 @@ def get_playlists_timestamp():
     cache_key = STATUS_PREFIX + ".playlist-timestamp"
     last_updated = cache.get(cache_key)
     if last_updated is None:
-        url = current_app.config["API_URL"] + "/1/user/rob/playlists/createdfor"
-        while True:
-            r = requests.get(url)
-            if r.status_code == 419:
-                sleep(1)
-                continue
+        playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, 1)
+        if playlists is None or not playlists:
+            return None
 
-            if r.status_code == 200:
-                break
-
-            if r.status_code in (400, 404, 503):
-                return None
-
-        last_updated = r.json()["playlists"][0]["playlist"]["date"]
+        last_updated = playlists[0].last_updated
         last_updated = int(datetime.fromisoformat(last_updated).timestamp())
         cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
 
