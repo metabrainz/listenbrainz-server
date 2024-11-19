@@ -200,6 +200,7 @@ def cron_build_all_mb_caches(ctx):
 @click.pass_context
 def cron_update_all_mb_caches(ctx):
     """ Update all mb entity metadata cache in ListenBrainz. """
+    ctx.invoke(update_canonical_release_data)
     ctx.invoke(update_mb_metadata_cache)
     ctx.invoke(update_mb_artist_metadata_cache)
     ctx.invoke(update_mb_release_group_cache)

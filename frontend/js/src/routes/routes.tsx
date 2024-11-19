@@ -10,7 +10,6 @@ import getRedirectRoutes from "./redirectRoutes";
 import getEntityPages from "./EntityPages";
 import Layout from "../layout";
 import ErrorBoundary from "../error/ErrorBoundary";
-import ProtectedRoutes from "../utils/ProtectedRoutes";
 import getSettingsRoutes from "../settings/routes";
 import getSettingsRedirectRoutes from "../settings/routes/redirectRoutes";
 import getPlayerRoutes from "../player/routes";
@@ -53,11 +52,7 @@ const getRoutes = (musicbrainzID?: string): RouteObject[] => {
       ],
     },
     {
-      element: (
-        <Layout>
-          <ProtectedRoutes />
-        </Layout>
-      ),
+      element: <Layout withProtectedRoutes />,
       errorElement: (
         <Layout>
           <ErrorBoundary />

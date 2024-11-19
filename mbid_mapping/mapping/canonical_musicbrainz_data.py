@@ -142,8 +142,9 @@ def update_canonical_release_data(use_lb_conn: bool = True):
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
-
-        releases = CanonicalRelease(mb_conn, unlogged=False)
+            releases = CanonicalRelease(mb_conn, lb_conn, unlogged=False)
+        else:
+            releases = CanonicalRelease(mb_conn, unlogged=False)
         releases.run()
 
         log("canonical_release_data: updated.")
