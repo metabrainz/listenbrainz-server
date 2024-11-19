@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import fuzzysort from "fuzzysort";
 import {
   getArtistName,
-  getReleaseMBID,
+  getReleaseName,
   getTrackName,
   loadScriptAsync,
 } from "../../utils/utils";
@@ -16,12 +16,16 @@ import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSetting
 export type AppleMusicPlayerProps = DataSourceProps & {
   handleAlbumMapping: (
     dataSource: keyof MatchedTrack,
-    releaseMBID: string,
+    releaseName: string,
     album: {
       trackName: string;
       uri: string;
     }[]
   ) => void;
+  getAlbumMapping: (
+    listen: BrainzPlayerQueueItem,
+    dataSource: keyof MatchedTrack
+  ) => string | undefined;
 };
 
 export type AppleMusicPlayerState = {
@@ -275,13 +279,13 @@ export default class AppleMusicPlayer
   };
 
   playListen = async (listen: BrainzPlayerQueueItem): Promise<void> => {
-    const { show } = this.props;
+    const { show, getAlbumMapping } = this.props;
     if (!show) {
       return;
     }
     this.setState({ listen });
 
-    const apple_music_id = listen.matchedTrack?.appleMusic;
+    const apple_music_id = getAlbumMapping(listen, "appleMusic");
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);
       return;
@@ -469,8 +473,9 @@ export default class AppleMusicPlayer
   fetchAlbumTracksAndUpdateMappings = async (albumId: string) => {
     // Exptract the album id from the url
     const { listen } = this.state;
-    const releaseMBID = getReleaseMBID(listen as Listen);
-    if (!releaseMBID || !albumId) {
+    const releaseName = getReleaseName(listen as Listen);
+
+    if (!releaseName || !albumId) {
       return;
     }
     const { handleAlbumMapping } = this.props;
@@ -483,7 +488,7 @@ export default class AppleMusicPlayer
     const tracks = response?.data?.data?.[0]?.relationships?.tracks
       ?.data as MusicKit.Song[];
 
-    if (!tracks || tracks.length === 0) {
+    if (!tracks || tracks?.length === 0) {
       return;
     }
 
@@ -492,7 +497,7 @@ export default class AppleMusicPlayer
       trackName: track.attributes?.name,
     }));
 
-    handleAlbumMapping("appleMusic", releaseMBID, trackMappings);
+    handleAlbumMapping("appleMusic", releaseName, trackMappings);
   };
 
   getAlbumArt = (): JSX.Element | null => {

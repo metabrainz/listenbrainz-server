@@ -1,6 +1,7 @@
 import * as React from "react";
 import { faRepeat } from "@fortawesome/free-solid-svg-icons";
 import { isEqual, isNil } from "lodash";
+import Fuse from "fuse.js";
 import { faRepeatOnce } from "../../utils/icons";
 import { listenOrJSPFTrackToQueueItem } from "./utils";
 
@@ -48,6 +49,7 @@ export type BrainzPlayerContextT = {
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
   queueRepeatMode: QueueRepeatMode;
+  albumMapping: AlbumMapping;
 };
 
 export const initialValue: BrainzPlayerContextT = {
@@ -65,6 +67,7 @@ export const initialValue: BrainzPlayerContextT = {
   queue: [],
   ambientQueue: [],
   queueRepeatMode: QueueRepeatModes.off,
+  albumMapping: {},
 };
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
@@ -82,7 +85,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
     | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
-    | "UPDATE_MATCHED_TRACKS";
+    | "ADD_ALBUM_MAPPING";
   data?: any;
 };
 
@@ -318,37 +321,56 @@ function valueReducer(
         ambientQueue: [...ambientQueue, ...tracksToAdd],
       };
     }
-    case "UPDATE_MATCHED_TRACKS": {
-      const {
-        queueMatchedTracks,
-        ambientQueueMatchedTracks,
-        dataSource,
-      } = action.data as {
-        queueMatchedTracks: Record<string, string>;
-        ambientQueueMatchedTracks: Record<string, string>;
+    case "ADD_ALBUM_MAPPING": {
+      const { dataSource, releaseName, album } = action.data as {
         dataSource: keyof MatchedTrack;
+        releaseName: string;
+        album: {
+          trackName: string;
+          uri: string;
+        }[];
+      };
+      const { albumMapping } = state;
+
+      // Initialize Fuse for fuzzy matching release names
+      const fuseOptions = {
+        threshold: 0.3,
+        distance: 100,
+        keys: ["releaseName"],
       };
 
-      const newQueue = state.queue.map((track) => ({
-        ...track,
-        matchedTrack: {
-          ...track.matchedTrack,
-          [dataSource]: queueMatchedTracks[track.id],
-        },
+      const existingReleases = Object.keys(albumMapping).map((key) => ({
+        releaseName: key,
       }));
 
-      const newAmbientQueue = state.ambientQueue.map((track) => ({
-        ...track,
-        matchedTrack: {
-          ...track.matchedTrack,
-          [dataSource]: ambientQueueMatchedTracks[track.id],
-        },
-      }));
+      const fuse = new Fuse(existingReleases, fuseOptions);
+      const matches = fuse.search(releaseName);
+
+      let targetReleaseName = releaseName;
+      // If we find a close match, use that release name instead
+      if (matches.length > 0 && matches[0].score && matches[0].score < 0.3) {
+        targetReleaseName = matches[0].item.releaseName;
+      }
+
+      // Create or update the release mapping
+      const updatedReleaseMapping = {
+        ...(albumMapping[targetReleaseName] || {}),
+      };
+
+      // Add each track's URI under the appropriate dataSource
+      album.forEach(({ trackName, uri }) => {
+        updatedReleaseMapping[trackName] = {
+          ...(updatedReleaseMapping[trackName] || {}),
+          [dataSource]: uri,
+        };
+      });
 
       return {
         ...state,
-        queue: newQueue,
-        ambientQueue: newAmbientQueue,
+        albumMapping: {
+          ...albumMapping,
+          [targetReleaseName]: updatedReleaseMapping,
+        },
       };
     }
     default: {

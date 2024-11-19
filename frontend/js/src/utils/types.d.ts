@@ -673,9 +673,16 @@ declare type MatchedTrack = {
   appleMusic?: string;
 };
 
+type AlbumMapping = Record<
+  string, // releaseName
+  Record<
+    string, // trackName
+    MatchedTrack
+  >
+>;
+
 declare type BrainzPlayerQueueItem = Listen & {
   id: string;
-  matchedTrack: MatchedTrack;
 };
 
 declare type BrainzPlayerQueue = BrainzPlayerQueueItem[];

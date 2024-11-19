@@ -16,7 +16,7 @@ import {
   loadScriptAsync,
   getTrackName,
   getArtistName,
-  getReleaseMBID,
+  getReleaseName,
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -40,12 +40,16 @@ export type SpotifyPlayerProps = DataSourceProps & {
   refreshSpotifyToken: () => Promise<string>;
   handleAlbumMapping: (
     dataSource: keyof MatchedTrack,
-    releaseMBID: string,
+    releaseName: string,
     album: {
       trackName: string;
       uri: string;
     }[]
   ) => void;
+  getAlbumMapping: (
+    listen: BrainzPlayerQueueItem,
+    dataSource: keyof MatchedTrack
+  ) => string | undefined;
 };
 
 export type SpotifyPlayerState = {
@@ -327,12 +331,13 @@ export default class SpotifyPlayer
   };
 
   playListen = (listen: BrainzPlayerQueueItem): void => {
-    const { show } = this.props;
+    const { show, getAlbumMapping } = this.props;
     if (!show) {
       return;
     }
     this.setState({ listen });
-    const spotifyUri = listen.matchedTrack?.spotify;
+    const spotifyUri = getAlbumMapping(listen, "spotify");
+
     if (spotifyUri) {
       this.playSpotifyURI(spotifyUri);
     } else {
@@ -538,8 +543,8 @@ export default class SpotifyPlayer
   fetchAlbumTracksAndUpdateMappings = async (trackURI: string) => {
     const { handleAlbumMapping } = this.props;
     const { listen } = this.state;
-    const releaseMBID = getReleaseMBID(listen as Listen);
-    if (!releaseMBID || !trackURI) {
+    const releaseName = getReleaseName(listen as Listen);
+    if (!releaseName || !trackURI) {
       return;
     }
 
@@ -583,7 +588,7 @@ export default class SpotifyPlayer
       trackName: track.name,
     }));
 
-    handleAlbumMapping("spotify", releaseMBID, trackMappings);
+    handleAlbumMapping("spotify", releaseName, trackMappings);
   };
 
   handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {

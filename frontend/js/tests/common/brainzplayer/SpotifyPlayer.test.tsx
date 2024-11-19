@@ -55,6 +55,10 @@ const props = {
     releaseMBID: string,
     trackMappings: Array<{ uri: string; trackName: string }>
   ) => {},
+  getAlbumMapping: (
+    listen: BrainzPlayerQueueItem,
+    dataSource: keyof MatchedTrack
+  ) => "",
 };
 
 describe("SpotifyPlayer", () => {
