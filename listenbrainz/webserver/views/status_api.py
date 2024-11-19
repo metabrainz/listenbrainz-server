@@ -108,8 +108,7 @@ def get_playlists_timestamp():
         if playlists is None or not playlists:
             return None
 
-        last_updated = playlists[0].last_updated
-        last_updated = int(datetime.fromisoformat(last_updated).timestamp())
+        last_updated = int(playlists[0].last_updated.timestamp())
         cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
 
     return last_updated
@@ -149,7 +148,8 @@ def get_dump_timestamp():
     dump_timestamp = cache.get(cache_key)
     if dump_timestamp is None:
         try:
-            dump_timestamp = db_dump.get_dump_entries()[0]  # return the latest dump
+            dump = db_dump.get_dump_entries()[0]  # return the latest dump
+            dump_timestamp = int(dump["created"].timestamp())
             cache.set(cache_key, dump_timestamp, DUMP_CACHE_TIME)
         except IndexError:
             return None
@@ -174,7 +174,7 @@ def get_service_status():
     if dump is None:
         dump_age = None
     else:
-        dump_age = current_ts - dump["created"]
+        dump_age = current_ts - dump
 
     listen_count = get_incoming_listens_count()
 

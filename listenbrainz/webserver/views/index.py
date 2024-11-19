@@ -1,6 +1,7 @@
 import locale
 import requests
 import time
+import os
 
 from brainzutils import cache
 from datetime import datetime
@@ -90,6 +91,8 @@ def blog_data():
 @web_listenstore_needed
 def current_status():
 
+    load = "%.2f %.2f %.2f" % os.getloadavg()
+
     service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
@@ -112,6 +115,7 @@ def current_status():
         })
 
     data = {
+        "load": load,
         "service-status": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
