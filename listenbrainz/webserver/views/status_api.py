@@ -18,7 +18,7 @@ from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
 CACHE_TIME = 60 * 60  # time in seconds we cache the fetched data
 DUMP_CACHE_TIME = 24 * 60 * 60  # time in seconds we cache the dump check
-LISTEN_COUNT_CACHE_TIME = 30 * 60  # time in seconds we cache the listen count
+LISTEN_COUNT_CACHE_TIME = 5 * 60  # time in seconds we cache the listen count
 PLAYLIST_CACHE_TIME = 24 * 30 * 60  # time in seconds we cache latest playlist timestamp
 
 status_api_bp = Blueprint("status_api_v1", __name__)
