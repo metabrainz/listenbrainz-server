@@ -128,7 +128,7 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         log("canonical_musicbrainz_data: done done done!")
 
 
-def update_canonical_release_data(use_lb_conn: bool = True):
+def update_canonical_release_data(use_lb_conn: bool = False):
     """
         Run only the canonical release data, apart from the other tables.
 
