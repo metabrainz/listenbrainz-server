@@ -91,8 +91,8 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                     date = str(year)
                     if month is not None:
                         date += "-%02d" % month
-                    if day is not None:
-                        date += "-%02d" % day
+                        if day is not None:
+                            date += "-%02d" % day
                     release_group["date"] = date
 
                 if type is not None:
