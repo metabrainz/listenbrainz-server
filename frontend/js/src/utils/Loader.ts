@@ -44,7 +44,8 @@ export const RouteQuery = (key: any[], url: string) => ({
 
 export const RouteQueryLoader = (
   routeKey: string,
-  includeSearchParams = false
+  includeSearchParams = false,
+  throwOnError: (response: Response) => boolean = () => false
 ) => async ({ request, params }: LoaderFunctionArgs) => {
   const keys = [routeKey] as any[];
 
@@ -58,7 +59,14 @@ export const RouteQueryLoader = (
     const searchParamsObject = getObjectForURLSearchParams(searchParams);
     keys.push(searchParamsObject);
   }
-
-  await queryClient.ensureQueryData(RouteQuery(keys, request.url || ""));
+  try {
+    await queryClient.ensureQueryData({
+      ...RouteQuery(keys, request.url || ""),
+    });
+  } catch (response) {
+    if (throwOnError(response)) {
+      throw response;
+    }
+  }
   return null;
 };
