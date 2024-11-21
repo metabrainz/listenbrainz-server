@@ -43,11 +43,13 @@ def update_flair():
         raise APIBadRequest("Missing flair field")
 
     flair = request.json["flair"]
-    if flair is not None:
+    if flair:
         if not isinstance(flair, str):
             raise APIBadRequest("Flair must be a string")
         if flair not in FLAIR_CHOICES:
             raise APIBadRequest(f"Invalid flair: {flair}")
+    else:
+        flair = None
 
     db_usersetting.update_flair(db_conn, user["id"], flair)
     return jsonify({"success": True})
