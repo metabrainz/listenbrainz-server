@@ -2,7 +2,11 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import * as React from "react";
 import { HTMLInputTypeAttribute, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleQuestion } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleQuestion,
+  faRss,
+  faRssSquare,
+} from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "react-tooltip";
 
 export type SyndicationFeedModalProps = {
@@ -97,7 +101,8 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
               <span aria-hidden="true">&times;</span>
             </button>
             <h4 className="modal-title" id="syndicationFeedModalLabel">
-              Feed: {feedTitle}
+              <FontAwesomeIcon icon={faRssSquare} />
+              &nbsp; Syndication feed: {feedTitle}
             </h4>
           </div>
 
