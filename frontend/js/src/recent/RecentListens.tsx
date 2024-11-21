@@ -10,6 +10,7 @@ import Card from "../components/Card";
 import { getTrackName } from "../utils/utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import RecentDonorsCard from "./components/RecentDonors";
+import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -50,6 +51,7 @@ export default class RecentListens extends React.Component<
         </div>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
+            <FlairsExplanationButton />
             <Card id="listen-count-card">
               <div>
                 {globalListenCount?.toLocaleString() ?? "-"}

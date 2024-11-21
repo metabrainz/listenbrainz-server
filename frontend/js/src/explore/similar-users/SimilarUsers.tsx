@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet";
 import { useLocation } from "react-router-dom";
 import { RouteQuery } from "../../utils/Loader";
 import Username from "../../common/Username";
+import FlairsExplanationButton from "../../common/flairs/FlairsExplanationButton";
 
 export default function SimilarUsers() {
   const location = useLocation();
@@ -26,6 +27,8 @@ export default function SimilarUsers() {
         ways: Sockpuppet accounts and listen spammers. This page should help us
         find these bad actors and let us report them.
       </p>
+
+      <FlairsExplanationButton />
 
       <table className="table table-striped">
         <tbody>
