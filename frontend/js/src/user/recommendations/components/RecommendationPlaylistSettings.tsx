@@ -5,8 +5,8 @@ import {
   faCode,
   faCog,
   faPlayCircle,
+  faRss,
   faSave,
-  faSquareRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
@@ -120,8 +120,10 @@ export default function RecommendationPlaylistSettings({
             <PlaylistMenu playlist={playlist} />
           </span>
           <button
-            className="btn btn-icon btn-info"
-            style={{ marginLeft: "10px" }}
+            type="button"
+            className="btn btn-icon btn-info rss-button"
+            data-toggle="modal"
+            data-target="#SyndicationFeedModal"
             onClick={() => {
               const sourcePatch =
                 extension?.additional_metadata?.algorithm_metadata.source_patch;
@@ -134,14 +136,8 @@ export default function RecommendationPlaylistSettings({
                 }/recommendations?recommendation_type=${sourcePatch}`,
               });
             }}
-            data-toggle="modal"
-            data-target="#SyndicationFeedModal"
-            type="button"
           >
-            <FontAwesomeIcon
-              icon={faSquareRss}
-              title="Subscribe to syndication feed"
-            />
+            <FontAwesomeIcon icon={faRss} size="sm" />
           </button>
         </div>
         <div>
