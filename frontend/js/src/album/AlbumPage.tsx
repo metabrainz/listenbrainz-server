@@ -217,7 +217,6 @@ export default function AlbumPage(): JSX.Element {
   if (isError) {
     return (
       <div className="center-p">
-        {/* <div style={{ fontSize: "xx-large" }}>¯\_(ツ)_/¯</div> */}
         <img
           src="/static/img/broken-cd.jpg"
           alt="Broken CD vector"

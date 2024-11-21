@@ -45,7 +45,7 @@ export const RouteQuery = (key: any[], url: string) => ({
 export const RouteQueryLoader = (
   routeKey: string,
   includeSearchParams = false,
-  throwOnError: (response: Response) => boolean = () => false
+  throwOnError: (response: Response) => boolean = () => true
 ) => async ({ request, params }: LoaderFunctionArgs) => {
   const keys = [routeKey] as any[];
 
