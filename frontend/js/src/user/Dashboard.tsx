@@ -609,14 +609,7 @@ export default function Listen() {
             )}
             <button
               type="button"
-              className="btn btn-icon btn-info btn-sm"
-              style={{
-                width: "24px",
-                height: "24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="btn btn-icon btn-info rss-button"
               data-toggle="modal"
               data-target="#SyndicationFeedModal"
               onClick={() => {
@@ -669,7 +662,7 @@ export default function Listen() {
                 });
               }}
             >
-              <FontAwesomeIcon icon={faRss} size="xs" />
+              <FontAwesomeIcon icon={faRss} size="sm" />
             </button>
           </div>
 

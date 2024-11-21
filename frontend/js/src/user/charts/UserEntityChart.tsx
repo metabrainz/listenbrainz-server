@@ -7,6 +7,7 @@ import {
   faAngleRight,
   faExclamationCircle,
   faHeadphones,
+  faRss,
   faSquareRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -222,7 +223,7 @@ export default function UserEntityChart() {
       </Helmet>
       <div style={{ marginTop: "1em", minHeight: 500 }}>
         <Loader isLoading={loading}>
-          <div>
+          <div className="flex-center">
             <Pill active={terminology === "artist"} type="secondary">
               <Link
                 to={`../top-artists/${attributesForLinks}`}
@@ -250,6 +251,48 @@ export default function UserEntityChart() {
                 Tracks
               </Link>
             </Pill>
+            <button
+              type="button"
+              className="btn btn-icon btn-info rss-button"
+              style={{ marginLeft: "auto" }}
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Top ${terminology}s`,
+                  options: [
+                    {
+                      label: "Time range",
+                      tooltip:
+                        "Select the time range for the feed. For instance, choosing '30 minutes' will include listens from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                      key: "range",
+                      type: "dropdown",
+                      values: Array.from(ranges, ([stat_type, stat_name]) => ({
+                        id: stat_type,
+                        value: stat_type,
+                        displayValue: stat_name,
+                      })),
+                    },
+                    {
+                      label: "Count",
+                      key: "count",
+                      type: "number",
+                      values: [
+                        { id: "10", value: "10" },
+                        { id: "20", value: "20" },
+                        { id: "50", value: "50" },
+                        { id: "100", value: "100" },
+                      ],
+                    },
+                  ],
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    user?.name
+                  }/stats/top-${terminology}s`,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faRss} size="sm" />
+            </button>
           </div>
           <h3>
             Top{" "}
@@ -295,44 +338,6 @@ export default function UserEntityChart() {
                 month: "long",
                 year: "numeric",
               })})`}
-            <FontAwesomeIcon
-              role="button"
-              icon={faSquareRss}
-              style={{ marginLeft: "10px", color: "#353070" }}
-              data-toggle="modal"
-              data-target="#SyndicationFeedModal"
-              onClick={() => {
-                NiceModal.show(SyndicationFeedModal, {
-                  feedTitle: `Top ${terminology}s`,
-                  options: [
-                    {
-                      label: "Time range",
-                      key: "range",
-                      type: "dropdown",
-                      values: Array.from(ranges, ([stat_type, stat_name]) => ({
-                        id: stat_type,
-                        value: stat_type,
-                        displayValue: stat_name,
-                      })),
-                    },
-                    {
-                      label: "Count",
-                      key: "count",
-                      type: "number",
-                      values: [
-                        { id: "10", value: "10" },
-                        { id: "20", value: "20" },
-                        { id: "50", value: "50" },
-                        { id: "100", value: "100" },
-                      ],
-                    },
-                  ],
-                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                    user?.name
-                  }/stats/top-${terminology}s`,
-                });
-              }}
-            />
           </h3>
           {hasError && (
             <div className="mt-15 mb-15">

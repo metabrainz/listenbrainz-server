@@ -570,14 +570,7 @@ export default function UserFeedPage() {
         {/* Commented out as new OAuth is not merged yet. */}
         {/* <button
           type="button"
-          className="btn btn-icon btn-info btn-sm"
-          style={{
-            width: "24px",
-            height: "24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="btn btn-icon btn-info rss-button"
           data-toggle="modal"
           data-target="#SyndicationFeedModal"
           onClick={() => {
@@ -630,7 +623,7 @@ export default function UserFeedPage() {
             });
           }}
         >
-          <FontAwesomeIcon icon={faRss} size="xs" />
+          <FontAwesomeIcon icon={faRss} size="sm" />
         </button> */}
       </div>
       <div className="row">
