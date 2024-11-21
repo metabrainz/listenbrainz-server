@@ -17,7 +17,6 @@ import {
   faEyeSlash,
   faComments,
   faPaperPlane,
-  faSquareRss,
   faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

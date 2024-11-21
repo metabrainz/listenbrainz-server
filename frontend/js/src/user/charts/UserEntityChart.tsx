@@ -8,7 +8,6 @@ import {
   faExclamationCircle,
   faHeadphones,
   faRss,
-  faSquareRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -17,7 +16,6 @@ import { Helmet } from "react-helmet";
 import { BarItemProps } from "@nivo/bar";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
 
 import Bar from "./components/Bar";

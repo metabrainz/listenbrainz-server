@@ -6,7 +6,7 @@ import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRss, faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import { faRss } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";

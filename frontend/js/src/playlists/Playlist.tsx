@@ -1,15 +1,9 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { saveAs } from "file-saver";
 import { findIndex } from "lodash";
 import * as React from "react";
 
-import {
-  faCog,
-  faPlusCircle,
-  faRss,
-  faSquareRss,
-} from "@fortawesome/free-solid-svg-icons";
+import { faCog, faPlusCircle, faRss } from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";

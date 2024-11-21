@@ -5,7 +5,6 @@ import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSquareRss } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";

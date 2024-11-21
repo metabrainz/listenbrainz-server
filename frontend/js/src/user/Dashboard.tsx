@@ -3,13 +3,12 @@
 import * as _ from "lodash";
 import * as React from "react";
 
-import NiceModal, { hide } from "@ebay/nice-modal-react";
+import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import {
   faCompactDisc,
   faTrashAlt,
-  faSquareRss,
   faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
