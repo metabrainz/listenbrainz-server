@@ -356,6 +356,7 @@ export default function PlaylistPage() {
                   className="btn btn-icon btn-info btn-sm rss-button"
                   data-toggle="modal"
                   data-target="#SyndicationFeedModal"
+                  title="Subscribe to syndication feed (RSS)"
                   onClick={() => {
                     NiceModal.show(SyndicationFeedModal, {
                       feedTitle: `Playlist`,

@@ -302,6 +302,7 @@ export default function UserEntityChart() {
               style={{ marginLeft: "auto" }}
               data-toggle="modal"
               data-target="#SyndicationFeedModal"
+              title="Subscribe to syndication feed (RSS)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {
                   feedTitle: `Top ${terminology}s`,

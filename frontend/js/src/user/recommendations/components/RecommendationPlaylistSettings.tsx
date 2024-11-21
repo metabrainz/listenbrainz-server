@@ -124,6 +124,7 @@ export default function RecommendationPlaylistSettings({
             className="btn btn-icon btn-info rss-button"
             data-toggle="modal"
             data-target="#SyndicationFeedModal"
+            title="Subscribe to syndication feed (RSS)"
             onClick={() => {
               const sourcePatch =
                 extension?.additional_metadata?.algorithm_metadata.source_patch;

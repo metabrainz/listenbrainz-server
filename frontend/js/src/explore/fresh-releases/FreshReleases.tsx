@@ -381,6 +381,7 @@ export default function FreshReleases() {
                 className="btn btn-icon btn-info rss-button"
                 data-toggle="modal"
                 data-target="#SyndicationFeedModal"
+                title="Subscribe to syndication feed (RSS)"
                 onClick={() => {
                   if (pageType === PAGE_TYPE_SITEWIDE) {
                     NiceModal.show(SyndicationFeedModal, {

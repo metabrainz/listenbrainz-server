@@ -611,6 +611,7 @@ export default function Listen() {
               className="btn btn-icon btn-info rss-button"
               data-toggle="modal"
               data-target="#SyndicationFeedModal"
+              title="Subscribe to syndication feed (RSS)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {
                   feedTitle: "Recent listens",
