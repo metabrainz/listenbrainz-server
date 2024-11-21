@@ -765,7 +765,7 @@ def get_recommendation(user_name):
 
     fg = _init_feed(
         f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
-        f"{'Weekly Jams' if recommendation_type == 'weekly-jams' else 'Weekly Exploration'} for {user_name}",
+        f"{'Weekly Jams' if recommendation_type == 'weekly-jams' else 'Weekly Exploration'} for {user_name} - ListenBrainz",
         f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
         _external_url_for("user.recommendation_playlists",
                           user_name=user_name),
