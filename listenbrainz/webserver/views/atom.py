@@ -301,19 +301,19 @@ def get_fresh_releases():
             f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        fe.link(href=f"{_external_url_for('release.release_page')}/{release_mbid}", rel="alternate")
+        fe.link(href=f"{_external_url_for('release.release_page')}{release_mbid}", rel="alternate")
         fe.link(href=this_feed_url, rel="self")
 
         content = render_template(
             "atom/fresh_releases.html",
-            release_mb_page_base_url="https://musicbrainz.org/release/",
+            release_lb_page_base_url=_external_url_for('release.release_page'),
             release_name=release_name,
             release_mbid=release_mbid,
             artist_page_base_url=_external_url_for(
                 "artist.artist_page", path=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
-            expore_fresh_releases_url=_external_url_for(
+            explore_fresh_releases_url=_external_url_for(
                 "explore.index", path="fresh-releases"
             ),
         )
@@ -383,12 +383,12 @@ def get_user_fresh_releases(user_name):
             f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        fe.link(href=f"{_external_url_for('release.release_page')}/{release_mbid}", rel="alternate")
+        fe.link(href=f"{_external_url_for('release.release_page')}{release_mbid}", rel="alternate")
         fe.link(href=this_feed_url, rel="self")
 
         content = render_template(
             "atom/fresh_releases.html",
-            release_mb_page_base_url="https://musicbrainz.org/release/",
+            release_lb_page_base_url=_external_url_for('release.release_page'),
             release_name=release_name,
             release_mbid=release_mbid,
             artist_page_base_url=_external_url_for(
@@ -459,7 +459,7 @@ def get_artist_stats(user_name):
             status=204, response="Statistics for the user haven't been calculated."
         )
     this_feed_url = _external_url_for(".get_artist_stats", user_name=user_name)
-    user_stats_url = _external_url_for("user.index", path="top-artists", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats/top-artists", user_name=user_name, range=range)
     
     fg = _init_feed(
         this_feed_url,
@@ -542,7 +542,7 @@ def get_release_group_stats(user_name):
         )
 
     this_feed_url = _external_url_for(".get_release_group_stats", user_name=user_name)
-    user_stats_url = _external_url_for("user.index", path="top-albums", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats/top-albums", user_name=user_name, range=range)
 
     fg = _init_feed(
         this_feed_url,
@@ -624,7 +624,7 @@ def get_recording_stats(user_name):
         )
 
     this_feed_url = _external_url_for(".get_recording_stats", user_name=user_name)
-    user_stats_url = _external_url_for("user.index", path="top-tracks", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats/top-tracks", user_name=user_name, range=range)
 
     fg = _init_feed(
         this_feed_url,
@@ -888,7 +888,7 @@ def get_cover_art_grid_stats(user_name):
     )
 
     this_feed_url = _external_url_for(".get_cover_art_grid_stats", user_name=user_name)
-    user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name, range=range)
 
     fg = _init_feed(
         this_feed_url,
@@ -984,7 +984,7 @@ def get_cover_art_custom_stats(user_name):
         image_size=image_size,
     )
     this_feed_url = _external_url_for(".get_cover_art_custom_stats", user_name=user_name)
-    user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name, range=range)
     
     fg = _init_feed(
         this_feed_url,

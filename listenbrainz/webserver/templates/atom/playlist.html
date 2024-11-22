@@ -1,6 +1,6 @@
 <p>
     <ul>
-        {% for track in tracks if tracks is not None %}
+        {% for track in (tracks  or []) %}
         <li>
             {% if track.mbid %}
                 <a href="{{ recording_mb_page_base_url }}{{ track.mbid }}">{{ track.title }}</a>
