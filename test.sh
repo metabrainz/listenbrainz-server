@@ -255,7 +255,6 @@ if [ $DB_RUNNING -eq 1 ] ; then
     echo "Running tests"
     docker_compose_run listenbrainz pytest "$@"
     RET=$?
-    unit_dcdown
     exit $RET
 else
     # Else, we have containers, just run tests
