@@ -27,6 +27,16 @@
     padding-left: 50px;
     scroll-snap-align: start;
 
+    .homepage-upper-logo-info {
+      display: flex;
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      z-index: 3;
+      height: 12vh;
+      gap: 1vh;
+    }
+
     .homepage-upper-grey-box {
       height: 65%;
       bottom: 0;
@@ -371,6 +381,9 @@
       bottom: 4.5em;
     }
     .homepage-upper {
+      .homepage-upper-logo-info {
+        height: 8vh;
+      }
       .listen-container {
         top: 8vh;
       }

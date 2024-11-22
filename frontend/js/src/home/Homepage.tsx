@@ -131,6 +131,23 @@ function HomePage() {
             height: "200px",
           }}
         />
+        <div className="homepage-upper-logo-info">
+          <img
+            className="homepage-upper-logo-info-image"
+            src="/static/img/homepage/LB-Open-Source.png"
+            alt="ListenBrainz Open Source Logo"
+          />
+          <img
+            className="homepage-upper-logo-info-image"
+            src="/static/img/homepage/LB-Data-Provider.png"
+            alt="ListenBrainz Data Provider Logo"
+          />
+          <img
+            className="homepage-upper-logo-info-image"
+            src="/static/img/homepage/LB-Ethical.png"
+            alt="ListenBrainz Ethical Source Logo"
+          />
+        </div>
         <img
           className="homepage-upper-headphone"
           src="/static/img/homepage/LB-Headphone.png"
