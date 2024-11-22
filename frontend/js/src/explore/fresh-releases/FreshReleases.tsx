@@ -406,7 +406,7 @@ export default function FreshReleases() {
                     });
                   } else if (pageType === PAGE_TYPE_USER) {
                     NiceModal.show(SyndicationFeedModal, {
-                      feedTitle: `User-specific Fresh Releases`,
+                      feedTitle: `${currentUser.name}'s Fresh Releases`,
                       options: [],
                       baseUrl: `${getBaseUrl()}/syndication-feed/user/${
                         currentUser.name
