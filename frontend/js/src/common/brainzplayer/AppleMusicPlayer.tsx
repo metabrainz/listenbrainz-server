@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get, deburr, escapeRegExp, isString } from "lodash";
+import { get as _get, escapeRegExp, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router-dom";
 import fuzzysort from "fuzzysort";
@@ -208,24 +208,22 @@ export default class AppleMusicPlayer
         { term: searchTerm, types: "songs" }
       );
       const releaseName = _get(listen, "track_metadata.release_name", "");
-      const releaseNameWithoutAccents = deburr(releaseName);
-      const trackNameWithoutAccents = deburr(trackName);
       const candidateMatches = response?.data?.results?.songs?.data.map(
         (candidate) => ({
           ...candidate,
           attributes: {
             ...candidate.attributes,
-            name: deburr(candidate.attributes.name),
-            albumName: deburr(candidate.attributes.albumName),
+            name: candidate.attributes.name,
+            albumName: candidate.attributes.albumName,
           },
         })
       );
 
       let fuzzyMatches;
-      if (releaseNameWithoutAccents) {
+      if (releaseName) {
         // If we have a release name, search for both track and album
         fuzzyMatches = fuzzysort.go(
-          `${trackNameWithoutAccents} ${releaseNameWithoutAccents}`,
+          `${trackName} ${releaseName}`,
           candidateMatches,
           {
             keys: ["attributes.name", "attributes.albumName"],
@@ -238,10 +236,11 @@ export default class AppleMusicPlayer
             },
           }
         );
-      } else {
+      }
+      if (!fuzzyMatches || !fuzzyMatches.length) {
         // Check if the first API result is a match
         if (
-          new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+          new RegExp(escapeRegExp(trackName), "igu").test(
             candidateMatches?.[0]?.attributes.name
           )
         ) {
@@ -250,7 +249,7 @@ export default class AppleMusicPlayer
           return;
         }
         // Otherwise just search for track name
-        fuzzyMatches = fuzzysort.go(trackNameWithoutAccents, candidateMatches, {
+        fuzzyMatches = fuzzysort.go(trackName, candidateMatches, {
           key: "attributes.name",
         });
       }
