@@ -58,7 +58,7 @@ class BackgroundTasks:
                 break
             except Exception:
                 current_app.logger.error("Error in background tasks processor:", exc_info=True)
-
+                time.sleep(2)
                 # Exit the container, restart
                 current_app.logger.info("Exiting process, letting container restart.")
                 break
