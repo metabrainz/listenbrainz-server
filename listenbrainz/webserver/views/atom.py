@@ -142,7 +142,7 @@ def _get_cover_art_feed_title(
     return f"{range_description} {title} for {user_name} - ListenBrainz"
 
 
-def _init_feed(id, title, self_url, alternate_url):
+def _init_feed(id, title, alternate_url, self_url):
     """
     Initialize a feed with common attributes.
     """
@@ -150,8 +150,10 @@ def _init_feed(id, title, self_url, alternate_url):
     fg.id(id)
     fg.title(title)
     fg.author({"name": "ListenBrainz"})
-    fg.link(href=alternate_url, rel="alternate")
+    # Self link should be that of the RSS feed
     fg.link(href=self_url, rel="self")
+    # Alternate link should be the page this info is on
+    fg.link(href=alternate_url, rel="alternate")
     fg.logo(_external_url_for("static", filename="img/listenbrainz_logo_icon.svg"))
     fg.language("en")
     return fg
@@ -190,12 +192,15 @@ def get_listens(user_name):
     listens, _, _ = timescale_connection._ts.fetch_listens(
         user, from_ts=from_ts, to_ts=to_ts, limit=MAX_ITEMS_PER_GET
     )
+    
+    this_feed_url = _external_url_for(".get_listens", user_name=user_name)
+    user_dashboard_url = _external_url_for("user.index", path="", user_name=user_name)
 
     fg = _init_feed(
-        _external_url_for(".get_listens", user_name=user_name),
+        this_feed_url,
         f"Listens for {user_name} - ListenBrainz",
-        _external_url_for("user.index", path="", user_name=user_name),
-        _external_url_for(".get_listens", user_name=user_name),
+        user_dashboard_url,
+        this_feed_url,
     )
 
     # newer listen comes first
@@ -212,14 +217,15 @@ def get_listens(user_name):
         fe = fg.add_entry()
         # according to spec, ids don't have to be deferencable.
         fe.id(
-            f"{_external_url_for('.get_listens', user_name=user_name)}/{listen.ts_since_epoch}/{track_name}"
+            f"{this_feed_url}/{listen.ts_since_epoch}/{track_name}"
         )
         fe.title(f"{track_name} - {artist_name}")
+        fe.link(href=user_dashboard_url, rel="alternate")
+        fe.link(href=this_feed_url, rel="self")
 
         content = render_template(
             "atom/listens.html",
-            user_page_url=_external_url_for(
-                "user.index", path="", user_name=user_name),
+            user_page_url=user_dashboard_url,
             user_name=user_name,
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
             track_name=track_name,
@@ -270,11 +276,13 @@ def get_fresh_releases():
             "Server failed to get latest release: {}".format(e))
         return InternalServerError("Server failed to get latest release")
 
+    this_feed_url = _external_url_for(".get_fresh_releases")
+
     fg = _init_feed(
-        _external_url_for(".get_fresh_releases"),
+        this_feed_url,
         "Fresh Releases - ListenBrainz",
         _external_url_for("explore.index", path="fresh-releases"),
-        _external_url_for(".get_fresh_releases"),
+        this_feed_url,
     )
 
     for r in db_releases:
@@ -290,9 +298,11 @@ def get_fresh_releases():
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('.get_fresh_releases')}/{uts}/{artist_credit_name}/{release_name}"
+            f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
+        fe.link(href=f"{_external_url_for('release.release_page')}/{release_mbid}", rel="alternate")
+        fe.link(href=this_feed_url, rel="self")
 
         content = render_template(
             "atom/fresh_releases.html",
@@ -346,11 +356,13 @@ def get_user_fresh_releases(user_name):
         key=lambda k: k.get("release_date", ""),  # sort by release date
     )
 
+    this_feed_url = _external_url_for(".get_user_fresh_releases", user_name=user_name)
+
     fg = _init_feed(
-        _external_url_for(".get_user_fresh_releases", user_name=user_name),
+        this_feed_url,
         f"Fresh Releases for {user_name} - ListenBrainz",
         _external_url_for("explore.index", path="fresh-releases"),
-        _external_url_for(".get_user_fresh_releases", user_name=user_name),
+        this_feed_url,
     )
 
     for r in releases:
@@ -368,9 +380,11 @@ def get_user_fresh_releases(user_name):
 
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('.get_user_fresh_releases', user_name=user_name)}/{uts}/{artist_credit_name}/{release_name}"
+            f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
+        fe.link(href=f"{_external_url_for('release.release_page')}/{release_mbid}", rel="alternate")
+        fe.link(href=this_feed_url, rel="self")
 
         content = render_template(
             "atom/fresh_releases.html",
@@ -444,12 +458,14 @@ def get_artist_stats(user_name):
         return Response(
             status=204, response="Statistics for the user haven't been calculated."
         )
-
+    this_feed_url = _external_url_for(".get_artist_stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="top-artists", user_name=user_name)
+    
     fg = _init_feed(
-        _external_url_for(".get_artist_stats", user_name=user_name),
+        this_feed_url,
         _get_stats_feed_title(user_name, "artists", range),
-        _external_url_for("user.stats", user_name=user_name),
-        _external_url_for(".get_artist_stats", user_name=user_name),
+        user_stats_url,
+        this_feed_url,
     )
 
     # this_* stats are updated daily, so we can use the timestamp of the last updated stats,
@@ -463,10 +479,12 @@ def get_artist_stats(user_name):
     t_with_tz = dt.replace(tzinfo=timezone.utc)
 
     fe = fg.add_entry()
-    fe.id(f"{_external_url_for('.get_artist_stats', user_name=user_name)}/{range}/{t}")
+    fe.id(f"{this_feed_url}/{range}/{t}")
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
+    fe.link(href=f"{this_feed_url}/{range}/", rel="self")
+    fe.link(href=user_stats_url, rel="alternate")
 
     content = render_template(
         "atom/top_artists.html",
@@ -523,11 +541,14 @@ def get_release_group_stats(user_name):
             status=204, response="Statistics for the user haven't been calculated."
         )
 
+    this_feed_url = _external_url_for(".get_release_group_stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="top-albums", user_name=user_name)
+
     fg = _init_feed(
-        _external_url_for(".get_release_group_stats", user_name=user_name),
+        this_feed_url,
         _get_stats_feed_title(user_name, "release_groups", range),
-        _external_url_for("user.stats", user_name=user_name),
-        _external_url_for(".get_release_group_stats", user_name=user_name),
+        user_stats_url,
+        this_feed_url,
     )
 
     if _is_daily_updated_stats(range):
@@ -539,11 +560,13 @@ def get_release_group_stats(user_name):
 
     fe = fg.add_entry()
     fe.id(
-        f"{_external_url_for('.get_release_group_stats', user_name=user_name)}/{range}/{t}"
+        f"{this_feed_url}/{range}/{t}"
     )
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
+    fe.link(href=user_stats_url, rel="alternate")
+    fe.link(href=f"{this_feed_url}/{range}/", rel="self")
 
     content = render_template(
         "atom/top_albums.html",
@@ -600,11 +623,14 @@ def get_recording_stats(user_name):
             status=204, response="Statistics for the user haven't been calculated."
         )
 
+    this_feed_url = _external_url_for(".get_recording_stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="top-tracks", user_name=user_name)
+
     fg = _init_feed(
-        _external_url_for(".get_recording_stats", user_name=user_name),
+        this_feed_url,
         _get_stats_feed_title(user_name, "recordings", range),
-        _external_url_for("user.stats", user_name=user_name),
-        _external_url_for(".get_recording_stats", user_name=user_name),
+        user_stats_url,
+        this_feed_url,
     )
 
     if _is_daily_updated_stats(range):
@@ -621,6 +647,8 @@ def get_recording_stats(user_name):
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
+    fe.link(href=user_stats_url, rel="alternate")
+    fe.link(href=f"{this_feed_url}/{range}/", rel="self")
 
     content = render_template(
         "atom/top_tracks.html",
@@ -667,26 +695,28 @@ def get_playlist_recordings(playlist_mbid):
 
     fetch_playlist_recording_metadata(playlist)
 
+    this_feed_url = _external_url_for(".get_playlist_recordings", playlist_mbid=playlist_mbid)
+    playlist_page_url = _external_url_for("playlist.playlist_page", path=playlist_mbid)
+
     fg = _init_feed(
-        _external_url_for(".get_playlist_recordings",
-                          playlist_mbid=playlist_mbid),
+        this_feed_url,
         playlist.name + " - ListenBrainz",
-        _external_url_for(".get_playlist_recordings",
-                          playlist_mbid=playlist_mbid),
-        _external_url_for("playlist.load_playlist",
-                          playlist_mbid=playlist_mbid),
+        this_feed_url,
+        playlist_page_url,
     )
 
     for recording in playlist.recordings:
         fe = fg.add_entry()
         fe.id(
-            f"{_external_url_for('.get_playlist_recordings', playlist_mbid=playlist_mbid)}/{recording.mbid}"
+            f"{this_feed_url}/{recording.mbid}"
         )
         fe.title(
-            f"{recording.title} by {recording.artist_credit}"
+            f"{recording.title} by {recording.artist_credit} was added to {playlist.name}"
             if recording.artist_credit
-            else recording.title
+            else f"{recording.title} was added to {playlist.name}"
         )
+        fe.link(href=this_feed_url, rel="self")
+        fe.link(href=playlist_page_url, rel="alternate")
 
         content = render_template(
             "atom/recording.html",
@@ -763,19 +793,23 @@ def get_recommendation(user_name):
 
     fetch_playlist_recording_metadata(playlist)
 
+    this_feed_url = f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}"
+    playlist_page_url = _external_url_for("playlist.playlist_page", path=playlist.mbid)
+
     fg = _init_feed(
-        f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
+        this_feed_url,
         f"{'Weekly Jams' if recommendation_type == 'weekly-jams' else 'Weekly Exploration'} for {user_name} - ListenBrainz",
-        f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}",
-        _external_url_for("user.recommendation_playlists",
-                          user_name=user_name),
+        this_feed_url,
+        playlist_page_url,
     )
 
     fe = fg.add_entry()
     fe.id(
-        f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}/{playlist.created.timestamp()}"
+        f"{this_feed_url}/{playlist.created.timestamp()}"
     )
     fe.title(playlist.name)
+    fe.link(href=this_feed_url, rel="self")
+    fe.link(href=playlist_page_url, rel="alternate")
 
     content = render_template(
         "atom/playlist.html",
@@ -853,11 +887,14 @@ def get_cover_art_grid_stats(user_name):
         image_size=image_size,
     )
 
+    this_feed_url = _external_url_for(".get_cover_art_grid_stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name)
+
     fg = _init_feed(
-        _external_url_for(".get_cover_art_grid_stats", user_name=user_name),
+        this_feed_url,
         _get_cover_art_feed_title(user_name, range, art_type="grid"),
-        _external_url_for("user.stats", user_name=user_name),
-        _external_url_for(".get_cover_art_grid_stats", user_name=user_name),
+        user_stats_url,
+        this_feed_url,
     )
 
     entity_list, to_ts, last_updated = _get_entity_stats(
@@ -880,9 +917,11 @@ def get_cover_art_grid_stats(user_name):
 
     fe = fg.add_entry()
     fe.id(
-        f"{_external_url_for('.get_cover_art_grid_stats', user_name=user_name)}/{range}/{t}"
+        f"{this_feed_url}/{range}/{t}"
     )
     fe.title(_get_stats_entry_title(range, to_ts - 60) + " (Stats Art Grid)")
+    fe.link(href=f"{this_feed_url}/{range}", rel="self")
+    fe.link(href=user_stats_url, rel="alternate")
 
     content = render_template(
         "atom/stat_art.html",
@@ -944,14 +983,16 @@ def get_cover_art_custom_stats(user_name):
         time_range=range,
         image_size=image_size,
     )
-
+    this_feed_url = _external_url_for(".get_cover_art_custom_stats", user_name=user_name)
+    user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name)
+    
     fg = _init_feed(
-        _external_url_for(".get_cover_art_custom_stats", user_name=user_name),
+        this_feed_url,
         _get_cover_art_feed_title(
             user_name, range, art_type="custom", custom_name=custom_name
         ),
-        _external_url_for("user.stats", user_name=user_name),
-        _external_url_for(".get_cover_art_custom_stats", user_name=user_name),
+        user_stats_url,
+        this_feed_url,
     )
 
     if custom_name == "designer-top-5":
@@ -985,6 +1026,8 @@ def get_cover_art_custom_stats(user_name):
         f"{_external_url_for('.get_cover_art_custom_stats', user_name=user_name)}/{range}/{t}"
     )
     fe.title(_get_stats_entry_title(range, to_ts - 60))
+    fe.link(href=f"{this_feed_url}/{range}", rel="self")
+    fe.link(href=user_stats_url, rel="alternate")
 
     content = render_template(
         "atom/stat_art.html",
