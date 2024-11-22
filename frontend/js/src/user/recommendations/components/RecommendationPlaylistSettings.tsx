@@ -83,15 +83,26 @@ export default function RecommendationPlaylistSettings({
             className="btn btn-icon btn-info"
             onClick={play}
             type="button"
+            style={{
+              marginLeft: 0,
+            }}
           >
-            <FontAwesomeIcon icon={faPlayCircle} title="Play this playlists" />
+            <FontAwesomeIcon
+              icon={faPlayCircle}
+              title="Play this playlists"
+              fixedWidth
+            />
           </button>
           <button
             className="btn btn-icon btn-info"
             onClick={onCopyPlaylist}
             type="button"
           >
-            <FontAwesomeIcon icon={faSave} title="Save to my playlists" />
+            <FontAwesomeIcon
+              icon={faSave}
+              title="Save to my playlists"
+              fixedWidth
+            />
           </button>
           <button
             className="btn btn-icon btn-info"
@@ -104,9 +115,13 @@ export default function RecommendationPlaylistSettings({
             data-target="#ListenPayloadModal"
             type="button"
           >
-            <FontAwesomeIcon icon={faCode} title="Inspect playlist" />
+            <FontAwesomeIcon
+              icon={faCode}
+              title="Inspect playlist"
+              fixedWidth
+            />
           </button>
-          <span className="dropdown">
+          <span className="dropdown" style={{ marginLeft: 0 }}>
             <button
               className="dropdown-toggle btn btn-icon btn-info"
               type="button"
@@ -115,13 +130,13 @@ export default function RecommendationPlaylistSettings({
               aria-haspopup="true"
               aria-expanded="true"
             >
-              <FontAwesomeIcon icon={faCog} title="More options" />
+              <FontAwesomeIcon icon={faCog} title="More options" fixedWidth />
             </button>
             <PlaylistMenu playlist={playlist} />
           </span>
           <button
             type="button"
-            className="btn btn-icon btn-info rss-button"
+            className="btn btn-icon btn-info"
             data-toggle="modal"
             data-target="#SyndicationFeedModal"
             title="Subscribe to syndication feed (RSS)"
@@ -138,7 +153,7 @@ export default function RecommendationPlaylistSettings({
               });
             }}
           >
-            <FontAwesomeIcon icon={faRss} size="sm" />
+            <FontAwesomeIcon icon={faRss} fixedWidth />
           </button>
         </div>
         <div>
