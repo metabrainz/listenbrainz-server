@@ -134,11 +134,13 @@ class MusicBrainzReleaseGroupCache(MusicBrainzEntityMetadataCache):
             release_group_tags.append(tag)
 
 
-        date = str(row["year"] or '')
-        if row["month"] is not None:
-            date += "-%02d" % row["month"]
-        if row["day"] is not None:
-            date += "-%02d" % row["day"]
+        date = ''
+        if row["year"] is not None:
+            date = str(row["year"])
+            if row["month"] is not None:
+                date += "-%02d" % row["month"]
+                if row["day"] is not None:
+                    date += "-%02d" % row["day"]
 
         release_group = {
             "name": row["release_group_name"],
