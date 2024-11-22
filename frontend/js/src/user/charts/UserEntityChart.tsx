@@ -252,49 +252,51 @@ export default function UserEntityChart() {
           </div>
           <div className="flex-center">
             <h3 className="header-with-line">
-              Top{" "}
-              <span style={{ textTransform: "capitalize" }}>
-                {terminology ? `${terminology}s` : ""}
-              </span>{" "}
-              of {range !== "all_time" ? "the" : ""}
-              <span className="dropdown" style={{ fontSize: 22 }}>
-                <button
-                  className="dropdown-toggle btn-transparent capitalize-bold"
-                  data-toggle="dropdown"
-                  type="button"
-                >
-                  {ranges.get(range)}
-                  <span className="caret" />
-                </button>
-                <ul className="dropdown-menu" role="menu">
-                  {Array.from(ranges, ([stat_type, stat_name]) => {
-                    return (
-                      <li key={`${stat_type}-${stat_name}`}>
-                        <Link
-                          to={{
-                            pathname: window.location.pathname,
-                            search: `?page=1&range=${stat_type}`,
-                          }}
-                          role="button"
-                        >
-                          {stat_name}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+              <span>
+                Top{" "}
+                <span style={{ textTransform: "capitalize" }}>
+                  {terminology ? `${terminology}s` : ""}
+                </span>{" "}
+                of {range !== "all_time" ? "the" : ""}
+                <span className="dropdown" style={{ fontSize: 22 }}>
+                  <button
+                    className="dropdown-toggle btn-transparent capitalize-bold"
+                    data-toggle="dropdown"
+                    type="button"
+                  >
+                    {ranges.get(range)}
+                    <span className="caret" />
+                  </button>
+                  <ul className="dropdown-menu" role="menu">
+                    {Array.from(ranges, ([stat_type, stat_name]) => {
+                      return (
+                        <li key={`${stat_type}-${stat_name}`}>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=1&range=${stat_type}`,
+                            }}
+                            role="button"
+                          >
+                            {stat_name}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </span>
+                {range !== "all_time" &&
+                  !hasError &&
+                  `(${startDate?.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })} - ${endDate?.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })})`}
               </span>
-              {range !== "all_time" &&
-                !hasError &&
-                `(${startDate?.toLocaleString("en-us", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })} - ${endDate?.toLocaleString("en-us", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })})`}
             </h3>
             <button
               type="button"
