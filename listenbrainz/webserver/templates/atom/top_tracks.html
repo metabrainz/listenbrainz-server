@@ -1,6 +1,6 @@
 <p>
     <ul>
-        {% for track in tracks %}
+        {% for track in tracks if tracks is not None %}
         <li>
             {% if track.recording_mbid %}
                 <a href="https://musicbrainz.org/recording/{{ track.recording_mbid }}">{{ track.track_name }}</a>
@@ -8,7 +8,7 @@
                 {{ track.track_name }}
             {% endif %}
             by 
-            {% for artist in track.artists %}
+            {% for artist in track.artists if track.artists is not None %}
                 {% if artist.artist_mbid %}
                     <a href="{{ artist_page_base_url }}{{ artist.artist_mbid }}">{{ artist.artist_credit_name }}</a>{{ artist.join_phrase }}
                 {% else %}
