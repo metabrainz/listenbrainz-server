@@ -239,6 +239,16 @@ export default class AppleMusicPlayer
           }
         );
       } else {
+        // Check if the first API result is a match
+        if (
+          new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+            candidateMatches?.[0]?.attributes.name
+          )
+        ) {
+          // First result matches track title, assume it's the correct result
+          await this.playAppleMusicId(candidateMatches[0].id);
+          return;
+        }
         // Otherwise just search for track name
         fuzzyMatches = fuzzysort.go(trackNameWithoutAccents, candidateMatches, {
           key: "attributes.name",
