@@ -259,16 +259,11 @@
       color: inherit;
     }
 
-    .homepage-info-links span {
-      margin-left: 10px;
-      margin-right: 10px;
-    }
-
     .create-account-button {
       display: inline-block;
       border-radius: 33px;
       background: #f1a026;
-      color: #1e1e1e;
+      color: #1e1e1e !important;
       text-align: center;
       font-size: 14px;
       font-weight: 700;
@@ -276,6 +271,20 @@
       padding: 6px 15px;
       border: none;
       margin: 1em 0;
+    }
+
+    .login-button {
+      display: inline-block;
+      border-radius: 33px;
+      background: #e0e0e0;
+      color: #1e1e1e !important;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.07);
+      padding: 6px 15px;
+      border: none;
+      margin: 1em;
     }
   }
 
@@ -462,11 +471,6 @@
         bottom: 4.5em;
         color: @dark-grey;
         max-width: 50%;
-      }
-      .create-account-button {
-        right: 0;
-        position: absolute;
-        top: 1.7em;
       }
     }
     .homepage-upper .homepage-upper-grey-box {

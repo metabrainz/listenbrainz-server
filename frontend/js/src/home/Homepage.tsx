@@ -69,6 +69,11 @@ function HomePage() {
       Create Account
     </a>
   );
+  const loginButton = (
+    <Link className="login-button" to="/login/">
+      Login
+    </Link>
+  );
   // Calculate available screen real estate
   // This allows us to ensure that each page takes full height taking mobile browser toolbars into account
   const styles = {
@@ -147,14 +152,13 @@ function HomePage() {
           </h1>
 
           {createAccountButton}
+          {loginButton}
 
           <div className="homepage-info-text">
             <p>Track, explore, visualise and share the music you listen to.</p>
             <p>Follow your favourites and discover great new music.</p>
           </div>
           <div className="homepage-info-links">
-            <Link to="/login/">Login</Link>
-            <span>|</span>
             <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
@@ -236,6 +240,7 @@ function HomePage() {
           </h1>
 
           {createAccountButton}
+          {loginButton}
 
           <div className="homepage-info-text">
             <p>
@@ -248,8 +253,6 @@ function HomePage() {
             </p>
           </div>
           <div className="homepage-info-links">
-            <Link to="/login/">Login</Link>
-            <span>|</span>
             <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
