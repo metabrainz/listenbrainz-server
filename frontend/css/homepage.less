@@ -253,9 +253,13 @@
 
     .homepage-information-vector-1 {
       position: absolute;
-      top: 20%;
-      right: 10%;
+      top: 3%;
+      right: 5%;
       animation: bobble 10s infinite;
+
+      @media (max-width: @screen-md) {
+        right: 0;
+      }
     }
 
     .homepage-information-grey-box {
@@ -291,7 +295,7 @@
       justify-content: space-between;
       max-width: 1200px;
       margin: 0 auto;
-      padding: 50px 50px 0 50px;
+      padding: 30px 50px;
       position: relative;
       z-index: 2;
       gap: 40px;
@@ -312,7 +316,6 @@
 
       @media (max-width: @screen-md) {
         max-width: 100%;
-        margin-bottom: 40px;
       }
 
       .info-icon {
@@ -348,10 +351,6 @@
           bottom: -10px;
           width: 100%;
           border-bottom: 1px solid @gray-light;
-        }
-
-        @media (max-width: @screen-md) {
-          font-size: 24px;
         }
       }
 
