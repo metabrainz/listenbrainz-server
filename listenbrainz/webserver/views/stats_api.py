@@ -327,6 +327,15 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     }})
 
 
+def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
+    if stats is None:
+        return None
+
+    entity_list, total_entity_count = _process_user_entity(stats, 0, 1)
+    return stats.last_updated
+
 @stats_api_bp.route("/user/<user_name>/listening-activity")
 @crossdomain
 @ratelimit()

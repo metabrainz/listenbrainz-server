@@ -78,6 +78,7 @@
     "jest-mock": "^25.2.3",
     "less": "^4.1.1",
     "less-plugin-clean-css": "^1.5.1",
+    "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "panzoom": "^9.4.3",
     "rc-slider": "^10.1.0",
