@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
+  faInfoCircle,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
@@ -65,9 +66,12 @@ export default function AlbumPage(): JSX.Element {
   const location = useLocation();
   const params = useParams() as { albumMBID: string };
   const { albumMBID } = params;
-  const { data } = useQuery<AlbumPageProps>(
-    RouteQuery(["album", params], location.pathname)
-  );
+  const { data, isError } = useQuery<AlbumPageProps>({
+    ...RouteQuery(["album", params], location.pathname),
+    //  @ts-ignore  the expected "error" here is a Response
+    // as RouteLoaderURL throws a json response object
+    throwOnError: (response) => response?.status !== 404,
+  });
   const {
     release_group_metadata: initialReleaseGroupMetadata,
     recordings_release_mbid,
@@ -88,12 +92,8 @@ export default function AlbumPage(): JSX.Element {
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
 
-  const {
-    tag,
-    release_group: album,
-    artist,
-    release,
-  } = metadata as ReleaseGroupMetadataLookup;
+  const { tag, release_group: album, artist, release } = (metadata ||
+    {}) as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
 
   /** Album art and album color related */
@@ -213,6 +213,53 @@ export default function AlbumPage(): JSX.Element {
     notation: "compact",
   });
   const showMediumTitle = (mediums?.length ?? 0) > 1;
+
+  if (isError) {
+    return (
+      <div className="center-p">
+        <img
+          src="/static/img/broken-cd.jpg"
+          alt="Broken CD vector"
+          width={200}
+        />
+        <br />
+        <div className="help-block small mb-15">
+          Broken CD by{" "}
+          <a href="https://www.vecteezy.com/members/amandalamsyah/uploads">
+            amandalamsyah on Vecteezy
+          </a>
+        </div>
+        <p className="strong">
+          We could not find this album in ListenBrainz; please check the URL and
+          try again.
+        </p>
+        <p>
+          If you&apos;ve recently added this release/album to MusicBrainz,
+          please wait until it is processed.
+          <div>
+            Releases added to MusicBrainz are processed &nbsp;
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              every 6 hours
+            </a>
+            &nbsp;
+            <FontAwesomeIcon icon={faInfoCircle} />.
+          </div>
+        </p>
+        <p>
+          In the meantime, you can see this album on MusicBrainz:
+          <br />
+          <OpenInMusicBrainzButton
+            entityType="release-group"
+            entityMBID={albumMBID}
+          />
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

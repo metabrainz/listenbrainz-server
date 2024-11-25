@@ -40,6 +40,7 @@ module.exports = {
   },
   moduleNameMapper: {
     'react-markdown': '<rootDir>/node_modules/react-markdown/react-markdown.min.js',
+    '^localforage$': '<rootDir>/frontend/js/tests/__mocks__/localforage.ts'
   },
   transform: {
     "\\.[jt]sx?$": "ts-jest",

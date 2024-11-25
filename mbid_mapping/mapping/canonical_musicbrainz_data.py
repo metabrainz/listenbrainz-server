@@ -126,3 +126,25 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
             mb_conn.commit()
 
         log("canonical_musicbrainz_data: done done done!")
+
+
+def update_canonical_release_data(use_lb_conn: bool):
+    """
+        Run only the canonical release data, apart from the other tables.
+
+        Arguments:
+            use_lb_conn: whether to use LB conn or not
+    """
+    mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
+
+    with psycopg2.connect(mb_uri) as mb_conn:
+
+        lb_conn = None
+        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
+            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+            releases = CanonicalRelease(mb_conn, lb_conn, unlogged=False)
+        else:
+            releases = CanonicalRelease(mb_conn, unlogged=False)
+        releases.run()
+
+        log("canonical_release_data: updated.")

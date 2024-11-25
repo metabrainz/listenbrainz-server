@@ -6,8 +6,15 @@ import { Provider as NiceModalProvider } from "@ebay/nice-modal-react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
+import ProtectedRoutes from "../utils/ProtectedRoutes";
 
-export default function Layout({ children }: { children?: React.ReactNode }) {
+export default function Layout({
+  children,
+  withProtectedRoutes,
+}: {
+  children?: React.ReactNode;
+  withProtectedRoutes?: boolean;
+}) {
   return (
     <NiceModalProvider>
       <ToastContainer
@@ -24,8 +31,9 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <Navbar />
       <div className="container-react">
         <div className="container-react-main">
-          <Outlet />
+          {!withProtectedRoutes && <Outlet />}
           {children}
+          {withProtectedRoutes && <ProtectedRoutes />}
           <BrainzPlayer />
         </div>
         <Footer />

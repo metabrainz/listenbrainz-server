@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import requests_mock
 import spotipy
 
@@ -32,17 +34,28 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
     def test_reset_import_timestamp(self):
-        val = int(time.time())
-        listens_importer.update_latest_listened_at(self.db_conn, self.user['id'], ExternalServiceType.LASTFM, val)
         self.temporary_login(self.user['login_id'])
-        response = self.client.get(self.custom_url_for('settings.index', path='resetlatestimportts'))
-        self.assertTemplateUsed('index.html')
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='lastfm'),
+            json={"external_user_id": "lucifer"}
+        )
+        self.assert200(response)
+        users = listens_importer.get_active_users_to_process(self.db_conn, ExternalServiceType.LASTFM)
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["external_user_id"], "lucifer")
+        self.assertEqual(users[0]["latest_listened_at"], None)
+
+        dt_now = datetime.now(tz=timezone.utc)
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='lastfm'),
+            json={"external_user_id": "lucifer", "latest_listened_at": dt_now.isoformat()}
+        )
         self.assert200(response)
 
-        response = self.client.post(self.custom_url_for('settings.reset_latest_import_timestamp'))
-        self.assertDictEqual(response.json, {'success': True})
-        ts = listens_importer.get_latest_listened_at(self.db_conn, self.user['id'], ExternalServiceType.LASTFM)
-        self.assertEqual(int(ts.strftime('%s')), 0)
+        users = listens_importer.get_active_users_to_process(self.db_conn, ExternalServiceType.LASTFM)
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0]["external_user_id"], "lucifer")
+        self.assertEqual(users[0]["latest_listened_at"], dt_now)
 
     def test_user_info_not_logged_in(self):
         """Tests user info view when not logged in"""
