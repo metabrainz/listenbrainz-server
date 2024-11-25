@@ -88,7 +88,7 @@ def get_entity_stats_for_range(
     to_date: datetime,
     message_type: str,
     database: str = None,
-    user_ids: list[int] = None
+    user_ids: List[int] = None
 ):
     """ Calculate entity stats for all users' listens between the start and the end datetime. """
     listens_df = get_listens_from_dump(from_date, to_date)
@@ -108,7 +108,7 @@ def get_entity_stats_for_range(
 
 def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],
                            entity: str, stats_range: str, message_type: str, database: str = None,
-                           user_ids: list[int] = None):
+                           user_ids: List[int] = None):
     handler = entity_handler_map[entity]
     if message_type == "year_in_music_top_stats":
         number_of_results = NUMBER_OF_YIM_ENTITIES
