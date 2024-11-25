@@ -572,7 +572,7 @@ export default function UserFeedPage() {
           className="btn btn-icon btn-info rss-button"
           data-toggle="modal"
           data-target="#SyndicationFeedModal"
-          title="Subscribe to syndication feed (RSS)"
+          title="Subscribe to syndication feed (Atom)"
           onClick={() => {
             NiceModal.show(SyndicationFeedModal, {
               feedTitle: `Latest activity`,

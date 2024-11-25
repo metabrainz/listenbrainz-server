@@ -58,7 +58,7 @@ function IconTray(props: IconTrayProps) {
           data-toggle="modal"
           data-target="#SyndicationFeedModal"
           onClick={onClickCopyFeedUrl}
-          title="Subscribe to syndication feed (RSS)"
+          title="Subscribe to syndication feed (Atom)"
         >
           <FontAwesomeIcon icon={faRss} fixedWidth />
         </button>

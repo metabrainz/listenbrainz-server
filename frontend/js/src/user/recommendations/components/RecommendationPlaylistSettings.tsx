@@ -139,7 +139,7 @@ export default function RecommendationPlaylistSettings({
             className="btn btn-icon btn-info"
             data-toggle="modal"
             data-target="#SyndicationFeedModal"
-            title="Subscribe to syndication feed (RSS)"
+            title="Subscribe to syndication feed (Atom)"
             onClick={() => {
               const sourcePatch =
                 extension?.additional_metadata?.algorithm_metadata.source_patch;
