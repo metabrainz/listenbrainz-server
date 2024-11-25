@@ -236,14 +236,11 @@
 
   .homepage-information {
     background: @homepage-background-inverted;
-    height: 100%;
+    height: auto;
     position: relative;
     padding-left: 50px;
+    padding-bottom: 1em;
     scroll-snap-align: start;
-
-    @media (max-width: @screen-md) {
-      height: max-content;
-    }
 
     .homepage-arrow:first-of-type {
       position: sticky;

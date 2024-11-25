@@ -346,7 +346,14 @@ function HomePage() {
               possible modification and redistribution... A main principle of
               open source software development is peer production, with products
               such as source code, blueprints, and documentation freely
-              available to the public.&quot; - Wikipedia
+              available to the public.&quot; -{" "}
+              <Link
+                to="https://en.wikipedia.org/wiki/Open_source"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Wikipedia
+              </Link>
             </p>
             <p>
               The ListenBrainz website, the MusicBrainz database, and the music
@@ -404,9 +411,17 @@ function HomePage() {
               music-based tasks.
             </p>
             <p>
-              We ask commercial supporters to support us in order to help fund
-              the creation and maintenance of these datasets. Personal use of
-              our datasets will always be free.
+              We ask{" "}
+              <Link
+                to="https://metabrainz.org/supporters/account-type"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                commercial supporters
+              </Link>{" "}
+              to support us in order to help fund the creation and maintenance
+              of these datasets. Personal use of our datasets will always be
+              free.
             </p>
             <Link
               to="https://metabrainz.org/datasets"
