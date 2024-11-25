@@ -9,6 +9,11 @@
     "description": "Entity statistics for all users for the requested stats_range",
     "params": ["entity", "stats_range", "database"]
   },
+  "stats.user.individual": {
+    "name": "stats.user.individual",
+    "description": "Entity statistics for all users for the requested stats_range",
+    "params": ["from_ts", "to_ts", "database", "user_ids"]
+  },
   "stats.entity.listeners": {
     "name": "stats.entity.listeners",
     "description": "Listener statistics for all entities of given type for the requested stats_range",

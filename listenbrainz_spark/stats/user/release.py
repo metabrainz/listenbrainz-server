@@ -3,7 +3,7 @@ from typing import List
 from listenbrainz_spark.stats import run_query
 
 
-def get_releases(table: str, cache_tables: List[str], number_of_results: int):
+def get_releases(table: str, cache_tables: List[str], number_of_results: int, user_ids: list[int]):
     """
     Get release information (release_name, release_mbid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
@@ -12,6 +12,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
     Args:
         table: name of the temporary table
         number_of_results: number of top results to keep per user.
+        user_ids: list of users to generate stats for
 
     Returns:
         iterator (iter): an iterator over result
@@ -26,6 +27,10 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                     'user2' : [{...}],
                 }
     """
+    if user_ids:
+        where_clause = f"WHERE user_id IN ({', '.join(str(user_id) for user_id in user_ids)})"
+    else:
+        where_clause = ""
     cache_table = cache_tables[0]
     result = run_query(f"""
         WITH gather_release_data AS (
@@ -38,6 +43,7 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int):
                  , rel.caa_id
                  , rel.caa_release_mbid
               FROM {table} l
+            {where_clause}
          LEFT JOIN {cache_table} rel
                 ON rel.release_mbid = l.release_mbid
         ), intermediate_table as (

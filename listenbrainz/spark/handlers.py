@@ -8,6 +8,7 @@ from flask import current_app, render_template
 from pydantic import ValidationError
 from requests import HTTPError
 from sentry_sdk import start_transaction
+from sqlalchemy.testing.plugin.plugin_base import logging
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -26,6 +27,9 @@ from listenbrainz.webserver import db_conn
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
+
+
+logger = logging.getLogger(__name__)
 
 
 def _handle_stats(message, stats_type, key):
@@ -409,3 +413,7 @@ def handle_echo(message):
         year_in_music.swap_yim_tables(message["message"]["year"])
     else:
         current_app.logger.info("message with unknown action: %s", json.dumps(message))
+
+
+def handle_stats_individual(message):
+    logger.info("Stats Message: %s", json.dumps(message))

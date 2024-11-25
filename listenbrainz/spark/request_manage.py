@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import date
+from datetime import date, datetime
 
 import click
 import orjson
@@ -548,9 +548,21 @@ def request_troi_playlists(slug, create_all):
 
 
 @cli.command(name="request_tags")
-def request_troi_playlists():
+def request_tags():
     """ Generate the tags dataset with percent rank """
     send_request_to_spark_cluster("tags.default")
+
+
+@cli.command(name="request_spark_individual_stats")
+def request_spark_individual_stats():
+    """ Generate spark stats for a given user """
+    send_request_to_spark_cluster(
+        "stats.user.individual",
+        from_ts=int(datetime(2022, 6, 1).timestamp()),
+        to_ts=int(datetime(2023, 3, 31).timestamp()),
+        database="stats_individual",
+        user_ids=[5746]
+    )
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality

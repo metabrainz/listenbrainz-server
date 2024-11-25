@@ -47,6 +47,21 @@ NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
 NUMBER_OF_YIM_ENTITIES = 50  # number of top entities to retain for Year in Music stats
 
 
+def get_individual_entity_stats(entity: str, from_ts: int, to_ts: int, database: str = None, user_ids: list[int] = None):
+    logger.debug(f"Calculating user_{entity}_individual...")
+    messages = get_entity_stats_for_range(
+        entity,
+        "custom",
+        datetime.fromtimestamp(from_ts),
+        datetime.fromtimestamp(to_ts),
+        "user_entity_individual",
+        database,
+        user_ids
+    )
+    logger.debug("Done!")
+    return messages
+
+
 def get_entity_stats(entity: str, stats_range: str, message_type: str = "user_entity", database: str = None)\
         -> Iterator[Optional[Dict]]:
     """ Get the top entity for all users for specified stats_range """
@@ -72,7 +87,8 @@ def get_entity_stats_for_range(
     from_date: datetime,
     to_date: datetime,
     message_type: str,
-    database: str = None
+    database: str = None,
+    user_ids: list[int] = None
 ):
     """ Calculate entity stats for all users' listens between the start and the end datetime. """
     listens_df = get_listens_from_dump(from_date, to_date)
@@ -86,18 +102,19 @@ def get_entity_stats_for_range(
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
     return calculate_entity_stats(
-        from_date, to_date, table, cache_dfs, entity, stats_range, message_type, database
+        from_date, to_date, table, cache_dfs, entity, stats_range, message_type, database, user_ids
     )
 
 
 def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],
-                           entity: str, stats_range: str, message_type: str, database: str = None):
+                           entity: str, stats_range: str, message_type: str, database: str = None,
+                           user_ids: list[int] = None):
     handler = entity_handler_map[entity]
     if message_type == "year_in_music_top_stats":
         number_of_results = NUMBER_OF_YIM_ENTITIES
     else:
         number_of_results = NUMBER_OF_TOP_ENTITIES
-    data = handler(table, cache_tables, number_of_results)
+    data = handler(table, cache_tables, number_of_results, user_ids)
     return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, message_type=message_type, database=database)
 

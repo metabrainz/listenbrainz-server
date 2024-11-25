@@ -21,7 +21,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 import orjson
@@ -39,6 +39,7 @@ from listenbrainz.db.user import get_users_by_id
 # as statistics for a special user with the following user_id.
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
+INDIVIDUAL_STATS_DB_PREFIX = "stats_individual"
 
 
 def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):

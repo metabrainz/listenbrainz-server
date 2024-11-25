@@ -34,7 +34,7 @@ from listenbrainz.spark.handlers import (
     handle_troi_playlists_end,
     handle_yim_top_genres,
     handle_yim_playlists,
-    handle_yim_playlists_end, handle_echo
+    handle_yim_playlists_end, handle_echo, handle_stats_individual
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
     ListeningActivityStatsDataset, EntityListenerStatsDataset
@@ -170,6 +170,7 @@ class BackgroundJobProcessor:
             "year_in_music_playlists_end": handle_yim_playlists_end,
             "troi_playlists": handle_troi_playlists,
             "troi_playlists_end": handle_troi_playlists_end,
+            "stats_individual": handle_stats_individual,
         })
 
     def process_message(self, message):
