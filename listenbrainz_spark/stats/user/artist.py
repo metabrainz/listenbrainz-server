@@ -4,7 +4,7 @@ from data.model.user_artist_stat import ArtistRecord
 from listenbrainz_spark.stats import run_query
 
 
-def get_artists(table: str, cache_tables: List[str], number_of_results: int, user_ids: list[int]) -> Iterator[ArtistRecord]:
+def get_artists(table: str, cache_tables: List[str], number_of_results: int, user_ids: List[int]) -> Iterator[ArtistRecord]:
     """ Get artist information (artist_name, artist_credit_id etc) for every user
         ordered by listen count
 
