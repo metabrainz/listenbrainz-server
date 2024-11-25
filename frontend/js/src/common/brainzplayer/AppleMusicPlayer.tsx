@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import fuzzysort from "fuzzysort";
 import {
   getArtistName,
+  getReleaseName,
   getTrackName,
   loadScriptAsync,
 } from "../../utils/utils";
@@ -12,12 +13,26 @@ import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
-export type AppleMusicPlayerProps = DataSourceProps;
+export type AppleMusicPlayerProps = DataSourceProps & {
+  handleAlbumMapping: (
+    dataSource: keyof MatchedTrack,
+    releaseName: string,
+    album: {
+      trackName: string;
+      uri: string;
+    }[]
+  ) => void;
+  getAlbumMapping: (
+    listen: BrainzPlayerQueueItem,
+    dataSource: keyof MatchedTrack
+  ) => string | undefined;
+};
 
 export type AppleMusicPlayerState = {
   currentAppleMusicTrack?: MusicKit.MediaItem;
   progressMs: number;
   durationMs: number;
+  listen?: BrainzPlayerQueueItem;
 };
 export async function loadAppleMusicKit(): Promise<void> {
   if (!window.MusicKit) {
@@ -173,10 +188,15 @@ export default class AppleMusicPlayer
       return;
     }
     try {
-      await this.appleMusicPlayer.setQueue({
+      const queueData = await this.appleMusicPlayer.setQueue({
         song: appleMusicId,
         startPlaying: true,
       });
+      const albumId = queueData.item(0)?.relationships?.albums?.data?.[0]?.id;
+
+      if (albumId) {
+        this.fetchAlbumTracksAndUpdateMappings(albumId);
+      }
     } catch (error) {
       handleError(error.message, "Error playing on Apple Music");
       onTrackNotFound();
@@ -188,7 +208,7 @@ export default class AppleMusicPlayer
     return AppleMusicPlayer.hasPermissions(appleMusicUser);
   };
 
-  searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
+  searchAndPlayTrack = async (listen: BrainzPlayerQueueItem): Promise<void> => {
     if (!this.appleMusicPlayer) {
       await this.connectAppleMusicPlayer();
       await this.searchAndPlayTrack(listen);
@@ -271,12 +291,14 @@ export default class AppleMusicPlayer
     return false;
   };
 
-  playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const { show } = this.props;
+  playListen = async (listen: BrainzPlayerQueueItem): Promise<void> => {
+    const { show, getAlbumMapping } = this.props;
     if (!show) {
       return;
     }
-    const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
+    this.setState({ listen });
+
+    const apple_music_id = getAlbumMapping(listen, "appleMusic");
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);
       return;
@@ -459,6 +481,36 @@ export default class AppleMusicPlayer
     }
     onTrackInfoChange(name, url, artistName, albumName, mediaImages);
     this.setState({ currentAppleMusicTrack: item });
+  };
+
+  fetchAlbumTracksAndUpdateMappings = async (albumId: string) => {
+    // Exptract the album id from the url
+    const { listen } = this.state;
+    const releaseName = getReleaseName(listen as Listen);
+
+    if (!releaseName || !albumId) {
+      return;
+    }
+    const { handleAlbumMapping } = this.props;
+
+    const response = await this.appleMusicPlayer?.api.music(
+      `/v1/catalog/{{storefrontId}}/albums/${albumId}`
+    );
+
+    // @ts-ignore
+    const tracks = response?.data?.data?.[0]?.relationships?.tracks
+      ?.data as MusicKit.Song[];
+
+    if (!tracks || tracks?.length === 0) {
+      return;
+    }
+
+    const trackMappings = tracks.map((track) => ({
+      uri: track.id,
+      trackName: track.attributes?.name,
+    }));
+
+    handleAlbumMapping("appleMusic", releaseName, trackMappings);
   };
 
   getAlbumArt = (): JSX.Element | null => {

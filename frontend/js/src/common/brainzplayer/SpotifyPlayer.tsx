@@ -16,6 +16,7 @@ import {
   loadScriptAsync,
   getTrackName,
   getArtistName,
+  getReleaseName,
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -37,6 +38,18 @@ const fixSpotifyPlayerStyleIssue = () => {
 
 export type SpotifyPlayerProps = DataSourceProps & {
   refreshSpotifyToken: () => Promise<string>;
+  handleAlbumMapping: (
+    dataSource: keyof MatchedTrack,
+    releaseName: string,
+    album: {
+      trackName: string;
+      uri: string;
+    }[]
+  ) => void;
+  getAlbumMapping: (
+    listen: BrainzPlayerQueueItem,
+    dataSource: keyof MatchedTrack
+  ) => string | undefined;
 };
 
 export type SpotifyPlayerState = {
@@ -44,6 +57,7 @@ export type SpotifyPlayerState = {
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
   device_id?: string;
+  listen?: BrainzPlayerQueueItem;
 };
 
 export default class SpotifyPlayer
@@ -172,7 +186,7 @@ export default class SpotifyPlayer
     return `spotify:track:${spotifyTrack}`;
   }
 
-  searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
+  searchAndPlayTrack = async (listen: BrainzPlayerQueueItem): Promise<void> => {
     const trackName = getTrackName(listen);
     // use only the first artist without feat. artists as it can confuse Spotify search
     const artistName = getArtistName(listen, true);
@@ -256,6 +270,7 @@ export default class SpotifyPlayer
       );
       let errorObject;
       if (response.ok) {
+        this.fetchAlbumTracksAndUpdateMappings(spotifyURI);
         return;
       }
       try {
@@ -315,15 +330,16 @@ export default class SpotifyPlayer
     );
   };
 
-  playListen = (listen: Listen | JSPFTrack): void => {
-    const { show } = this.props;
+  playListen = (listen: BrainzPlayerQueueItem): void => {
+    const { show, getAlbumMapping } = this.props;
     if (!show) {
       return;
     }
-    if (SpotifyPlayer.getURLFromListen(listen)) {
-      this.playSpotifyURI(
-        SpotifyPlayer.getSpotifyUriFromListen(listen as Listen)
-      );
+    this.setState({ listen });
+    const spotifyUri = getAlbumMapping(listen, "spotify");
+
+    if (spotifyUri) {
+      this.playSpotifyURI(spotifyUri);
     } else {
       this.searchAndPlayTrack(listen);
     }
@@ -502,6 +518,77 @@ export default class SpotifyPlayer
       .catch((error: Error) => {
         handleError(error, "Error connecting to Spotify");
       });
+  };
+
+  getAlbumIDFromTrackID = async (
+    trackId: string
+  ): Promise<string | undefined> => {
+    const response = await fetch(
+      `https://api.spotify.com/v1/tracks/${trackId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return undefined;
+    }
+    const data = await response.json();
+    return data.album.id;
+  };
+
+  fetchAlbumTracksAndUpdateMappings = async (trackURI: string) => {
+    const { handleAlbumMapping } = this.props;
+    const { listen } = this.state;
+    const releaseName = getReleaseName(listen as Listen);
+    if (!releaseName || !trackURI) {
+      return;
+    }
+
+    const trackId = trackURI.split(":")[2];
+    const albumID = await this.getAlbumIDFromTrackID(trackId);
+    if (!albumID) {
+      return;
+    }
+
+    const tracks: SpotifyTrack[] = [];
+
+    // Fetch tracks from Spotify API
+    const fetchTracks = async (offset: number = 0) => {
+      const response = await fetch(
+        `https://api.spotify.com/v1/albums/${albumID}/tracks?limit=50&offset=${offset}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      tracks.push(...data.items);
+      if (data.next) {
+        await fetchTracks(offset + 50);
+      }
+    };
+    await fetchTracks();
+
+    if (!tracks || tracks.length === 0) {
+      return;
+    }
+
+    const trackMappings = tracks.map((track) => ({
+      uri: track.uri,
+      trackName: track.name,
+    }));
+
+    handleAlbumMapping("spotify", releaseName, trackMappings);
   };
 
   handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {
