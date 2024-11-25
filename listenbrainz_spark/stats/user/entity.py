@@ -47,7 +47,7 @@ NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
 NUMBER_OF_YIM_ENTITIES = 50  # number of top entities to retain for Year in Music stats
 
 
-def get_individual_entity_stats(entity: str, from_ts: int, to_ts: int, database: str = None, user_ids: list[int] = None):
+def get_individual_entity_stats(entity: str, from_ts: int, to_ts: int, database: str = None, user_ids: List[int] = None):
     logger.debug(f"Calculating user_{entity}_individual...")
     messages = get_entity_stats_for_range(
         entity,
