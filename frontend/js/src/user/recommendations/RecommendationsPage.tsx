@@ -10,6 +10,7 @@ import { Link, useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import NiceModal from "@ebay/nice-modal-react";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import {
   getPlaylistExtension,
@@ -22,7 +23,6 @@ import RecommendationPlaylistSettings from "./components/RecommendationPlaylistS
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import HorizontalScrollContainer from "../../components/HorizontalScrollContainer";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
-import NiceModal from "@ebay/nice-modal-react";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -359,7 +359,6 @@ export default function RecommendationsPage() {
             <FontAwesomeIcon icon={faInfoCircle} />
             &nbsp; How and when are recommendations calculated?
           </button>
-
         </div>
       ) : (
         <HorizontalScrollContainer
