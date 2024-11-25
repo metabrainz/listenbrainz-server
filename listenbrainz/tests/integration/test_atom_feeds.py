@@ -303,6 +303,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             _path = self.custom_url_for(
                 f"atom.{_method_name}",
                 user_name=self.user["musicbrainz_id"],
+                range="week",
                 force_external=True,
             )
 
@@ -318,7 +319,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
                 self.fail("No id element found in feed")
             self.assertEqual(
                 entryIds.text,
-                f"{_path}/week/{self.stats_to_ts}",
+                f"{_path}/{self.stats_to_ts}",
             )
 
     def test_get_playlist_recordings(self):

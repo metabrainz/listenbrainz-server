@@ -476,7 +476,7 @@ def get_artist_stats(user_name):
     t_with_tz = dt.replace(tzinfo=timezone.utc)
 
     fe = fg.add_entry()
-    fe.id(f"{this_feed_url}{t}")
+    fe.id(f"{this_feed_url}/{t}")
     fe.title(
         _get_stats_entry_title(range, to_ts - 60)
     )  # minus 1 minute to situate the entry in the right range
@@ -912,7 +912,7 @@ def get_cover_art_grid_stats(user_name):
         f"{this_feed_url}/{t}"
     )
     fe.title(_get_stats_entry_title(range, to_ts - 60) + " (Stats Art Grid)")
-    fe.link(href=user_stats_url, rel="alternate")
+    fe.link(href=data_url, rel="alternate")
 
     content = render_template(
         "atom/stat_art.html",
@@ -1017,7 +1017,7 @@ def get_cover_art_custom_stats(user_name):
         f"{this_feed_url}/{t}"
     )
     fe.title(_get_stats_entry_title(range, to_ts - 60))
-    fe.link(href=user_stats_url, rel="alternate")
+    fe.link(href=data_url, rel="alternate")
 
     content = render_template(
         "atom/stat_art.html",
