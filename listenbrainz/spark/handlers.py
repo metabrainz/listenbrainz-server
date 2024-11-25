@@ -2,13 +2,13 @@
     receive from the Spark cluster.
 """
 import json
+import logging
 
 from brainzutils.mail import send_mail
 from flask import current_app, render_template
 from pydantic import ValidationError
 from requests import HTTPError
 from sentry_sdk import start_transaction
-from sqlalchemy.testing.plugin.plugin_base import logging
 
 import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
