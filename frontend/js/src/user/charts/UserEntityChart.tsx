@@ -300,7 +300,7 @@ export default function UserEntityChart() {
             </h3>
             <button
               type="button"
-              className="btn btn-icon btn-info rss-button"
+              className="btn btn-icon btn-info atom-button"
               style={{ marginLeft: "auto" }}
               data-toggle="modal"
               data-target="#SyndicationFeedModal"

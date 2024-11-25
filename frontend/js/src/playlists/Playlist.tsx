@@ -353,7 +353,7 @@ export default function PlaylistPage() {
               {customFields?.public && (
                 <button
                   type="button"
-                  className="btn btn-icon btn-info btn-sm rss-button"
+                  className="btn btn-icon btn-info btn-sm atom-button"
                   data-toggle="modal"
                   data-target="#SyndicationFeedModal"
                   title="Subscribe to syndication feed (Atom)"

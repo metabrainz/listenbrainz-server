@@ -569,7 +569,7 @@ export default function UserFeedPage() {
         {/* Commented out as new OAuth is not merged yet. */}
         {/* <button
           type="button"
-          className="btn btn-icon btn-info rss-button"
+          className="btn btn-icon btn-info atom-button"
           data-toggle="modal"
           data-target="#SyndicationFeedModal"
           title="Subscribe to syndication feed (Atom)"
