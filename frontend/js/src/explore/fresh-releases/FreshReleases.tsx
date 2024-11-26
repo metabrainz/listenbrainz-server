@@ -391,6 +391,7 @@ export default function FreshReleases() {
                           key: "days",
                           type: "number",
                           min: 1,
+                          max: 30,
                           defaultValue: 3,
                           tooltip:
                             "Select how many days of past releases to include in the feed, starting from today. Only releases that have already been published will be included.",
