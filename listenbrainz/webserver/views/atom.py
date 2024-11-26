@@ -100,7 +100,10 @@ def _get_stats_entry_title(stats_range: str, timestamp: int) -> str:
     dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
     if stats_range in [StatisticsRange.this_week.value, StatisticsRange.week.value]:
-        return f"Week {dt.isocalendar()[1]}"
+        iso_year, iso_week, iso_day = dt.isocalendar()
+        start_of_week = date.fromisocalendar(iso_year,iso_week,day=1).strftime("%a %d %b")
+        end_of_week = date.fromisocalendar(iso_year,iso_week,day=7).strftime("%a %d %b")
+        return f"Week {iso_week} ({start_of_week} - {end_of_week} {iso_year})"
     elif stats_range in [StatisticsRange.this_month.value, StatisticsRange.month.value]:
         return dt.strftime("%B %Y")
     elif stats_range in [StatisticsRange.this_year.value, StatisticsRange.year.value]:
