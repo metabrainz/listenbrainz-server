@@ -359,7 +359,7 @@ export default function PlaylistPage() {
                   title="Subscribe to syndication feed (Atom)"
                   onClick={() => {
                     NiceModal.show(SyndicationFeedModal, {
-                      feedTitle: `Playlist`,
+                      feedTitle: `Playlist - ${playlist.title}`,
                       options: [],
                       baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
                         playlist
