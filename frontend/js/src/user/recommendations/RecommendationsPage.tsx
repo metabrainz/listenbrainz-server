@@ -3,13 +3,14 @@
 
 import * as React from "react";
 
-import { faSave } from "@fortawesome/free-solid-svg-icons";
+import { faInfoCircle, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isUndefined, set } from "lodash";
 import { Link, useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import NiceModal from "@ebay/nice-modal-react";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import {
   getPlaylistExtension,
@@ -21,6 +22,7 @@ import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import HorizontalScrollContainer from "../../components/HorizontalScrollContainer";
+import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -345,6 +347,20 @@ export default function RecommendationsPage() {
             Oh no. Either something’s gone wrong, or you need to submit more
             listens before we can prepare delicious fresh produce just for you.
           </p>
+          <div>
+            <button
+              type="button"
+              className="btn btn-link"
+              data-toggle="modal"
+              data-target="#StatsExplanationsModal"
+              onClick={() => {
+                NiceModal.show(StatsExplanationsModal);
+              }}
+            >
+              <FontAwesomeIcon icon={faInfoCircle} />
+              &nbsp; How and when are recommendations calculated?
+            </button>
+          </div>
         </div>
       ) : (
         <HorizontalScrollContainer
