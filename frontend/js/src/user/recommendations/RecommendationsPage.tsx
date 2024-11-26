@@ -347,18 +347,20 @@ export default function RecommendationsPage() {
             Oh no. Either something’s gone wrong, or you need to submit more
             listens before we can prepare delicious fresh produce just for you.
           </p>
-          <button
-            type="button"
-            className="btn btn-link"
-            data-toggle="modal"
-            data-target="#StatsExplanationsModal"
-            onClick={() => {
-              NiceModal.show(StatsExplanationsModal);
-            }}
-          >
-            <FontAwesomeIcon icon={faInfoCircle} />
-            &nbsp; How and when are recommendations calculated?
-          </button>
+          <div>
+            <button
+              type="button"
+              className="btn btn-link"
+              data-toggle="modal"
+              data-target="#StatsExplanationsModal"
+              onClick={() => {
+                NiceModal.show(StatsExplanationsModal);
+              }}
+            >
+              <FontAwesomeIcon icon={faInfoCircle} />
+              &nbsp; How and when are recommendations calculated?
+            </button>
+          </div>
         </div>
       ) : (
         <HorizontalScrollContainer
