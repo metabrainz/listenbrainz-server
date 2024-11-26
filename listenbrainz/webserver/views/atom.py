@@ -343,16 +343,18 @@ def get_user_fresh_releases(user_name):
         return NotFound("User not found")
 
     data = db_get_fresh_releases(user["id"])
-    releases = sorted(
-        [
-            r
-            for r in data["releases"]
-            if "release_date" in r
-            and datetime.strptime(r["release_date"], "%Y-%m-%d").date()
-            <= date.today()  # only include past releases
-        ],
-        key=lambda k: k.get("release_date", ""),  # sort by release date
-    )
+    releases = []
+    if data and "releases" in data:
+        releases = sorted(
+            [
+                r
+                for r in data["releases"]
+                if "release_date" in r
+                and datetime.strptime(r["release_date"], "%Y-%m-%d").date()
+                <= date.today()  # only include past releases
+            ],
+            key=lambda k: k.get("release_date", ""),  # sort by release date
+        )
 
     this_feed_url = _external_url_for(".get_user_fresh_releases", user_name=user_name)
 
