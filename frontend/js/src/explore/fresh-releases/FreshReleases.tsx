@@ -384,7 +384,7 @@ export default function FreshReleases() {
                 onClick={() => {
                   if (pageType === PAGE_TYPE_SITEWIDE) {
                     NiceModal.show(SyndicationFeedModal, {
-                      feedTitle: `Site-wide Fresh Releases`,
+                      feedTitle: `Fresh Releases`,
                       options: [
                         {
                           label: "Days",

@@ -657,7 +657,7 @@ export default function Listen() {
                     },
                   ],
                   baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                    currentUser?.name
+                    user?.name
                   }/listens`,
                 });
               }}

@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
-import { Link } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { getBaseUrl, preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -31,6 +31,9 @@ export default function RecommendationPlaylistSettings({
   const { track } = playlist;
   const [firstListen, ...otherListens] = track;
   const { copyPlaylist } = APIService;
+
+  const loaderData = useLoaderData() as { user: ListenBrainzUser };
+  const userName = loaderData.user.name;
 
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
@@ -148,7 +151,7 @@ export default function RecommendationPlaylistSettings({
                 feedTitle: `Recommendations`,
                 options: [],
                 baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                  currentUser?.name
+                  userName ?? extension?.created_for
                 }/recommendations?recommendation_type=${sourcePatch}`,
               });
             }}

@@ -343,14 +343,12 @@ export default function ArtCreator() {
       options: [],
       baseUrl:
         style.type === "grid"
-          ? `${getBaseUrl()}/syndication-feed/user/${
-              currentUser?.name
-            }/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
-          : `${getBaseUrl()}/syndication-feed/user/${
-              currentUser?.name
-            }/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
+          ? `${getBaseUrl()}/syndication-feed/user/${userName}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+          : `${getBaseUrl()}/syndication-feed/user/${userName}/stats/art/custom?custom_name=${
+              style.name
+            }&range=${timeRange}`,
     });
-  }, [currentUser, style, gridSize, gridLayout, timeRange]);
+  }, [userName, style, gridSize, gridLayout, timeRange]);
 
   /* We want the username input to update as fast as the user types,
   but we don't want to update the preview URL on each keystroke so we debounce */
