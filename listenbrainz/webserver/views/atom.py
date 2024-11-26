@@ -572,6 +572,7 @@ def get_release_group_stats(user_name):
         "atom/top_albums.html",
         release_groups=entity_list,
         artist_page_base_url=_external_url_for("artist.artist_page", path=""),
+        album_page_base_url=_external_url_for("album.album_page", path=""),
     )
     fe.content(
         content=content,

@@ -3,7 +3,7 @@
         {% for release_group in (release_groups or []) %}
         <li>
             {% if release_group.release_group_mbid %}
-                <a href="https://musicbrainz.org/release_group/{{ release_group.release_group_mbid }}">{{ release_group.release_group_name }}</a>
+                <a href="{{ album_page_base_url }}{{ release_group.release_group_mbid }}">{{ release_group.release_group_name }}</a>
             {% else %}
                 {{ release_group.release_group_name }}
             {% endif %}
