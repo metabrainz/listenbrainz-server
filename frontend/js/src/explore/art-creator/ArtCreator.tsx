@@ -1,10 +1,9 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce, max, min } from "lodash";
+import { debounce } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";

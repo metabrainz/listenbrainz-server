@@ -7,7 +7,6 @@ import {
   faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { on } from "process";
 import * as React from "react";
 
 type IconTrayProps = {
