@@ -43,9 +43,9 @@ def get_releases(table: str, cache_tables: List[str], number_of_results: int, us
                  , rel.caa_id
                  , rel.caa_release_mbid
               FROM {table} l
-            {where_clause}
          LEFT JOIN {cache_table} rel
                 ON rel.release_mbid = l.release_mbid
+            {where_clause}
         ), intermediate_table as (
            SELECT user_id
                 , first(release_name) AS any_release_name

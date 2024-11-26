@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from typing import BinaryIO
 
@@ -18,6 +19,8 @@ _user = None
 _admin_key = None
 _host = None
 _port = None
+
+logger = logging.getLogger(__name__)
 
 
 def init(user, password, host, port):
@@ -177,6 +180,18 @@ def insert_data(database: str, data: list[dict]):
     with start_span(op="http", description="retry updating conflicts in database"):
         response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
         response.raise_for_status()
+
+
+def try_insert_data(database: str, data: list[dict]):
+    """ Try to insert data in the database if it exists, otherwise create the database and try again. """
+    try:
+        insert_data(database, data)
+    except Exception as e:
+        logger.error("Failed to insert data:", exc_info=True)
+        return
+
+    create_database(database)
+    insert_data(database, data)
 
 
 def delete_data(database: str, doc_id: int | str):

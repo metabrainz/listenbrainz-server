@@ -558,10 +558,10 @@ def request_spark_individual_stats():
     """ Generate spark stats for a given user """
     send_request_to_spark_cluster(
         "stats.user.individual",
-        entity="artists",
-        from_ts=int(datetime(2022, 6, 1).timestamp()),
-        to_ts=int(datetime(2023, 3, 31).timestamp()),
-        database=f"stats_individual_20240831",
+        entity="recordings",
+        from_ts=int(datetime(2023, 8, 1).timestamp()),
+        to_ts=int(datetime(2024, 4, 30).timestamp()),
+        database=f"stats_individual_20240915",
         user_ids=[5746]
     )
 
