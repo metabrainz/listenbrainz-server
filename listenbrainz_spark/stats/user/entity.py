@@ -168,10 +168,11 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     if database is None:
         database = f"{entity}_{stats_range}"
 
-    yield {
-        "type": "couchdb_data_start",
-        "database": database
-    }
+    if message_type != "user_entity_individual":
+        yield {
+            "type": "couchdb_data_start",
+            "database": database
+        }
 
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
@@ -192,7 +193,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             "database": database
         }
 
-    yield {
-        "type": "couchdb_data_end",
-        "database": database
-    }
+    if message_type != "user_entity_individual":
+        yield {
+            "type": "couchdb_data_end",
+            "database": database
+        }

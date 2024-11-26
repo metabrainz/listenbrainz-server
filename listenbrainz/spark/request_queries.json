@@ -12,7 +12,7 @@
   "stats.user.individual": {
     "name": "stats.user.individual",
     "description": "Entity statistics for all users for the requested stats_range",
-    "params": ["from_ts", "to_ts", "database", "user_ids"]
+    "params": ["from_ts", "to_ts", "database", "user_ids", "entity"]
   },
   "stats.entity.listeners": {
     "name": "stats.entity.listeners",

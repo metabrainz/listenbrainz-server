@@ -1,7 +1,8 @@
 """This module contains functions to insert and retrieve statistics
    calculated from Apache Spark into the database.
 """
-
+import logging
+from collections import defaultdict
 # listenbrainz-server - Server for the ListenBrainz project.
 #
 # Copyright (C) 2017 MetaBrainz Foundation Inc.
@@ -21,8 +22,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Optional
+from uuid import uuid4
 
 import orjson
 from flask import current_app
@@ -40,6 +42,9 @@ from listenbrainz.db.user import get_users_by_id
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
 INDIVIDUAL_STATS_DB_PREFIX = "stats_individual"
+INDIVIDUAL_STATS_RECORD_DB = "stats_individual_user_keys_db"
+
+logger = logging.getLogger(__name__)
 
 
 def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):
@@ -159,3 +164,49 @@ def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
     """
     data["user_id"] = SITEWIDE_STATS_USER_ID
     insert(database, from_ts, to_ts, [data])
+
+
+def insert_individual_stats(database, from_ts, to_ts, entity, data):
+    try:
+        couchdb.create_database(database)
+    except HTTPError as e:
+        logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+    user_keys_map = defaultdict(lambda: defaultdict(list))
+    for user in data:
+        user["_id"] = str(uuid4())
+        user["key"] = str(user["user_id"])
+        user["from_ts"] = from_ts
+        user["to_ts"] = to_ts
+        user["entity"] = entity
+
+        user_keys_map[user["user_id"]][database].append(user["_id"])
+
+    couchdb.insert_data(database, data)
+
+    try:
+        couchdb.create_database(INDIVIDUAL_STATS_RECORD_DB)
+    except HTTPError as e:
+        logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+
+    for user_id, user_database in user_keys_map.items():
+        user_data = couchdb.fetch_data(INDIVIDUAL_STATS_RECORD_DB, user_id)
+
+        logger.info("User data: %s", user_data)
+
+        keys_to_remove = set()
+        for database_name in user_data:
+            database_day = date.fromisoformat(database_name.split("_")[-1])
+            if date.today() - database_day > timedelta(days=2):
+                keys_to_remove.add(database_name)
+
+        for key in keys_to_remove:
+            user_data.pop(key)
+
+        for database_name, keys in user_data.items():
+            if database_name in user_data:
+                user_data[database_name].extend(keys)
+            else:
+                user_data[database_name] = keys
+
+        couchdb.insert_data(INDIVIDUAL_STATS_RECORD_DB, [user_data])
