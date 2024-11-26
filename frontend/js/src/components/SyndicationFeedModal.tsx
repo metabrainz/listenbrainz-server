@@ -1,26 +1,35 @@
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import * as React from "react";
-import { HTMLInputTypeAttribute, useState } from "react";
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleQuestion,
-  faRss,
   faRssSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "react-tooltip";
 
+type BaseOptionProps = {
+  label: string;
+  key: string;
+  tooltip?: string;
+};
+
+type DropdownOption = BaseOptionProps & {
+  type: "dropdown";
+  values: { id: string; value: string; displayValue?: string }[];
+  defaultIndex?: number;
+};
+
+type NumberOption = BaseOptionProps & {
+  type: "number";
+  min?: number;
+  max?: number;
+  defaultValue: number;
+};
+
 export type SyndicationFeedModalProps = {
   feedTitle: string;
-  options: {
-    label: string;
-    key: string;
-    type: HTMLInputTypeAttribute;
-    values: { id: string; value: string; displayValue?: string }[];
-    min?: number;
-    max?: number;
-    defaultIndex?: number;
-    tooltip?: string;
-  }[];
+  options: (DropdownOption | NumberOption)[];
   baseUrl: string;
 };
 
@@ -40,8 +49,12 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
 
   const initialSelectedOptions: SelectedOptions = options.reduce(
     (acc: SelectedOptions, option) => {
-      const defaultIndex = option.defaultIndex ?? 0;
-      acc[option.key] = option.values[defaultIndex].value;
+      if (option.type === "number") {
+        acc[option.key] = option.defaultValue.toString();
+      } else {
+        const defaultIndex = option.defaultIndex ?? 0;
+        acc[option.key] = option.values[defaultIndex].value;
+      }
       return acc;
     },
     {}

@@ -325,12 +325,8 @@ export default function UserEntityChart() {
                       label: "Count",
                       key: "count",
                       type: "number",
-                      values: [
-                        { id: "10", value: "10" },
-                        { id: "20", value: "20" },
-                        { id: "50", value: "50" },
-                        { id: "100", value: "100" },
-                      ],
+                      defaultValue: 10,
+                      min: 1,
                     },
                   ],
                   baseUrl: `${getBaseUrl()}/syndication-feed/user/${
