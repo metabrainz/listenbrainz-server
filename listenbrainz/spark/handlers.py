@@ -417,4 +417,4 @@ def handle_echo(message):
 
 def handle_stats_individual(message):
     db_stats.insert_individual_stats(message["database"], message["from_ts"], message["to_ts"], message["entity"], message["data"])
-    logger.info("Stats Message: %s", json.dumps(message))
+

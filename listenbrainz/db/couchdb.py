@@ -186,9 +186,9 @@ def try_insert_data(database: str, data: list[dict]):
     """ Try to insert data in the database if it exists, otherwise create the database and try again. """
     try:
         insert_data(database, data)
+        return
     except Exception as e:
         logger.error("Failed to insert data:", exc_info=True)
-        return
 
     create_database(database)
     insert_data(database, data)

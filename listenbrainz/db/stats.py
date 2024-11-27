@@ -183,25 +183,28 @@ def insert_individual_stats(database, from_ts, to_ts, entity, data):
         user_data = couchdb.fetch_data(INDIVIDUAL_STATS_RECORD_DB, user_id)
         if user_data is not None:
             keys_to_remove = set()
-            for database_name in user_data:
+            existing_databases = user_data["databases"]
+
+            for database_name in existing_databases:
                 database_day = date.fromisoformat(database_name.split("_")[-1])
                 if date.today() - database_day > timedelta(days=2):
                     keys_to_remove.add(database_name)
 
             for key in keys_to_remove:
-                user_data.pop(key)
+                existing_databases.pop(key)
 
             for database_name, keys in user_databases.items():
-                if database_name in user_data:
-                    user_data[database_name].extend(keys)
+                if database_name in existing_databases:
+                    existing_databases[database_name].extend(keys)
                 else:
-                    user_data[database_name] = keys
+                    existing_databases[database_name] = keys
         else:
             user_data = {
                 "_id": str(user_id),
                 "key": user_id,
-                **user_databases
+                "databases": user_databases
             }
 
-        logger.info("User data: %s", user_data)
         couchdb.try_insert_data(INDIVIDUAL_STATS_RECORD_DB, [user_data])
+
+    return user_keys_map

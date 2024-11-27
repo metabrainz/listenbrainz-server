@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import time
 
 from kombu import Connection, Message, Consumer, Exchange, Queue
@@ -13,12 +14,15 @@ PREFETCH_COUNT = 1000
 
 class SparkReader(ConsumerMixin):
 
-    def __init__(self, app):
+    def __init__(self, app, is_instant):
         self.app = app
         self.connection: Connection | None = None
-        self.spark_result_exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
-        self.spark_result_queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.spark_result_exchange,
-                                        durable=True)
+        if is_instant:
+            self.exchange = Exchange(app.config["INSTANT_SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
+            self.queue = Queue(app.config["INSTANT_SPARK_RESULT_PERSISTENT_QUEUE"], exchange=self.exchange, durable=True)
+        else:
+            self.exchange = Exchange(app.config["SPARK_RESULT_EXCHANGE"], "fanout", durable=False)
+            self.queue = Queue(app.config["SPARK_RESULT_QUEUE"], exchange=self.exchange, durable=True)
         self.response_handlers = {}
         self.processor: BackgroundJobProcessor | None = None
 
@@ -37,7 +41,7 @@ class SparkReader(ConsumerMixin):
         return [Consumer(
             channel,
             prefetch_count=PREFETCH_COUNT,
-            queues=[self.spark_result_queue],
+            queues=[self.queue],
             on_message=lambda msg: self.callback(msg)
         )]
 
@@ -76,5 +80,6 @@ class SparkReader(ConsumerMixin):
 
 
 if __name__ == '__main__':
-    sr = SparkReader(create_app())
+    _is_instant = sys.argv[0] == "--instant"
+    sr = SparkReader(create_app(), _is_instant)
     sr.start()

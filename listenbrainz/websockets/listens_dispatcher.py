@@ -19,12 +19,17 @@ class ListensDispatcher(ConsumerMixin):
         # for normal listens queue. when using ConsumerMixin, it sets up a default channel itself.
         # we create the other channel here. we also need to handle its cleanup later
         self.playing_now_channel = None
+        self.instant_stats_channel = None
 
         self.unique_exchange = Exchange(app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
         self.playing_now_exchange = Exchange(app.config["PLAYING_NOW_EXCHANGE"], "fanout", durable=False)
+        self.instant_stats_exchange = Exchange(app.config["INSTANT_SPARK_RESULT_EXCHANGE"], "fanout", durable=True)
         self.websockets_queue = Queue(app.config["WEBSOCKETS_QUEUE"], exchange=self.unique_exchange, durable=True)
         self.playing_now_queue = Queue(app.config["PLAYING_NOW_QUEUE"], exchange=self.playing_now_exchange,
                                        durable=True)
+        self.instant_stats_queue = Queue(app.config["INSTANT_SPARK_RESULT_WEBSOCKETS_QUEUE"], exchange=self.instant_stats_exchange,
+                                         durable=True)
+
 
     def send_listens(self, event_name, message):
         listens = json.loads(message.body)
@@ -36,13 +41,32 @@ class ListensDispatcher(ConsumerMixin):
             self.socketio.emit(event_name, json.dumps(listen.to_api()), to=listen.user_name)
         message.ack()
 
+    def send_instant_stats(self, message):
+        body = json.loads(message.body)
+        for user in body["data"]:
+            user["from_ts"] = body["from_ts"]
+            user["to_ts"] = body["to_ts"]
+            user["entity"] = body["entity"]
+            self.socketio.emit("instant_stats", json.dumps(user), to=f"{user['user_id']}/instant_stats")
+
     def get_consumers(self, _, channel):
         self.playing_now_channel = channel.connection.channel()
         return [
-            Consumer(channel, queues=[self.websockets_queue],
-                     on_message=lambda x: self.send_listens("listen", x)),
-            Consumer(self.playing_now_channel, queues=[self.playing_now_queue],
-                     on_message=lambda x: self.send_listens("playing_now", x))
+            Consumer(
+                channel,
+                queues=[self.websockets_queue],
+                on_message=lambda x: self.send_listens("listen", x)
+            ),
+            Consumer(
+                self.playing_now_channel,
+                queues=[self.playing_now_queue],
+                on_message=lambda x: self.send_listens("playing_now", x)
+            ),
+            Consumer(
+                self.instant_stats_channel,
+                queues=[self.instant_stats_queue],
+                on_message=lambda x: self.send_instant_stats(x)
+            )
         ]
 
     def on_consume_end(self, connection, default_channel):
