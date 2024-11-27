@@ -208,13 +208,13 @@ def artist_entity(artist_mbid):
     return jsonify(data)
 
 
-@release_group_bp.route("/",  defaults={'path': ''})
-@release_group_bp.route('/<path:path>/')
+@album_bp.route("/",  defaults={'path': ''})
+@album_bp.route('/<path:path>/')
 def album_page(path):
     return render_template("index.html")
 
 
-@release_group_bp.route("/<release_group_mbid>/", methods=["POST"])
+@album_bp.route("/<release_group_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def album_entity(release_group_mbid):
     """ Show an album page with all their relevant information """
