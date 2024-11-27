@@ -2,14 +2,50 @@
 
 from collections import deque
 import contextlib
+import requests
 import subprocess
 import sys
+from time import sleep
 import os
 
 LINES_IN_LOG_SNIPPET = 500
 
-newlines = ['\n', '\r\n', '\r']
+BOT_TOKEN = ""
+BOT_CHAT_ID = 0
+FAILURE_REPORT_RETRIES = 20 
+FAILURE_REPORT_DELAY = 5  # in seconds
+
+def post_telegram_message(msg):
+
+    for retry in range(FAILURE_REPORT_RETRIES):
+        r = requests.post(
+            url="https://api.telegram.org/bot%s/sendMessage" % BOT_TOKEN,
+            data={'chat_id': BOT_CHAT_ID, 'text': msg}
+        )
+        if r.status_code == 200:
+            return
+
+        if r.status_code in (400, 401, 403, 404, 429, 500):
+            sleep(FAILURE_REPORT_DELAY)
+
+    sys.stderr.write("Failed to send error notification to the Telegram chat.\n")
+
+def send_notification(script, return_code, stdout, stderr):
+
+    msg = "script %s failed with error code %d:\n" % (script, return_code)
+    msg += "STDOUT\n"
+    msg += "\n".join(stdout)
+    msg += "\n\n"
+    if stderr:
+        msg += "STDERR\n"
+        msg += "\n".join(stderr)
+        msg += "\n\n"
+
+    post_telegram_message(msg)
+
+
 def monitor(proc):
+    newlines = ['\n', '\r\n', '\r']
     stdout = getattr(proc, "stdout")
     os.set_blocking(stdout.fileno(), False)
     stderr = getattr(proc, "stderr")
@@ -60,7 +96,6 @@ def monitor_process(cmd):
         universal_newlines=True,
     )
     stdout, stderr = monitor(proc)
-    print("proc status %d" % proc.returncode)
     return proc.returncode, stdout, stderr
 
 
@@ -73,25 +108,14 @@ def main():
     try:
         ret, stdout, stderr = monitor_process(args)
     except KeyboardInterrupt:
-        print("Interrupted, exit with -1")
         sys.exit(-1)
 
     if ret == 0:
-        print("Exit with success!")
         sys.exit(0)
 
     # We did not exit successfully, so report an error
-    print("Script failed. stdout/stderr:")
-    for line in stdout:
-        print("[stdout]", line)
-
-    for line in stderr:
-        print("[stderr]", line)
-
-    print("Exit with status %d" % ret)
+    send_notification(sys.argv[0], ret, stdout, stderr)
     sys.exit(ret)
-
-
 
 
 if __name__ == "__main__":
