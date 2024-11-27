@@ -56,6 +56,12 @@ then
     rm -f /etc/service/spark_reader/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-instant-${DEPLOY_ENV}" ]
+then
+    log Enabling spark reader instant
+    rm -f /etc/service/spark_reader_instant/down
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-${DEPLOY_ENV}" ]
 then
     log Enabling api labs
