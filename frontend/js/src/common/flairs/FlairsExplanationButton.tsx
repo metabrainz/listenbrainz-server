@@ -5,7 +5,8 @@ import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import FlairsExplanationModal from "./FlairsExplanationModal";
 
-function FlairsExplanationButton() {
+function FlairsExplanationButton(props: { className?: string }) {
+  const { className } = props;
   const htmlContent = "animated".split("").map((letter, i) => (
     <span
       // eslint-disable-next-line react/no-array-index-key
@@ -19,7 +20,7 @@ function FlairsExplanationButton() {
   return (
     <button
       type="button"
-      className="btn btn-link"
+      className={`btn btn-link ${className}`}
       data-toggle="modal"
       data-target="#FlairsExplanationsModal"
       onClick={() => {

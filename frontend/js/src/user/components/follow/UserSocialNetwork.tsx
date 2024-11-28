@@ -285,7 +285,7 @@ export default class UserSocialNetwork extends React.Component<
               similarArtists={similarArtists}
             />
           )}
-        <Card className="card-user-sn hidden-xs hidden-sm">
+        <Card className="hidden-xs hidden-sm">
           <FollowerFollowingModal
             user={user}
             followerList={followerList}
