@@ -40,7 +40,6 @@ import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
-import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -495,7 +494,6 @@ export default function Listen() {
               />
             )}
           </div>
-          <FlairsExplanationButton />
           {playingNow && getListenCard(playingNow)}
           {userPinnedRecording && (
             <PinnedRecordingCard

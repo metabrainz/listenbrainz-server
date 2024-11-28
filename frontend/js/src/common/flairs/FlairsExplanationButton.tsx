@@ -6,7 +6,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import FlairsExplanationModal from "./FlairsExplanationModal";
 
 function FlairsExplanationButton() {
-  const htmlContent = "doing this thing".split("").map((letter, i) => (
+  const htmlContent = "animated".split("").map((letter, i) => (
     <span
       // eslint-disable-next-line react/no-array-index-key
       key={letter + i}
@@ -29,7 +29,7 @@ function FlairsExplanationButton() {
     >
       <FontAwesomeIcon icon={faInfoCircle} />
       &nbsp; Why are some names{" "}
-      <span className="flair wave">{htmlContent}</span>?
+      <span className="flair wave strong">{htmlContent}</span>?
     </button>
   );
 }

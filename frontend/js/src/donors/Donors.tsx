@@ -113,7 +113,7 @@ function Donors() {
   return (
     <div role="main" id="donors">
       {donateBanner}
-      <div className="listen-header" style={{ marginBottom: "0" }}>
+      <div className="flex-center">
         <h2 className="header-with-line">Donations</h2>
         <div className="flex" role="group" aria-label="Sort by">
           <Pill

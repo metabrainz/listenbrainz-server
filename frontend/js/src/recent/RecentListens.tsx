@@ -51,7 +51,6 @@ export default class RecentListens extends React.Component<
         </div>
         <div className="row">
           <div className="col-md-4 col-md-push-8">
-            <FlairsExplanationButton />
             <Card id="listen-count-card">
               <div>
                 {globalListenCount?.toLocaleString() ?? "-"}
@@ -69,6 +68,7 @@ export default class RecentListens extends React.Component<
             <Card className="hidden-xs card-user-sn">
               <RecentDonorsCard donors={recentDonors} />
             </Card>
+            <FlairsExplanationButton />
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (

@@ -46,7 +46,6 @@ import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import Username from "../common/Username";
-import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -649,7 +648,6 @@ export default function UserFeedPage() {
           )}
         </div>
         <div className="col-md-offset-1 col-md-4">
-          <FlairsExplanationButton />
           <UserSocialNetwork user={currentUser} />
         </div>
       </div>

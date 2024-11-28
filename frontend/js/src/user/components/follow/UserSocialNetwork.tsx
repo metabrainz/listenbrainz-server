@@ -7,6 +7,7 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
+import FlairsExplanationButton from "../../../common/flairs/FlairsExplanationButton";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
@@ -293,6 +294,7 @@ export default class UserSocialNetwork extends React.Component<
             updateFollowingList={this.updateFollowingList}
           />
         </Card>
+        <FlairsExplanationButton />
         <Card className="card-user-sn hidden-xs hidden-sm">
           <SimilarUsersModal
             user={user}
