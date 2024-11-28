@@ -8,20 +8,23 @@ import sys
 from time import sleep
 import os
 
+import config
+
 LINES_IN_LOG_SNIPPET = 500
 
-BOT_TOKEN = ""
-BOT_CHAT_ID = 0
-FAILURE_REPORT_RETRIES = 20 
+FAILURE_REPORT_RETRIES = 20
 FAILURE_REPORT_DELAY = 5  # in seconds
 
+
 def post_telegram_message(msg):
+    """ Post a message to the LB services Telegram channel """
 
     for retry in range(FAILURE_REPORT_RETRIES):
-        r = requests.post(
-            url="https://api.telegram.org/bot%s/sendMessage" % BOT_TOKEN,
-            data={'chat_id': BOT_CHAT_ID, 'text': msg}
-        )
+        r = requests.post(url="https://api.telegram.org/bot%s/sendMessage" % config["SERVICE_MONITOR_TELEGRAM_BOT_TOKEN"],
+                          data={
+                              'chat_id': config["SERVICE_MONITOR_TELEGRAM_CHAT_ID"],
+                              'text': msg
+                          })
         if r.status_code == 200:
             return
 
@@ -30,7 +33,9 @@ def post_telegram_message(msg):
 
     sys.stderr.write("Failed to send error notification to the Telegram chat.\n")
 
+
 def send_notification(script, return_code, stdout, stderr):
+    """ Format the logs into a single text message and send it """
 
     msg = "script %s failed with error code %d:\n" % (script, return_code)
     msg += "STDOUT\n"
@@ -45,6 +50,11 @@ def send_notification(script, return_code, stdout, stderr):
 
 
 def monitor(proc):
+    """ Monitor a process by making the stdout/stderr non-blocking files. Continually read
+        and save the stdout/stderr output, keeping only the last LINES_IN_LOG_SNIPPET lines
+        of output of both. Once the called process terminates, return both stdout and stderr
+        logs """
+
     newlines = ['\n', '\r\n', '\r']
     stdout = getattr(proc, "stdout")
     os.set_blocking(stdout.fileno(), False)
@@ -61,7 +71,7 @@ def monitor(proc):
             while True:
                 if proc.poll() is not None:
                     return list(log_stdout), list(log_stderr)
-                
+
                 # Process stdout
                 ch = stdout.read(1)
                 if ch == "":
@@ -88,7 +98,10 @@ def monitor(proc):
 
                 stderr_line += ch
 
+
 def monitor_process(cmd):
+    """ Call Popen to start monitoring a process, then monitor the proceess with the monitor method """
+
     proc = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -111,6 +124,7 @@ def main():
         sys.exit(-1)
 
     if ret == 0:
+        # All went well, lets leave!
         sys.exit(0)
 
     # We did not exit successfully, so report an error

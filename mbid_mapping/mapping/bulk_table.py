@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from itertools import zip_longest
+import sys
 
 import psycopg2
 from psycopg2.extras import DictCursor, execute_values
@@ -385,7 +386,7 @@ class BulkInsertTable:
 
                 if self.select_conn is None:
                     log("You need to provide a DB connections string.")
-                    raise RuntimeError
+                    sys.exit(-1)
 
                 with self.select_conn.cursor(cursor_factory=DictCursor) as curs:
                     log(f"{self.table_name}: execute query {i+1} of {len(queries)}")
@@ -451,3 +452,5 @@ class BulkInsertTable:
             log(f"{self.table_name}: defer swap tables.")
 
         log(f"{self.table_name}: done")
+
+        return 0

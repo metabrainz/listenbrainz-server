@@ -46,7 +46,13 @@ def canonical_data(use_lb_conn):
     """
         Create the MBID Mapping tables. (mbid_mapping, mbid_mapping_release, canonical_recording, recording_canonical_release)
     """
-    create_canonical_musicbrainz_data(use_lb_conn)
+
+#    TODO: repeat this for all other invocations below
+    try:
+        sys.exit(create_canonical_musicbrainz_data(use_lb_conn))
+    except Exception as err:
+        sys.stderr.write(str(err))
+        return -1
 
 
 @cli.command()

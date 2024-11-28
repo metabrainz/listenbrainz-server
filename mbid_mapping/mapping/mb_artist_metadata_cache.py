@@ -422,10 +422,10 @@ def create_mb_artist_metadata_cache(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
-    create_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, [], use_lb_conn)
+    return create_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, [], use_lb_conn)
 
 
 def incremental_update_mb_artist_metadata_cache(use_lb_conn: bool):
     """ Update the MB metadata cache incrementally """
-    incremental_update_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, use_lb_conn)
+    return incremental_update_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, use_lb_conn)
 

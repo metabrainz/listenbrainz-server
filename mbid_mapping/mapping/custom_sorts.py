@@ -227,3 +227,5 @@ def create_custom_sort_tables(conn):
         print("failed to create release_group_combined_type_sort table")
         conn.rollback()
         raise
+
+    return 0

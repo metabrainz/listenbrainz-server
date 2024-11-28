@@ -127,6 +127,8 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
 
         log("canonical_musicbrainz_data: done done done!")
 
+    return 0
+
 
 def update_canonical_release_data(use_lb_conn: bool):
     """
@@ -148,3 +150,5 @@ def update_canonical_release_data(use_lb_conn: bool):
         releases.run()
 
         log("canonical_release_data: updated.")
+
+    return 0
