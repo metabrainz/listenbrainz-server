@@ -97,6 +97,35 @@ export default function ExplorePage() {
             <hr />
           </div>
           <div className="row">
+            <div className="explore-card-container">
+              <div className="explore-card">
+                <div
+                  className="explore-card-img-overlay"
+                  style={{ mixBlendMode: "difference" }}
+                >
+                  {" "}
+                </div>
+                <div className="explore-card-img-clip flex-center">
+                  <div
+                    style={{
+                      fontSize: "6em",
+                      fontWeight: "bold",
+                      fontFamily: "Roboto",
+                      transform: "rotate(-8deg)",
+                      color: COLOR_LB_ORANGE,
+                    }}
+                  >
+                    2024
+                  </div>
+                </div>
+                <div className="explore-card-text">
+                  <div className="explore-card-text-name">
+                    Your Year in Music 2024
+                  </div>
+                  <div>Coming Soon</div>
+                </div>
+              </div>
+            </div>
             <div>
               <ExploreCard
                 name="Your Year in Music 2023"
