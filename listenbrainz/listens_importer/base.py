@@ -153,7 +153,7 @@ class ListensImporter(abc.ABC):
             if time.monotonic() > self._metric_submission_time:
                 self._metric_submission_time += METRIC_UPDATE_INTERVAL
                 metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
-                _listens_imported_since_last_update = 0
+                self._listens_imported_since_last_update = 0
 
         current_app.logger.info('Processed %d users successfully!', success)
         current_app.logger.info('Encountered errors while processing %d users.', failure)

@@ -61,6 +61,7 @@ services:
       - lb_db
     environment:
       PYTHON_TESTS_RUNNING: 1
+    restart: unless-stopped
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     volumes:
       - ..:/code/listenbrainz:z

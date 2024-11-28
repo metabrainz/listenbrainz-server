@@ -1,7 +1,7 @@
 import locale
-import os
 import requests
 import time
+import os
 
 from brainzutils import cache
 from datetime import datetime
@@ -19,8 +19,10 @@ from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
+from listenbrainz.webserver.errors import APINotFound
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.views.status_api import get_service_status
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.db.donation import get_recent_donors
@@ -92,6 +94,7 @@ def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
+    service_status = get_service_status()
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
@@ -114,6 +117,7 @@ def current_status():
 
     data = {
         "load": load,
+        "service-status": service_status,
         "listenCount": format(int(listen_count), ",d") if listen_count else "0",
         "userCount": user_count,
         "listenCountsPerDay": listen_counts_per_day,
@@ -300,4 +304,9 @@ def _get_user_count():
 @index_bp.route('/<path:path>/')
 @web_listenstore_needed
 def index_pages(path):
+    # this is a catch-all route, all unmatched urls match this route instead of raising a 404
+    # at least in the case the of API urls, we don't want this behavior. hence detect api urls
+    # and raise 404 errors manually
+    if path.startswith("1/"):
+        raise APINotFound(f"Page not found: {path}")
     return render_template("index.html")

@@ -14,6 +14,7 @@ import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
 import { Flair } from "./constants";
+import { getCoverArtCache, setCoverArtCache } from "./coverArtCache";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
@@ -760,13 +761,23 @@ const getAlbumArtFromReleaseGroupMBID = async (
   optionalSize?: CAAThumbnailSizes
 ): Promise<string | undefined> => {
   try {
+    const cacheKey = `rag:${releaseGroupMBID}-${optionalSize}`;
+    const cachedCoverArt = await getCoverArtCache(cacheKey);
+    if (cachedCoverArt) {
+      return cachedCoverArt;
+    }
     const CAAResponse = await fetchWithRetry(
       `https://coverartarchive.org/release-group/${releaseGroupMBID}`,
       retryParams
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      return getThumbnailFromCAAResponse(body, optionalSize);
+      const coverArt = getThumbnailFromCAAResponse(body, optionalSize);
+      if (coverArt) {
+        // Cache the successful result
+        await setCoverArtCache(cacheKey, coverArt);
+      }
+      return coverArt;
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -785,13 +796,25 @@ const getAlbumArtFromReleaseMBID = async (
   optionalSize?: CAAThumbnailSizes
 ): Promise<string | undefined> => {
   try {
+    // Check cache first
+    const cacheKey = `ca:${userSubmittedReleaseMBID}-${optionalSize}-${useReleaseGroupFallback}`;
+    const cachedCoverArt = await getCoverArtCache(cacheKey);
+    if (cachedCoverArt) {
+      return cachedCoverArt;
+    }
+
     const CAAResponse = await fetchWithRetry(
       `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
       retryParams
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      return getThumbnailFromCAAResponse(body, optionalSize);
+      const coverArt = getThumbnailFromCAAResponse(body, optionalSize);
+      if (coverArt) {
+        // Cache the successful result
+        await setCoverArtCache(cacheKey, coverArt);
+      }
+      return coverArt;
     }
 
     if (CAAResponse.status === 404 && useReleaseGroupFallback) {
@@ -806,7 +829,14 @@ const getAlbumArtFromReleaseMBID = async (
         return undefined;
       }
 
-      return await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
+      const fallbackCoverArt = await getAlbumArtFromReleaseGroupMBID(
+        releaseGroupMBID
+      );
+      if (fallbackCoverArt) {
+        // Cache the fallback result
+        await setCoverArtCache(cacheKey, fallbackCoverArt);
+      }
+      return fallbackCoverArt;
     }
   } catch (error) {
     // eslint-disable-next-line no-console

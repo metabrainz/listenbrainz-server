@@ -26,6 +26,13 @@ def get_release_group_sort_key(release_group):
     if release_date is None:
         release_date = datetime.min
     else:
+        # Add default month/day if missing
+        parts = release_date.split('-')
+        if len(parts) == 1:  # YYYY
+            release_date += "-01-01"
+        elif len(parts) == 2:  # YYYY-MM
+            release_date += "-01"
+
         release_date = datetime.strptime(release_date, "%Y-%m-%d")
 
     return release_group["total_listen_count"] or 0, release_date
