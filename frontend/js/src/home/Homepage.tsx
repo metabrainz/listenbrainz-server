@@ -373,7 +373,7 @@ function HomePage() {
               everyone can benefit.
             </p>
             <Link
-              to="https://github.com/orgs/metabrainz/repositories"
+              to="https://github.com/orgs/metabrainz"
               className="info-link"
               target="_blank"
               rel="noopener noreferrer"
@@ -413,7 +413,7 @@ function HomePage() {
             <p>
               We ask{" "}
               <Link
-                to="https://metabrainz.org/supporters/account-type"
+                to="https://metabrainz.org/supporters"
                 target="_blank"
                 rel="noopener noreferrer"
               >
