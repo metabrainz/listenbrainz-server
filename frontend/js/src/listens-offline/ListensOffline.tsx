@@ -17,8 +17,10 @@ export default function ListensOffline() {
 
       <p>
         You may find out more about the current status of our services by
-        checking our <a href="https://mastodon.social/@ListenBrainz">Mastodon</a>
-        or <a href="https://bsky.app/profile/listenbrainz.org">Bluesky</a> feeds.
+        checking our{" "}
+        <a href="https://mastodon.social/@ListenBrainz">Mastodon</a>
+        or <a href="https://bsky.app/profile/listenbrainz.org">Bluesky</a>{" "}
+        feeds.
       </p>
     </>
   );
