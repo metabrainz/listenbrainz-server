@@ -260,6 +260,7 @@ export default function AlbumPage(): JSX.Element {
       </div>
     );
   }
+  const artistForRadio = artist.artists?.[0]?.artist_mbid ?? encodeURIComponent(artistName);
 
   return (
     <div
@@ -315,9 +316,7 @@ export default function AlbumPage(): JSX.Element {
             <Link
               type="button"
               className="btn btn-info"
-              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artistName
-              )})&mode=easy`}
+              to={`/explore/lb-radio/?prompt=artist:(${artistForRadio})&mode=easy`}
             >
               <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
             </Link>
@@ -334,20 +333,16 @@ export default function AlbumPage(): JSX.Element {
             <ul className="dropdown-menu">
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})::nosim&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=artist:(${artistForRadio})&mode=easy`}
                 >
-                  This artist
+                  Artist radio
                 </Link>
               </li>
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=artist:(${artistForRadio})::nosim&mode=easy`}
                 >
-                  Similar artists
+                  This artist only
                 </Link>
               </li>
               {Boolean(filteredTags?.length) && (
