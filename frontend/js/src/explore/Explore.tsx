@@ -6,6 +6,7 @@ import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { COLOR_LB_ORANGE } from "../utils/constants";
 
 type ExploreCardProps = {
   name: string;
@@ -80,36 +81,6 @@ export default function ExplorePage() {
             url="/explore/music-neighborhood/"
           />
         </div>
-        {currentUser?.name && (
-          <div>
-            <ExploreCard
-              name="Your Year in Music 2023"
-              desc="Review"
-              img_name="year-in-music-2023.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2023/`}
-            />
-          </div>
-        )}
-        {currentUser?.name && (
-          <div>
-            <ExploreCard
-              name="Your Year in Music 2022"
-              desc="Review"
-              img_name="year-in-music-2022.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2022/`}
-            />
-          </div>
-        )}
-        {currentUser?.name && (
-          <div>
-            <ExploreCard
-              name="Your Year in Music 2021"
-              desc="Review"
-              img_name="year-in-music-2021.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2021/`}
-            />
-          </div>
-        )}
         <div>
           <ExploreCard
             name="Top Similar Users"
@@ -119,6 +90,40 @@ export default function ExplorePage() {
           />
         </div>
       </div>
+      {currentUser?.name && (
+        <>
+          <div className="explore-page-divider">
+            <h3>Your year in music</h3>
+            <hr />
+          </div>
+          <div className="row">
+            <div>
+              <ExploreCard
+                name="Your Year in Music 2023"
+                desc="Review"
+                img_name="year-in-music-2023.jpg"
+                url={`/user/${currentUser.name}/year-in-music/2023/`}
+              />
+            </div>
+            <div>
+              <ExploreCard
+                name="Your Year in Music 2022"
+                desc="Review"
+                img_name="year-in-music-2022.jpg"
+                url={`/user/${currentUser.name}/year-in-music/2022/`}
+              />
+            </div>
+            <div>
+              <ExploreCard
+                name="Your Year in Music 2021"
+                desc="Review"
+                img_name="year-in-music-2021.jpg"
+                url={`/user/${currentUser.name}/year-in-music/2021/`}
+              />
+            </div>
+          </div>
+        </>
+      )}
       <div className="explore-page-divider">
         <h3>Beta</h3>
         <hr />
