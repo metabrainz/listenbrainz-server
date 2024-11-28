@@ -15,6 +15,7 @@ import { RouteQuery } from "../utils/Loader";
 import Loader from "../components/Loader";
 import Blob from "../home/Blob";
 import Username from "../common/Username";
+import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
 
 type DonorLoaderData = {
   data: DonationInfo[];
@@ -112,7 +113,7 @@ function Donors() {
   return (
     <div role="main" id="donors">
       {donateBanner}
-      <div className="listen-header">
+      <div className="flex-center">
         <h2 className="header-with-line">Donations</h2>
         <div className="flex" role="group" aria-label="Sort by">
           <Pill
@@ -131,6 +132,7 @@ function Donors() {
           </Pill>
         </div>
       </div>
+      <FlairsExplanationButton />
       <Loader isLoading={isLoading}>
         {donors?.map((donor) => (
           <div key={donor.id} className="donor-card">
