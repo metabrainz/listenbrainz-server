@@ -264,6 +264,10 @@ export default function AlbumPage(): JSX.Element {
     artist.artists
       ?.map((a) => `artist:(${a.artist_mbid ?? a.name})`)
       .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})`;
+  const artistsRadioPromptNoSim: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})::nosim`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})::nosim`;
 
   return (
     <div
@@ -344,7 +348,7 @@ export default function AlbumPage(): JSX.Element {
               </li>
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}::nosim&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
                 >
                   {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
                   only
