@@ -313,7 +313,7 @@ export default function UserEntityChart() {
                       {
                         label: "Time range",
                         tooltip:
-                          "Select the time range for the feed. For instance, choosing '30 minutes' will include listens from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                          "Select the time range for the feed. For instance, choosing 'this week' will include listens from the current week. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
                         key: "range",
                         type: "dropdown",
                         values: Array.from(
