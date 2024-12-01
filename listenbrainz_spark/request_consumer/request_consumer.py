@@ -27,7 +27,7 @@ from kombu.mixins import ConsumerProducerMixin
 from kombu.utils.debug import setup_logging
 
 # import listenbrainz_spark
-import listenbrainz_spark.query_map
+# import listenbrainz_spark.query_map
 from listenbrainz_spark import config
 
 
