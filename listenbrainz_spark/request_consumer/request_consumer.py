@@ -24,6 +24,7 @@ import logging
 from kombu import Exchange, Queue, Message, Connection, Consumer
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerProducerMixin
+from kombu.utils.debug import setup_logging
 
 import listenbrainz_spark
 import listenbrainz_spark.query_map
@@ -33,6 +34,7 @@ from listenbrainz_spark import config, hdfs_connection
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 logger = logging.getLogger(__name__)
+setup_logging(loggers=[logger])
 
 
 class RequestConsumer(ConsumerProducerMixin):
@@ -114,6 +116,10 @@ class RequestConsumer(ConsumerProducerMixin):
             Consumer(channel, queues=[self.spark_request_queue], no_ack=True, on_message=lambda x: self.callback(x))
         ]
 
+    def on_iteration(self):
+        super().on_iteration()
+        logger.info("entering consume")
+
     def init_rabbitmq_connection(self):
         connection_name = "spark-request-consumer-" + socket.gethostname()
         self.connection = Connection(
@@ -130,7 +136,9 @@ class RequestConsumer(ConsumerProducerMixin):
             try:
                 logger.info('Request consumer started!')
                 listenbrainz_spark.init_spark_session(app_name)
+                logger.info('Request consumer, spark session inited!')
                 self.init_rabbitmq_connection()
+                logger.info('Request consumer, rabbitmq connected!')
                 self.run()
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
