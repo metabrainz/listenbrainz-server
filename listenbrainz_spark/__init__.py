@@ -11,8 +11,8 @@ _logger.addHandler(_handler)
 
 import sentry_sdk
 
-from py4j.protocol import Py4JJavaError
-from pyspark.sql import SparkSession, SQLContext
+# from py4j.protocol import Py4JJavaError
+# from pyspark.sql import SparkSession, SQLContext
 
 from listenbrainz_spark.exceptions import SparkSessionNotInitializedException
 from listenbrainz_spark import config
