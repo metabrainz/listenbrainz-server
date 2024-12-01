@@ -131,7 +131,7 @@ def request_instant_stats(user_name):
         transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
     )
     producer = connection.Producer()
-    spark_request_exchange = Exchange(current_app.config["INSTANT_SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+    spark_request_exchange = Exchange(current_app.config["INSTANT_SPARK_REQUEST_EXCHANGE"], "fanout", durable=True)
     producer.publish(
         message,
         routing_key="",
