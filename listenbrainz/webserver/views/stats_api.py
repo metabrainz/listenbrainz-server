@@ -1,8 +1,10 @@
 import calendar
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, date
 from typing import Dict, List, Tuple, Iterable
 
+from kombu import Connection
+from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 from requests import HTTPError
 
 import listenbrainz.db.stats as db_stats
@@ -17,7 +19,8 @@ from flask import Blueprint, current_app, jsonify, request
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
-from listenbrainz.db import year_in_music as db_year_in_music
+from listenbrainz.db import year_in_music as db_year_in_music, couchdb
+from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -30,6 +33,113 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
+
+
+@stats_api_bp.route("/user/<user_name>/list-instant")
+@crossdomain
+@ratelimit()
+def get_instant_stats_list(user_name):
+    """ Get a list of instant stats for the given user. """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    data = couchdb.fetch_exact_data(db_stats.INDIVIDUAL_STATS_RECORD_DB, str(user["id"]))
+    if data is None:
+        return jsonify({"databases": []})
+    return jsonify({"databases": data["databases"]})
+
+
+@stats_api_bp.get("/user/<user_name>/instant")
+@crossdomain
+@ratelimit()
+def get_instant_stats(user_name):
+    """ Get an already generated instant stat for the given user. The database and the document
+    id should be provided in the query parameters.
+    """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    database = request.args.get("database")
+    if database is None:
+        raise APIBadRequest("'database' query parameter is missing")
+
+    document_id = request.args.get("document_id")
+    if database is None:
+        raise APIBadRequest("'document_id' query parameter is missing")
+
+    data = couchdb.fetch_exact_data(database, document_id)
+    if data is None:
+        raise APINotFound("Cannot find stats for given database and document id")
+
+    data.pop("_id", None)
+    data.pop("_rev", None)
+    data.pop("key", None)
+
+    return jsonify(data)
+
+
+@stats_api_bp.post("/user/<user_name>/instant")
+@crossdomain
+@ratelimit()
+def request_instant_stats(user_name):
+    """ Request an instant stat for the given user. """
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    from_ts = request.json.get("from_ts")
+    if from_ts is None:
+        raise APIBadRequest("'from_ts' query parameter is missing")
+    try:
+        from_ts = int(from_ts)
+    except (ValueError, TypeError):
+        raise APIBadRequest("'from_ts' query parameter is invalid")
+
+    to_ts = request.json.get("to_ts")
+    if to_ts is None:
+        raise APIBadRequest("'to_ts' query parameter is missing")
+    try:
+        to_ts = int(to_ts)
+    except (ValueError, TypeError):
+        raise APIBadRequest("'to_ts' query parameter is invalid")
+
+    entity = request.json.get("entity")
+    if entity is None:
+        raise APIBadRequest("'entity' query parameter is missing")
+    if entity not in ["artists", "recordings", "releases", "release_groups"]:
+        raise APIBadRequest("'entity' query parameter is invalid")
+
+    today = date.today().strftime("%Y%m%d")
+    message = {
+        "query": "stats.user.individual",
+        "params": {
+            "entity": entity,
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "database": f"stats_individual_{today}",
+            "user_ids": [user["id"]]
+        }
+    }
+    connection = Connection(
+        hostname=current_app.config["RABBITMQ_HOST"],
+        userid=current_app.config["RABBITMQ_USERNAME"],
+        port=current_app.config["RABBITMQ_PORT"],
+        password=current_app.config["RABBITMQ_PASSWORD"],
+        virtual_host=current_app.config["RABBITMQ_VHOST"],
+        transport_options={"client_properties": {"connection_name": get_fallback_connection_name()}}
+    )
+    producer = connection.Producer()
+    spark_request_exchange = Exchange(current_app.config["INSTANT_SPARK_REQUEST_EXCHANGE"], "fanout", durable=False)
+    producer.publish(
+        message,
+        routing_key="",
+        exchange=spark_request_exchange,
+        delivery_mode=PERSISTENT_DELIVERY_MODE,
+        declare=[spark_request_exchange]
+    )
+    return jsonify({})
 
 
 @stats_api_bp.route("/user/<user_name>/artists")

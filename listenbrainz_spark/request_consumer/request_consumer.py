@@ -40,9 +40,9 @@ class RequestConsumer(ConsumerProducerMixin):
     def __init__(self):
         self.connection = None
 
-        self.spark_result_exchange = Exchange(config.SPARK_RESULT_EXCHANGE, "fanout", durable=False)
+        self.spark_result_exchange = Exchange(config.SPARK_RESULT_EXCHANGE, "fanout", durable=True)
         self.spark_result_queue = Queue(config.SPARK_REQUEST_QUEUE, exchange=self.spark_result_exchange, durable=True)
-        self.spark_request_exchange = Exchange(config.SPARK_REQUEST_EXCHANGE, "fanout", durable=False)
+        self.spark_request_exchange = Exchange(config.SPARK_REQUEST_EXCHANGE, "fanout", durable=True)
         self.spark_request_queue = Queue(config.SPARK_REQUEST_QUEUE, exchange=self.spark_request_exchange, durable=True)
 
     def get_result(self, request):

@@ -133,6 +133,21 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
+def fetch_exact_data(database: str, document_id: str):
+    """ Retrieve data from couchdb for the exact given database and document id.
+
+    Args:
+         database: the database name to retrieve data from
+         document_id: the document_id to retrieve data for
+    """
+    base_url = get_base_url()
+    document_url = f"{base_url}/{database}/{document_id}"
+    response = requests.get(document_url)
+    if response.status_code == 404:
+        return None
+    return response.json()
+
+
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
     with start_span(op="serializing", description="serialize data to json"):
