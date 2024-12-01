@@ -92,6 +92,7 @@ class RequestConsumer(ConsumerProducerMixin):
                 routing_key='',
                 body=body,
                 properties=PERSISTENT_DELIVERY_MODE,
+                declare=[self.spark_result_exchange]
             )
 
         if num_of_messages:
