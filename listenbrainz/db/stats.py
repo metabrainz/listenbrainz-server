@@ -168,36 +168,40 @@ def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
 
 def insert_individual_stats(database, from_ts, to_ts, entity, data):
     user_keys_map = defaultdict(lambda: defaultdict(list))
-    for user in data:
-        user["_id"] = str(uuid4())
-        user["key"] = user["user_id"]
-        user["from_ts"] = from_ts
-        user["to_ts"] = to_ts
-        user["entity"] = entity
+    for doc in data:
+        doc["_id"] = str(uuid4())
+        doc["key"] = doc["user_id"]
+        doc["from_ts"] = from_ts
+        doc["to_ts"] = to_ts
+        doc["entity"] = entity
 
-        user_keys_map[user["user_id"]][database].append(user["_id"])
+        user_keys_map[doc["user_id"]][database].append({
+            "database": database,
+            "doc_id": doc["_id"],
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "entity": entity,
+        })
 
     couchdb.try_insert_data(database, data)
 
     for user_id, user_databases in user_keys_map.items():
         user_data = couchdb.fetch_data(INDIVIDUAL_STATS_RECORD_DB, user_id)
         if user_data is not None:
-            keys_to_remove = set()
-            existing_databases = user_data["databases"]
+            new_databases = {}
 
-            for database_name in existing_databases:
-                database_day = date.fromisoformat(database_name.split("_")[-1])
-                if date.today() - database_day > timedelta(days=2):
-                    keys_to_remove.add(database_name)
+            for database_name, databases in user_data["databases"].items():
+                database_date = date.fromisoformat(database_name.split("_")[-1])
+                if date.today() - database_date <= timedelta(days=2):
+                    new_databases[database_name] = databases
 
-            for key in keys_to_remove:
-                existing_databases.pop(key)
-
-            for database_name, keys in user_databases.items():
-                if database_name in existing_databases:
-                    existing_databases[database_name].extend(keys)
+            for database_name, databases in user_databases.items():
+                if database_name in new_databases:
+                    new_databases[database_name].extend(databases)
                 else:
-                    existing_databases[database_name] = keys
+                    new_databases[database_name] = databases
+
+            user_data["databases"] = new_databases
         else:
             user_data = {
                 "_id": str(user_id),
@@ -206,5 +210,3 @@ def insert_individual_stats(database, from_ts, to_ts, entity, data):
             }
 
         couchdb.try_insert_data(INDIVIDUAL_STATS_RECORD_DB, [user_data])
-
-    return user_keys_map
