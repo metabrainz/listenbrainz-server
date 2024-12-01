@@ -26,9 +26,9 @@ from kombu.entity import PERSISTENT_DELIVERY_MODE
 from kombu.mixins import ConsumerProducerMixin
 from kombu.utils.debug import setup_logging
 
-import listenbrainz_spark
+# import listenbrainz_spark
 import listenbrainz_spark.query_map
-from listenbrainz_spark import config, hdfs_connection
+from listenbrainz_spark import config
 
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
@@ -135,7 +135,7 @@ class RequestConsumer(ConsumerProducerMixin):
         while True:
             try:
                 logger.info('Request consumer started!')
-                listenbrainz_spark.init_spark_session(app_name)
+                # listenbrainz_spark.init_spark_session(app_name)
                 logger.info('Request consumer, spark session inited!')
                 self.init_rabbitmq_connection()
                 logger.info('Request consumer, rabbitmq connected!')
