@@ -30,6 +30,7 @@ FLAIR_CHOICES = [
     "sliced",
 ]
 
+
 @user_settings_api_bp.route("/flair", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
