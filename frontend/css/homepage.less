@@ -55,7 +55,11 @@
       top: 10px;
       z-index: 3;
       height: 12vh;
-      gap: 1vh;
+      gap: 2vh;
+
+      @media (max-width: @screen-xs) {
+        display: none;
+      }
     }
 
     .homepage-upper-grey-box {
@@ -348,8 +352,8 @@
           position: absolute;
           left: 0;
           bottom: -10px;
-          width: 100%;
-          border-bottom: 1px solid @gray-light;
+          width: 30%;
+          border-bottom: 1px solid @gray-dark;
         }
       }
 
