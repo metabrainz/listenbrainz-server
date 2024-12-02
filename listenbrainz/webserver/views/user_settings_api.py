@@ -14,8 +14,24 @@ from listenbrainz.webserver.views.api_tools import (
 
 user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 
+FLAIR_CHOICES = [
+    "shake",
+    "lb-colors-sweep",
+    "light-sweep",
+    "wave",
+    "flip-horizontal",
+    "flip-vertical",
+    "flip-3d",
+    "extruded",
+    "underline",
+    "tornado",
+    "highlighter",
+    "anaglyph",
+    "sliced",
+]
 
-@user_settings_api_bp.route("/flair", methods=["POST"])
+
+@user_settings_api_bp.route("/flair", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def update_flair():
@@ -25,9 +41,18 @@ def update_flair():
     """
     user = validate_auth_header()
     if "flair" not in request.json:
-        raise APIBadRequest("Missing flair")
+        raise APIBadRequest("Missing flair field")
 
-    db_usersetting.update_flair(db_conn, user["id"], request.json["flair"])
+    flair = request.json["flair"]
+    if flair:
+        if not isinstance(flair, str):
+            raise APIBadRequest("Flair must be a string")
+        if flair not in FLAIR_CHOICES:
+            raise APIBadRequest(f"Invalid flair: {flair}")
+    else:
+        flair = None
+
+    db_usersetting.update_flair(db_conn, user["id"], flair)
     return jsonify({"success": True})
 
 

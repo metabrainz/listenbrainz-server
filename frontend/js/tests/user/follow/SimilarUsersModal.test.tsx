@@ -7,6 +7,7 @@ import GlobalAppContext, {
 } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 const props = {
   user: { name: "shivam-kapila" },
@@ -31,9 +32,11 @@ describe("<SimilarUsersModal />", () => {
   it("renders", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <SimilarUsersModal {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <SimilarUsersModal {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(".similar-users-list")).toHaveLength(1);

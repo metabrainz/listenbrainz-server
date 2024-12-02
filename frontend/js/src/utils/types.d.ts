@@ -657,6 +657,7 @@ declare type BrainzPlayerSettings = {
   >;
 };
 
+
 declare type UserPreferences = {
   saveData?: boolean;
   brainzplayer?: BrainzPlayerSettings;

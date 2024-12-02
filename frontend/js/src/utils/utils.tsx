@@ -13,6 +13,7 @@ import { GlobalAppContextT } from "./GlobalAppContext";
 import APIServiceClass from "./APIService";
 import { ToastMsg } from "../notifications/Notifications";
 import RecordingFeedbackManager from "./RecordingFeedbackManager";
+import { Flair } from "./constants";
 import { getCoverArtCache, setCoverArtCache } from "./coverArtCache";
 
 const originalFetch = window.fetch;
@@ -542,6 +543,7 @@ type GlobalAppProps = {
   musicbrainz?: MetaBrainzProjectUser;
   appleMusic?: AppleMusicUser;
   user_preferences?: UserPreferences;
+  flair?: Flair;
 };
 type GlobalProps = GlobalAppProps & SentryProps;
 
@@ -591,6 +593,7 @@ const getPageProps = async (): Promise<{
       sentry_traces_sample_rate,
       sentry_dsn,
       user_preferences,
+      flair,
     } = globalReactProps;
 
     const userPreferences = {
@@ -640,6 +643,7 @@ const getPageProps = async (): Promise<{
         apiService,
         current_user
       ),
+      flair,
     };
     sentryProps = {
       sentry_dsn,

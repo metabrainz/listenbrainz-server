@@ -41,6 +41,7 @@ import SimilarArtistComponent from "../explore/music-neighborhood/components/Sim
 import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import Username from "../common/Username";
 
 function SortingButtons({
   sort,
@@ -501,9 +502,7 @@ export default function ArtistPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Link to={`/user/${listener.user_name}/`}>
-                          {listener.user_name}
-                        </Link>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;

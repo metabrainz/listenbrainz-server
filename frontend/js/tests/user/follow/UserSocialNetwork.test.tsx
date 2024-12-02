@@ -36,6 +36,7 @@ import GlobalAppContext, {
 } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 jest.useFakeTimers({ advanceTimers: true });
 
@@ -93,9 +94,11 @@ describe("<UserSocialNetwork />", () => {
   it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
@@ -106,9 +109,11 @@ describe("<UserSocialNetwork />", () => {
     const consoleErrorSpy = jest.spyOn(console, "error");
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     const instance = wrapper
@@ -145,9 +150,13 @@ describe("<UserSocialNetwork />", () => {
   describe("updateFollowingList", () => {
     it("updates the state when called with action follow", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -166,9 +175,13 @@ describe("<UserSocialNetwork />", () => {
 
     it("updates the state when called with action unfollow", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -187,9 +200,13 @@ describe("<UserSocialNetwork />", () => {
 
     it("only allows adding a user once", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -211,9 +228,13 @@ describe("<UserSocialNetwork />", () => {
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -237,9 +258,11 @@ describe("<UserSocialNetwork />", () => {
         <GlobalAppContext.Provider
           value={{ ...globalContext, currentUser: {} as ListenBrainzUser }}
         >
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper
@@ -252,9 +275,11 @@ describe("<UserSocialNetwork />", () => {
     it("returns false if user is not in followingList", async () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper
@@ -272,9 +297,11 @@ describe("<UserSocialNetwork />", () => {
     it("returns true if user is in followingList", async () => {
       const wrapper = mount<UserSocialNetwork>(
         <GlobalAppContext.Provider value={globalContext}>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper

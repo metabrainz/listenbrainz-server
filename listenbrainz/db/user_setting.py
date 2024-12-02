@@ -161,3 +161,18 @@ def get_flair(db_conn, user_id: int):
     """), {"user_id": user_id})
     row = result.mappings().first()
     return row.flair if row else None
+
+
+def get_all_flairs(db_conn):
+    """ Retrieve all flairs for all users """
+    query = """
+        SELECT musicbrainz_id
+             , musicbrainz_row_id
+             , flair
+          FROM user_setting us
+          JOIN "user" u
+            ON u.id = us.user_id
+         WHERE flair IS NOT NULL
+    """
+    result = db_conn.execute(sqlalchemy.text(query))
+    return result.all()
