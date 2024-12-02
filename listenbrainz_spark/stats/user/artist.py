@@ -4,13 +4,14 @@ from data.model.user_artist_stat import ArtistRecord
 from listenbrainz_spark.stats import run_query
 
 
-def get_artists(table: str, cache_tables: List[str], number_of_results: int) -> Iterator[ArtistRecord]:
+def get_artists(table: str, cache_tables: List[str], number_of_results: int, user_ids: List[int]) -> Iterator[ArtistRecord]:
     """ Get artist information (artist_name, artist_credit_id etc) for every user
         ordered by listen count
 
         Args:
             table: name of the temporary table.
             number_of_results: number of top results to keep per user.
+            user_ids: list of users to generate stats for
 
         Returns:
             iterator (iter): an iterator over result
@@ -25,6 +26,10 @@ def get_artists(table: str, cache_tables: List[str], number_of_results: int) -> 
                         user2: [{...}],
                     }
     """
+    if user_ids:
+        where_clause = f"WHERE user_id IN ({', '.join(str(user_id) for user_id in user_ids)})"
+    else:
+        where_clause = ""
     cache_table = cache_tables[0]
     result = run_query(f"""
         WITH exploded_listens AS (
@@ -32,6 +37,7 @@ def get_artists(table: str, cache_tables: List[str], number_of_results: int) -> 
                  , artist_name AS artist_credit_name
                  , explode_outer(artist_credit_mbids) AS artist_mbid
              FROM {table}
+             {where_clause}
         ), listens_with_mb_data as (
             SELECT user_id
                  , COALESCE(at.artist_name, el.artist_credit_name) AS artist_name

@@ -3,7 +3,7 @@ from typing import List
 from listenbrainz_spark.stats import run_query
 
 
-def get_release_groups(table: str, cache_tables: List[str], number_of_results: int):
+def get_release_groups(table: str, cache_tables: List[str], number_of_results: int, user_ids: List[int]):
     """
     Get release group information (release_group_name, release_group_mbid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
@@ -12,6 +12,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
     Args:
         table: name of the temporary table
         number_of_results: number of top results to keep per user.
+        user_ids: list of users to generate stats for
 
     Returns:
         iterator (iter): an iterator over result
@@ -26,6 +27,10 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                     'user2' : [{...}],
                 }
     """
+    if user_ids:
+        where_clause = f"WHERE user_id IN ({', '.join(str(user_id) for user_id in user_ids)})"
+    else:
+        where_clause = ""
     rel_cache_table = cache_tables[0]
     rg_cache_table = cache_tables[1]
     result = run_query(f"""
@@ -45,6 +50,7 @@ def get_release_groups(table: str, cache_tables: List[str], number_of_results: i
                 ON rel.release_mbid = l.release_mbid
          LEFT JOIN {rg_cache_table} rg
                 ON rg.release_group_mbid = rel.release_group_mbid
+            {where_clause}
         ), intermediate_table as (
             SELECT user_id
                  , first(release_group_name) AS any_release_group_name

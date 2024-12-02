@@ -1,7 +1,8 @@
 """This module contains functions to insert and retrieve statistics
    calculated from Apache Spark into the database.
 """
-
+import logging
+from collections import defaultdict
 # listenbrainz-server - Server for the ListenBrainz project.
 #
 # Copyright (C) 2017 MetaBrainz Foundation Inc.
@@ -21,8 +22,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import Optional
+from uuid import uuid4
 
 import orjson
 from flask import current_app
@@ -39,6 +41,10 @@ from listenbrainz.db.user import get_users_by_id
 # as statistics for a special user with the following user_id.
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
+INDIVIDUAL_STATS_DB_PREFIX = "stats_individual"
+INDIVIDUAL_STATS_RECORD_DB = "stats_individual_user_keys_db"
+
+logger = logging.getLogger(__name__)
 
 
 def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):
@@ -158,3 +164,49 @@ def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
     """
     data["user_id"] = SITEWIDE_STATS_USER_ID
     insert(database, from_ts, to_ts, [data])
+
+
+def insert_individual_stats(database, from_ts, to_ts, entity, data):
+    user_keys_map = defaultdict(lambda: defaultdict(list))
+    for doc in data:
+        doc["_id"] = str(uuid4())
+        doc["key"] = doc["user_id"]
+        doc["from_ts"] = from_ts
+        doc["to_ts"] = to_ts
+        doc["entity"] = entity
+
+        user_keys_map[doc["user_id"]][database].append({
+            "database": database,
+            "doc_id": doc["_id"],
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "entity": entity,
+        })
+
+    couchdb.try_insert_data(database, data)
+
+    for user_id, user_databases in user_keys_map.items():
+        user_data = couchdb.fetch_data(INDIVIDUAL_STATS_RECORD_DB, user_id)
+        if user_data is not None:
+            new_databases = {}
+
+            for database_name, databases in user_data["databases"].items():
+                database_date = date.fromisoformat(database_name.split("_")[-1])
+                if date.today() - database_date <= timedelta(days=2):
+                    new_databases[database_name] = databases
+
+            for database_name, databases in user_databases.items():
+                if database_name in new_databases:
+                    new_databases[database_name].extend(databases)
+                else:
+                    new_databases[database_name] = databases
+
+            user_data["databases"] = new_databases
+        else:
+            user_data = {
+                "_id": str(user_id),
+                "key": user_id,
+                "databases": user_databases
+            }
+
+        couchdb.try_insert_data(INDIVIDUAL_STATS_RECORD_DB, [user_data])

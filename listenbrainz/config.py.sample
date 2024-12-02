@@ -67,6 +67,12 @@ EXTERNAL_SERVICES_EXCHANGE = "external_services"
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = "external_services_spotify_cache"
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = "external_services_apple_cache"
 
+INSTANT_SPARK_REQUEST_EXCHANGE = "instant_spark_request"
+INSTANT_SPARK_REQUEST_QUEUE = "instant_spark_request"
+INSTANT_SPARK_RESULT_EXCHANGE = "instant_spark_result"
+INSTANT_SPARK_RESULT_PERSISTENT_QUEUE = "instant_spark_result_persistent"
+INSTANT_SPARK_RESULT_WEBSOCKETS_QUEUE = "instant_spark_result_websockets"
+
 # Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
 TYPESENSE_HOST = "localhost"
 TYPESENSE_PORT = 8108

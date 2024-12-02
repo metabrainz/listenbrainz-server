@@ -178,6 +178,12 @@ EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_s
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
 EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
 
+INSTANT_SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "instant_spark_request_exchange"}}'''
+INSTANT_SPARK_REQUEST_QUEUE = '''{{template "KEY" "instant_spark_request_queue"}}'''
+INSTANT_SPARK_RESULT_EXCHANGE = '''{{template "KEY" "instant_spark_result_exchange"}}'''
+INSTANT_SPARK_RESULT_PERSISTENT_QUEUE = '''{{template "KEY" "instant_spark_result_persistent_queue"}}'''
+INSTANT_SPARK_RESULT_WEBSOCKETS_QUEUE = '''{{template "KEY" "instant_spark_result_websockets_queue"}}'''
+
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"

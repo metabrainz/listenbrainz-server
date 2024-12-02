@@ -147,6 +147,12 @@ COPY ./docker/services/spark_reader/spark_reader.service /etc/service/spark_read
 COPY ./docker/services/spark_reader/spark_reader.finish /etc/service/spark_reader/finish
 RUN touch /etc/service/spark_reader/down
 
+# Spark reader instant
+COPY ./docker/services/spark_reader_instant/consul-template-spark-reader-instant.conf /etc/consul-template-spark-reader-instant.conf
+COPY ./docker/services/spark_reader_instant/spark_reader_instant.service /etc/service/spark_reader_instant/run
+COPY ./docker/services/spark_reader_instant/spark_reader_instant.finish /etc/service/spark_reader_instant/finish
+RUN touch /etc/service/spark_reader_instant/down
+
 # Spotify reader
 COPY ./docker/services/spotify_reader/consul-template-spotify-reader.conf /etc/consul-template-spotify-reader.conf
 COPY ./docker/services/spotify_reader/spotify_reader.service /etc/service/spotify_reader/run

@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from typing import BinaryIO
 
@@ -18,6 +19,8 @@ _user = None
 _admin_key = None
 _host = None
 _port = None
+
+logger = logging.getLogger(__name__)
 
 
 def init(user, password, host, port):
@@ -130,6 +133,21 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
+def fetch_exact_data(database: str, document_id: str):
+    """ Retrieve data from couchdb for the exact given database and document id.
+
+    Args:
+         database: the database name to retrieve data from
+         document_id: the document_id to retrieve data for
+    """
+    base_url = get_base_url()
+    document_url = f"{base_url}/{database}/{document_id}"
+    response = requests.get(document_url)
+    if response.status_code == 404:
+        return None
+    return response.json()
+
+
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
     with start_span(op="serializing", description="serialize data to json"):
@@ -177,6 +195,18 @@ def insert_data(database: str, data: list[dict]):
     with start_span(op="http", description="retry updating conflicts in database"):
         response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
         response.raise_for_status()
+
+
+def try_insert_data(database: str, data: list[dict]):
+    """ Try to insert data in the database if it exists, otherwise create the database and try again. """
+    try:
+        insert_data(database, data)
+        return
+    except Exception as e:
+        logger.error("Failed to insert data:", exc_info=True)
+
+    create_database(database)
+    insert_data(database, data)
 
 
 def delete_data(database: str, doc_id: int | str):
