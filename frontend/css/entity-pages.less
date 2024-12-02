@@ -28,7 +28,11 @@
       display: flex;
       flex-direction: column;
       min-width: 200px;
-      max-height: 410px;
+      max-height: 29em;
+      overflow: hidden;
+      > *:first-child {
+        line-height: 1em;
+      }
       .wikipedia-extract {
         margin-top: 2em;
         overflow: hidden;

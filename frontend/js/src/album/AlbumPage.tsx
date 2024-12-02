@@ -282,7 +282,7 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
-          <div className="details h3">
+          <div className="details h4">
             <div>
               {artist.artists.map((ar) => {
                 return (
