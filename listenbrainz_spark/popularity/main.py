@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from more_itertools import chunked
 
 from listenbrainz_spark import config
+from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY, RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
+from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS, get_latest_listen_ts
 
 STATS_PER_MESSAGE = 10000
 
@@ -111,8 +114,10 @@ def main(mlhd):
     if mlhd:
         table = f"parquet.`{MLHD_PLUS_DATA_DIRECTORY}`"
     else:
+        from_ts = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+        to_ts = get_latest_listen_ts()
         table = "listens_popularity"
-        get_listens_from_dump().createOrReplaceTempView(table)
+        get_listens_from_dump(from_ts, to_ts).createOrReplaceTempView(table)
 
     rel_cache_table = "release_data_cache"
     read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView(rel_cache_table)
