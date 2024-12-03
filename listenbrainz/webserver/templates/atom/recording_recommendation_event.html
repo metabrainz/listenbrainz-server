@@ -1,0 +1,15 @@
+<p>
+    <a href="{{ user_page_url }}">{{ event.user_name }}</a> recommended
+    {% if event.metadata.track_metadata.additional_info.recording_mbid -%}
+        <a href="{{ recording_mb_page_base_url }}{{ event.metadata.track_metadata.additional_info.recording_mbid }}">{{ event.metadata.track_metadata.track_name }}</a>
+    {%- else -%}
+        {{ event.metadata.track_metadata.track_name }}
+    {%- endif %}
+    by
+    {% if event.metadata.track_metadata.additional_info.artist_mbids and event.metadata.track_metadata.artist_name -%}
+        <a href="{{ artist_page_base_url }}{{ event.metadata.track_metadata.artist_mbids[0] }}">{{ event.metadata.track_metadata.artist_name }}</a>
+    {%- else -%}
+        {{ event.metadata.track_metadata.artist_name }}
+    {%- endif %}
+    .
+</p>

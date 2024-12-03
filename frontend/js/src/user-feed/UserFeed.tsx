@@ -17,6 +17,7 @@ import {
   faEyeSlash,
   faComments,
   faPaperPlane,
+  faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -31,6 +32,7 @@ import {
   useInfiniteQuery,
   InfiniteData,
 } from "@tanstack/react-query";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ListenCard from "../common/listens/ListenCard";
 import {
@@ -40,11 +42,13 @@ import {
   getReviewEventContent,
   personalRecommendationEventToListen,
   getPersonalRecommendationEventContent,
+  getBaseUrl,
 } from "../utils/utils";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import ListenControl from "../common/listens/ListenControl";
 import { ToastMsg } from "../notifications/Notifications";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -562,6 +566,65 @@ export default function UserFeedPage() {
       </Helmet>
       <div className="listen-header">
         <h3 className="header-with-line">Latest activity</h3>
+        {/* Commented out as new OAuth is not merged yet. */}
+        {/* <button
+          type="button"
+          className="btn btn-icon btn-info atom-button"
+          data-toggle="modal"
+          data-target="#SyndicationFeedModal"
+          title="Subscribe to syndication feed (Atom)"
+          onClick={() => {
+            NiceModal.show(SyndicationFeedModal, {
+              feedTitle: `Latest activity`,
+              options: [
+                {
+                  label: "Time range",
+                  key: "minutes",
+                  type: "dropdown",
+                  tooltip:
+                    "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                  values: [
+                    {
+                      id: "10minutes",
+                      value: "10",
+                      displayValue: "10 minutes",
+                    },
+                    {
+                      id: "30minutes",
+                      value: "30",
+                      displayValue: "30 minutes",
+                    },
+                    {
+                      id: "1hour",
+                      value: "60",
+                      displayValue: "1 hour",
+                    },
+                    {
+                      id: "2hours",
+                      value: "120",
+                      displayValue: "2 hours",
+                    },
+                    {
+                      id: "4hours",
+                      value: "240",
+                      displayValue: "4 hours",
+                    },
+                    {
+                      id: "8hours",
+                      value: "480",
+                      displayValue: "8 hours",
+                    },
+                  ],
+                },
+              ],
+              baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                currentUser?.name
+              }/events`,
+            });
+          }}
+        >
+          <FontAwesomeIcon icon={faRss} size="sm" />
+        </button> */}
       </div>
       <div className="row">
         <div className="col-md-7 col-xs-12">
