@@ -27,24 +27,24 @@ import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerC
 import { RouteQuery } from "../../utils/Loader";
 
 export type LinkListensProps = {
-  missingData?: Array<UnlinkedListens>;
+  unlinkedListens?: Array<UnlinkedListens>;
   user: ListenBrainzUser;
 };
 
 type LinkListensLoaderData = {
-  missing_data?: Array<UnlinkedListens>;
+  unlinked_listens?: Array<UnlinkedListens>;
   last_updated?: string | null;
 };
 
 export interface LinkListensState {
-  missingData: Array<UnlinkedListens>;
-  groupedMissingData: Array<UnlinkedListens[]>;
+  unlinkedListens: Array<UnlinkedListens>;
+  groupedUnlinkedListens: Array<UnlinkedListens[]>;
   deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage: number;
   loading: boolean;
 }
 
-export function missingDataToListen(
+export function unlinkedListenDataToListen(
   data: UnlinkedListens,
   user: ListenBrainzUser
 ): Listen {
@@ -73,43 +73,48 @@ export default function LinkListensPage() {
   const { data: loaderData, isLoading } = useQuery<LinkListensLoaderData>(
     RouteQuery(["link-listens"], location.pathname)
   );
-  const { missing_data: missingDataProps = [], last_updated: lastUpdated } =
-    loaderData || {};
+  const {
+    unlinked_listens: unlinkedListensProps = [],
+    last_updated: lastUpdated,
+  } = loaderData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
 
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
-  const [missingData, setMissingData] = React.useState<Array<UnlinkedListens>>(
-    missingDataProps
+  const [unlinkedListens, setUnlinkedListens] = React.useState<
+    Array<UnlinkedListens>
+  >(unlinkedListensProps);
+  const unsortedGroupedUnlinkedListens = groupBy(
+    unlinkedListens,
+    "release_name"
   );
-  const unsortedGroupedMissingData = groupBy(missingData, "release_name");
   // remove and store a catchall group with no release name
-  const noReleaseNameGroup = pick(unsortedGroupedMissingData, "null");
+  const noReleaseNameGroup = pick(unsortedGroupedUnlinkedListens, "null");
   if (size(noReleaseNameGroup) > 0) {
     // remove catchall group from other groups,
     // we want to add it at the very end
-    delete unsortedGroupedMissingData.null;
+    delete unsortedGroupedUnlinkedListens.null;
   }
-  const sortedMissingDataGroups = sortBy(
-    unsortedGroupedMissingData,
+  const sortedUnlinkedListensGroups = sortBy(
+    unsortedGroupedUnlinkedListens,
     "length"
   ).reverse();
   if (noReleaseNameGroup.null?.length) {
     // re-add the group with no release name at the end,
     // will be displayed as single listens rather than a group
-    sortedMissingDataGroups.push(noReleaseNameGroup.null);
+    sortedUnlinkedListensGroups.push(noReleaseNameGroup.null);
   }
 
   // Pagination
   const currPage = isNull(pageSearchParam) ? 1 : parseInt(pageSearchParam, 10);
-  const totalPages = unsortedGroupedMissingData
-    ? Math.ceil(size(unsortedGroupedMissingData) / EXPECTED_ITEMS_PER_PAGE)
+  const totalPages = unsortedGroupedUnlinkedListens
+    ? Math.ceil(size(unsortedGroupedUnlinkedListens) / EXPECTED_ITEMS_PER_PAGE)
     : 0;
 
   const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
-  const itemsOnThisPage = sortedMissingDataGroups.slice(
+  const itemsOnThisPage = sortedUnlinkedListensGroups.slice(
     offset,
     offset + EXPECTED_ITEMS_PER_PAGE
   );
@@ -143,7 +148,7 @@ export default function LinkListensPage() {
           dispatch({
             type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
             data: {
-              track: missingDataToListen(data, user),
+              track: unlinkedListenDataToListen(data, user),
               index: -1,
             },
           });
@@ -178,12 +183,12 @@ export default function LinkListensPage() {
 
   // BrainzPlayer
   React.useEffect(() => {
-    const missingMBDataAsListen = itemsOnThisPage.flatMap((x) => [
-      ...x.map((y) => missingDataToListen(y, user)),
+    const unlinkedDataAsListen = itemsOnThisPage.flatMap((x) => [
+      ...x.map((y) => unlinkedListenDataToListen(y, user)),
     ]);
     dispatch({
       type: "SET_AMBIENT_QUEUE",
-      data: missingMBDataAsListen,
+      data: unlinkedDataAsListen,
     });
   }, [dispatch, itemsOnThisPage, user]);
 
@@ -236,7 +241,7 @@ export default function LinkListensPage() {
                   NiceModal.show<MatchingTracksResults, any>(
                     MultiTrackMBIDMappingModal,
                     {
-                      missingData: group,
+                      unlinkedListens: group,
                       releaseName,
                     }
                   ).then((matchedTracks) => {
@@ -253,7 +258,7 @@ export default function LinkListensPage() {
                           dispatch({
                             type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
                             data: {
-                              track: missingDataToListen(
+                              track: unlinkedListenDataToListen(
                                 itemBeforeMatching,
                                 user
                               ),
@@ -264,7 +269,7 @@ export default function LinkListensPage() {
                       }
                     );
                     // Remove successfully matched items from the page
-                    setMissingData((prevValue) =>
+                    setUnlinkedListens((prevValue) =>
                       prevValue.filter(
                         (md) => !matchedTracks[md.recording_msid]
                       )
@@ -287,7 +292,7 @@ export default function LinkListensPage() {
                 return undefined;
               }
               let additionalActions;
-              const listen = missingDataToListen(groupItem, user);
+              const listen = unlinkedListenDataToListen(groupItem, user);
               const additionalMenuItems = [];
               if (user?.auth_token) {
                 const recordingMSID = getRecordingMSID(listen);
@@ -326,7 +331,7 @@ export default function LinkListensPage() {
                             },
                           });
                           // Remove successfully matched item from the page
-                          setMissingData((prevValue) =>
+                          setUnlinkedListens((prevValue) =>
                             prevValue.filter(
                               (md) =>
                                 md.recording_msid !==

@@ -20,7 +20,7 @@ const user = userEvent.setup();
 const routes = getSettingsRoutes();
 
 const pageData = {
-  missing_data: missingDataProps.missingData,
+  unlinked_listens: missingDataProps.missingData,
 };
 // React-Query setup
 const queryClient = new QueryClient({

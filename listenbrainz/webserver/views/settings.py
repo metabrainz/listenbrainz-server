@@ -327,9 +327,9 @@ def music_services_set_token(service_name: str):
 @api_login_required
 def link_listens():
     """ Returns a list of unlinked listens for the user """
-    missing_data, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
+    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
     data = {
-        "missing_data": missing_data or [],
+        "unlinked_listens": unlinked_listens or [],
         "last_updated": created,
     }
     return jsonify(data)
