@@ -68,6 +68,7 @@ import {
   useBrainzPlayerDispatch,
 } from "../brainzplayer/BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { useMediaQuery } from "../../explore/fresh-releases/utils";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -91,6 +92,7 @@ export type ListenCardProps = {
   additionalMenuItems?: JSX.Element[];
   // This optional JSX element is for a custom icon
   additionalActions?: JSX.Element;
+  isMobile?: boolean;
 };
 
 export type ListenCardState = {
@@ -259,6 +261,7 @@ export class ListenCard extends React.Component<
       listen: listenFromProps,
       dispatch: dispatchProp,
       thumbnailSrc,
+      isMobile,
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying } = this.state;
@@ -537,8 +540,9 @@ export class ListenCard extends React.Component<
             )}
             <div className="listen-controls">
               {isLoggedIn &&
+                !isMobile &&
                 (feedbackComponent ?? (
-                  <ListenFeedbackComponent listen={listen} />
+                  <ListenFeedbackComponent listen={listen} type="button" />
                 ))}
               {hideActionsMenu ? null : (
                 <>
@@ -557,6 +561,12 @@ export class ListenCard extends React.Component<
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
                   >
+                    {isMobile && (
+                      <ListenFeedbackComponent
+                        listen={listen}
+                        type="dropdown"
+                      />
+                    )}
                     {recordingMBID && (
                       <ListenControl
                         icon={faExternalLinkAlt}
@@ -782,7 +792,14 @@ export default function ListenCardWrapper(props: ListenCardProps) {
     gcTime: 1000 * 60 * 60 * 12,
   });
 
+  const isMobile = useMediaQuery("(max-width: 480px)");
+
   return (
-    <ListenCard {...props} dispatch={dispatch} thumbnailSrc={thumbnailSrc} />
+    <ListenCard
+      {...props}
+      dispatch={dispatch}
+      thumbnailSrc={thumbnailSrc}
+      isMobile={isMobile}
+    />
   );
 }
