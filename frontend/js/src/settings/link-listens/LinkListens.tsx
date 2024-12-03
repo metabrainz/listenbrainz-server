@@ -27,25 +27,25 @@ import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerC
 import { RouteQuery } from "../../utils/Loader";
 
 export type LinkListensProps = {
-  missingData?: Array<MissingMBData>;
+  missingData?: Array<UnlinkedListens>;
   user: ListenBrainzUser;
 };
 
 type LinkListensLoaderData = {
-  missing_data?: Array<MissingMBData>;
+  missing_data?: Array<UnlinkedListens>;
   last_updated?: string | null;
 };
 
 export interface LinkListensState {
-  missingData: Array<MissingMBData>;
-  groupedMissingData: Array<MissingMBData[]>;
+  missingData: Array<UnlinkedListens>;
+  groupedMissingData: Array<UnlinkedListens[]>;
   deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage: number;
   loading: boolean;
 }
 
 export function missingDataToListen(
-  data: MissingMBData,
+  data: UnlinkedListens,
   user: ListenBrainzUser
 ): Listen {
   return {
@@ -81,7 +81,7 @@ export default function LinkListensPage() {
 
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
-  const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
+  const [missingData, setMissingData] = React.useState<Array<UnlinkedListens>>(
     missingDataProps
   );
   const unsortedGroupedMissingData = groupBy(missingData, "release_name");
@@ -116,7 +116,7 @@ export default function LinkListensPage() {
 
   // Functions
 
-  const deleteListen = async (data: MissingMBData) => {
+  const deleteListen = async (data: UnlinkedListens) => {
     if (user?.auth_token) {
       const listenedAt = new Date(data.listened_at).getTime() / 1000;
       try {
@@ -214,7 +214,7 @@ export default function LinkListensPage() {
       )}
       <br />
       <div>
-        <div id="missingMBData">
+        <div id="link-listens">
           <div
             style={{
               height: 0,
