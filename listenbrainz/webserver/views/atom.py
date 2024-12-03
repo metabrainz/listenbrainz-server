@@ -44,6 +44,7 @@ MAX_NUMBER_OF_FRESH_RELEASE_DAYS = 30
 RECOMMENDATION_TYPES = (
     "weekly-jams",
     "weekly-exploration",
+    "daily-jams",
 )
 STATS_RANGE_DESCRIPTIONS = {
     StatisticsRange.this_week.value: "This Week's",
