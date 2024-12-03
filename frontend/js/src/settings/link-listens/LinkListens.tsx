@@ -199,20 +199,18 @@ export default function LinkListensPage() {
       </Helmet>
       <h2 className="page-title">Link listens to MusicBrainz - {user?.name}</h2>
       <p>
-        We try our best to automatically match listens to a recording in
-        MusicBrainz, to offer the best experience. Sometimes the auto-match is
-        incorrect, or the data does not exist in MusicBrainz. You will find
-        below your top 1000 listens that haven&apos;t been automatically linked,
-        grouped by album. Link them below, or&nbsp;
+        You will find below your top 1000 listens (grouped by album) that have
+        not been automatically linked to a MusicBrainz recording. Link them
+        below or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
         </a>
         .
       </p>
-      <p>
+      <p className="small">
         <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
-        music encyclopedia that ListenBrainz uses to display information about
-        your music.
+        music encyclopedia that ListenBrainz uses to display more information
+        about your music.
       </p>
       {!isNil(lastUpdated) && (
         <p>Last updated {new Date(lastUpdated).toLocaleDateString()}</p>
