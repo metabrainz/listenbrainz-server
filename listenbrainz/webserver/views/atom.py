@@ -797,9 +797,11 @@ def get_recommendation(user_name):
     this_feed_url = f"{_external_url_for('.get_recommendation', user_name=user_name)}/{recommendation_type}"
     playlist_page_url = _external_url_for("playlist.playlist_page", path=playlist.mbid)
 
+    recommendation_type_titlecase = recommendation_type.title().replace("-"," ")
+
     fg = _init_feed(
         this_feed_url,
-        f"{'Weekly Jams' if recommendation_type == 'weekly-jams' else 'Weekly Exploration'} for {user_name} - ListenBrainz",
+        f"{recommendation_type_titlecase} for {user_name} - ListenBrainz",
         this_feed_url,
         playlist_page_url,
     )
