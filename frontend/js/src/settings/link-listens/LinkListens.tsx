@@ -195,9 +195,9 @@ export default function LinkListensPage() {
   return (
     <>
       <Helmet>
-        <title>Link listens to MusicBrainz - {user?.name}</title>
+        <title>Link with MusicBrainz</title>
       </Helmet>
-      <h2 className="page-title">Link listens to MusicBrainz - {user?.name}</h2>
+      <h2 className="page-title">Link with MusicBrainz</h2>
       <p>
         You will find below your top 1000 listens (grouped by album) that have
         not been automatically linked to a MusicBrainz recording. Link them
