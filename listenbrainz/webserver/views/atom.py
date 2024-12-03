@@ -18,7 +18,7 @@ from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_re
 from data.model.common_stat import StatisticsRange
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 from listenbrainz.webserver.views.stats_api import _is_valid_range
-from listenbrainz.webserver.views.art_api import cover_art_custom_stats
+from listenbrainz.webserver.views.art_api import cover_art_custom_stats, cover_art_grid_stats
 import listenbrainz.db.stats as db_stats
 from data.model.user_entity import EntityRecord
 from listenbrainz.webserver.views.api_tools import (
@@ -921,11 +921,16 @@ def get_cover_art_grid_stats(user_name):
     fe.title(_get_stats_entry_title(range, to_ts - 60) + " (Stats Art Grid)")
     fe.link(href=data_url, rel="alternate")
 
-    content = render_template(
-        "atom/stat_art.html",
-        data_url=data_url,
+    cover_art_api_response = cover_art_grid_stats(
+        user_name=user_name,
+        time_range=range,
+        dimension=dimension,
+        layout=layout,
+        image_size=image_size,
     )
-    fe.content(content=content, type="html")
+    rendered_svg =  cover_art_api_response.get_data()
+
+    fe.content(content=rendered_svg, type="image/svg+xml")
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
