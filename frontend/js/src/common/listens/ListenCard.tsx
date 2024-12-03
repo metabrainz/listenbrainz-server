@@ -92,7 +92,6 @@ export type ListenCardProps = {
   additionalMenuItems?: JSX.Element[];
   // This optional JSX element is for a custom icon
   additionalActions?: JSX.Element;
-  isMobile?: boolean;
 };
 
 export type ListenCardState = {
@@ -103,6 +102,7 @@ export type ListenCardState = {
 type ListenCardPropsWithDispatch = ListenCardProps & {
   thumbnailSrc?: string;
   dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
+  isMobile: boolean;
 };
 
 export class ListenCard extends React.Component<
