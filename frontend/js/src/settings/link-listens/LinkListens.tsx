@@ -26,17 +26,17 @@ import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { RouteQuery } from "../../utils/Loader";
 
-export type MissingMBDataProps = {
+export type LinkListensProps = {
   missingData?: Array<MissingMBData>;
   user: ListenBrainzUser;
 };
 
-type MissingMBDataLoaderData = {
+type LinkListensLoaderData = {
   missing_data?: Array<MissingMBData>;
   last_updated?: string | null;
 };
 
-export interface MissingMBDataState {
+export interface LinkListensState {
   missingData: Array<MissingMBData>;
   groupedMissingData: Array<MissingMBData[]>;
   deletedListens: Array<string>; // array of recording_msid of deleted items
@@ -64,14 +64,14 @@ export function missingDataToListen(
 
 const EXPECTED_ITEMS_PER_PAGE = 25;
 
-export default function MissingMBDataPage() {
+export default function LinkListensPage() {
   // Context
   const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
   const dispatch = useBrainzPlayerDispatch();
   const location = useLocation();
   // Loader
-  const { data: loaderData, isLoading } = useQuery<MissingMBDataLoaderData>(
-    RouteQuery(["missing-data"], location.pathname)
+  const { data: loaderData, isLoading } = useQuery<LinkListensLoaderData>(
+    RouteQuery(["link-listens"], location.pathname)
   );
   const { missing_data: missingDataProps = [], last_updated: lastUpdated } =
     loaderData || {};
@@ -190,12 +190,15 @@ export default function MissingMBDataPage() {
   return (
     <>
       <Helmet>
-        <title>Missing MusicBrainz Data of {user?.name}</title>
+        <title>Link listens to MusicBrainz - {user?.name}</title>
       </Helmet>
-      <h2 className="page-title">Missing MusicBrainz Data of {user?.name}</h2>
+      <h2 className="page-title">Link listens to MusicBrainz - {user?.name}</h2>
       <p>
-        Your top 1000 listens that haven&apos;t been automatically linked. Link
-        the listens below, or&nbsp;
+        We try our best to automatically match listens to a recording in
+        MusicBrainz, to offer the best experience. Sometimes the auto-match is
+        incorrect, or the data does not exist in MusicBrainz. You will find
+        below your top 1000 listens that haven&apos;t been automatically linked,
+        grouped by album. Link them below, or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
         </a>

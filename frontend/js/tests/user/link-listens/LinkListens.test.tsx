@@ -30,13 +30,13 @@ const queryClient = new QueryClient({
     },
   },
 });
-const queryKey = ["missing-data"];
+const queryKey = ["link-listens"];
 
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe("MissingMBDataPage", () => {
+describe("LinkListensPage", () => {
   let server: SetupServerApi;
   let router: Router;
   beforeAll(async () => {
@@ -44,7 +44,7 @@ describe("MissingMBDataPage", () => {
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
     // Mock the server responses
     const handlers = [
-      http.post("/settings/missing-data/", ({ request }) => {
+      http.post("/settings/link-listens/", ({ request }) => {
         return HttpResponse.json(pageData);
       }),
     ];
@@ -53,7 +53,7 @@ describe("MissingMBDataPage", () => {
     // Create the router *after* MSW mock server is set up
     // See https://github.com/mswjs/msw/issues/1653#issuecomment-1781867559
     router = createMemoryRouter(routes, {
-      initialEntries: ["/settings/missing-data/"],
+      initialEntries: ["/settings/link-listens/"],
     });
   });
   beforeEach(async () => {
