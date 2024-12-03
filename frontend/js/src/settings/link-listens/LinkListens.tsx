@@ -2,7 +2,11 @@
 
 import * as React from "react";
 
-import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faLink,
+  faQuestionCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
@@ -12,6 +16,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { groupBy, isNil, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
+import ReactTooltip from "react-tooltip";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
@@ -198,10 +203,26 @@ export default function LinkListensPage() {
         <title>Link with MusicBrainz</title>
       </Helmet>
       <h2 className="page-title">Link with MusicBrainz</h2>
+      <ReactTooltip id="matching-tooltip" multiline>
+        We try our best to match every listen with a MusicBrainz recording in
+        order to enrich the information about the track, album and artist.
+        <br />
+        Sometimes the auto-matching fails to recognize tracks, but you can
+        manually link them below.
+        <br />
+        Other times, this data does not exist in MusicBrainz and needs to be
+        added.
+      </ReactTooltip>
       <p>
         You will find below your top 1000 listens (grouped by album) that have
-        not been automatically linked to a MusicBrainz recording. Link them
-        below or&nbsp;
+        not been automatically linked
+        <FontAwesomeIcon
+          icon={faQuestionCircle}
+          size="sm"
+          data-tip
+          data-for="matching-tooltip"
+        />{" "}
+        to a MusicBrainz recording. Link them below or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
         </a>
