@@ -67,6 +67,9 @@ export default function RecommendationPlaylistSettings({
     );
   }, [firstListen]);
 
+  const sourcePatch =
+    extension?.additional_metadata?.algorithm_metadata?.source_patch;
+
   return (
     <div className="playlist-settings card">
       <div className="playlist-settings-header">
@@ -137,27 +140,29 @@ export default function RecommendationPlaylistSettings({
             </button>
             <PlaylistMenu playlist={playlist} />
           </span>
-          <button
-            type="button"
-            className="btn btn-icon btn-info"
-            data-toggle="modal"
-            data-target="#SyndicationFeedModal"
-            title="Subscribe to syndication feed (Atom)"
-            onClick={() => {
-              const sourcePatch =
-                extension?.additional_metadata?.algorithm_metadata.source_patch;
-
-              NiceModal.show(SyndicationFeedModal, {
-                feedTitle: `Recommendations`,
-                options: [],
-                baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                  userName ?? extension?.created_for
-                }/recommendations?recommendation_type=${sourcePatch}`,
-              });
-            }}
-          >
-            <FontAwesomeIcon icon={faRss} fixedWidth />
-          </button>
+          {sourcePatch &&
+            ["weekly-jams", "weekly-exploration", "daily-jams"].includes(
+              sourcePatch
+            ) && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info"
+                data-toggle="modal"
+                data-target="#SyndicationFeedModal"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  NiceModal.show(SyndicationFeedModal, {
+                    feedTitle: `Recommendations`,
+                    options: [],
+                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                      userName ?? extension?.created_for
+                    }/recommendations?recommendation_type=${sourcePatch}`,
+                  });
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} fixedWidth />
+              </button>
+            )}
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
