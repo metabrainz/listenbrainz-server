@@ -228,6 +228,9 @@ def sync_release_color_table():
 
     compare_coverart(mb_query, lb_query, 0, 0, "caa_id", "caa_id")
 
+    # set the cache key so that the incremental update starts at the right place
+    cache.set(LAST_UPDATED_CACHE_KEY, datetime.datetime.now(), expirein=0, encode=True)
+
 
 def incremental_update_release_color_table():
     """ Incrementally update the cover art mapping. This is designed to run hourly
