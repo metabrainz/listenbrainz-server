@@ -202,6 +202,9 @@ def sync_release_color_table():
         by fetching all rows sorted by caa_id and adding or removing
         cover art as needed. """
 
+    cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT,
+               namespace=config.REDIS_NAMESPACE)
+
     log("cover art sync starting...")
     mb_query = """SELECT caa.id AS caa_id
                        , release AS release_id
