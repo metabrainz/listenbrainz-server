@@ -59,8 +59,8 @@ option to `register`_ your application. Fill out the form with the following dat
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
 
-.. _MusicBrainz applications page: https://musicbrainz.org/account/applications
-.. _register: https://musicbrainz.org/account/applications/register
+.. _MusicBrainz applications page: https://musicbrainz.org/new-oauth2/client/list
+.. _register: https://musicbrainz.org/new-oauth2/client/create
 
 
 Update config.py
@@ -80,15 +80,15 @@ text editor and look for this section.
 .. code-block:: yaml
 
     # MusicBrainz OAuth
-    MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
-    MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+    OAUTH_CLIENT_ID = "CLIENT_ID"
+    OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
 
 Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
 .. note:: 
-    Make sure the ``MUSICBRAINZ_CLIENT_ID`` and ``MUSICBRAINZ_CLIENT_SECRET`` parameters are set properly, 
+    Make sure the ``OAUTH_CLIENT_ID`` and ``OAUTH_CLIENT_SECRET`` parameters are set properly,
     failing to do so will result in a basic browser auth popup like the one below:
 .. image:: ../images/auth-popup.png
     :width: 200
