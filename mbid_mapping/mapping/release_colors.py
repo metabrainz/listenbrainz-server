@@ -202,6 +202,9 @@ def sync_release_color_table():
         by fetching all rows sorted by caa_id and adding or removing
         cover art as needed. """
 
+    cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT,
+               namespace=config.REDIS_NAMESPACE)
+
     log("cover art sync starting...")
     mb_query = """SELECT caa.id AS caa_id
                        , release AS release_id
@@ -224,6 +227,9 @@ def sync_release_color_table():
                     LIMIT %s"""
 
     compare_coverart(mb_query, lb_query, 0, 0, "caa_id", "caa_id")
+
+    # set the cache key so that the incremental update starts at the right place
+    cache.set(LAST_UPDATED_CACHE_KEY, datetime.datetime.now(), expirein=0, encode=True)
 
 
 def incremental_update_release_color_table():
