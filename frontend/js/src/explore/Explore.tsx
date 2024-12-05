@@ -59,6 +59,14 @@ export default function ExplorePage() {
         </div>
         <div>
           <ExploreCard
+            name="Link listens"
+            desc="Fix your unlinked listens"
+            img_name="link-listens.jpg"
+            url="/settings/link-listens/"
+          />
+        </div>
+        <div>
+          <ExploreCard
             name="Hue Sound"
             desc="Discover"
             img_name="huesound.jpg"
