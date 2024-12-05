@@ -32,6 +32,17 @@
   > span {
     display: inline-block;
   }
+  
+  /*
+    Disable animations entirely if the prefers-reduced-motion
+    accessibility feature is active
+  */
+  @media (prefers-reduced-motion) {
+    &, &::after, &::before, & > span {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
 
   /* 
     Glitchy shaking animation
