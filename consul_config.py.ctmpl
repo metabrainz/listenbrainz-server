@@ -178,10 +178,12 @@ EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_s
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
 EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
 
-MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
-MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
-MUSICBRAINZ_OAUTH_URL = f"{MUSICBRAINZ_BASE_URL}/oauth2/userinfo"
+OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
+OAUTH_CLIENT_SECRET = '''{{template "KEY" "oauth/client_secret"}}'''
+OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
+OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''

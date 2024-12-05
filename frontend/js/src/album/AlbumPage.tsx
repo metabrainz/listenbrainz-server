@@ -260,6 +260,14 @@ export default function AlbumPage(): JSX.Element {
       </div>
     );
   }
+  const artistsRadioPrompt: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})`;
+  const artistsRadioPromptNoSim: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})::nosim`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})::nosim`;
 
   return (
     <div
@@ -315,11 +323,10 @@ export default function AlbumPage(): JSX.Element {
             <Link
               type="button"
               className="btn btn-info"
-              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artistName
-              )})&mode=easy`}
+              to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
             >
-              <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
+              <FontAwesomeIcon icon={faPlayCircle} /> Artist
+              {artist.artists?.length > 1 && "s"} Radio
             </Link>
             <button
               type="button"
@@ -334,20 +341,17 @@ export default function AlbumPage(): JSX.Element {
             <ul className="dropdown-menu">
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})::nosim&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
                 >
-                  This artist
+                  Artist{artist.artists?.length > 1 && "s"} radio
                 </Link>
               </li>
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
                 >
-                  Similar artists
+                  {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
+                  only
                 </Link>
               </li>
               {Boolean(filteredTags?.length) && (

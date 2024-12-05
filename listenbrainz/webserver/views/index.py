@@ -17,6 +17,7 @@ import listenbrainz.db.user as db_user
 from data.model.user_entity import EntityRecord
 from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
 from listenbrainz.webserver.errors import APINotFound
@@ -242,17 +243,10 @@ def mb_user_deleter(musicbrainz_row_id):
 
 
 def _authorize_mb_user_deleter(auth_token):
-    headers = {'Authorization': 'Bearer {}'.format(auth_token)}
-    r = requests.get(current_app.config['MUSICBRAINZ_OAUTH_URL'], headers=headers)
     try:
-        r.raise_for_status()
+        service = MusicBrainzService()
+        data = service.get_user_info(auth_token)
     except HTTPError:
-        raise Unauthorized('Not authorized to use this view')
-
-    data = {}
-    try:
-        data = r.json()
-    except ValueError:
         raise Unauthorized('Not authorized to use this view')
 
     try:

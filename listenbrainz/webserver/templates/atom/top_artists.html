@@ -1,5 +1,5 @@
 <p>
-    {% for artist in artists %}
+    {% for artist in (artists or []) %}
         <li>
             {% if artist.artist_mbid %}
                 <a href="{{ artist_page_base_url }}{{ artist.artist_mbid }}">{{ artist.artist_name }}</a>
