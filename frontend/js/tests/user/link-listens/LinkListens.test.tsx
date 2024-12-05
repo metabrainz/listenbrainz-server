@@ -80,7 +80,7 @@ describe("LinkListensPage", () => {
       false
     );
     await screen.findByText(
-      textContentMatcher("Missing MusicBrainz Data of riksucks")
+      textContentMatcher("Link with MusicBrainz")
     );
     const albumGroups = await screen.findAllByRole("heading", { level: 3 });
     // 25 groups per page
