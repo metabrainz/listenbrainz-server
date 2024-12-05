@@ -10,6 +10,7 @@ import Loader from "../../../components/Loader";
 import { getChartEntityDetails, userChartEntityToListen } from "../utils";
 import ListenCard from "../../../common/listens/ListenCard";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { getListenCardKey } from "../../../utils/utils";
 
 export type UserTopEntityProps = {
   range?: UserStatsAPIRange;
@@ -101,11 +102,12 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                   count: artist.listen_count,
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
+                const listen = userChartEntityToListen(interchangeFormat);
                 return (
                   <ListenCard
-                    key={artist.artist_mbid}
+                    key={`top-artist-${getListenCardKey(listen)}`}
                     listenDetails={listenDetails}
-                    listen={userChartEntityToListen(interchangeFormat)}
+                    listen={listen}
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
@@ -145,11 +147,12 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                   artists: release.artists,
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
+                const listen = userChartEntityToListen(interchangeFormat);
                 return (
                   <ListenCard
-                    key={release.release_mbid}
+                    key={`top-release-${getListenCardKey(listen)}`}
                     listenDetails={listenDetails}
-                    listen={userChartEntityToListen(interchangeFormat)}
+                    listen={listen}
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
@@ -201,7 +204,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 return (
                   <ListenCard
-                    key={recording_mbid}
+                    key={`top-recording-${getListenCardKey(
+                      listenFromRecording
+                    )}`}
                     listen={listenFromRecording}
                     showTimestamp={false}
                     showUsername={false}
@@ -234,11 +239,12 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                   artists: releaseGroup.artists,
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
+                const listen = userChartEntityToListen(interchangeFormat);
                 return (
                   <ListenCard
-                    key={releaseGroup.release_group_mbid}
+                    key={`top-release-group-${getListenCardKey(listen)}`}
                     listenDetails={listenDetails}
-                    listen={userChartEntityToListen(interchangeFormat)}
+                    listen={listen}
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
