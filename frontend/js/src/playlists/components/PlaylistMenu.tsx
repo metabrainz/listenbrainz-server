@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { faSpotify, faSoundcloud } from "@fortawesome/free-brands-svg-icons";
 import {
   faCopy,
   faFileExport,
@@ -36,7 +36,9 @@ function PlaylistMenu({
   onPlaylistCopied,
   disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
-  const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
+  const { APIService, currentUser, spotifyAuth, soundcloudAuth } = useContext(
+    GlobalAppContext
+  );
   const { auth_token } = currentUser;
   const playlistID = getPlaylistId(playlist);
   const playlistTitle = playlist.title;
@@ -159,6 +161,39 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
+  const exportToSoundcloud = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    let result;
+    if (playlistID) {
+      result = await APIService.exportPlaylistToSoundCloud(
+        auth_token,
+        playlistID
+      );
+    } else {
+      result = await APIService.exportJSPFPlaylistToSoundCloud(
+        auth_token,
+        playlist
+      );
+    }
+    const { external_url } = result;
+    toast.success(
+      <ToastMsg
+        title="Playlist exported to Soundcloud"
+        message={
+          <>
+            Successfully exported playlist:{" "}
+            <a href={external_url} target="_blank" rel="noopener noreferrer">
+              {playlistTitle}
+            </a>
+          </>
+        }
+      />,
+      { toastId: "export-playlist" }
+    );
+  };
   const handlePlaylistExport = async (handler: () => Promise<void>) => {
     if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
@@ -179,6 +214,7 @@ function PlaylistMenu({
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
   );
+  const showSoundCloudExportButton = soundcloudAuth;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"
@@ -233,21 +269,48 @@ function PlaylistMenu({
           </li>
         </>
       )}
+      <li role="separator" className="divider" />
       {showSpotifyExportButton && (
+        <li>
+          <a
+            id="exportPlaylistToSpotify"
+            role="button"
+            href="#"
+            onClick={() => handlePlaylistExport(exportToSpotify)}
+          >
+            <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
+          </a>
+        </li>
+      )}
+      {showSoundCloudExportButton && (
+        <li>
+          <a
+            id="exportPlaylistToSoundCloud"
+            role="button"
+            href="#"
+            onClick={() => handlePlaylistExport(exportToSoundcloud)}
+          >
+            <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
+            SoundCloud
+          </a>
+        </li>
+      )}
+      {/* {showSoundCloudExportButton && (
         <>
           <li role="separator" className="divider" />
           <li>
             <a
-              id="exportPlaylistToSpotify"
+              id="exportPlaylistToSoundCloud"
               role="button"
               href="#"
-              onClick={() => handlePlaylistExport(exportToSpotify)}
+              onClick={() => handlePlaylistExport(exportToSoundcloud)}
             >
-              <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
+              <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
+              SoundCloud
             </a>
           </li>
         </>
-      )}
+      )} */}
       <li role="separator" className="divider" />
       <li>
         <a
