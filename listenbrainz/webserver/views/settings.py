@@ -323,13 +323,13 @@ def music_services_set_token(service_name: str):
     return jsonify({"success": True})
 
 
-@settings_bp.route('/missing-data/', methods=['POST'])
+@settings_bp.route('/link-listens/', methods=['POST'])
 @api_login_required
-def missing_mb_data():
-    """ Returns a list of missing data for the user """
-    missing_data, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
+def link_listens():
+    """ Returns a list of unlinked listens for the user """
+    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
     data = {
-        "missing_data": missing_data or [],
+        "unlinked_listens": unlinked_listens or [],
         "last_updated": created,
     }
     return jsonify(data)

@@ -32,7 +32,7 @@ export type MatchingTracksResults = {
 
 export type MultiTrackMBIDMappingModalProps = {
   releaseName: string | null;
-  missingData: Array<MissingMBData>;
+  missingData: Array<UnlinkedListens>;
 };
 
 // https://lucene.apache.org/core/7_7_2/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Escaping_Special_Characters
