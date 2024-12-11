@@ -107,6 +107,7 @@ def fetch_lfm_feedback(lfm_user: str):
 
 
 def bulk_get_msids(connection, items):
+    """ Fetch msids for all the specified items (recording, artist_credit) in batches. """
     query = """
         SELECT DISTINCT ON (key)
                lower(s.recording)  || '-' || lower(s.artist_credit) AS key
