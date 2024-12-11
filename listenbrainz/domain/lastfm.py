@@ -36,7 +36,7 @@ def bulk_insert_loved_tracks(user_id: int, feedback: list[tuple[int, str]], colu
     with db_conn.connection.cursor() as cursor:
         execute_values(cursor, delete_query, [(mbid,) for ts, mbid in feedback], template=f"({user_id}, %s)")
         execute_values(cursor, insert_query, feedback, template=f"({user_id}, to_timestamp(%s), %s, 1)")
-        db_conn.commit()
+        db_conn.connection.commit()
 
 
 def load_recordings_from_tracks(track_mbids: list) -> dict[str, str]:
@@ -163,8 +163,9 @@ def import_feedback(user_id: int, lfm_user: str):
 
     bulk_insert_loved_tracks(user_id, mbid_feedback, "recording_mbid")
     bulk_insert_loved_tracks(user_id, msid_feedback, "recording_msid")
+
     return {
-        "total_count": total_count,
+        "total": total_count,
         "imported": len(mbid_feedback) + len(msid_feedback),
     }
 
