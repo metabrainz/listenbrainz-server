@@ -1004,7 +1004,6 @@ def _get_sitewide_stats(entity: str):
         raise APINoContent("")
 
     count = min(count, MAX_ITEMS_PER_GET)
-    count = count + offset
     total_entity_count = stats["count"]
 
     return jsonify({
