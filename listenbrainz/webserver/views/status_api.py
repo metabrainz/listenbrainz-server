@@ -11,7 +11,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.db.playlist import get_recommendation_playlists_for_user
+from listenbrainz.db.playlist import get_recommendation_playlists_for_user, RECOMMENDATION_PATCHES
 import listenbrainz.db.dump as db_dump
 from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 
@@ -107,8 +107,12 @@ def get_playlists_timestamp():
         playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, 1)
         if playlists is None or not playlists:
             return None
-
-        last_updated = int(playlists[0].last_updated.timestamp())
+        last_updated = {}
+        for playlist in playlists:
+            source_patch = playlist.get("additional_metadata", {}).get(
+                "algorithm_metadata", {}).get("source_patch")
+            last_updated_ts = int(playlist.last_updated.timestamp())
+            last_updated[source_patch] = last_updated_ts
         cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
 
     return last_updated
@@ -184,11 +188,18 @@ def get_service_status():
     else:
         stats_age = current_ts - stats
 
-    playlists = get_playlists_timestamp()
-    if playlists is None:
-        playlists_age = None
+    playlists_ts = get_playlists_timestamp()
+    playlists_age = {}
+    if playlists_ts is None or not len(playlists_ts):
+        for patch_name in RECOMMENDATION_PATCHES:
+            playlists_age[patch_name] = None
     else:
-        playlists_age = current_ts - playlists
+        for patch_name in RECOMMENDATION_PATCHES:
+            if patch_name in playlists_ts:
+                age = current_ts - playlists_ts[patch_name]
+                playlists_age[patch_name] = age
+            else:
+                playlists_age[patch_name] = None
 
     return {
         "time": current_ts,
