@@ -101,7 +101,7 @@ def get_stats_timestamp():
 def get_playlists_timestamp():
     """ Check to see when recommendations playlists were last generated for a "random" user. Returns unix epoch timestamp"""
 
-    cache_key = STATUS_PREFIX + ".playlist-timestamp"
+    cache_key = STATUS_PREFIX + ".playlist-timestamps"
     last_updated = cache.get(cache_key)
     if last_updated is None:
         playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, 1)
