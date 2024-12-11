@@ -109,8 +109,7 @@ def get_playlists_timestamp():
             return None
         last_updated = {}
         for playlist in playlists:
-            source_patch = playlist.get("additional_metadata", {}).get(
-                "algorithm_metadata", {}).get("source_patch")
+            source_patch = playlist.additional_metadata["algorithm_metadata"]["source_patch"]
             last_updated_ts = int(playlist.last_updated.timestamp())
             last_updated[source_patch] = last_updated_ts
         cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
