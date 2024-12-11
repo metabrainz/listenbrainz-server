@@ -1,7 +1,9 @@
+import os
+
 import listenbrainz.db.user as db_user
 import listenbrainz.db.playlist as db_playlist
 
-from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.tests.integration import IntegrationTestCase, TIMESCALE_SQL_DIR
 from listenbrainz.db import timescale
 from listenbrainz.db.model.playlist import WritablePlaylist
 
@@ -13,6 +15,10 @@ class PlaylistTestCase(IntegrationTestCase):
         self.user_1 = db_user.get_or_create(self.db_conn, 1, 'ansh')
         self.user_2 = db_user.get_or_create(self.db_conn, 2, 'ansh_2')
         self.ts_conn = timescale.engine.connect()
+
+    def tearDown(self):
+        timescale.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
+        self.ts_conn.close()
 
     def test_create(self):
         playlist_1 = WritablePlaylist(

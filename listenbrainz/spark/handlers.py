@@ -72,12 +72,6 @@ def handle_user_daily_activity(message):
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
-        stats_range = message["stats_range"]
-        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
-        if not databases:
-            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
-            return
-
         stats = {
             "data": message["data"]
         }
@@ -85,7 +79,8 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
             stats["count"] = message["count"]
 
         db_stats.insert_sitewide_stats(
-            databases[0],
+            stat_type,
+            message["stats_range"],
             message["from_ts"],
             message["to_ts"],
             stats

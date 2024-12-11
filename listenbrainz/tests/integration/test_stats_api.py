@@ -49,7 +49,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # otherwise we will get an error.
         with open(cls.path_to_data_file('sitewide_top_artists_db_data_for_api_test.json'), 'r') as f:
             cls.sitewide_artist_payload = json.load(f)
-        db_stats.insert_sitewide_stats('artists_all_time_20220718', 0, 5, cls.sitewide_artist_payload)
+        db_stats.insert_sitewide_stats('artists', 'all_time', 0, 5, cls.sitewide_artist_payload)
 
     def setUp(self):
         self.maxDiff = None
@@ -495,7 +495,7 @@ class StatsAPITestCase(IntegrationTestCase):
                     with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_{range_}.json'),
                               'r') as f:
                         payload = json.load(f)
-                    db_stats.insert_sitewide_stats(f"{entity}_{range_}_20220718", 0, 5, payload)
+                    db_stats.insert_sitewide_stats(entity, range_, 0, 5, payload)
                     response = self.client.get(self.custom_url_for(endpoint), query_string={'range': range_})
                     self.assertSitewideStatEqual(payload, response, entity, range_, 25)
 
@@ -507,7 +507,7 @@ class StatsAPITestCase(IntegrationTestCase):
             with self.subTest(f"test api returns at most 100 stats in a response for {entity}", entity=entity):
                 with open(self.path_to_data_file(f'sitewide_top_{entity}_db_data_for_api_test_week.json'), 'r') as f:
                     payload = json.load(f)
-                db_stats.insert_sitewide_stats(f"{entity}_week_20220718", 0, 5, payload)
+                db_stats.insert_sitewide_stats(entity, "week", 0, 5, payload)
                 response = self.client.get(self.custom_url_for(endpoint), query_string={'count': 200, 'range': 'week'})
                 self.assertSitewideStatEqual(payload, response, entity, "week", 200)
 
