@@ -25,4 +25,4 @@ Python
 
 Java
 ^^^^^^
-* `listenbrainz-java <https://github.com/rain0r/listenbrainz-client/>`_
+* `listenbrainz-client <https://github.com/rain0r/listenbrainz-client/>`_
