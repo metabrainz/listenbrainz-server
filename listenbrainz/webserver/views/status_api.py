@@ -11,7 +11,7 @@ from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.db.playlist import get_recommendation_playlists_for_user, RECOMMENDATION_PATCHES
+from listenbrainz.db.playlist import get_recommendation_playlists_for_user
 import listenbrainz.db.dump as db_dump
 from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 
@@ -20,7 +20,10 @@ CACHE_TIME = 60 * 60  # time in seconds we cache the fetched data
 DUMP_CACHE_TIME = 24 * 60 * 60  # time in seconds we cache the dump check
 LISTEN_COUNT_CACHE_TIME = 5 * 60  # time in seconds we cache the listen count
 PLAYLIST_CACHE_TIME = 24 * 30 * 60  # time in seconds we cache latest playlist timestamp
-
+# See RECOMMENDATION_PATCHES in listenbrainz.db.playlist for a full list of patches
+MONITORED_PLAYLIST_PATCHES = ('daily-jams',
+                              'weekly-jams',
+                              'weekly-exploration')
 status_api_bp = Blueprint("status_api_v1", __name__)
 
 
@@ -104,10 +107,10 @@ def get_playlists_timestamp():
     cache_key = STATUS_PREFIX + ".playlist-timestamps"
     last_updated = cache.get(cache_key)
     if last_updated is None:
+        last_updated = {}
         playlists = get_recommendation_playlists_for_user(db_conn, ts_conn, 1)
         if playlists is None or not playlists:
-            return None
-        last_updated = {}
+            return last_updated
         for playlist in playlists:
             source_patch = playlist.additional_metadata["algorithm_metadata"]["source_patch"]
             last_updated_ts = int(playlist.last_updated.timestamp())
@@ -188,23 +191,14 @@ def get_service_status():
         stats_age = current_ts - stats
 
     playlists_ts = get_playlists_timestamp()
-    playlists_age = {}
-    if playlists_ts is None or not len(playlists_ts):
-        for patch_name in RECOMMENDATION_PATCHES:
-            playlists_age[patch_name] = None
-    else:
-        for patch_name in RECOMMENDATION_PATCHES:
-            if patch_name in playlists_ts:
-                age = current_ts - playlists_ts[patch_name]
-                playlists_age[patch_name] = age
-            else:
-                playlists_age[patch_name] = None
+    playlists = [{"name": patch_name, "age": playlists_ts.get(
+        patch_name, None)} for patch_name in MONITORED_PLAYLIST_PATCHES]
 
     return {
         "time": current_ts,
         "dump_age": dump_age,
         "stats_age": stats_age,
-        "playlists_age": playlists_age,
+        "playlists": playlists,
         "incoming_listen_count": listen_count
     }
 
