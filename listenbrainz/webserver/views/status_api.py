@@ -191,8 +191,12 @@ def get_service_status():
         stats_age = current_ts - stats
 
     playlists_ts = get_playlists_timestamp()
-    playlists = [{"name": patch_name, "age": playlists_ts.get(
-        patch_name, None)} for patch_name in MONITORED_PLAYLIST_PATCHES]
+    playlists = []
+    for patch_name in MONITORED_PLAYLIST_PATCHES:
+        playlist_age = current_ts - playlists_ts[patch_name] \
+            if patch_name in playlists_ts else None
+        playlists.append({"name": patch_name, "age": playlist_age})
+
 
     return {
         "time": current_ts,
