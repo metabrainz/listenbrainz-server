@@ -168,7 +168,6 @@ def get_service_status():
         {
           "dump_age": null,
           "incoming_listen_count": 2,
-          "playlists_age": 63229,
           "stats_age": 418605,
           "time": 1731429303
         }
@@ -190,6 +189,33 @@ def get_service_status():
     else:
         stats_age = current_ts - stats
 
+    return {
+        "time": current_ts,
+        "dump_age": dump_age,
+        "stats_age": stats_age,
+        "incoming_listen_count": listen_count
+    }
+
+
+def get_playlist_status():
+    """ Fetch the age of the last output of recommendation playlists and return a dict:
+        {
+          "playlists": [
+               {
+                name: "daily-jams",
+                "age": 1234,
+                },
+                {
+                name: "weekly-jams",
+                "age": 1234,
+                },
+          ]
+          "time": 1731429303
+        }
+    """
+
+    current_ts = int(time())
+
     playlists_ts = get_playlists_timestamp()
     playlists = []
     for patch_name in MONITORED_PLAYLIST_PATCHES:
@@ -197,32 +223,25 @@ def get_service_status():
             if patch_name in playlists_ts else None
         playlists.append({"name": patch_name, "age": playlist_age})
 
-
     return {
         "time": current_ts,
-        "dump_age": dump_age,
-        "stats_age": stats_age,
         "playlists": playlists,
-        "incoming_listen_count": listen_count
     }
 
 
 @status_api_bp.route("/service-status", methods=["GET"])
 @ratelimit()
 def service_status():
-    """ Fetch the recently updated metrics for age of stats, playlists, dumps and the number of items in the incoming
+    """ Fetch the recently updated metrics for age of stats, dumps and the number of items in the incoming
         queue. This function returns JSON:
 
     .. code-block:: json
 
         {
-            "time": 155574537,
-            "stats": {
-                "seconds_since_last_update": 1204
-            },
-            "incoming_listens": {
-                "count": 1028
-            }
+            "dump_age": 60309,
+            "incoming_listen_count": 0,
+            "stats_age": 38715,
+            "time": 1734021912
         }
 
     :statuscode 200: You have data.
@@ -230,3 +249,37 @@ def service_status():
     """
 
     return jsonify(get_service_status())
+
+
+@status_api_bp.route("/playlist-status", methods=["GET"])
+@ratelimit()
+def playlist_status():
+    """ Fetch the recently updated metrics for age of recommendation playlists.
+        This function returns JSON:
+
+    .. code-block:: json
+
+        {
+            "playlists": [
+                {
+                "age": 55671,
+                "name": "daily-jams"
+                },
+                {
+                "age": 919392,
+                "name": "weekly-jams"
+                },
+                {
+                "age": 919184,
+                "name": "weekly-exploration"
+                }
+            ],
+            "time": 1734013745
+        }
+
+
+    :statuscode 200: You have data.
+    :resheader Content-Type: *application/json*
+    """
+
+    return jsonify(get_playlist_status())
