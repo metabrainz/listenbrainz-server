@@ -340,10 +340,7 @@ export default function PlaylistPage() {
             content={String(totalDurationMs / 1000)}
           />
         )}
-        <meta
-          property="og:url"
-          content={PLAYLIST_URI_PREFIX + playlist.identifier}
-        />
+        <meta property="og:url" content={playlist.identifier} />
       </Helmet>
       <div className="row">
         <div
