@@ -11,7 +11,7 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 
-import NiceModal from "@ebay/nice-modal-react";
+import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
 
 import { groupBy, isNil, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,6 +26,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getRecordingMSID } from "../../utils/utils";
 import MultiTrackMBIDMappingModal, {
   MatchingTracksResults,
+  MultiTrackMBIDMappingModalProps,
 } from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
@@ -258,13 +259,13 @@ export default function LinkListensPage() {
                 style={{ padding: "0", height: "initial" }}
                 type="button"
                 onClick={(e) => {
-                  NiceModal.show<MatchingTracksResults, any>(
-                    MultiTrackMBIDMappingModal,
-                    {
-                      unlinkedListens: group,
-                      releaseName,
-                    }
-                  ).then((matchedTracks) => {
+                  NiceModal.show<
+                    MatchingTracksResults,
+                    MultiTrackMBIDMappingModalProps & NiceModalHocProps
+                  >(MultiTrackMBIDMappingModal, {
+                    unlinkedListens: group,
+                    releaseName,
+                  }).then((matchedTracks) => {
                     Object.entries(matchedTracks).forEach(
                       ([recordingMsid, track]) => {
                         // For deleting items from the BrainzPlayer queue, we need to use
