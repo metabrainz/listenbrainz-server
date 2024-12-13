@@ -612,7 +612,7 @@ type ColorReleasesResponse = {
   };
 };
 
-type MissingMBData = {
+type UnlinkedListens = {
   artist_name: string;
   listened_at: string;
   recording_name: string;

@@ -55,11 +55,11 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "missing-data/",
-          loader: RouteQueryLoader("missing-data"),
+          path: "link-listens/",
+          loader: RouteQueryLoader("link-listens"),
           lazy: async () => {
-            const MissingMBData = await import("../missing-data/MissingMBData");
-            return { Component: MissingMBData.default };
+            const LinkListens = await import("../link-listens/LinkListens");
+            return { Component: LinkListens.default };
           },
         },
         {
