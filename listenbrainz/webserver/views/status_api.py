@@ -113,6 +113,10 @@ def get_playlists_timestamp():
             return last_updated
         for playlist in playlists:
             source_patch = playlist.additional_metadata["algorithm_metadata"]["source_patch"]
+            if source_patch in last_updated:
+                # playlists are sorted by created date in descending order
+                # don't overwrite the previously set timestamp for that playlist patch
+                continue
             last_updated_ts = int(playlist.last_updated.timestamp())
             last_updated[source_patch] = last_updated_ts
         cache.set(cache_key, last_updated, PLAYLIST_CACHE_TIME)
