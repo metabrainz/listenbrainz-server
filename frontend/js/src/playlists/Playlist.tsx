@@ -320,8 +320,10 @@ export default function PlaylistPage() {
 
   return (
     <div role="main">
-      <Helmet>
-        <title>{playlist.title} - Playlist</title>
+      <Helmet defer={false}>
+        <title>
+          {playlist.title} by {playlist.creator}
+        </title>
         <meta property="og:type" content="music.playlist" />
         <meta
           property="og:title"
