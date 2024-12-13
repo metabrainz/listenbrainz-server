@@ -6,7 +6,8 @@ export const MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION =
 export const MUSICBRAINZ_JSPF_TRACK_EXTENSION =
   "https://musicbrainz.org/doc/jspf#track";
 
-export const PLAYLIST_URI_PREFIX = "https://listenbrainz.org/playlist/";
+export const LISTENBRAINZ_URI_PREFIX = "https://listenbrainz.org/";
+export const PLAYLIST_URI_PREFIX = `${LISTENBRAINZ_URI_PREFIX}playlist/`;
 export const PLAYLIST_TRACK_URI_PREFIX = "https://musicbrainz.org/recording/";
 export const PLAYLIST_ARTIST_URI_PREFIX = "https://musicbrainz.org/artist/";
 

@@ -28,6 +28,7 @@ import {
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
   JSPFTrackToListen,
+  LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
 } from "./utils";
@@ -321,6 +322,28 @@ export default function PlaylistPage() {
     <div role="main">
       <Helmet>
         <title>{playlist.title} - Playlist</title>
+        <meta property="og:type" content="music.playlist" />
+        <meta
+          property="og:title"
+          content={`${playlist.title} by ${playlist.creator} (${
+            playlist.track?.length ?? 0
+          } tracks) — ListenBrainz`}
+        />
+        <meta property="og:description" content={playlist.annotation} />
+        <meta
+          property="music:creator"
+          content={`${LISTENBRAINZ_URI_PREFIX}user/${playlist.creator}`}
+        />
+        {totalDurationMs && (
+          <meta
+            property="music:duration"
+            content={String(totalDurationMs / 1000)}
+          />
+        )}
+        <meta
+          property="og:url"
+          content={PLAYLIST_URI_PREFIX + playlist.identifier}
+        />
       </Helmet>
       <div className="row">
         <div
