@@ -239,6 +239,11 @@ def get_mbid_mapping():
     The total number of characters in the artist name, recording name and release name query arguments should be
     less than or equal to :data:`~webserver.views.metadata_api.MAX_MAPPING_QUERY_LENGTH`.
 
+    The data returned by this endpoint can be seen here:
+
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_lookup_metadata_example.json
+       :language: json
+
     :param artist_name: artist name of the listen
     :type artist_name: ``str``
     :param recording_name: track name of the listen
@@ -522,7 +527,7 @@ def metadata_artist():
 
     The data returned by this endpoint can be seen here:
 
-    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_artist_metadata_example.json
        :language: json
 
     :param artist_mbids: A comma separated list of recording_mbids
