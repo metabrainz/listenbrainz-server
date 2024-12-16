@@ -1,54 +1,55 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import * as React from "react";
-import { toast } from "react-toastify";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faBell,
   faCircle,
+  faComments,
+  faEye,
+  faEyeSlash,
   faHeadphones,
   faHeart,
+  faPaperPlane,
   faQuestion,
+  faRss,
   faThumbsUp,
+  faThumbtack,
+  faTrash,
   faUserPlus,
   faUserSecret,
   faUserSlash,
-  faThumbtack,
-  faTrash,
-  faEye,
-  faEyeSlash,
-  faComments,
-  faPaperPlane,
-  faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
+import { reject as _reject } from "lodash";
+import * as React from "react";
 import { Helmet } from "react-helmet";
+import { toast } from "react-toastify";
 
-import { Link, useParams } from "react-router-dom";
+import NiceModal from "@ebay/nice-modal-react";
 import {
+  InfiniteData,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
-  useInfiniteQuery,
-  InfiniteData,
 } from "@tanstack/react-query";
-import NiceModal from "@ebay/nice-modal-react";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { Link, useParams } from "react-router-dom";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
+import ListenControl from "../common/listens/ListenControl";
+import Username from "../common/Username";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { ToastMsg } from "../notifications/Notifications";
+import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
-  preciseTimestamp,
-  getAdditionalContent,
   feedReviewEventToListen,
+  getAdditionalContent,
+  getBaseUrl,
+  getPersonalRecommendationEventContent,
   getReviewEventContent,
   personalRecommendationEventToListen,
-  getPersonalRecommendationEventContent,
-  getBaseUrl,
+  preciseTimestamp,
 } from "../utils/utils";
-import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
-import ListenControl from "../common/listens/ListenControl";
-import { ToastMsg } from "../notifications/Notifications";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
-import SyndicationFeedModal from "../components/SyndicationFeedModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -512,23 +513,21 @@ export default function UserFeedPage() {
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following{" "}
-            <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
+            You are now following <Username username={user_name_1} />
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
-            following you
+            <Username username={user_name_0} /> is now following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
-          following <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
+          <Username username={user_name_0} /> is now following{" "}
+          <Username username={user_name_1} />
         </span>
       );
     }
@@ -550,7 +549,7 @@ export default function UserFeedPage() {
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <Link to={`/user/${user_name}/`}>{user_name}</Link>
+        <Username username={user_name} />
       );
     return (
       <span className="event-description-text">
