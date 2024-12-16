@@ -19,7 +19,7 @@ const sections: Section[] = [
       { to: "music-services/details/", label: "Connect services" },
       { to: "brainzplayer/", label: "Music player" },
       { to: "import/", label: "Import listens" },
-      { to: "missing-data/", label: "Missing data" },
+      { to: "link-listens/", label: "Link listens" },
     ],
   },
   {

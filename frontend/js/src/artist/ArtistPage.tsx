@@ -355,9 +355,7 @@ export default function ArtistPage(): JSX.Element {
               <Link
                 type="button"
                 className="btn btn-info"
-                to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                  artist?.name
-                )})&mode=easy`}
+                to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
               >
                 <FontAwesomeIcon icon={faPlayCircle} /> Radio
               </Link>
@@ -374,20 +372,16 @@ export default function ArtistPage(): JSX.Element {
               <ul className="dropdown-menu">
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                      artist?.name
-                    )})::nosim&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
                   >
-                    This artist
+                    Artist radio
                   </Link>
                 </li>
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                      artist?.name
-                    )})&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
                   >
-                    Similar artists
+                    This artist only
                   </Link>
                 </li>
                 {Boolean(filteredTags?.length) && (

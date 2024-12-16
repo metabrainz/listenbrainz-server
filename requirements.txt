@@ -5,7 +5,7 @@ Flask-WTF == 1.2.1
 Flask-SQLAlchemy == 3.1.1
 Flask-UUID == 0.2
 Flask-SocketIO==5.3.6
-bleach==5.0.0
+bleach==5.0.1
 click == 8.1.3
 jsonschema == 4.6.0
 rauth == 0.7.3
@@ -22,7 +22,7 @@ pika == 1.2.1
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@upgrade-deps
 spotipy>=2.22.1
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@830ecb2b2120acbd5deed2dab4587784c7be04b6
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v2024.08.30.1
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v2024.12.04.0
 PyYAML==6.0
 eventlet == 0.35.2
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781

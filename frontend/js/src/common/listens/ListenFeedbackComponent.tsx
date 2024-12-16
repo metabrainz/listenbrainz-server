@@ -5,15 +5,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 
 import useFeedbackMap from "../../hooks/useFeedbackMap";
+import ListenControl from "./ListenControl";
 
 export type ListenFeedbackComponentProps = {
   listen: BaseListenFormat;
+  type: "button" | "dropdown";
 };
 
 export default function ListenFeedbackComponent(
   props: ListenFeedbackComponentProps
 ) {
-  const { listen } = props;
+  const { listen, type } = props;
   const recordingMBID = getRecordingMBID(listen);
   const recordingMSID = getRecordingMSID(listen);
 
@@ -24,6 +26,32 @@ export default function ListenFeedbackComponent(
   if (!recordingMSID && !recordingMBID) {
     return null;
   }
+
+  if (type === "dropdown") {
+    return (
+      <>
+        <ListenControl
+          buttonClassName={`btn btn-transparent love${
+            currentFeedback === 1 ? " loved" : ""
+          }`}
+          text="Love"
+          icon={faHeart}
+          title="Love"
+          action={() => update(currentFeedback === 1 ? 0 : 1)}
+        />
+        <ListenControl
+          buttonClassName={`btn btn-transparent hate${
+            currentFeedback === -1 ? " hated" : ""
+          }`}
+          text="Hate"
+          icon={faHeartCrack}
+          title="Hate"
+          action={() => update(currentFeedback === -1 ? 0 : -1)}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <button

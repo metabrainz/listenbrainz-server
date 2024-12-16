@@ -5,16 +5,18 @@ import {
   faCode,
   faCog,
   faPlayCircle,
+  faRss,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitize } from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
-import { Link } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
-import { preciseTimestamp } from "../../../utils/utils";
+import { getBaseUrl, preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import ListenPayloadModal from "../../../common/listens/ListenPayloadModal";
 import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
+import SyndicationFeedModal from "../../../components/SyndicationFeedModal";
 
 export type RecommendationPlaylistSettingsProps = {
   playlist: JSPFPlaylist;
@@ -29,6 +31,9 @@ export default function RecommendationPlaylistSettings({
   const { track } = playlist;
   const [firstListen, ...otherListens] = track;
   const { copyPlaylist } = APIService;
+
+  const loaderData = useLoaderData() as { user: ListenBrainzUser };
+  const userName = loaderData.user.name;
 
   const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
     if (!currentUser?.auth_token) {
@@ -62,6 +67,9 @@ export default function RecommendationPlaylistSettings({
     );
   }, [firstListen]);
 
+  const sourcePatch =
+    extension?.additional_metadata?.algorithm_metadata?.source_patch;
+
   return (
     <div className="playlist-settings card">
       <div className="playlist-settings-header">
@@ -81,15 +89,26 @@ export default function RecommendationPlaylistSettings({
             className="btn btn-icon btn-info"
             onClick={play}
             type="button"
+            style={{
+              marginLeft: 0,
+            }}
           >
-            <FontAwesomeIcon icon={faPlayCircle} title="Play this playlists" />
+            <FontAwesomeIcon
+              icon={faPlayCircle}
+              title="Play this playlists"
+              fixedWidth
+            />
           </button>
           <button
             className="btn btn-icon btn-info"
             onClick={onCopyPlaylist}
             type="button"
           >
-            <FontAwesomeIcon icon={faSave} title="Save to my playlists" />
+            <FontAwesomeIcon
+              icon={faSave}
+              title="Save to my playlists"
+              fixedWidth
+            />
           </button>
           <button
             className="btn btn-icon btn-info"
@@ -102,9 +121,13 @@ export default function RecommendationPlaylistSettings({
             data-target="#ListenPayloadModal"
             type="button"
           >
-            <FontAwesomeIcon icon={faCode} title="Inspect playlist" />
+            <FontAwesomeIcon
+              icon={faCode}
+              title="Inspect playlist"
+              fixedWidth
+            />
           </button>
-          <span className="dropdown">
+          <span className="dropdown" style={{ marginLeft: 0 }}>
             <button
               className="dropdown-toggle btn btn-icon btn-info"
               type="button"
@@ -113,10 +136,33 @@ export default function RecommendationPlaylistSettings({
               aria-haspopup="true"
               aria-expanded="true"
             >
-              <FontAwesomeIcon icon={faCog} title="More options" />
+              <FontAwesomeIcon icon={faCog} title="More options" fixedWidth />
             </button>
             <PlaylistMenu playlist={playlist} />
           </span>
+          {sourcePatch &&
+            ["weekly-jams", "weekly-exploration", "daily-jams"].includes(
+              sourcePatch
+            ) && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info"
+                data-toggle="modal"
+                data-target="#SyndicationFeedModal"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  NiceModal.show(SyndicationFeedModal, {
+                    feedTitle: `Recommendations`,
+                    options: [],
+                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                      userName ?? extension?.created_for
+                    }/recommendations?recommendation_type=${sourcePatch}`,
+                  });
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} fixedWidth />
+              </button>
+            )}
         </div>
         <div>
           {extension?.public ? "Public" : "Private"} playlist by&nbsp;
