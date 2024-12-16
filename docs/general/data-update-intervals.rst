@@ -13,7 +13,7 @@ Removing deleted listens from stats			    On the 2nd and 16th of each month
 Full dumps						                1st and 15th of each month
 Incremental dumps					            Daily
 Weekly playlists						           Monday morning, based on the users timezone setting
-Daily playlists						          Every morning, based on the users timezone setting
+Daily playlists***						          Every morning, based on the users timezone setting
 =============================================== =========================================
 
 Situations will occasionally arise where these take longer. If you have been a very patient user, and
@@ -23,6 +23,7 @@ If you suspect something has gone very wrong you can also search for tickets, an
 
    |   * Listens via a connected Spotify account may not be submitted immediately, causing a short delay
    |   ** Statistics may take longer on the 1st and 15th of each month
+   |   *** To generate daily playlists, follow `troi-bot <https://listenbrainz.org/user/troi-bot/>`_.
 
 This complicated schedule is caused by ListenBrainz having a lot of interconnected parts that work at
 different scales. For more details, read on!
