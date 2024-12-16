@@ -86,7 +86,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   setPlaylistType = (type: PlaylistType) => {
-    this.setState({ playlistType: type });
+    this.setState({ playlistType: type, sortBy: SortOption.DATE_CREATED });
   };
 
   onCopiedPlaylist = (newPlaylist: JSPFPlaylist): void => {
