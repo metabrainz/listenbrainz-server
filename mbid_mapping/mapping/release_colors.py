@@ -47,17 +47,17 @@ def process_image(filename, mime_type):
     raise RuntimeError
 
 
-def insert_row(release_mbid, red, green, blue, caa_id):
+def insert_row(release_mbid, red, green, blue, caa_id, year):
     """ Insert a row into release_color mapping """
 
     with psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            sql = """INSERT INTO release_color (release_mbid, red, green, blue, color, caa_id)
-                          VALUES (%s, %s, %s, %s, %s::cube, %s)
+            sql = """INSERT INTO release_color (release_mbid, red, green, blue, color, caa_id, year)
+                          VALUES (%s, %s, %s, %s, %s::cube, %s, %s)
                      ON CONFLICT DO NOTHING"""
 
             args = (release_mbid, red, green, blue,
-                    Cube(red, green, blue), caa_id)
+                    Cube(red, green, blue), caa_id, year)
             try:
                 curs.execute(sql, args)
                 conn.commit()
@@ -85,7 +85,7 @@ def process_row(row):
 
             try:
                 red, green, blue = process_image(filename, row["mime_type"])
-                insert_row(row["release_mbid"], red, green, blue, row["caa_id"])
+                insert_row(row["release_mbid"], red, green, blue, row["caa_id"], row["year"])
                 log("%s %s: (%s, %s, %s)" %
                     (row["caa_id"], row["release_mbid"], red, green, blue))
             except Exception as err:
@@ -210,11 +210,14 @@ def sync_release_color_table():
                        , release AS release_id
                        , release.gid AS release_mbid
                        , mime_type
+                       , year
                     FROM cover_art_archive.cover_art caa
                     JOIN cover_art_archive.cover_art_type cat
                       ON cat.id = caa.id
-                    JOIN musicbrainz.release
+                    JOIN musicbrainz.release r
                       ON caa.release = release.id
+                    JOIN release_first_release_date rfrd
+                      ON rfrd.release = r.id
                    WHERE type_id = 1
                      AND caa.id > %s
                 ORDER BY caa.id
@@ -259,11 +262,14 @@ def incremental_update_release_color_table():
                        , release.gid AS release_mbid
                        , mime_type
                        , date_uploaded
+                       , year
                     FROM cover_art_archive.cover_art caa
                     JOIN cover_art_archive.cover_art_type cat
                       ON cat.id = caa.id
-                    JOIN musicbrainz.release
+                    JOIN musicbrainz.release r
                       ON caa.release = release.id
+                    JOIN release_first_release_date rfrd
+                      ON rfrd.release = r.id
                    WHERE type_id = 1
                      AND caa.date_uploaded > %s
                 ORDER BY caa.date_uploaded
