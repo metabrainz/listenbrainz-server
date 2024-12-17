@@ -648,4 +648,60 @@
       }
     }
   }
+  &.yim-2024 {
+    --backgroundColor: #4c6c52;
+    --cardBackgroundColor: #fefff5;
+    --accentColor: #718c56;
+    --selectedColor: var(--accentColor);
+    --swiper-navigation-color: var(--accentColor);
+    @text-color: var(--accentColor);
+    @content-background-color: var(--cardBackgroundColor);
+    background-color: unset;
+    color: @text-color;
+    .content-card {
+      background: @content-background-color;
+      color: @text-color;
+      .heading,
+      .small-stat {
+        color: inherit;
+      }
+      .heading {
+        aspect-ratio: unset;
+      }
+      .img-header {
+        mix-blend-mode: multiply;
+      }
+    }
+    .small-stat {
+      font-weight: 300;
+    }
+    .scrollable-area::after {
+      background: linear-gradient(
+        0deg,
+        var(--cardBackgroundColor),
+        transparent
+      );
+    }
+    .btn-info,
+    .yim-share-button {
+      background-color: var(--accentColor);
+    }
+    .color-picker {
+      flex-wrap: wrap;
+      gap: 2em;
+      > div {
+        &:first-of-type {
+          width: 100%;
+          font-weight: bold;
+          font-size: larger;
+        }
+        text-align: center;
+        text-align: -webkit-center;
+      }
+    }
+    .swiper,
+    .graph-container {
+      background-color: var(--backgroundColor);
+    }
+  }
 }
