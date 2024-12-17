@@ -324,9 +324,9 @@ def taste(user_name: str):
 
 @user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
 @user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
-def year_in_music(user_name, year: int = 2023):
+def year_in_music(user_name, year: int = 2024):
     """ Year in Music """
-    if year != 2021 and year != 2022 and year != 2023:
+    if year not in (2021, 2022, 2023, 2024):
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
