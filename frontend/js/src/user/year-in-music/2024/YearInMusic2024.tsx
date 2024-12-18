@@ -9,6 +9,7 @@ import {
 } from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
+import { ResponsiveTreeMap } from "@nivo/treemap";
 import Tooltip from "react-tooltip";
 import { toast } from "react-toastify";
 import {
@@ -55,9 +56,26 @@ import { RouteQuery } from "../../../utils/Loader";
 import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 import { YearInMusicProps } from "../2023/YearInMusic2023";
 
+type Node = {
+  id: string;
+  loc: number;
+  name: string;
+  children?: Node[];
+};
+
+type GenreGraphData = {
+  children: Node[];
+  name: string;
+};
+
+type YearInMusicProps2024 = YearInMusicProps & {
+  genreGraphData: GenreGraphData;
+};
+
 type YearInMusicLoaderData = {
-  user: YearInMusicProps["user"];
-  data: YearInMusicProps["yearInMusicData"];
+  user: YearInMusicProps2024["user"];
+  data: YearInMusicProps2024["yearInMusicData"];
+  genreGraphData: YearInMusicProps2024["genreGraphData"];
 };
 
 const YIM2024Seasons = {
@@ -83,14 +101,14 @@ export type YearInMusicState = {
 };
 
 export default class YearInMusic extends React.Component<
-  YearInMusicProps,
+  YearInMusicProps2024,
   YearInMusicState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
   private buddiesScrollContainer: React.RefObject<HTMLDivElement>;
 
-  constructor(props: YearInMusicProps) {
+  constructor(props: YearInMusicProps2024) {
     super(props);
     this.state = {
       mosaics: [],
@@ -357,6 +375,7 @@ export default class YearInMusic extends React.Component<
       topDiscoveriesPlaylist,
       topMissedRecordingsPlaylist,
       missingPlaylistData,
+      genreGraphData,
     } = this.props;
     const {
       selectedMetric,
@@ -1128,6 +1147,52 @@ export default class YearInMusic extends React.Component<
                     </div>
                   </div>
                 )}
+                {genreGraphData && (
+                  <div className="" id="genre-graph">
+                    <h3 className="text-center">
+                      What genres have {yourOrUsersName} explored to?{" "}
+                      <FontAwesomeIcon
+                        icon={faQuestionCircle}
+                        data-tip
+                        data-for="genre-graph-helptext"
+                        size="xs"
+                      />
+                      <Tooltip id="genre-graph-helptext">
+                        What genres did{" "}
+                        {isCurrentUser
+                          ? "you explored"
+                          : `${user.name} explored`}
+                        this year?
+                      </Tooltip>
+                    </h3>
+                    <div className="graph-container">
+                      <div className="graph" style={{ height: "400px" }}>
+                        <ResponsiveTreeMap
+                          margin={{ left: 30, bottom: 30, right: 30, top: 30 }}
+                          data={genreGraphData}
+                          identity="name"
+                          value="loc"
+                          valueFormat=".02s"
+                          label="id"
+                          labelSkipSize={12}
+                          labelTextColor={{
+                            from: "color",
+                            modifiers: [["darker", 1.2]],
+                          }}
+                          parentLabelPosition="left"
+                          parentLabelTextColor={{
+                            from: "color",
+                            modifiers: [["darker", 2]],
+                          }}
+                          borderColor={{
+                            from: "color",
+                            modifiers: [["darker", 0.1]],
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="yim-share-button-container">
                   <ImageShareButtons
                     svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=stats&season=${selectedSeasonName}`}
@@ -1537,7 +1602,14 @@ export function YearInMusicWrapper() {
     RouteQuery(["year-in-music-2024", params], location.pathname)
   );
   const fallbackUser = { name: "" };
-  const { user = fallbackUser, data: yearInMusicData } = data || {};
+  const {
+    user = fallbackUser,
+    data: yearInMusicData,
+    genreGraphData = {
+      children: [],
+      name: "",
+    },
+  } = data || {};
   const listens: BaseListenFormat[] = [];
 
   if (yearInMusicData?.top_recordings) {
@@ -1617,6 +1689,7 @@ export function YearInMusicWrapper() {
     <YearInMusic
       user={user ?? fallbackUser}
       yearInMusicData={yearInMusicData}
+      genreGraphData={genreGraphData}
       topDiscoveriesPlaylist={topDiscoveriesPlaylist}
       topMissedRecordingsPlaylist={topMissedRecordingsPlaylist}
       missingPlaylistData={missingPlaylistData}
