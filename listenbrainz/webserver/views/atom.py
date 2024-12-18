@@ -247,7 +247,7 @@ def get_listens(user_name):
         fe.published(listen.timestamp)
         fe.updated(listen.timestamp)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -328,7 +328,7 @@ def get_fresh_releases():
         fe.published(t_with_tz)
         fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -411,7 +411,7 @@ def get_user_fresh_releases(user_name):
         fe.published(t_with_tz)
         fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -502,7 +502,7 @@ def get_artist_stats(user_name):
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -584,7 +584,7 @@ def get_release_group_stats(user_name):
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -665,7 +665,7 @@ def get_recording_stats(user_name):
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -738,7 +738,7 @@ def get_playlist_recordings(playlist_mbid):
         fe.published(t_with_tz)
         fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -828,7 +828,7 @@ def get_recommendation(user_name):
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
 
     return Response(atomfeed, mimetype="application/atom+xml")
 
@@ -937,7 +937,7 @@ def get_cover_art_grid_stats(user_name):
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
@@ -1046,7 +1046,7 @@ def get_cover_art_custom_stats(user_name):
     fe.published(t_with_tz)
     fe.updated(t_with_tz)
 
-    atomfeed = fg.atom_str(pretty=True)
+    atomfeed = fg.atom_str(pretty=True).replace(b"&lt;",b"<").replace(b"&gt;",b">")
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
