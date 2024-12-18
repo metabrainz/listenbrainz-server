@@ -2,6 +2,7 @@
 @import "/node_modules/swiper/swiper.less";
 @import "/node_modules/swiper/modules/navigation/navigation.less";
 @import "/node_modules/swiper/modules/effect-coverflow/effect-coverflow.less";
+@import "/node_modules/swiper/modules/effect-cube/effect-cube.less";
 
 /* latin */
 @font-face {
@@ -112,8 +113,7 @@
       }
     }
   }
-
-  .swiper {
+  #top-albums .swiper {
     width: 100%;
     perspective: 900px;
     background-color: whitesmoke;
@@ -667,6 +667,10 @@
       }
       .heading {
         aspect-ratio: unset;
+        h3,
+        h4 {
+          margin: 0;
+        }
       }
       .img-header {
         mix-blend-mode: multiply;
@@ -702,6 +706,9 @@
     .swiper,
     .graph-container {
       background-color: var(--backgroundColor);
+    }
+    .swiper-cube .swiper-slide {
+      text-align: center;
     }
   }
 }

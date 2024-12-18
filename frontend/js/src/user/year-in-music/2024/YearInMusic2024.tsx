@@ -1,6 +1,12 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
+import {
+  Navigation,
+  Keyboard,
+  EffectCoverflow,
+  Lazy,
+  EffectCube,
+} from "swiper";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
@@ -33,6 +39,7 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 import {
   generateAlbumArtThumbnailLink,
   getArtistLink,
+  getListenCardKey,
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
@@ -259,6 +266,7 @@ export default class YearInMusic extends React.Component<
             }
             return (
               <ListenCard
+                key={getListenCardKey(listen)}
                 className="playlist-item-card"
                 listen={listen}
                 customThumbnail={thumbnail}
@@ -519,7 +527,7 @@ export default class YearInMusic extends React.Component<
             <div>Pick a season</div>
             {Object.entries(YIM2024Seasons).map(([name, colors]) => {
               return (
-                <div style={{ color: colors.text }}>
+                <div style={{ color: colors.text }} key={name}>
                   <div
                     aria-label={`Select season ${name}`}
                     role="button"
@@ -1308,6 +1316,7 @@ export default class YearInMusic extends React.Component<
                 {followingList.slice(0, 15).map((followedUser, index) => {
                   return (
                     <Link
+                      key={`follow-user-${followedUser}`}
                       className="buddy content-card card"
                       to={`/user/${followedUser}/year-in-music/2024/`}
                     >
@@ -1337,31 +1346,24 @@ export default class YearInMusic extends React.Component<
         <div className="cover-art-composite">
           <div className="section">
             <div className="header">
-              2024 Releases
+              2024 album mosaïc
               <div className="subheader">
                 the top albums on ListenBrainz that came out in 2024
                 <br />
-                made out of cover art of other 2024 albums
+                made out of cover art from other 2024 albums
               </div>
             </div>
             <Swiper
-              modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
-              spaceBetween={15}
-              slidesPerView={2}
-              initialSlide={0}
+              modules={[EffectCube, Navigation, Keyboard]}
               centeredSlides
-              lazy={{
-                enabled: true,
-                loadPrevNext: true,
-                loadPrevNextAmount: 2,
-              }}
-              watchSlidesProgress
+              // watchSlidesProgress
               navigation
-              effect="coverflow"
-              coverflowEffect={{
-                rotate: 20,
-                depth: 100,
+              effect="cube"
+              cubeEffect={{
+                shadow: true,
                 slideShadows: false,
+                // shadowOffset: 20,
+                // shadowScale: 0.94,
               }}
             >
               {yearInMusicData?.top_release_groups
@@ -1383,13 +1385,11 @@ export default class YearInMusic extends React.Component<
                       key={`coverflow-${release_group.release_group_name}`}
                     >
                       <img
-                        data-src={
+                        src={
                           coverArt ?? "/static/img/cover-art-placeholder.jpg"
                         }
                         alt={release_group.release_group_name}
-                        className="swiper-lazy"
                       />
-                      <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                       <div title={release_group.release_group_name}>
                         {getEntityLink(
                           "release-group",
