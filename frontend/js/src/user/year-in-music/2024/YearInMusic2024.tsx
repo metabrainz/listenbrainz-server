@@ -1339,14 +1339,76 @@ export default class YearInMusic extends React.Component<
             <div className="header">
               2024 Releases
               <div className="subheader">
-                just some of the great music that came out in 2024.
+                the top albums on ListenBrainz that came out in 2024
                 <br />
-                click on cover art to open albums
+                made out of cover art of other 2024 albums
               </div>
             </div>
+            <Swiper
+              modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
+              spaceBetween={15}
+              slidesPerView={2}
+              initialSlide={0}
+              centeredSlides
+              lazy={{
+                enabled: true,
+                loadPrevNext: true,
+                loadPrevNextAmount: 2,
+              }}
+              watchSlidesProgress
+              navigation
+              effect="coverflow"
+              coverflowEffect={{
+                rotate: 20,
+                depth: 100,
+                slideShadows: false,
+              }}
+            >
+              {yearInMusicData?.top_release_groups
+                .slice(0, 10)
+                .map((release_group) => {
+                  if (
+                    !release_group.caa_id ||
+                    !release_group.caa_release_mbid
+                  ) {
+                    return null;
+                  }
+                  const coverArt = generateAlbumArtThumbnailLink(
+                    release_group.caa_id,
+                    release_group.caa_release_mbid,
+                    500
+                  );
+                  return (
+                    <SwiperSlide
+                      key={`coverflow-${release_group.release_group_name}`}
+                    >
+                      <img
+                        data-src={
+                          coverArt ?? "/static/img/cover-art-placeholder.jpg"
+                        }
+                        alt={release_group.release_group_name}
+                        className="swiper-lazy"
+                      />
+                      <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
+                      <div title={release_group.release_group_name}>
+                        {getEntityLink(
+                          "release-group",
+                          release_group.release_group_name,
+                          release_group.release_group_mbid
+                        )}
+                        <div className="small text-muted">
+                          {getStatsArtistLink(
+                            release_group.artists,
+                            release_group.artist_name,
+                            release_group.artist_mbids
+                          )}
+                        </div>
+                      </div>
+                    </SwiperSlide>
+                  );
+                })}
+            </Swiper>
           </div>
-          <div className="composite-image">[INSERT IMAGE GALLERY HERE]</div>
-
           <div className="section">
             {userShareBar}
             <div className="closing-remarks">
