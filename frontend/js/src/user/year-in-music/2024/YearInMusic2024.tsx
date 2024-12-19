@@ -420,6 +420,7 @@ export default class YearInMusic extends React.Component<
     const isCurrentUser = user.name === currentUser?.name;
     const youOrUsername = isCurrentUser ? "you" : `${user.name}`;
     const yourOrUsersName = isCurrentUser ? "your" : `${user.name}'s`;
+    const hasOrHave = isCurrentUser ? "has" : "have";
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
@@ -1150,7 +1151,7 @@ export default class YearInMusic extends React.Component<
                 {genreGraphData && (
                   <div className="" id="genre-graph">
                     <h3 className="text-center">
-                      What genres have {yourOrUsersName} explored to?{" "}
+                      What genres {hasOrHave} {youOrUsername} explored to?{" "}
                       <FontAwesomeIcon
                         icon={faQuestionCircle}
                         data-tip
