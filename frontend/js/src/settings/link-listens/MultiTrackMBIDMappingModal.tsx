@@ -32,14 +32,14 @@ export type MatchingTracksResults = {
 
 export type MultiTrackMBIDMappingModalProps = {
   releaseName: string | null;
-  missingData: Array<MissingMBData>;
+  unlinkedListens: Array<UnlinkedListens>;
 };
 
 // https://lucene.apache.org/core/7_7_2/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Escaping_Special_Characters
 const lucineSpecialCharRegex = /[+\-!(){}[\]^"~*?:\\/]|(?:&{2})|(?:\|{2})/gm;
 
 export default NiceModal.create(
-  ({ missingData, releaseName }: MultiTrackMBIDMappingModalProps) => {
+  ({ unlinkedListens, releaseName }: MultiTrackMBIDMappingModalProps) => {
     const modal = useModal();
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
     const { lookupMBRelease, submitMBIDMapping } = APIService;
@@ -267,15 +267,15 @@ export default NiceModal.create(
         keys: ["title", "artist-credit.name"],
       });
       const newMatchingTracks: MatchingTracksResults = {};
-      missingData.forEach((missingDataItem) => {
-        let stringToSearch = missingDataItem.recording_name;
+      unlinkedListens.forEach((unlinkedListensItem) => {
+        let stringToSearch = unlinkedListensItem.recording_name;
         if (includeArtistNameMatch) {
-          stringToSearch += ` ${missingDataItem.artist_name}`;
+          stringToSearch += ` ${unlinkedListensItem.artist_name}`;
         }
         const matches = fuzzysearch.search(stringToSearch);
         if (matches[0]) {
           // We have a match
-          newMatchingTracks[missingDataItem.recording_msid] = {
+          newMatchingTracks[unlinkedListensItem.recording_msid] = {
             ...matches[0].item,
             searchString: stringToSearch,
           };
@@ -285,7 +285,7 @@ export default NiceModal.create(
         }
       });
       setMatchingTracks(newMatchingTracks);
-    }, [includeArtistNameMatch, missingData, potentialTracks]);
+    }, [includeArtistNameMatch, unlinkedListens, potentialTracks]);
 
     const removeItemFromMatches = (recordingMSID: string) => {
       setMatchingTracks((currentMatchingTracks) =>
@@ -293,14 +293,14 @@ export default NiceModal.create(
       );
     };
 
-    if (!missingData) {
+    if (!unlinkedListens) {
       return null;
     }
     const matchingTracksEntries =
       matchingTracks && Object.entries(matchingTracks);
     const hasMatches = Boolean(matchingTracksEntries?.length);
     const unmatchedItems =
-      missingData.filter((md) => !matchingTracks?.[md.recording_msid]) ?? [];
+      unlinkedListens.filter((md) => !matchingTracks?.[md.recording_msid]) ?? [];
 
     // We may need to escape or replace the Lucene search special characters
     // + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /     as described in
@@ -309,20 +309,20 @@ export default NiceModal.create(
       lucineSpecialCharRegex,
       "\\$&"
     );
-    const escapedArtistName = missingData[0]?.artist_name?.replace(
+    const escapedArtistName = unlinkedListens[0]?.artist_name?.replace(
       lucineSpecialCharRegex,
       "\\$&"
     );
     let searchTerm = escapeSpecialCharacters ? escapedReleaseName : releaseName;
     if (
       includeArtistNameSearch &&
-      (missingData[0]?.artist_name ||
+      (unlinkedListens[0]?.artist_name ||
         (escapeSpecialCharacters && escapedArtistName))
     ) {
       searchTerm += ` artist:(${
         escapeSpecialCharacters
           ? escapedArtistName
-          : missingData[0]?.artist_name
+          : unlinkedListens[0]?.artist_name
       })`;
     }
 

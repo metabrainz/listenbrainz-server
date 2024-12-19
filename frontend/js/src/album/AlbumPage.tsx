@@ -32,6 +32,7 @@ import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import CBReviewModal from "../cb-review/CBReviewModal";
+import Username from "../common/Username";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -290,7 +291,7 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
-          <div className="details h3">
+          <div className="details h4">
             <div>
               {artist.artists.map((ar) => {
                 return (
@@ -492,9 +493,7 @@ export default function AlbumPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Link to={`/user/${listener.user_name}/`}>
-                          {listener.user_name}
-                        </Link>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;

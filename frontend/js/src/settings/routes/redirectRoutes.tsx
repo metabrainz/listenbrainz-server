@@ -25,8 +25,8 @@ const getRedirectRoutes = (): RouteObject[] => {
           element: <Navigate to="/settings/import/" replace />,
         },
         {
-          path: "missing-data/",
-          element: <Navigate to="/settings/missing-data/" replace />,
+          path: "link-listens/",
+          element: <Navigate to="/settings/link-listens/" replace />,
         },
         {
           path: "select_timezone/",

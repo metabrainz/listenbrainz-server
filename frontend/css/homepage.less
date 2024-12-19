@@ -55,7 +55,11 @@
       top: 10px;
       z-index: 3;
       height: 12vh;
-      gap: 1vh;
+      gap: 2vh;
+
+      @media (max-width: @screen-xs) {
+        display: none;
+      }
     }
 
     .homepage-upper-grey-box {
@@ -238,8 +242,7 @@
     background: @homepage-background-inverted;
     height: auto;
     position: relative;
-    padding-left: 50px;
-    padding-bottom: 1em;
+    padding: 0 50px 1em 50px;
     scroll-snap-align: start;
 
     .homepage-arrow:first-of-type {
@@ -293,10 +296,9 @@
       justify-content: space-between;
       max-width: 1200px;
       margin: 6vh auto 4.5em auto;
-      padding: 0 30px;
       position: relative;
       z-index: 2;
-      gap: 30px;
+      gap: 6em;
 
       @media (max-width: @screen-md) {
         flex-direction: column;
@@ -348,7 +350,7 @@
           position: absolute;
           left: 0;
           bottom: -10px;
-          width: 100%;
+          width: 30%;
           border-bottom: 1px solid @gray-light;
         }
       }
@@ -548,6 +550,7 @@
 
     .homepage-information {
       padding-left: 0;
+      padding-right: 0;
     }
   }
 
@@ -597,7 +600,7 @@
 
     .homepage-information {
       .homepage-information-content {
-        padding: 60px 25px 0 25px;
+        padding: 0 25px 0 25px;
       }
 
       .info-column {
