@@ -178,12 +178,13 @@ export default class YearInMusic extends React.Component<
       const response = await fetch(
         "https://static.metabrainz.org/LB/year-in-music/2024/2024_mosaics.json"
       );
-      const mosaics = response.json();
+      const mosaics = await response.json();
 
       this.setState({
         mosaics: (mosaics as unknown) as MosaicImageDefinition[],
       });
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
     }
   };
