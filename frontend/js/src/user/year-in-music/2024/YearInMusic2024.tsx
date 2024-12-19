@@ -67,13 +67,19 @@ const YIM2024Seasons = {
   winter: { background: "#DFE5EB", cardBackground: "#F8FBFF", text: "#4C5565" },
 };
 type YIM2024SeasonNames = keyof typeof YIM2024Seasons;
-// const YIM2024ColorStrings = Object.values(YIM2024Seasons);
-
+type MosaicImageDefinition = {
+  release_mbid: string;
+  artist_mbid: string;
+  artist_name: string;
+  release_name: string;
+  spiciness: number; // between 0 and 1
+};
 export type YearInMusicState = {
   followingList: Array<string>;
   followingListForLoggedInUser: Array<string>;
   selectedMetric: "artist" | "listen";
   selectedSeasonName: YIM2024SeasonNames;
+  mosaics: MosaicImageDefinition[];
 };
 
 export default class YearInMusic extends React.Component<
@@ -87,6 +93,7 @@ export default class YearInMusic extends React.Component<
   constructor(props: YearInMusicProps) {
     super(props);
     this.state = {
+      mosaics: [],
       followingList: [],
       followingListForLoggedInUser: [],
       selectedMetric: "listen",
@@ -98,6 +105,7 @@ export default class YearInMusic extends React.Component<
   async componentDidMount() {
     await this.getFollowing();
     await this.getFollowingForLoggedInUser();
+    await this.getMosaicImages();
   }
 
   async componentDidUpdate(prevProps: YearInMusicProps) {
@@ -162,6 +170,21 @@ export default class YearInMusic extends React.Component<
         />,
         { toastId: "fetch-following-error" }
       );
+    }
+  };
+
+  getMosaicImages = async () => {
+    try {
+      const response = await fetch(
+        "https://static.metabrainz.org/LB/year-in-music/2024/2024_mosaics.json"
+      );
+      const mosaics = response.json();
+
+      this.setState({
+        mosaics: (mosaics as unknown) as MosaicImageDefinition[],
+      });
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -334,7 +357,12 @@ export default class YearInMusic extends React.Component<
       topMissedRecordingsPlaylist,
       missingPlaylistData,
     } = this.props;
-    const { selectedMetric, selectedSeasonName, followingList } = this.state;
+    const {
+      selectedMetric,
+      selectedSeasonName,
+      followingList,
+      mosaics,
+    } = this.state;
     const { APIService, currentUser } = this.context;
     const listens: BaseListenFormat[] = [];
     const selectedSeason = YIM2024Seasons[selectedSeasonName];
@@ -645,7 +673,6 @@ export default class YearInMusic extends React.Component<
                         loadPrevNext: true,
                         loadPrevNextAmount: 4,
                       }}
-                      watchSlidesProgress
                       navigation
                       effect="coverflow"
                       coverflowEffect={{
@@ -1362,136 +1389,128 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
         )}
-        <div className="cover-art-composite">
+        {Boolean(mosaics?.length) && (
           <div className="section">
             <div className="header">
-              2024 album mosaïc
+              2024 Cover Art Mosaïc
               <div className="subheader">
-                the top albums on ListenBrainz that came out in 2024
+                The top ListenBrainz albums of 2024,
                 <br />
-                made out of cover art from other 2024 albums
+                recreated with cover art from the year.
               </div>
             </div>
             <Swiper
-              modules={[EffectCube, Navigation, Keyboard]}
+              modules={[EffectCube, Navigation, Keyboard, Lazy]}
               centeredSlides
-              // watchSlidesProgress
               navigation
+              loop
               effect="cube"
               cubeEffect={{
-                shadow: true,
+                shadow: false,
                 slideShadows: false,
-                // shadowOffset: 20,
-                // shadowScale: 0.94,
+              }}
+              lazy={{
+                enabled: true,
+                loadPrevNext: true,
+                loadPrevNextAmount: 2,
               }}
             >
-              {yearInMusicData?.top_release_groups
-                .slice(0, 10)
-                .map((release_group) => {
-                  if (
-                    !release_group.caa_id ||
-                    !release_group.caa_release_mbid
-                  ) {
-                    return null;
-                  }
-                  const coverArt = generateAlbumArtThumbnailLink(
-                    release_group.caa_id,
-                    release_group.caa_release_mbid,
-                    500
-                  );
-                  return (
-                    <SwiperSlide
-                      key={`coverflow-${release_group.release_group_name}`}
-                    >
-                      <img
-                        src={
-                          coverArt ?? "/static/img/cover-art-placeholder.jpg"
-                        }
-                        alt={release_group.release_group_name}
-                      />
-                      <div title={release_group.release_group_name}>
+              {mosaics?.map((mosaicImage) => {
+                const imageLink = `https://static.metabrainz.org/LB/year-in-music/2024/${mosaicImage.release_mbid}.png`;
+                return (
+                  <SwiperSlide key={`coverflow-${mosaicImage.release_mbid}`}>
+                    <div style={{ marginInline: "auto", width: "fit-content" }}>
+                      <a href={imageLink} target="_blank" rel="noreferrer">
+                        <img
+                          src={imageLink}
+                          alt={mosaicImage.release_name}
+                          width={500}
+                          height={500}
+                        />
+                      </a>
+                      <div title={mosaicImage.release_name}>
                         {getEntityLink(
-                          "release-group",
-                          release_group.release_group_name,
-                          release_group.release_group_mbid
+                          "release",
+                          mosaicImage.release_name,
+                          mosaicImage.release_mbid
                         )}
                         <div className="small text-muted">
                           {getStatsArtistLink(
-                            release_group.artists,
-                            release_group.artist_name,
-                            release_group.artist_mbids
+                            undefined,
+                            mosaicImage.artist_name,
+                            [mosaicImage.artist_mbid]
                           )}
                         </div>
                       </div>
-                    </SwiperSlide>
-                  );
-                })}
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
             </Swiper>
           </div>
-          <div className="section">
-            {userShareBar}
-            <div className="closing-remarks">
-              <span className="bold">
-                Wishing you a very cozy 2025, from the ListenBrainz team.
-              </span>
-              <br />
-              If you have questions or feedback don&apos;t hesitate to contact
-              us
-              <br />
-              on&nbsp;
-              <a
-                target="_blank"
-                href="https://community.metabrainz.org/c/listenbrainz/18"
-                rel="noopener noreferrer"
-              >
-                our forums
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="mailto:listenbrainz@metabrainz.org"
-                rel="noopener noreferrer"
-              >
-                by email
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
-                rel="noopener noreferrer"
-              >
-                Matrix
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="https://discord.gg/R4hBw972QA"
-                rel="noopener noreferrer"
-              >
-                Discord
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="https://bsky.app/profile/metabrainz.bsky.social"
-                rel="noopener noreferrer"
-              >
-                Bluesky
-              </a>
-              &nbsp;or&nbsp;
-              <a
-                target="_blank"
-                href="https://mastodon.social/@metabrainz"
-                rel="noopener noreferrer"
-              >
-                Mastodon
-              </a>
-              .
-              <br />
-              <br />
-              Feeling nostalgic? See your previous Year in Music:{" "}
-              <Link to={`/user/${user.name}/year-in-music/2023/`}>2023</Link>
-            </div>
+        )}
+        <div className="section">
+          {userShareBar}
+          <div className="closing-remarks">
+            <span className="bold">
+              Wishing you a very cozy 2025, from the ListenBrainz team.
+            </span>
+            <br />
+            If you have questions or feedback don&apos;t hesitate to contact us
+            <br />
+            on&nbsp;
+            <a
+              target="_blank"
+              href="https://community.metabrainz.org/c/listenbrainz/18"
+              rel="noopener noreferrer"
+            >
+              our forums
+            </a>
+            ,&nbsp;
+            <a
+              target="_blank"
+              href="mailto:listenbrainz@metabrainz.org"
+              rel="noopener noreferrer"
+            >
+              by email
+            </a>
+            ,&nbsp;
+            <a
+              target="_blank"
+              href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
+              rel="noopener noreferrer"
+            >
+              Matrix
+            </a>
+            ,&nbsp;
+            <a
+              target="_blank"
+              href="https://discord.gg/R4hBw972QA"
+              rel="noopener noreferrer"
+            >
+              Discord
+            </a>
+            ,&nbsp;
+            <a
+              target="_blank"
+              href="https://bsky.app/profile/metabrainz.bsky.social"
+              rel="noopener noreferrer"
+            >
+              Bluesky
+            </a>
+            &nbsp;or&nbsp;
+            <a
+              target="_blank"
+              href="https://mastodon.social/@metabrainz"
+              rel="noopener noreferrer"
+            >
+              Mastodon
+            </a>
+            .
+            <br />
+            <br />
+            Feeling nostalgic? See your previous Year in Music:{" "}
+            <Link to={`/user/${user.name}/year-in-music/2023/`}>2023</Link>
           </div>
         </div>
         {/* Trick to load the font files for use with the SVG render */}
