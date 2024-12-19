@@ -446,13 +446,16 @@ export default class YearInMusic extends React.Component<
     const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
     const statsImageCustomStyles = `.background, text {\nfill: ${backgroundColor};\n}\n.outline {\nstroke: ${selectedSeason.text};\n}\n`;
     const buddiesImages = [
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-01.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-02.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-03.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-04.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-05.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-06.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/yim24-buddy-07.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-01.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-02.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-03.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-04.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-05.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-06.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-07.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-08.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-09.png`,
+      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-10.png`,
     ];
 
     let newArtistsDiscovered: number | string =
@@ -1314,6 +1317,22 @@ export default class YearInMusic extends React.Component<
                 ref={this.buddiesScrollContainer}
               >
                 {followingList.slice(0, 15).map((followedUser, index) => {
+                  let numberOfBuddyImages;
+                  switch (selectedSeasonName) {
+                    case "summer":
+                      numberOfBuddyImages = 7;
+                      break;
+                    case "autumn":
+                      numberOfBuddyImages = 10;
+                      break;
+                    case "winter":
+                      numberOfBuddyImages = 5;
+                      break;
+                    case "spring":
+                    default:
+                      numberOfBuddyImages = 9;
+                      break;
+                  }
                   return (
                     <Link
                       key={`follow-user-${followedUser}`}
@@ -1322,7 +1341,7 @@ export default class YearInMusic extends React.Component<
                     >
                       <div className="img-container">
                         <img
-                          src={buddiesImages[index % 7]}
+                          src={buddiesImages[index % numberOfBuddyImages]}
                           alt="Music buddies"
                         />
                       </div>
