@@ -302,7 +302,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     raise APIBadRequest(f"Unkown custom cover art type {custom_name}")
 
 
-def _cover_art_yim_stats(user_name, stats, year):
+def _cover_art_yim_stats(user_name, stats, year, yim24):
     """ Create the SVG using YIM statistics for the given year. """
     if stats.get("day_of_week") is None or stats.get("most_listened_year") is None or \
         stats.get("total_listen_count") is None or stats.get("total_new_artists_discovered") is None or \
@@ -343,6 +343,18 @@ def _cover_art_yim_stats(user_name, stats, year):
             total_listen_count=stats["total_listen_count"],
             total_new_artists_discovered=stats["total_new_artists_discovered"],
             total_artists_count=stats["total_artists_count"],
+        )
+
+    if year == 2024:
+        return render_template(
+            "art/svg-templates/year-in-music-2024/yim-2024-stats.svg",
+            user_name=user_name,
+            most_played_day_message=Markup(most_played_day_message),
+            most_listened_year=most_listened_year,
+            total_listen_count=stats["total_listen_count"],
+            total_new_artists_discovered=stats["total_new_artists_discovered"],
+            total_artists_count=stats["total_artists_count"],
+            **yim24,
         )
 
 
@@ -408,14 +420,50 @@ def _cover_art_yim_albums_2023(user_name, stats):
         images=images,
     )
 
+def _cover_art_yim_albums_2024(user_name, stats, yim24):
+    """ Create the SVG using YIM top albums for 2024. """
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    images = []
+    selected_urls = set()
 
-def _cover_art_yim_albums(user_name, stats, year):
+    if stats.get("top_release_groups") is None:
+        return None
+
+    for release_group in stats["top_release_groups"]:
+        if "caa_id" in release_group and "caa_release_mbid" in release_group:
+            url = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
+            if url not in selected_urls:
+                selected_urls.add(url)
+                images.append({
+                    "url": url,
+                    "title": release_group["release_group_name"],
+                    "artist": release_group["artist_name"],
+                    "entity_mbid": release_group["release_group_mbid"]
+                })
+
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images)
+
+    return render_template(
+        "art/svg-templates/year-in-music-2024/yim-2024-albums.svg",
+        user_name=user_name,
+        images=images,
+        **yim24,
+    )
+
+
+def _cover_art_yim_albums(user_name, stats, year, yim24):
     """ Create the SVG using YIM top albums for the given year. """
     if year == 2022:
         return _cover_art_yim_albums_2022(user_name, stats)
 
     if year == 2023:
         return _cover_art_yim_albums_2023(user_name, stats)
+    
+    if year == 2024:
+        return _cover_art_yim_albums_2024(user_name, stats, yim24)
 
 
 def _cover_art_yim_tracks(user_name, stats, year):
@@ -439,8 +487,15 @@ def _cover_art_yim_tracks(user_name, stats, year):
             tracks=stats["top_recordings"],
         )
 
+    if year == 2024:
+        return render_template(
+           "art/svg-templates/year-in-music-2024/yim-2024-tracks.svg",
+            user_name=user_name,
+            tracks=stats["top_recordings"],
+        )
 
-def _cover_art_yim_artists(user_name, stats, year):
+
+def _cover_art_yim_artists(user_name, stats, year, yim24):
     """ Create the SVG using top artists for the given user. """
     if stats.get("top_artists") is None:
         return None
@@ -460,6 +515,15 @@ def _cover_art_yim_artists(user_name, stats, year):
             user_name=user_name,
             artists=stats["top_artists"],
             total_artists_count=stats["total_artists_count"],
+        )
+
+    if year == 2024:
+        return render_template(
+            "art/svg-templates/year-in-music-2024/yim-2024-artists.svg",
+            user_name=user_name,
+            artists=stats["top_artists"],
+            total_artists_count=stats["total_artists_count"],
+            **yim24,
         )
 
 
@@ -543,8 +607,56 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
         branding=branding
     )
 
+def _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24):
+    """ Create the SVG using playlist tracks' cover arts for the given YIM 2024 playlist. """
+    if stats.get(key) is None:
+        return None
 
-def _cover_art_yim_playlist(user_name, stats, key, year, branding):
+    images = []
+    selected_urls = set()
+
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+
+    for track in stats[key]["track"]:
+        additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
+        if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
+            caa_id = additional_metadata["caa_id"]
+            caa_release_mbid = additional_metadata["caa_release_mbid"]
+            cover_art = cac.resolve_cover_art(caa_id, caa_release_mbid, 250)
+
+            # check existence in set to avoid duplicates
+            if cover_art not in selected_urls:
+                images.append({
+                    "url": cover_art,
+                    "entity_mbid": caa_release_mbid,
+                    "title": track.get("album"),
+                    "artist": track.get("creator"),
+                })
+
+    if len(images) == 0:
+        return None
+
+    images = _repeat_images(images)
+
+    match key:
+        case "playlist-top-discoveries-for-year":
+            target_svg = "art/svg-templates/year-in-music-2024/yim-2024-discovery-playlist.svg"
+        case "playlist-top-missed-recordings-for-year":
+            target_svg = "art/svg-templates/year-in-music-2024/yim-2024-missed-tracks-playlist.svg"
+        case other:
+            raise APIBadRequest(f"Invalid playlist type {key}. Playlist type should be one of (playlist-top-discoveries-for-year, playlist-top-missed-recordings-for-year)")
+    
+
+    return render_template(
+        target_svg,
+        user_name=user_name,
+        images=images,
+        branding=branding,
+        **yim24,
+    )
+
+
+def _cover_art_yim_playlist(user_name, stats, key, year, branding, yim24):
     """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
     if year == 2022:
         return _cover_art_yim_playlist_2022(user_name, stats, key)
@@ -552,8 +664,10 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding):
     if year == 2023:
         return _cover_art_yim_playlist_2023(user_name, stats, key, branding)
 
+    if year == 2024:
+        return _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24)
 
-def _cover_art_yim_overview(user_name, stats, year):
+def _cover_art_yim_overview(user_name, stats, year, yim24):
     """ Create the SVG using top stats for the overview YIM image. """
     filtered_genres = []
     total_filtered_genre_count = 0
@@ -601,12 +715,15 @@ def _cover_art_yim_overview(user_name, stats, year):
 
     if year == 2023:
         return render_template("art/svg-templates/yim-2023.svg", **props)
+    
+    if year == 2024:
+        return render_template("art/svg-templates/year-in-music-2024/yim-2024-overview.svg", **props, **yim24)
 
 
 @art_api_bp.route("/year-in-music/<int:year>/<user_name>", methods=["GET"])
 @crossdomain
 @ratelimit()
-def cover_art_yim(user_name, year: int = 2023):
+def cover_art_yim(user_name, year: int = 2024):
     """ Create the shareable svg image using YIM stats """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
@@ -623,14 +740,38 @@ def cover_art_yim(user_name, year: int = 2023):
     if stats is None:
         raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
 
+    season = request.args.get("season") or 'spring'
+    match season:
+        case "spring":
+            background_color = "#EDF3E4"
+            accent_color = "#718C56"
+        case "summer":
+            background_color = "#DBE8DF"
+            accent_color = "#4B835C"
+        case "autumn":
+            background_color = "#F1E8E1"
+            accent_color = "#926F6F"
+        case "winter":
+            background_color = "#DFE5EB"
+            accent_color = "#4C5565"
+    
+    yim24 = None
+    if year == 2024:
+        yim24 = {
+            season:season,
+            background_color:background_color,
+            accent_color:accent_color,
+        }
+        
+
     match image:
-        case "overview": svg = _cover_art_yim_overview(user_name, stats, year)
-        case "stats": svg = _cover_art_yim_stats(user_name, stats, year)
-        case "albums": svg = _cover_art_yim_albums(user_name, stats, year)
-        case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year)
-        case "artists": svg = _cover_art_yim_artists(user_name, stats, year)
-        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding)
-        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding)
+        case "overview": svg = _cover_art_yim_overview(user_name, stats, year, yim24)
+        case "stats": svg = _cover_art_yim_stats(user_name, stats, year, yim24)
+        case "albums": svg = _cover_art_yim_albums(user_name, stats, year, yim24)
+        case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year, yim24)
+        case "artists": svg = _cover_art_yim_artists(user_name, stats, year, yim24)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding, yim24)
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding, yim24)
         case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     if svg is None:
