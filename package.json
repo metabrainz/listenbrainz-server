@@ -57,7 +57,7 @@
     "@tanstack/react-query-devtools": "^5.28.6",
     "@types/react-datetime-picker": "^3.4.1",
     "blobs": "^2.3.0-beta.2",
-    "canvg": "^4.0.1",
+    "canvg": "^4.0.2",
     "core-js": "^3.26.1",
     "d3-array": "~2.3.3",
     "d3-format": "^1.4.4",
