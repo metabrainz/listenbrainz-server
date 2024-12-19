@@ -1427,14 +1427,20 @@ export default class YearInMusic extends React.Component<
                 const imageLink = `https://static.metabrainz.org/LB/year-in-music/2024/${mosaicImage.release_mbid}.png`;
                 return (
                   <SwiperSlide key={`coverflow-${mosaicImage.release_mbid}`}>
-                    <div style={{ marginInline: "auto", width: "fit-content" }}>
+                    <div
+                      style={{
+                        marginInline: "auto",
+                        width: "fit-content",
+                      }}
+                    >
                       <a href={imageLink} target="_blank" rel="noreferrer">
                         <img
                           data-src={imageLink}
                           alt={mosaicImage.release_name}
                           className="swiper-lazy"
-                          width={500}
-                          height={500}
+                          style={{
+                            maxWidth: "min(90vw, 100%)",
+                          }}
                         />
                       </a>
                       <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
