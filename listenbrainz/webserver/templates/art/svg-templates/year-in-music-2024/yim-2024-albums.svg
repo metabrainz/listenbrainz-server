@@ -2,26 +2,26 @@
   <style id="style1242">
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         .album-art {
-        preserveAspectRatio: "xMidYMid slice";
-        height: 135px;
-        width: 135px;
+          preserveAspectRatio: "xMidYMid slice";
+          height: 135px;
+          width: 135px;
         }
         text {
-        fill: {{ accent_color }};
-        font-family: 'Inter', sans-serif;
-        font-weight: 900;
+          fill: {{ accent_color }};
+          font-family: 'Inter', sans-serif;
+          font-weight: 900;
         }
         .branding {
-        font-size: 20px;
-        letter-spacing: 0em;
-        text-transform: uppercase;
+          font-size: 20px;
+          letter-spacing: 0em;
+          text-transform: uppercase;
         }
         .subtitle {
-        text-anchor: middle;
-        font-size: 32px;
+          text-anchor: middle;
+          font-size: 32px;
         }
         .background {
-        fill: {{ background_color }};
+          fill: {{ background_color }};
         }
     </style>
   <g id="g321">

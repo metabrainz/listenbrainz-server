@@ -55,7 +55,7 @@
           <tspan dx="12">I</tspan>
           <tspan dx="12">C</tspan>
         </text>
-        <text x="50%" y="800" id="top-artists" class="subtitle">
+        <text x="50%" y="790" id="playlist" class="subtitle">
           <tspan>P</tspan>
           <tspan dx="12">L</tspan>
           <tspan dx="12">A</tspan>
@@ -67,7 +67,7 @@
           <tspan dx="12">S</tspan>
           <tspan dx="12">:</tspan>
         </text>
-        <text x="50%" y="795" id="top-artists" class="subtitle">
+        <text x="50%" y="830" id="missed-tracks" class="subtitle">
             <tspan>M</tspan>
             <tspan dx="12">I</tspan>
             <tspan dx="12">S</tspan>
