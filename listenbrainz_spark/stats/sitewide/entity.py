@@ -53,7 +53,7 @@ def get_listen_count_limit(stats_range: str) -> int:
     listens to a particular recording for 10000 times, it will be counted as
     500 for calculating the stat.
     """
-    return 500
+    return 100000
 
 
 def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEntityStatMessage]]:
