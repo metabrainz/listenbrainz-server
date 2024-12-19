@@ -1433,7 +1433,7 @@ export default class YearInMusic extends React.Component<
               }}
             >
               {yearInMusicData?.top_release_groups
-                .slice(0, 10)
+                ?.slice(0, 10)
                 .map((release_group) => {
                   if (
                     !release_group.caa_id ||
