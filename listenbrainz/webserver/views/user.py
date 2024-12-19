@@ -1,10 +1,13 @@
 from datetime import datetime
+from collections import defaultdict
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
 from flask import Blueprint, render_template, request, url_for, jsonify, current_app
 from flask_login import current_user, login_required
+import psycopg2
+from psycopg2.extras import DictCursor
 
 from listenbrainz import webserver
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
@@ -12,6 +15,7 @@ from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
+from listenbrainz.db.genre import load_genre_with_subgenres
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
@@ -19,8 +23,13 @@ from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from werkzeug.exceptions import NotFound
 
+from brainzutils import cache
+
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
+
+TAG_HEIRARCHY_CACHE_KEY = "tag_hierarchy"
+TAG_HEIRARCHY_CACHE_EXPIRY = 60 * 60 * 24 * 7  # 7 days
 
 user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
@@ -322,6 +331,75 @@ def taste(user_name: str):
     return jsonify(data)
 
 
+def process_genre_data(yim_top_genre: list, data: list, user_name: str):
+    if not yim_top_genre or not data:
+        return {}
+
+    yimDataDict = {genre["genre"]: genre["genre_count"] for genre in yim_top_genre}
+
+    adj_matrix = defaultdict(list)
+    is_head = defaultdict(lambda: True)
+    id_name_map = {}
+    parent_map = defaultdict(lambda: None)
+
+    for row in data:
+        genre_id = row["genre_gid"]
+        is_head[genre_id]
+        id_name_map[genre_id] = row.get("genre")
+
+        subgenre_id = row["subgenre_gid"]
+        if subgenre_id:
+            is_head[subgenre_id] = False
+            id_name_map[subgenre_id] = row.get("subgenre")
+            parent_map[subgenre_id] = genre_id
+            adj_matrix[genre_id].append(subgenre_id)
+        else:
+            adj_matrix[genre_id] = []
+
+    visited = set()
+    rootNodes = [node for node in is_head if is_head[node]]
+
+    def create_node(id):
+        if id in visited:
+            return None
+        visited.add(id)
+
+        genreCount = yimDataDict.get(id_name_map[id], 0)
+        children = []
+
+        for subGenre in sorted(adj_matrix[id]):
+            childNode = create_node(subGenre)
+            if isinstance(childNode, list):
+                children.extend(childNode)
+            elif childNode is not None:
+                children.append(childNode)
+
+        if genreCount == 0:
+            if len(children) == 0:
+                return None
+            return children
+
+        data = {"id": id, "name": id_name_map[id], "children": children, "loc": genreCount}
+
+        if len(children) == 0:
+            del data["children"]
+
+        return data
+
+    outputArr = []
+    for rootNode in rootNodes:
+        node = create_node(rootNode)
+        if isinstance(node, list):
+            outputArr.extend(node)
+        elif node is not None:
+            outputArr.append(node)
+
+    return {
+        "name": user_name,
+        "children": outputArr
+    }
+
+
 @user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
 @user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
 def year_in_music(user_name, year: int = 2024):
@@ -339,8 +417,26 @@ def year_in_music(user_name, year: int = 2024):
         yearInMusicData = {}
         current_app.logger.error(f"Error getting Year in Music data for user {user_name}: {e}")
 
+    genreGraphData = {}
+    if yearInMusicData and year == 2024:
+        try:
+            data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
+            if not data:
+                with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,\
+                        mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+                    data = load_genre_with_subgenres(mb_curs)
+                    data = [dict(row) for row in data] if data else []
+                cache.set(TAG_HEIRARCHY_CACHE_KEY, data, expirein=TAG_HEIRARCHY_CACHE_EXPIRY)
+        except Exception as e:
+            current_app.logger.error("Error loading genre hierarchy: %s", e)
+            return jsonify({"error": "Failed to load genre hierarchy"}), 500
+
+        yimTopGenre = yearInMusicData.get("top_genres", [])
+        genreGraphData = process_genre_data(yimTopGenre, data, user_name)
+
     return jsonify({
         "data": yearInMusicData,
+        **({"genreGraphData": genreGraphData} if year == 2024 else {}),
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
