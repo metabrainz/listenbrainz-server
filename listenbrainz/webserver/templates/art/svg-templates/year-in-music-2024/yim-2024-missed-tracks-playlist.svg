@@ -1,11 +1,15 @@
 {% if branding %}
+    {% set startX = 0 %}
+    {% set startY = 0 %}
     {% set width = 924 %}
     {% set height = 924 %}
 {% else %}
+    {% set startX = -50 %}
+    {% set startY = -50 %}
     {% set width = 650 %}
     {% set height = 650 %}
 {% endif %}
-<svg width="{{width}}" height="{{height}}" viewBox="0 0 {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="{{width}}" height="{{height}}" viewBox="{{startX}} {{startY}} {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         .album-art {
