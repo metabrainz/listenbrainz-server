@@ -172,7 +172,8 @@ CREATE TABLE release_color (
     green                   SMALLINT NOT NULL,
     blue                    SMALLINT NOT NULL,
     color                   CUBE,
-    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    year                    INTEGER DEFAULT NULL
 );
 
 CREATE TABLE user_relationship (

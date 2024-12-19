@@ -51,6 +51,7 @@ CREATE UNIQUE INDEX user_id_event_type_event_id_ndx_hide_user_timeline_event ON 
 CREATE INDEX user_id_ndx_pinned_recording ON pinned_recording (user_id);
 
 CREATE UNIQUE INDEX release_mbid_ndx_release_color ON release_color (release_mbid);
+CREATE INDEX year_ndx_release_color ON release_color (year);
 CREATE UNIQUE INDEX caa_id_release_mbid_ndx_release_color ON release_color (caa_id, release_mbid);
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
