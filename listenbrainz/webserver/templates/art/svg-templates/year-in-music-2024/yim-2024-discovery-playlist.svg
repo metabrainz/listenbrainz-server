@@ -54,7 +54,7 @@
           <tspan dx="12">I</tspan>
           <tspan dx="12">C</tspan>
         </text>
-        <text x="50%" y="755" id="top-artists" class="subtitle">
+        <text x="50%" y="800" id="top-artists" class="subtitle">
           <tspan>P</tspan>
           <tspan dx="12">L</tspan>
           <tspan dx="12">A</tspan>
@@ -108,7 +108,7 @@
             </a>
         {% endfor %}
         <image
-            href="{{ url_for('static', filename='img/year-in-music-24/{{season}}/playlists/yim24-playlist-02.png') }}" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+            href="{{ image_folder }}/playlists/yim24-playlist-02.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
         </image>
     </g>
 </svg>

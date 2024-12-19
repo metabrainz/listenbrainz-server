@@ -466,7 +466,7 @@ def _cover_art_yim_albums(user_name, stats, year, yim24):
         return _cover_art_yim_albums_2024(user_name, stats, yim24)
 
 
-def _cover_art_yim_tracks(user_name, stats, year):
+def _cover_art_yim_tracks(user_name, stats, year, yim24):
     """ Create the SVG using top tracks for the given user. """
     if stats.get("top_recordings") is None:
         return None
@@ -492,6 +492,7 @@ def _cover_art_yim_tracks(user_name, stats, year):
            "art/svg-templates/year-in-music-2024/yim-2024-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
+            **yim24,
         )
 
 
@@ -758,9 +759,10 @@ def cover_art_yim(user_name, year: int = 2024):
     yim24 = None
     if year == 2024:
         yim24 = {
-            season:season,
-            background_color:background_color,
-            accent_color:accent_color,
+            "season":season,
+            "background_color":background_color,
+            "accent_color":accent_color,
+            "image_folder":'https://beta.listenbrainz.org/static/img/year-in-music-24/' + season,
         }
         
 

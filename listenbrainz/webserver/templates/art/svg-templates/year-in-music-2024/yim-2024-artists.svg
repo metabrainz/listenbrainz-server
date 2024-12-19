@@ -30,7 +30,7 @@
       <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
       <text class="branding" x="750" y="897" id="text102">LISTENBRAINZ</text>
       <text class="branding" x="26" y="43" id="text104">{{user_name}}</text>
-      <text x="50%" y="150" id="my-year" class="subtitle">
+      <text x="50%" y="90" id="my-year" class="subtitle">
           <tspan>M</tspan>
           <tspan dx="12">Y</tspan>
           <tspan dx="30">Y</tspan>
@@ -38,7 +38,7 @@
           <tspan dx="12">A</tspan>
           <tspan dx="12">R</tspan>
       </text>
-      <text x="50%" y="190" id="in-music" class="subtitle">
+      <text x="50%" y="130" id="in-music" class="subtitle">
           <tspan>I</tspan>
           <tspan dx="12">N</tspan>
           <tspan dx="30">M</tspan>
@@ -47,7 +47,7 @@
           <tspan dx="12">I</tspan>
           <tspan dx="12">C</tspan>
       </text>
-      <text x="50%" y="755" id="top-artists" class="subtitle">
+      <text x="50%" y="800" id="top-artists" class="subtitle">
           <tspan>T</tspan>
           <tspan dx="12">O</tspan>
           <tspan dx="12">P</tspan>
@@ -76,7 +76,16 @@
         {% endfor %}
     </g>
     <image
-        href="{{ url_for('static', filename='img/year-in-music-24/{{season}}/playlists/yim24-playlist-01.png') }}" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+        href="{{ image_folder }}/buddies/yim24-buddy-04.png" height="250" x="700" y="450" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-4">
+    </image>
+    <image
+        href="{{ image_folder }}/buddies/yim24-buddy-03.png" height="250" x="100" y="550" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-3">
+    </image>
+    <image
+        href="{{ image_folder }}/buddies/yim24-buddy-02.png" height="250" x="620" y="125" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-2">
+    </image>
+    <image
+        href="{{ image_folder }}/buddies/yim24-buddy-01.png" height="250" x="-40" y="410" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-1">
     </image>
   </g>
 </svg>
