@@ -555,7 +555,7 @@ export default class YearInMusic extends React.Component<
         <YIMYearMetaTags year={2024} backgroundColor={backgroundColor} />
         <div id="main-header">
           <div className="color-picker">
-            <div>Pick a season</div>
+            <div>Choose a season</div>
             {Object.entries(YIM2024Seasons).map(([name, colors]) => {
               return (
                 <div style={{ color: colors.text }} key={name}>
@@ -563,14 +563,21 @@ export default class YearInMusic extends React.Component<
                     aria-label={`Select season ${name}`}
                     role="button"
                     tabIndex={0}
-                    className="color-selector"
+                    className="color-selector flex-center"
                     style={{
-                      backgroundColor: colors.text,
+                      backgroundColor: colors.cardBackground,
+                      border: `1px solid ${colors.text}`,
                     }}
                     onClick={this.selectColor}
                     onKeyDown={this.selectColor}
                     data-season={name}
-                  />
+                  >
+                    <img
+                      src={`/static/img/year-in-music-24/icon-${name}.svg`}
+                      alt={name}
+                      height={35}
+                    />
+                  </div>
                   <div>{capitalize(name)}</div>
                 </div>
               );
@@ -1422,12 +1429,14 @@ export default class YearInMusic extends React.Component<
                     <div style={{ marginInline: "auto", width: "fit-content" }}>
                       <a href={imageLink} target="_blank" rel="noreferrer">
                         <img
-                          src={imageLink}
+                          data-src={imageLink}
                           alt={mosaicImage.release_name}
+                          className="swiper-lazy"
                           width={500}
                           height={500}
                         />
                       </a>
+                      <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                       <div title={mosaicImage.release_name}>
                         {getEntityLink(
                           "release",
