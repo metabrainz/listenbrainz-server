@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from more_itertools import chunked
 
 from listenbrainz_spark import config
+from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY, RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
+from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS, get_latest_listen_ts
 
 STATS_PER_MESSAGE = 10000
 
@@ -133,7 +136,9 @@ def get_popularity_per_artist_query(entity, mlhd_table, listens_table):
 def main():
     """ Generate popularity data for MLHD data. """
     listens_table = "listens_popularity"
-    get_listens_from_dump().createOrReplaceTempView(listens_table)
+    start = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+    end = get_latest_listen_ts()
+    get_listens_from_dump(start, end).createOrReplaceTempView(listens_table)
 
     mlhd_table = f"parquet.`{MLHD_PLUS_DATA_DIRECTORY}`"
 
