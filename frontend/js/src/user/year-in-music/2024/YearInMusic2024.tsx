@@ -389,6 +389,14 @@ export default class YearInMusic extends React.Component<
     const backgroundColor = selectedSeason.background;
     const cardBackgroundColor = selectedSeason.cardBackground;
 
+    const textColors = Object.values(YIM2024Seasons).map(
+      (season) => season.text
+    );
+    const reorderedColors = [
+      ...textColors.slice(textColors.indexOf(selectedSeason.text)),
+      ...textColors.slice(0, textColors.indexOf(selectedSeason.text)),
+    ];
+
     // Some data might not have been calculated for some users
     // This boolean lets us warn them of that
     let missingSomeData = missingPlaylistData;
@@ -1176,6 +1184,7 @@ export default class YearInMusic extends React.Component<
                             from: "color",
                             modifiers: [["darker", 1.2]],
                           }}
+                          colors={reorderedColors}
                           parentLabelPosition="left"
                           parentLabelTextColor={{
                             from: "color",
