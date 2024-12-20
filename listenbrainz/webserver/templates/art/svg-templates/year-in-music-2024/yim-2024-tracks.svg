@@ -25,21 +25,21 @@
         .background {
           fill: {{ background_color }};
         }
-        .track-name {
-          font-size: 20px;
+        .track-name, .track-name * {
+            font-size: 20px;
         }
-        .artist-name {
-          font-size: 20px;
-          font-weight: 500;
+        .artist-name, .artist-name * {
+            font-size: 20px;
+            font-weight: 500;
         }
     </style>
   <g id="g1348">
     <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
     <image
-      href="{{ image_folder }}/playlists/yim24-playlist-04.png" x="0" y="450" style="pointer-events: none;" id="background-image">
+      href="{{ image_folder }}/playlists/yim24-playlist-04.png" x="0" y="530" style="pointer-events: none;" id="background-image">
     </image>
     <image
-      href="{{ image_folder }}/playlists/yim24-playlist-06.png" x="600" y="50" style="pointer-events: none;" id="background-image">
+      href="{{ image_folder }}/playlists/yim24-playlist-06.png" x="600" y="50" width="300" style="pointer-events: none;" id="background-image">
     </image>
     <g id="g1264">
       <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
@@ -75,7 +75,7 @@
       </text>
     </g>
     <g>
-      {% set y_start = 280 %}
+      {% set y_start = 210 %}
       {% set gap = 45 %}
       {% for track in tracks[:10] %}
       <text>

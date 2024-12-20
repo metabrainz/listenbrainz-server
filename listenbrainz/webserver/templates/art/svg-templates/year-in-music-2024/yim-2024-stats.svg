@@ -38,10 +38,10 @@
     <g>
         <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
         <image
-            href="{{ image_folder }}/playlist/yim24-playlist-04.png" width="200" x="620" y="125" style="pointer-events: none;" id="top">
+            href="{{ image_folder }}/playlists/yim24-playlist-04.png" width="300" x="620" y="10" style="pointer-events: none;" id="top">
         </image>
         <image
-            href="{{ image_folder }}/playlist/yim24-playlist-03.png" width="350" height="350" x="-40" y="510" style="pointer-events: none;" id="stumpy">
+            href="{{ image_folder }}/playlists/yim24-playlist-03.png" width="350" height="350" x="-40" y="510" style="pointer-events: none;" id="stumpy">
         </image>
         <g>
             <text class="branding" x="750" y="897">LISTENBRAINZ</text>
