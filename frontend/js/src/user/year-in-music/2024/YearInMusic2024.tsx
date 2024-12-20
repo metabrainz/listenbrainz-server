@@ -579,21 +579,12 @@ export default class YearInMusic extends React.Component<
               );
             })}
           </div>
-          <div className="hashtag">#YearInMusic</div>
           {hasSomeData ? (
-            <span
-              className="masked-image"
-              style={{
-                WebkitMaskImage:
-                  "url('/static/img/year-in-music-24/yim23-logo.png')",
-              }}
-            >
-              <img
-                className="img-responsive header-image"
-                src="/static/img/year-in-music-24/yim23-logo.png"
-                alt="Your year in music 2024"
-              />
-            </span>
+            <img
+              className="img-responsive header-image"
+              src="/static/img/year-in-music-24/yim24-header.png"
+              alt="Your year in music 2024"
+            />
           ) : (
             <>
               <span
