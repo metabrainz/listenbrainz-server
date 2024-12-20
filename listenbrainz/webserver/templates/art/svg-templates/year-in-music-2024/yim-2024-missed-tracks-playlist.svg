@@ -4,8 +4,8 @@
     {% set width = 924 %}
     {% set height = 924 %}
 {% else %}
-    {% set startX = -50 %}
-    {% set startY = -50 %}
+    {% set startX = -60 %}
+    {% set startY = -60 %}
     {% set width = 650 %}
     {% set height = 650 %}
 {% endif %}
@@ -38,7 +38,7 @@
     {% if branding %}
     <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
     <image
-        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="pointer-events: none;" id="background-image">
     </image>
     <g id="g297">
         <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
@@ -92,7 +92,7 @@
     <g transform="translate(195, 190)">
     {% else %}
     <image
-        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+        href="{{ image_folder }}/playlists/yim24-playlist-01-no-bg.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
     </image>
     <g>
     {% endif %}

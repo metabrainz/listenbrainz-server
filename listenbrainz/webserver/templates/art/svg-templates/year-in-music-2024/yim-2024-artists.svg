@@ -26,16 +26,16 @@
   <g id="g138">
     <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
     <image
-        href="{{ image_folder }}/playlists/yim24-buddy-06.png" height="250" x="700" y="450" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-4">
+        href="{{ image_folder }}/playlists/yim24-buddy-06.png" height="250" x="700" y="450" style="pointer-events: none;" id="buddy-4">
     </image>
     <image
-        href="{{ image_folder }}/playlists/yim24-buddy-05.png" height="250" x="100" y="550" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-3">
+        href="{{ image_folder }}/playlists/yim24-buddy-05.png" height="250" x="100" y="550" style="pointer-events: none;" id="buddy-3">
     </image>
     <image
-        href="{{ image_folder }}/playlists/yim24-buddy-04.png" height="250" x="620" y="125" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-2">
+        href="{{ image_folder }}/playlists/yim24-buddy-04.png" height="250" x="620" y="125" style="pointer-events: none;" id="buddy-2">
     </image>
     <image
-        href="{{ image_folder }}/playlists/yim24-buddy-03.png" height="250" x="-40" y="410" style="mix-blend-mode: multiply; pointer-events: none;" id="buddy-1">
+        href="{{ image_folder }}/playlists/yim24-buddy-03.png" height="250" x="-40" y="410" style="pointer-events: none;" id="buddy-1">
     </image>
     <g id="g114">
       <text class="branding" x="750" y="897" id="text102">LISTENBRAINZ</text>
