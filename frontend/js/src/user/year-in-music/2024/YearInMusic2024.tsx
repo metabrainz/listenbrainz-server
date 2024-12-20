@@ -531,7 +531,7 @@ export default class YearInMusic extends React.Component<
     const userShareBar = (
       <div className="card content-card">
         <div className="link-section">
-          {isUserLoggedIn && (
+          {isUserLoggedIn && user.name !== currentUser?.name && (
             <FollowButton
               type="icon-only btn-info"
               user={user}
