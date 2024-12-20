@@ -36,8 +36,14 @@
         }
     </style>
     <g>
+        <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+        <image
+            href="{{ image_folder }}/playlist/yim24-playlist-04.png" width="200" x="620" y="125" style="mix-blend-mode: multiply; pointer-events: none;" id="top">
+        </image>
+        <image
+            href="{{ image_folder }}/playlist/yim24-playlist-03.png" width="350" height="350" x="-40" y="510" style="mix-blend-mode: multiply; pointer-events: none;" id="stumpy">
+        </image>
         <g>
-            <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
             <text class="branding" x="750" y="897">LISTENBRAINZ</text>
             <text class="branding" x="26" y="43">{{user_name}}</text>
             <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
@@ -60,12 +66,6 @@
                 <tspan dx="12">C</tspan>
             </text>
         </g>
-        <image
-            href="{{ image_folder }}/playlist/yim24-playlist-04.png" width="200" x="620" y="125" style="mix-blend-mode: multiply; pointer-events: none;" id="top">
-        </image>
-        <image
-            href="{{ image_folder }}/playlist/yim24-playlist-03.png" width="350" height="350" x="-40" y="510" style="mix-blend-mode: multiply; pointer-events: none;" id="stumpy">
-        </image>
         <rect x="110.5" y="276.5" width="684" height="462" fill="#FAFFFA"/>
         <text class="common-description" x="451.5" y="353">
             {{most_played_day_message}}

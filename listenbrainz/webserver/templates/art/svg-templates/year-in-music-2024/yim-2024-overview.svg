@@ -40,7 +40,7 @@
           font-size: 70px;
         }
         .genre-count {
-          font-size: 79px;
+          font-size: 42px;
         }
         .dark {
           fill: #253127;
@@ -105,7 +105,7 @@
             <tspan class="entity" dx="16">SONGS</tspan>
         </text>
         {%- set y_start = 850 -%}
-        {%- set y_step = 79 -%}
+        {%- set y_step = 50 -%}
         {%- for genre in genres -%}
             <text class="genre-count {% if loop.index0 > 0 %}dark{% endif %}" x="70" y="{{ y_start - y_step * loop.index0 }}">
                 <tspan class="value">{{ genre['genre_count_percent'] }}%</tspan>

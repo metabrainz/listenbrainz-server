@@ -34,8 +34,14 @@
         }
     </style>
   <g id="g1348">
+    <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+    <image
+      href="{{ image_folder }}/playlists/yim24-playlist-04.png" x="0" y="450" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
+    <image
+      href="{{ image_folder }}/playlists/yim24-playlist-06.png" x="600" y="50" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
     <g id="g1264">
-      <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
       <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
       <text class="branding" x="26" y="43" id="text1248">{{user_name}}</text>
       <text class="branding" font-style="italic" x="26" y="897" id="text1250">#YEARINMUSIC</text>
@@ -68,12 +74,6 @@
           <tspan dx="12">S</tspan>
       </text>
     </g>
-    <image
-      href="{{ image_folder }}/playlists/yim24-playlist-04.png" x="0" y="450" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
-    </image>
-    <image
-      href="{{ image_folder }}/playlists/yim24-playlist-06.png" x="600" y="50" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
-    </image>
     <g>
       {% set y_start = 280 %}
       {% set gap = 45 %}

@@ -36,8 +36,11 @@
         }
     </style>
     {% if branding %}
+    <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
     <g id="g297">
-        <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
         <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
         <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
         <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
@@ -86,11 +89,11 @@
             <tspan dx="12">S</tspan>
         </text>
     </g>
+    <g transform="translate(195, 190)">
+    {% else %}
     <image
         href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
     </image>
-    <g transform="translate(195, 190)">
-    {% else %}
     <g>
     {% endif %}
         {% set x_s = [50, 50, 50, 185, 185, 185, 320, 320, 320] %}
