@@ -6,9 +6,6 @@ from threading import Thread, get_ident
 import psycopg2
 from psycopg2.extensions import register_adapter
 import requests
-import sentry_sdk
-from sentry_sdk.crons import capture_checkin
-from sentry_sdk.crons.consts import MonitorStatus
 
 from brainzutils import metrics, cache
 import config
@@ -287,8 +284,6 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
         the corresponding compare key. The starting indexes (the current comparison index
         into the data) must be provided and match the type of the comparison keys. """
 
-    sentry_sdk.init(config.LOG_SENTRY["dsn"])
-    check_in_id = capture_checkin(monitor_slug='caa-color-sync', status=MonitorStatus.IN_PROGRESS)
     with psycopg2.connect(config.MB_DATABASE_STANDBY_URI) as mb_conn, \
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
             psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn, \
@@ -377,5 +372,3 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
             caa_front_count=mb_count,
             lb_caa_count=lb_count
         )
-
-    capture_checkin(monitor_slug='caa-color-sync', check_in_id=check_in_id, status=MonitorStatus.OK)

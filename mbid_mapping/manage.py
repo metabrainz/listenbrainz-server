@@ -13,7 +13,7 @@ from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
 from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
-from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
+from mapping.release_colors import sync_release_color_table
 from reports.tracks_of_the_year import calculate_tracks_of_the_year
 from reports.top_discoveries import calculate_top_discoveries
 from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_update_mb_metadata_cache, \
@@ -22,6 +22,7 @@ from mapping.mb_release_group_cache import create_mb_release_group_cache, \
     incremental_update_mb_release_group_cache
 from mapping.spotify_metadata_index import create_spotify_metadata_index
 from mapping.apple_metadata_index import create_apple_metadata_index
+from mapping.cron_wrapper import cron_wrapper_create_all, cron_incremental_update_release_color_table
 from similar.tag_similarity import create_tag_similarity
 
 
@@ -38,6 +39,13 @@ def create_all():
     """
     create_canonical_musicbrainz_data(True)
     action_build_index()
+
+@cli.command()
+def cron_create_all():
+    """
+        Create all canonical data in one go as a monitored cron job. First mb canonical data, then its typesense index.
+    """
+    cron_wrapper_create_all()
 
 
 @cli.command()
@@ -82,11 +90,11 @@ def sync_coverart():
 
 
 @cli.command()
-def update_coverart():
+def cron_update_coverart():
     """
         Update the release_color table incrementally. Designed to be called hourly by cron.
     """
-    incremental_update_release_color_table()
+    cron_incremental_update_release_color_table()
 
 
 @cli.command()
