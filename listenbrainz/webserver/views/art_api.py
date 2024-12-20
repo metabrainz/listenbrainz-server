@@ -672,13 +672,15 @@ def _cover_art_yim_overview(user_name, stats, year, yim24):
     """ Create the SVG using top stats for the overview YIM image. """
     filtered_genres = []
     total_filtered_genre_count = 0
+    number_of_genres = 4 if year < 2024 else 6
     for genre in stats.get("top_genres", []):
-        if genre["genre"] not in ("pop", "rock", "electronic", "hip hop"):
+        # In 2023 we filtered out the most popular genres
+        if year > 2023 or genre["genre"] not in ("pop", "rock", "electronic", "hip hop"):
             filtered_genres.append(genre)
             total_filtered_genre_count += genre["genre_count"]
 
     filtered_top_genres = []
-    for genre in filtered_genres[:4]:
+    for genre in filtered_genres[:number_of_genres]:
         genre_count_percent = round(genre["genre_count"] / total_filtered_genre_count * 100)
         filtered_top_genres.append({"genre": genre["genre"], "genre_count_percent": genre_count_percent})
 

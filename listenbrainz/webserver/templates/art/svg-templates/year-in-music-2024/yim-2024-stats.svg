@@ -36,8 +36,14 @@
         }
     </style>
     <g>
+        <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+        <image
+            href="{{ image_folder }}/playlists/yim24-playlist-04.png" width="300" x="620" y="10" style="pointer-events: none;" id="top">
+        </image>
+        <image
+            href="{{ image_folder }}/playlists/yim24-playlist-03.png" width="350" height="350" x="-40" y="510" style="pointer-events: none;" id="stumpy">
+        </image>
         <g>
-            <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
             <text class="branding" x="750" y="897">LISTENBRAINZ</text>
             <text class="branding" x="26" y="43">{{user_name}}</text>
             <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
@@ -80,11 +86,5 @@
         <line class="stroke" x1="399" y1="470.5" x2="504" y2="470.5" stroke="{{ accent_color }}"/>
         <line class="stroke" x1="399" y1="556.5" x2="504" y2="556.5" stroke="{{ accent_color }}"/>
         <line class="stroke" x1="399" y1="642.5" x2="504" y2="642.5" stroke="{{ accent_color }}"/>
-        <image
-            href="{{ image_folder }}/yim24-02.png" width="200" x="620" y="125" style="mix-blend-mode: multiply; pointer-events: none;" id="top">
-        </image>
-        <image
-            href="{{ image_folder }}/yim24-01.png" width="350" height="350" x="-40" y="510" style="mix-blend-mode: multiply; pointer-events: none;" id="stumpy">
-        </image>
     </g>
 </svg>
