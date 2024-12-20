@@ -93,6 +93,9 @@
     <g transform="translate(195, 190)">
     {% else %}
     <g>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-02.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
     {% endif %}
         {% set x_s = [50, 50, 50, 185, 185, 185, 320, 320, 320] %}
         {% set y_s = [80, 215, 350, 80, 215, 350, 80, 215, 350] %}
@@ -112,8 +115,5 @@
                 </image>
             </a>
         {% endfor %}
-        <image
-            href="{{ image_folder }}/playlists/yim24-playlist-02.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
-        </image>
     </g>
 </svg>

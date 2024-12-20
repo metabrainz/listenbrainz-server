@@ -86,6 +86,9 @@
             <tspan dx="12">S</tspan>
         </text>
     </g>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
     <g transform="translate(195, 190)">
     {% else %}
     <g>
@@ -108,8 +111,5 @@
                 </image>
             </a>
         {% endfor %}
-        <image
-            href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="704" height="704" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
-        </image>
     </g>
 </svg>

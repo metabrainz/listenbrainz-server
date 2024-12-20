@@ -60,6 +60,9 @@
           <tspan dx="12">S</tspan>
       </text>
     </g>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-02.png" width="704" height="704" x="115" y="101" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
     <g id="g319">
         {% set x_s = [265, 265, 265, 400, 400, 400, 535, 535, 535] %}
         {% set y_s = [250, 385, 520, 250, 385, 520, 250, 385, 520] %}
@@ -80,8 +83,5 @@
             </a>
         {% endfor %}
     </g>
-      <image
-          href="{{ image_folder }}/playlists/yim24-playlist-02.png" width="704" height="704" x="115" y="101" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
-      </image>
   </g>
 </svg>
