@@ -651,12 +651,12 @@
   &.yim-2024 {
     --backgroundColor: #4c6c52;
     --cardBackgroundColor: #fefff5;
-    --accentColor: #718c56;
+    --accentColor: #2B9F7A;
     --selectedColor: var(--accentColor);
     --swiper-navigation-color: var(--accentColor);
     @text-color: var(--accentColor);
     @content-background-color: var(--cardBackgroundColor);
-    background-color: unset;
+    background-color: var(--backgroundColor);
     color: @text-color;
     .content-card {
       background: @content-background-color;
@@ -702,8 +702,7 @@
         text-align: center;
         text-align: -webkit-center;
         .color-selector {
-          width: 3.5em;
-          height: 3.5em;
+          background: none;
         }
       }
     }

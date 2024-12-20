@@ -745,16 +745,16 @@ def cover_art_yim(user_name, year: int = 2024):
     match season:
         case "spring":
             background_color = "#EDF3E4"
-            accent_color = "#718C56"
+            accent_color = "#2B9F7A"
         case "summer":
             background_color = "#DBE8DF"
-            accent_color = "#4B835C"
+            accent_color = "#3C8C54"
         case "autumn":
             background_color = "#F1E8E1"
-            accent_color = "#926F6F"
+            accent_color = "#CB3146"
         case "winter":
             background_color = "#DFE5EB"
-            accent_color = "#4C5565"
+            accent_color = "#5B52AC"
     
     yim24 = None
     if year == 2024:

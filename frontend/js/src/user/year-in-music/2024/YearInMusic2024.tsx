@@ -61,10 +61,10 @@ type YearInMusicLoaderData = {
 };
 
 const YIM2024Seasons = {
-  spring: { background: "#EDF3E4", cardBackground: "#FEFFF5", text: "#718C56" },
-  summer: { background: "#DBE8DF", cardBackground: "#FAFFFA", text: "#4B835C" },
-  autumn: { background: "#F1E8E1", cardBackground: "#FFFAF4", text: "#926F6F" },
-  winter: { background: "#DFE5EB", cardBackground: "#F8FBFF", text: "#4C5565" },
+  spring: { background: "#EDF3E4", cardBackground: "#FEFFF5", text: "#2B9F7A" },
+  summer: { background: "#DBE8DF", cardBackground: "#FAFFFA", text: "#3C8C54" },
+  autumn: { background: "#F1E8E1", cardBackground: "#FFFAF4", text: "#CB3146" },
+  winter: { background: "#DFE5EB", cardBackground: "#F8FBFF", text: "#5B52AC" },
 };
 type YIM2024SeasonNames = keyof typeof YIM2024Seasons;
 type MosaicImageDefinition = {
@@ -565,10 +565,6 @@ export default class YearInMusic extends React.Component<
                     role="button"
                     tabIndex={0}
                     className="color-selector flex-center"
-                    style={{
-                      backgroundColor: colors.cardBackground,
-                      border: `1px solid ${colors.text}`,
-                    }}
                     onClick={this.selectColor}
                     onKeyDown={this.selectColor}
                     data-season={name}
@@ -576,10 +572,9 @@ export default class YearInMusic extends React.Component<
                     <img
                       src={`/static/img/year-in-music-24/icon-${name}.svg`}
                       alt={name}
-                      height={35}
+                      height={40}
                     />
                   </div>
-                  <div>{capitalize(name)}</div>
                 </div>
               );
             })}
