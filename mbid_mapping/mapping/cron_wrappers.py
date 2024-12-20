@@ -19,7 +19,7 @@ from sentry_sdk.crons.consts import MonitorStatus
 def cron_wrapper_create_all():
     """ Run a monitored cron job to create the canonical data and the typesense index """
 
-    slug='canonical-data-typesense-index'
+    slug = 'canonical-data-typesense-index'
     sentry_sdk.init(config.LOG_SENTRY["dsn"])
     check_in_id = capture_checkin(monitor_slug=slug, status=MonitorStatus.IN_PROGRESS)
 
@@ -118,6 +118,7 @@ def cron_create_tag_similarity():
 
     capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
 
+
 def cron_build_all_mb_caches():
     """ build all mb caches via cron """
 
@@ -136,6 +137,7 @@ def cron_build_all_mb_caches():
         return
 
     capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
+
 
 def cron_update_all_mb_caches():
     """ Update all mb caches via cron """
