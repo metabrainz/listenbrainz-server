@@ -1,3 +1,5 @@
+import os
+
 {{- define "KEY" -}}
     {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
 {{- end -}}
@@ -82,3 +84,12 @@ TYPESENSE_API_KEY = '''{{template "KEY" "typesense_api_key"}}'''
 
 # For debugging, only fetches a tiny portion of the data if True
 USE_MINIMAL_DATASET = False
+
+# Sentry config
+LOG_SENTRY = {
+    'dsn': '''{{template "KEY" "sentry/dsn"}}''',
+    'environment': '''{{template "KEY" "sentry/environment"}}''',
+    'release': os.getenv('GIT_SHA', None),
+    'traces_sample_rate': {{template "KEY" "sentry/traces_sample_rate"}},
+}
+DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
