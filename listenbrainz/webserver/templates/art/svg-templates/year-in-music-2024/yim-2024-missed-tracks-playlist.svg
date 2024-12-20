@@ -38,7 +38,7 @@
     {% if branding %}
     <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
     <image
-        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="702" height="702" x="-100" y="-70" style="pointer-events: none;" id="background-image">
+        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="702" height="702" x="96" y="122" style="pointer-events: none;" id="background-image">
     </image>
     <g id="g297">
         <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
