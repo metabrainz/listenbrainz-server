@@ -87,10 +87,10 @@
           {% endif %}
         </tspan>
         <tspan class="track-name" x="125" y="{{ y_start + loop.index0 * gap }}">
-          {{ render_entity_link("recording", track.recording_mbid, track.track_name|upper|e) }}
+          {{ render_entity_link("recording", track.recording_mbid, track.track_name) }}
         </tspan>
         <tspan class="artist-name" x="125" dy="20">
-          {{ render_entity_link("artist", track.artist_mbids[0], track.artist_name|upper|e) }}
+          {{ render_entity_link("artist", track.artist_mbids[0], track.artist_name) }}
         </tspan>
       </text>
       {% endfor %}
