@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-import sys
-import os
-import subprocess
+
+from functools import wraps
 
 import click
 import sentry_sdk
-from sentry_sdk.crons import capture_checkin
-from sentry_sdk.crons.consts import MonitorStatus
+from sentry_sdk import monitor
 
 import config
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
@@ -25,19 +23,11 @@ from similar.tag_similarity import create_tag_similarity
 def cron(slug):
 
     def wrapper(func):
-
-        def wrapped_f(*args):
-            sentry_sdk.init(config.LOG_SENTRY["dsn"])
-            check_in_id = capture_checkin(monitor_slug=slug, status=MonitorStatus.IN_PROGRESS)
-            try:
-                func(*args)
-            except Exception as err:
-                print("Exception: %s" % err)
-                capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.ERROR)
-                return
-
-            capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
-
+        @wraps(func)
+        def wrapped_f(*args, **kwargs):
+            sentry_sdk.init(**config.LOG_SENTRY)
+            with monitor(slug):
+                func(*args, **kwargs)
         return wrapped_f
 
     return wrapper
@@ -48,8 +38,8 @@ def cli():
     pass
 
 
-@cron("canonical-data-typesense-index")
 @cli.command()
+@cron("canonical-data-typesense-index")
 def cron_create_all():
     """
         Create all canonical data in one go as a monitored cron job. First mb canonical data, then its typesense index.
@@ -58,8 +48,8 @@ def cron_create_all():
     action_build_index()
 
 
-@cron("caa-color-sync")
 @cli.command()
+@cron("caa-color-sync")
 def cron_update_coverart():
     """
         Update the release_color table incrementally. Designed to be called hourly by cron.
@@ -68,19 +58,7 @@ def cron_update_coverart():
 
 
 @cli.command()
-def log():
-    """
-        Print the internal cron log file for debugging purposes.
-    """
-    if os.path.exists(CRON_LOG_FILE):
-        log("Current cron job log file:")
-        subprocess.run(["cat", CRON_LOG_FILE])
-    else:
-        log("Log file is empty")
-
-
 @cron("build-mb-metadata-cache")
-@cli.command()
 def cron_build_mb_metadata_cache():
     """ Build the mb metadata cache and tables it depends on in production in appropriate databases.
      After building the cache, cleanup mbid_mapping table.
@@ -89,8 +67,8 @@ def cron_build_mb_metadata_cache():
     cleanup_mbid_mapping_table()
 
 
-@cron("build-all-mb-caches")
 @cli.command()
+@cron("build-all-mb-caches")
 def cron_build_all_mb_caches():
     """ Build all mb entity metadata cache and tables it depends on in production in appropriate
      databases. After building the cache, cleanup mbid_mapping table.
@@ -102,8 +80,8 @@ def cron_build_all_mb_caches():
 
 
 
-@cron("update-all-mb-caches")
 @cli.command()
+@cron("update-all-mb-caches")
 def cron_update_all_mb_caches():
     """ Update all mb entity metadata cache in ListenBrainz. """
     update_canonical_release_data(False)
@@ -112,8 +90,8 @@ def cron_update_all_mb_caches():
     incremental_update_mb_release_group_cache(True)
 
 
-@cron("create-spotify-metadata-index")
 @cli.command()
+@cron("create-spotify-metadata-index")
 def build_cron_spotify_metadata_index(use_lb_conn):
     """
         Build the spotify metadata index that LB uses invoked via cron
@@ -121,8 +99,8 @@ def build_cron_spotify_metadata_index(use_lb_conn):
     create_spotify_metadata_index(True)
 
 
-@cron("create-apple-metadata-index")
 @cli.command()
+@cron("create-apple-metadata-index")
 def cron_build_apple_metadata_index():
     """
         Build the Apple Music metadata index that LB uses invoked from cron
@@ -130,8 +108,8 @@ def cron_build_apple_metadata_index():
     create_apple_metadata_index(True)
 
 
-@cron("create-soundcloud-metadata-index")
 @cli.command()
+@cron("create-soundcloud-metadata-index")
 def cron_build_soundcloud_metadata_index():
     """
         Build the Soundcloud Music metadata index that LB usesa invoked from cron
@@ -139,8 +117,8 @@ def cron_build_soundcloud_metadata_index():
     create_soundcloud_metadata_index(True)
 
 
-@cron("create-tag-similarity")
 @cli.command()
+@cron("create-tag-similarity")
 def cron_build_tag_similarity():
     """
         Build the tag similarity data invoked via cron
