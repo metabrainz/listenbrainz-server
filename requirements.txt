@@ -32,7 +32,7 @@ sentry-sdk[flask]==2.19.2
 pydantic == 1.10.13
 pycountry==22.3.5
 Flask==3.0.0
-Jinja2==3.1.4
+Jinja2==3.1.5
 Werkzeug==3.0.6
 Flask-DebugToolbar@git+https://github.com/amCap1712/flask-debugtoolbar.git@f42bb238cd3fbc79c51b93c341164c2be820025e
 Flask-UUID==0.2
