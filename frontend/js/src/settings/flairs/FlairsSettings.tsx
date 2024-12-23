@@ -68,8 +68,8 @@ export default function FlairsSettings() {
         );
         const values = await response.text();
         const [shouldNag, daysLeft] = values.split(",");
-        setFlairUnlocked(Number(shouldNag) === 1);
-        setUnlockDaysLeft(Number(daysLeft));
+        setFlairUnlocked(!Number(shouldNag));
+        setUnlockDaysLeft(Math.max(Number(daysLeft), 0));
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Could not fetch nag status:", error);
