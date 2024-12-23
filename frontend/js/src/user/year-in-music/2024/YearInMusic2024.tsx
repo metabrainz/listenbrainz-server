@@ -1496,7 +1496,7 @@ export default class YearInMusic extends React.Component<
                           alt={mosaicImage.release_name}
                           className="swiper-lazy"
                           style={{
-                            maxWidth: "min(90vw, 100%)",
+                            maxWidth: "min(90vw, 1200px)",
                           }}
                         />
                       </a>
