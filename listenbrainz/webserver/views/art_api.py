@@ -764,7 +764,7 @@ def cover_art_yim(user_name, year: int = 2024):
             "season":season,
             "background_color":background_color,
             "accent_color":accent_color,
-            "image_folder":'https://beta.listenbrainz.org/static/img/year-in-music-24/' + season,
+            "image_folder": f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-24/{season}',
         }
         
 
