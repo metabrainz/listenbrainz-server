@@ -16,7 +16,7 @@ function ListenCountCard(props: ListenCountCardProps) {
 
   if (listenCount) {
     content = (
-      <div>
+      <div data-testid="listen-count-card-content">
         {isCurrentUser ? "You have" : `${user.name} has`} listened to
         <hr />
         {listenCount.toLocaleString()}

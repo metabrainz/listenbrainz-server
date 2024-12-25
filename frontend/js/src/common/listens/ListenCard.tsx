@@ -1,5 +1,13 @@
 import * as React from "react";
 
+import NiceModal from "@ebay/nice-modal-react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import {
+  faSoundcloud,
+  faSpotify,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
+import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faCode,
   faCommentDots,
@@ -16,21 +24,15 @@ import {
   faSquare,
   faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  faSoundcloud,
-  faSpotify,
-  faYoutube,
-} from "@fortawesome/free-brands-svg-icons";
-import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import NiceModal from "@ebay/nice-modal-react";
-import { faPlayCircle } from "@fortawesome/free-regular-svg-icons";
-import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
+import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
+  getAlbumArtFromListenMetadataKey,
   getArtistLink,
   getArtistMBIDs,
   getArtistName,
@@ -47,24 +49,27 @@ import {
 
 import CBReviewModal from "../../cb-review/CBReviewModal";
 import Card from "../../components/Card";
-import CoverArtWithFallback from "./CoverArtWithFallback";
-import GlobalAppContext from "../../utils/GlobalAppContext";
-import ListenControl from "./ListenControl";
-import ListenFeedbackComponent from "./ListenFeedbackComponent";
-import ListenPayloadModal from "./ListenPayloadModal";
-import MBIDMappingModal from "./MBIDMappingModal";
+import { useMediaQuery } from "../../explore/fresh-releases/utils";
+import { ToastMsg } from "../../notifications/Notifications";
 import PersonalRecommendationModal from "../../personal-recommendations/PersonalRecommendationsModal";
 import PinRecordingModal from "../../pins/PinRecordingModal";
-import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
-import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
-import { ToastMsg } from "../../notifications/Notifications";
-import YoutubePlayer from "../brainzplayer/YoutubePlayer";
 import { millisecondsToStr } from "../../playlists/utils";
-import AddToPlaylist from "./AddToPlaylist";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 import {
   BrainzPlayerActionType,
   useBrainzPlayerDispatch,
 } from "../brainzplayer/BrainzPlayerContext";
+import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
+import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
+import YoutubePlayer from "../brainzplayer/YoutubePlayer";
+import Username from "../Username";
+import AddToPlaylist from "./AddToPlaylist";
+import CoverArtWithFallback from "./CoverArtWithFallback";
+import ListenControl from "./ListenControl";
+import ListenFeedbackComponent from "./ListenFeedbackComponent";
+import ListenPayloadModal from "./ListenPayloadModal";
+import MBIDMappingModal from "./MBIDMappingModal";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -93,11 +98,12 @@ export type ListenCardProps = {
 export type ListenCardState = {
   listen: Listen;
   isCurrentlyPlaying: boolean;
-  thumbnailSrc?: string; // Full URL to the CoverArtArchive thumbnail
 };
 
 type ListenCardPropsWithDispatch = ListenCardProps & {
+  thumbnailSrc?: string;
   dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
+  isMobile: boolean;
 };
 
 export class ListenCard extends React.Component<
@@ -117,7 +123,6 @@ export class ListenCard extends React.Component<
 
   async componentDidMount() {
     window.addEventListener("message", this.receiveBrainzPlayerMessage);
-    await this.getCoverArt();
   }
 
   async componentDidUpdate(
@@ -129,31 +134,10 @@ export class ListenCard extends React.Component<
     if (Boolean(listen) && !isEqual(listen, oldListen)) {
       this.setState({ listen });
     }
-    if (!customThumbnail && Boolean(listen) && !isEqual(listen, oldListen)) {
-      await this.getCoverArt();
-    }
   }
 
   componentWillUnmount() {
     window.removeEventListener("message", this.receiveBrainzPlayerMessage);
-  }
-
-  async getCoverArt() {
-    const { spotifyAuth, APIService, userPreferences } = this.context;
-    if (userPreferences?.saveData === true) {
-      return;
-    }
-    const { listen } = this.state;
-    const albumArtSrc = await getAlbumArtFromListenMetadata(
-      listen,
-      spotifyAuth,
-      APIService
-    );
-    if (albumArtSrc) {
-      this.setState({ thumbnailSrc: albumArtSrc });
-    } else {
-      this.setState({ thumbnailSrc: undefined });
-    }
   }
 
   playListen = () => {
@@ -277,9 +261,11 @@ export class ListenCard extends React.Component<
       additionalActions,
       listen: listenFromProps,
       dispatch: dispatchProp,
+      thumbnailSrc,
+      isMobile,
       ...otherProps
     } = this.props;
-    const { listen, isCurrentlyPlaying, thumbnailSrc } = this.state;
+    const { listen, isCurrentlyPlaying } = this.state;
     const { currentUser } = this.context;
     const isLoggedIn = !isEmpty(currentUser);
 
@@ -542,21 +528,17 @@ export class ListenCard extends React.Component<
           <div className="right-section">
             {(showUsername || showTimestamp) && (
               <div className="username-and-timestamp">
-                {showUsername && (
-                  <Link
-                    to={`/user/${listen.user_name}/`}
-                    title={listen.user_name ?? undefined}
-                  >
-                    {listen.user_name}
-                  </Link>
+                {showUsername && listen.user_name && (
+                  <Username username={listen.user_name} />
                 )}
                 {showTimestamp && timeStampForDisplay}
               </div>
             )}
             <div className="listen-controls">
               {isLoggedIn &&
+                !isMobile &&
                 (feedbackComponent ?? (
-                  <ListenFeedbackComponent listen={listen} />
+                  <ListenFeedbackComponent listen={listen} type="button" />
                 ))}
               {hideActionsMenu ? null : (
                 <>
@@ -575,6 +557,12 @@ export class ListenCard extends React.Component<
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
                   >
+                    {isMobile && (
+                      <ListenFeedbackComponent
+                        listen={listen}
+                        type="dropdown"
+                      />
+                    )}
                     {recordingMBID && (
                       <ListenControl
                         icon={faExternalLinkAlt}
@@ -603,6 +591,7 @@ export class ListenCard extends React.Component<
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}
+                        iconColor={dataSourcesInfo.spotify.color}
                         title="Open in Spotify"
                         text="Open in Spotify"
                         key="Open in Spotify"
@@ -616,6 +605,7 @@ export class ListenCard extends React.Component<
                     {youtubeURL && (
                       <ListenControl
                         icon={faYoutube}
+                        iconColor={dataSourcesInfo.youtube.color}
                         title="Open in YouTube"
                         text="Open in YouTube"
                         key="Open in YouTube"
@@ -629,6 +619,7 @@ export class ListenCard extends React.Component<
                     {soundcloudURL && (
                       <ListenControl
                         icon={faSoundcloud}
+                        iconColor={dataSourcesInfo.soundcloud.color}
                         title="Open in Soundcloud"
                         text="Open in Soundcloud"
                         key="Open in Soundcloud"
@@ -761,5 +752,50 @@ export class ListenCard extends React.Component<
 
 export default function ListenCardWrapper(props: ListenCardProps) {
   const dispatch = useBrainzPlayerDispatch();
-  return <ListenCard {...props} dispatch={dispatch} />;
+  const { spotifyAuth, APIService, userPreferences } = React.useContext(
+    GlobalAppContext
+  );
+  const { listen, customThumbnail } = props;
+
+  const albumArtQueryKey = React.useMemo(
+    () => getAlbumArtFromListenMetadataKey(listen, spotifyAuth),
+    [listen, spotifyAuth]
+  );
+
+  const albumArtDisabled =
+    Boolean(customThumbnail) || !listen || userPreferences?.saveData;
+
+  const { data: thumbnailSrc } = useQuery({
+    queryKey: ["album-art", albumArtQueryKey, albumArtDisabled],
+    queryFn: async () => {
+      if (albumArtDisabled) {
+        return "";
+      }
+      try {
+        const albumArtURL = await getAlbumArtFromListenMetadata(
+          listen,
+          spotifyAuth,
+          APIService
+        );
+        return albumArtURL ?? "";
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error fetching album art", error);
+        return "";
+      }
+    },
+    staleTime: 1000 * 60 * 60 * 12,
+    gcTime: 1000 * 60 * 60 * 12,
+  });
+
+  const isMobile = useMediaQuery("(max-width: 480px)");
+
+  return (
+    <ListenCard
+      {...props}
+      dispatch={dispatch}
+      thumbnailSrc={thumbnailSrc}
+      isMobile={isMobile}
+    />
+  );
 }

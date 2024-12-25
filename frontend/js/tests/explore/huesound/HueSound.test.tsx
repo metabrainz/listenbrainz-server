@@ -11,6 +11,7 @@ import {
   textContentMatcher,
 } from "../../test-utils/rtl-test-utils";
 import getExploreRoutes from "../../../src/explore/routes";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 const release: ColorReleaseItem = {
   artist_name: "Rorcal & Music For The Space",
@@ -96,7 +97,14 @@ describe("HueSound", () => {
       messages.push(message)
     );
     // With initial navigation, see initialEntries when we create memRouter
-    render(<RouterProvider router={memRouter} />);
+    renderWithProviders(
+      <RouterProvider router={memRouter} />,
+      {},
+      {
+        wrapper: ReactQueryWrapper,
+      },
+      false
+    );
 
     await waitFor(async () => {
       const releaseButton = screen.getByRole("button");

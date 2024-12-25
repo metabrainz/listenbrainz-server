@@ -195,7 +195,9 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
                 break
             except Exception:
                 current_app.logger.error("Error in Timescale Writer:", exc_info=True)
-                time.sleep(3)
+                current_app.logger.error("Sleeping 3 seconds and exiting...", exc_info=True)
+                time.sleep(self.ERROR_RETRY_DELAY)
+                break
 
 
 if __name__ == "__main__":

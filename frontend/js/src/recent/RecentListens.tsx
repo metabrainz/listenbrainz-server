@@ -9,11 +9,14 @@ import Card from "../components/Card";
 
 import { getTrackName } from "../utils/utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import RecentDonorsCard from "./components/RecentDonors";
+import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
   globalListenCount: number;
   globalUserCount: string;
+  recentDonors: Array<DonationInfoWithPinnedRecording>;
 };
 
 type RecentListensLoaderData = RecentListensProps;
@@ -36,7 +39,7 @@ export default class RecentListens extends React.Component<
 
   render() {
     const { listens } = this.state;
-    const { globalListenCount, globalUserCount } = this.props;
+    const { globalListenCount, globalUserCount, recentDonors } = this.props;
 
     return (
       <div role="main">
@@ -55,13 +58,17 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">songs played</small>
               </div>
             </Card>
-            <Card id="listen-count-card">
+            <Card id="listen-count-card" className="card-user-sn">
               <div>
                 {globalUserCount ?? "-"}
                 <br />
                 <small className="text-muted">users</small>
               </div>
             </Card>
+            <Card className="hidden-xs">
+              <RecentDonorsCard donors={recentDonors} />
+            </Card>
+            <FlairsExplanationButton className="hidden-xs" />
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (

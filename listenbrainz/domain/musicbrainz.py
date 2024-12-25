@@ -20,18 +20,24 @@ class MusicBrainzService(BaseBrainzService):
             service = ExternalServiceType.MUSICBRAINZ_PROD
         super(MusicBrainzService, self).__init__(
             service=service,
-            client_id=current_app.config["MUSICBRAINZ_CLIENT_ID"],
-            client_secret=current_app.config["MUSICBRAINZ_CLIENT_SECRET"],
-            redirect_uri=url_for('login.musicbrainz_post', _external=True),
-            authorize_url=f"{current_app.config['MUSICBRAINZ_BASE_URL']}/oauth2/authorize",
-            token_url=f"{current_app.config['MUSICBRAINZ_BASE_URL']}/oauth2/token",
+            client_id=current_app.config["OAUTH_CLIENT_ID"],
+            client_secret=current_app.config["OAUTH_CLIENT_SECRET"],
+            redirect_uri=url_for("login.musicbrainz_post", _external=True),
+            authorize_url=current_app.config["OAUTH_AUTHORIZE_URL"],
+            token_url=current_app.config["OAUTH_TOKEN_URL"],
             scopes=MUSICBRAINZ_SCOPES
         )
 
     def get_user_info(self, token: str):
         response = requests.post(
-            f"{current_app.config['MUSICBRAINZ_BASE_URL']}/oauth2/userinfo",
-            headers={"Authorization": f"Bearer {token}"}
+            current_app.config["OAUTH_INTROSPECTION_URL"],
+            data={
+                "client_id": current_app.config["OAUTH_CLIENT_ID"],
+                "client_secret": current_app.config["OAUTH_CLIENT_SECRET"],
+                "token": token,
+                "token_type_hint": "access_token",
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         response.raise_for_status()
         return response.json()

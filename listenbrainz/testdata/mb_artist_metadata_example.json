@@ -1,0 +1,41 @@
+[
+   {
+      "area": "United Kingdom",
+      "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+      "begin_year": 1991,
+      "mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+      "name": "Portishead",
+      "type": "Group",
+      "rels": {
+         "free streaming": "https://www.deezer.com/artist/1069",
+         "lyrics": "https://muzikum.eu/en/122-6105/portishead/lyrics.html",
+         "official homepage": "http://www.portishead.co.uk/",
+         "purchase for download": "https://www.junodownload.com/artists/Portishead/releases/",
+         "social network": "https://www.facebook.com/portishead",
+         "streaming": "https://tidal.com/artist/27441",
+         "wikidata": "https://www.wikidata.org/wiki/Q191352",
+         "youtube": "https://www.youtube.com/user/portishead1002"
+      },
+      "tag": {
+         "artist": [
+            {
+               "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "count": 6,
+               "genre_mbid": "cc38aba3-48ed-439a-83b9-f81a34a66598",
+               "tag": "downtempo"
+            },
+            {
+               "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "count": 13,
+               "genre_mbid": "45eb1d9c-588c-4dc8-9394-a14b7c8f02bc",
+               "tag": "trip hop"
+            },
+            {
+               "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
+               "count": 7,
+               "tag": "trip-hop"
+            }
+         ]
+      }
+   }
+]

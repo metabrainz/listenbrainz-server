@@ -303,27 +303,12 @@ class HandlersTestCase(DatabaseTestCase):
         }
         CouchDbDataset.handle_start({"database": "artists_all_time_20220818"})
         handle_sitewide_entity(data)
-        stats = db_stats.get(
-            db_stats.SITEWIDE_STATS_USER_ID,
-            "artists",
-            "all_time",
-            ArtistRecord
-        )
-        self.assertEqual(stats, StatApi[ArtistRecord](
-            user_id=db_stats.SITEWIDE_STATS_USER_ID,
-            to_ts=10,
-            from_ts=1,
-            count=1,
-            stats_range='all_time',
-            data=StatRecordList[ArtistRecord](__root__=[
-                ArtistRecord(
-                    artist_name='Coldplay',
-                    artist_mbid=None,
-                    listen_count=20,
-                )
-            ]),
-            last_updated=stats.last_updated
-        ))
+        stats = db_stats.get_sitewide_stats("artists","all_time")
+        self.assertEqual(stats["count"], data["count"])
+        self.assertEqual(stats["from_ts"], data["from_ts"])
+        self.assertEqual(stats["to_ts"], data["to_ts"])
+        self.assertEqual(stats["data"], data["data"])
+
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get')

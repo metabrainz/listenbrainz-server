@@ -10,7 +10,14 @@ type PillProps = {
 };
 
 export default function Pill(props: React.PropsWithChildren<PillProps>) {
-  const { active, children, type, style: propStyle, ...buttonProps } = props;
+  const {
+    active,
+    children,
+    type,
+    style: propStyle,
+    className: propClassName = "",
+    ...buttonProps
+  } = props;
 
   return (
     <button
@@ -19,7 +26,7 @@ export default function Pill(props: React.PropsWithChildren<PillProps>) {
       {...buttonProps}
       className={`pill ${type === "secondary" ? "secondary" : ""} ${
         active ? "active" : ""
-      }`}
+      } ${propClassName}`}
     >
       {children}
     </button>

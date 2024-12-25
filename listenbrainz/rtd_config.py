@@ -35,8 +35,8 @@ UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
 
 # MusicBrainz OAuth
-MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
-MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+OAUTH_CLIENT_ID = "CLIENT_ID"
+OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
@@ -72,7 +72,6 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://0.0.0.0:7080/'
-MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 SPOTIFY_CLIENT_ID = ''
 SPOTIFY_CLIENT_SECRET = ''
 

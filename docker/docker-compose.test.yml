@@ -36,6 +36,7 @@ services:
       PYTHONDONTWRITEBYTECODE: 1
       SQLALCHEMY_WARN_20: 1
       PYTHON_TESTS_RUNNING: 1
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
@@ -48,6 +49,7 @@ services:
       - redis
       - lb_db
       - rabbitmq
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     environment:
       PYTHON_TESTS_RUNNING: 1
 
@@ -59,12 +61,17 @@ services:
       - lb_db
     environment:
       PYTHON_TESTS_RUNNING: 1
+    restart: unless-stopped
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    volumes:
+      - ..:/code/listenbrainz:z
 
   frontend_tester:
     build:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-frontend-dev
+    user: "${LB_DOCKER_USER:-node}:${LB_DOCKER_GROUP:-node}"
     volumes:
       - ../frontend:/code/frontend:z
 
@@ -73,6 +80,7 @@ services:
     volumes:
       - ..:/code/listenbrainz:z
     command: python manage.py run_websockets -h 0.0.0.0 -p 8102
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     expose:
       - "8102"
     ports:

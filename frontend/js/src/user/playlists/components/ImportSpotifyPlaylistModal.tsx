@@ -87,8 +87,8 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
           title="Successfully imported playlist from Spotify"
           message={
             <>
-              Imported
-              <a href={newPlaylist.identifier}> {playlistName}</a>
+              Imported{" "}
+              <a href={`/playlist/${newPlaylist.identifier}`}>{playlistName}</a>
             </>
           }
         />,

@@ -1,14 +1,14 @@
 import json
 import time
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import pytest
 from psycopg2.extras import execute_values
+import requests_mock
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.external_service import ExternalServiceType
-from listenbrainz import db
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 import listenbrainz.db.external_service_oauth as db_oauth
@@ -387,7 +387,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
             
             actual_xml = response.data.decode('utf-8')
             self.assertEqual(actual_xml, expected_error_xml)
-
 
     def test_valid_playing_now(self):
         """ Test for valid submission of listen_type 'playing_now'
@@ -943,6 +942,62 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assertTrue(response.json['valid'])
         self.assertEqual(response.json['user_name'], self.user['musicbrainz_id'])
 
+    @requests_mock.Mocker()
+    def test_oauth_invalid_access_token(self, mock_requests):
+        """Test oauth access tokens for submit listens"""
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={"active": False})
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Bearer meba_123'},
+            content_type='application/json'
+        )
+        self.assert401(response)
+        self.assertEqual(response.json["error"], "Invalid access token.")
+
+        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={
+            "active": True,
+            "client_id": "abc",
+            "token_type": "Bearer",
+            "metabrainz_user_id": 123,
+            "scope": "profile",
+            "sub": "lucifer",
+            "issued_by": "https://metabrainz.org/",
+            "expires_at": int(datetime(2023, 1, 2).timestamp()),
+            "issued_at": int(datetime(2023, 1, 1).timestamp()),
+        })
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Bearer meba_123'},
+            content_type='application/json'
+        )
+        self.assert401(response)
+        self.assertEqual(response.json["error"], "Invalid access token.")
+
+        mock_requests.post("https://musicbrainz.org/new-oauth2/introspect", json={
+            "active": True,
+            "client_id": "abc",
+            "token_type": "Bearer",
+            "metabrainz_user_id": 123,
+            "scope": "profile",
+            "sub": "lucifer",
+            "issued_by": "https://metabrainz.org/",
+            "expires_at": int((datetime.now() + timedelta(hours=1)).timestamp()),
+            "issued_at": int(datetime.now().timestamp()),
+        })
+        response = self.client.post(
+            self.custom_url_for('api_v1.submit_listen'),
+            data=json.dumps(payload),
+            headers={'Authorization': 'Bearer meba_123'},
+            content_type='application/json'
+        )
+        self.assert401(response)
+        self.assertEqual(response.json["error"], "Insufficient scope.")
+
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
         """
@@ -974,41 +1029,6 @@ class APITestCase(ListenAPIIntegrationTestCase):
                          ['track_metadata']['release_name'], 'The Life of Pablo')
         self.assertEqual(r.json['payload']['listens'][0]
                          ['track_metadata']['track_name'], 'Fade')
-
-    @pytest.mark.skip(reason="Test seems to fail when running all integration tests, but passes when run individually. "
-                             "Skip for now")
-    def test_delete_listen(self):
-        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
-            payload = json.load(f)
-
-        # send a listen
-        ts = int(time.time())
-        payload['payload'][0]['listened_at'] = ts
-        response = self.send_data(payload)
-        self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
-
-        url = self.custom_url_for('api_v1.get_listens',
-                                  user_name=self.user['musicbrainz_id'])
-        response = self.wait_for_query_to_have_items(url, 1)
-        data = json.loads(response.data)['payload']
-        self.assertEqual(len(data['listens']), 1)
-
-        delete_listen_url = self.custom_url_for('api_v1.delete_listen')
-        data = {
-            "listened_at": ts,
-            "recording_msid": payload['payload'][0]['track_metadata']['additional_info']['recording_msid']
-        }
-
-        response = self.client.post(
-            delete_listen_url,
-            data=json.dumps(data),
-            headers={'Authorization': 'Token {}'.format(
-                self.user['auth_token'])},
-            content_type='application/json'
-        )
-        self.assert200(response)
-        self.assertEqual(response.json["status"], "ok")
 
     def test_delete_listen_not_logged_in(self):
         delete_listen_url = self.custom_url_for('api_v1.delete_listen')

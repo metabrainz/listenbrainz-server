@@ -7,14 +7,15 @@ import {
   faAngleRight,
   faExclamationCircle,
   faHeadphones,
+  faRss,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { BarItemProps } from "@nivo/bar";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
 import { getData, processData } from "./utils";
 
 import Bar from "./components/Bar";
@@ -30,9 +31,10 @@ import {
 import ListenCard from "../../common/listens/ListenCard";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { COLOR_LB_ASPHALT, COLOR_LB_ORANGE } from "../../utils/constants";
-import { getStatsArtistLink } from "../../utils/utils";
+import { getBaseUrl, getStatsArtistLink } from "../../utils/utils";
 import { useMediaQuery } from "../../explore/fresh-releases/utils";
 import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
 
 export type UserEntityChartProps = {
   user?: ListenBrainzUser;
@@ -248,51 +250,99 @@ export default function UserEntityChart() {
               </Link>
             </Pill>
           </div>
-          <h3>
-            Top{" "}
-            <span style={{ textTransform: "capitalize" }}>
-              {terminology ? `${terminology}s` : ""}
-            </span>{" "}
-            of {range !== "all_time" ? "the" : ""}
-            <span className="dropdown" style={{ fontSize: 22 }}>
+          <div className="flex-center">
+            <h3 className="header-with-line">
+              <span>
+                Top{" "}
+                <span style={{ textTransform: "capitalize" }}>
+                  {terminology ? `${terminology}s` : ""}
+                </span>{" "}
+                of {range !== "all_time" ? "the" : ""}
+                <span className="dropdown" style={{ fontSize: 22 }}>
+                  <button
+                    className="dropdown-toggle btn-transparent capitalize-bold"
+                    data-toggle="dropdown"
+                    type="button"
+                  >
+                    {ranges.get(range)}
+                    <span className="caret" />
+                  </button>
+                  <ul className="dropdown-menu" role="menu">
+                    {Array.from(ranges, ([stat_type, stat_name]) => {
+                      return (
+                        <li key={`${stat_type}-${stat_name}`}>
+                          <Link
+                            to={{
+                              pathname: window.location.pathname,
+                              search: `?page=1&range=${stat_type}`,
+                            }}
+                            role="button"
+                          >
+                            {stat_name}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </span>
+                {range !== "all_time" &&
+                  !hasError &&
+                  `(${startDate?.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })} - ${endDate?.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })})`}
+              </span>
+            </h3>
+            {Boolean(user?.name) && (
               <button
-                className="dropdown-toggle btn-transparent capitalize-bold"
-                data-toggle="dropdown"
                 type="button"
+                className="btn btn-icon btn-info atom-button"
+                style={{ marginLeft: "auto" }}
+                data-toggle="modal"
+                data-target="#SyndicationFeedModal"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  NiceModal.show(SyndicationFeedModal, {
+                    feedTitle: `Top ${terminology}s`,
+                    options: [
+                      {
+                        label: "Time range",
+                        tooltip:
+                          "Select the time range for the feed. For instance, choosing 'this week' will include listens from the current week. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                        key: "range",
+                        type: "dropdown",
+                        values: Array.from(
+                          ranges,
+                          ([stat_type, stat_name]) => ({
+                            id: stat_type,
+                            value: stat_type,
+                            displayValue: stat_name,
+                          })
+                        ),
+                      },
+                      {
+                        label: "Count",
+                        key: "count",
+                        type: "number",
+                        defaultValue: 10,
+                        min: 1,
+                      },
+                    ],
+                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                      user?.name
+                    }/stats/top-${terminology}s`,
+                  });
+                }}
               >
-                {ranges.get(range)}
-                <span className="caret" />
+                <FontAwesomeIcon icon={faRss} size="sm" />
               </button>
-              <ul className="dropdown-menu" role="menu">
-                {Array.from(ranges, ([stat_type, stat_name]) => {
-                  return (
-                    <li key={`${stat_type}-${stat_name}`}>
-                      <Link
-                        to={{
-                          pathname: window.location.pathname,
-                          search: `?page=1&range=${stat_type}`,
-                        }}
-                        role="button"
-                      >
-                        {stat_name}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </span>
-            {range !== "all_time" &&
-              !hasError &&
-              `(${startDate?.toLocaleString("en-us", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })} - ${endDate?.toLocaleString("en-us", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })})`}
-          </h3>
+            )}
+          </div>
           {hasError && (
             <div className="mt-15 mb-15">
               <div className="text-center">

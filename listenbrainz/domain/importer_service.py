@@ -1,5 +1,7 @@
 from abc import ABC
-from typing import List, Union
+from typing import Union
+
+from flask import current_app
 
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceError
 from listenbrainz.db import listens_importer
@@ -10,9 +12,9 @@ class ImporterService(ExternalService, ABC):
     """ Base class that external music services which also allow to import listen history
     to ListenBrainz should implement."""
 
-    def get_active_users_to_process(self) -> List[dict]:
+    def get_active_users_to_process(self, exclude_error=True) -> list[dict]:
         """ Return list of active users for importing listens. """
-        raise NotImplementedError()
+        return listens_importer.get_active_users_to_process(db_conn, self.service, exclude_error)
 
     def update_user_import_status(self, user_id: int, error: str = None):
         """ Update the last_update field for user with specified user ID.

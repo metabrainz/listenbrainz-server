@@ -160,7 +160,12 @@ function Queue(props: BrainzPlayerQueueProps) {
                     track={queueItem}
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem
-                    ) => removeTrackFromQueue(trackToDelete, index)}
+                    ) =>
+                      removeTrackFromQueue(
+                        trackToDelete,
+                        index + currentListenIndex + 1
+                      )
+                    }
                   />
                 );
               }

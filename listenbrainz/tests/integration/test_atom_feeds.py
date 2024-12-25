@@ -1,7 +1,9 @@
 from datetime import datetime
 import json
 import time
+from uuid import UUID
 from listenbrainz.db import couchdb
+from listenbrainz.db.model.playlist import PLAYLIST_EXTENSION_URI, PLAYLIST_URI_PREFIX
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
 from lxml import etree
 from listenbrainz.db import fresh_releases as db_fresh
@@ -301,6 +303,7 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
             _path = self.custom_url_for(
                 f"atom.{_method_name}",
                 user_name=self.user["musicbrainz_id"],
+                range="week",
                 force_external=True,
             )
 
@@ -316,5 +319,54 @@ class AtomFeedsTestCase(ListenAPIIntegrationTestCase):
                 self.fail("No id element found in feed")
             self.assertEqual(
                 entryIds.text,
-                f"{_path}/week/{self.stats_to_ts}",
+                f"{_path}/{self.stats_to_ts}",
             )
+
+    def test_get_playlist_recordings(self):
+        """
+        Check server sends valid playlist feed.
+        """
+        playlist = {
+            "playlist": {
+                "title": "neo soul",
+                "annotation": "souls that are n-e-o.",
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True,
+                        "additional_metadata": {"what_to_get": "soul"},
+                    }
+                },
+            }
+        }
+
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+        )
+        self.assert200(response)
+
+        playlist_mbid = response.json["playlist_mbid"]
+        UUID(response.json["playlist_mbid"])
+
+        response = self.client.get(
+            self.custom_url_for(
+                "atom.get_playlist_recordings",
+                playlist_mbid=playlist_mbid,
+            ),
+        )
+        self.assert200(response)
+
+        nsAtom = self.nsAtom
+        xml_tree = etree.fromstring(response.data)
+        _path = self.custom_url_for(
+            "atom.get_playlist_recordings",
+            playlist_mbid=playlist_mbid,
+            force_external=True,
+        )
+
+        # Check feed id
+        feedId = xml_tree.find(f"{nsAtom}id")
+        if feedId is None:
+            self.fail("No id element found in feed")
+        self.assertEqual(feedId.text, _path)

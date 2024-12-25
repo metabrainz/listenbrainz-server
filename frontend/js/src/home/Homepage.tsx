@@ -20,7 +20,11 @@
 
 import * as React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAnglesRight,
+  faSortDown,
+  faSortUp,
+} from "@fortawesome/free-solid-svg-icons";
 import { isNumber, throttle } from "lodash";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
@@ -43,6 +47,7 @@ function HomePage() {
   const { listenCount, artistCount } = data || {};
   const homepageUpperRef = React.useRef<HTMLDivElement>(null);
   const homepageLowerRef = React.useRef<HTMLDivElement>(null);
+  const homepageLowerInfoRef = React.useRef<HTMLDivElement>(null);
 
   const [windowHeight, setWindowHeight] = React.useState(window.innerHeight);
 
@@ -68,6 +73,11 @@ function HomePage() {
     >
       Create Account
     </a>
+  );
+  const loginButton = (
+    <Link className="login-button" to="/login/">
+      Login
+    </Link>
   );
   // Calculate available screen real estate
   // This allows us to ensure that each page takes full height taking mobile browser toolbars into account
@@ -126,6 +136,41 @@ function HomePage() {
             height: "200px",
           }}
         />
+        <div
+          className="homepage-upper-logo-info"
+          onClick={() => {
+            homepageLowerInfoRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              homepageLowerInfoRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+          }}
+          role="button"
+          tabIndex={0}
+        >
+          <img
+            className="homepage-upper-logo-info-image"
+            src="/static/img/homepage/LB-Open-Source.png"
+            alt="ListenBrainz Open Source Logo"
+          />
+          <img
+            className="homepage-upper-logo-info-image"
+            src="/static/img/homepage/LB-Data-Provider.png"
+            alt="ListenBrainz Data Provider Logo"
+          />
+          <img
+            className="homepage-upper-logo-info-image"
+            src="/static/img/homepage/LB-Ethical.png"
+            alt="ListenBrainz Ethical Source Logo"
+          />
+        </div>
         <img
           className="homepage-upper-headphone"
           src="/static/img/homepage/LB-Headphone.png"
@@ -147,14 +192,13 @@ function HomePage() {
           </h1>
 
           {createAccountButton}
+          {loginButton}
 
           <div className="homepage-info-text">
             <p>Track, explore, visualise and share the music you listen to.</p>
             <p>Follow your favourites and discover great new music.</p>
           </div>
           <div className="homepage-info-links">
-            <Link to="/login/">Login</Link>
-            <span>|</span>
             <Link to="/about/">About ListenBrainz</Link>
           </div>
         </div>
@@ -236,6 +280,7 @@ function HomePage() {
           </h1>
 
           {createAccountButton}
+          {loginButton}
 
           <div className="homepage-info-text">
             <p>
@@ -248,9 +293,194 @@ function HomePage() {
             </p>
           </div>
           <div className="homepage-info-links">
-            <Link to="/login/">Login</Link>
-            <span>|</span>
             <Link to="/about/">About ListenBrainz</Link>
+          </div>
+        </div>
+        <FontAwesomeIcon
+          icon={faSortDown}
+          className="homepage-arrow"
+          size="3x"
+          onClick={() => {
+            homepageLowerInfoRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+      </div>
+
+      <div className="homepage-information" ref={homepageLowerInfoRef}>
+        <FontAwesomeIcon
+          icon={faSortUp}
+          className="homepage-arrow"
+          size="3x"
+          onClick={() => {
+            homepageLowerRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }}
+        />
+
+        <Blob
+          width={200}
+          height={200}
+          randomness={1.5}
+          className="homepage-information-vector-1"
+          style={{ animationDelay: "-10s" }}
+        />
+
+        <div className="homepage-information-grey-box" />
+
+        <div className="homepage-information-content">
+          <div className="info-column">
+            <div className="info-icon">
+              <img
+                src="/static/img/homepage/LB-Open-Source-Info.png"
+                alt="Open source"
+              />
+            </div>
+            <h2>Open source</h2>
+            <p>
+              &quot;Open source is source code that is made freely available for
+              possible modification and redistribution... A main principle of
+              open source software development is peer production, with products
+              such as source code, blueprints, and documentation freely
+              available to the public.&quot; -{" "}
+              <Link
+                to="https://en.wikipedia.org/wiki/Open_source"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Wikipedia
+              </Link>
+            </p>
+            <p>
+              The ListenBrainz website, the MusicBrainz database, and the music
+              and listen data that our users contribute is all open source. This
+              means that anyone can view the code, contribute improvements and
+              new features, and copy and modify it for their own use.
+            </p>
+            <p>
+              Thousands of people contribute code or data to ListenBrainz and
+              its sister projects for no monetary return. Contributors do this
+              to further humanity&apos;s global store of knowledge, and to
+              safeguard and share data about the artists and music that we love.
+            </p>
+            <p>
+              Data wants to be free, and we believe that by sharing what we
+              have, rather than jealously guarding it for the benefit of a few,
+              everyone can benefit.
+            </p>
+            <Link
+              to="https://github.com/orgs/metabrainz"
+              className="info-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FontAwesomeIcon icon={faAnglesRight} size="sm" /> GitHub
+              repositories
+            </Link>
+          </div>
+
+          <div className="info-column">
+            <div className="info-icon">
+              <img
+                src="/static/img/homepage/LB-Data-Provider-Info.png"
+                alt="Data provider"
+              />
+            </div>
+            <h2>Data provider</h2>
+            <p>
+              The MetaBrainz core mission is to curate and maintain public
+              datasets that anyone can download and use. Some of the world’s
+              biggest platforms, such as Google and Amazon, use our data, as
+              well as small-scale developers and simply curious individuals.
+            </p>
+            <p>
+              ListenBrainz and its sister sites are part of this mission - the
+              music data that our users submit to ListenBrainz, and the
+              MusicBrainz database that powers it, is available for download. We
+              want to help <strong>you</strong> build products and tools.
+            </p>
+            <p>
+              These datasets include the ListenBrainz PostgreSQL Data Dumps,
+              which contains detailed data about ~1 billion listens, and can be
+              used to create and study music consumption patterns. Our datasets
+              are AI Ready, perfect for training large language models for
+              music-based tasks.
+            </p>
+            <p>
+              We ask{" "}
+              <Link
+                to="https://metabrainz.org/supporters"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                commercial supporters
+              </Link>{" "}
+              to support us in order to help fund the creation and maintenance
+              of these datasets. Personal use of our datasets will always be
+              free.
+            </p>
+            <Link
+              to="https://metabrainz.org/datasets"
+              className="info-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FontAwesomeIcon icon={faAnglesRight} size="sm" /> MetaBrainz
+              Datasets
+            </Link>
+          </div>
+
+          <div className="info-column">
+            <div className="info-icon">
+              <img
+                src="/static/img/homepage/LB-Ethical-Info.png"
+                alt="Ethical forever"
+              />
+            </div>
+            <h2>Ethical forever</h2>
+            <p>
+              In today&apos;s world your personal data is owned, bought, sold
+              and traded. Your personal and global listening history powers
+              multi-billion dollar corporations and is used to tie you to their
+              services and platforms. Sometimes it seems that the only person
+              without access to your data, is you.
+            </p>
+            <p>
+              Not any more! ListenBrainz was created because we believe in your
+              right to your data. It is free, has no advertising, and you can
+              migrate your data out at any time.
+            </p>
+            <p>
+              The MetaBrainz Foundation is a registered non-profit, making it
+              impossible for us to be bought or traded. Our team and volunteer
+              contributers from across the globe are proud to consider
+              ListenBrainz and it&apos;s sister sites enshittification-proof
+              projects, immune to the the crapifying that takes place when
+              business interests inevitably subsume and monetize projects that
+              initially focussed on high-quality offerings to attract users. In
+              fact Cory Doctorow, the coiner of the term &quot;
+              <Link
+                to="https://en.wikipedia.org/wiki/Enshittification"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                enshittification
+              </Link>
+              &quot;, is on the MetaBrainz board of directors.
+            </p>
+            <Link
+              to="https://metabrainz.org/"
+              className="info-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FontAwesomeIcon icon={faAnglesRight} size="sm" /> MetaBrainz
+              Foundation
+            </Link>
           </div>
         </div>
       </div>

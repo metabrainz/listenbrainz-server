@@ -228,6 +228,28 @@ export default function UserListeningActivity(
       const lastMonthDay = lastMonth[i] || null;
       const thisMonthDay = thisMonth[i] || null;
 
+      if (!lastMonthDay && !thisMonthDay) {
+        const daysInMilliseconds = 24 * 60 * 60 * 1000;
+
+        // Determine the date based on which month has more days
+        const dateTS =
+          numOfDaysInLastMonth > numOfDaysInThisMonth
+            ? new Date(startOfLastMonth.getTime() + i * daysInMilliseconds)
+            : new Date(
+                startOfLastMonth.getTime() +
+                  numOfDaysInLastMonth * daysInMilliseconds +
+                  i * daysInMilliseconds
+              );
+
+        result.push({
+          id: dateTS.toLocaleString("en-us", dateFormat),
+          lastRangeCount: 0,
+          thisRangeCount: 0,
+        });
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+
       let thisMonthData = {};
       let lastMonthData = {};
       if (thisMonthDay) {

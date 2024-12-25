@@ -50,14 +50,16 @@
   padding: 0.5em;
 }
 
-.explore-card-text-name > a {
+.explore-card-text-name {
   font-size: 18pt;
   font-weight: 900;
   font-family: Roboto, sans-serif;
-  &:visited,
-  &:hover,
-  &:visited:hover {
-    color: @blue;
+  a {
+    &:visited,
+    &:hover,
+    &:visited:hover {
+      color: @blue;
+    }
   }
 }
 
@@ -139,11 +141,8 @@
 .explore-page-divider {
   display: flex;
   align-items: baseline;
-  > *:first-child {
-    margin-right: 0.6em;
-    flex: 0;
-  }
+  gap: 1em;
   hr {
-    width: 100%;
+    flex: 1;
   }
 }

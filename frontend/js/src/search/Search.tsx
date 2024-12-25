@@ -25,7 +25,10 @@ export default function Search() {
 
   React.useEffect(() => {
     if (invalidSearchTypes(searchType)) {
-      setSearchParams({ search_term: searchTerm, search_type: "artist" });
+      setSearchParams(
+        { search_term: searchTerm, search_type: "artist" },
+        { replace: true }
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchType]);

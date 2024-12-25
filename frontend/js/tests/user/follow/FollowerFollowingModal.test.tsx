@@ -29,6 +29,7 @@ import GlobalAppContext, {
 } from "../../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import UserListModalEntry from "../../../src/user/components/follow/UserListModalEntry";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 const props = {
   user: { name: "foobar" },
@@ -54,9 +55,11 @@ describe("<FollowerFollowingModal />", () => {
   it("renders", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <FollowerFollowingModal {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <FollowerFollowingModal {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(UserListModalEntry)).toHaveLength(1);
@@ -64,9 +67,11 @@ describe("<FollowerFollowingModal />", () => {
   it("updates the mode correctly", async () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <FollowerFollowingModal {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <FollowerFollowingModal {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     const instance = wrapper

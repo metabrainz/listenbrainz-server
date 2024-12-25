@@ -6,12 +6,12 @@
       {% set hostURL = '' %}
     {% endif %}
     <a href="{{ host }}/{{ entity }}/{{ mbid }}" target="_blank">
-      {{ name|upper }}
-      <title>{{ name }}</title>
+      {{ name|upper|e }}
+      <title>{{ name|e }}</title>
     </a>
   {%- else -%}
-    {{ name|upper }}
-    <title>{{ name }}</title>
+    {{ name|upper|e }}
+    <title>{{ name|e }}</title>
   {%- endif -%}
 {% endmacro %}
 

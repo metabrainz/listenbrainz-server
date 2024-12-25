@@ -1,0 +1,90 @@
+.horizontal-scroll-container {
+  position: relative;
+
+  .horizontal-scroll-container.dragging .horizontal-scroll * {
+    // Prevent text selection and interactions when the user is actively dragging to scroll
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .horizontal-scroll {
+    overflow-x: auto;
+    .small-scrollbar();
+    &.no-scrollbar {
+      /* Hide the scrollbar: */
+      -ms-overflow-style: none; /* Internet Explorer and Edge */
+      scrollbar-width: none; /* Firefox */
+      &::-webkit-scrollbar {
+        /* Chrome, Safari and Opera */
+        display: none;
+      }
+    }
+  }
+  // hide overflow behind button with gradient to indicate there's more
+  .nav-button {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 55px;
+    border: none;
+    font-size: 2em;
+    color: @light-grey;
+    z-index: 2;
+    opacity: 1;
+    transition: opacity 300ms linear;
+    &.backward {
+      background: linear-gradient(to right, @white 10%, transparent);
+      text-align: left;
+      left: -1px;
+    }
+    &.forward {
+      background: linear-gradient(to left, @white 10%, transparent);
+      right: -1px;
+      text-align: right;
+    }
+  }
+  &.scroll-start .nav-button.backward,
+  &.scroll-end& .nav-button.forward {
+    opacity: 0;
+    pointer-events: none;
+  }
+  // Hide arrow buttons when the container does not overflow (class added with javascript)
+  &.no-scroll .nav-button {
+    display: none;
+  }
+}
+
+.dragscroll {
+  /* We user the dragscroll library to handle dragging to scroll */
+  overflow-x: scroll;
+  /* But we want to hide the scrollbar: */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    /* Chrome, Safari and Opera */
+    display: none;
+  }
+}
+@scrollbar-background-color: #f5f5f5;
+@scrollbar-thumb-color: darken(@scrollbar-background-color, 10%);
+@scrollbar-thumb-color-dark: darken(@scrollbar-thumb-color, 15%);
+
+.small-scrollbar {
+  scrollbar-width: unset;
+  padding-bottom: 1em;
+  &::-webkit-scrollbar {
+    height: 5px;
+    display: block;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: @scrollbar-background-color;
+    border-radius: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: @scrollbar-thumb-color;
+    border-radius: 5px;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: @scrollbar-thumb-color-dark;
+  }
+}

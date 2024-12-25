@@ -21,7 +21,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 
-const dataSourcesInfo = {
+export const dataSourcesInfo = {
   youtube: {
     name: "YouTube",
     icon: faYoutube,

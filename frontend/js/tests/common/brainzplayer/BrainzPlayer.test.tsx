@@ -17,6 +17,7 @@ import {
 } from "../../../src/common/brainzplayer/BrainzPlayerContext";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -92,6 +93,13 @@ function BrainzPlayerWithWrapper(brainzPlayerProps: {
 }
 
 const mockDispatch = jest.fn();
+
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useLocation: () => ({
+    pathname: "/user/foobar/",
+  }),
+}));
 
 describe("BrainzPlayer", () => {
   beforeEach(() => {
@@ -175,7 +183,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");
@@ -201,7 +211,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const queueList = screen.getByTestId("queue");
@@ -224,7 +236,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");
@@ -256,7 +270,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");
@@ -287,7 +303,9 @@ describe("BrainzPlayer", () => {
         ...GlobalContextMock.context,
         spotifyAuth: spotifyAccountWithPermissions,
       },
-      {}
+      {
+        wrapper: ReactQueryWrapper,
+      }
     );
 
     const playButton = screen.getByTestId("bp-play-button");

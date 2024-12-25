@@ -14,6 +14,7 @@ import { getRecordingMBID } from "../../utils/utils";
 import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 type MenuOptionsProps = {
   currentListen?: Listen | JSPFTrack;
@@ -92,6 +93,7 @@ function MenuOptions(props: MenuOptionsProps) {
           {spotifyURL && (
             <ListenControl
               icon={faSpotify}
+              iconColor={dataSourcesInfo.spotify.color}
               text="Open in Spotify"
               link={spotifyURL}
               anchorTagAttributes={{
@@ -103,6 +105,7 @@ function MenuOptions(props: MenuOptionsProps) {
           {youtubeURL && (
             <ListenControl
               icon={faYoutube}
+              iconColor={dataSourcesInfo.youtube.color}
               text="Open in YouTube"
               link={youtubeURL}
               anchorTagAttributes={{
@@ -114,6 +117,7 @@ function MenuOptions(props: MenuOptionsProps) {
           {soundcloudURL && (
             <ListenControl
               icon={faSoundcloud}
+              iconColor={dataSourcesInfo.soundcloud.color}
               text="Open in Soundcloud"
               link={soundcloudURL}
               anchorTagAttributes={{

@@ -1,0 +1,79 @@
+#donations-page {
+  background: @homepage-background;
+  margin-left: -15px;
+  margin-right: -15px;
+  margin-bottom: -20px;
+  padding: 3em 2em;
+  position: relative;
+  .donations-page-header {
+    text-align: center;
+    margin-bottom: 2em;
+    color: @white;
+    font-size: 24px;
+  }
+  .donations-page-footer {
+    z-index: 1;
+    position: relative;
+    font-size: 1.5rem;
+  }
+  .grey-wedge {
+    height: 530px;
+    bottom: 0;
+    clip-path: polygon(100% 100%, 100% 18%, 0px 0%, 0% 100%);
+    background: #e9e9e9;
+    position: absolute;
+    left: 0;
+    width: 100%;
+  }
+  .blob {
+    position: absolute;
+    top: 25%;
+    opacity: 70%;
+  }
+}
+
+#donations-tiers {
+  position: relative;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 3em;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  align-items: stretch;
+  ul {
+    margin-left: 1.5em;
+  }
+  .tier {
+    padding: 1em;
+    flex: 1;
+    flex-basis: 250px;
+    scale: 1;
+    height: auto;
+    &:hover {
+      scale: 1.1;
+    }
+    background: fadeout(white, 30%);
+    transition: scale 0.2s ease-in-out;
+    // blurred glass effect
+    // background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    &:first-child {
+      flex-basis: 100%;
+      height: auto;
+    }
+  }
+  .tier-heading {
+    text-align: center;
+    margin-bottom: 1.5em;
+  }
+  .perk {
+    margin-bottom: 0.5em;
+  }
+}

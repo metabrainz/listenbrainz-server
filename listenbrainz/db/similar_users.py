@@ -44,16 +44,8 @@ def import_user_similarities(data):
                 target_user_count += len(similar.keys())
             execute_values(curs, query, values, page_size=ROWS_PER_BATCH, template=None)
 
-        conn.commit()
 
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error("Error: Cannot import user similarites: %s" % str(err))
-        return 0, 0.0, "Error: Cannot import user similarites: %s" % str(err)
-
-    # Next lookup user names and insert them into the new similar_users table
-    try:
-        with conn.cursor() as curs:
+            # Next lookup user names and insert them into the new similar_users table
             curs.execute(
                 """DROP TABLE IF EXISTS recommendation.tmp_similar_user""")
             curs.execute("""CREATE TABLE recommendation.tmp_similar_user
@@ -77,36 +69,18 @@ def import_user_similarities(data):
                             FOREIGN KEY (user_id)
                              REFERENCES "user" (id)
                               ON DELETE CASCADE""" % int(time.time()))
-        conn.commit()
 
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error("Error: Cannot correlate user similarity user name: %s" % str(err))
-        return 0, 0.0, "Error: Cannot correlate user similarity user name: %s" % str(err)
-
-    # Finally rotate the table into place
-    try:
-        with conn.cursor() as curs:
             curs.execute("""ALTER TABLE recommendation.similar_user
                               RENAME TO delete_similar_user""")
             curs.execute("""ALTER TABLE recommendation.tmp_similar_user
                               RENAME TO similar_user""")
-        conn.commit()
-    except psycopg2.errors.OperationalError as err:
-        conn.rollback()
-        current_app.logger.error("Error: Failed to rotate similar_users table into place: %s" % str(err))
-        return 0, 0.0, "Error: Failed to rotate similar_users table into place: %s" % str(err)
-
-    # Last, delete the old table
-    try:
-        with conn.cursor() as curs:
             curs.execute("""DROP TABLE recommendation.delete_similar_user CASCADE""")
         conn.commit()
 
     except psycopg2.errors.OperationalError as err:
         conn.rollback()
-        current_app.logger.error("Error: Failed to clean up old similar user table: %s" % str(err))
-        return 0, 0.0, "Error: Failed to clean up old similar user table: %s" % str(err)
+        current_app.logger.error("Error: Cannot rotate similar users data: %s" % str(err))
+        return 0, 0.0, "Error: Cannot rotate similar users data: %s" % str(err)
 
     return user_count, target_user_count / user_count, ""
 

@@ -33,12 +33,14 @@ from sentry_sdk import start_span
 from data.model.common_stat import StatApi
 from data.model.user_artist_map import UserArtistMapRecord
 from listenbrainz.db import couchdb
+from listenbrainz.db.couchdb import try_insert_data
 from listenbrainz.db.user import get_users_by_id
 
 # sitewide statistics are stored in the user statistics table
 # as statistics for a special user with the following user_id.
 # Note: this is the id from LB's "user" table and *not musicbrainz_row_id*.
 SITEWIDE_STATS_USER_ID = 15753
+SITEWIDE_STATS_DB = "sitewide_stats_current"
 
 
 def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="user_id"):
@@ -147,7 +149,7 @@ def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, 
     insert(databases[0], from_ts, to_ts, [{"user_id": user_id, "data": [x.dict() for x in data]}])
 
 
-def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
+def insert_sitewide_stats(stats_type: str, stats_range: str, from_ts: int, to_ts: int, data: dict):
     """ Insert sitewide stats in couchdb.
 
         Args:
@@ -156,5 +158,16 @@ def insert_sitewide_stats(database: str, from_ts: int, to_ts: int, data: dict):
             to_ts: the end of the time period for which the stat is
             data: sitewide stat to insert
     """
+    data["_id"] = f"{stats_type}_{stats_range}"
+    data["key"] = data["_id"]
     data["user_id"] = SITEWIDE_STATS_USER_ID
-    insert(database, from_ts, to_ts, [data])
+    data["from_ts"] = from_ts
+    data["to_ts"] = to_ts
+    data["last_updated"] = int(datetime.now().timestamp())
+
+    try_insert_data(SITEWIDE_STATS_DB, [data])
+
+
+def get_sitewide_stats(type_: str, stats_range: str):
+    """ Retrieve sitewide stats for a given type and range. """
+    return couchdb.fetch_exact_data(SITEWIDE_STATS_DB, f"{type_}_{stats_range}")

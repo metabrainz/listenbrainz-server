@@ -72,7 +72,7 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header(fetch_email=True)
+    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 

@@ -1,8 +1,10 @@
-import React, { useCallback, useState, useContext } from "react";
+import * as React from "react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { ToastMsg } from "../notifications/Notifications";
+
+const { useCallback, useState, useContext } = React;
 
 type ReportUserModalProps = {
   onSubmit: (optionalReason?: string) => void;

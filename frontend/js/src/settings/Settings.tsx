@@ -5,9 +5,13 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import Username from "../common/Username";
+import FlairsSettings from "./flairs/FlairsSettings";
 
 export default function Settings() {
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const globalContext = React.useContext(GlobalAppContext);
+  const { currentUser } = globalContext;
+
   const { auth_token: authToken, name } = currentUser;
 
   const [showToken, setShowToken] = React.useState(false);
@@ -53,10 +57,34 @@ export default function Settings() {
   return (
     <>
       <Helmet>
-        <title>User {currentUser?.name}</title>
+        <title>User {name}</title>
       </Helmet>
       <div id="user-profile">
-        <h2 className="page-title">{name}</h2>
+        <h2 className="page-title">User Settings</h2>
+        <div>
+          <h4>
+            Username: <Username username={name} hideLink elementType="span" />
+          </h4>
+          <a
+            href={`https://musicbrainz.org/user/${name}`}
+            aria-label="Edit Profile on MusicBrainz"
+            title="Edit Profile on MusicBrainz"
+            className="btn btn-outline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="/static/img/meb-icons/MusicBrainz.svg"
+              width="18"
+              height="18"
+              alt="MusicBrainz"
+              style={{ verticalAlign: "bottom" }}
+            />{" "}
+            Edit Profile on MusicBrainz
+          </a>
+        </div>
+
+        <FlairsSettings />
 
         <h3>User token</h3>
         <p>
@@ -95,7 +123,7 @@ export default function Settings() {
 
         <p>If you want to reset your token, click below</p>
         <p>
-          <span className="btn btn-info btn-lg" style={{ width: "200px" }}>
+          <span className="btn btn-warning" style={{ width: "200px" }}>
             <Link to="/settings/resettoken/" style={{ color: "white" }}>
               Reset token
             </Link>

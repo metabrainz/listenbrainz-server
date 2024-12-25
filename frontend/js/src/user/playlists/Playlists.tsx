@@ -1,6 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable camelcase */
-
 import {
   faListAlt,
   faPlusCircle,
@@ -15,6 +12,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 
+import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -31,7 +29,11 @@ import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal"
 import ImportAppleMusicPlaylistModal from "./components/ImportAppleMusicPlaylistModal";
 import ImportSoundCloudPlaylistModal from "./components/ImportSoundCloudPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
-import { getPlaylistId, PlaylistType } from "../../playlists/utils";
+import {
+  getPlaylistExtension,
+  getPlaylistId,
+  PlaylistType,
+} from "../../playlists/utils";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -43,7 +45,16 @@ export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
   playlistCount: number;
   playlistType: PlaylistType;
+  sortBy: SortOption;
 };
+
+enum SortOption {
+  DATE_CREATED = "dateCreated",
+  DATE_UPDATED = "dateUpdated",
+  TITLE = "title",
+  CREATOR = "creator",
+  RANDOM = "random",
+}
 
 type UserPlaylistsLoaderData = UserPlaylistsProps;
 
@@ -61,6 +72,7 @@ export default class UserPlaylists extends React.Component<
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
       playlistCount,
       playlistType: PlaylistType.playlists,
+      sortBy: SortOption.DATE_CREATED,
     };
   }
 
@@ -79,7 +91,7 @@ export default class UserPlaylists extends React.Component<
   };
 
   setPlaylistType = (type: PlaylistType) => {
-    this.setState({ playlistType: type });
+    this.setState({ playlistType: type, sortBy: SortOption.DATE_CREATED });
   };
 
   onCopiedPlaylist = (newPlaylist: JSPFPlaylist): void => {
@@ -135,9 +147,61 @@ export default class UserPlaylists extends React.Component<
     return currentUser?.name === user.name;
   };
 
+  setSortOption = (option: SortOption) => {
+    const { playlists } = this.state;
+    if (option === SortOption.RANDOM) {
+      this.setState({
+        sortBy: option,
+        playlists: [...playlists].sort(() => Math.random() - 0.5),
+      });
+      return;
+    }
+
+    const sortPlaylists = (criteria: any, orders: any) =>
+      orderBy([...playlists], criteria, orders);
+
+    const criterias = {
+      [SortOption.DATE_CREATED]: (pl: JSPFPlaylist) =>
+        new Date(pl.date).getTime(),
+      [SortOption.TITLE]: (pl: JSPFPlaylist) => pl.title.toLowerCase(),
+      [SortOption.CREATOR]: (pl: JSPFPlaylist) => pl.creator.toLowerCase(),
+      [SortOption.DATE_UPDATED]: (pl: JSPFPlaylist) =>
+        getPlaylistExtension(pl)?.last_modified_at || pl.date,
+    };
+
+    const orders = {
+      [SortOption.DATE_CREATED]: ["desc"],
+      [SortOption.TITLE]: ["asc"],
+      [SortOption.CREATOR]: ["asc"],
+      [SortOption.DATE_UPDATED]: ["desc"],
+    };
+
+    const sortingCriteriaBasedOnOption = [
+      criterias[option as keyof typeof criterias],
+      ...Object.values(criterias).filter(
+        (c) => c !== criterias[option as keyof typeof criterias]
+      ),
+    ];
+
+    const sortingOrdersBasedOnOption = [
+      orders[option],
+      ...Object.values(orders).filter((o) => o !== orders[option]),
+    ];
+
+    const sortedPlaylists = sortPlaylists(
+      sortingCriteriaBasedOnOption,
+      sortingOrdersBasedOnOption
+    );
+
+    this.setState({
+      sortBy: option,
+      playlists: sortedPlaylists,
+    });
+  };
+
   render() {
     const { user } = this.props;
-    const { playlists, playlistCount, playlistType } = this.state;
+    const { playlists, playlistCount, playlistType, sortBy } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -276,6 +340,21 @@ export default class UserPlaylists extends React.Component<
               </ul>
             </div>
           )}
+        </div>
+        <div className="playlist-sort-controls">
+          <b>Sort by:</b>
+          <select
+            value={sortBy}
+            onChange={(e) => this.setSortOption(e.target.value as SortOption)}
+            className="form-control"
+            style={{ width: "200px" }}
+          >
+            <option value={SortOption.DATE_CREATED}>Date Created</option>
+            <option value={SortOption.DATE_UPDATED}>Date Updated</option>
+            <option value={SortOption.TITLE}>Title</option>
+            <option value={SortOption.CREATOR}>Creator</option>
+            <option value={SortOption.RANDOM}>Random</option>
+          </select>
         </div>
         <PlaylistsList
           onPaginatePlaylists={this.updatePlaylists}

@@ -1392,6 +1392,8 @@ class FeedbackAPITestCase(IntegrationTestCase):
             "018dfa9b-7a80-3997-b64e-8520488656a1": "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
             "2446a9ae-6e63-3273-bfc9-58eed8571d7a": "f53937b3-f6dc-450c-8d57-bbc667d8af23"
         }
+        expected_msid = messybrainz.submit_recording(self.ts_conn, "Let Me Love You", "ariana grande")
+        self.ts_conn.commit()
 
         r = self.client.post(
             self.custom_url_for("feedback_api_v1.import_feedback"),
@@ -1402,21 +1404,23 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(r)
         self.assertDictEqual(r.json, {
             "total": 8,
-            "inserted": 3,
-            "missing_mbid": 2,
-            "invalid_mbid": 1,
-            "mbid_not_found": 2
+            "imported": 6,
         })
         r = self.client.get(
             self.custom_url_for("feedback_api_v1.get_feedback_for_user", user_name=self.user["musicbrainz_id"]))
+        print(r.json)
+
         data = r.json
-        self.assertEqual(data["count"], 3)
-        self.assertEqual(data["total_count"], 3)
+        self.assertEqual(data["count"], 6)
+        self.assertEqual(data["total_count"], 6)
         self.assertEqual(data["offset"], 0)
         expected_mbids = [
             "7ac86b1a-d183-40ca-9d41-df2d90681ffd",
             "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
             "f53937b3-f6dc-450c-8d57-bbc667d8af23"
         ]
-        received_mbids = [f["recording_mbid"] for f in data["feedback"]]
-        self.assertCountEqual(expected_mbids, received_mbids)
+        received_mbids = {f["recording_mbid"] for f in data["feedback"]}
+        received_msids = {f["recording_msid"] for f in data["feedback"]}
+        for mbid in expected_mbids:
+            self.assertIn(mbid, received_mbids)
+        self.assertIn(expected_msid, received_msids)

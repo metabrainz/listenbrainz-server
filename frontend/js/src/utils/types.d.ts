@@ -535,6 +535,7 @@ type CritiqueBrainzReview = {
   languageCode?: string;
   rating?: number;
   user_name?: string;
+  published_on?: string;
 };
 
 type CritiqueBrainzReviewAPI = {
@@ -607,7 +608,7 @@ type ColorReleasesResponse = {
   };
 };
 
-type MissingMBData = {
+type UnlinkedListens = {
   artist_name: string;
   listened_at: string;
   recording_name: string;
@@ -651,6 +652,7 @@ declare type BrainzPlayerSettings = {
     "spotify" | "youtube" | "soundcloud" | "appleMusic"
   >;
 };
+
 
 declare type UserPreferences = {
   saveData?: boolean;

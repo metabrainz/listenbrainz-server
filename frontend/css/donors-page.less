@@ -1,0 +1,132 @@
+.donor-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .donor-info {
+    display: flex;
+    margin-bottom: 1rem;
+    flex-direction: column;
+
+    @media (min-width: 640px) {
+      margin-bottom: 0;
+    }
+
+    .donation-user {
+      font-weight: 600;
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      .donor-name:not(.flair) {
+        font-weight: 300 !important;
+      }
+    }
+
+    .donation-date {
+      display: flex;
+      color: #6b7280;
+      gap: 10px;
+      align-items: baseline;
+    }
+  }
+
+  .donor-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    .donation-amount {
+      font-weight: 600;
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .recent-listens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+
+      .listen-item {
+        display: flex;
+        align-items: center;
+        color: #6b7280;
+        background-color: #edf2f7;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        gap: 0.5rem;
+        font-weight: 300;
+
+        &:hover,
+        &:visited {
+          color: #6b7280 !important;
+        }
+      }
+    }
+  }
+
+  &:hover {
+    background-color: @table-bg-hover;
+  }
+}
+
+#donors {
+  margin-top: 15px;
+  .donations-page-header {
+    .donation-header-text {
+      position: relative;
+      color: @white;
+      font-size: 16px;
+    }
+    a {
+      color: @black;
+      font-weight: bold;
+      margin-left: 2em;
+      &.btn {
+        border-radius: @border-radius-base;
+      }
+    }
+    opacity: 0.85;
+    border-radius: @border-radius-large;
+    background: @homepage-background;
+    padding: 3em 2em;
+    position: relative;
+    text-align: center;
+    margin-bottom: 2em;
+    overflow: hidden;
+    canvas {
+      position: absolute;
+      opacity: 0.5;
+    }
+  }
+}
+
+.recent-donor-card {
+  gap: 1rem;
+  > div {
+    width: 150px;
+  }
+  .user-link {
+    word-wrap: break-word;
+  }
+  .donor-pinned-recording {
+    display: flex;
+    align-items: center;
+    background: #edf2f7;
+    gap: 0.5rem;
+    margin-left: auto;
+    border-radius: 10px;
+    .text {
+      color: #6b7280;
+      text-wrap: wrap;
+    }
+    svg {
+      color: #353070;
+    }
+  }
+}
