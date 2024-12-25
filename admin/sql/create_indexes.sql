@@ -50,11 +50,15 @@ CREATE UNIQUE INDEX user_id_event_type_event_id_ndx_hide_user_timeline_event ON 
 
 CREATE INDEX user_id_ndx_pinned_recording ON pinned_recording (user_id);
 
-CREATE INDEX release_mbid_ndx_release_color ON release_color (release_mbid);
-CREATE UNIQUE INDEX caa_id_ndx_release_color ON release_color (caa_id);
+CREATE UNIQUE INDEX release_mbid_ndx_release_color ON release_color (release_mbid);
+CREATE UNIQUE INDEX caa_id_release_mbid_ndx_release_color ON release_color (caa_id, release_mbid);
 
 CREATE UNIQUE INDEX user_id_ndx_user_setting ON user_setting (user_id);
 
-CREATE INDEX background_tasks_user_id_task_type_idx ON background_tasks (user_id, task);
+CREATE UNIQUE INDEX background_tasks_user_id_task_type_uniq_idx ON background_tasks (user_id, task);
+
+CREATE INDEX user_data_export_user_id_idx ON user_data_export (user_id);
+
+CREATE UNIQUE INDEX user_data_export_deduplicate_waiting_idx ON user_data_export (user_id, type) WHERE status = 'waiting' OR status = 'in_progress';
 
 COMMIT;

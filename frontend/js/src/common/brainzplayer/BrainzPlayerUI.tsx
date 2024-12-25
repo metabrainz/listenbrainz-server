@@ -33,6 +33,7 @@ import Queue from "./Queue";
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
   currentDataSourceIcon?: IconProp;
+  currentDataSourceIconColor?: string;
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
@@ -78,6 +79,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const {
     currentDataSourceName,
     currentDataSourceIcon,
+    currentDataSourceIconColor,
     listenBrainzAPIBaseURI,
     currentListen,
     trackUrl,
@@ -264,12 +266,16 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           {isPlayingATrack && currentDataSourceName && (
             <a
               href={trackUrl || "#"}
+              className="music-service-icon"
               aria-label={`Open in ${currentDataSourceName}`}
               title={`Open in ${currentDataSourceName}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <FontAwesomeIcon icon={currentDataSourceIcon!} />
+              <FontAwesomeIcon
+                icon={currentDataSourceIcon!}
+                color={currentDataSourceIconColor}
+              />
             </a>
           )}
           <FontAwesomeIcon

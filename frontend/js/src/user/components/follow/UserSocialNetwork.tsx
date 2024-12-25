@@ -7,6 +7,8 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
+import FlairsExplanationButton from "../../../common/flairs/FlairsExplanationButton";
+import useUserFlairs from "../../../utils/FlairLoader";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
@@ -274,17 +276,18 @@ export default class UserSocialNetwork extends React.Component<
       similarArtists,
       similarityScore,
     } = this.state;
+    const isAnotherUser =
+      Boolean(currentUser?.name) && currentUser.name !== user?.name;
     return (
       <>
-        {!(isNil(currentUser) || isEmpty(currentUser)) &&
-          currentUser.name !== user?.name && (
-            <CompatibilityCard
-              user={user}
-              similarityScore={similarityScore}
-              similarArtists={similarArtists}
-            />
-          )}
-        <Card className="card-user-sn hidden-xs hidden-sm">
+        {isAnotherUser && (
+          <CompatibilityCard
+            user={user}
+            similarityScore={similarityScore}
+            similarArtists={similarArtists}
+          />
+        )}
+        <Card className="hidden-xs hidden-sm">
           <FollowerFollowingModal
             user={user}
             followerList={followerList}
@@ -293,6 +296,9 @@ export default class UserSocialNetwork extends React.Component<
             updateFollowingList={this.updateFollowingList}
           />
         </Card>
+        {isAnotherUser && (
+          <FlairsExplanationButton className="hidden-xs hidden-sm" />
+        )}
         <Card className="card-user-sn hidden-xs hidden-sm">
           <SimilarUsersModal
             user={user}

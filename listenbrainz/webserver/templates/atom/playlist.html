@@ -1,0 +1,19 @@
+<p>
+    <ul>
+        {% for track in (tracks  or []) %}
+        <li>
+            {% if track.mbid %}
+                <a href="{{ recording_mb_page_base_url }}{{ track.mbid }}">{{ track.title }}</a>
+            {% else %}
+                {{ track.title }}
+            {% endif %}
+            by 
+            {% if track.artist_mbids and track.artist_credit %}
+                <a href="{{ artist_page_base_url }}{{ track.artist_mbids[0] }}">{{ track.artist_credit }}</a>
+            {% else %}
+                {{ track.artist_credit }}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</p>

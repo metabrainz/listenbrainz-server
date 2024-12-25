@@ -1,3 +1,5 @@
+import json
+
 import sqlalchemy
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
@@ -136,3 +138,41 @@ def get_brainzplayer_prefs(db_conn, user_id: int):
     """), {"user_id": user_id})
     row = result.mappings().first()
     return dict(row) if row else None
+
+
+def update_flair(db_conn, user_id: int, flair):
+    """ Update a user's flair """
+    db_conn.execute(sqlalchemy.text("""
+         INSERT INTO user_setting (user_id, flair)
+         VALUES (:user_id, :flair)
+    ON CONFLICT (user_id)
+      DO UPDATE
+            SET flair = EXCLUDED.flair
+    """), {"flair": json.dumps(flair), "user_id": user_id})
+    db_conn.commit()
+
+
+def get_flair(db_conn, user_id: int):
+    """ Retrieve flair for the given user """
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT flair
+          FROM user_setting
+         WHERE user_id = :user_id
+    """), {"user_id": user_id})
+    row = result.mappings().first()
+    return row.flair if row else None
+
+
+def get_all_flairs(db_conn):
+    """ Retrieve all flairs for all users """
+    query = """
+        SELECT musicbrainz_id
+             , musicbrainz_row_id
+             , flair
+          FROM user_setting us
+          JOIN "user" u
+            ON u.id = us.user_id
+         WHERE flair IS NOT NULL
+    """
+    result = db_conn.execute(sqlalchemy.text(query))
+    return result.all()

@@ -2,7 +2,7 @@ import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
-import { PopularRecording } from "../album/utils";
+import type { Flair } from "./constants";
 
 export default class APIService {
   APIBaseURI: string;
@@ -1455,6 +1455,23 @@ export default class APIService {
     return response.status;
   };
 
+  submitFlairPreferences = async (
+    userToken: string,
+    flair: Flair
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/flair`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ flair }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   exportPlaylistToSpotify = async (
     userToken: string,
     playlist_mbid: string
@@ -1794,6 +1811,13 @@ export default class APIService {
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
     const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getUserFlairs = async (): Promise<Record<string, Flair>> => {
+    const url = `${this.APIBaseURI}/donors/all-flairs`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

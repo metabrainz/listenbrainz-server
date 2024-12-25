@@ -1,7 +1,6 @@
 import * as React from "react";
-import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import APIService from "../../../src/utils/APIService";
@@ -13,9 +12,8 @@ import * as sitewideFilters from "../../__mocks__/freshReleasesSitewideFilters.j
 import * as userDisplayFilters from "../../__mocks__/freshReleasesDisplaySettings.json";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../src/utils/GlobalAppContext";
+import type { GlobalAppContextT } from "../../../src/utils/GlobalAppContext";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const freshReleasesProps = {
   user: {
@@ -86,12 +84,11 @@ describe("FreshReleases", () => {
     });
     mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
 
-    render(
-      <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <QueryClientProvider client={queryClient}>
-          <FreshReleases />
-        </QueryClientProvider>
-      </GlobalAppContext.Provider>
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <FreshReleases />
+      </QueryClientProvider>,
+      mountOptions.context
     );
 
     await waitFor(() => {
@@ -117,14 +114,11 @@ describe("FreshReleases", () => {
     });
     mountOptions.context.APIService.fetchUserFreshReleases = mockFetchUserFreshReleases;
 
-    render(
-      <GlobalAppContext.Provider value={{ ...mountOptions.context }}>
-        <BrowserRouter>
-          <QueryClientProvider client={queryClient}>
-            <FreshReleases />
-          </QueryClientProvider>
-        </BrowserRouter>
-      </GlobalAppContext.Provider>
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <FreshReleases />
+      </QueryClientProvider>,
+      mountOptions.context
     );
 
     await waitFor(() => {
@@ -151,7 +145,7 @@ describe("FreshReleases", () => {
     const setShowFutureReleases = jest.fn();
     const releaseCardGridRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-    render(
+    renderWithProviders(
       <ReleaseFilters
         releaseTags={sitewideFilters.releaseTags}
         releaseTypes={sitewideFilters.releaseTypes}

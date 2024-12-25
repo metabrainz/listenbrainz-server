@@ -327,6 +327,15 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     }})
 
 
+def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
+    if stats is None:
+        return None
+
+    entity_list, total_entity_count = _process_user_entity(stats, 0, 1)
+    return stats.last_updated
+
 @stats_api_bp.route("/user/<user_name>/listening-activity")
 @crossdomain
 @ratelimit()
@@ -990,20 +999,22 @@ def _get_sitewide_stats(entity: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, entity, stats_range, EntityRecord)
+    stats = db_stats.get_sitewide_stats(entity, stats_range)
     if stats is None:
         raise APINoContent("")
 
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
+    count = min(count, MAX_ITEMS_PER_GET)
+    total_entity_count = stats["count"]
+
     return jsonify({
         "payload": {
-            entity: entity_list,
+            entity: stats["data"][offset:count + offset],
             "range": stats_range,
             "offset": offset,
             "count": total_entity_count,
-            "from_ts": stats.from_ts,
-            "to_ts": stats.to_ts,
-            "last_updated": stats.last_updated
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "last_updated": stats["last_updated"]
         }
     })
 
@@ -1067,23 +1078,19 @@ def get_sitewide_listening_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get(
-        db_stats.SITEWIDE_STATS_USER_ID,
-        "listening_activity",
-        stats_range,
-        ListeningActivityRecord
-    )
+    stats = db_stats.get_sitewide_stats("listening_activity", stats_range)
     if stats is None:
         raise APINoContent('')
 
-    listening_activity = [x.dict() for x in stats.data.__root__]
-    return jsonify({"payload": {
-        "listening_activity": listening_activity,
-        "from_ts": stats.from_ts,
-        "to_ts": stats.to_ts,
-        "range": stats_range,
-        "last_updated": stats.last_updated
-    }})
+    return jsonify({
+        "payload": {
+            "listening_activity": stats["data"],
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "range": stats_range,
+            "last_updated": stats["last_updated"]
+        }
+    })
 
 
 @stats_api_bp.route("/sitewide/artist-map")
@@ -1142,15 +1149,48 @@ def get_sitewide_artist_map():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    result = _get_artist_map_stats(db_stats.SITEWIDE_STATS_USER_ID, stats_range)
+    stats = db_stats.get_sitewide_stats("artistmap", stats_range)
+    if stats is not None:
+        return jsonify({
+            "payload": {
+                "artist_map": stats["data"],
+                "from_ts": stats["from_ts"],
+                "to_ts": stats["to_ts"],
+                "last_updated": stats["last_updated"],
+                "stats_range": stats_range
+            }
+        })
+
+    artist_stats = db_stats.get_sitewide_stats("artists", stats_range)
+    if artist_stats is None:
+        raise APINoContent('')
+
+    # Calculate the data
+    artist_mbid_counts = defaultdict(int)
+    for artist in artist_stats["data"]:
+        if artist["artist_mbid"]:
+            artist_mbid_counts[artist["artist_mbid"]] += artist["listen_count"]
+
+    country_code_data = _get_country_wise_counts(artist_mbid_counts)
+    artist_map_stats = [x.dict() for x in country_code_data]
+    try:
+        db_stats.insert_sitewide_stats(
+            "artistmap",
+            stats_range,
+            artist_stats["from_ts"],
+            artist_stats["to_ts"],
+            {"data": artist_map_stats}
+        )
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
     return jsonify({
         "payload": {
-            "range": stats_range,
-            "from_ts": result.from_ts,
-            "to_ts": result.to_ts,
-            "last_updated": result.last_updated,
-            "artist_map": [x.dict() for x in result.data.__root__]
+            "artist_map": artist_map_stats,
+            "from_ts": artist_stats["from_ts"],
+            "to_ts": artist_stats["to_ts"],
+            "last_updated": artist_stats["last_updated"],
+            "stats_range": stats_range
         }
     })
 

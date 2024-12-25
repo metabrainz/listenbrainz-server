@@ -3,17 +3,14 @@
 
 import * as React from "react";
 
-import {
-  faChevronLeft,
-  faChevronRight,
-  faSave,
-} from "@fortawesome/free-solid-svg-icons";
+import { faInfoCircle, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { isUndefined, set, throttle } from "lodash";
+import { isUndefined, set } from "lodash";
 import { Link, useLoaderData } from "react-router-dom";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import NiceModal from "@ebay/nice-modal-react";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import {
   getPlaylistExtension,
@@ -24,6 +21,8 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import HorizontalScrollContainer from "../../components/HorizontalScrollContainer";
+import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -101,9 +100,6 @@ export default function RecommendationsPage() {
   const [selectedPlaylist, setSelectedPlaylist] = React.useState<
     JSPFPlaylist
   >();
-
-  // Ref
-  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Functions
   const fetchPlaylist = React.useCallback(
@@ -300,49 +296,6 @@ export default function RecommendationsPage() {
     );
   };
 
-  const onScroll: React.ReactEventHandler<HTMLDivElement> = (event) => {
-    const element = event.target as HTMLDivElement;
-    const parent = element.parentElement;
-    if (!element || !parent) {
-      return;
-    }
-    // calculate horizontal scroll percentage
-    const scrollPercentage =
-      (100 * element.scrollLeft) / (element.scrollWidth - element.clientWidth);
-
-    if (scrollPercentage > 95) {
-      parent.classList.add("scroll-end");
-      parent.classList.remove("scroll-start");
-    } else if (scrollPercentage < 5) {
-      parent.classList.add("scroll-start");
-      parent.classList.remove("scroll-end");
-    } else {
-      parent.classList.remove("scroll-end");
-      parent.classList.remove("scroll-start");
-    }
-  };
-
-  const manualScroll: React.ReactEventHandler<HTMLElement> = (event) => {
-    if (!scrollContainerRef?.current) {
-      return;
-    }
-    if (event?.currentTarget.classList.contains("forward")) {
-      scrollContainerRef.current.scrollBy({
-        left: 300,
-        top: 0,
-        behavior: "smooth",
-      });
-    } else {
-      scrollContainerRef.current.scrollBy({
-        left: -300,
-        top: 0,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const throttledOnScroll = throttle(onScroll, 400, { leading: true });
-
   // Effect
   React.useEffect(() => {
     const playlistsMapped = loaderPlaylists?.map((pl) => pl.playlist);
@@ -394,46 +347,43 @@ export default function RecommendationsPage() {
             Oh no. Either something’s gone wrong, or you need to submit more
             listens before we can prepare delicious fresh produce just for you.
           </p>
+          <div>
+            <button
+              type="button"
+              className="btn btn-link"
+              data-toggle="modal"
+              data-target="#StatsExplanationsModal"
+              onClick={() => {
+                NiceModal.show(StatsExplanationsModal);
+              }}
+            >
+              <FontAwesomeIcon icon={faInfoCircle} />
+              &nbsp; How and when are recommendations calculated?
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="playlists-masonry-container scroll-start">
-          <button
-            className="nav-button backward"
-            type="button"
-            onClick={manualScroll}
-          >
-            <FontAwesomeIcon icon={faChevronLeft} />
-          </button>
-          <div
-            className="playlists-masonry dragscroll"
-            onScroll={throttledOnScroll}
-            ref={scrollContainerRef}
-          >
-            {playlists.map((playlist, index) => {
-              const extension = getPlaylistExtension(playlist);
-              const sourcePatch =
-                extension?.additional_metadata?.algorithm_metadata.source_patch;
-              const isFirstOfType =
-                playlists.findIndex((pl) => {
-                  const extension2 = getPlaylistExtension(pl);
-                  const sourcePatch2 =
-                    extension2?.additional_metadata?.algorithm_metadata
-                      .source_patch;
-                  return sourcePatch === sourcePatch2;
-                }) === index;
+        <HorizontalScrollContainer
+          className="playlists-masonry"
+          showScrollbar={false}
+        >
+          {playlists.map((playlist, index) => {
+            const extension = getPlaylistExtension(playlist);
+            const sourcePatch =
+              extension?.additional_metadata?.algorithm_metadata.source_patch;
+            const isFirstOfType =
+              playlists.findIndex((pl) => {
+                const extension2 = getPlaylistExtension(pl);
+                const sourcePatch2 =
+                  extension2?.additional_metadata?.algorithm_metadata
+                    .source_patch;
+                return sourcePatch === sourcePatch2;
+              }) === index;
 
-              const info = getPlaylistInfo(playlist, !isFirstOfType);
-              return getPlaylistCard(playlist, info);
-            })}
-          </div>
-          <button
-            className="nav-button forward"
-            type="button"
-            onClick={manualScroll}
-          >
-            <FontAwesomeIcon icon={faChevronRight} />
-          </button>
-        </div>
+            const info = getPlaylistInfo(playlist, !isFirstOfType);
+            return getPlaylistCard(playlist, info);
+          })}
+        </HorizontalScrollContainer>
       )}
       {selectedPlaylist && (
         <section id="selected-playlist">
