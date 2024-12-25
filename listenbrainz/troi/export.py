@@ -42,4 +42,6 @@ def export_to_apple_music(lb_token, apple_music_token, music_user_token, is_publ
     patch = TransferPlaylistPatch(args)
     playlist = patch.generate_playlist()
     metadata = playlist.playlists[0].additional_metadata
+    if not metadata:
+        raise Exception("Failed to export playlist to Apple Music")
     return metadata["external_urls"]["apple_music"]

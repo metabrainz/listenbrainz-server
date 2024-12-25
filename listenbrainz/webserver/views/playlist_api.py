@@ -888,6 +888,8 @@ def export_playlist(playlist_mbid, service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
+    except Exception as e:
+        raise APIError(str(e), 500)
 
 
 @playlist_api_bp.route("/import/<service>", methods=["GET", "OPTIONS"])
