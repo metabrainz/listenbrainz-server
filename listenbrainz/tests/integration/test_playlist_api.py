@@ -1117,131 +1117,133 @@ class PlaylistAPITestCase(IntegrationTestCase):
         )
         self.assert403(response)
 
-@requests_mock.Mocker()
-@mock.patch("listenbrainz.webserver.views.playlist_api.export_to_spotify")
-@mock.patch("listenbrainz.webserver.views.playlist_api.export_to_apple_music")
-def test_playlist_export(self, mock_requests, mock_troi_bot):
-    """ Test various error cases related to exporting a playlist to spotify and apple music """
-    mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
-        'access_token': 'tokentoken',
-        'expires_in': 3600,
-        'scope': '',
-    })
+    @requests_mock.Mocker()
+    @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_spotify")
+    @mock.patch("listenbrainz.webserver.views.playlist_api.export_to_apple_music")
+    def test_playlist_export(self, mock_requests, mock_export_to_apple_music, mock_export_to_spotify):
+        """ Test various error cases related to exporting a playlist to spotify and apple music """
+        mock_export_to_spotify.return_value = "spotify_url"
+        mock_export_to_apple_music.return_value = "apple_music_url"
 
-    playlist = {
-        "playlist": {
-            "title": "my updated playlist",
-            "extension": {
-                PLAYLIST_EXTENSION_URI: {
-                    "public": True
-                }
-            },
+        mock_requests.post(OAUTH_TOKEN_URL, status_code=200, json={
+            'access_token': 'tokentoken',
+            'expires_in': 3600,
+            'scope': '',
+        })
+
+        playlist = {
+            "playlist": {
+                "title": "my updated playlist",
+                "extension": {
+                    PLAYLIST_EXTENSION_URI: {
+                        "public": True
+                    }
+                },
+            }
         }
-    }
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.create_playlist"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert200(response)
-    playlist_mbid = response.json["playlist_mbid"]
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.create_playlist"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        playlist_mbid = response.json["playlist_mbid"]
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="lastfm"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert400(response)
-    self.assertEqual(response.json["error"], "Service lastfm is not supported. We currently only support 'spotify' and 'apple_music'.")
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="lastfm"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Service lastfm is not supported. We currently only support 'spotify' and 'apple_music'.")
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert400(response)
-    self.assertEqual(response.json["error"], "Service spotify is not linked. Please link your spotify account first.")
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Service spotify is not linked. Please link your spotify account first.")
 
-    db_oauth.save_token(
-        self.db_conn,
-        user_id=self.user['id'],
-        service=ExternalServiceType.SPOTIFY,
-        access_token='token',
-        refresh_token='refresh_token',
-        token_expires_ts=int(time.time()),
-        record_listens=True,
-        scopes=['user-read-recently-played']
-    )
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=['user-read-recently-played']
+        )
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert400(response)
-    self.assertEqual(
-        response.json["error"],
-        "Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
-        " Please relink your spotify account from ListenBrainz settings with appropriate scopes"
-        " to use this feature."
-    )
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
+            " Please relink your spotify account from ListenBrainz settings with appropriate scopes"
+            " to use this feature."
+        )
 
-    db_oauth.delete_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, True)
+        db_oauth.delete_token(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, True)
 
-    db_oauth.save_token(
-        self.db_conn,
-        user_id=self.user['id'],
-        service=ExternalServiceType.SPOTIFY,
-        access_token='token',
-        refresh_token='refresh_token',
-        token_expires_ts=int(time.time()),
-        record_listens=True,
-        scopes=[
-            'streaming',
-            'user-read-email',
-            'user-read-private',
-            'playlist-modify-public',
-            'playlist-modify-private',
-            'user-read-currently-playing',
-            'user-read-recently-played'
-        ]
-    )
-    mock_troi_bot.assert_not_called()
-    mock_troi_bot.return_value = "spotify_url"
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.SPOTIFY,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=[
+                'streaming',
+                'user-read-email',
+                'user-read-private',
+                'playlist-modify-public',
+                'playlist-modify-private',
+                'user-read-currently-playing',
+                'user-read-recently-played'
+            ]
+        )
+        mock_export_to_spotify.assert_not_called()
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert200(response)
-    self.assertEqual(response.json, {"external_url": "spotify_url"})
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json, {"external_url": "spotify_url"})
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert400(response)
-    self.assertEqual(response.json["error"], "Service apple_music is not linked. Please link your apple_music account first.")
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Service apple_music is not linked. Please link your apple_music account first.")
 
-    db_oauth.save_token(
-        self.db_conn,
-        user_id=self.user['id'],
-        service=ExternalServiceType.APPLE_MUSIC,
-        access_token='token',
-        refresh_token='refresh_token',
-        token_expires_ts=int(time.time()),
-        record_listens=True
-    )
-    mock_troi_bot.assert_not_called()
-    mock_troi_bot.return_value = "apple_music_url"
+        db_oauth.save_token(
+            self.db_conn,
+            user_id=self.user['id'],
+            service=ExternalServiceType.APPLE,
+            access_token='token',
+            refresh_token='refresh_token',
+            token_expires_ts=int(time.time()),
+            record_listens=True,
+            scopes=[]
+        )
+        mock_export_to_apple_music.assert_not_called()
 
-    response = self.client.post(
-        self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
-        json=playlist,
-        headers={"Authorization": "Token {}".format(self.user["auth_token"])}
-    )
-    self.assert200(response)
-    self.assertEqual(response.json, {"external_url": "apple_music_url"})
+        response = self.client.post(
+            self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="apple_music"),
+            json=playlist,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])}
+        )
+        self.assert200(response)
+        self.assertEqual(response.json, {"external_url": "apple_music_url"})
