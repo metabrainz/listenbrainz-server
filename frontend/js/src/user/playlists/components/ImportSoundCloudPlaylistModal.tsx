@@ -44,18 +44,23 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         toast.error(
           <ToastMsg
             title="Error loading playlists"
-            message={
-              error?.message === "Unauthorized" ? (
-                <>
-                  Session has expired. Please reconnect to{" "}
-                  <Link to="/settings/music-services/details/">Soundcloud</Link>.
-                </>
-              ) : error?.message === "Not Found" ? (
-                "The requested resource was not found."
-              ) : (
-                error?.message ?? error
-              )
-            }
+            message={(() => {
+              if (error?.message === "Unauthorized") {
+                return (
+                  <>
+                    Session has expired. Please reconnect to{" "}
+                    <Link to="/settings/music-services/details/">
+                      Soundcloud
+                    </Link>
+                    .
+                  </>
+                );
+              }
+              if (error?.message === "Not Found") {
+                return "The requested resource was not found.";
+              }
+              return error?.message ?? error;
+            })()}
           />,
           { toastId: "load-playlists-error" }
         );
