@@ -9,11 +9,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import Card from "../../components/Card";
-import { ToastMsg } from "../../notifications/Notifications";
-import GlobalAppContext from "../../utils/GlobalAppContext";
-import PlaylistMenu from "./PlaylistMenu";
-import { getPlaylistExtension, getPlaylistId } from "../utils";
+import Card from "../../../components/Card";
+import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
+import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;

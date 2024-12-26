@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import Loader from "../../../components/Loader";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import PlaylistCard from "../../../playlists/components/PlaylistCard";
+import PlaylistCard from "./PlaylistCard";
 import { PlaylistType } from "../../../playlists/utils";
 
 export type PlaylistsListProps = {
@@ -49,8 +49,7 @@ export default class PlaylistsList extends React.Component<
   async componentDidUpdate(
     prevProps: React.PropsWithChildren<PlaylistsListProps>
   ): Promise<void> {
-    const { user, activeSection } = this.props;
-    const { currentUser } = this.context;
+    const { activeSection } = this.props;
     if (prevProps.activeSection !== activeSection) {
       await this.fetchPlaylists(0);
     }
@@ -153,7 +152,6 @@ export default class PlaylistsList extends React.Component<
       onPlaylistDeleted,
     } = this.props;
     const { paginationOffset, playlistCount, loading } = this.state;
-    const { currentUser } = this.context;
     return (
       <div>
         <Loader isLoading={loading} />
