@@ -1495,13 +1495,10 @@ export default class YearInMusic extends React.Component<
                           data-src={imageLink}
                           alt={mosaicImage.release_name}
                           className="swiper-lazy"
-                          style={{
-                            maxWidth: "min(90vw, 1200px)",
-                          }}
                         />
                       </a>
                       <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
-                      <div title={mosaicImage.release_name}>
+                      <h4 title={mosaicImage.release_name}>
                         {getEntityLink(
                           "release",
                           mosaicImage.release_name,
@@ -1514,7 +1511,7 @@ export default class YearInMusic extends React.Component<
                             [mosaicImage.artist_mbid]
                           )}
                         </div>
-                      </div>
+                      </h4>
                     </div>
                   </SwiperSlide>
                 );
