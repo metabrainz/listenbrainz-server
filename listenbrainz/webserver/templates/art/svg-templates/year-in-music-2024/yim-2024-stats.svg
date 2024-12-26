@@ -7,7 +7,6 @@
     xmlns:xlink="http://www.w3.org/1999/xlink">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
         text {
             fill: {{ accent_color }};
             font-family: 'Inter', sans-serif;
