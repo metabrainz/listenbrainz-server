@@ -26,13 +26,13 @@
   <g id="g138">
     <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
     <image
-        href="{{ image_folder }}/playlists/yim24-playlist-06.png" height="250" x="700" y="450" style="pointer-events: none;" id="buddy-4">
+        href="{{ image_folder }}/playlists/yim24-playlist-06.png" height="250" width="250" x="700" y="450" style="pointer-events: none;" id="buddy-4">
     </image>
     <image
-        href="{{ image_folder }}/playlists/yim24-playlist-05.png" height="250" x="0" y="600" style="pointer-events: none;" id="buddy-3">
+        href="{{ image_folder }}/playlists/yim24-playlist-05.png" height="250" width="250" x="0" y="600" style="pointer-events: none;" id="buddy-3">
     </image>
     <image
-        href="{{ image_folder }}/playlists/yim24-playlist-04.png" height="250" x="660" y="45" style="pointer-events: none;" id="buddy-2">
+        href="{{ image_folder }}/playlists/yim24-playlist-04.png" height="250" width="250" x="660" y="45" style="pointer-events: none;" id="buddy-2">
     </image>
     <g id="g114">
       <text class="branding" x="750" y="897" id="text102">LISTENBRAINZ</text>
