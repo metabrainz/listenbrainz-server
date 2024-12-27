@@ -18,6 +18,7 @@ import {
   getArtistName,
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
@@ -515,7 +516,6 @@ export default class SpotifyPlayer
       duration,
       track_window: { current_track, previous_tracks },
     } = playerState;
-
     const { currentSpotifyTrack, durationMs } = this.state;
     const { playerPaused } = this.props;
     const {
@@ -617,6 +617,16 @@ export default class SpotifyPlayer
     if (!show) {
       return null;
     }
-    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
+    return (
+      <BrainzPlayerContext.Consumer>
+        {(context) => {
+          const { volume } = context;
+          this.spotifyPlayer?.setVolume(volume / 100).then(() => {
+            console.log("volume set to ", volume);
+          });
+          return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
+        }}
+      </BrainzPlayerContext.Consumer>
+    );
   }
 }

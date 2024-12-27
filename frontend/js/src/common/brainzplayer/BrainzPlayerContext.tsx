@@ -40,6 +40,7 @@ export type BrainzPlayerContextT = {
   currentTrackURL?: string;
   playerPaused: boolean;
   isActivated: boolean;
+  volume: number;
   durationMs: number;
   progressMs: number;
   updateTime: number;
@@ -57,6 +58,7 @@ export const initialValue: BrainzPlayerContextT = {
   currentTrackArtist: "",
   playerPaused: true,
   isActivated: false,
+  volume: 100,
   durationMs: 0,
   progressMs: 0,
   updateTime: performance.now(),
@@ -73,6 +75,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "SET_PLAYBACK_TIMER"
     | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
+    | "VOLUME_CHANGE"
     | "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE"
     | "MOVE_AMBIENT_QUEUE_ITEM"
     | "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE"
@@ -178,6 +181,10 @@ function valueReducer(
         queue: newQueue,
         currentListenIndex: newCurrentListenIndex,
       };
+    }
+    case "VOLUME_CHANGE": {
+      // console.log(action.payload);
+      return { ...state, volume: action.payload };
     }
     case "MOVE_AMBIENT_QUEUE_ITEM": {
       const { ambientQueue } = state;
