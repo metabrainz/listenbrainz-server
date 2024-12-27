@@ -67,19 +67,19 @@
         </g>
         <g style="transform: translateY(-40px);">
             <rect x="110.5" y="276.5" width="684" height="462" fill="#FAFFFA"/>
-            <text class="common-description" x="451.5" y="353">
+            <text class="common-description" x="451.5" y="353" fill="{{ accent_color }}">
                 {{most_played_day_message}}
             </text>
-            <text class="common-description" x="451.5" y="440">
+            <text class="common-description" x="451.5" y="440" fill="{{ accent_color }}">
                 LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
             </text>
-            <text class="common-description" x="451.5" y="527">
+            <text class="common-description" x="451.5" y="527" fill="{{ accent_color }}">
                 MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
             </text>
-            <text class="common-description" x="451.5" y="611">
+            <text class="common-description" x="451.5" y="611" fill="{{ accent_color }}">
                 LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
             </text>
-            <text class="common-description" x="451.5" y="695">
+            <text class="common-description" x="451.5" y="695" fill="{{ accent_color }}">
                 DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
             </text>
             <line x1="399" y1="384.5" x2="504" y2="384.5" stroke="{{ accent_color }}"/>
