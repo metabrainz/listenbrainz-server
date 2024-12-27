@@ -35,10 +35,10 @@
   <g id="g1348">
     <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
     <image
-      href="{{ image_folder }}/playlists/yim24-playlist-04.png" width="300" height="300" x="0" y="530" style="pointer-events: none;" id="background-image">
+      href="{{ image_folder }}/playlists/yim24-playlist-04.png" width="300" height="300" x="0" y="590" style="pointer-events: none;" id="buddy-1">
     </image>
     <image
-      href="{{ image_folder }}/playlists/yim24-playlist-06.png" x="600" y="50" width="300" height="300" style="pointer-events: none;" id="background-image">
+      href="{{ image_folder }}/playlists/yim24-playlist-06.png" x="600" y="0" width="300" height="300" style="pointer-events: none;" id="buddy-2">
     </image>
     <g id="g1264">
       <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
@@ -78,17 +78,17 @@
       {% set gap = 45 %}
       {% for track in tracks[:10] %}
       <text>
-        <tspan class="track-name" x="100" y="{{ y_start + loop.index0 * gap }}">
+        <tspan class="track-name" x="200" y="{{ y_start + loop.index0 * gap }}">
           {% if loop.index == 10 %}
             X
           {% else %}
             {{ loop.index }}
           {% endif %}
         </tspan>
-        <tspan class="track-name" x="125" y="{{ y_start + loop.index0 * gap }}">
+        <tspan class="track-name" x="225" y="{{ y_start + loop.index0 * gap }}">
           {{ render_entity_link("recording", track.recording_mbid, track.track_name) }}
         </tspan>
-        <tspan class="artist-name" x="125" dy="20">
+        <tspan class="artist-name" x="225" dy="20">
           {{ render_entity_link("artist", track.artist_mbids[0], track.artist_name) }}
         </tspan>
       </text>

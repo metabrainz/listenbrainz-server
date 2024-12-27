@@ -65,25 +65,27 @@
                 <tspan dx="12">C</tspan>
             </text>
         </g>
-        <rect x="110.5" y="276.5" width="684" height="462" fill="#FAFFFA"/>
-        <text class="common-description" x="451.5" y="353">
-            {{most_played_day_message}}
-        </text>
-        <text class="common-description" x="451.5" y="440">
-            LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
-        </text>
-        <text class="common-description" x="451.5" y="527">
-            MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
-        </text>
-        <text class="common-description" x="451.5" y="611">
-            LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
-        </text>
-        <text class="common-description" x="451.5" y="695">
-            DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
-        </text>
-        <line x1="399" y1="384.5" x2="504" y2="384.5" stroke="{{ accent_color }}"/>
-        <line x1="399" y1="470.5" x2="504" y2="470.5" stroke="{{ accent_color }}"/>
-        <line x1="399" y1="556.5" x2="504" y2="556.5" stroke="{{ accent_color }}"/>
-        <line x1="399" y1="642.5" x2="504" y2="642.5" stroke="{{ accent_color }}"/>
+        <g style="transform: translateY(-40px);">
+            <rect x="110.5" y="276.5" width="684" height="462" fill="#FAFFFA"/>
+            <text class="common-description" x="451.5" y="353">
+                {{most_played_day_message}}
+            </text>
+            <text class="common-description" x="451.5" y="440">
+                LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
+            </text>
+            <text class="common-description" x="451.5" y="527">
+                MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
+            </text>
+            <text class="common-description" x="451.5" y="611">
+                LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
+            </text>
+            <text class="common-description" x="451.5" y="695">
+                DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
+            </text>
+            <line x1="399" y1="384.5" x2="504" y2="384.5" stroke="{{ accent_color }}"/>
+            <line x1="399" y1="470.5" x2="504" y2="470.5" stroke="{{ accent_color }}"/>
+            <line x1="399" y1="556.5" x2="504" y2="556.5" stroke="{{ accent_color }}"/>
+            <line x1="399" y1="642.5" x2="504" y2="642.5" stroke="{{ accent_color }}"/>
+        </g>
     </g>
 </svg>
