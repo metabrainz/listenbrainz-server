@@ -396,6 +396,7 @@ def process_genre_data(yim_top_genre: list, data: list, user_name: str):
 
     return {
         "name": user_name,
+        "color": "transparent",
         "children": outputArr
     }
 
