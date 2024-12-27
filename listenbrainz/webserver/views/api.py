@@ -731,10 +731,6 @@ def get_service_details(user_name):
 def get_tags_dataset():
     """ Get recordings for use in LB radio with the specified tags that match the requested criteria.
 
-    .. code-block:: json
-
-
-
     :param tag: the MusicBrainz tag to fetch recordings for, this parameter can be specified multiple times. if more
         than one tag is specified, the operator param should also be specified.
     :param operator: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
