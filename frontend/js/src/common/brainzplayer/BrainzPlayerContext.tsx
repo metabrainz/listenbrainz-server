@@ -183,7 +183,6 @@ function valueReducer(
       };
     }
     case "VOLUME_CHANGE": {
-      // console.log(action.payload);
       return { ...state, volume: action.payload };
     }
     case "MOVE_AMBIENT_QUEUE_ITEM": {

@@ -621,9 +621,7 @@ export default class SpotifyPlayer
       <BrainzPlayerContext.Consumer>
         {(context) => {
           const { volume } = context;
-          this.spotifyPlayer?.setVolume(volume / 100).then(() => {
-            console.log("volume set to ", volume);
-          });
+          this.spotifyPlayer?.setVolume(volume / 100);
           return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
         }}
       </BrainzPlayerContext.Consumer>
