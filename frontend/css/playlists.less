@@ -1,6 +1,19 @@
 @playlistBackgroundColor: #fafafa;
 @descriptionLines: 3;
 
+#playlists-page .playlist-view-options {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.8rem;
+  gap: 1rem;
+
+  .playlist-sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
 #playlists-container {
   display: flex;
   flex-wrap: wrap;
@@ -8,12 +21,6 @@
 
   &.list-view {
     flex-direction: column;
-  }
-
-  .playlist-view-options {
-    display: flex;
-    margin-top: 0.8rem;
-    gap: 1rem;
   }
 
   /* Pure CSS multiline ellipsis by Sagi Shrieber:
@@ -109,11 +116,11 @@
         gap: 2rem;
 
         .playlist-index {
-            min-width: 2rem;
-            text-align: right;
-            font-weight: bold;
-            margin-top: 0.5rem;
-          }
+          min-width: 2rem;
+          text-align: right;
+          font-weight: bold;
+          margin-top: 0.5rem;
+        }
       }
     }
 
@@ -225,11 +232,4 @@
   display: block;
   align-self: center;
   min-width: 3em;
-}
-
-.playlist-sort-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.8em;
 }
