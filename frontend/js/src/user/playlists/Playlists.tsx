@@ -3,7 +3,6 @@ import {
   faPlusCircle,
   faUsers,
   faFileImport,
-  faMusic,
 } from "@fortawesome/free-solid-svg-icons";
 import { faSpotify, faItunesNote } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
@@ -29,6 +28,8 @@ import {
   getPlaylistId,
   PlaylistType,
 } from "../../playlists/utils";
+import PlaylistView from "./playlistView.d";
+import { faGrid, faStacked } from "../../utils/icons";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -41,6 +42,7 @@ export type UserPlaylistsState = {
   playlistCount: number;
   playlistType: PlaylistType;
   sortBy: SortOption;
+  view: PlaylistView;
 };
 
 enum SortOption {
@@ -68,6 +70,7 @@ export default class UserPlaylists extends React.Component<
       playlistCount,
       playlistType: PlaylistType.playlists,
       sortBy: SortOption.DATE_CREATED,
+      view: PlaylistView.GRID,
     };
   }
 
@@ -196,7 +199,7 @@ export default class UserPlaylists extends React.Component<
 
   render() {
     const { user } = this.props;
-    const { playlists, playlistCount, playlistType, sortBy } = this.state;
+    const { playlists, playlistCount, playlistType, sortBy, view } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -313,20 +316,41 @@ export default class UserPlaylists extends React.Component<
             </div>
           )}
         </div>
-        <div className="playlist-sort-controls">
-          <b>Sort by:</b>
-          <select
-            value={sortBy}
-            onChange={(e) => this.setSortOption(e.target.value as SortOption)}
-            className="form-control"
-            style={{ width: "200px" }}
-          >
-            <option value={SortOption.DATE_CREATED}>Date Created</option>
-            <option value={SortOption.DATE_UPDATED}>Date Updated</option>
-            <option value={SortOption.TITLE}>Title</option>
-            <option value={SortOption.CREATOR}>Creator</option>
-            <option value={SortOption.RANDOM}>Random</option>
-          </select>
+        <div className="tertiary-nav">
+          <div className="playlist-sort-controls">
+            <b>Sort by:</b>
+            <select
+              value={sortBy}
+              onChange={(e) => this.setSortOption(e.target.value as SortOption)}
+              className="form-control"
+              style={{ width: "200px" }}
+            >
+              <option value={SortOption.DATE_CREATED}>Date Created</option>
+              <option value={SortOption.DATE_UPDATED}>Date Updated</option>
+              <option value={SortOption.TITLE}>Title</option>
+              <option value={SortOption.CREATOR}>Creator</option>
+              <option value={SortOption.RANDOM}>Random</option>
+            </select>
+          </div>
+          <div className="playlist-view-controls">
+            <b>View: </b>
+            <Pill
+              active={view === PlaylistView.GRID}
+              type="secondary"
+              onClick={() => this.setState({ view: PlaylistView.GRID })}
+              title="Grid view"
+            >
+              <FontAwesomeIcon icon={faGrid} />
+            </Pill>
+            <Pill
+              active={view === PlaylistView.LIST}
+              type="secondary"
+              onClick={() => this.setState({ view: PlaylistView.LIST })}
+              title="List view"
+            >
+              <FontAwesomeIcon icon={faStacked} />
+            </Pill>
+          </div>
         </div>
         <PlaylistsList
           onPaginatePlaylists={this.updatePlaylists}
@@ -337,6 +361,7 @@ export default class UserPlaylists extends React.Component<
           playlistCount={playlistCount}
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
+          view={view}
         >
           {this.isCurrentUserPage() && [
             <Card

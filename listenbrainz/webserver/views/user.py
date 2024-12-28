@@ -170,7 +170,7 @@ def playlists(user_name: str):
     playlists = []
     user_playlists, playlist_count = get_playlists_for_user(
         db_conn, ts_conn, user.id, include_private=include_private,
-        load_recordings=False, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
+        load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
     )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())

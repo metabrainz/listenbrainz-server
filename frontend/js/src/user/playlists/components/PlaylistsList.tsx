@@ -9,6 +9,7 @@ import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import PlaylistCard from "./PlaylistCard";
 import { PlaylistType } from "../../../playlists/utils";
+import PlaylistView from "../playlistView.d";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
@@ -16,6 +17,7 @@ export type PlaylistsListProps = {
   paginationOffset?: number;
   playlistCount: number;
   activeSection: PlaylistType;
+  view: PlaylistView;
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   onPlaylistEdited: (playlist: JSPFPlaylist) => void;
   onPlaylistDeleted: (playlist: JSPFPlaylist) => void;
@@ -147,6 +149,7 @@ export default class PlaylistsList extends React.Component<
       playlists,
       activeSection,
       children,
+      view,
       onCopiedPlaylist,
       onPlaylistEdited,
       onPlaylistDeleted,
@@ -160,17 +163,20 @@ export default class PlaylistsList extends React.Component<
         )}
         <div
           id="playlists-container"
+          className={view === PlaylistView.LIST ? "list-view" : ""}
           style={{ opacity: loading ? "0.4" : "1" }}
         >
-          {playlists.map((playlist: JSPFPlaylist) => {
+          {playlists.map((playlist: JSPFPlaylist, index: number) => {
             return (
               <PlaylistCard
+                view={view}
                 showOptions={activeSection !== PlaylistType.recommendations}
                 playlist={playlist}
                 onSuccessfulCopy={onCopiedPlaylist ?? noop}
                 onPlaylistEdited={onPlaylistEdited}
                 onPlaylistDeleted={onPlaylistDeleted}
                 key={playlist.identifier}
+                index={index}
               />
             );
           })}
