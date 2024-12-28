@@ -30,6 +30,7 @@ import {
 } from "../../playlists/utils";
 import PlaylistView from "./playlistView.d";
 import { faGrid, faStacked } from "../../utils/icons";
+import { getObjectForURLSearchParams } from "../../utils/utils";
 
 export type UserPlaylistsProps = {
   playlists: JSPFObject[];
@@ -40,8 +41,6 @@ export type UserPlaylistsProps = {
 
 export type UserPlaylistsState = {
   playlists: JSPFPlaylist[];
-  playlistCount: number;
-  playlistType: PlaylistType;
   sortBy: SortOption;
   view: PlaylistView;
 };
@@ -58,8 +57,10 @@ type UserPlaylistsLoaderData = UserPlaylistsProps;
 
 type UserPlaylistsClassProps = UserPlaylistsProps & {
   page: number;
+  playlistType: PlaylistType;
   handleClickPrevious: () => void;
   handleClickNext: () => void;
+  handleSetPlaylistType: (newType: PlaylistType) => void;
 };
 
 export default class UserPlaylists extends React.Component<
@@ -74,8 +75,6 @@ export default class UserPlaylists extends React.Component<
     const { playlists, playlistCount } = props;
     this.state = {
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
-      playlistCount,
-      playlistType: PlaylistType.playlists,
       sortBy: SortOption.DATE_CREATED,
       view: PlaylistView.GRID,
     };
@@ -98,16 +97,16 @@ export default class UserPlaylists extends React.Component<
     );
   };
 
-  updatePlaylists = (playlists: JSPFPlaylist[]): void => {
-    this.setState({ playlists });
-  };
-
   setPlaylistType = (type: PlaylistType) => {
-    this.setState({ playlistType: type, sortBy: SortOption.DATE_CREATED });
+    const { handleSetPlaylistType, playlistType } = this.props;
+    if (type !== playlistType) {
+      handleSetPlaylistType(type);
+      this.setState({ sortBy: SortOption.DATE_CREATED });
+    }
   };
 
   onCopiedPlaylist = (newPlaylist: JSPFPlaylist): void => {
-    const { playlistType } = this.state;
+    const { playlistType } = this.props;
     if (this.isCurrentUserPage() && playlistType === PlaylistType.playlists) {
       this.setState((prevState) => ({
         playlists: [newPlaylist, ...prevState.playlists],
@@ -216,10 +215,11 @@ export default class UserPlaylists extends React.Component<
       user,
       pageCount,
       page,
+      playlistType,
       handleClickPrevious,
       handleClickNext,
     } = this.props;
-    const { playlists, playlistCount, playlistType, sortBy, view } = this.state;
+    const { playlists, sortBy, view } = this.state;
     const { currentUser } = this.context;
 
     return (
@@ -415,27 +415,48 @@ export default class UserPlaylists extends React.Component<
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObj = getObjectForURLSearchParams(searchParams);
   const currPageNoStr = searchParams.get("page") || "1";
   const currPageNo = parseInt(currPageNoStr, 10);
+  const type = searchParams.get("type") || "";
 
   const handleClickPrevious = () => {
     setSearchParams({
+      ...searchParamsObj,
       page: Math.max(currPageNo - 1, 1).toString(),
     });
   };
 
   const handleClickNext = () => {
     setSearchParams({
+      ...searchParamsObj,
       page: Math.min(currPageNo + 1, data.pageCount).toString(),
     });
+  };
+
+  const playlistType =
+    type === "collaborative"
+      ? PlaylistType.collaborations
+      : PlaylistType.playlists;
+
+  const handleSetPlaylistType = (newType: PlaylistType) => {
+    const newParams = { ...searchParamsObj };
+    if (newType === PlaylistType.collaborations) {
+      newParams.type = "collaborative";
+    } else {
+      delete newParams?.type;
+    }
+    setSearchParams(newParams);
   };
 
   return (
     <UserPlaylists
       {...data}
       page={currPageNo}
+      playlistType={playlistType}
       handleClickPrevious={handleClickPrevious}
       handleClickNext={handleClickNext}
+      handleSetPlaylistType={handleSetPlaylistType}
     />
   );
 }

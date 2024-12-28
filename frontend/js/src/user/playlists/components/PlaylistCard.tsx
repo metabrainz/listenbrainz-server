@@ -164,12 +164,29 @@ export default function PlaylistCard({
             aria-expanded="true"
             type="button"
           />
-          <PlaylistMenu
-            playlist={playlist}
-            onPlaylistSaved={onPlaylistEdited}
-            onPlaylistDeleted={onPlaylistDeleted}
-            onPlaylistCopied={onSuccessfulCopy}
-          />
+          {showOptions ? (
+            <PlaylistMenu
+              playlist={playlist}
+              onPlaylistSaved={onPlaylistEdited}
+              onPlaylistDeleted={onPlaylistDeleted}
+              onPlaylistCopied={onSuccessfulCopy}
+            />
+          ) : (
+            <ul
+              className="dropdown-menu dropdown-menu-right"
+              aria-labelledby="playlistOptionsDropdown"
+            >
+              <li>
+                <a onClick={onCopyPlaylist} role="button" href="#">
+                  <FontAwesomeIcon
+                    icon={faSave as IconProp}
+                    title="Save to my playlists"
+                  />
+                  &nbsp;Save
+                </a>
+              </li>
+            </ul>
+          )}
         </div>
       </div>
     );
