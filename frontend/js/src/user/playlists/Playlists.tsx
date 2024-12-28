@@ -376,7 +376,6 @@ export default class UserPlaylists extends React.Component<
           onCopiedPlaylist={this.onCopiedPlaylist}
           playlists={playlists}
           activeSection={playlistType}
-          user={user}
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
           view={view}
@@ -428,6 +427,7 @@ export function UserPlaylistsWrapper() {
       page: Math.min(currPageNo + 1, data.pageCount).toString(),
     });
   };
+
   return (
     <UserPlaylists
       {...data}
