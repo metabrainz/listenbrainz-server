@@ -110,50 +110,66 @@ export default function PlaylistCard({
 
   if (view === PlaylistView.LIST) {
     return (
-      <div
-        className="playlist-card-list-view"
-        onClick={navigateToPlaylist}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            navigateToPlaylist();
-          }
-        }}
-        role="presentation"
-      >
-        <div className="playlist-info">
-          <div className="playlist-index">{index + 1}</div>
-          <div className="playlist-info-content">
-            <div className="playlist-title">
-              <Link to={`/playlist/${sanitize(playlistId)}/`}>
-                {playlist.title}
-              </Link>
+      <div className="playlist-card-list-view">
+        <div
+          className="playlist-card-container"
+          onClick={navigateToPlaylist}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              navigateToPlaylist();
+            }
+          }}
+          role="presentation"
+        >
+          <div className="playlist-info">
+            <div className="playlist-index">{index + 1}</div>
+            <div className="playlist-info-content">
+              <div className="playlist-title">
+                <Link to={`/playlist/${sanitize(playlistId)}/`}>
+                  {playlist.title}
+                </Link>
+              </div>
+              {playlist.annotation && (
+                <div
+                  className="description"
+                  // eslint-disable-next-line react/no-danger
+                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                />
+              )}
             </div>
-            {playlist.annotation && (
-              <div
-                className="playlist-annotation"
-                // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{ __html: playlist.annotation }}
-              />
-            )}
+          </div>
+          <div className="playlist-more-info">
+            <div className="playlist-stats">
+              <div className="playlist-date">
+                <FontAwesomeIcon icon={faCalendar} />
+                {new Date(playlist.date).toLocaleString(undefined, {
+                  dateStyle: "short",
+                })}
+              </div>
+              <div className="playlist-date">
+                <FontAwesomeIcon icon={faMusic} />
+                {playlist.track?.length} track
+                {playlist.track?.length === 1 ? "" : "s"}
+              </div>
+            </div>
           </div>
         </div>
-        <div className="playlist-more-info">
-          <div className="playlist-stats">
-            <div className="playlist-date">
-              <FontAwesomeIcon icon={faCalendar} />
-              {new Date(playlist.date).toLocaleString(undefined, {
-                dateStyle: "short",
-              })}
-            </div>
-            <div className="playlist-date">
-              <FontAwesomeIcon icon={faMusic} />
-              {playlist.track?.length} track
-              {playlist.track?.length === 1 ? "" : "s"}
-            </div>
-          </div>
-          <div className="playlist-actions">
-            <FontAwesomeIcon icon={faEllipsisVertical} />
-          </div>
+        <div className="playlist-actions dropdown playlist-card-action-dropdown">
+          <FontAwesomeIcon
+            icon={faEllipsisVertical}
+            fixedWidth
+            id="playlistOptionsDropdown"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="true"
+            type="button"
+          />
+          <PlaylistMenu
+            playlist={playlist}
+            onPlaylistSaved={onPlaylistEdited}
+            onPlaylistDeleted={onPlaylistDeleted}
+            onPlaylistCopied={onSuccessfulCopy}
+          />
         </div>
       </div>
     );

@@ -16,6 +16,33 @@
     gap: 1rem;
   }
 
+  /* Pure CSS multiline ellipsis by Sagi Shrieber:
+			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
+			*/
+  .description {
+    overflow: hidden;
+    position: relative;
+    line-height: 1.2em;
+    max-height: @descriptionLines * 1.2em;
+    text-align: justify;
+    padding-right: 2em;
+    &:before {
+      content: "...";
+      position: absolute;
+      right: 1em;
+      bottom: 0;
+    }
+    &:after {
+      content: "";
+      position: absolute;
+      right: 0;
+      width: 1em;
+      height: 1em;
+      margin-top: 0.2em;
+      background-color: inherit;
+    }
+  }
+
   .playlist {
     margin: 0.5em;
     width: 15em;
@@ -50,60 +77,44 @@
           margin: 0;
         }
       }
-
-      /* Pure CSS multiline ellipsis by Sagi Shrieber:
-			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
-			*/
-      .description {
-        overflow: hidden;
-        position: relative;
-        line-height: 1.2em;
-        max-height: @descriptionLines * 1.2em;
-        text-align: justify;
-        padding-right: 2em;
-        &:before {
-          content: "...";
-          position: absolute;
-          right: 1em;
-          bottom: 0;
-        }
-        &:after {
-          content: "";
-          position: absolute;
-          right: 0;
-          width: 1em;
-          height: 1em;
-          margin-top: 0.2em;
-          background-color: inherit;
-        }
-      }
     }
   }
 
   .playlist-card-list-view {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     border: 1px solid #e2e8f0;
     padding: 1rem;
     margin: 0.5rem 0;
     min-height: 8rem;
     border-radius: 10px;
+    gap: 3rem;
+
+    @media (max-width: 640px) {
+      gap: 0;
+    }
 
     &:hover {
       cursor: pointer;
     }
 
-    .playlist-index {
-      min-width: 2rem;
-      text-align: right;
-      font-weight: bold;
-      margin-top: 0.5rem;
-    }
-
-    .playlist-info {
+    .playlist-card-container {
       display: flex;
-      gap: 2rem;
+      justify-content: space-between;
+      width: 100%;
+      gap: 0.8rem;
+
+      .playlist-info {
+        display: flex;
+        gap: 2rem;
+
+        .playlist-index {
+            min-width: 2rem;
+            text-align: right;
+            font-weight: bold;
+            margin-top: 0.5rem;
+          }
+      }
     }
 
     .playlist-info-content {
@@ -128,13 +139,8 @@
 
     .playlist-more-info {
       display: flex;
-      gap: 4rem;
       align-self: center;
       width: max-content;
-
-      @media (max-width: 640px) {
-        gap: 2rem;
-      }
 
       .playlist-stats {
         display: flex;
@@ -142,16 +148,14 @@
         align-items: flex-end;
 
         .playlist-date {
-          display: flex;
           color: #6b7280;
-          gap: 10px;
           align-items: baseline;
         }
       }
-
-      .playlist-actions {
-        align-self: center;
-      }
+    }
+    .playlist-actions {
+      align-self: center;
+      margin: 1rem;
     }
   }
 }
