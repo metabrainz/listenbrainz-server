@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
@@ -17,7 +18,7 @@ from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
-from werkzeug.exceptions import NotFound
+from listenbrainz.webserver.views.api_tools import get_non_negative_param
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
@@ -156,6 +157,8 @@ def stats(user_name: str):
 def playlists(user_name: str):
     """ Show user playlists """
 
+    page = get_non_negative_param("page", default=1)
+
     user = _get_user(user_name)
     if not user:
         return jsonify({"error": "Cannot find user: %s" % user_name}), 404
@@ -168,9 +171,11 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
+    offset = (page - 1) * DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+
     user_playlists, playlist_count = get_playlists_for_user(
         db_conn, ts_conn, user.id, include_private=include_private,
-        load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
+        load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
     )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
@@ -179,6 +184,7 @@ def playlists(user_name: str):
         "playlists": playlists,
         "user": user_data,
         "playlistCount": playlist_count,
+        "pageCount": ceil(playlist_count / DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL),
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 

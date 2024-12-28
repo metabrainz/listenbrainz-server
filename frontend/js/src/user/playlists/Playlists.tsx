@@ -11,7 +11,7 @@ import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import Card from "../../components/Card";
@@ -35,6 +35,7 @@ export type UserPlaylistsProps = {
   playlists: JSPFObject[];
   user: ListenBrainzUser;
   playlistCount: number;
+  pageCount: number;
 };
 
 export type UserPlaylistsState = {
@@ -55,14 +56,20 @@ enum SortOption {
 
 type UserPlaylistsLoaderData = UserPlaylistsProps;
 
+type UserPlaylistsClassProps = UserPlaylistsProps & {
+  page: number;
+  handleClickPrevious: () => void;
+  handleClickNext: () => void;
+};
+
 export default class UserPlaylists extends React.Component<
-  UserPlaylistsProps,
+  UserPlaylistsClassProps,
   UserPlaylistsState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props: UserPlaylistsProps) {
+  constructor(props: UserPlaylistsClassProps) {
     super(props);
     const { playlists, playlistCount } = props;
     this.state = {
@@ -72,6 +79,13 @@ export default class UserPlaylists extends React.Component<
       sortBy: SortOption.DATE_CREATED,
       view: PlaylistView.GRID,
     };
+  }
+
+  componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
+    const { playlists } = this.props;
+    if (prevProps.playlists !== playlists) {
+      this.setState({ playlists: playlists.map((pl) => pl.playlist) });
+    }
   }
 
   alertNotAuthorized = () => {
@@ -198,7 +212,13 @@ export default class UserPlaylists extends React.Component<
   };
 
   render() {
-    const { user } = this.props;
+    const {
+      user,
+      pageCount,
+      page,
+      handleClickPrevious,
+      handleClickNext,
+    } = this.props;
     const { playlists, playlistCount, playlistType, sortBy, view } = this.state;
     const { currentUser } = this.context;
 
@@ -353,15 +373,17 @@ export default class UserPlaylists extends React.Component<
           </div>
         </div>
         <PlaylistsList
-          onPaginatePlaylists={this.updatePlaylists}
           onCopiedPlaylist={this.onCopiedPlaylist}
           playlists={playlists}
           activeSection={playlistType}
           user={user}
-          playlistCount={playlistCount}
           onPlaylistEdited={this.onPlaylistEdited}
           onPlaylistDeleted={this.onPlaylistDeleted}
           view={view}
+          page={page}
+          handleClickPrevious={handleClickPrevious}
+          handleClickNext={handleClickNext}
+          pageCount={pageCount}
         >
           {this.isCurrentUserPage() && [
             <Card
@@ -391,5 +413,27 @@ export default class UserPlaylists extends React.Component<
 
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
-  return <UserPlaylists {...data} />;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currPageNoStr = searchParams.get("page") || "1";
+  const currPageNo = parseInt(currPageNoStr, 10);
+
+  const handleClickPrevious = () => {
+    setSearchParams({
+      page: Math.max(currPageNo - 1, 1).toString(),
+    });
+  };
+
+  const handleClickNext = () => {
+    setSearchParams({
+      page: Math.min(currPageNo + 1, data.pageCount).toString(),
+    });
+  };
+  return (
+    <UserPlaylists
+      {...data}
+      page={currPageNo}
+      handleClickPrevious={handleClickPrevious}
+      handleClickNext={handleClickNext}
+    />
+  );
 }

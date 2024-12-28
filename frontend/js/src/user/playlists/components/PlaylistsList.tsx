@@ -10,18 +10,20 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 import PlaylistCard from "./PlaylistCard";
 import { PlaylistType } from "../../../playlists/utils";
 import PlaylistView from "../playlistView.d";
+import Pagination from "../../../common/Pagination";
 
 export type PlaylistsListProps = {
   playlists: JSPFPlaylist[];
   user: ListenBrainzUser;
-  paginationOffset?: number;
-  playlistCount: number;
+  pageCount: number;
+  page: number;
   activeSection: PlaylistType;
   view: PlaylistView;
   onCopiedPlaylist?: (playlist: JSPFPlaylist) => void;
   onPlaylistEdited: (playlist: JSPFPlaylist) => void;
   onPlaylistDeleted: (playlist: JSPFPlaylist) => void;
-  onPaginatePlaylists: (playlists: JSPFPlaylist[]) => void;
+  handleClickPrevious: () => void;
+  handleClickNext: () => void;
 };
 
 export type PlaylistsListState = {
@@ -31,31 +33,10 @@ export type PlaylistsListState = {
 };
 
 export default class PlaylistsList extends React.Component<
-  React.PropsWithChildren<PlaylistsListProps>,
-  PlaylistsListState
+  React.PropsWithChildren<PlaylistsListProps>
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-
-  private DEFAULT_PLAYLISTS_PER_PAGE = 25;
-
-  constructor(props: React.PropsWithChildren<PlaylistsListProps>) {
-    super(props);
-    this.state = {
-      loading: false,
-      paginationOffset: props.paginationOffset || 0,
-      playlistCount: props.playlistCount,
-    };
-  }
-
-  async componentDidUpdate(
-    prevProps: React.PropsWithChildren<PlaylistsListProps>
-  ): Promise<void> {
-    const { activeSection } = this.props;
-    if (prevProps.activeSection !== activeSection) {
-      await this.fetchPlaylists(0);
-    }
-  }
 
   alertNotAuthorized = () => {
     toast.error(
@@ -76,95 +57,28 @@ export default class PlaylistsList extends React.Component<
     return currentUser?.name === user.name;
   };
 
-  handleClickNext = async () => {
-    const { paginationOffset, playlistCount } = this.state;
-    const newOffset = paginationOffset + this.DEFAULT_PLAYLISTS_PER_PAGE;
-    // No more playlists to fetch
-    if (newOffset >= playlistCount) {
-      return;
-    }
-    await this.fetchPlaylists(newOffset);
-  };
-
-  handleClickPrevious = async () => {
-    const { paginationOffset } = this.state;
-    // No more playlists to fetch
-    if (paginationOffset === 0) {
-      return;
-    }
-    const newOffset = Math.max(
-      0,
-      paginationOffset - this.DEFAULT_PLAYLISTS_PER_PAGE
-    );
-    await this.fetchPlaylists(newOffset);
-  };
-
-  handleAPIResponse = (newPlaylists: {
-    playlists: JSPFObject[];
-    playlist_count: number;
-    count: string;
-    offset: string;
-  }) => {
-    const { onPaginatePlaylists } = this.props;
-    const parsedOffset = parseInt(newPlaylists.offset, 10);
-    this.setState({
-      playlistCount: newPlaylists.playlist_count,
-      paginationOffset: parsedOffset,
-      loading: false,
-    });
-    onPaginatePlaylists(
-      newPlaylists.playlists.map((pl: JSPFObject) => pl.playlist)
-    );
-  };
-
-  fetchPlaylists = async (newOffset: number = 0) => {
-    const { APIService, currentUser } = this.context;
-    const { user, activeSection } = this.props;
-    this.setState({ loading: true });
-    try {
-      const newPlaylists = await APIService.getUserPlaylists(
-        user.name,
-        currentUser?.auth_token,
-        newOffset,
-        this.DEFAULT_PLAYLISTS_PER_PAGE,
-        activeSection === PlaylistType.recommendations,
-        activeSection === PlaylistType.collaborations
-      );
-
-      this.handleAPIResponse(newPlaylists);
-    } catch (error) {
-      toast.error(
-        <ToastMsg
-          title="Error loading playlists"
-          message={error?.message ?? error}
-        />,
-        { toastId: "load-playlists-error" }
-      );
-      this.setState({ loading: false });
-    }
-  };
-
   render() {
     const {
       playlists,
       activeSection,
       children,
       view,
+      page,
+      pageCount,
       onCopiedPlaylist,
       onPlaylistEdited,
       onPlaylistDeleted,
+      handleClickPrevious,
+      handleClickNext,
     } = this.props;
-    const { paginationOffset, playlistCount, loading } = this.state;
     return (
       <div>
-        <Loader isLoading={loading} />
         {!playlists.length && (
           <p>No playlists to show yet. Come back later !</p>
         )}
         <div
           id="playlists-container"
           className={view === PlaylistView.LIST ? "list-view" : ""}
-          style={{ opacity: loading ? "0.4" : "1" }}
         >
           {playlists.map((playlist: JSPFPlaylist, index: number) => {
             return (
@@ -182,41 +96,12 @@ export default class PlaylistsList extends React.Component<
           })}
           {children}
         </div>
-        <ul className="pager" style={{ display: "flex" }}>
-          <li className={`previous ${paginationOffset <= 0 ? "disabled" : ""}`}>
-            <a
-              role="button"
-              onClick={this.handleClickPrevious}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") this.handleClickPrevious();
-              }}
-              tabIndex={0}
-            >
-              &larr; Previous
-            </a>
-          </li>
-          <li
-            className={`next ${
-              playlistCount &&
-              playlistCount <=
-                paginationOffset + this.DEFAULT_PLAYLISTS_PER_PAGE
-                ? "disabled"
-                : ""
-            }`}
-            style={{ marginLeft: "auto" }}
-          >
-            <a
-              role="button"
-              onClick={this.handleClickNext}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") this.handleClickNext();
-              }}
-              tabIndex={0}
-            >
-              Next &rarr;
-            </a>
-          </li>
-        </ul>
+        <Pagination
+          currentPageNo={page}
+          totalPageCount={pageCount}
+          handleClickPrevious={handleClickPrevious}
+          handleClickNext={handleClickNext}
+        />
       </div>
     );
   }
