@@ -387,7 +387,9 @@ export default class UserPlaylists extends React.Component<
           {this.isCurrentUserPage() && [
             <Card
               key="new-playlist"
-              className="new-playlist"
+              className={`new-playlist ${
+                view === PlaylistView.LIST ? "list-view" : ""
+              }`}
               data-toggle="modal"
               data-target="#CreateOrEditPlaylistModal"
               onClick={() => {
