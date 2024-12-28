@@ -316,22 +316,7 @@ export default class UserPlaylists extends React.Component<
             </div>
           )}
         </div>
-        <div className="tertiary-nav">
-          <div className="playlist-sort-controls">
-            <b>Sort by:</b>
-            <select
-              value={sortBy}
-              onChange={(e) => this.setSortOption(e.target.value as SortOption)}
-              className="form-control"
-              style={{ width: "200px" }}
-            >
-              <option value={SortOption.DATE_CREATED}>Date Created</option>
-              <option value={SortOption.DATE_UPDATED}>Date Updated</option>
-              <option value={SortOption.TITLE}>Title</option>
-              <option value={SortOption.CREATOR}>Creator</option>
-              <option value={SortOption.RANDOM}>Random</option>
-            </select>
-          </div>
+        <div className="playlist-view-options">
           <div className="playlist-view-controls">
             <b>View: </b>
             <Pill
@@ -350,6 +335,21 @@ export default class UserPlaylists extends React.Component<
             >
               <FontAwesomeIcon icon={faStacked} />
             </Pill>
+          </div>
+          <div className="playlist-sort-controls">
+            <b>Sort by:</b>
+            <select
+              value={sortBy}
+              onChange={(e) => this.setSortOption(e.target.value as SortOption)}
+              className="form-control"
+              style={{ width: "200px" }}
+            >
+              <option value={SortOption.DATE_CREATED}>Date Created</option>
+              <option value={SortOption.DATE_UPDATED}>Date Updated</option>
+              <option value={SortOption.TITLE}>Title</option>
+              <option value={SortOption.CREATOR}>Creator</option>
+              <option value={SortOption.RANDOM}>Random</option>
+            </select>
           </div>
         </div>
         <PlaylistsList
