@@ -3,7 +3,6 @@
 
 #playlists-page .playlist-view-options {
   display: flex;
-  flex-direction: column;
   margin-top: 0.8rem;
   gap: 1rem;
 
@@ -145,21 +144,21 @@
     }
 
     .playlist-more-info {
-      display: flex;
       align-self: center;
-      width: max-content;
 
       .playlist-stats {
         display: flex;
         flex-direction: column;
-        align-items: flex-end;
 
         .playlist-date {
           color: #6b7280;
-          align-items: baseline;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
       }
     }
+
     .playlist-actions {
       align-self: center;
       margin: 1rem;
