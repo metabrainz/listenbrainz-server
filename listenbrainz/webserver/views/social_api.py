@@ -17,7 +17,7 @@ social_api_bp = Blueprint('social_api_v1', __name__)
 @ratelimit()
 def get_followers(user_name: str):
     """
-    Fetch the list of followers of the user ``user_name``. Returns a JSON with an array of user names like these:
+    Fetch the list of followers of the user ``user_name``. Returns a JSON with an array of usernames like these:
 
     .. code-block:: json
 
@@ -49,7 +49,7 @@ def get_followers(user_name: str):
 @ratelimit()
 def get_following(user_name: str):
     """
-    Fetch the list of users followed by the user ``user_name``. Returns a JSON with an array of user names like these:
+    Fetch the list of users followed by the user ``user_name``. Returns a JSON with an array of usernames like these:
 
     .. code-block:: json
 
