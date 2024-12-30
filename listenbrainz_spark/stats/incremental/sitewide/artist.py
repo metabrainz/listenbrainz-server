@@ -114,9 +114,8 @@ def get_artists_incremental(table: str, cache_tables: List[str], user_listen_cou
             .createOrReplaceTempView(table)
         full_df = aggregate_artists(table, cache_tables)
         full_df.write.mode("overwrite").parquet(PATH)
-        full_df = read_files_from_HDFS(PATH)
-    else:
-        full_df = listenbrainz_spark.session.createDataFrame([], schema=schema)
+
+    full_df = read_files_from_HDFS(PATH)
 
     if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
         table = "incremental_listens_temp_sitewide"
