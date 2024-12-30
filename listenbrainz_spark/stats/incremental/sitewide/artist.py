@@ -32,11 +32,11 @@ def aggregate_artists(table: str, cache_tables: List[str]):
          LEFT JOIN {cache_table} at
                 ON el.artist_mbid = at.artist_mbid
         )
-            SELECT first(any_artist_name) AS artist_name
+            SELECT first(artist_name) AS artist_name
                  , artist_mbid
                  , count(*) as listen_count
               FROM listens_with_mb_data
-          GROUP BY lower(any_artist_name)
+          GROUP BY lower(artist_name)
                  , artist_mbid
     """)
     return result
@@ -109,8 +109,9 @@ def get_artists_incremental(table: str, cache_tables: List[str], user_listen_cou
             iterator (iter): An iterator over result
     """
     if not hdfs_connection.client.status(PATH, strict=False):
+        table = "all_listens_temp_sitewide"
         read_files_from_HDFS(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY) \
-            .createOrReplaceTempView("all_listens_temp_sitewide")
+            .createOrReplaceTempView(table)
         full_df = aggregate_artists(table, cache_tables)
         full_df.write.mode("overwrite").parquet(PATH)
         full_df = read_files_from_HDFS(PATH)
@@ -118,8 +119,9 @@ def get_artists_incremental(table: str, cache_tables: List[str], user_listen_cou
         full_df = listenbrainz_spark.session.createDataFrame([], schema=schema)
 
     if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
+        table = "incremental_listens_temp_sitewide"
         read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
-            .createOrReplaceTempView("incremental_listens_temp_sitewide")
+            .createOrReplaceTempView(table)
         inc_df = aggregate_artists(table, cache_tables)
     else:
         inc_df = listenbrainz_spark.session.createDataFrame([], schema=schema)
