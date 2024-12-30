@@ -137,7 +137,14 @@ def metadata_recording_post():
     recording metadata suitable for showing in a context that requires as much detail about
     a recording and the artist. Using the inc parameter, you can control which portions of metadata
     to fetch.
-       { "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", ... ], inc="artist tag" }
+
+
+    .. code-block:: json
+
+       {
+            "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", "..." ],
+            "inc": "artist tag"
+       }
 
     To see what data this endpoint returns, please look at the data above for the GET version.
 

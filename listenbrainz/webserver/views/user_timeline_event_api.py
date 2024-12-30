@@ -183,7 +183,7 @@ def create_user_cb_review_event(user_name):
                 "entity_type": "<entity type, required>",
                 "text": "<the message to post, required>",
                 "language": "<language code, required>",
-                "rating": <rating, int>,
+                "rating": "<rating, int>",
             },
         }
 
@@ -575,7 +575,7 @@ def create_personal_recommendation_event(user_name):
             "metadata": {
                 "recording_msid": "<The MessyBrainz ID of the recording, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording>",
-                "users": [<usernames of the persons you want to recommend to, required>]
+                "users": [], // "<usernames of the persons you want to recommend to, required>"
                 "blurb_content": "<String containing personalized recommendation>"
             }
         }
@@ -585,7 +585,7 @@ def create_personal_recommendation_event(user_name):
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend
-    personal recordings on the behalf of this user
+        personal recordings on the behalf of this user
     :statuscode 403: Forbidden, you do not have permissions to recommend
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*

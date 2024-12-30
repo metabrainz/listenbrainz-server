@@ -159,8 +159,8 @@ def lb_radio():
 
         {
             "payload": {
-                "jspf" : <JSPF playlist here>,
-                "feedback": [ <user feedback items> ]
+                "jspf" : {}, // <JSPF playlist here>
+                "feedback": [] // <user feedback items>
             }
         }
 
