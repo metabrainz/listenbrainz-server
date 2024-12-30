@@ -268,7 +268,7 @@ def incremental_update_release_color_table():
                       ON cat.id = caa.id
                     JOIN musicbrainz.release r
                       ON caa.release = release.id
-                    JOIN release_first_release_date rfrd
+               LEFT JOIN release_first_release_date rfrd
                       ON rfrd.release = r.id
                    WHERE type_id = 1
                      AND caa.date_uploaded > %s
