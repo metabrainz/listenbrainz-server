@@ -132,7 +132,8 @@ def get_artists_incremental(table: str, cache_tables: List[str], user_listen_cou
     inc_table = "sitewide_artists_all_time_incremental"
     inc_df.createOrReplaceTempView(inc_table)
 
-    combined_table = combine_artists(full_table, inc_table)
+    combined_table = "sitewide_artists_all_time_combined"
+    combine_artists(full_table, inc_table).createOrReplaceTempView(combined_table)
     results_df = top_n_artists(combined_table, top_artists_limit)
 
     return results_df.toLocalIterator()
