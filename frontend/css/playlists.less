@@ -32,11 +32,17 @@
     max-height: @descriptionLines * 1.2em;
     text-align: justify;
     padding-right: 2em;
+    display: -webkit-box;
+    line-clamp: @descriptionLines;
+    -webkit-line-clamp: @descriptionLines;
+    -webkit-box-orient: vertical;
+
     &:before {
       content: "...";
       position: absolute;
       right: 1em;
       bottom: 0;
+      display: none;
     }
     &:after {
       content: "";
