@@ -16,7 +16,7 @@ schema = StructType([
 ])
 
 
-def aggregate_artists(table: str, cache_tables: List[str]):
+def aggregate_artists(table: str, cache_tables: List[str], user_listen_count_limit: int):
     cache_table = cache_tables[0]
     result = run_query(f"""
         WITH exploded_listens AS (
@@ -31,12 +31,21 @@ def aggregate_artists(table: str, cache_tables: List[str]):
               FROM exploded_listens el
          LEFT JOIN {cache_table} at
                 ON el.artist_mbid = at.artist_mbid
-        )
-            SELECT first(artist_name) AS artist_name
+        ), user_counts as (
+            SELECT user_id
+                 , first(artist_name) AS any_artist_name
                  , artist_mbid
-                 , count(*) as listen_count
+                 , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM listens_with_mb_data
-          GROUP BY lower(artist_name)
+          GROUP BY user_id
+                 , lower(artist_name)
+                 , artist_mbid
+        )
+            SELECT first(any_artist_name) AS artist_name
+                 , artist_mbid
+                 , SUM(listen_count) as listen_count
+              FROM user_counts
+          GROUP BY lower(any_artist_name)
                  , artist_mbid
     """)
     return result
@@ -112,7 +121,7 @@ def get_artists_incremental(table: str, cache_tables: List[str], user_listen_cou
         table = "all_listens_temp_sitewide"
         read_files_from_HDFS(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY) \
             .createOrReplaceTempView(table)
-        full_df = aggregate_artists(table, cache_tables)
+        full_df = aggregate_artists(table, cache_tables, user_listen_count_limit)
         full_df.write.mode("overwrite").parquet(PATH)
 
     full_df = read_files_from_HDFS(PATH)
@@ -121,7 +130,7 @@ def get_artists_incremental(table: str, cache_tables: List[str], user_listen_cou
         table = "incremental_listens_temp_sitewide"
         read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
             .createOrReplaceTempView(table)
-        inc_df = aggregate_artists(table, cache_tables)
+        inc_df = aggregate_artists(table, cache_tables, user_listen_count_limit)
     else:
         inc_df = listenbrainz_spark.session.createDataFrame([], schema=schema)
 
