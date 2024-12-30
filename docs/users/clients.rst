@@ -26,3 +26,7 @@ Python
 Java
 ^^^^^^
 * `listenbrainz-client <https://github.com/rain0r/listenbrainz-client/>`__
+
+Swift
+^^^^^
+* `ListenBrainzKit <https://swiftpackageindex.com/samglt/ListenBrainzKit/>`__
