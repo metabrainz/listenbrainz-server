@@ -11,6 +11,7 @@ from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
+from listenbrainz_spark.stats.incremental.sitewide.artist import get_artists_incremental
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.sitewide.recording import get_recordings
 from listenbrainz_spark.stats.sitewide.release import get_releases
@@ -74,7 +75,11 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, cache_dfs, listen_count_limit)
+
+    if entity == "artists" and stats_range == "all_time":
+        data = get_artists_incremental(table_name, cache_dfs, listen_count_limit)
+    else:
+        data = handler(table_name, cache_dfs, listen_count_limit)
 
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)
