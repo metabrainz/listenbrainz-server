@@ -75,11 +75,7 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
     handler = entity_handler_map[entity]
-
-    if entity == "artists" and stats_range == "all_time":
-        data = get_artists_incremental(table_name, cache_dfs, listen_count_limit)
-    else:
-        data = handler(table_name, cache_dfs, listen_count_limit)
+    data = handler(table_name, cache_dfs, listen_count_limit)
 
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)
