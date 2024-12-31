@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 from typing import List, Optional
@@ -11,7 +10,7 @@ from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
-from listenbrainz_spark.stats.incremental.sitewide.artist import get_artists_incremental, AritstSitewideEntity
+from listenbrainz_spark.stats.incremental.sitewide.artist import AritstSitewideEntity
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.sitewide.recording import get_recordings
 from listenbrainz_spark.stats.sitewide.release import get_releases
