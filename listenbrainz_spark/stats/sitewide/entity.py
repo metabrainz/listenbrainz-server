@@ -11,7 +11,7 @@ from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
-from listenbrainz_spark.stats.incremental.sitewide.artist import get_artists_incremental
+from listenbrainz_spark.stats.incremental.sitewide.artist import get_artists_incremental, AritstSitewideEntity
 from listenbrainz_spark.stats.sitewide.artist import get_artists
 from listenbrainz_spark.stats.sitewide.recording import get_recordings
 from listenbrainz_spark.stats.sitewide.release import get_releases
@@ -44,6 +44,10 @@ entity_cache_map = {
     "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 }
 
+incremental_sitewide_map = {
+    "artists": AritstSitewideEntity()
+}
+
 
 def get_listen_count_limit(stats_range: str) -> int:
     """ Return the per user per entity listen count above which it should
@@ -63,8 +67,6 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
     listens_df = get_listens_from_dump(from_date, to_date)
-    table_name = f"sitewide_{entity}_{stats_range}"
-    listens_df.createOrReplaceTempView(table_name)
 
     listen_count_limit = get_listen_count_limit(stats_range)
 
@@ -74,8 +76,14 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
         cache_dfs.append(df_name)
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
-    handler = entity_handler_map[entity]
-    data = handler(table_name, cache_dfs, listen_count_limit)
+    if stats_range == "all_time" and entity == "artists":
+        entity_obj = incremental_sitewide_map[entity]
+        data = entity_obj.generate_stats(stats_range, cache_dfs, listen_count_limit)
+    else:
+        table_name = f"sitewide_{entity}_{stats_range}"
+        listens_df.createOrReplaceTempView(table_name)
+        handler = entity_handler_map[entity]
+        data = handler(table_name, cache_dfs, listen_count_limit)
 
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)
