@@ -129,7 +129,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>({});
+  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>(
+    {}
+  );
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 

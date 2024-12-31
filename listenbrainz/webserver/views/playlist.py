@@ -6,6 +6,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.art.cover_art_generator import CoverArtGenerator
 
 playlist_bp = Blueprint("playlist", __name__)
 
@@ -35,7 +36,37 @@ def playlist_page(playlist_mbid: str):
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
-@playlist_bp.post("/<playlist_mbid>/")
+def get_cover_art_options(playlist: db_playlist.Playlist) -> list[dict]:
+    selected_image_ids = set()
+    images = []
+
+    for track in playlist.recordings:
+        track = track.dict()
+        additional_metadata = track.get("additional_metadata")
+
+        if not additional_metadata:
+            continue
+
+        caa_id = additional_metadata.get("caa_id")
+        caa_release_mbid = additional_metadata.get("caa_release_mbid")
+        if not (caa_id and caa_release_mbid):
+            continue
+
+        unique_key = f"{caa_id}-{caa_release_mbid}"
+        if unique_key not in selected_image_ids:
+            selected_image_ids.add(unique_key)
+            images.append({
+                "caa_id": caa_id,
+                "caa_release_mbid": caa_release_mbid,
+                "title": track.get("title"),
+                "entity_mbid": str(track.get("mbid")),
+                "artist": track.get("artist_credit")
+            })
+
+    return images
+
+
+@playlist_bp.route("/<playlist_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def load_playlist(playlist_mbid: str):
     """Load a single playlist by id
@@ -53,6 +84,19 @@ def load_playlist(playlist_mbid: str):
 
     fetch_playlist_recording_metadata(playlist)
 
+    images = get_cover_art_options(playlist)
+    options = []
+
+    for dimension, designs in CoverArtGenerator.GRID_TILE_DESIGNS.items():
+        for layout_idx, design in enumerate(designs):
+            image_count = len(design)
+            if len(images) >= image_count:
+                options.append({
+                    "dimension": dimension,
+                    "layout": layout_idx
+                })
+
     return jsonify({
         "playlist": playlist.serialize_jspf(),
+        "coverArtGridOptions": options
     })
