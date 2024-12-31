@@ -166,13 +166,18 @@ def get_listens_from_dump(start: datetime, end: datetime) -> DataFrame:
         inc_df = read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH)
         df = df.union(inc_df)
 
-    df = df.where(f"listened_at >= to_timestamp('{start}')")
-    df = df.where(f"listened_at <= to_timestamp('{end}')")
+    if start:
+        df = df.where(f"listened_at >= to_timestamp('{start}')")
+    if end:
+        df = df.where(f"listened_at <= to_timestamp('{end}')")
 
     return df
 
 
 def get_intermediate_stats_df(start: datetime, end: datetime):
+    if start is None and end is None:
+        return read_files_from_HDFS(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
+
     filters = []
 
     current = start
