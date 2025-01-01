@@ -99,7 +99,7 @@ export function YIMYearMetaTags({
           }`}
       </style>
       <style type="text/css">
-      {`
+        {`
         @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;900");
       `}
       </style>

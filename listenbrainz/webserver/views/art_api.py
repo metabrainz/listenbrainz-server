@@ -461,7 +461,7 @@ def _cover_art_yim_albums(user_name, stats, year, yim24):
 
     if year == 2023:
         return _cover_art_yim_albums_2023(user_name, stats)
-    
+
     if year == 2024:
         return _cover_art_yim_albums_2024(user_name, stats, yim24)
 
@@ -489,7 +489,7 @@ def _cover_art_yim_tracks(user_name, stats, year, yim24):
 
     if year == 2024:
         return render_template(
-           "art/svg-templates/year-in-music-2024/yim-2024-tracks.svg",
+            "art/svg-templates/year-in-music-2024/yim-2024-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
             **yim24,
@@ -608,6 +608,7 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
         branding=branding
     )
 
+
 def _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24):
     """ Create the SVG using playlist tracks' cover arts for the given YIM 2024 playlist. """
     if stats.get(key) is None:
@@ -646,7 +647,6 @@ def _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24):
             target_svg = "art/svg-templates/year-in-music-2024/yim-2024-missed-tracks-playlist.svg"
         case other:
             raise APIBadRequest(f"Invalid playlist type {key}. Playlist type should be one of (playlist-top-discoveries-for-year, playlist-top-missed-recordings-for-year)")
-    
 
     return render_template(
         target_svg,
@@ -667,6 +667,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, yim24):
 
     if year == 2024:
         return _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24)
+
 
 def _cover_art_yim_overview(user_name, stats, year, yim24):
     """ Create the SVG using top stats for the overview YIM image. """
@@ -718,7 +719,7 @@ def _cover_art_yim_overview(user_name, stats, year, yim24):
 
     if year == 2023:
         return render_template("art/svg-templates/yim-2023.svg", **props)
-    
+
     if year == 2024:
         return render_template("art/svg-templates/year-in-music-2024/yim-2024-overview.svg", **props, **yim24)
 
@@ -757,16 +758,15 @@ def cover_art_yim(user_name, year: int = 2024):
         case "winter":
             background_color = "#DFE5EB"
             accent_color = "#5B52AC"
-    
+
     yim24 = None
     if year == 2024:
         yim24 = {
-            "season":season,
-            "background_color":background_color,
-            "accent_color":accent_color,
+            "season": season,
+            "background_color": background_color,
+            "accent_color": accent_color,
             "image_folder": f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-24/{season}',
         }
-        
 
     match image:
         case "overview": svg = _cover_art_yim_overview(user_name, stats, year, yim24)
