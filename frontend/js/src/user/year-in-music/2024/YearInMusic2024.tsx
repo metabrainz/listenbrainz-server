@@ -501,7 +501,6 @@ export default class YearInMusic extends React.Component<
     const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2024`;
     const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
-    const statsImageCustomStyles = `.background, text {\nfill: ${backgroundColor};\n}\n.outline {\nstroke: ${selectedSeason.text};\n}\n`;
     const buddiesImages = [
       `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-01.png`,
       `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-02.png`,
@@ -1205,7 +1204,6 @@ export default class YearInMusic extends React.Component<
                     shareUrl={`${linkToThisPage}#stats`}
                     shareTitle="My music listening in 2024"
                     fileName={`${user.name}-stats-2024`}
-                    customStyles={statsImageCustomStyles}
                   />
                 </div>
               </div>
