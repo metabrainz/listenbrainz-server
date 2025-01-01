@@ -491,7 +491,7 @@ export default class YearInMusic extends React.Component<
             </div>
 
             {yearInMusicData.top_releases ? (
-              <div id="releases-coverflow">
+              <div id="top-albums">
                 <Swiper
                   modules={[Navigation, Keyboard, EffectCoverflow]}
                   spaceBetween={15}
