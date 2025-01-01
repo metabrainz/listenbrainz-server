@@ -85,6 +85,6 @@ next full dump, you will have all data as the next full dump.
 
 .. warning::
 
-Deleted listens present a tricky problem in this setup, since they are not included
-in the incremental dumps. To get a fully accurate list of listens, with deleted
-listens removed, you'll need to re-import a full dump.
+  Deleted listens present a tricky problem in this setup, since they are not included
+  in the incremental dumps. To get a fully accurate list of listens, with deleted
+  listens removed, you'll need to re-import a full dump.

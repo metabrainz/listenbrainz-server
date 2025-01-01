@@ -300,7 +300,8 @@ export default NiceModal.create(
       matchingTracks && Object.entries(matchingTracks);
     const hasMatches = Boolean(matchingTracksEntries?.length);
     const unmatchedItems =
-      unlinkedListens.filter((md) => !matchingTracks?.[md.recording_msid]) ?? [];
+      unlinkedListens.filter((md) => !matchingTracks?.[md.recording_msid]) ??
+      [];
 
     // We may need to escape or replace the Lucene search special characters
     // + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /     as described in
