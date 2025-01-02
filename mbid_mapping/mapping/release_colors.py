@@ -378,4 +378,3 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
             caa_front_count=mb_count,
             lb_caa_count=lb_count
         )
-
