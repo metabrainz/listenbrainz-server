@@ -9,6 +9,7 @@ from pyspark.sql.types import StructType, StructField, TimestampType
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
+from listenbrainz_spark.config import HDFS_CLUSTER_URI
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, \
     LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY, LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY
 from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
@@ -28,10 +29,10 @@ class SitewideEntity(abc.ABC):
         self.entity = entity
     
     def get_existing_aggregate_path(self, stats_range) -> str:
-        return f"/{LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY}/{self.entity}/{stats_range}"
+        return f"{LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY}/{self.entity}/{stats_range}"
 
     def get_bookkeeping_path(self, stats_range) -> str:
-        return f"/{LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY}/{self.entity}/{stats_range}"
+        return f"{LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY}/{self.entity}/{stats_range}"
 
     def get_listen_count_limit(self, stats_range: str) -> int:
         """ Return the per user per entity listen count above which it should
@@ -72,7 +73,7 @@ class SitewideEntity(abc.ABC):
         metadata_path = self.get_bookkeeping_path(stats_range)
         existing_aggregate_usable = False
         try:
-            metadata = listenbrainz_spark.session.read.json(metadata_path).collect()[0]
+            metadata = listenbrainz_spark.session.read.json(f"{HDFS_CLUSTER_URI}{metadata_path}").collect()[0]
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
             existing_aggregate_usable = existing_from_date == from_date
         except AnalysisException:
