@@ -9,10 +9,9 @@ from pyspark.sql.types import StructType, StructField, TimestampType
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, \
+from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, \
     LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY, LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY
-from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT, get_dates_for_stats_range
-from listenbrainz_spark.stats.sitewide.entity import get_listen_count_limit
+from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
 from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
 
 
@@ -34,6 +33,17 @@ class SitewideEntity(abc.ABC):
     def get_bookkeeping_path(self, stats_range) -> str:
         return f"/{LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY}/{self.entity}/{stats_range}"
 
+    def get_listen_count_limit(self, stats_range: str) -> int:
+        """ Return the per user per entity listen count above which it should
+        be capped. The rationale is to avoid a single user's listens from
+        over-influencing the sitewide stats.
+
+        For instance: if the limit for yearly recordings count is 500 and a user
+        listens to a particular recording for 10000 times, it will be counted as
+        500 for calculating the stat.
+        """
+        return 500
+
     def get_partial_aggregate_schema(self) -> StructType:
         raise NotImplementedError()
 
@@ -51,12 +61,12 @@ class SitewideEntity(abc.ABC):
 
     def generate_stats(self, stats_range: str, from_date: datetime,
                        to_date: datetime, top_entity_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
-        user_listen_count_limit = get_listen_count_limit(stats_range)
+        user_listen_count_limit = self.get_listen_count_limit(stats_range)
 
-        cache_dfs = []
+        cache_tables = []
         for idx, df_path in enumerate(self.get_cache_tables()):
             df_name = f"entity_data_cache_{idx}"
-            cache_dfs.append(df_name)
+            cache_tables.append(df_name)
             read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
         metadata_path = self.get_bookkeeping_path(stats_range)
