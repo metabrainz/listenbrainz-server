@@ -74,7 +74,12 @@ class SitewideEntity(abc.ABC):
 
         metadata_path = self.get_bookkeeping_path(stats_range)
         try:
-            metadata = listenbrainz_spark.session.read.json(f"{HDFS_CLUSTER_URI}{metadata_path}").collect()[0]
+            metadata = listenbrainz_spark \
+                .session \
+                .read \
+                .schema(BOOKKEEPING_SCHEMA) \
+                .json(f"{HDFS_CLUSTER_URI}{metadata_path}") \
+                .collect()[0]
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
             existing_aggregate_usable = existing_from_date.date() == from_date.date()
         except AnalysisException:
