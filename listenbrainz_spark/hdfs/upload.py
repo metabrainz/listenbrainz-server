@@ -6,7 +6,7 @@ import tempfile
 import logging
 from typing import List
 
-from listenbrainz_spark import schema, path, utils
+from listenbrainz_spark import schema, path, utils, hdfs_connection
 from listenbrainz_spark.hdfs.utils import create_dir
 from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
@@ -180,3 +180,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             .partitionBy("year", "month") \
             .mode("overwrite") \
             .parquet(path.LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
+
+        if path_exists(path.LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY):
+            hdfs_connection.client.delete(path.LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY, recursive=True, skipTrash=True)

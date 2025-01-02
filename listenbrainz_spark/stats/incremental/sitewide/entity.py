@@ -7,7 +7,8 @@ from pyspark.sql.types import StructType
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
+from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, \
+    LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY
 from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
 from listenbrainz_spark.utils import read_files_from_HDFS
 
@@ -18,7 +19,7 @@ class SitewideEntity(abc.ABC):
         self.entity = entity
     
     def get_existing_aggregate_path(self, stats_range) -> str:
-        return f"/sitewide_stats_aggregates/{self.entity}/{stats_range}"
+        return f"/{LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY}/{self.entity}/{stats_range}"
 
     def get_partial_aggregate_schema(self) -> StructType:
         raise NotImplementedError()
