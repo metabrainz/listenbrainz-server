@@ -1,16 +1,26 @@
 import abc
+from datetime import datetime
 from pathlib import Path
 from typing import List
 
+from pyspark.errors import AnalysisException
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType
+from pyspark.sql.types import StructType, StructField, TimestampType
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, \
-    LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY
-from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
-from listenbrainz_spark.utils import read_files_from_HDFS
+    LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY, LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY
+from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT, get_dates_for_stats_range
+from listenbrainz_spark.stats.sitewide.entity import get_listen_count_limit
+from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
+
+
+BOOKKEEPING_SCHEMA = StructType([
+    StructField('from_date', TimestampType(), nullable=False),
+    StructField('to_date', TimestampType(), nullable=False),
+    StructField('created', TimestampType(), nullable=False),
+])
 
 
 class SitewideEntity(abc.ABC):
@@ -20,6 +30,9 @@ class SitewideEntity(abc.ABC):
     
     def get_existing_aggregate_path(self, stats_range) -> str:
         return f"/{LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY}/{self.entity}/{stats_range}"
+
+    def get_bookkeeping_path(self, stats_range) -> str:
+        return f"/{LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY}/{self.entity}/{stats_range}"
 
     def get_partial_aggregate_schema(self) -> StructType:
         raise NotImplementedError()
@@ -33,18 +46,45 @@ class SitewideEntity(abc.ABC):
     def get_top_n(self, final_aggregate, N) -> DataFrame:
         raise NotImplementedError()
 
-    def generate_stats(self, stats_range: str, cache_tables: List[str], user_listen_count_limit, top_entity_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+    def get_cache_tables(self) -> List[str]:
+        raise NotImplementedError()
+
+    def generate_stats(self, stats_range: str, from_date: datetime,
+                       to_date: datetime, top_entity_limit: int = SITEWIDE_STATS_ENTITY_LIMIT):
+        user_listen_count_limit = get_listen_count_limit(stats_range)
+
+        cache_dfs = []
+        for idx, df_path in enumerate(self.get_cache_tables()):
+            df_name = f"entity_data_cache_{idx}"
+            cache_dfs.append(df_name)
+            read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
+
+        metadata_path = self.get_bookkeeping_path(stats_range)
+        existing_aggregate_usable = False
+        try:
+            metadata = listenbrainz_spark.session.read.json(metadata_path).collect()[0]
+            existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
+            existing_aggregate_usable = existing_from_date == from_date
+        except AnalysisException:
+            pass
+
         prefix = f"sitewide_{self.entity}_{stats_range}"
         existing_aggregate_path = self.get_existing_aggregate_path(stats_range)
-        hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
 
-        # todo: handle stats ranges
-        if not hdfs_connection.client.status(existing_aggregate_path, strict=False):
+        if not hdfs_connection.client.status(existing_aggregate_path, strict=False) or not existing_aggregate_usable:
             table = f"{prefix}_full_listens"
-            read_files_from_HDFS(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY) \
-                .createOrReplaceTempView(table)
+            get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
+
+            hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
             full_df = self.aggregate(table, cache_tables, user_listen_count_limit)
             full_df.write.mode("overwrite").parquet(existing_aggregate_path)
+
+            hdfs_connection.client.makedirs(Path(metadata_path).parent)
+            metadata_df = listenbrainz_spark.session.createDataFrame(
+                [(from_date, to_date, datetime.now())],
+                schema=BOOKKEEPING_SCHEMA
+            )
+            metadata_df.write.mode("overwrite").json(metadata_path)
 
         full_df = read_files_from_HDFS(existing_aggregate_path)
 

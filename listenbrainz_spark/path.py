@@ -6,6 +6,7 @@ LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
 LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY = os.path.join('/', 'data', 'stats-new')
 
 LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY = os.path.join('/', 'sitewide_stats_aggregates')
+LISTENBRAINZ_SITEWIDE_STATS_BOOKKEEPING_DIRECTORY = os.path.join('/', 'sitewide_stats_bookkeeping')
 
 # MLHD+ dump files
 MLHD_PLUS_RAW_DATA_DIRECTORY = os.path.join("/", "mlhd-raw")

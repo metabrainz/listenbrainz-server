@@ -69,32 +69,12 @@ def get_listen_count_limit(stats_range: str) -> int:
 def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Returns top entity stats for given time period """
     logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
-
     from_date, to_date = get_dates_for_stats_range(stats_range)
-
-    listen_count_limit = get_listen_count_limit(stats_range)
-
-    cache_dfs = []
-    for idx, df_path in enumerate(entity_cache_map.get(entity)):
-        df_name = f"entity_data_cache_{idx}"
-        cache_dfs.append(df_name)
-        read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-
-    if stats_range == "all_time":
-        entity_obj = incremental_sitewide_map[entity]
-        data = entity_obj.generate_stats(stats_range, cache_dfs, listen_count_limit)
-    else:
-        listens_df = get_listens_from_dump(from_date, to_date)
-        table_name = f"sitewide_{entity}_{stats_range}"
-        listens_df.createOrReplaceTempView(table_name)
-        handler = entity_handler_map[entity]
-        data = handler(table_name, cache_dfs, listen_count_limit)
-
+    entity_obj = incremental_sitewide_map[entity]
+    data = entity_obj.generate_stats(stats_range, from_date, to_date)
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)
-
     logger.debug("Done!")
-
     return messages
 
 

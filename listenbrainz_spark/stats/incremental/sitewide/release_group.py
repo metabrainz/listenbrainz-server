@@ -1,5 +1,8 @@
+from typing import List
+
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, ArrayType
 
+from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
 
@@ -8,6 +11,9 @@ class ReleaseGroupSitewideEntity(SitewideEntity):
 
     def __init__(self):
         super().__init__(entity="release_groups")
+
+    def get_cache_tables(self) -> List[str]:
+        return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
