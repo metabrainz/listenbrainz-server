@@ -1,5 +1,8 @@
+from typing import List
+
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
+from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
 
@@ -8,6 +11,9 @@ class AritstSitewideEntity(SitewideEntity):
 
     def __init__(self):
         super().__init__(entity="artists")
+
+    def get_cache_tables(self) -> List[str]:
+        return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
