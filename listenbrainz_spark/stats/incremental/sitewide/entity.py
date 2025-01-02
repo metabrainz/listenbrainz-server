@@ -76,8 +76,7 @@ class SitewideEntity(abc.ABC):
         try:
             metadata = listenbrainz_spark.session.read.json(f"{HDFS_CLUSTER_URI}{metadata_path}").collect()[0]
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
-            existing_aggregate_usable = existing_from_date == from_date
-            logger.info("Existing from date: %s, new from date: %s", existing_from_date, from_date)
+            existing_aggregate_usable = existing_from_date.date() == from_date.date()
         except AnalysisException:
             existing_aggregate_usable = False
             logger.info("Existing partial aggregate not found!")
