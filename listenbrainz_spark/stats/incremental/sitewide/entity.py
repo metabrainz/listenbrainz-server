@@ -1,4 +1,5 @@
 import abc
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -16,6 +17,7 @@ from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
 from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
 
 
+logger = logging.getLogger(__name__)
 BOOKKEEPING_SCHEMA = StructType([
     StructField('from_date', TimestampType(), nullable=False),
     StructField('to_date', TimestampType(), nullable=False),
@@ -71,21 +73,23 @@ class SitewideEntity(abc.ABC):
             read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
 
         metadata_path = self.get_bookkeeping_path(stats_range)
-        existing_aggregate_usable = False
         try:
             metadata = listenbrainz_spark.session.read.json(f"{HDFS_CLUSTER_URI}{metadata_path}").collect()[0]
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
             existing_aggregate_usable = existing_from_date == from_date
+            logger.info("Existing from date: %s, new from date: %s", existing_from_date, from_date)
         except AnalysisException:
-            pass
+            existing_aggregate_usable = False
+            logger.info("Existing partial aggregate not found!")
 
         prefix = f"sitewide_{self.entity}_{stats_range}"
         existing_aggregate_path = self.get_existing_aggregate_path(stats_range)
 
         if not hdfs_connection.client.status(existing_aggregate_path, strict=False) or not existing_aggregate_usable:
             table = f"{prefix}_full_listens"
-            get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
+            get_listens_from_dump(from_date, to_date, include_incremental=False).createOrReplaceTempView(table)
 
+            logger.info("Creating partial aggregate from full dump listens")
             hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
             full_df = self.aggregate(table, cache_tables, user_listen_count_limit)
             full_df.write.mode("overwrite").parquet(existing_aggregate_path)
