@@ -54,18 +54,6 @@ incremental_sitewide_map = {
 }
 
 
-def get_listen_count_limit(stats_range: str) -> int:
-    """ Return the per user per entity listen count above which it should
-    be capped. The rationale is to avoid a single user's listens from
-    over-influencing the sitewide stats.
-
-    For instance: if the limit for yearly recordings count is 500 and a user
-    listens to a particular recording for 10000 times, it will be counted as
-    500 for calculating the stat.
-    """
-    return 500
-
-
 def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Returns top entity stats for given time period """
     logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
