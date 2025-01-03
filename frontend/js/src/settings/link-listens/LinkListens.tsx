@@ -249,14 +249,14 @@ export default function LinkListensPage() {
         first.
       </ReactTooltip>
       <p>
-        You will find below your top 1000 listens (grouped by album) that have
-        not been automatically linked
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          size="sm"
+        You will find below your top 1000 listens (grouped by album) that have{" "}
+        <u
+          className="link-listens-tooltip"
           data-tip
           data-for="matching-tooltip"
-        />{" "}
+        >
+          not been automatically linked
+        </u>{" "}
         to a MusicBrainz recording. Link them below or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
