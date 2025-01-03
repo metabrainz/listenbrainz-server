@@ -229,7 +229,7 @@ def _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, rec
     })
 
 
-@feedback_api_bp.post("/user/<user_name>/get-feedback-for-recordings")
+@feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user_post(user_name):
