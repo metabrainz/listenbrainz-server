@@ -3,12 +3,12 @@
     {% if entity == 'recording' %}
       {% set hostURL = 'https://musicbrainz.org' %}
     {% else %}
-      {% set hostURL = '' %}
+      {% set hostURL = 'https://listenbrainz.org' %}
     {% endif %}
     <a href="{{ host }}/{{ entity }}/{{ mbid }}" target="_blank">
       {{ name|upper|e }}
-      <title>{{ name|e }}</title>
     </a>
+    <title>{{ name|e }}</title>
   {%- else -%}
     {{ name|upper|e }}
     <title>{{ name|e }}</title>
@@ -17,7 +17,7 @@
 
 {% macro render_image_link(entity, image) %}
   {% if image.entity_mbid %}
-  <a href="/{{ entity }}/{{ image.entity_mbid }}" target="_blank">
+  <a href="https://listenbrainz.org/{{ entity }}/{{ image.entity_mbid }}" target="_blank">
   {% endif %}
     <image
         x="{{ image.x }}"

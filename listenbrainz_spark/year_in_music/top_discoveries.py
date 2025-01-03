@@ -66,8 +66,9 @@ def generate_top_discoveries(year):
 
 
 def create_tracks_of_the_year(year):
+    start = datetime(year, 1, 1)
     end = datetime.combine(date(year, 12, 31), time.max)
-    listens = get_listens_from_dump(end=end)
+    listens = get_listens_from_dump(start, end)
     listens.createOrReplaceTempView("listens_for_tracks_of_year")
     query = f"""
             SELECT user_id
