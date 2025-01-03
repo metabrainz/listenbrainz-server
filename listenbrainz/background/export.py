@@ -80,6 +80,8 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
         SELECT jsonb_build_object(
                     'listened_at'
                   ,  extract(epoch from listened_at)
+                  , 'inserted_at'
+                  ,  extract(epoch from inserted_at)
                   , 'track_metadata'
                   , jsonb_set(data, '{recording_msid}'::text[], to_jsonb(recording_msid::text))
                )::text as line
