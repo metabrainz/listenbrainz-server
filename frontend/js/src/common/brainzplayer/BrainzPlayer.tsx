@@ -153,6 +153,7 @@ export default function BrainzPlayer() {
     currentTrackURL,
     playerPaused,
     isActivated,
+    volume,
     durationMs,
     progressMs,
     listenSubmitted,

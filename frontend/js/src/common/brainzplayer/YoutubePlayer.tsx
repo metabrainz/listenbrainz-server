@@ -24,6 +24,7 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type YoutubePlayerProps = DataSourceProps & {
@@ -376,30 +377,41 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
     const leftBound =
       document.body.clientWidth - draggableBoundPadding * 2 - 350;
     return (
-      <Draggable
-        handle=".youtube-drag-handle"
-        bounds={{
-          left: -leftBound,
-          right: -draggableBoundPadding,
-          bottom: -draggableBoundPadding,
+      <BrainzPlayerContext.Consumer>
+        {(context) => {
+          const { volume } = context;
+          this.youtubePlayer?.setVolume(volume);
+          return (
+            <Draggable
+              handle=".youtube-drag-handle"
+              bounds={{
+                left: -leftBound,
+                right: -draggableBoundPadding,
+                bottom: -draggableBoundPadding,
+              }}
+            >
+              <div
+                className={`youtube-wrapper${!show ? " hidden" : ""}`}
+                data-testid={`youtube-wrapper${!show ? " hidden" : ""}`}
+              >
+                <button
+                  className="btn btn-sm youtube-drag-handle"
+                  type="button"
+                >
+                  <FontAwesomeIcon icon={faArrowsAlt} />
+                </button>
+                <YouTube
+                  className="youtube-player"
+                  opts={options}
+                  onError={this.onError}
+                  onStateChange={this.handlePlayerStateChanged}
+                  onReady={this.onReady}
+                />
+              </div>
+            </Draggable>
+          );
         }}
-      >
-        <div
-          className={`youtube-wrapper${!show ? " hidden" : ""}`}
-          data-testid={`youtube-wrapper${!show ? " hidden" : ""}`}
-        >
-          <button className="btn btn-sm youtube-drag-handle" type="button">
-            <FontAwesomeIcon icon={faArrowsAlt} />
-          </button>
-          <YouTube
-            className="youtube-player"
-            opts={options}
-            onError={this.onError}
-            onStateChange={this.handlePlayerStateChanged}
-            onReady={this.onReady}
-          />
-        </div>
-      </Draggable>
+      </BrainzPlayerContext.Consumer>
     );
   }
 }

@@ -3,6 +3,7 @@ import {
   faBarsStaggered,
   faFastBackward,
   faFastForward,
+  faVolumeUp,
   faHeart,
   faHeartCrack,
   faMusic,
@@ -72,6 +73,30 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
     >
       <FontAwesomeIcon icon={icon as IconProp} size={size} fixedWidth />
     </button>
+  );
+}
+
+function VolumeControlButton() {
+  const { volume } = useBrainzPlayerContext();
+  const dispatch = useBrainzPlayerDispatch();
+  const volumeRef = React.useRef<HTMLInputElement>(null);
+  const handleVolumeChange = () => {
+    dispatch({
+      type: "VOLUME_CHANGE",
+      payload: volumeRef ? volumeRef.current.value : 100,
+    });
+  };
+  return (
+    <input
+      ref={volumeRef}
+      onMouseUp={handleVolumeChange}
+      className="volume"
+      type="range"
+      defaultValue="100"
+      max="100"
+      min="0"
+      step="5"
+    />
   );
 }
 
@@ -262,6 +287,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             disabled={disabled}
           />
         </div>
+        <VolumeControlButton />
         <div className="actions">
           {isPlayingATrack && currentDataSourceName && (
             <a

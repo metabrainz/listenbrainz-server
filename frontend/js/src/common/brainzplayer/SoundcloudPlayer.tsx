@@ -9,6 +9,7 @@ import {
   searchForSoundcloudTrack,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 require("../../../lib/soundcloud-player-api");
@@ -406,24 +407,32 @@ export default class SoundcloudPlayer
   render() {
     const { show } = this.props;
     return (
-      <div
-        className={`soundcloud ${!show ? "hidden" : ""}`}
-        data-testid={`soundcloud ${!show ? "hidden" : ""}`}
-      >
-        <iframe
-          id="soundcloud-iframe"
-          ref={this.iFrameRef}
-          title="Soundcloud player"
-          width="100%"
-          height="420px"
-          style={{ display: "none" }}
-          scrolling="no"
-          frameBorder="no"
-          allow="autoplay"
-          src="https://w.soundcloud.com/player/?auto_play=false"
-        />
-        <div>{this.getAlbumArt()}</div>
-      </div>
+      <BrainzPlayerContext.Consumer>
+        {(context) => {
+          const { volume } = context;
+          this.soundcloudPlayer?.setVolume(volume / 100);
+          return (
+            <div
+              className={`soundcloud ${!show ? "hidden" : ""}`}
+              data-testid={`soundcloud ${!show ? "hidden" : ""}`}
+            >
+              <iframe
+                id="soundcloud-iframe"
+                ref={this.iFrameRef}
+                title="Soundcloud player"
+                width="100%"
+                height="420px"
+                style={{ display: "none" }}
+                scrolling="no"
+                frameBorder="no"
+                allow="autoplay"
+                src="https://w.soundcloud.com/player/?auto_play=false"
+              />
+              <div>{this.getAlbumArt()}</div>
+            </div>
+          );
+        }}
+      </BrainzPlayerContext.Consumer>
     );
   }
 }

@@ -10,6 +10,7 @@ import {
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type AppleMusicPlayerProps = DataSourceProps;
@@ -470,6 +471,16 @@ export default class AppleMusicPlayer
     if (!show) {
       return null;
     }
-    return <div>{this.getAlbumArt()}</div>;
+    return (
+      <BrainzPlayerContext.Consumer>
+        {(context) => {
+          const { volume } = context;
+          if (this.appleMusicPlayer.player) {
+            this.appleMusicPlayer.player.volume = volume;
+          }
+          return <div>{this.getAlbumArt()}</div>;
+        }}
+      </BrainzPlayerContext.Consumer>
+    );
   }
 }
