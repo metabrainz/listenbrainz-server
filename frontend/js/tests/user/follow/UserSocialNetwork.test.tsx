@@ -68,7 +68,7 @@ const similarUsers = [
   },
 ];
 
-const followingFollowers = ["bob", "fnord"];
+const followingFollowers = ["jack", "fnord"];
 
 describe("<UserSocialNetwork />", () => {
   afterEach(() => {
@@ -138,7 +138,7 @@ describe("<UserSocialNetwork />", () => {
     ];
     expect(instance.state.similarUsersList).toEqual(similarUsersInState);
 
-    const expectedFollowingFollowersState = ["bob", "fnord"];
+    const expectedFollowingFollowersState = ["jack", "fnord"];
     expect(instance.state.followerList).toEqual(
       expectedFollowingFollowersState
     );
@@ -166,14 +166,44 @@ describe("<UserSocialNetwork />", () => {
       });
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
     });
 
     it("updates the state when called with action unfollow", async () => {
+      const wrapper = mount(
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork
+                user={{
+                  id: 1,
+                  name: "iliekcomputers",
+                }}
+              />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
+      await act(async () => {
+        await instance.componentDidMount();
+      });
+
+      // initial state after first fetch
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
+      await act(async () => {
+        instance.updateFollowingList({ name: "fnord" }, "unfollow");
+      });
+      expect(instance.state.followingList).toEqual(["jack"]);
+    });
+
+    it("does nothing, when called with action unfollow when it's not your own account", async () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
           <ReactQueryWrapper>
@@ -191,11 +221,13 @@ describe("<UserSocialNetwork />", () => {
       });
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "fnord" }, "unfollow");
       });
-      expect(instance.state.followingList).toEqual(["bob"]);
+
+      // Since it's not your own account, it should not be removed from the following list
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
     });
 
     it("only allows adding a user once", async () => {
@@ -217,13 +249,13 @@ describe("<UserSocialNetwork />", () => {
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
 
       // Ensure we can't add a user twice
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
     });
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
@@ -243,11 +275,11 @@ describe("<UserSocialNetwork />", () => {
         await instance.componentDidMount();
       });
 
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "unfollow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
     });
   });
 
