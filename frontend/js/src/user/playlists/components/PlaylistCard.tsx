@@ -2,18 +2,25 @@
 
 import * as React from "react";
 
-import { faCog, faSave } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCog,
+  faSave,
+  faCalendar,
+  faMusic,
+  faEllipsisVertical,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { sanitize } from "dompurify";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import Card from "../../components/Card";
-import { ToastMsg } from "../../notifications/Notifications";
-import GlobalAppContext from "../../utils/GlobalAppContext";
-import PlaylistMenu from "./PlaylistMenu";
-import { getPlaylistExtension, getPlaylistId } from "../utils";
+import { Link, useNavigate } from "react-router-dom";
+import Card from "../../../components/Card";
+import { ToastMsg } from "../../../notifications/Notifications";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import PlaylistMenu from "../../../playlists/components/PlaylistMenu";
+import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
+import PlaylistView from "../playlistView.d";
 
 export type PlaylistCardProps = {
   playlist: JSPFPlaylist;
@@ -21,10 +28,14 @@ export type PlaylistCardProps = {
   onPlaylistEdited: (playlist: JSPFPlaylist) => void;
   onPlaylistDeleted: (playlist: JSPFPlaylist) => void;
   showOptions: boolean;
+  view: PlaylistView;
+  index: number;
 };
 
 export default function PlaylistCard({
   playlist,
+  view,
+  index,
   onSuccessfulCopy,
   onPlaylistEdited,
   onPlaylistDeleted,
@@ -33,6 +44,7 @@ export default function PlaylistCard({
   const { APIService, currentUser, spotifyAuth } = React.useContext(
     GlobalAppContext
   );
+  const navigate = useNavigate();
 
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
@@ -91,6 +103,94 @@ export default function PlaylistCard({
       });
     }
   }, [currentUser.auth_token, playlistId, APIService, onSuccessfulCopy]);
+
+  const navigateToPlaylist = () => {
+    navigate(`/playlist/${sanitize(playlistId)}/`);
+  };
+
+  if (view === PlaylistView.LIST) {
+    return (
+      <div className="playlist-card-list-view">
+        <div
+          className="playlist-card-container"
+          onClick={navigateToPlaylist}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              navigateToPlaylist();
+            }
+          }}
+          role="presentation"
+        >
+          <div className="playlist-info">
+            <div className="playlist-index">{index + 1}</div>
+            <div className="playlist-info-content">
+              <div className="playlist-title">
+                <Link to={`/playlist/${sanitize(playlistId)}/`}>
+                  {playlist.title}
+                </Link>
+              </div>
+              {playlist.annotation && (
+                <div
+                  className="description"
+                  // eslint-disable-next-line react/no-danger
+                  dangerouslySetInnerHTML={{ __html: playlist.annotation }}
+                />
+              )}
+            </div>
+          </div>
+          <div className="playlist-more-info">
+            <div className="playlist-stats">
+              <div className="playlist-date">
+                <FontAwesomeIcon icon={faCalendar} />
+                {new Date(playlist.date).toLocaleString(undefined, {
+                  dateStyle: "short",
+                })}
+              </div>
+              <div className="playlist-date">
+                <FontAwesomeIcon icon={faMusic} />
+                {playlist.track?.length} track
+                {playlist.track?.length === 1 ? "" : "s"}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="playlist-actions dropdown playlist-card-action-dropdown">
+          <FontAwesomeIcon
+            icon={faEllipsisVertical}
+            fixedWidth
+            id="playlistOptionsDropdown"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="true"
+            type="button"
+          />
+          {showOptions ? (
+            <PlaylistMenu
+              playlist={playlist}
+              onPlaylistSaved={onPlaylistEdited}
+              onPlaylistDeleted={onPlaylistDeleted}
+              onPlaylistCopied={onSuccessfulCopy}
+            />
+          ) : (
+            <ul
+              className="dropdown-menu dropdown-menu-right"
+              aria-labelledby="playlistOptionsDropdown"
+            >
+              <li>
+                <a onClick={onCopyPlaylist} role="button" href="#">
+                  <FontAwesomeIcon
+                    icon={faSave as IconProp}
+                    title="Save to my playlists"
+                  />
+                  &nbsp;Save
+                </a>
+              </li>
+            </ul>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Card className="playlist" key={playlistId}>
