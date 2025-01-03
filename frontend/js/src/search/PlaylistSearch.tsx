@@ -137,7 +137,12 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
                       {playlist.title}
                     </Link>
                   </td>
-                  <td>{playlist?.annotation}</td>
+                  <td
+                    // eslint-disable-next-line react/no-danger
+                    dangerouslySetInnerHTML={{
+                      __html: playlist?.annotation || "",
+                    }}
+                  />
                   <td>
                     <Link
                       to={`https://musicbrainz.org/user/${playlist?.creator}`}
