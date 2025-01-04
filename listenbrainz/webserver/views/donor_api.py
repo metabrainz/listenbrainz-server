@@ -13,7 +13,7 @@ donor_api_bp = Blueprint('donor_api_v1', __name__)
 DEFAULT_DONOR_COUNT = 25
 
 
-@donor_api_bp.route("/recent", methods=["GET", "OPTIONS"])
+@donor_api_bp.route("/recent", methods=["GET"])
 @crossdomain
 @ratelimit()
 def recent_donors():
@@ -30,7 +30,7 @@ def recent_donors():
     return jsonify(donors)
 
 
-@donor_api_bp.route("/biggest", methods=["GET", "OPTIONS"])
+@donor_api_bp.route("/biggest", methods=["GET"])
 @crossdomain
 @ratelimit()
 def biggest_donors():
@@ -47,7 +47,7 @@ def biggest_donors():
     return jsonify(donors)
 
 
-@donor_api_bp.route("/all-flairs", methods=["GET", "OPTIONS"])
+@donor_api_bp.route("/all-flairs", methods=["GET"])
 @crossdomain
 @ratelimit()
 def all_flairs():

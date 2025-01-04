@@ -28,7 +28,7 @@ def _repeat_images(images, size=9):
     return images
 
 
-@art_api_bp.route("/grid/", methods=["POST", "OPTIONS"])
+@art_api_bp.route("/grid/", methods=["POST"])
 @crossdomain
 @ratelimit()
 def cover_art_grid_post():

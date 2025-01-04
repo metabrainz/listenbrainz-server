@@ -21,7 +21,7 @@ from pydantic import ValidationError
 pinned_recording_api_bp = Blueprint("pinned_rec_api_bp_v1", __name__)
 
 
-@pinned_recording_api_bp.route("/pin", methods=["POST", "OPTIONS"])
+@pinned_recording_api_bp.route("/pin", methods=["POST"])
 @crossdomain
 @ratelimit()
 def pin_recording_for_user():
@@ -73,7 +73,7 @@ def pin_recording_for_user():
     return jsonify({"pinned_recording": recording_to_pin_with_id.to_api()})
 
 
-@pinned_recording_api_bp.route("/pin/unpin", methods=["POST", "OPTIONS"])
+@pinned_recording_api_bp.route("/pin/unpin", methods=["POST"])
 @crossdomain
 @ratelimit()
 def unpin_recording_for_user():
@@ -101,7 +101,7 @@ def unpin_recording_for_user():
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/pin/delete/<row_id>", methods=["POST", "OPTIONS"])
+@pinned_recording_api_bp.route("/pin/delete/<row_id>", methods=["POST"])
 @crossdomain
 @ratelimit()
 def delete_pin_for_user(row_id):
@@ -131,7 +131,7 @@ def delete_pin_for_user(row_id):
     return jsonify({"status": "ok"})
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET", "OPTIONS"])
+@pinned_recording_api_bp.route("/<user_name>/pins", methods=["GET"])
 @crossdomain
 @ratelimit()
 def get_pins_for_user(user_name):
@@ -209,7 +209,7 @@ def get_pins_for_user(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET", "OPTIONS"])
+@pinned_recording_api_bp.route("/<user_name>/pins/following", methods=["GET"])
 @crossdomain
 @ratelimit()
 def get_pins_for_user_following(user_name):
@@ -282,7 +282,7 @@ def get_pins_for_user_following(user_name):
     )
 
 
-@pinned_recording_api_bp.route("/<user_name>/pins/current", methods=["GET", "OPTIONS"])
+@pinned_recording_api_bp.route("/<user_name>/pins/current", methods=["GET"])
 @crossdomain
 @ratelimit()
 def get_current_pin_for_user(user_name):
@@ -331,7 +331,7 @@ def get_current_pin_for_user(user_name):
     })
 
 
-@pinned_recording_api_bp.route("/pin/update/<row_id>", methods=["POST", "OPTIONS"])
+@pinned_recording_api_bp.route("/pin/update/<row_id>", methods=["POST"])
 @crossdomain
 @ratelimit()
 def update_blurb_content_pinned_recording(row_id):
