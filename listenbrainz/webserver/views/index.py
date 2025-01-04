@@ -1,34 +1,31 @@
 import locale
-import requests
-import time
 import os
+import time
+from datetime import datetime
+from typing import List
 
 from brainzutils import cache
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from typing import List
-from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
+from flask import Blueprint, render_template, current_app, request, jsonify
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
-import orjson
 from werkzeug.exceptions import Unauthorized, NotFound
 
+import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 from data.model.user_entity import EntityRecord
 from listenbrainz.background.background_tasks import add_task
-from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.domain.musicbrainz import MusicBrainzService
-from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
-from listenbrainz.webserver.errors import APINotFound
-from listenbrainz.webserver.timescale_connection import _ts
-from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.views.status_api import get_service_status
-import listenbrainz.db.stats as db_stats
-import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.db.donation import get_recent_donors
-from listenbrainz.db.pinned_recording import get_current_pin_for_users
+from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
+from listenbrainz.db.pinned_recording import get_current_pin_for_users
+from listenbrainz.domain.musicbrainz import MusicBrainzService
+from listenbrainz.webserver import flash, db_conn, meb_conn, ts_conn
+from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver.views.status_api import get_service_status
 from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
@@ -71,7 +68,6 @@ def index():
 @index_bp.route("/current-status/", methods=['POST'])
 @web_listenstore_needed
 def current_status():
-
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
     service_status = get_service_status()
@@ -87,7 +83,8 @@ def current_status():
             day = datetime.utcnow() - relativedelta(days=delta)
             day_listen_count = _redis.get_listen_count_for_day(day)
         except:
-            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
+            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'),
+                                     exc_info=True)
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
@@ -111,12 +108,12 @@ def recent_listens():
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
         recent.append({
-                "track_metadata": listen.data,
-                "user_name" : listen.user_name,
-                "listened_at": listen.ts_since_epoch,
-                "listened_at_iso": listen.timestamp.isoformat() + "Z",
-            })
-            
+            "track_metadata": listen.data,
+            "user_name": listen.user_name,
+            "listened_at": listen.ts_since_epoch,
+            "listened_at_iso": listen.timestamp.isoformat() + "Z",
+        })
+
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
@@ -273,7 +270,7 @@ def _get_user_count():
         return user_count
 
 
-@index_bp.route("/",  defaults={'path': ''})
+@index_bp.route("/", defaults={'path': ''})
 @index_bp.route('/<not_api_path:path>/')
 @web_listenstore_needed
 def index_pages(path):
