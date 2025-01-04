@@ -10,7 +10,7 @@ from listenbrainz.webserver.views.api_tools import is_valid_uuid, MAX_ITEMS_PER_
 popularity_api_bp = Blueprint('popularity_api_v1', __name__)
 
 
-@popularity_api_bp.get("/top-recordings-for-artist/<artist_mbid>")
+@popularity_api_bp.route("/top-recordings-for-artist/<artist_mbid>", methods=["GET"])
 @crossdomain
 @ratelimit()
 def top_recordings_for_artist(artist_mbid):
@@ -55,7 +55,7 @@ def top_recordings_for_artist(artist_mbid):
         raise APIInternalServerError("Failed to fetch metadata for recordings. Please try again.")
 
 
-@popularity_api_bp.get("/top-release-groups-for-artist/<artist_mbid>")
+@popularity_api_bp.route("/top-release-groups-for-artist/<artist_mbid>", methods=["GET"])
 @crossdomain
 @ratelimit()
 def top_release_groups_for_artist(artist_mbid):
@@ -136,7 +136,7 @@ def fetch_entity_popularity_counts(entity):
     return popularity_data
 
 
-@popularity_api_bp.post("/recording")
+@popularity_api_bp.route("/recording", methods=["POST"])
 @crossdomain
 @ratelimit()
 def popularity_recording():
@@ -178,7 +178,7 @@ def popularity_recording():
     return fetch_entity_popularity_counts("recording")
 
 
-@popularity_api_bp.post("/artist")
+@popularity_api_bp.route("/artist", methods=["POST"])
 @crossdomain
 @ratelimit()
 def popularity_artist():
@@ -220,7 +220,7 @@ def popularity_artist():
     return fetch_entity_popularity_counts("artist")
 
 
-@popularity_api_bp.post("/release")
+@popularity_api_bp.route("/release", methods=["POST"])
 @crossdomain
 @ratelimit()
 def popularity_release():
@@ -262,7 +262,7 @@ def popularity_release():
     return fetch_entity_popularity_counts("release")
 
 
-@popularity_api_bp.post("/release-group")
+@popularity_api_bp.route("/release-group", methods=["POST"])
 @crossdomain
 @ratelimit()
 def popularity_release_group():

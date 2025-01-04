@@ -27,7 +27,7 @@ from pydantic import ValidationError
 recommendation_feedback_api_bp = Blueprint('recommendation_feedback_api_v1', __name__)
 
 
-@recommendation_feedback_api_bp.route("submit", methods=["POST", "OPTIONS"])
+@recommendation_feedback_api_bp.route("submit", methods=["POST"])
 @crossdomain
 @ratelimit()
 def submit_recommendation_feedback():
@@ -76,7 +76,7 @@ def submit_recommendation_feedback():
     return jsonify({'status': 'ok'})
 
 
-@recommendation_feedback_api_bp.route("delete", methods=["POST", "OPTIONS"])
+@recommendation_feedback_api_bp.route("delete", methods=["POST"])
 @crossdomain
 @ratelimit()
 def delete_recommendation_feedback():

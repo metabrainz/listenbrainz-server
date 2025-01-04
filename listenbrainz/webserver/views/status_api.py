@@ -1,12 +1,11 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-import requests
-from time import sleep, time
+from time import time
 
 from kombu import Connection, Queue, Exchange
 from kombu.exceptions import KombuError
-from werkzeug.exceptions import ServiceUnavailable
 
+from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
@@ -28,6 +27,7 @@ status_api_bp = Blueprint("status_api_v1", __name__)
 
 
 @status_api_bp.route("/get-dump-info", methods=["GET"])
+@crossdomain
 @ratelimit()
 def get_dump_info():
     """
@@ -238,6 +238,7 @@ def get_playlist_status():
 
 
 @status_api_bp.route("/service-status", methods=["GET"])
+@crossdomain
 @ratelimit()
 def service_status():
     """ Fetch the recently updated metrics for age of stats, dumps and the number of items in the incoming
@@ -260,6 +261,7 @@ def service_status():
 
 
 @status_api_bp.route("/playlist-status", methods=["GET"])
+@crossdomain
 @ratelimit()
 def playlist_status():
     """ Fetch the recently updated metrics for age of recommendation playlists. This function returns JSON:

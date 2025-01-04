@@ -1,6 +1,5 @@
 from functools import wraps
 
-from brainzutils import musicbrainz_db
 from flask import request, current_app, make_response, redirect, url_for
 
 from listenbrainz.webserver import timescale_connection
@@ -24,7 +23,8 @@ def crossdomain(f):
         h["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         return resp
 
-    f.provide_automatic_options = False
+    decorator.provide_automatic_options = False
+    decorator.required_methods = ["OPTIONS"]
     return decorator
 
 

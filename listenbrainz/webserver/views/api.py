@@ -50,7 +50,7 @@ def search_user():
     return jsonify({'users': users})
 
 
-@api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
+@api_bp.route("/submit-listens", methods=["POST"])
 @crossdomain
 @ratelimit()
 def submit_listen():

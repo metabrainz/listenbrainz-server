@@ -21,7 +21,7 @@ HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
 explore_api_bp = Blueprint('explore_api_v1', __name__)
 
 
-@explore_api_bp.route("/fresh-releases/", methods=["GET", "OPTIONS"])
+@explore_api_bp.route("/fresh-releases/", methods=["GET"])
 @crossdomain
 @ratelimit()
 def get_fresh_releases():
@@ -94,7 +94,7 @@ def get_fresh_releases():
     })
 
 
-@explore_api_bp.route("/color/<color>", methods=["GET", "OPTIONS"])
+@explore_api_bp.route("/color/<color>", methods=["GET"])
 @crossdomain
 @ratelimit()
 def huesound(color):
@@ -145,7 +145,7 @@ def huesound(color):
     return jsonify({"payload": {"releases": results}})
 
 
-@explore_api_bp.route("/lb-radio", methods=["GET", "OPTIONS"])
+@explore_api_bp.route("/lb-radio", methods=["GET"])
 @crossdomain
 @ratelimit()
 def lb_radio():
