@@ -274,12 +274,10 @@ def _get_user_count():
 
 
 @index_bp.route("/",  defaults={'path': ''})
-@index_bp.route('/<path:path>/')
+@index_bp.route('/<not_api_path:path>/')
 @web_listenstore_needed
 def index_pages(path):
     # this is a catch-all route, all unmatched urls match this route instead of raising a 404
     # at least in the case the of API urls, we don't want this behavior. hence detect api urls
-    # and raise 404 errors manually
-    if path.startswith("1/"):
-        raise APINotFound(f"Page not found: {path}")
+    # in the custom NotApiConverter and raise 404 errors manually
     return render_template("index.html")
