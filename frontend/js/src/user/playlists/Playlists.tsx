@@ -230,146 +230,151 @@ export default class UserPlaylists extends React.Component<
           } Playlists`}</title>
         </Helmet>
         <div className="tertiary-nav">
-          <div>
-            <Pill
-              active={playlistType === PlaylistType.playlists}
-              type="secondary"
-              onClick={() => this.setPlaylistType(PlaylistType.playlists)}
-            >
-              <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
-            </Pill>
-            <Pill
-              active={playlistType === PlaylistType.collaborations}
-              type="secondary"
-              onClick={() => this.setPlaylistType(PlaylistType.collaborations)}
-            >
-              <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
-            </Pill>
-          </div>
-          {this.isCurrentUserPage() && (
-            <div className="dropdown">
-              <button
-                className="btn btn-info dropdown-toggle"
-                type="button"
-                id="ImportPlaylistDropdown"
-                data-toggle="dropdown"
-                aria-haspopup="true"
+          <div className="playlist-view-options">
+            <div className="playlist-view-controls">
+              <Pill
+                active={playlistType === PlaylistType.playlists}
+                type="secondary"
+                onClick={() => this.setPlaylistType(PlaylistType.playlists)}
               >
-                <FontAwesomeIcon icon={faPlusCircle} title="Import from" />
-                &nbsp;Import from...&nbsp;
-                <span className="caret" />
-              </button>
-              <ul
-                className="dropdown-menu dropdown-menu-right"
-                aria-labelledby="ImportPlaylistDropdown"
+                <FontAwesomeIcon icon={faListAlt as IconProp} /> Playlists
+              </Pill>
+              <Pill
+                active={playlistType === PlaylistType.collaborations}
+                type="secondary"
+                onClick={() =>
+                  this.setPlaylistType(PlaylistType.collaborations)
+                }
               >
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportSpotifyPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    data-toggle="modal"
-                    data-target="#ImportMusicServicePlaylistModal"
-                  >
-                    <FontAwesomeIcon icon={faSpotify} />
-                    &nbsp;Spotify
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportAppleMusicPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    data-toggle="modal"
-                    data-target="#ImportMusicServicePlaylistModal"
-                  >
-                    <FontAwesomeIcon icon={faItunesNote} />
-                    &nbsp;Apple Music
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    data-toggle="modal"
-                    data-target="#ImportPlaylistModal"
-                  >
-                    <FontAwesomeIcon icon={faFileImport} />
-                    &nbsp;Upload JSPF file
-                  </button>
-                </li>
-              </ul>
+                <FontAwesomeIcon icon={faUsers as IconProp} /> Collaborative
+              </Pill>
             </div>
-          )}
-        </div>
-        <div className="playlist-view-options">
-          <div className="playlist-view-controls">
-            <b>View: </b>
-            <Pill
-              active={view === PlaylistView.GRID}
-              type="secondary"
-              onClick={() => this.setState({ view: PlaylistView.GRID })}
-              title="Grid view"
-            >
-              <FontAwesomeIcon icon={faGrid} />
-            </Pill>
-            <Pill
-              active={view === PlaylistView.LIST}
-              type="secondary"
-              onClick={() => this.setState({ view: PlaylistView.LIST })}
-              title="List view"
-            >
-              <FontAwesomeIcon icon={faStacked} />
-            </Pill>
+            <div className="playlist-view-controls">
+              <Pill
+                active={view === PlaylistView.GRID}
+                type="secondary"
+                onClick={() => this.setState({ view: PlaylistView.GRID })}
+                title="Grid view"
+              >
+                <FontAwesomeIcon icon={faGrid} />
+              </Pill>
+              <Pill
+                active={view === PlaylistView.LIST}
+                type="secondary"
+                onClick={() => this.setState({ view: PlaylistView.LIST })}
+                title="List view"
+              >
+                <FontAwesomeIcon icon={faStacked} />
+              </Pill>
+            </div>
           </div>
-          <div className="playlist-sort-controls">
-            <b>Sort by:</b>
-            <select
-              value={sortBy}
-              onChange={(e) => this.setSortOption(e.target.value as SortOption)}
-              className="form-control"
-              style={{ width: "200px" }}
-            >
-              <option value={SortOption.DATE_CREATED}>Date Created</option>
-              <option value={SortOption.DATE_UPDATED}>Date Updated</option>
-              <option value={SortOption.TITLE}>Title</option>
-              <option value={SortOption.CREATOR}>Creator</option>
-              <option value={SortOption.RANDOM}>Random</option>
-            </select>
+          <div className="playlist-view-options">
+            <div className="playlist-sort-controls">
+              <b>Sort by:</b>
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  this.setSortOption(e.target.value as SortOption)
+                }
+                className="form-control"
+                style={{ width: "200px" }}
+              >
+                <option value={SortOption.DATE_CREATED}>Date Created</option>
+                <option value={SortOption.DATE_UPDATED}>Date Updated</option>
+                <option value={SortOption.TITLE}>Title</option>
+                <option value={SortOption.CREATOR}>Creator</option>
+                <option value={SortOption.RANDOM}>Random</option>
+              </select>
+            </div>
+            {this.isCurrentUserPage() && (
+              <div className="dropdown">
+                <button
+                  className="btn btn-info dropdown-toggle"
+                  type="button"
+                  id="ImportPlaylistDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                >
+                  <FontAwesomeIcon icon={faPlusCircle} title="Import" />
+                  &nbsp;Import&nbsp;
+                  <span className="caret" />
+                </button>
+                <ul
+                  className="dropdown-menu dropdown-menu-right"
+                  aria-labelledby="ImportPlaylistDropdown"
+                >
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportSpotifyPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#ImportMusicServicePlaylistModal"
+                    >
+                      <FontAwesomeIcon icon={faSpotify} />
+                      &nbsp;Spotify
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportAppleMusicPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#ImportMusicServicePlaylistModal"
+                    >
+                      <FontAwesomeIcon icon={faItunesNote} />
+                      &nbsp;Apple Music
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#ImportPlaylistModal"
+                    >
+                      <FontAwesomeIcon icon={faFileImport} />
+                      &nbsp;Upload JSPF file
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
         <PlaylistsList
