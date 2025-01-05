@@ -12,13 +12,13 @@ DEFAULT_DONOR_COUNT = 25
 donors_bp = Blueprint("donors", __name__)
 
 
-@donors_bp.route("/",  defaults={'path': ''})
-@donors_bp.route('/<path:path>/')
+@donors_bp.get("/",  defaults={'path': ''})
+@donors_bp.get('/<path:path>/')
 def donors(path):
     return render_template("index.html")
 
 
-@donors_bp.route("/", methods=["POST"])
+@donors_bp.post("/")
 def donors_post():
     page = _parse_int_arg("page", 1)
     sort = request.args.get("sort", "date")

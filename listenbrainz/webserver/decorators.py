@@ -6,7 +6,11 @@ from listenbrainz.webserver import timescale_connection
 
 
 def crossdomain(f):
-    """ Decorator to add CORS headers to flask endpoints """
+    """ Decorator to add CORS headers to flask endpoints.
+
+    This decorator should be applied just after the route to ensure the provide_automatic_options
+    is set correctly.
+    """
     @wraps(f)
     def decorator(*args, **kwargs):
         options_resp = current_app.make_default_options_response()

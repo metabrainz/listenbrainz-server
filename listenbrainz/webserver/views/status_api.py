@@ -26,7 +26,7 @@ MONITORED_PLAYLIST_PATCHES = ('daily-jams',
 status_api_bp = Blueprint("status_api_v1", __name__)
 
 
-@status_api_bp.route("/get-dump-info", methods=["GET"])
+@status_api_bp.get("/get-dump-info")
 @crossdomain
 @ratelimit()
 def get_dump_info():
@@ -237,7 +237,7 @@ def get_playlist_status():
     }
 
 
-@status_api_bp.route("/service-status", methods=["GET"])
+@status_api_bp.get("/service-status")
 @crossdomain
 @ratelimit()
 def service_status():
@@ -260,7 +260,7 @@ def service_status():
     return jsonify(get_service_status())
 
 
-@status_api_bp.route("/playlist-status", methods=["GET"])
+@status_api_bp.get("/playlist-status")
 @crossdomain
 @ratelimit()
 def playlist_status():

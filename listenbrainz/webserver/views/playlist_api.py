@@ -276,7 +276,7 @@ def fetch_playlist_recording_metadata(playlist: Playlist):
         raise APIInternalServerError("Failed to fetch metadata for a playlist. Please try again.")
 
 
-@playlist_api_bp.route("/create", methods=["POST"])
+@playlist_api_bp.post("/create")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -400,7 +400,7 @@ def create_playlist():
     return jsonify({'status': 'ok', 'playlist_mbid': playlist.mbid})
 
 
-@playlist_api_bp.route("/search", methods=["GET"])
+@playlist_api_bp.get("/search")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -428,7 +428,7 @@ def search_playlist():
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@playlist_api_bp.route("/edit/<playlist_mbid>", methods=["POST"])
+@playlist_api_bp.post("/edit/<playlist_mbid>")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -508,7 +508,7 @@ def edit_playlist(playlist_mbid):
     return jsonify({'status': 'ok'})
 
 
-@playlist_api_bp.route("/<playlist_mbid>", methods=["GET"])
+@playlist_api_bp.get("/<playlist_mbid>")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -548,7 +548,7 @@ def get_playlist(playlist_mbid):
     return jsonify(playlist.serialize_jspf())
 
 
-@playlist_api_bp.route("/<playlist_mbid>/xspf", methods=["GET"])
+@playlist_api_bp.get("/<playlist_mbid>/xspf")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -601,8 +601,8 @@ def get_playlist_xspf(playlist_mbid):
         raise PlaylistAPIXMLError("Internal server error occurred.", status_code=500)
 
 
-@playlist_api_bp.route("/<playlist_mbid>/item/add/<int:offset>", methods=["POST"])
-@playlist_api_bp.route("/<playlist_mbid>/item/add", methods=["POST"], defaults={'offset': None})
+@playlist_api_bp.post("/<playlist_mbid>/item/add/<int:offset>")
+@playlist_api_bp.post("/<playlist_mbid>/item/add", defaults={'offset': None})
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -663,7 +663,7 @@ def add_playlist_item(playlist_mbid, offset):
     return jsonify({'status': 'ok'})
 
 
-@playlist_api_bp.route("/<playlist_mbid>/item/move", methods=["POST"])
+@playlist_api_bp.post("/<playlist_mbid>/item/move")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -715,7 +715,7 @@ def move_playlist_item(playlist_mbid):
     return jsonify({'status': 'ok'})
 
 
-@playlist_api_bp.route("/<playlist_mbid>/item/delete", methods=["POST"])
+@playlist_api_bp.post("/<playlist_mbid>/item/delete")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -765,7 +765,7 @@ def delete_playlist_item(playlist_mbid):
     return jsonify({'status': 'ok'})
 
 
-@playlist_api_bp.route("/<playlist_mbid>/delete", methods=["POST"])
+@playlist_api_bp.post("/<playlist_mbid>/delete")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -803,7 +803,7 @@ def delete_playlist(playlist_mbid):
     return jsonify({'status': 'ok'})
 
 
-@playlist_api_bp.route("/<playlist_mbid>/copy", methods=["POST"])
+@playlist_api_bp.post("/<playlist_mbid>/copy")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -838,7 +838,7 @@ def copy_playlist(playlist_mbid):
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
 
 
-@playlist_api_bp.route("/<playlist_mbid>/export/<service>", methods=["POST"])
+@playlist_api_bp.post("/<playlist_mbid>/export/<service>")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -882,7 +882,7 @@ def export_playlist(playlist_mbid, service):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/import/<service>", methods=["GET"])
+@playlist_api_bp.get("/import/<service>")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -934,7 +934,7 @@ def import_playlist_from_music_service(service):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/spotify/<playlist_id>/tracks", methods=["GET"])
+@playlist_api_bp.get("/spotify/<playlist_id>/tracks")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -970,7 +970,7 @@ def import_tracks_from_spotify_playlist(playlist_id):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/apple_music/<playlist_id>/tracks", methods=["GET"])
+@playlist_api_bp.get("/apple_music/<playlist_id>/tracks")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -1006,7 +1006,7 @@ def import_tracks_from_apple_playlist(playlist_id):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/export-jspf/<service>", methods=["POST"])
+@playlist_api_bp.post("/export-jspf/<service>")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
