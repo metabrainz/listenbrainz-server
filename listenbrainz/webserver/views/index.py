@@ -38,7 +38,7 @@ NUMBER_OF_RECENT_LISTENS = 50
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
 
 
-@index_bp.route("/", methods=['POST'])
+@index_bp.post("/")
 def index():
     if _ts:
         try:
@@ -65,7 +65,7 @@ def index():
     return jsonify(props)
 
 
-@index_bp.route("/current-status/", methods=['POST'])
+@index_bp.post("/current-status/")
 @web_listenstore_needed
 def current_status():
     load = "%.2f %.2f %.2f" % os.getloadavg()
@@ -103,7 +103,7 @@ def current_status():
     return jsonify(data)
 
 
-@index_bp.route("/recent/", methods=['POST'])
+@index_bp.post("/recent/")
 def recent_listens():
     recent = []
     for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
@@ -172,7 +172,7 @@ def gdpr_notice():
             return jsonify({'status': 'not_agreed'}), 400
 
 
-@index_bp.route('/search/', methods=['POST', 'OPTIONS'])
+@index_bp.post("/search/")
 def search():
     search_term = request.args.get("search_term")
     user_id = current_user.id if current_user.is_authenticated else None
@@ -187,7 +187,7 @@ def search():
     })
 
 
-@index_bp.route('/feed/', methods=['POST', 'OPTIONS'])
+@index_bp.post("/feed/")
 @login_required
 def feed():
     user_id = current_user.id
@@ -216,7 +216,7 @@ def feed():
     })
 
 
-@index_bp.route('/delete-user/<int:musicbrainz_row_id>')
+@index_bp.get("/delete-user/<int:musicbrainz_row_id>")
 def mb_user_deleter(musicbrainz_row_id):
     """ This endpoint is used by MusicBrainz to delete accounts once they
     are deleted on MusicBrainz too.
@@ -270,8 +270,8 @@ def _get_user_count():
         return user_count
 
 
-@index_bp.route("/", defaults={'path': ''})
-@index_bp.route('/<not_api_path:path>/')
+@index_bp.get("/", defaults={'path': ''})
+@index_bp.get('/<not_api_path:path>/')
 @web_listenstore_needed
 def index_pages(path):
     # this is a catch-all route, all unmatched urls match this route instead of raising a 404

@@ -81,7 +81,7 @@ def fetch_release_group_metadata(release_group_mbids, incs):
     return result
 
 
-@metadata_bp.route("/recording/", methods=["GET"])
+@metadata_bp.get("/recording/")
 @crossdomain
 @ratelimit()
 def metadata_recording():
@@ -124,7 +124,7 @@ def metadata_recording():
     return jsonify(result)
 
 
-@metadata_bp.route("/recording/", methods=["POST"])
+@metadata_bp.post("/recording/")
 @crossdomain
 @ratelimit()
 def metadata_recording_post():
@@ -178,7 +178,7 @@ def metadata_recording_post():
     return jsonify(result)
 
 
-@metadata_bp.route("/release_group/", methods=["GET"])
+@metadata_bp.get("/release_group/")
 @crossdomain
 @ratelimit()
 def metadata_release_group():
@@ -237,7 +237,7 @@ def process_results(match, metadata, incs):
     return result
 
 
-@metadata_bp.route("/lookup/", methods=["GET"])
+@metadata_bp.get("/lookup/")
 @crossdomain
 @ratelimit()
 def get_mbid_mapping():
@@ -369,7 +369,7 @@ def process_bulk_lookup_results(all_results, all_params, query, make_input):
     return all_results, all_params
 
 
-@metadata_bp.route("/lookup/", methods=["POST"])
+@metadata_bp.post("/lookup/")
 @crossdomain
 @ratelimit()
 def get_mbid_mapping_post():
@@ -449,7 +449,7 @@ def get_mbid_mapping_post():
         raise APIInternalServerError("Server failed to lookup recording")
 
 
-@metadata_bp.route("/submit_manual_mapping/", methods=["POST"])
+@metadata_bp.post("/submit_manual_mapping/")
 @crossdomain
 @ratelimit()
 def submit_manual_mapping():
@@ -492,7 +492,7 @@ def submit_manual_mapping():
     return jsonify({"status": "ok"})
 
 
-@metadata_bp.route("/get_manual_mapping/", methods=["GET"])
+@metadata_bp.get("/get_manual_mapping/")
 @crossdomain
 @ratelimit()
 def get_manual_mapping():
@@ -522,7 +522,7 @@ def get_manual_mapping():
         return jsonify({"status": "none"}), 404
 
 
-@metadata_bp.route("/artist/", methods=["GET"])
+@metadata_bp.get("/artist/")
 @crossdomain
 @ratelimit()
 def metadata_artist():

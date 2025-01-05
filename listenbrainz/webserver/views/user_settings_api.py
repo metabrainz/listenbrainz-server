@@ -31,7 +31,7 @@ FLAIR_CHOICES = [
 ]
 
 
-@user_settings_api_bp.route("/flair", methods=["POST"])
+@user_settings_api_bp.post("/flair")
 @crossdomain
 @ratelimit()
 def update_flair():
@@ -56,7 +56,7 @@ def update_flair():
     return jsonify({"success": True})
 
 
-@user_settings_api_bp.route('/timezone', methods=["POST"])
+@user_settings_api_bp.post('/timezone')
 @crossdomain
 @ratelimit()
 def reset_timezone():
@@ -87,7 +87,7 @@ def reset_timezone():
     return jsonify({"status": "ok"})
 
 
-@user_settings_api_bp.route('/troi', methods=["POST"])
+@user_settings_api_bp.post('/troi')
 @crossdomain
 @ratelimit()
 def update_troi_prefs():
@@ -131,7 +131,7 @@ brainzplayer_preferences_schema = {
 }
 
 
-@user_settings_api_bp.route('/brainzplayer', methods=["POST"])
+@user_settings_api_bp.post('/brainzplayer')
 @crossdomain
 @ratelimit()
 def update_brainzplayer_prefs():
