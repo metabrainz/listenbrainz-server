@@ -13,6 +13,7 @@ from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.config import HDFS_CLUSTER_URI
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, \
     LISTENBRAINZ_USER_STATS_AGG_DIRECTORY, LISTENBRAINZ_USER_STATS_BOOKKEEPING_DIRECTORY
+from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
 
 
@@ -40,6 +41,14 @@ class UserEntity(abc.ABC):
 
     def aggregate(self, table, cache_tables) -> DataFrame:
         raise NotImplementedError()
+
+    def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
+        query = f"""
+            SELECT *
+              FROM {existing_aggregate} ea
+             WHERE ea.user_id = EXISTS(SELECT 1 FROM {incremental_aggregate} ia WHERE ia.user_id = ea.user_id)
+        """
+        return run_query(query)
 
     def combine_aggregates(self, existing_aggregate, incremental_aggregate) -> DataFrame:
         raise NotImplementedError()
@@ -75,6 +84,8 @@ class UserEntity(abc.ABC):
         prefix = f"user_{self.entity}_{stats_range}"
         existing_aggregate_path = self.get_existing_aggregate_path(stats_range)
 
+        only_inc_users = True
+
         if not hdfs_connection.client.status(existing_aggregate_path, strict=False) or not existing_aggregate_usable:
             table = f"{prefix}_full_listens"
             get_listens_from_dump(from_date, to_date, include_incremental=False).createOrReplaceTempView(table)
@@ -90,6 +101,7 @@ class UserEntity(abc.ABC):
                 schema=BOOKKEEPING_SCHEMA
             )
             metadata_df.write.mode("overwrite").json(metadata_path)
+            only_inc_users = False
 
         full_df = read_files_from_HDFS(existing_aggregate_path)
 
@@ -100,6 +112,7 @@ class UserEntity(abc.ABC):
             inc_df = self.aggregate(table, cache_tables)
         else:
             inc_df = listenbrainz_spark.session.createDataFrame([], schema=self.get_partial_aggregate_schema())
+            only_inc_users = False
 
         full_table = f"{prefix}_existing_aggregate"
         full_df.createOrReplaceTempView(full_table)
@@ -107,11 +120,18 @@ class UserEntity(abc.ABC):
         inc_table = f"{prefix}_incremental_aggregate"
         inc_df.createOrReplaceTempView(inc_table)
 
-        combined_df = self.combine_aggregates(full_table, inc_table)
+        if only_inc_users:
+            existing_table = f"{prefix}_filtered_aggregate"
+            filtered_aggregate_df = self.filter_existing_aggregate(full_table, inc_table)
+            filtered_aggregate_df.createOrReplaceTempView(existing_table)
+        else:
+            existing_table = full_table
+
+        combined_df = self.combine_aggregates(existing_table, inc_table)
         
         combined_table = f"{prefix}_combined_aggregate"
         combined_df.createOrReplaceTempView(combined_table)
         results_df = self.get_top_n(combined_table, top_entity_limit)
 
-        return results_df.toLocalIterator()
+        return only_inc_users, results_df.toLocalIterator()
     

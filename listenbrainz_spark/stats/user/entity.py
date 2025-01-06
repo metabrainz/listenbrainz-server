@@ -92,8 +92,8 @@ def get_entity_stats_for_range(
         number_of_results = NUMBER_OF_TOP_ENTITIES
 
     entity_obj = incremental_entity_obj_map[entity]
-    data = entity_obj.generate_stats(stats_range, from_date, to_date, number_of_results)
-    return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
+    only_inc_users, data = entity_obj.generate_stats(stats_range, from_date, to_date, number_of_results)
+    return create_messages(only_inc_users, data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, message_type=message_type, database=database)
 
 
@@ -123,7 +123,7 @@ def parse_one_user_stats(entry, entity: str, stats_range: str):
         return None
 
 
-def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
+def create_messages(only_inc_users, data, entity: str, stats_range: str, from_date: datetime, to_date: datetime,
                     message_type: str, database: str = None) \
         -> Iterator[Optional[Dict]]:
     """
@@ -146,10 +146,11 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     if database is None:
         database = f"{entity}_{stats_range}"
 
-    yield {
-        "type": "couchdb_data_start",
-        "database": database
-    }
+    if not only_inc_users:
+        yield {
+            "type": "couchdb_data_start",
+            "database": database
+        }
 
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
@@ -170,7 +171,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             "database": database
         }
 
-    yield {
-        "type": "couchdb_data_end",
-        "database": database
-    }
+    if not only_inc_users:
+        yield {
+            "type": "couchdb_data_end",
+            "database": database
+        }
