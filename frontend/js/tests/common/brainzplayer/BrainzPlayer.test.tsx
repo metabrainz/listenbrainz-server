@@ -94,8 +94,8 @@ function BrainzPlayerWithWrapper(brainzPlayerProps: {
 
 const mockDispatch = jest.fn();
 
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useLocation: () => ({
     pathname: "/user/foobar/",
   }),

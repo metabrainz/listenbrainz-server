@@ -41,16 +41,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { currentUser } = globalAppContext;
 
   const routes = getRoutes(currentUser?.name);
-  //   const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
-  //     createBrowserRouter
-  //   );
-  const router = createBrowserRouter(routes, {
-    future: {
-      v7_relativeSplatPath: true,
-      v7_fetcherPersist: true,
-      v7_normalizeFormMethod: true,
-    },
-  });
+  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
+    createBrowserRouter
+  );
+  const router = sentryCreateBrowserRouter(routes);
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(
