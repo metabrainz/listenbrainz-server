@@ -103,11 +103,9 @@ def request_user_stats(type_, range_, entity, database):
     if type_ in ["entity", "listener"] and entity:
         params["entity"] = entity
 
-    if not database:
+    if not database and type_ != entity:
         today = date.today().strftime("%Y%m%d")
-        if type_ == "entity":
-            prefix = entity
-        elif type_ == "listeners":
+        if type_ == "listeners":
             prefix = f"{entity}_listeners"
         else:
             prefix = type_
