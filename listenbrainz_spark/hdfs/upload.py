@@ -182,4 +182,4 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             .parquet(path.LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
 
         if path_exists(path.LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY):
-            hdfs_connection.client.delete(path.LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY, recursive=True, skipTrash=True)
+            hdfs_connection.client.delete(path.LISTENBRAINZ_SITEWIDE_STATS_AGG_DIRECTORY, recursive=True, skip_trash=True)
