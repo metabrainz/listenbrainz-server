@@ -86,7 +86,7 @@ class ArtistUserEntity(UserEntity):
         query = f"""
             WITH entity_count AS (
                 SELECT user_id
-                     , count(*) AS total_count
+                     , count(*) AS artists_count
                   FROM {final_aggregate}
               GROUP BY user_id
             ), ranked_stats AS (
