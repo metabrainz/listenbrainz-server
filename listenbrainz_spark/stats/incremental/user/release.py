@@ -55,8 +55,8 @@ class ReleaseUserEntity(UserEntity):
                     , caa_release_mbid
                     , count(*) as listen_count
                  FROM gather_release_data
-                WHERE release_name != ''
-                  AND release_name IS NOT NULL
+                WHERE any_release_name != ''
+                  AND any_release_name IS NOT NULL
              GROUP BY user_id
                     , lower(any_release_name)
                     , any_release_mbid
