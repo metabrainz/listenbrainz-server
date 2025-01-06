@@ -44,9 +44,12 @@ class UserEntity(abc.ABC):
 
     def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
         query = f"""
+            WITH incremental_users AS (
+                SELECT DISTINCT user_id FROM {incremental_aggregate}
+            )
             SELECT *
               FROM {existing_aggregate} ea
-             WHERE ea.user_id = EXISTS(SELECT 1 FROM {incremental_aggregate} ia WHERE ia.user_id = ea.user_id)
+             WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.user_id = ea.user_id)
         """
         return run_query(query)
 
