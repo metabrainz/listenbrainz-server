@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, date
 from typing import Iterator, Optional, Dict, List
 
 from more_itertools import chunked
@@ -22,7 +22,6 @@ from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
 from listenbrainz_spark.stats.user.release_group import get_release_groups
-from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +143,7 @@ def create_messages(only_inc_users, data, entity: str, stats_range: str, from_da
         messages: A list of messages to be sent via RabbitMQ
     """
     if database is None:
-        database = f"{entity}_{stats_range}"
+        database = f"{entity}_{stats_range}_{date.today().strftime('%Y%m%d')}"
 
     if not only_inc_users:
         yield {
