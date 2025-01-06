@@ -47,7 +47,7 @@ class ReleaseUserEntity(UserEntity):
             )
                SELECT user_id
                     , first(any_release_name) AS release_name
-                    , release_mbid
+                    , any_release_mbid AS release_mbid
                     , first(release_artist_name) AS artist_name
                     , artist_credit_mbids
                     , artists
@@ -58,8 +58,8 @@ class ReleaseUserEntity(UserEntity):
                 WHERE release_name != ''
                   AND release_name IS NOT NULL
              GROUP BY user_id
-                    , lower(release_name)
-                    , release_mbid
+                    , lower(any_release_name)
+                    , any_release_mbid
                     , lower(release_artist_name)
                     , artist_credit_mbids
                     , artists
