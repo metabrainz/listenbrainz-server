@@ -71,11 +71,13 @@ class ArtistUserEntity(UserEntity):
                      , listen_count
                   FROM {incremental_aggregate}     
             )
-                SELECT first(artist_name) AS artist_name
+                SELECT user_id
+                     , first(artist_name) AS artist_name
                      , artist_mbid
-                     , sum(listen_count) as total_listen_count
+                     , sum(listen_count) as listen_count
                   FROM intermediate_table
-              GROUP BY lower(artist_name)
+              GROUP BY user_id
+                     , lower(artist_name)
                      , artist_mbid
         """
         return run_query(query)
