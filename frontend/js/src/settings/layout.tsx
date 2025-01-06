@@ -74,7 +74,9 @@ function SettingsLayout() {
               <ul>
                 {section.links.map((link) => (
                   <li key={link.to}>
-                    <NavLink to={link.to}>{link.label}</NavLink>
+                    <NavLink to={link.to} viewTransition>
+                      {link.label}
+                    </NavLink>
                   </li>
                 ))}
               </ul>

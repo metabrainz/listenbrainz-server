@@ -52,6 +52,7 @@ function Navbar() {
           className="navbar-logo"
           to="/?redirect=false"
           onClick={toggleSidebar}
+          viewTransition
         >
           <img
             src="/static/img/navbar_logo.svg"
@@ -66,6 +67,7 @@ function Navbar() {
           className="navbar-logo"
           to="/?redirect=false"
           onClick={toggleSidebar}
+          viewTransition
         >
           <img
             src="/static/img/listenbrainz_logo_icon.svg"
@@ -75,27 +77,28 @@ function Navbar() {
         <div className="main-nav">
           {currentUser?.name ? (
             <>
-              <NavLink to="/feed/" onClick={toggleSidebar}>
+              <NavLink to="/feed/" onClick={toggleSidebar} viewTransition>
                 Feed
               </NavLink>
               <NavLink
                 to={`/user/${currentUser.name}/`}
                 onClick={toggleSidebar}
+                viewTransition
               >
                 Dashboard
               </NavLink>
             </>
           ) : (
             <>
-              <NavLink to="/recent/" onClick={toggleSidebar}>
+              <NavLink to="/recent/" onClick={toggleSidebar} viewTransition>
                 Feed
               </NavLink>
-              <NavLink to="/statistics/" onClick={toggleSidebar}>
+              <NavLink to="/statistics/" onClick={toggleSidebar} viewTransition>
                 Dashboard
               </NavLink>
             </>
           )}
-          <NavLink to="/explore/" onClick={toggleSidebar}>
+          <NavLink to="/explore/" onClick={toggleSidebar} viewTransition>
             Explore
           </NavLink>
         </div>
@@ -110,19 +113,19 @@ function Navbar() {
                 className="username"
               />
               <a href="/login/logout/">Logout</a>
-              <NavLink to="/settings/" onClick={toggleSidebar}>
+              <NavLink to="/settings/" onClick={toggleSidebar} viewTransition>
                 Settings
               </NavLink>
             </>
           ) : (
-            <Link to="/login/" onClick={toggleSidebar}>
+            <Link to="/login/" onClick={toggleSidebar} viewTransition>
               Sign in
             </Link>
           )}
-          <NavLink to="/about/" onClick={toggleSidebar}>
+          <NavLink to="/about/" onClick={toggleSidebar} viewTransition>
             About
           </NavLink>
-          <NavLink to="/donors/" onClick={toggleSidebar}>
+          <NavLink to="/donors/" onClick={toggleSidebar} viewTransition>
             Donations
           </NavLink>
           <a

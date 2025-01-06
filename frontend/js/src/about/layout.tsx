@@ -28,7 +28,9 @@ function AboutLayout() {
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>
-            <Link to="/about/">About</Link>
+            <Link to="/about/" viewTransition>
+              About
+            </Link>
           </li>
           {activeLabel && activeLabel !== "About" && (
             <li className="active">{activeLabel}</li>
@@ -42,7 +44,9 @@ function AboutLayout() {
           <ul>
             {sections.map((link) => (
               <li key={link.to}>
-                <NavLink to={link.to}>{link.label}</NavLink>
+                <NavLink to={link.to} viewTransition>
+                  {link.label}
+                </NavLink>
               </li>
             ))}
             <li>

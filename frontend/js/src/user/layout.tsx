@@ -17,7 +17,9 @@ function NavItem({
     <li
       className={`${isActive ? "active" : ""} ${isDisabled ? "disabled" : ""}`}
     >
-      <NavLink to={url}>{label}</NavLink>
+      <NavLink to={url} viewTransition>
+        {label}
+      </NavLink>
     </li>
   );
 }

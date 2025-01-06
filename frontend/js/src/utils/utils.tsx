@@ -263,6 +263,7 @@ const getMBIDMappingArtistLink = (artists: MBIDMappingArtist[]) => {
           <Link
             to={`/artist/${artist.artist_mbid}/`}
             title={artist.artist_credit_name}
+            viewTransition
           >
             {artist.artist_credit_name}
           </Link>
@@ -283,7 +284,11 @@ const getStatsArtistLink = (
   }
   const firstArtist = _.first(artist_mbids);
   if (firstArtist) {
-    return <Link to={`/artist/${firstArtist}/`}>{artist_name}</Link>;
+    return (
+      <Link to={`/artist/${firstArtist}/`} viewTransition>
+        {artist_name}
+      </Link>
+    );
   }
   return artist_name;
 };

@@ -20,7 +20,7 @@ function ExploreCard(props: ExploreCardProps) {
   return (
     <div className="explore-card-container">
       <div className="explore-card">
-        <Link to={url}>
+        <Link to={url} viewTransition>
           <div className="explore-card-img-overlay"> </div>
         </Link>
         <div className="explore-card-img-clip flex-center">
@@ -32,7 +32,9 @@ function ExploreCard(props: ExploreCardProps) {
         </div>
         <div className="explore-card-text">
           <div className="explore-card-text-name">
-            <Link to={url}>{name}</Link>
+            <Link to={url} viewTransition>
+              {name}
+            </Link>
           </div>
           <div>{desc}</div>
         </div>

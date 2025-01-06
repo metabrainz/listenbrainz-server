@@ -31,7 +31,9 @@ function ExploreLayout() {
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>
-            <Link to="/explore/">Explore</Link>
+            <Link to="/explore/" viewTransition>
+              Explore
+            </Link>
           </li>
           {activeLabel && <li className="active">{activeLabel}</li>}
         </ol>

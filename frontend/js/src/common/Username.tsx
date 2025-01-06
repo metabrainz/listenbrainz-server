@@ -66,6 +66,7 @@ function Username(props: WithLinkProps | WithElementProps) {
         className={cssClasses}
         title={username}
         data-text={username}
+        viewTransition
       >
         {htmlContent}
       </Link>

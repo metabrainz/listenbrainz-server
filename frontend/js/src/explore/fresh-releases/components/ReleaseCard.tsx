@@ -234,7 +234,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
       {showReleaseTitle && (
         <div className="name-type-container">
           <div className="release-name" title={releaseName}>
-            <Link to={linkToEntity}>{releaseName}</Link>
+            <Link to={linkToEntity} viewTransition>
+              {releaseName}
+            </Link>
           </div>
         </div>
       )}
@@ -242,7 +244,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
         <div className="release-artist" title={artistCreditName}>
           {artistCredits.map((ac) => (
             <span key={ac.artist_mbid}>
-              <Link to={`/artist/${ac.artist_mbid}/`}>
+              <Link to={`/artist/${ac.artist_mbid}/`} viewTransition>
                 {ac.artist_credit_name}
               </Link>
               {ac.join_phrase}
@@ -258,6 +260,7 @@ export default function ReleaseCard(props: ReleaseCardProps) {
                 ? `/artist/${artistMBIDs[0]}/`
                 : `/search/?search_type=artist&search_term=${artistCreditName}`
             }
+            viewTransition
           >
             {artistCreditName}
           </Link>
