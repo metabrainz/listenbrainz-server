@@ -7,7 +7,7 @@ import {
   faQuestionCircle,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 

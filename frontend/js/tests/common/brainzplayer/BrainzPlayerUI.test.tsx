@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
 
 // Font Awesome generates a random hash ID for each icon everytime.

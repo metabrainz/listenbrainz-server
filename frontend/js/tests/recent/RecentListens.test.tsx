@@ -5,7 +5,7 @@ import { mount, ReactWrapper } from "enzyme";
 import * as timeago from "time-ago";
 import fetchMock from "jest-fetch-mock";
 import { act } from "react-dom/test-utils";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";

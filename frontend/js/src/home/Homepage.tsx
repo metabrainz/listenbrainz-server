@@ -26,7 +26,7 @@ import {
   faSortUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { isNumber, throttle } from "lodash";
-import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import NumberCounter from "./NumberCounter";

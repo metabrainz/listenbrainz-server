@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { RouteObject } from "react-router-dom";
+import type { RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
 

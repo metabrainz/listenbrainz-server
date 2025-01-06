@@ -8,7 +8,7 @@ import {
   matchRoutes,
   useLocation,
   useNavigationType,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
@@ -41,10 +41,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const { currentUser } = globalAppContext;
 
   const routes = getRoutes(currentUser?.name);
-  const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
-    createBrowserRouter
-  );
-  const router = sentryCreateBrowserRouter(routes);
+  //   const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
+  //     createBrowserRouter
+  //   );
+  const router = createBrowserRouter(routes, {
+    future: {
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+    },
+  });
 
   const renderRoot = createRoot(domContainer!);
   renderRoot.render(

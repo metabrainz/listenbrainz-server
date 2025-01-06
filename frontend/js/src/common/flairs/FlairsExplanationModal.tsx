@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 /** A note about this modal:
  * We use Bootstrap 3 modals, which work with jQuery and data- attributes

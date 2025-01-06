@@ -32,7 +32,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";

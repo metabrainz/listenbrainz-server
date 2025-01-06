@@ -12,7 +12,7 @@ import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import NiceModal from "@ebay/nice-modal-react";
 import {
   getRelIconLink,

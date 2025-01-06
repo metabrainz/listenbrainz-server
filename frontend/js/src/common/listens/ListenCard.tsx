@@ -27,7 +27,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import {
   fullLocalizedDateFromTimestampOrISODate,

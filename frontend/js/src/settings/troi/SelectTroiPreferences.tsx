@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";

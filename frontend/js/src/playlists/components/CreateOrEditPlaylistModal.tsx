@@ -2,7 +2,7 @@ import * as React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import { omit } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   getPlaylistExtension,

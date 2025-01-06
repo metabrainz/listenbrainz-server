@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { HttpResponse, http } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import { screen, waitFor } from "@testing-library/react";
