@@ -5,6 +5,9 @@ LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
 
 LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY = os.path.join('/', 'data', 'stats-new')
 
+LISTENBRAINZ_USER_STATS_AGG_DIRECTORY = os.path.join('/', 'user_stats_aggregates')
+LISTENBRAINZ_USER_STATS_BOOKKEEPING_DIRECTORY = os.path.join('/', 'user_stats_bookkeeping')
+
 LISTENBRAINZ_BASE_STATS_DIRECTORY = os.path.join('/', 'stats')
 LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'sitewide')
 

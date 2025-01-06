@@ -13,6 +13,7 @@ from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME, RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
+from listenbrainz_spark.stats.incremental.user.artist import ArtistUserEntity
 from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
@@ -75,29 +76,27 @@ def get_entity_stats_for_range(
     database: str = None
 ):
     """ Calculate entity stats for all users' listens between the start and the end datetime. """
-    listens_df = get_listens_from_dump(from_date, to_date)
-    table = f"user_{entity}_{stats_range}"
-    listens_df.createOrReplaceTempView(table)
-
-    cache_dfs = []
-    for idx, df_path in enumerate(entity_cache_map.get(entity)):
-        df_name = f"entity_data_cache_{idx}"
-        cache_dfs.append(df_name)
-        read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-
-    return calculate_entity_stats(
-        from_date, to_date, table, cache_dfs, entity, stats_range, message_type, database
-    )
-
-
-def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],
-                           entity: str, stats_range: str, message_type: str, database: str = None):
-    handler = entity_handler_map[entity]
-    if message_type == "year_in_music_top_stats":
-        number_of_results = NUMBER_OF_YIM_ENTITIES
+    if entity == "artists":
+        entity_obj = ArtistUserEntity()
+        data = entity_obj.generate_stats(stats_range, from_date, to_date, NUMBER_OF_TOP_ENTITIES)
     else:
-        number_of_results = NUMBER_OF_TOP_ENTITIES
-    data = handler(table, cache_tables, number_of_results)
+        listens_df = get_listens_from_dump(from_date, to_date)
+        table = f"user_{entity}_{stats_range}"
+        listens_df.createOrReplaceTempView(table)
+
+        cache_dfs = []
+        for idx, df_path in enumerate(entity_cache_map.get(entity)):
+            df_name = f"entity_data_cache_{idx}"
+            cache_dfs.append(df_name)
+            read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
+
+        handler = entity_handler_map[entity]
+        if message_type == "year_in_music_top_stats":
+            number_of_results = NUMBER_OF_YIM_ENTITIES
+        else:
+            number_of_results = NUMBER_OF_TOP_ENTITIES
+        data = handler(table, cache_dfs, number_of_results)
+
     return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, message_type=message_type, database=database)
 
