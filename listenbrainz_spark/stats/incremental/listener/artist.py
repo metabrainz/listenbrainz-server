@@ -27,7 +27,7 @@ class ArtistEntityListener(EntityListener):
     def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
         query = f"""
             WITH incremental_artists AS (
-                SELECT DISTINCT explode_outer(artist_credit_mbids) AS artist_mbid FROM {incremental_aggregate}
+                SELECT DISTINCT artist_mbid FROM {incremental_aggregate}
             )
             SELECT *
               FROM {existing_aggregate} ea
