@@ -47,10 +47,10 @@ entity_cache_map = {
 }
 
 incremental_sitewide_map = {
-    "artists": AritstSitewideEntity(),
-    "releases": ReleaseSitewideEntity(),
-    "recordings": RecordingSitewideEntity(),
-    "release_groups": ReleaseGroupSitewideEntity(),
+    "artists": AritstSitewideEntity,
+    "releases": ReleaseSitewideEntity,
+    "recordings": RecordingSitewideEntity,
+    "release_groups": ReleaseGroupSitewideEntity,
 }
 
 

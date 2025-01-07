@@ -9,8 +9,8 @@ from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
 
 class ReleaseGroupSitewideEntity(SitewideEntity):
 
-    def __init__(self):
-        super().__init__(entity="release_groups")
+    def __init__(self, stats_range):
+        super().__init__(entity="release_groups", stats_range=stats_range)
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
