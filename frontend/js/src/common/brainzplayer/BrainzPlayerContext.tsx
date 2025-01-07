@@ -86,6 +86,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
     | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
   data?: any;
+  payload?: any;
 };
 
 function valueReducer(
