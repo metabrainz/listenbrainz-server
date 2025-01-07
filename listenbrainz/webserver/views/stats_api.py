@@ -74,8 +74,8 @@ def get_artist(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - ``artist_mbids`` is an optional field and may not be present in all the responses
+        ``artist_mbids`` is an optional field and may not be present in all the responses
+
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -142,9 +142,8 @@ def get_release(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - ``artist_mbids`` and ``release_mbid`` are optional fields and
-          may not be present in all the responses
+
+        ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -214,9 +213,8 @@ def get_release_group(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - ``artist_mbids`` and ``release_group_mbid`` are optional fields and
-          may not be present in all the responses
+
+        ``artist_mbids`` and ``release_group_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -280,10 +278,10 @@ def get_recording(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - We only calculate the top 1000 all_time recordings
         - ``artist_mbids``, ``release_name``, ``release_mbid`` and ``recording_mbid`` are optional fields
-         and may not be present in all the responses
+          and may not be present in all the responses
 
     :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -377,7 +375,7 @@ def get_listening_activity(user_name: str):
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - The example above shows the data for three days only, however we calculate the statistics for
           the current time range and the previous time range. For example for weekly statistics the data
           is calculated for the current as well as the past week.
@@ -451,9 +449,6 @@ def get_daily_activity(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
-
-    .. note::
-        - This endpoint is currently in beta
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
@@ -533,7 +528,7 @@ def get_artist_map(user_name: str):
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - We cache the results for this query for a week to improve page load times, if you want to request fresh data
           you can use the ``force_recalculate`` flag.
 
@@ -766,7 +761,6 @@ def get_sitewide_artist():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - ``artist_mbids`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
@@ -834,7 +828,7 @@ def get_sitewide_release():
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
@@ -904,7 +898,6 @@ def get_sitewide_release_group():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
@@ -968,10 +961,9 @@ def get_sitewide_recording():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - We only calculate the top 1000 all_time recordings
         - ``artist_mbids``, ``release_name``, ``release_mbid`` and ``recording_mbid`` are optional fields and
-         may not be present in all the responses
+          may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
         Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -1061,7 +1053,6 @@ def get_sitewide_listening_activity():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - The example above shows the data for three days only, however we calculate the statistics for
           the current time range and the previous time range. For example for weekly statistics the data
           is calculated for the current as well as the past week.
@@ -1129,9 +1120,8 @@ def get_sitewide_artist_map():
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - We cache the results for this query for a week to improve page load times, if you want to request fresh data
-          you can use the ``force_recalculate`` flag.
+        We cache the results for this query for a week to improve page load times, if you want to request fresh data
+        you can use the ``force_recalculate`` flag.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
@@ -1239,7 +1229,7 @@ def _get_artist_map_stats(user_id, stats_range):
 @stats_api_bp.route("/user/<user_name>/year-in-music/<int:year>")
 def year_in_music(user_name: str, year: int = 2023):
     """ Get data for year in music stuff """
-    if year != 2021 and year != 2022 and year != 2023:
+    if year != 2021 and year != 2022 and year != 2023 and year != 2024:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = db_user.get_by_mb_id(db_conn, user_name)

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 /** A note about this modal:
  * We use Bootstrap 3 modals, which work with jQuery and data- attributes
@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 
 export default NiceModal.create(() => {
   const modal = useModal();
+  const navigate = useNavigate();
 
   const closeModal = () => {
     modal.hide();
@@ -73,8 +74,27 @@ export default NiceModal.create(() => {
             </p>
 
             <p>
-              Ready to support us? <Link to="/donate/">Donate here</Link> or{" "}
-              <Link to="/donors/">view our donors</Link>.
+              Ready to support us?{" "}
+              <Link
+                to="/donate/"
+                onClick={() => {
+                  navigate("/donate/");
+                }}
+                data-dismiss="modal"
+              >
+                Donate here
+              </Link>{" "}
+              or{" "}
+              <Link
+                to="/donors/"
+                onClick={() => {
+                  navigate("/donors/");
+                }}
+                data-dismiss="modal"
+              >
+                view our donors
+              </Link>
+              .
             </p>
           </div>
           <div className="modal-footer">
