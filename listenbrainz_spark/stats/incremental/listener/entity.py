@@ -79,7 +79,7 @@ class EntityListener(abc.ABC):
         prefix = f"entity_listener_{self.entity}_{stats_range}"
         existing_aggregate_path = self.get_existing_aggregate_path(stats_range)
 
-        only_inc_users = True
+        only_inc_entities = True
 
         if not hdfs_connection.client.status(existing_aggregate_path, strict=False) or not existing_aggregate_usable:
             table = f"{prefix}_full_listens"
@@ -96,7 +96,7 @@ class EntityListener(abc.ABC):
                 schema=BOOKKEEPING_SCHEMA
             )
             metadata_df.write.mode("overwrite").json(metadata_path)
-            only_inc_users = False
+            only_inc_entities = False
 
         full_df = read_files_from_HDFS(existing_aggregate_path)
 
@@ -107,7 +107,7 @@ class EntityListener(abc.ABC):
             inc_df = self.aggregate(table, cache_tables)
         else:
             inc_df = listenbrainz_spark.session.createDataFrame([], schema=self.get_partial_aggregate_schema())
-            only_inc_users = False
+            only_inc_entities = False
 
         full_table = f"{prefix}_existing_aggregate"
         full_df.createOrReplaceTempView(full_table)
@@ -115,7 +115,7 @@ class EntityListener(abc.ABC):
         inc_table = f"{prefix}_incremental_aggregate"
         inc_df.createOrReplaceTempView(inc_table)
 
-        if only_inc_users:
+        if only_inc_entities:
             existing_table = f"{prefix}_filtered_aggregate"
             filtered_aggregate_df = self.filter_existing_aggregate(full_table, inc_table)
             filtered_aggregate_df.createOrReplaceTempView(existing_table)
@@ -128,5 +128,5 @@ class EntityListener(abc.ABC):
         combined_df.createOrReplaceTempView(combined_table)
         results_df = self.get_top_n(combined_table, top_entity_limit)
 
-        return only_inc_users, results_df.toLocalIterator()
+        return only_inc_entities, results_df.toLocalIterator()
     
