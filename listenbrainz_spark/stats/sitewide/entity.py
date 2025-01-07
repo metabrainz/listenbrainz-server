@@ -58,10 +58,9 @@ incremental_sitewide_map = {
 def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEntityStatMessage]]:
     """ Returns top entity stats for given time period """
     logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
-    from_date, to_date = get_dates_for_stats_range(stats_range)
     entity_cls = incremental_sitewide_map[entity]
     entity_obj: SitewideEntity = entity_cls(stats_range)
-    data = entity_obj.generate_stats(SITEWIDE_STATS_ENTITY_LIMIT)
+    from_date, to_date, data = entity_obj.generate_stats(SITEWIDE_STATS_ENTITY_LIMIT)
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)
     logger.debug("Done!")
