@@ -1,13 +1,9 @@
-import json
 import logging
 from datetime import datetime
-from typing import Iterator, Optional, Dict, List
+from typing import Iterator, Optional, Dict
 
 from more_itertools import chunked
-from pydantic import ValidationError
 
-from data.model.entity_listener_stat import EntityListenerRecord, ArtistListenerRecord, \
-    ReleaseGroupListenerRecord
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
@@ -20,11 +16,6 @@ logger = logging.getLogger(__name__)
 entity_handler_map = {
     "artists": artist.get_listeners,
     "release_groups": release_group.get_listeners,
-}
-
-entity_model_map = {
-    "artists": ArtistListenerRecord,
-    "release_groups": ReleaseGroupListenerRecord,
 }
 
 entity_cache_map = {
@@ -50,18 +41,6 @@ def get_listener_stats(entity: str, stats_range: str, database: str = None) -> I
     only_inc_entities, data = entity_obj.generate_stats(stats_range, from_date, to_date, NUMBER_OF_TOP_LISTENERS)
     return create_messages(only_inc_entities, data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, database=database)
-
-
-def parse_one_entity_stats(entry, entity: str, stats_range: str) \
-        -> Optional[EntityListenerRecord]:
-    try:
-        data = entry.asDict(recursive=True)
-        entity_model_map[entity](**data)
-        return data
-    except ValidationError:
-        logger.error(f"""ValidationError while calculating {stats_range} listeners of {entity}.
-         Data: {json.dumps(data, indent=2)}""", exc_info=True)
-        return None
 
 
 def create_messages(only_inc_entities, data, entity: str, stats_range: str, from_date: datetime, to_date: datetime, database: str = None) \
@@ -96,7 +75,7 @@ def create_messages(only_inc_entities, data, entity: str, stats_range: str, from
     for entries in chunked(data, ENTITIES_PER_MESSAGE):
         multiple_entity_stats = []
         for entry in entries:
-            processed_stat = parse_one_entity_stats(entry, entity, stats_range)
+            processed_stat = entry.asDict(recursive=True)
             multiple_entity_stats.append(processed_stat)
 
         yield {
