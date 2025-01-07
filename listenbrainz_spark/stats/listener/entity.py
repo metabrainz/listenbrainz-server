@@ -6,13 +6,14 @@ from typing import Iterator, Optional, Dict, List
 from more_itertools import chunked
 from pydantic import ValidationError
 
-from data.model.entity_listener_stat import EntityListenerRecord, ArtistListenerRecord, EntityListenerStatMessage, \
+from data.model.entity_listener_stat import EntityListenerRecord, ArtistListenerRecord, \
     ReleaseGroupListenerRecord
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import get_dates_for_stats_range
+from listenbrainz_spark.stats.incremental.listener.artist import ArtistEntityListener
+from listenbrainz_spark.stats.incremental.listener.release_group import ReleaseGroupEntityListener
 from listenbrainz_spark.stats.listener import artist, release_group
-from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,11 @@ entity_cache_map = {
     "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME],
 }
 
+incremental_entity_obj_map = {
+    "artists": ArtistEntityListener(),
+    "release_groups": ReleaseGroupEntityListener(),
+}
+
 ENTITIES_PER_MESSAGE = 10000  # number of entities per message
 NUMBER_OF_TOP_LISTENERS = 10  # number of top listeners to retain for user stats
 
@@ -40,30 +46,9 @@ def get_listener_stats(entity: str, stats_range: str, database: str = None) -> I
     logger.debug(f"Calculating {entity}_listeners_{stats_range}...")
 
     from_date, to_date = get_dates_for_stats_range(stats_range)
-    listens_df = get_listens_from_dump(from_date, to_date)
-    table = f"{entity}_listeners_{stats_range}"
-    listens_df.createOrReplaceTempView(table)
-
-    cache_dfs = []
-    for idx, df_path in enumerate(entity_cache_map.get(entity)):
-        df_name = f"entity_data_cache_{idx}"
-        cache_dfs.append(df_name)
-        read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-
-    messages = calculate_entity_stats(
-        from_date, to_date, table, cache_dfs, entity, stats_range, database
-    )
-
-    logger.debug("Done!")
-
-    return messages
-
-
-def calculate_entity_stats(from_date: datetime, to_date: datetime, table: str, cache_tables: List[str],
-                           entity: str, stats_range: str, database: str = None):
-    handler = entity_handler_map[entity]
-    data = handler(table, cache_tables, NUMBER_OF_TOP_LISTENERS)
-    return create_messages(data=data, entity=entity, stats_range=stats_range, from_date=from_date,
+    entity_obj = incremental_entity_obj_map[entity]
+    only_inc_entities, data = entity_obj.generate_stats(stats_range, from_date, to_date, NUMBER_OF_TOP_LISTENERS)
+    return create_messages(only_inc_entities, data=data, entity=entity, stats_range=stats_range, from_date=from_date,
                            to_date=to_date, database=database)
 
 
@@ -79,7 +64,7 @@ def parse_one_entity_stats(entry, entity: str, stats_range: str) \
         return None
 
 
-def create_messages(data, entity: str, stats_range: str, from_date: datetime, to_date: datetime, database: str = None) \
+def create_messages(only_inc_entities, data, entity: str, stats_range: str, from_date: datetime, to_date: datetime, database: str = None) \
         -> Iterator[Optional[Dict]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
@@ -97,12 +82,13 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
         messages: A list of messages to be sent via RabbitMQ
     """
     if database is None:
-        database = f"{entity}_listeners_{stats_range}"
+        database = f"{entity}_listeners_{stats_range}_{datetime.today().strftime('%Y%m%d')}"
 
-    yield {
-        "type": "couchdb_data_start",
-        "database": database
-    }
+    if only_inc_entities:
+        yield {
+            "type": "couchdb_data_start",
+            "database": database
+        }
 
     from_ts = int(from_date.timestamp())
     to_ts = int(to_date.timestamp())
@@ -123,7 +109,8 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
             "database": database
         }
 
-    yield {
-        "type": "couchdb_data_end",
-        "database": database
-    }
+    if only_inc_entities:
+        yield {
+            "type": "couchdb_data_end",
+            "database": database
+        }
