@@ -9,20 +9,21 @@ from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
 
 class AritstSitewideEntity(SitewideEntity):
 
-    def __init__(self):
-        super().__init__(entity="artists")
+    def __init__(self, stats_range):
+        super().__init__(entity="artists", stats_range=stats_range)
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_mbid', StringType(), nullable=True),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_mbid", StringType(), nullable=True),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
-    def aggregate(self, table, cache_tables, user_listen_count_limit):
+    def aggregate(self, table, cache_tables):
+        user_listen_count_limit = self.get_listen_count_limit()
         cache_table = cache_tables[0]
         result = run_query(f"""
             WITH exploded_listens AS (
@@ -67,7 +68,7 @@ class AritstSitewideEntity(SitewideEntity):
                 SELECT artist_name
                      , artist_mbid
                      , listen_count
-                  FROM {incremental_aggregate}     
+                  FROM {incremental_aggregate}
             )
                 SELECT first(artist_name) AS artist_name
                      , artist_mbid
@@ -103,7 +104,7 @@ class AritstSitewideEntity(SitewideEntity):
             )
                 SELECT total_count
                      , stats
-                  FROM grouped_stats 
+                  FROM grouped_stats
                   JOIN entity_count
                     ON TRUE
         """

@@ -9,26 +9,27 @@ from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
 
 class RecordingSitewideEntity(SitewideEntity):
 
-    def __init__(self):
-        super().__init__(entity="recordings")
+    def __init__(self, stats_range):
+        super().__init__(entity="recordings", stats_range=stats_range)
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('recording_name', StringType(), nullable=False),
-            StructField('recording_mbid', StringType(), nullable=True),
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
-            StructField('release_name', StringType(), nullable=True),
-            StructField('release_mbid', StringType(), nullable=True),
-            StructField('caa_id', IntegerType(), nullable=True),
-            StructField('caa_release_mbid', StringType(), nullable=True),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("recording_name", StringType(), nullable=False),
+            StructField("recording_mbid", StringType(), nullable=True),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=True),
+            StructField("release_name", StringType(), nullable=True),
+            StructField("release_mbid", StringType(), nullable=True),
+            StructField("caa_id", IntegerType(), nullable=True),
+            StructField("caa_release_mbid", StringType(), nullable=True),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
-    def aggregate(self, table, cache_tables, user_listen_count_limit):
+    def aggregate(self, table, cache_tables):
+        user_listen_count_limit = self.get_listen_count_limit()
         cache_table = cache_tables[0]
         result = run_query(f"""
         WITH user_counts as (
@@ -153,7 +154,7 @@ class RecordingSitewideEntity(SitewideEntity):
             )
                 SELECT total_count
                      , stats
-                  FROM grouped_stats 
+                  FROM grouped_stats
                   JOIN entity_count
                     ON TRUE
         """
