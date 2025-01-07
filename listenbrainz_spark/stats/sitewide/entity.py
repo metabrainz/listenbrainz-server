@@ -9,8 +9,9 @@ from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats import get_dates_for_stats_range
+from listenbrainz_spark.stats import get_dates_for_stats_range, SITEWIDE_STATS_ENTITY_LIMIT
 from listenbrainz_spark.stats.incremental.sitewide.artist import AritstSitewideEntity
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
 from listenbrainz_spark.stats.incremental.sitewide.recording import RecordingSitewideEntity
 from listenbrainz_spark.stats.incremental.sitewide.release import ReleaseSitewideEntity
 from listenbrainz_spark.stats.incremental.sitewide.release_group import ReleaseGroupSitewideEntity
@@ -59,8 +60,8 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
     logger.debug(f"Calculating sitewide_{entity}_{stats_range}...")
     from_date, to_date = get_dates_for_stats_range(stats_range)
     entity_cls = incremental_sitewide_map[entity]
-    entity_obj = entity_cls(stats_range)
-    data = entity_obj.generate_stats()
+    entity_obj: SitewideEntity = entity_cls(stats_range)
+    data = entity_obj.generate_stats(SITEWIDE_STATS_ENTITY_LIMIT)
     messages = create_messages(data=data, entity=entity, stats_range=stats_range,
                                from_date=from_date, to_date=to_date)
     logger.debug("Done!")
