@@ -1,8 +1,9 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, ArrayType
 
-from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
+from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME, \
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.listener.entity import EntityListener
 from listenbrainz_spark.stats.incremental.user.entity import UserEntity
@@ -11,15 +12,19 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 class ReleaseGroupEntityListener(EntityListener):
 
     def __init__(self):
-        super().__init__(entity="artists")
+        super().__init__(entity="release_groups")
 
     def get_cache_tables(self) -> List[str]:
-        return [ARTIST_COUNTRY_CODE_DATAFRAME]
+        return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_mbid', StringType(), nullable=True),
+            StructField('release_group_mbid', StringType(), nullable=False),
+            StructField('release_group_name', StringType(), nullable=False),
+            StructField('release_group_artist_name', StringType(), nullable=False),
+            StructField('artist_credit_mbids', ArrayType(StringType()), nullable=False),
+            StructField('caa_id', IntegerType(), nullable=True),
+            StructField('caa_release_mbid', StringType(), nullable=True),
             StructField('user_id', IntegerType(), nullable=False),
             StructField('listen_count', IntegerType(), nullable=False),
         ])
@@ -55,13 +60,13 @@ class ReleaseGroupEntityListener(EntityListener):
              LEFT JOIN {rg_cache_table} rg
                     ON rg.release_group_mbid = rel.release_group_mbid
             )
-                SELECT user_id
-                     , release_group_mbid
+                SELECT release_group_mbid
                      , release_group_name
                      , release_group_artist_name
                      , artist_credit_mbids
                      , caa_id
                      , caa_release_mbid
+                     , user_id
                      , count(*) AS listen_count
                   FROM gather_release_data
               GROUP BY release_group_mbid
