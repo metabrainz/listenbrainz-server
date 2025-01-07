@@ -17,16 +17,17 @@ class ReleaseSitewideEntity(SitewideEntity):
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('release_name', StringType(), nullable=False),
-            StructField('release_mbid', StringType(), nullable=False),
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_credit_mbids', ArrayType(StringType()), nullable=False),
-            StructField('caa_id', IntegerType(), nullable=True),
-            StructField('caa_release_mbid', StringType(), nullable=True),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("release_name", StringType(), nullable=False),
+            StructField("release_mbid", StringType(), nullable=False),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=False),
+            StructField("caa_id", IntegerType(), nullable=True),
+            StructField("caa_release_mbid", StringType(), nullable=True),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
-    def aggregate(self, table, cache_tables, user_listen_count_limit):
+    def aggregate(self, table, cache_tables):
+        user_listen_count_limit = self.get_listen_count_limit()
         cache_table = cache_tables[0]
         result = run_query(f"""
        WITH gather_release_data AS (
@@ -144,7 +145,7 @@ class ReleaseSitewideEntity(SitewideEntity):
             )
                 SELECT total_count
                      , stats
-                  FROM grouped_stats 
+                  FROM grouped_stats
                   JOIN entity_count
                     ON TRUE
         """
