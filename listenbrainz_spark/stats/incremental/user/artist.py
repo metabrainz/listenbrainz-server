@@ -9,18 +9,18 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class ArtistUserEntity(UserEntity):
 
-    def __init__(self):
-        super().__init__(entity="artists")
+    def __init__(self, stats_range):
+        super().__init__(entity="artists", stats_range=stats_range)
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('user_id', IntegerType(), nullable=False),
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_mbid', StringType(), nullable=True),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("user_id", IntegerType(), nullable=False),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_mbid", StringType(), nullable=True),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
     def aggregate(self, table, cache_tables):
