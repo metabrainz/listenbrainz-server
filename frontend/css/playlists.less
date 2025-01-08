@@ -34,24 +34,12 @@
     padding-right: 2em;
     display: -webkit-box;
     line-clamp: @descriptionLines;
+    margin-top: 0.5rem;
     -webkit-line-clamp: @descriptionLines;
     -webkit-box-orient: vertical;
 
-    &:before {
-      content: "...";
-      position: absolute;
-      right: 1em;
-      bottom: 0;
-      display: none;
-    }
-    &:after {
-      content: "";
-      position: absolute;
-      right: 0;
-      width: 1em;
-      height: 1em;
-      margin-top: 0.2em;
-      background-color: inherit;
+    p {
+      margin-bottom: 0;
     }
   }
 
@@ -118,13 +106,13 @@
 
       .playlist-info {
         display: flex;
+        align-items: center;
         gap: 2rem;
 
         .playlist-index {
           min-width: 2rem;
           text-align: right;
           font-weight: bold;
-          margin-top: 0.5rem;
         }
       }
     }
@@ -140,7 +128,6 @@
 
       .playlist-title {
         font-size: 1.75rem;
-        margin-bottom: 0.5rem;
         a {
           font-weight: 500;
           color: #353070;
@@ -151,6 +138,7 @@
 
     .playlist-more-info {
       align-self: center;
+      flex-shrink: 0;
 
       .playlist-stats {
         display: flex;
