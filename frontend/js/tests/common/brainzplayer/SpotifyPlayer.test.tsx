@@ -28,6 +28,7 @@ const defaultContext = {
 const props = {
   refreshSpotifyToken: new APIService("base-uri").refreshSpotifyToken,
   show: true,
+  volume: 100,
   playerPaused: false,
   onPlayerPausedChange: (paused: boolean) => {},
   onProgressChange: (progressMs: number) => {},

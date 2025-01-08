@@ -26,6 +26,7 @@ const defaultContext = {
 
 const props = {
   show: true,
+  volume: 100,
   playerPaused: false,
   refreshSoundcloudToken: new APIService("base-uri").refreshSoundcloudToken,
   onPlayerPausedChange: (paused: boolean) => {},

@@ -8,6 +8,7 @@ import APIService from "../../../src/utils/APIService";
 
 const props = {
   show: true,
+  volume: 100,
   playerPaused: false,
   youtubeUser: {
     api_key: "fake-api-key",
