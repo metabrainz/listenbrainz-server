@@ -181,6 +181,9 @@ class IncrementalStats(abc.ABC):
 
         return full_df
 
+    def incremental_dump_exists(self) -> bool:
+        return hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False)
+
     def create_incremental_aggregate(self) -> DataFrame:
         """
         Create an incremental aggregate from incremental listens.
@@ -188,15 +191,10 @@ class IncrementalStats(abc.ABC):
         Returns:
             DataFrame: The generated incremental aggregate DataFrame.
         """
-        if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
-            table = f"{self.get_table_prefix()}_incremental_listens"
-            read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
-                .createOrReplaceTempView(table)
-            inc_df = self.aggregate(table, self._cache_tables)
-        else:
-            inc_df = listenbrainz_spark.session.createDataFrame([], schema=self.get_partial_aggregate_schema())
-
-        return inc_df
+        table = f"{self.get_table_prefix()}_incremental_listens"
+        read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
+            .createOrReplaceTempView(table)
+        return self.aggregate(table, self._cache_tables)
 
     def generate_stats(self, top_entity_limit: int) -> Tuple[datetime, datetime, Iterator[Row]]:
         """
@@ -208,24 +206,24 @@ class IncrementalStats(abc.ABC):
         Returns a tuple of the data range for which the stats were calculated alongside an iterator over the results.
         """
         self.setup_cache_tables()
+        prefix = self.get_table_prefix()
 
         if not self.partial_aggregate_usable():
             self.create_partial_aggregate()
-        full_df = read_files_from_HDFS(self.get_existing_aggregate_path())
+        partial_df = read_files_from_HDFS(self.get_existing_aggregate_path())
+        partial_table = f"{prefix}_existing_aggregate"
+        partial_df.createOrReplaceTempView(partial_table)
 
-        inc_df = self.create_incremental_aggregate()
+        if self.incremental_dump_exists():
+            inc_df = self.create_incremental_aggregate()
+            inc_table = f"{prefix}_incremental_aggregate"
+            inc_df.createOrReplaceTempView(inc_table)
+            final_df = self.combine_aggregates(partial_table, inc_table)
+        else:
+            final_df = partial_df
 
-        prefix = self.get_table_prefix()
-        full_table = f"{prefix}_existing_aggregate"
-        inc_table = f"{prefix}_incremental_aggregate"
+        final_table = f"{prefix}_final_aggregate"
+        final_df.createOrReplaceTempView(final_table)
 
-        full_df.createOrReplaceTempView(full_table)
-        inc_df.createOrReplaceTempView(inc_table)
-
-        combined_df = self.combine_aggregates(full_table, inc_table)
-
-        combined_table = f"{prefix}_combined_aggregate"
-        combined_df.createOrReplaceTempView(combined_table)
-        results_df = self.get_top_n(combined_table, top_entity_limit)
-
+        results_df = self.get_top_n(final_table, top_entity_limit)
         return self.from_date, self.to_date, results_df.toLocalIterator()
