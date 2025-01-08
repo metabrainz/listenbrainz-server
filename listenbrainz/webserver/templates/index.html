@@ -1,5 +1,16 @@
 {% from 'macros.html' import print_message %}
-
+{%
+  set opengraph_title =  og_meta_tags['title'] if og_meta_tags and og_meta_tags['title']
+  else "ListenBrainz"
+%}
+{%
+  set opengraph_description =  og_meta_tags['description'] if og_meta_tags and og_meta_tags['description']
+  else "Track, explore, visualise and share the music you listen to. Follow your favourites and discover great new music."
+%}
+{%
+  set opengraph_type =  og_meta_tags['type'] if og_meta_tags and og_meta_tags['type']
+  else "website"
+%}
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,18 +22,13 @@
 
   <meta
     name="description"
-    content="Track, explore, visualise and share the music you listen to.
-  Follow your favourites and discover great new music."
+    content="{{ opengraph_description }}"
   />
   <!-- OpenGraph meta tags -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="ListenBrainz" />
   <meta property="og:site_name" content="ListenBrainz" />
-  <meta
-    property="og:description"
-    content="Track, explore, visualise and share the music you listen to.
-  Follow your favourites and discover great new music."
-  />
+  <meta property="og:title" content="{{ opengraph_title }}" />
+  <meta property="og:type" content="{{ opengraph_type }}" />
+  <meta property="og:description" content="{{ opengraph_description }}" />
   <!--  OpenGraph image meta tags -->
   <meta
     property="og:image"
@@ -30,13 +36,14 @@
   />
   <meta property="og:image:width" content="1280" />
   <meta property="og:image:height" content="640" />
+  <!-- Other OpenGraph meta tags (title, type and description are already handled above) -->
+  {%- for tagname, tagvalue in (og_meta_tags or {}).items() if tagname not in ['description', 'title', 'type']-%}
+    <meta property="og:{{ tagname }}" content="{{ tagvalue }}" />
+  {%- endfor -%}
+
   <!--  Twitter meta tags -->
-  <meta name="twitter:title" content="ListenBrainz" />
-  <meta
-    property="twitter:description"
-    content="Track, explore, visualise and share the music you listen to.
-  Follow your favourites and discover great new music."
-  />
+  <meta name="twitter:title" content="{{ opengraph_title }}" />
+  <meta property="twitter:description" content="{{ opengraph_description }}"/>
   <!--  Twitter image meta tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta
