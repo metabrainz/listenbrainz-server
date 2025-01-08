@@ -179,13 +179,17 @@ function PlaylistMenu({
       );
     }
     const { external_url } = result;
+    const url = external_url?.replace(
+      "/v1/me/library/playlists/",
+      "https://music.apple.com/us/library/playlist/"
+    );
     toast.success(
       <ToastMsg
         title="Playlist exported to Apple Music"
         message={
           <>
             Successfully exported playlist:{" "}
-            <a href={external_url} target="_blank" rel="noopener noreferrer">
+            <a href={url} target="_blank" rel="noopener noreferrer">
               {playlistTitle}
             </a>
           </>
