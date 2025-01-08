@@ -23,7 +23,7 @@ def playlist_page(playlist_mbid: str):
         playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, False)
         if playlist is not None and playlist.is_visible_by(current_user_id):
             og_meta_tags = {
-                "title": playlist.name,
+                "title": f'{playlist.name} — Playlist on ListenBrainz',
                 "description": playlist.description,
                 "type": "music:playlist",
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/playlist/{playlist_mbid}',
