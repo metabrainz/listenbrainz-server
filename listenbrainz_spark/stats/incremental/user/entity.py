@@ -1,46 +1,22 @@
 import abc
 import logging
-from datetime import datetime
-from pathlib import Path
-from typing import List
 
-from pyspark.errors import AnalysisException
-from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, StructField, TimestampType
-
-import listenbrainz_spark
-from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.config import HDFS_CLUSTER_URI
-from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH, \
-    LISTENBRAINZ_USER_STATS_AGG_DIRECTORY, LISTENBRAINZ_USER_STATS_BOOKKEEPING_DIRECTORY
+from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
+from listenbrainz_spark.stats.incremental import IncrementalStats
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 
 logger = logging.getLogger(__name__)
-BOOKKEEPING_SCHEMA = StructType([
-    StructField('from_date', TimestampType(), nullable=False),
-    StructField('to_date', TimestampType(), nullable=False),
-    StructField('created', TimestampType(), nullable=False),
-])
 
 
-class UserEntity(abc.ABC):
-    
-    def __init__(self, entity):
-        self.entity = entity
-    
-    def get_existing_aggregate_path(self, stats_range) -> str:
-        return f"{LISTENBRAINZ_USER_STATS_AGG_DIRECTORY}/{self.entity}/{stats_range}"
+class UserEntity(IncrementalStats, abc.ABC):
 
-    def get_bookkeeping_path(self, stats_range) -> str:
-        return f"{LISTENBRAINZ_USER_STATS_BOOKKEEPING_DIRECTORY}/{self.entity}/{stats_range}"
+    def get_base_path(self) -> str:
+        return LISTENBRAINZ_USER_STATS_DIRECTORY
 
-    def get_partial_aggregate_schema(self) -> StructType:
-        raise NotImplementedError()
-
-    def aggregate(self, table, cache_tables) -> DataFrame:
-        raise NotImplementedError()
+    def get_table_prefix(self) -> str:
+        return f"user_{self.entity}_{self.stats_range}"
 
     def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
         query = f"""
@@ -53,88 +29,39 @@ class UserEntity(abc.ABC):
         """
         return run_query(query)
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate) -> DataFrame:
-        raise NotImplementedError()
+    def generate_stats(self, top_entity_limit: int):
+        self.setup_cache_tables()
+        prefix = self.get_table_prefix()
 
-    def get_top_n(self, final_aggregate, N) -> DataFrame:
-        raise NotImplementedError()
+        if not self.partial_aggregate_usable():
+            self.create_partial_aggregate()
+            only_inc_users = False
+        else:
+            only_inc_users = True
 
-    def get_cache_tables(self) -> List[str]:
-        raise NotImplementedError()
+        partial_df = read_files_from_HDFS(self.get_existing_aggregate_path())
+        partial_table = f"{prefix}_existing_aggregate"
+        partial_df.createOrReplaceTempView(partial_table)
 
-    def generate_stats(self, stats_range: str, from_date: datetime,
-                       to_date: datetime, top_entity_limit: int):
-        cache_tables = []
-        for idx, df_path in enumerate(self.get_cache_tables()):
-            df_name = f"entity_data_cache_{idx}"
-            cache_tables.append(df_name)
-            read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
+        if self.incremental_dump_exists():
+            inc_df = self.create_incremental_aggregate()
+            inc_table = f"{prefix}_incremental_aggregate"
+            inc_df.createOrReplaceTempView(inc_table)
 
-        metadata_path = self.get_bookkeeping_path(stats_range)
-        try:
-            metadata = listenbrainz_spark \
-                .session \
-                .read \
-                .schema(BOOKKEEPING_SCHEMA) \
-                .json(f"{HDFS_CLUSTER_URI}{metadata_path}") \
-                .collect()[0]
-            existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
-            existing_aggregate_usable = existing_from_date.date() == from_date.date()
-        except AnalysisException:
-            existing_aggregate_usable = False
-            logger.info("Existing partial aggregate not found!")
+            if only_inc_users:
+                filtered_aggregate_df = self.filter_existing_aggregate(partial_table, inc_table)
+                filtered_table = f"{prefix}_filtered_aggregate"
+                filtered_aggregate_df.createOrReplaceTempView(filtered_table)
+            else:
+                filtered_table = partial_table
 
-        prefix = f"user_{self.entity}_{stats_range}"
-        existing_aggregate_path = self.get_existing_aggregate_path(stats_range)
-
-        only_inc_users = True
-
-        if not hdfs_connection.client.status(existing_aggregate_path, strict=False) or not existing_aggregate_usable:
-            table = f"{prefix}_full_listens"
-            get_listens_from_dump(from_date, to_date, include_incremental=False).createOrReplaceTempView(table)
-
-            logger.info("Creating partial aggregate from full dump listens")
-            hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
-            full_df = self.aggregate(table, cache_tables)
-            full_df.write.mode("overwrite").parquet(existing_aggregate_path)
-
-            hdfs_connection.client.makedirs(Path(metadata_path).parent)
-            metadata_df = listenbrainz_spark.session.createDataFrame(
-                [(from_date, to_date, datetime.now())],
-                schema=BOOKKEEPING_SCHEMA
-            )
-            metadata_df.write.mode("overwrite").json(metadata_path)
+            final_df = self.combine_aggregates(filtered_table, inc_table)
+        else:
+            final_df = partial_df
             only_inc_users = False
 
-        full_df = read_files_from_HDFS(existing_aggregate_path)
+        final_table = f"{prefix}_final_aggregate"
+        final_df.createOrReplaceTempView(final_table)
 
-        if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
-            table = f"{prefix}_incremental_listens"
-            read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
-                .createOrReplaceTempView(table)
-            inc_df = self.aggregate(table, cache_tables)
-        else:
-            inc_df = listenbrainz_spark.session.createDataFrame([], schema=self.get_partial_aggregate_schema())
-            only_inc_users = False
-
-        full_table = f"{prefix}_existing_aggregate"
-        full_df.createOrReplaceTempView(full_table)
-
-        inc_table = f"{prefix}_incremental_aggregate"
-        inc_df.createOrReplaceTempView(inc_table)
-
-        if only_inc_users:
-            existing_table = f"{prefix}_filtered_aggregate"
-            filtered_aggregate_df = self.filter_existing_aggregate(full_table, inc_table)
-            filtered_aggregate_df.createOrReplaceTempView(existing_table)
-        else:
-            existing_table = full_table
-
-        combined_df = self.combine_aggregates(existing_table, inc_table)
-        
-        combined_table = f"{prefix}_combined_aggregate"
-        combined_df.createOrReplaceTempView(combined_table)
-        results_df = self.get_top_n(combined_table, top_entity_limit)
-
-        return only_inc_users, results_df.toLocalIterator()
-    
+        results_df = self.get_top_n(final_table, top_entity_limit)
+        return self.from_date, self.to_date, only_inc_users, results_df.toLocalIterator()

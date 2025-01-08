@@ -11,25 +11,25 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class RecordingUserEntity(UserEntity):
 
-    def __init__(self):
-        super().__init__(entity="recordings")
+    def __init__(self, stats_range):
+        super().__init__(entity="recordings", stats_range=stats_range)
 
     def get_cache_tables(self) -> List[str]:
         return [RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('user_id', IntegerType(), nullable=False),
-            StructField('recording_name', StringType(), nullable=False),
-            StructField('recording_mbid', StringType(), nullable=True),
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_credit_mbids', ArrayType(StringType()), nullable=True),
-            StructField('release_name', StringType(), nullable=True),
-            StructField('release_mbid', StringType(), nullable=True),
-            StructField('artists', artists_column_schema, nullable=True),
-            StructField('caa_id', IntegerType(), nullable=True),
-            StructField('caa_release_mbid', StringType(), nullable=True),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("user_id", IntegerType(), nullable=False),
+            StructField("recording_name", StringType(), nullable=False),
+            StructField("recording_mbid", StringType(), nullable=True),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=True),
+            StructField("release_name", StringType(), nullable=True),
+            StructField("release_mbid", StringType(), nullable=True),
+            StructField("artists", artists_column_schema, nullable=True),
+            StructField("caa_id", IntegerType(), nullable=True),
+            StructField("caa_release_mbid", StringType(), nullable=True),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
     def aggregate(self, table, cache_tables):
