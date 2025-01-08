@@ -475,8 +475,9 @@ export default class AppleMusicPlayer
       <BrainzPlayerContext.Consumer>
         {(context) => {
           const { volume } = context;
-          if (this.appleMusicPlayer.player) {
-            this.appleMusicPlayer.player.volume = volume;
+          const player = this.appleMusicPlayer?.player;
+          if (player) {
+            player.volume = volume;
           }
           return <div>{this.getAlbumArt()}</div>;
         }}

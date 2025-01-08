@@ -83,7 +83,11 @@ function VolumeControlButton() {
   const handleVolumeChange = () => {
     dispatch({
       type: "VOLUME_CHANGE",
-      payload: volumeRef ? volumeRef.current.value : 100,
+      payload: volumeRef
+        ? volumeRef.current?.value
+          ? volumeRef.current.value
+          : 100
+        : 100,
     });
   };
   return (
