@@ -138,6 +138,7 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
                     </Link>
                   </td>
                   <td
+                    className="ellipsis-4-lines"
                     // eslint-disable-next-line react/no-danger
                     dangerouslySetInnerHTML={{
                       __html: playlist?.annotation || "",
