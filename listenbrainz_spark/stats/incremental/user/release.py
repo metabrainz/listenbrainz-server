@@ -10,23 +10,23 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class ReleaseUserEntity(UserEntity):
 
-    def __init__(self):
-        super().__init__(entity="releases")
+    def __init__(self, stats_range):
+        super().__init__(entity="releases", stats_range=stats_range)
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('user_id', IntegerType(), nullable=False),
-            StructField('release_name', StringType(), nullable=False),
-            StructField('release_mbid', StringType(), nullable=False),
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_credit_mbids', ArrayType(StringType()), nullable=False),
-            StructField('artists', artists_column_schema, nullable=True),
-            StructField('caa_id', IntegerType(), nullable=True),
-            StructField('caa_release_mbid', StringType(), nullable=True),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("user_id", IntegerType(), nullable=False),
+            StructField("release_name", StringType(), nullable=False),
+            StructField("release_mbid", StringType(), nullable=False),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=False),
+            StructField("artists", artists_column_schema, nullable=True),
+            StructField("caa_id", IntegerType(), nullable=True),
+            StructField("caa_release_mbid", StringType(), nullable=True),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
     def aggregate(self, table, cache_tables):
