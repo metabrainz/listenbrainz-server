@@ -137,7 +137,14 @@ def metadata_recording_post():
     recording metadata suitable for showing in a context that requires as much detail about
     a recording and the artist. Using the inc parameter, you can control which portions of metadata
     to fetch.
-       { "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", ... ], inc="artist tag" }
+
+
+    .. code-block:: json
+
+       {
+            "recording_mbids": [ "25d47b0c-5177-49db-b740-c166e4acebd1", "..." ],
+            "inc": "artist tag"
+       }
 
     To see what data this endpoint returns, please look at the data above for the GET version.
 
@@ -238,6 +245,11 @@ def get_mbid_mapping():
     This endpoint looks up mbid metadata for the given artist, recording and optionally a release name.
     The total number of characters in the artist name, recording name and release name query arguments should be
     less than or equal to :data:`~webserver.views.metadata_api.MAX_MAPPING_QUERY_LENGTH`.
+
+    The data returned by this endpoint can be seen here:
+
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_lookup_metadata_example.json
+       :language: json
 
     :param artist_name: artist name of the listen
     :type artist_name: ``str``
@@ -522,7 +534,7 @@ def metadata_artist():
 
     The data returned by this endpoint can be seen here:
 
-    .. literalinclude:: ../../../listenbrainz/testdata/mb_metadata_cache_example.json
+    .. literalinclude:: ../../../listenbrainz/testdata/mb_artist_metadata_example.json
        :language: json
 
     :param artist_mbids: A comma separated list of recording_mbids

@@ -36,6 +36,7 @@ import GlobalAppContext, {
 } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 jest.useFakeTimers({ advanceTimers: true });
 
@@ -67,7 +68,7 @@ const similarUsers = [
   },
 ];
 
-const followingFollowers = ["bob", "fnord"];
+const followingFollowers = ["jack", "fnord"];
 
 describe("<UserSocialNetwork />", () => {
   afterEach(() => {
@@ -93,9 +94,11 @@ describe("<UserSocialNetwork />", () => {
   it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
@@ -106,9 +109,11 @@ describe("<UserSocialNetwork />", () => {
     const consoleErrorSpy = jest.spyOn(console, "error");
     const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <UserSocialNetwork {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     const instance = wrapper
@@ -133,7 +138,7 @@ describe("<UserSocialNetwork />", () => {
     ];
     expect(instance.state.similarUsersList).toEqual(similarUsersInState);
 
-    const expectedFollowingFollowersState = ["bob", "fnord"];
+    const expectedFollowingFollowersState = ["jack", "fnord"];
     expect(instance.state.followerList).toEqual(
       expectedFollowingFollowersState
     );
@@ -145,9 +150,13 @@ describe("<UserSocialNetwork />", () => {
   describe("updateFollowingList", () => {
     it("updates the state when called with action follow", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -157,18 +166,27 @@ describe("<UserSocialNetwork />", () => {
       });
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
     });
 
     it("updates the state when called with action unfollow", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork
+                user={{
+                  id: 1,
+                  name: "iliekcomputers",
+                }}
+              />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -178,18 +196,49 @@ describe("<UserSocialNetwork />", () => {
       });
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "fnord" }, "unfollow");
       });
-      expect(instance.state.followingList).toEqual(["bob"]);
+      expect(instance.state.followingList).toEqual(["jack"]);
+    });
+
+    it("does nothing, when called with action unfollow when it's not your own account", async () => {
+      const wrapper = mount(
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
+      );
+      const instance = wrapper
+        .find(UserSocialNetwork)
+        .instance() as UserSocialNetwork;
+      await act(async () => {
+        await instance.componentDidMount();
+      });
+
+      // initial state after first fetch
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
+      await act(async () => {
+        instance.updateFollowingList({ name: "fnord" }, "unfollow");
+      });
+
+      // Since it's not your own account, it should not be removed from the following list
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
     });
 
     it("only allows adding a user once", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -200,20 +249,24 @@ describe("<UserSocialNetwork />", () => {
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
 
       // Ensure we can't add a user twice
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord", "Baldur"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
     });
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
       const wrapper = mount(
-        <BrowserRouter>
-          <UserSocialNetwork {...props} />
-        </BrowserRouter>
+        <GlobalAppContext.Provider value={globalContext}>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
+        </GlobalAppContext.Provider>
       );
       const instance = wrapper
         .find(UserSocialNetwork)
@@ -222,11 +275,11 @@ describe("<UserSocialNetwork />", () => {
         await instance.componentDidMount();
       });
 
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "unfollow");
       });
-      expect(instance.state.followingList).toEqual(["bob", "fnord"]);
+      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
     });
   });
 
@@ -237,9 +290,11 @@ describe("<UserSocialNetwork />", () => {
         <GlobalAppContext.Provider
           value={{ ...globalContext, currentUser: {} as ListenBrainzUser }}
         >
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper
@@ -252,9 +307,11 @@ describe("<UserSocialNetwork />", () => {
     it("returns false if user is not in followingList", async () => {
       const wrapper = mount(
         <GlobalAppContext.Provider value={globalContext}>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper
@@ -272,9 +329,11 @@ describe("<UserSocialNetwork />", () => {
     it("returns true if user is in followingList", async () => {
       const wrapper = mount<UserSocialNetwork>(
         <GlobalAppContext.Provider value={globalContext}>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
+          <ReactQueryWrapper>
+            <BrowserRouter>
+              <UserSocialNetwork {...props} />
+            </BrowserRouter>
+          </ReactQueryWrapper>
         </GlobalAppContext.Provider>
       );
       const instance = wrapper

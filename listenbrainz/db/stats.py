@@ -53,7 +53,7 @@ def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="use
             values: list with each item as stat for 1 user
             key: the key of the value to user as _id of the document
     """
-    with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
+    with start_span(op="processing", name="add _id, from_ts, to_ts and last_updated to docs"):
         for doc in values:
             doc["_id"] = str(doc[key])
             doc["key"] = doc[key]

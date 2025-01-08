@@ -46,6 +46,7 @@ Procedures
 * Reload service configuration: Update the RabbitMQ service details in consul configuration for LB and deploy a new image.
 * Restart service: Restart LB docker containers and each container will disconnect and reconnect to RabbitMQ.
 * Move service:
+
    * Create vhost, user, permissions, queues in the new instance
    * Stop LB producers (except the web and api containers)
    * Use shovels to transfer existing messages from old RabbitMQ instance to new one
@@ -53,6 +54,7 @@ Procedures
    * Deploy all consumers using the new image
    * Deploy all producers using the new image
    * Stop shovels
+
   There will be no data loss but a short downtime while the containers restart.
 * Remove service: LB cannot function without RabbitMQ. So the only way is to stop LB containers, and LB will become unavailable.
 
@@ -64,7 +66,9 @@ Implementation details
 * message protocol version: AMQP 0.9.1.
 * heartbeat timeout: client sets to 0, rabbitmq will use the server specified value.
 * ack mode:
+
    * producers do not use any ack mode.
    * auto ack: `spark-request-consumer-michael`
    * manual ack: all other consumers
+
 * Each connection identifies itself with RabbitMQ server by using the name of the docker container in which the service is running.

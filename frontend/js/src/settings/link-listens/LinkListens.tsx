@@ -172,6 +172,40 @@ export default function LinkListensPage() {
     }
   };
 
+  const openMultiTrackMappingModal = React.useCallback(
+    async (group: UnlinkedListens[], releaseName: string | null) => {
+      const matchedTracks: MatchingTracksResults = await NiceModal.show(
+        MultiTrackMBIDMappingModal,
+        {
+          unlinkedListens: group,
+          releaseName,
+        }
+      );
+      // Remove successfully matched items from the page
+      setUnlinkedListens((prevValue) =>
+        prevValue.filter((md) => !matchedTracks[md.recording_msid])
+      );
+      Object.entries(matchedTracks).forEach(([recordingMsid, track]) => {
+        // For deleting items from the BrainzPlayer queue, we need to use
+        // the metadata it was created from rather than the matched track metadata
+        const itemBeforeMatching = group.find(
+          ({ recording_msid }) => recordingMsid === recording_msid
+        );
+        if (itemBeforeMatching) {
+          // Remove the listen from the BrainzPlayer queue
+          dispatch({
+            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+            data: {
+              track: unlinkedListenDataToListen(itemBeforeMatching, user),
+              index: -1,
+            },
+          });
+        }
+      });
+    },
+    [dispatch, user]
+  );
+
   // Effects
   React.useEffect(() => {
     // Set the ?page search param in URL on startup if not set, as well as
@@ -215,15 +249,16 @@ export default function LinkListensPage() {
         first.
       </ReactTooltip>
       <p>
-        You will find below your top 1000 listens (grouped by album) that have
-        not been automatically linked
-        <FontAwesomeIcon
-          icon={faQuestionCircle}
-          size="sm"
+        You will find below your top 1000 listens (grouped by album) that
+        have&nbsp;
+        <u
+          className="link-listens-tooltip"
           data-tip
           data-for="matching-tooltip"
-        />{" "}
-        to a MusicBrainz recording. Link them below or&nbsp;
+        >
+          not been automatically linked
+        </u>
+        &nbsp; to a MusicBrainz recording. Link them below or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
         </a>
@@ -257,44 +292,8 @@ export default function LinkListensPage() {
                 className="btn btn-link btn-icon color-orange"
                 style={{ padding: "0", height: "initial" }}
                 type="button"
-                onClick={(e) => {
-                  NiceModal.show<MatchingTracksResults, any>(
-                    MultiTrackMBIDMappingModal,
-                    {
-                      unlinkedListens: group,
-                      releaseName,
-                    }
-                  ).then((matchedTracks) => {
-                    Object.entries(matchedTracks).forEach(
-                      ([recordingMsid, track]) => {
-                        // For deleting items from the BrainzPlayer queue, we need to use
-                        // the metadata it was created from rather than the matched track metadata
-                        const itemBeforeMatching = group.find(
-                          ({ recording_msid }) =>
-                            recordingMsid === recording_msid
-                        );
-                        if (itemBeforeMatching) {
-                          // Remove the listen from the BrainzPlayer queue
-                          dispatch({
-                            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-                            data: {
-                              track: unlinkedListenDataToListen(
-                                itemBeforeMatching,
-                                user
-                              ),
-                              index: -1,
-                            },
-                          });
-                        }
-                      }
-                    );
-                    // Remove successfully matched items from the page
-                    setUnlinkedListens((prevValue) =>
-                      prevValue.filter(
-                        (md) => !matchedTracks[md.recording_msid]
-                      )
-                    );
-                  });
+                onClick={() => {
+                  openMultiTrackMappingModal(group, releaseName);
                 }}
                 data-toggle="modal"
                 data-target="#MultiTrackMBIDMappingModal"
