@@ -252,6 +252,8 @@ export default class UserSocialNetwork extends React.Component<
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => {
+    const { currentUser } = this.context;
+    const { user: profileUser } = this.props;
     const { followingList } = this.state;
     const newFollowingList = [...followingList];
     const index = newFollowingList.findIndex(
@@ -260,7 +262,11 @@ export default class UserSocialNetwork extends React.Component<
     if (action === "follow" && index === -1) {
       newFollowingList.push(user.name);
     }
-    if (action === "unfollow" && index !== -1) {
+    if (
+      action === "unfollow" &&
+      index !== -1 &&
+      profileUser.name === currentUser?.name
+    ) {
       newFollowingList.splice(index, 1);
     }
     this.setState({ followingList: newFollowingList });

@@ -25,7 +25,7 @@
         .album-name, .artist-name {
           font-family: Inter, sans-serif;
           font-weight: 900;
-          color: {{ accent_color }}C;
+          color: {{ accent_color }};
         }
         .album-name {
           margin: 8px;
@@ -71,7 +71,7 @@
                 <tspan x="26" y="130">YEAR IN</tspan>
                 <tspan x="26" y="210">MUSIC</tspan>
             </text>
-            <line x1="26" y1="244" x2="244" y2="244" stroke="#4C6C52" stroke-width="8"/>
+            <line x1="26" y1="244" x2="244" y2="244" stroke="{{ accent_color }}" stroke-width="8"/>
         </g>
         {%- if album_2 -%}
             <g>
