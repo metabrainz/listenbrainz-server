@@ -65,7 +65,7 @@ export type SoundcloudPlayerState = {
 
 export type SoundCloudPlayerProps = DataSourceProps & {
   refreshSoundcloudToken: () => Promise<string>;
-};
+} & { volume: number };
 
 export default class SoundcloudPlayer
   extends React.Component<SoundCloudPlayerProps, SoundcloudPlayerState>
@@ -405,34 +405,28 @@ export default class SoundcloudPlayer
   };
 
   render() {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    this.soundcloudPlayer?.setVolume(volume / 100);
+
     return (
-      <BrainzPlayerContext.Consumer>
-        {(context) => {
-          const { volume } = context;
-          this.soundcloudPlayer?.setVolume(volume / 100);
-          return (
-            <div
-              className={`soundcloud ${!show ? "hidden" : ""}`}
-              data-testid={`soundcloud ${!show ? "hidden" : ""}`}
-            >
-              <iframe
-                id="soundcloud-iframe"
-                ref={this.iFrameRef}
-                title="Soundcloud player"
-                width="100%"
-                height="420px"
-                style={{ display: "none" }}
-                scrolling="no"
-                frameBorder="no"
-                allow="autoplay"
-                src="https://w.soundcloud.com/player/?auto_play=false"
-              />
-              <div>{this.getAlbumArt()}</div>
-            </div>
-          );
-        }}
-      </BrainzPlayerContext.Consumer>
+      <div
+        className={`soundcloud ${!show ? "hidden" : ""}`}
+        data-testid={`soundcloud ${!show ? "hidden" : ""}`}
+      >
+        <iframe
+          id="soundcloud-iframe"
+          ref={this.iFrameRef}
+          title="Soundcloud player"
+          width="100%"
+          height="420px"
+          style={{ display: "none" }}
+          scrolling="no"
+          frameBorder="no"
+          allow="autoplay"
+          src="https://w.soundcloud.com/player/?auto_play=false"
+        />
+        <div>{this.getAlbumArt()}</div>
+      </div>
     );
   }
 }

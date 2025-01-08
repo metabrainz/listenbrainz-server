@@ -3,7 +3,6 @@ import {
   faBarsStaggered,
   faFastBackward,
   faFastForward,
-  faVolumeUp,
   faHeart,
   faHeartCrack,
   faMusic,
@@ -83,11 +82,7 @@ function VolumeControlButton() {
   const handleVolumeChange = () => {
     dispatch({
       type: "VOLUME_CHANGE",
-      payload: volumeRef
-        ? volumeRef.current?.value
-          ? volumeRef.current.value
-          : 100
-        : 100,
+      data: volumeRef?.current?.value ?? 100,
     });
   };
   return (

@@ -1024,6 +1024,7 @@ export default function BrainzPlayer() {
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1046,6 +1047,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
           <YoutubePlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1069,6 +1071,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
           <SoundcloudPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1091,6 +1094,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
           <AppleMusicPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof

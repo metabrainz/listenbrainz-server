@@ -18,7 +18,6 @@ import {
   getArtistName,
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
@@ -38,7 +37,7 @@ const fixSpotifyPlayerStyleIssue = () => {
 
 export type SpotifyPlayerProps = DataSourceProps & {
   refreshSpotifyToken: () => Promise<string>;
-};
+} & { volume: number };
 
 export type SpotifyPlayerState = {
   currentSpotifyTrack?: SpotifyTrack;
@@ -613,18 +612,11 @@ export default class SpotifyPlayer
   };
 
   render() {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    this.spotifyPlayer?.setVolume(volume / 100);
     if (!show) {
       return null;
     }
-    return (
-      <BrainzPlayerContext.Consumer>
-        {(context) => {
-          const { volume } = context;
-          this.spotifyPlayer?.setVolume(volume / 100);
-          return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
-        }}
-      </BrainzPlayerContext.Consumer>
-    );
+    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
   }
 }

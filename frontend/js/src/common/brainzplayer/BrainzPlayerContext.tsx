@@ -86,7 +86,6 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
     | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
   data?: any;
-  payload?: any;
 };
 
 function valueReducer(
@@ -184,7 +183,7 @@ function valueReducer(
       };
     }
     case "VOLUME_CHANGE": {
-      return { ...state, volume: action.payload };
+      return { ...state, volume: action.data };
     }
     case "MOVE_AMBIENT_QUEUE_ITEM": {
       const { ambientQueue } = state;
