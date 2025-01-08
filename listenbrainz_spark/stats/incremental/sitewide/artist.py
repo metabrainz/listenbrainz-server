@@ -72,7 +72,7 @@ class AritstSitewideEntity(SitewideEntity):
             )
                 SELECT first(artist_name) AS artist_name
                      , artist_mbid
-                     , sum(listen_count) as total_listen_count
+                     , sum(listen_count) as listen_count
                   FROM intermediate_table
               GROUP BY lower(artist_name)
                      , artist_mbid
@@ -87,13 +87,13 @@ class AritstSitewideEntity(SitewideEntity):
             ), ordered_stats AS (
                 SELECT *
                   FROM {final_aggregate}
-              ORDER BY total_listen_count DESC
+              ORDER BY listen_count DESC
                  LIMIT {N}
             ), grouped_stats AS (
                 SELECT sort_array(
                             collect_list(
                                 struct(
-                                    total_listen_count AS listen_count
+                                    listen_count
                                   , artist_name
                                   , artist_mbid
                                 )

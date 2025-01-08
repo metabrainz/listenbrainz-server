@@ -105,7 +105,7 @@ class ReleaseSitewideEntity(SitewideEntity):
                      , artist_credit_mbids
                      , caa_id
                      , caa_release_mbid
-                     , sum(listen_count) as total_listen_count
+                     , sum(listen_count) as listen_count
                   FROM intermediate_table
               GROUP BY lower(release_name)
                      , release_mbid
@@ -124,13 +124,13 @@ class ReleaseSitewideEntity(SitewideEntity):
             ), ordered_stats AS (
                 SELECT *
                   FROM {final_aggregate}
-              ORDER BY total_listen_count DESC
+              ORDER BY listen_count DESC
                  LIMIT {N}
             ), grouped_stats AS (
                 SELECT sort_array(
                             collect_list(
                                 struct(
-                                    total_listen_count AS listen_count
+                                    listen_count
                                   , release_name
                                   , release_mbid
                                   , artist_name
