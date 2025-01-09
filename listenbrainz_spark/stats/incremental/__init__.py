@@ -1,11 +1,11 @@
 import abc
 from datetime import datetime
 from pathlib import Path
-from typing import List, Tuple, Iterator
+from typing import List
 
 from pyspark.errors import AnalysisException
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, Row
+from pyspark.sql.types import StructType
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
@@ -195,35 +195,3 @@ class IncrementalStats(abc.ABC):
         read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
             .createOrReplaceTempView(table)
         return self.aggregate(table, self._cache_tables)
-
-    def generate_stats(self, top_entity_limit: int) -> Tuple[datetime, datetime, Iterator[Row]]:
-        """
-        Generate statistics of the given type, entity and stats range.
-
-        Args:
-            top_entity_limit (int): The maximum number of top entities to retrieve.
-
-        Returns a tuple of the data range for which the stats were calculated alongside an iterator over the results.
-        """
-        self.setup_cache_tables()
-        prefix = self.get_table_prefix()
-
-        if not self.partial_aggregate_usable():
-            self.create_partial_aggregate()
-        partial_df = read_files_from_HDFS(self.get_existing_aggregate_path())
-        partial_table = f"{prefix}_existing_aggregate"
-        partial_df.createOrReplaceTempView(partial_table)
-
-        if self.incremental_dump_exists():
-            inc_df = self.create_incremental_aggregate()
-            inc_table = f"{prefix}_incremental_aggregate"
-            inc_df.createOrReplaceTempView(inc_table)
-            final_df = self.combine_aggregates(partial_table, inc_table)
-        else:
-            final_df = partial_df
-
-        final_table = f"{prefix}_final_aggregate"
-        final_df.createOrReplaceTempView(final_table)
-
-        results_df = self.get_top_n(final_table, top_entity_limit)
-        return self.from_date, self.to_date, results_df.toLocalIterator()
