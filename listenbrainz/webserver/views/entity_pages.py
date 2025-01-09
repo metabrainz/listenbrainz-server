@@ -111,14 +111,36 @@ def release_redirect(release_mbid):
 
 
 @artist_bp.route("/",  defaults={'path': ''})
-@artist_bp.route('/<path:path>/')
-def artist_page(path):
-    return render_template("index.html")
+@artist_bp.route("/<artist_mbid>/", methods=["GET"])
+def artist_page(artist_mbid:str):
+    og_meta_tags = None
+    if is_valid_uuid(artist_mbid) and artist_mbid not in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
+        artist_data = get_metadata_for_artist(ts_conn, [artist_mbid])
+        if len(artist_data) == 0:
+            pass
+        else:
+            artist = artist_data[0]
+            artist_name = artist.artist_data.get("name")
+            release_group_data = artist.release_group_data
+            release_group_mbids = [rg["mbid"] for rg in release_group_data]
+            popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
+            album_count = len(release_group_mbids)
+            total_listen_count = sum(rg["total_listen_count"] or 0 for rg in popularity_data)
+
+            og_meta_tags = {
+                "title": f'{artist_name}',
+                "description": f'Artist - {total_listen_count} listens — {album_count} albums — ListenBrainz',
+                "type": "profile",
+                "profile:username": artist_name,
+                "profile.gender": artist.artist_data.get("gender"),
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/artist/{artist.artist_mbid}',
+            }
+    return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
 @artist_bp.route("/<artist_mbid>/", methods=["POST"])
 @web_listenstore_needed
-def artist_entity(artist_mbid):
+def artist_entity(artist_mbid:str):
     """ Show a artist page with all their relevant information """
     # VA artist mbid
     if artist_mbid in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
