@@ -124,13 +124,15 @@ def artist_page(artist_mbid:str):
             artist_name = artist.artist_data.get("name")
             release_group_data = artist.release_group_data
             release_group_mbids = [rg["mbid"] for rg in release_group_data]
-            popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
             album_count = len(release_group_mbids)
-            total_listen_count = sum(rg["total_listen_count"] or 0 for rg in popularity_data)
+            listening_stats = get_entity_listener(db_conn, "artists", artist_mbid, "all_time")
+            total_listen_count = 0
+            if listening_stats and "total_listen_count" in listening_stats:
+                total_listen_count = number_readable(listening_stats["total_listen_count"] or 0)
 
             og_meta_tags = {
                 "title": f'{artist_name}',
-                "description": f'Artist - {number_readable(total_listen_count)} listens — {album_count} albums — ListenBrainz',
+                "description": f'Artist - {total_listen_count} listens — {album_count} albums — ListenBrainz',
                 "type": "profile",
                 "profile:username": artist_name,
                 "profile.gender": artist.artist_data.get("gender"),
