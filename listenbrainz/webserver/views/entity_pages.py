@@ -8,6 +8,7 @@ from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.utils import number_readable
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
@@ -129,7 +130,7 @@ def artist_page(artist_mbid:str):
 
             og_meta_tags = {
                 "title": f'{artist_name}',
-                "description": f'Artist - {total_listen_count} listens — {album_count} albums — ListenBrainz',
+                "description": f'Artist - {number_readable(total_listen_count)} listens — {album_count} albums — ListenBrainz',
                 "type": "profile",
                 "profile:username": artist_name,
                 "profile.gender": artist.artist_data.get("gender"),
