@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Iterator, Dict
 
+from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
 from listenbrainz_spark.stats import run_query
@@ -66,3 +67,15 @@ class ListeningActivitySitewideEntity(SitewideEntity):
               USING (time_range)
         """
         return run_query(query)
+
+    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+        message = {
+            "type": "sitewide_listening_activity",
+            "stats_range": self.stats_range,
+            "from_ts": int(self.from_date.timestamp()),
+            "to_ts": int(self.to_date.timestamp())
+        }
+        data = results.collect()[0]
+        _dict = data.asDict(recursive=True)
+        message["data"] = _dict["listening_activity"]
+        yield message
