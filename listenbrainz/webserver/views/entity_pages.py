@@ -268,7 +268,9 @@ def album_page(release_group_mbid:str):
                 "type": "music.album",
                 "music:musician": artist_name,
                 "music:release_date": release_group.get("release_group").get("date"),
-                "image": f'https://coverartarchive.org/release-group/{release_group_mbid}/front',
+                "image": f'https://coverartarchive.org/release-group/{release_group_mbid}/front-500',
+                "image:width": "500",
+                "image:alt": f"Cover art for {album_name}",
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/album/{release_group_mbid}',
             }
             
