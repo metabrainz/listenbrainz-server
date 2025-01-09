@@ -9,8 +9,8 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class ArtistUserEntity(UserEntity):
 
-    def __init__(self, stats_range):
-        super().__init__(entity="artists", stats_range=stats_range)
+    def  __init__(self, stats_range, database, message_type):
+        super().__init__(entity="artists", stats_range=stats_range, database=database, message_type=message_type)
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
