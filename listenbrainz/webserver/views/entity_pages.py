@@ -82,13 +82,13 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.route("/",  defaults={'path': ''})
-@release_bp.route('/<path:path>/')
+@release_bp.get("/",  defaults={'path': ''})
+@release_bp.get('/<path:path>/')
 def release_page(path):
     return render_template("index.html")
 
 
-@release_bp.route("/<release_mbid>/", methods=["POST"])
+@release_bp.post("/<release_mbid>/")
 @web_listenstore_needed
 def release_redirect(release_mbid):
     if not is_valid_uuid(release_mbid):
@@ -110,13 +110,13 @@ def release_redirect(release_mbid):
         return jsonify({"releaseGroupMBID": result["release_group_mbid"]})
 
 
-@artist_bp.route("/",  defaults={'path': ''})
-@artist_bp.route('/<path:path>/')
+@artist_bp.get("/",  defaults={'path': ''})
+@artist_bp.get('/<path:path>/')
 def artist_page(path):
     return render_template("index.html")
 
 
-@artist_bp.route("/<artist_mbid>/", methods=["POST"])
+@artist_bp.post("/<artist_mbid>/")
 @web_listenstore_needed
 def artist_entity(artist_mbid):
     """ Show a artist page with all their relevant information """
@@ -208,13 +208,13 @@ def artist_entity(artist_mbid):
     return jsonify(data)
 
 
-@album_bp.route("/",  defaults={'path': ''})
-@album_bp.route('/<path:path>/')
+@album_bp.get("/",  defaults={'path': ''})
+@album_bp.get('/<path:path>/')
 def album_page(path):
     return render_template("index.html")
 
 
-@album_bp.route("/<release_group_mbid>/", methods=["POST"])
+@album_bp.post("/<release_group_mbid>/")
 @web_listenstore_needed
 def album_entity(release_group_mbid):
     """ Show an album page with all their relevant information """
@@ -267,7 +267,7 @@ def album_entity(release_group_mbid):
     return jsonify(data)
 
 
-@release_group_bp.route("/",  defaults={'path': ''})
-@release_group_bp.route('/<path:path>/')
+@release_group_bp.get("/",  defaults={'path': ''})
+@release_group_bp.get('/<path:path>/')
 def release_group_redirect(path):
     return render_template("index.html")

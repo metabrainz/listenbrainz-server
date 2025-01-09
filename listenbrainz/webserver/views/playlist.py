@@ -10,8 +10,9 @@ import listenbrainz.db.playlist as db_playlist
 playlist_bp = Blueprint("playlist", __name__)
 
 
-@playlist_bp.route("/",  defaults={'playlist_mbid': ''})
-@playlist_bp.route('/<playlist_mbid>/', methods=["GET"])
+
+@playlist_bp.get("/",  defaults={'playlist_mbid': ''})
+@playlist_bp.get('/<playlist_mbid>/')
 def playlist_page(playlist_mbid: str):
     current_user_id = None
     og_meta_tags = None
@@ -33,7 +34,7 @@ def playlist_page(playlist_mbid: str):
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
-@playlist_bp.route("/<playlist_mbid>/", methods=["POST"])
+@playlist_bp.post("/<playlist_mbid>/")
 @web_listenstore_needed
 def load_playlist(playlist_mbid: str):
     """Load a single playlist by id
