@@ -11,6 +11,7 @@ from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.db.genre import load_genre_with_subgenres
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.views.user import TAG_HEIRARCHY_CACHE_KEY, TAG_HEIRARCHY_CACHE_EXPIRY
+from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -81,7 +82,7 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
         return None, None, None, None
 
     # 1. Current genre
-    current_genre = {"mbid": genre_mbid, "name": id_name_map[genre_mbid]}
+    current_genre = {"id": genre_mbid, "name": id_name_map[genre_mbid]}
 
     # 2. All children of the genre
     children = adj_matrix[genre_mbid]
@@ -110,7 +111,7 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
     siblings.discard(genre_mbid)
 
     def format_genre_list(genre_list: list) -> list:
-        return [{"mbid": genre, "name": id_name_map[genre]} for genre in genre_list]
+        return [{"id": genre, "name": id_name_map[genre]} for genre in genre_list]
 
     # Format parent graph data
     parent_graph = {
@@ -124,13 +125,11 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
         format_genre_list(siblings)
 
 
-@explore_bp.route("/genre-explorer/", methods=["POST"])
-def genre_explorer():
+@explore_bp.route("/genre-explorer/<genre_mbid>/", methods=["POST"])
+def genre_explorer(genre_mbid):
     """ Get genre explorer data """
-    # Get genre-mbid from request
-    genre_mbid = request.args.get("genre", "")
-    if not genre_mbid:
-        return jsonify({"error": "genre parameter is required"}), 400
+    if not is_valid_uuid(genre_mbid):
+        return jsonify({"error": "Provided genre ID is invalid: %s" % genre_mbid}), 400
 
     try:
         data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
