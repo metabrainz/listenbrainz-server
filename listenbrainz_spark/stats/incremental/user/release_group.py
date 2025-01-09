@@ -11,8 +11,8 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class ReleaseGroupUserEntity(UserEntity):
 
-    def __init__(self, stats_range):
-        super().__init__(entity="release_groups", stats_range=stats_range)
+    def  __init__(self, stats_range, database, message_type):
+        super().__init__(entity="release_groups", stats_range=stats_range, database=database, message_type=message_type)
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
