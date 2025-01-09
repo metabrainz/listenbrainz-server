@@ -13,7 +13,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
-export type AppleMusicPlayerProps = DataSourceProps & { volume: number };
+export type AppleMusicPlayerProps = DataSourceProps;
 
 export type AppleMusicPlayerState = {
   currentAppleMusicTrack?: MusicKit.MediaItem;
@@ -470,7 +470,7 @@ export default class AppleMusicPlayer
     const { show, volume } = this.props;
     const player = this.appleMusicPlayer;
     if (player) {
-      player.volume = volume / 100;
+      player.volume = (volume ?? 100) / 100;
     }
     if (!show) {
       return null;

@@ -29,6 +29,7 @@ import {
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
 import Queue from "./Queue";
+import VolumeControlButton from "./VolumeControlButton";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -75,30 +76,6 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
   );
 }
 
-function VolumeControlButton() {
-  const { volume } = useBrainzPlayerContext();
-  const dispatch = useBrainzPlayerDispatch();
-  const volumeRef = React.useRef<HTMLInputElement>(null);
-  const handleVolumeChange = () => {
-    dispatch({
-      type: "VOLUME_CHANGE",
-      data: volumeRef?.current?.value ?? 100,
-    });
-  };
-  return (
-    <input
-      ref={volumeRef}
-      onMouseUp={handleVolumeChange}
-      className="volume"
-      type="range"
-      defaultValue="100"
-      max="100"
-      min="0"
-      step="5"
-    />
-  );
-}
-
 function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const {
     currentDataSourceName,
@@ -112,7 +89,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const { currentUser } = React.useContext(GlobalAppContext);
 
   // BrainzPlayerContext
-  const { queueRepeatMode } = useBrainzPlayerContext();
+  const { queueRepeatMode, volume } = useBrainzPlayerContext();
   const dispatch = useBrainzPlayerDispatch();
 
   // const { currentListenFeedback } = this.state;
@@ -286,7 +263,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             disabled={disabled}
           />
         </div>
-        <VolumeControlButton />
+        <VolumeControlButton volume={volume} />
         <div className="actions">
           {isPlayingATrack && currentDataSourceName && (
             <a

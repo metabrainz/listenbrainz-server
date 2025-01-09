@@ -58,6 +58,7 @@ export type DataSourceTypes =
 
 export type DataSourceProps = {
   show: boolean;
+  volume?: number;
   playerPaused: boolean;
   onPlayerPausedChange: (paused: boolean) => void;
   onProgressChange: (progressMs: number) => void;

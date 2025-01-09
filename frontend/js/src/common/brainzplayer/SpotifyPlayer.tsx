@@ -37,7 +37,7 @@ const fixSpotifyPlayerStyleIssue = () => {
 
 export type SpotifyPlayerProps = DataSourceProps & {
   refreshSpotifyToken: () => Promise<string>;
-} & { volume: number };
+};
 
 export type SpotifyPlayerState = {
   currentSpotifyTrack?: SpotifyTrack;
@@ -316,7 +316,7 @@ export default class SpotifyPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
-    const { show } = this.props;
+    const { show, volume } = this.props;
     if (!show) {
       return;
     }
@@ -436,7 +436,7 @@ export default class SpotifyPlayer
       );
       return;
     }
-    const { refreshSpotifyToken } = this.props;
+    const { refreshSpotifyToken, volume } = this.props;
     const { spotifyAuth: spotifyUser = undefined } = this.context;
 
     this.spotifyPlayer = new window.Spotify.Player({
@@ -462,7 +462,7 @@ export default class SpotifyPlayer
           );
         }
       },
-      volume: 0.7, // Careful with this, now…
+      volume, // Careful with this, now…
     });
 
     // Error handling
@@ -613,7 +613,7 @@ export default class SpotifyPlayer
 
   render() {
     const { show, volume } = this.props;
-    this.spotifyPlayer?.setVolume(volume / 100);
+    this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
     if (!show) {
       return null;
     }

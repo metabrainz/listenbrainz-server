@@ -30,7 +30,7 @@ import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSetting
 export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
-} & { volume: number };
+};
 
 // For some reason Youtube types do not document getVideoData,
 // which we need to determine if there was no search results
@@ -359,7 +359,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
 
   render() {
     const { show, volume } = this.props;
-    this.youtubePlayer?.setVolume(volume);
+    this.youtubePlayer?.setVolume(volume ?? 100);
     const options: Options = {
       playerVars: {
         controls: 0,

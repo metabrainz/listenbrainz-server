@@ -65,7 +65,7 @@ export type SoundcloudPlayerState = {
 
 export type SoundCloudPlayerProps = DataSourceProps & {
   refreshSoundcloudToken: () => Promise<string>;
-} & { volume: number };
+};
 
 export default class SoundcloudPlayer
   extends React.Component<SoundCloudPlayerProps, SoundcloudPlayerState>
@@ -406,7 +406,7 @@ export default class SoundcloudPlayer
 
   render() {
     const { show, volume } = this.props;
-    this.soundcloudPlayer?.setVolume(volume / 100);
+    this.soundcloudPlayer?.setVolume((volume ?? 100) / 100);
 
     return (
       <div
