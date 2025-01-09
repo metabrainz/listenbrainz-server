@@ -5,35 +5,26 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.listener.entity import EntityListener
-from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 
 class ArtistEntityListener(EntityListener):
 
-    def __init__(self):
-        super().__init__(entity="artists")
+    def __init__(self, stats_range, database):
+        super().__init__(entity="artists", stats_range=stats_range, database=database, message_type="entity_listener")
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
     def get_partial_aggregate_schema(self):
         return StructType([
-            StructField('artist_name', StringType(), nullable=False),
-            StructField('artist_mbid', StringType(), nullable=True),
-            StructField('user_id', IntegerType(), nullable=False),
-            StructField('listen_count', IntegerType(), nullable=False),
+            StructField("artist_name", StringType(), nullable=False),
+            StructField("artist_mbid", StringType(), nullable=True),
+            StructField("user_id", IntegerType(), nullable=False),
+            StructField("listen_count", IntegerType(), nullable=False),
         ])
 
-    def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
-        query = f"""
-            WITH incremental_artists AS (
-                SELECT DISTINCT artist_mbid FROM {incremental_aggregate}
-            )
-            SELECT *
-              FROM {existing_aggregate} ea
-             WHERE EXISTS(SELECT 1 FROM incremental_artists iu WHERE iu.artist_mbid = ea.artist_mbid)
-        """
-        return run_query(query)
+    def get_entity_id(self):
+        return "artist_mbid"
 
     def aggregate(self, table, cache_tables):
         cache_table = cache_tables[0]

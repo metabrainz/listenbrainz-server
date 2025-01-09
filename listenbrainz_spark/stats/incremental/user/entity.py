@@ -1,5 +1,4 @@
 import abc
-import json
 import logging
 from datetime import date, datetime
 from typing import Optional, Iterator, Dict, Tuple
@@ -15,9 +14,7 @@ from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental import IncrementalStats
-from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
 from listenbrainz_spark.utils import read_files_from_HDFS
-
 
 logger = logging.getLogger(__name__)
 
@@ -47,17 +44,25 @@ class UserEntity(IncrementalStats, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"user_{self.entity}_{self.stats_range}"
 
+    def get_entity_id(self):
+        return "user_id"
+
+    def items_per_message(self):
+        """ Get the number of items to chunk per message """
+        return 25
+
     def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
+        entity_id = self.get_entity_id()
         query = f"""
             WITH incremental_users AS (
-                SELECT DISTINCT user_id FROM {incremental_aggregate}
+                SELECT DISTINCT {entity_id} FROM {incremental_aggregate}
             )
             SELECT *
               FROM {existing_aggregate} ea
-             WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.user_id = ea.user_id)
+             WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.{entity_id} = ea.{entity_id})
         """
         return run_query(query)
 
@@ -135,7 +140,7 @@ class UserEntity(IncrementalStats, abc.ABC):
         to_ts = int(self.to_date.timestamp())
 
         data = results.toLocalIterator()
-        for entries in chunked(data, USERS_PER_MESSAGE):
+        for entries in chunked(data, self.items_per_message()):
             multiple_user_stats = []
             for entry in entries:
                 row = entry.asDict(recursive=True)
