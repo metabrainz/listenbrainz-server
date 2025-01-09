@@ -1,19 +1,7 @@
-import json
 import logging
-from datetime import datetime, date
 from typing import Iterator, Optional, Dict
 
-from more_itertools import chunked
-from pydantic import ValidationError
-
-from data.model.common_stat_spark import UserStatRecords, StatMessage
-from data.model.user_listening_activity import ListeningActivityRecord
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.common.listening_activity import setup_time_range
 from listenbrainz_spark.stats.incremental.user.listening_activity import ListeningActivityUserEntity
-from listenbrainz_spark.stats.user import USERS_PER_MESSAGE
-from listenbrainz_spark.utils import get_listens_from_dump
-
 
 logger = logging.getLogger(__name__)
 
