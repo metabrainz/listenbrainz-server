@@ -34,7 +34,7 @@ def sizeof_readable(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yb', suffix)
 
-def number_readable(num):
+def number_readable(num:int):
     # Solution by rtaft from https://stackoverflow.com/a/45846841/4904467
     """ Converts a number to a short human-readable format (1.2K, 6.6M, etc.)"""
     suffixes = ['', 'K', 'M', 'B', 'T']
