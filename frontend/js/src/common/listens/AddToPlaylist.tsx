@@ -101,7 +101,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
               message={
                 <>
                   Successfully added <i>{trackToSend.title}</i> to playlist{" "}
-                  <Link to={playlistIdentifier}>{playlistName}</Link>
+                  <Link to={`/playlist/${playlistId}`}>{playlistName}</Link>
                 </>
               }
             />,
