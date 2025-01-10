@@ -1,7 +1,7 @@
 import abc
 import json
 import logging
-from datetime import date
+from datetime import date, datetime
 from typing import Optional, Iterator, Dict, Tuple
 
 from more_itertools import chunked
@@ -31,8 +31,9 @@ entity_model_map = {
 
 class UserEntity(IncrementalStats, abc.ABC):
 
-    def  __init__(self, entity: str, stats_range: str, database: Optional[str], message_type: Optional[str]):
-        super().__init__(entity, stats_range)
+    def  __init__(self, entity: str, stats_range: str = None, database: str = None, message_type: str = None,
+                  from_date: datetime = None, to_date: datetime = None):
+        super().__init__(entity, stats_range, from_date, to_date)
         if database:
             self.database = database
         else:
