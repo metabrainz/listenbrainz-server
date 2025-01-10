@@ -13,7 +13,7 @@ class EntityListener(UserEntity, abc.ABC):
 
     def __init__(self, entity: str, stats_range: str, database: Optional[str], message_type: Optional[str]):
         if not database:
-            database = f"{self.entity}_listeners_{self.stats_range}_{date.today().strftime('%Y%m%d')}"
+            database = f"{entity}_listeners_{stats_range}_{date.today().strftime('%Y%m%d')}"
         super().__init__(entity, stats_range, database, message_type)
 
     def get_table_prefix(self) -> str:
