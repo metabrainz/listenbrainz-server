@@ -29,4 +29,4 @@ class EntityListener(UserEntity, abc.ABC):
         return 10000
 
     def parse_one_user_stats(self, entry: dict):
-        raise entry
+        return entry
