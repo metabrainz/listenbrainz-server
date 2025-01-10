@@ -466,4 +466,4 @@ def index(user_name, path):
             "profile:username": user_name,
             "url": f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/',
         }
-    return render_template("index.html", og_meta_tags=og_meta_tags)
+    return render_template("index.html", og_meta_tags=og_meta_tags, user=user)
