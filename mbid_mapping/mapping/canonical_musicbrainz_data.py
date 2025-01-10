@@ -81,14 +81,6 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
         else:
             unlogged = True
 
-        # For some reason the tables are not being cleaned up.
-        if lb_conn is not None:
-            with lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-                curs.execute("DROP TABLE IF EXISTS mapping.canonical_release_redirect_tmp")
-                curs.execute("DROP TABLE IF EXISTS mapping.canonical_musicbrainz_data_release_support_tmp")
-                curs.execute("DROP TABLE IF EXISTS mapping.canonical_musicbrainz_data_tmp")
-                curs.execute("DROP TABLE IF EXISTS mapping.canonical_recording_redirect_tmp")
-
         # Setup all the needed objects
         releases = CanonicalRelease(mb_conn, unlogged=False)
         can = CanonicalRecordingRedirect(mb_conn, lb_conn, unlogged=unlogged)

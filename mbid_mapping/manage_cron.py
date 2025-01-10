@@ -68,7 +68,7 @@ def cron_build_mb_metadata_cache():
 
 
 @cli.command()
-@cron("build-all-mb-caches")
+@cron("build-mb-metadata-caches")
 def cron_build_all_mb_caches():
     """ Build all mb entity metadata cache and tables it depends on in production in appropriate
      databases. After building the cache, cleanup mbid_mapping table.
@@ -92,7 +92,7 @@ def cron_update_all_mb_caches():
 
 @cli.command()
 @cron("create-spotify-metadata-index")
-def build_cron_spotify_metadata_index(use_lb_conn):
+def cron_build_spotify_metadata_index():
     """
         Build the spotify metadata index that LB uses invoked via cron
     """
