@@ -42,15 +42,23 @@ class IncrementalStats(abc.ABC):
         is absent in incremental listens.
     """
 
-    def __init__(self, entity: str, stats_range: str):
+    def __init__(self, entity: str, stats_range: str = None, from_date: datetime = None, to_date: datetime = None):
         """
         Args:
             entity: The entity for which statistics are generated.
             stats_range: The statistics range to calculate the stats for.
+            from_date: date from which listens to use for this stat
+            to_date: date until which listens to use for this stat
+
+        If both from_date and to_date are specified, they will be used instead of stats_range.
         """
         self.entity = entity
-        self.stats_range = stats_range
-        self.from_date, self.to_date = get_dates_for_stats_range(stats_range)
+        if from_date and to_date:
+            self.stats_range = f"{self.from_date.strftime('%Y%m%d')}_{self.to_date.strftime('%Y%m%d')}"
+            self.from_date, self.to_date = from_date, to_date
+        else:
+            self.stats_range = stats_range
+            self.from_date, self.to_date = get_dates_for_stats_range(stats_range)
         self._cache_tables = []
 
     @abc.abstractmethod
@@ -145,7 +153,8 @@ class IncrementalStats(abc.ABC):
                 .json(f"{HDFS_CLUSTER_URI}{metadata_path}") \
                 .collect()[0]
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
-            existing_aggregate_fresh = existing_from_date.date() == self.from_date.date()
+            existing_aggregate_fresh = existing_from_date.date() == self.from_date.date() \
+                and existing_to_date.date() <= self.to_date.date()
         except AnalysisException:
             existing_aggregate_fresh = False
 
