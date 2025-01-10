@@ -15,9 +15,13 @@ logger = logging.getLogger(__name__)
 
 class ListeningActivityUserEntity(UserEntity):
 
-    def  __init__(self, stats_range, database, message_type):
-        super().__init__(entity="listening_activity", stats_range=stats_range, database=database, message_type=message_type)
-        self.from_date, self.to_date, _, __, self.spark_date_format = setup_time_range(stats_range)
+    def  __init__(self, stats_range, database, message_type, year=None):
+        super().__init__(
+            entity="listening_activity", stats_range=stats_range,
+            database=database, message_type=message_type
+        )
+        self.year = year
+        self.from_date, self.to_date, _, __, self.spark_date_format = setup_time_range(self.stats_range, self.year)
 
     def get_cache_tables(self) -> List[str]:
         return []

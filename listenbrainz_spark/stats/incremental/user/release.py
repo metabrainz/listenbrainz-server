@@ -10,8 +10,9 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class ReleaseUserEntity(UserEntity):
 
-    def  __init__(self, stats_range, database, message_type):
-        super().__init__(entity="releases", stats_range=stats_range, database=database, message_type=message_type)
+    def  __init__(self, stats_range, database, message_type, from_date, to_date):
+        super().__init__(entity="releases", stats_range=stats_range, database=database, message_type=message_type,
+                         from_date=from_date, to_date=to_date)
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME]
