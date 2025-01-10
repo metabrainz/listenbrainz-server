@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class DailyActivityUserEntity(UserEntity):
 
-    def  __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
+    def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
         super().__init__(
             entity="daily_activity", stats_range=stats_range, database=database,
             message_type=message_type, from_date=from_date, to_date=to_date
