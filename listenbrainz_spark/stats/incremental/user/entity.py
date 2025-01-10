@@ -31,7 +31,7 @@ entity_model_map = {
 
 class UserEntity(IncrementalStats, abc.ABC):
 
-    def  __init__(self, entity: str, stats_range: str = None, database: str = None, message_type: str = None,
+    def __init__(self, entity: str, stats_range: str = None, database: str = None, message_type: str = None,
                   from_date: datetime = None, to_date: datetime = None):
         super().__init__(entity, stats_range, from_date, to_date)
         if database:

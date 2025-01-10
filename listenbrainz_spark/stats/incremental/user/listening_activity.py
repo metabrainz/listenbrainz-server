@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ListeningActivityUserEntity(UserEntity):
 
-    def  __init__(self, stats_range, database, message_type, year=None):
+    def __init__(self, stats_range, database, message_type, year=None):
         super().__init__(
             entity="listening_activity", stats_range=stats_range,
             database=database, message_type=message_type
@@ -82,7 +82,7 @@ class ListeningActivityUserEntity(UserEntity):
                FROM time_range
           LEFT JOIN {final_aggregate}
               USING (time_range)
-           GROUP BY user_id 
+           GROUP BY user_id
         """
         return run_query(query)
 

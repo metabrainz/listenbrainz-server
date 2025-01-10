@@ -11,7 +11,7 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 class RecordingUserEntity(UserEntity):
 
-    def  __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
+    def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
         super().__init__(entity="recordings", stats_range=stats_range, database=database, message_type=message_type,
                          from_date=from_date, to_date=to_date)
 
@@ -93,7 +93,7 @@ class RecordingUserEntity(UserEntity):
                      , caa_id
                      , caa_release_mbid
                      , listen_count
-                  FROM {incremental_aggregate}     
+                  FROM {incremental_aggregate}
             )
                 SELECT user_id
                      , first(recording_name) AS recording_name
