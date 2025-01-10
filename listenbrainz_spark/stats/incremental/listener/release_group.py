@@ -94,7 +94,7 @@ class ReleaseGroupEntityListener(EntityListener):
                      , caa_release_mbid
                      , user_id
                      , listen_count
-                  FROM {incremental_aggregate}     
+                  FROM {incremental_aggregate}
             )
                 SELECT release_group_mbid
                      , release_group_name
@@ -130,7 +130,7 @@ class ReleaseGroupEntityListener(EntityListener):
                  , artist_credit_mbids AS artist_mbids
                  , caa_id
                  , caa_release_mbid
-                 , user_id 
+                 , user_id
                  , listen_count
                  , row_number() OVER (PARTITION BY release_group_mbid ORDER BY listen_count DESC) AS rank
               FROM {final_aggregate}
@@ -145,7 +145,7 @@ class ReleaseGroupEntityListener(EntityListener):
                         collect_list(
                             struct(
                                 listen_count
-                              , user_id 
+                              , user_id
                             )
                         )
                         , false

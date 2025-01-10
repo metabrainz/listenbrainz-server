@@ -65,7 +65,7 @@ class ArtistEntityListener(EntityListener):
                      , artist_name
                      , artist_mbid
                      , listen_count
-                  FROM {incremental_aggregate}     
+                  FROM {incremental_aggregate}
             )
                 SELECT artist_mbid
                      , artist_name
@@ -85,11 +85,11 @@ class ArtistEntityListener(EntityListener):
                      , SUM(listen_count) as total_listen_count
                      , COUNT(DISTINCT user_id) as total_user_count
                   FROM {final_aggregate}
-              GROUP BY artist_mbid      
+              GROUP BY artist_mbid
             ), ranked_stats as (
                 SELECT artist_mbid
                      , artist_name
-                     , user_id 
+                     , user_id
                      , listen_count
                      , row_number() OVER (PARTITION BY artist_mbid ORDER BY listen_count DESC) AS rank
                   FROM {final_aggregate}
@@ -100,7 +100,7 @@ class ArtistEntityListener(EntityListener):
                             collect_list(
                                 struct(
                                     listen_count
-                                  , user_id 
+                                  , user_id
                                 )
                             )
                             , false
