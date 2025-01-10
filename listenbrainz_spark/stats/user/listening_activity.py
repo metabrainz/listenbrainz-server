@@ -5,6 +5,7 @@ from listenbrainz_spark.stats.incremental.user.listening_activity import Listeni
 
 logger = logging.getLogger(__name__)
 
+
 def get_listening_activity(stats_range: str, database: str = None)\
         -> Iterator[Optional[Dict]]:
     """ Compute the number of listens for a time range compared to the previous range
