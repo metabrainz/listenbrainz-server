@@ -6,6 +6,7 @@ import {
   faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { ToastMsg } from "../../notifications/Notifications";
 import { PLAYLIST_URI_PREFIX, listenToJSPFTrack } from "../../playlists/utils";
@@ -100,7 +101,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
               message={
                 <>
                   Successfully added <i>{trackToSend.title}</i> to playlist{" "}
-                  <a href={playlistIdentifier}>{playlistName}</a>
+                  <Link to={playlistIdentifier}>{playlistName}</Link>
                 </>
               }
             />,
