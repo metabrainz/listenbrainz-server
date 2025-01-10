@@ -89,6 +89,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
           throw new Error(`No identifier for playlist ${playlistName}`);
         }
         const playlistId = playlistIdentifier?.replace(PLAYLIST_URI_PREFIX, "");
+        const playlistUrl = new URL(playlistIdentifier)
         const status = await APIService.addPlaylistItems(
           currentUser.auth_token,
           playlistId,
@@ -101,7 +102,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
               message={
                 <>
                   Successfully added <i>{trackToSend.title}</i> to playlist{" "}
-                  <Link to={playlistIdentifier}>{playlistName}</Link>
+                  <Link to={playlistUrl.pathname}>{playlistName}</Link>
                 </>
               }
             />,
