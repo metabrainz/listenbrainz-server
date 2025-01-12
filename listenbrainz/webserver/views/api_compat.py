@@ -24,7 +24,7 @@ from listenbrainz.webserver import timescale_connection, db_conn
 api_bp = Blueprint('api_compat', __name__)
 
 
-@api_bp.route('/api/auth/', methods=['GET'])
+@api_bp.get('/api/auth/')
 @ratelimit()
 @login_required
 def api_auth():
@@ -35,7 +35,7 @@ def api_auth():
     )
 
 
-@api_bp.route('/api/auth/', methods=['POST'])
+@api_bp.post('/api/auth/')
 @ratelimit()
 @login_required
 def api_auth_approve():

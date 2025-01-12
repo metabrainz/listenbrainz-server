@@ -42,7 +42,7 @@ def index(path):
     return render_template("index.html", user=current_user)
 
 
-@user_bp.route("/<user_name>/", methods=['POST'])
+@user_bp.post("/<user_name>/")
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -118,9 +118,9 @@ def profile(user_name):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/stats/top-artists/", methods=['POST'])
-@user_bp.route("/<user_name>/stats/top-albums/", methods=['POST'])
-@user_bp.route("/<user_name>/stats/top-tracks/", methods=['POST'])
+@user_bp.post("/<user_name>/stats/top-artists/")
+@user_bp.post("/<user_name>/stats/top-albums/")
+@user_bp.post("/<user_name>/stats/top-tracks/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -140,7 +140,7 @@ def charts(user_name):
     return jsonify(props)
 
 
-@user_bp.route("/<user_name>/stats/", methods=['POST'])
+@user_bp.post("/<user_name>/stats/")
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -160,7 +160,7 @@ def stats(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/playlists/", methods=['POST'])
+@user_bp.post("/<user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
@@ -194,7 +194,7 @@ def playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/recommendations/", methods=['POST'])
+@user_bp.post("/<user_name>/recommendations/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -235,7 +235,7 @@ def recommendation_playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/report-user/", methods=['POST'])
+@user_bp.post("/<user_name>/report-user/")
 @api_login_required
 def report_abuse(user_name):
     data = request.json
@@ -279,7 +279,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.route("/<user_name>/taste/", methods=['POST'])
+@user_bp.post("/<user_name>/taste/")
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -401,8 +401,8 @@ def process_genre_data(yim_top_genre: list, data: list, user_name: str):
     }
 
 
-@user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
-@user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
+@user_bp.post("/<user_name>/year-in-music/")
+@user_bp.post("/<user_name>/year-in-music/<int:year>/")
 def year_in_music(user_name, year: int = 2024):
     """ Year in Music """
     if year not in (2021, 2022, 2023, 2024):
@@ -445,8 +445,8 @@ def year_in_music(user_name, year: int = 2024):
     })
 
 
-@user_bp.route("/<user_name>/",  defaults={'path': ''})
-@user_bp.route('/<user_name>/<path:path>/')
+@user_bp.get("/<user_name>/",  defaults={'path': ''})
+@user_bp.get('/<user_name>/<path:path>/')
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)
