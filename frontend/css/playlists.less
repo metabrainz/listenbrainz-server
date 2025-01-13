@@ -1,10 +1,47 @@
 @playlistBackgroundColor: #fafafa;
 @descriptionLines: 3;
 
+#playlists-page .playlist-view-options {
+  display: flex;
+  margin-top: 0.8rem;
+  gap: 1rem;
+
+  .playlist-sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
 #playlists-container {
   display: flex;
   flex-wrap: wrap;
   padding-top: 1em;
+
+  &.list-view {
+    flex-direction: column;
+  }
+
+  /* Pure CSS multiline ellipsis by Sagi Shrieber:
+			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
+			*/
+  .description {
+    overflow: hidden;
+    position: relative;
+    line-height: 1.2em;
+    max-height: @descriptionLines * 1.2em;
+    text-align: justify;
+    padding-right: 2em;
+    display: -webkit-box;
+    line-clamp: @descriptionLines;
+    margin-top: 0.5rem;
+    -webkit-line-clamp: @descriptionLines;
+    -webkit-box-orient: vertical;
+
+    p {
+      margin-bottom: 0;
+    }
+  }
 
   .playlist {
     margin: 0.5em;
@@ -40,33 +77,85 @@
           margin: 0;
         }
       }
+    }
+  }
 
-      /* Pure CSS multiline ellipsis by Sagi Shrieber:
-			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
-			*/
-      .description {
-        overflow: hidden;
-        position: relative;
-        line-height: 1.2em;
-        max-height: @descriptionLines * 1.2em;
-        text-align: justify;
-        padding-right: 2em;
-        &:before {
-          content: "...";
-          position: absolute;
-          right: 1em;
-          bottom: 0;
-        }
-        &:after {
-          content: "";
-          position: absolute;
-          right: 0;
-          width: 1em;
-          height: 1em;
-          margin-top: 0.2em;
-          background-color: inherit;
+  .playlist-card-list-view {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    min-height: 8rem;
+    border-radius: 10px;
+    gap: 3rem;
+
+    @media (max-width: 640px) {
+      gap: 0;
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    .playlist-card-container {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      gap: 0.8rem;
+
+      .playlist-info {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+
+        .playlist-index {
+          min-width: 2rem;
+          text-align: right;
+          font-weight: bold;
         }
       }
+    }
+
+    .playlist-info-content {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1rem;
+
+      @media (min-width: 640px) {
+        margin-bottom: 0;
+      }
+
+      .playlist-title {
+        font-size: 1.75rem;
+        a {
+          font-weight: 500;
+          color: #353070;
+          text-decoration: none;
+        }
+      }
+    }
+
+    .playlist-more-info {
+      align-self: center;
+      flex-shrink: 0;
+
+      .playlist-stats {
+        display: flex;
+        flex-direction: column;
+
+        .playlist-date {
+          color: #6b7280;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+      }
+    }
+
+    .playlist-actions {
+      align-self: center;
+      margin: 1rem;
     }
   }
 }
@@ -81,6 +170,11 @@
   height: initial !important;
   color: white;
   text-align: center;
+
+  &.list-view {
+    width: auto;
+  }
+
   > div {
     display: flex;
     flex-direction: column;
@@ -136,11 +230,4 @@
   display: block;
   align-self: center;
   min-width: 3em;
-}
-
-.playlist-sort-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.8em;
 }
