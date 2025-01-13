@@ -256,7 +256,7 @@ export default class UserPlaylists extends React.Component<
                 onClick={() => this.setState({ view: PlaylistView.GRID })}
                 title="Grid view"
               >
-                <FontAwesomeIcon icon={faGrid} />
+                <FontAwesomeIcon icon={faGrid} fixedWidth />
               </Pill>
               <Pill
                 active={view === PlaylistView.LIST}
@@ -264,7 +264,7 @@ export default class UserPlaylists extends React.Component<
                 onClick={() => this.setState({ view: PlaylistView.LIST })}
                 title="List view"
               >
-                <FontAwesomeIcon icon={faStacked} />
+                <FontAwesomeIcon icon={faStacked} fixedWidth />
               </Pill>
             </div>
           </div>

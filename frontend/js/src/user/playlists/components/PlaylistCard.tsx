@@ -29,6 +29,7 @@ export type PlaylistCardProps = {
   onPlaylistDeleted: (playlist: JSPFPlaylist) => void;
   showOptions: boolean;
   view: PlaylistView;
+  page: number;
   index: number;
 };
 
@@ -36,6 +37,7 @@ export default function PlaylistCard({
   playlist,
   view,
   index,
+  page,
   onSuccessfulCopy,
   onPlaylistEdited,
   onPlaylistDeleted,
@@ -122,7 +124,7 @@ export default function PlaylistCard({
           role="presentation"
         >
           <div className="playlist-info">
-            <div className="playlist-index">{index + 1}</div>
+            <div className="playlist-index">{index + 1 + (page - 1) * 25}</div>
             <div className="playlist-info-content">
               <div className="playlist-title">
                 <Link to={`/playlist/${sanitize(playlistId)}/`}>

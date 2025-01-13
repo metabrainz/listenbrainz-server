@@ -52,6 +52,7 @@ export default function PlaylistsList(
           return (
             <PlaylistCard
               view={view}
+              page={page}
               showOptions={activeSection !== PlaylistType.recommendations}
               playlist={playlist}
               onSuccessfulCopy={onCopiedPlaylist ?? noop}
