@@ -52,14 +52,13 @@ export default function PlaylistsList(
           return (
             <PlaylistCard
               view={view}
-              page={page}
               showOptions={activeSection !== PlaylistType.recommendations}
               playlist={playlist}
               onSuccessfulCopy={onCopiedPlaylist ?? noop}
               onPlaylistEdited={onPlaylistEdited}
               onPlaylistDeleted={onPlaylistDeleted}
               key={playlist.identifier}
-              index={index}
+              index={index + (page - 1) * 25}
             />
           );
         })}
