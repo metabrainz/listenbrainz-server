@@ -74,8 +74,8 @@ export default function UserReports() {
         NiceModal.show(StatsExplanationsModal);
       }}
     >
-      <FontAwesomeIcon icon={faInfoCircle} />
-      &nbsp; How and when are statistics calculated?
+      <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: "0.5rem" }} />
+      How and when are statistics calculated?
     </button>
   );
 

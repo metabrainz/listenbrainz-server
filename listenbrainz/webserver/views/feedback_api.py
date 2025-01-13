@@ -21,7 +21,7 @@ feedback_api_bp = Blueprint('feedback_api_v1', __name__)
 FEEDBACK_DEFAULT_SCORE = 0
 
 
-@feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
+@feedback_api_bp.post("/recording-feedback")
 @crossdomain
 @ratelimit()
 def recording_feedback():
@@ -71,7 +71,7 @@ def recording_feedback():
     return jsonify({'status': 'ok'})
 
 
-@feedback_api_bp.route("/user/<user_name>/get-feedback", methods=["GET"])
+@feedback_api_bp.get("/user/<user_name>/get-feedback")
 @crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
@@ -125,7 +125,7 @@ def get_feedback_for_user(user_name):
     })
 
 
-@feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
+@feedback_api_bp.get("/recording/<recording_mbid>/get-feedback-mbid")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recording_mbid(recording_mbid):
@@ -149,7 +149,7 @@ def get_feedback_for_recording_mbid(recording_mbid):
     return _get_feedback_for_recording("recording_mbid", recording_mbid)
 
 
-@feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
+@feedback_api_bp.get("/recording/<recording_msid>/get-feedback")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recording_msid(recording_msid):
@@ -298,7 +298,7 @@ def get_feedback_for_recordings_for_user_get(user_name):
 
 
 
-@feedback_api_bp.route("/import", methods=["POST", "OPTIONS"])
+@feedback_api_bp.post("/import")
 @crossdomain
 @ratelimit()
 def import_feedback():
