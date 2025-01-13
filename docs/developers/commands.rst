@@ -5,6 +5,7 @@ Scripts
 We have a bunch of python scripts to execute common tasks.
 
 .. note::
+
     During development, you can use :code:`./develop.sh manage ...` to execute
     the commands. In production, the command should be run inside the appropriate
     container using :code:`python manage.py ...`.

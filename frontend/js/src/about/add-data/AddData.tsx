@@ -5,7 +5,7 @@ export default function AddData() {
   return (
     <>
       <h2 className="page-title">Adding your data to Listenbrainz</h2>
-      <h3>Submitting Listens</h3>
+      <h3>Submit Listens</h3>
       <p>Submit your listening history to ListenBrainz.</p>
       <h4>Music players</h4>
       <ul>
@@ -367,17 +367,17 @@ export default function AddData() {
         </li>
       </ul>
 
-      <h3>Submitting via Spotify</h3>
-      <p>Automatically submit your Spotify listens.</p>
+      <h3>Submit from Spotify and Last.fm</h3>
+      <p>Automatically submit your Spotify or Last.fm listens.</p>
       <p>
-        Importing the same listens from two different sources, such as Last.FM
+        Submitting the same listens from two different sources, such as Last.FM
         and Spotify, may cause duplicates in your listen history. When you opt
         into automatic Spotify submissions you may notice duplicates for your
-        last 50 listens on Spotify.
+        last 50 Spotify listens.
       </p>
       <p>
         <Link to="/settings/music-services/details/">
-          Connect your Spotify account to ListenBrainz
+          Connect your Spotify or Last.fm account to ListenBrainz
         </Link>
       </p>
 

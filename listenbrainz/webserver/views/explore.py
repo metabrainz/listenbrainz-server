@@ -8,7 +8,7 @@ from listenbrainz.webserver import db_conn, ts_conn
 explore_bp = Blueprint('explore', __name__)
 
 
-@explore_bp.route("/similar-users/", methods=['POST'])
+@explore_bp.post("/similar-users/")
 def similar_users():
     """ Show all of the users with the highest similarity in order to make
         them visible to all of our users. This view can show bugs in the algorithm
@@ -22,7 +22,7 @@ def similar_users():
     })
 
 
-@explore_bp.route("/music-neighborhood/", methods=['POST'])
+@explore_bp.post("/music-neighborhood/")
 def artist_similarity():
     """ Explore artist similarity """
 
@@ -42,14 +42,14 @@ def artist_similarity():
     return jsonify(data)
 
 
-@explore_bp.route("/ai-brainz/")
+@explore_bp.get("/ai-brainz/")
 def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template("index.html")
 
 
-@explore_bp.route("/lb-radio/", methods=["POST"])
+@explore_bp.post("/lb-radio/")
 def lb_radio():
     """ LB Radio view
 
@@ -82,8 +82,8 @@ def lb_radio():
     return jsonify(data)
 
 
-@explore_bp.route('/', defaults={'path': ''})
-@explore_bp.route('/<path:path>/')
+@explore_bp.get('/', defaults={'path': ''})
+@explore_bp.get('/<path:path>/')
 def index(path):
     """ Main explore page for users to browse the various explore features """
 

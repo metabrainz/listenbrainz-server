@@ -130,17 +130,31 @@ def fetch_data(prefix: str, user_id: int):
     return None
 
 
+def fetch_exact_data(database: str, document_id: str):
+    """ Retrieve data from couchdb for the exact given database and document id.
+    Args:
+         database: the database name to retrieve data from
+         document_id: the document_id to retrieve data for
+    """
+    base_url = get_base_url()
+    document_url = f"{base_url}/{database}/{document_id}"
+    response = requests.get(document_url)
+    if response.status_code == 404:
+        return None
+    return response.json()
+
+
 def insert_data(database: str, data: list[dict]):
     """ Insert the given data into the specified database. """
-    with start_span(op="serializing", description="serialize data to json"):
+    with start_span(op="serializing", name="serialize data to json"):
         docs = orjson.dumps({"docs": data})
 
-    with start_span(op="http", description="insert docs in couchdb using api"):
+    with start_span(op="http", name="insert docs in couchdb using api"):
         couchdb_url = f"{get_base_url()}/{database}/_bulk_docs"
         response = requests.post(couchdb_url, data=docs, headers={"Content-Type": "application/json"})
         response.raise_for_status()
 
-    with start_span(op="deserializing", description="checking response for conflicts"):
+    with start_span(op="deserializing", name="checking response for conflicts"):
         conflict_doc_ids = []
         for doc_status in response.json():
             if doc_status.get("error") == "conflict":
@@ -151,7 +165,7 @@ def insert_data(database: str, data: list[dict]):
 
         conflict_docs = orjson.dumps({"docs": [{"id": doc_id} for doc_id in conflict_doc_ids]})
 
-    with start_span(op="http", description="retrieving conflicts from database"):
+    with start_span(op="http", name="retrieving conflicts from database"):
         response = requests.post(
             f"{get_base_url()}/{database}/_bulk_get",
             data=conflict_docs,
@@ -159,7 +173,7 @@ def insert_data(database: str, data: list[dict]):
         )
         response.raise_for_status()
 
-    with start_span(op="deserializing", description="processing conflicting revisions"):
+    with start_span(op="deserializing", name="processing conflicting revisions"):
         revs_map = {}
         for result in response.json()["results"]:
             existing_doc = result["docs"][0]["ok"]
@@ -171,12 +185,21 @@ def insert_data(database: str, data: list[dict]):
                 doc["_rev"] = revs_map[doc["_id"]]
             docs_to_update.append(doc)
 
-    with start_span(op="serializing", description="serialize conflicting docs to update"):
+    with start_span(op="serializing", name="serialize conflicting docs to update"):
         docs_to_update = orjson.dumps({"docs": docs_to_update})
 
-    with start_span(op="http", description="retry updating conflicts in database"):
+    with start_span(op="http", name="retry updating conflicts in database"):
         response = requests.post(couchdb_url, data=docs_to_update, headers={"Content-Type": "application/json"})
         response.raise_for_status()
+
+
+def try_insert_data(database: str, data: list[dict]):
+    """ Try to insert data in the database if it exists, otherwise create the database and try again. """
+    try:
+        insert_data(database, data)
+    except Exception:
+        create_database(database)
+        insert_data(database, data)
 
 
 def delete_data(database: str, doc_id: int | str):

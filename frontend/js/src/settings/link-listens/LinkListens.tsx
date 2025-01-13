@@ -2,7 +2,11 @@
 
 import * as React from "react";
 
-import { faLink, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faLink,
+  faQuestionCircle,
+  faTrashAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
@@ -12,6 +16,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { groupBy, isNil, isNull, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
+import ReactTooltip from "react-tooltip";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
@@ -26,26 +31,26 @@ import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { RouteQuery } from "../../utils/Loader";
 
-export type MissingMBDataProps = {
-  missingData?: Array<MissingMBData>;
+export type LinkListensProps = {
+  unlinkedListens?: Array<UnlinkedListens>;
   user: ListenBrainzUser;
 };
 
-type MissingMBDataLoaderData = {
-  missing_data?: Array<MissingMBData>;
+type LinkListensLoaderData = {
+  unlinked_listens?: Array<UnlinkedListens>;
   last_updated?: string | null;
 };
 
-export interface MissingMBDataState {
-  missingData: Array<MissingMBData>;
-  groupedMissingData: Array<MissingMBData[]>;
+export interface LinkListensState {
+  unlinkedListens: Array<UnlinkedListens>;
+  groupedUnlinkedListens: Array<UnlinkedListens[]>;
   deletedListens: Array<string>; // array of recording_msid of deleted items
   currPage: number;
   loading: boolean;
 }
 
-export function missingDataToListen(
-  data: MissingMBData,
+export function unlinkedListenDataToListen(
+  data: UnlinkedListens,
   user: ListenBrainzUser
 ): Listen {
   return {
@@ -64,59 +69,64 @@ export function missingDataToListen(
 
 const EXPECTED_ITEMS_PER_PAGE = 25;
 
-export default function MissingMBDataPage() {
+export default function LinkListensPage() {
   // Context
   const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
   const dispatch = useBrainzPlayerDispatch();
   const location = useLocation();
   // Loader
-  const { data: loaderData, isLoading } = useQuery<MissingMBDataLoaderData>(
-    RouteQuery(["missing-data"], location.pathname)
+  const { data: loaderData, isLoading } = useQuery<LinkListensLoaderData>(
+    RouteQuery(["link-listens"], location.pathname)
   );
-  const { missing_data: missingDataProps = [], last_updated: lastUpdated } =
-    loaderData || {};
+  const {
+    unlinked_listens: unlinkedListensProps = [],
+    last_updated: lastUpdated,
+  } = loaderData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
 
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
-  const [missingData, setMissingData] = React.useState<Array<MissingMBData>>(
-    missingDataProps
+  const [unlinkedListens, setUnlinkedListens] = React.useState<
+    Array<UnlinkedListens>
+  >(unlinkedListensProps);
+  const unsortedGroupedUnlinkedListens = groupBy(
+    unlinkedListens,
+    "release_name"
   );
-  const unsortedGroupedMissingData = groupBy(missingData, "release_name");
   // remove and store a catchall group with no release name
-  const noReleaseNameGroup = pick(unsortedGroupedMissingData, "null");
+  const noReleaseNameGroup = pick(unsortedGroupedUnlinkedListens, "null");
   if (size(noReleaseNameGroup) > 0) {
     // remove catchall group from other groups,
     // we want to add it at the very end
-    delete unsortedGroupedMissingData.null;
+    delete unsortedGroupedUnlinkedListens.null;
   }
-  const sortedMissingDataGroups = sortBy(
-    unsortedGroupedMissingData,
+  const sortedUnlinkedListensGroups = sortBy(
+    unsortedGroupedUnlinkedListens,
     "length"
   ).reverse();
   if (noReleaseNameGroup.null?.length) {
     // re-add the group with no release name at the end,
     // will be displayed as single listens rather than a group
-    sortedMissingDataGroups.push(noReleaseNameGroup.null);
+    sortedUnlinkedListensGroups.push(noReleaseNameGroup.null);
   }
 
   // Pagination
   const currPage = isNull(pageSearchParam) ? 1 : parseInt(pageSearchParam, 10);
-  const totalPages = unsortedGroupedMissingData
-    ? Math.ceil(size(unsortedGroupedMissingData) / EXPECTED_ITEMS_PER_PAGE)
+  const totalPages = unsortedGroupedUnlinkedListens
+    ? Math.ceil(size(unsortedGroupedUnlinkedListens) / EXPECTED_ITEMS_PER_PAGE)
     : 0;
 
   const offset = (currPage - 1) * EXPECTED_ITEMS_PER_PAGE;
-  const itemsOnThisPage = sortedMissingDataGroups.slice(
+  const itemsOnThisPage = sortedUnlinkedListensGroups.slice(
     offset,
     offset + EXPECTED_ITEMS_PER_PAGE
   );
 
   // Functions
 
-  const deleteListen = async (data: MissingMBData) => {
+  const deleteListen = async (data: UnlinkedListens) => {
     if (user?.auth_token) {
       const listenedAt = new Date(data.listened_at).getTime() / 1000;
       try {
@@ -143,7 +153,7 @@ export default function MissingMBDataPage() {
           dispatch({
             type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
             data: {
-              track: missingDataToListen(data, user),
+              track: unlinkedListenDataToListen(data, user),
               index: -1,
             },
           });
@@ -162,6 +172,40 @@ export default function MissingMBDataPage() {
     }
   };
 
+  const openMultiTrackMappingModal = React.useCallback(
+    async (group: UnlinkedListens[], releaseName: string | null) => {
+      const matchedTracks: MatchingTracksResults = await NiceModal.show(
+        MultiTrackMBIDMappingModal,
+        {
+          unlinkedListens: group,
+          releaseName,
+        }
+      );
+      // Remove successfully matched items from the page
+      setUnlinkedListens((prevValue) =>
+        prevValue.filter((md) => !matchedTracks[md.recording_msid])
+      );
+      Object.entries(matchedTracks).forEach(([recordingMsid, track]) => {
+        // For deleting items from the BrainzPlayer queue, we need to use
+        // the metadata it was created from rather than the matched track metadata
+        const itemBeforeMatching = group.find(
+          ({ recording_msid }) => recordingMsid === recording_msid
+        );
+        if (itemBeforeMatching) {
+          // Remove the listen from the BrainzPlayer queue
+          dispatch({
+            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
+            data: {
+              track: unlinkedListenDataToListen(itemBeforeMatching, user),
+              index: -1,
+            },
+          });
+        }
+      });
+    },
+    [dispatch, user]
+  );
+
   // Effects
   React.useEffect(() => {
     // Set the ?page search param in URL on startup if not set, as well as
@@ -178,40 +222,59 @@ export default function MissingMBDataPage() {
 
   // BrainzPlayer
   React.useEffect(() => {
-    const missingMBDataAsListen = itemsOnThisPage.flatMap((x) => [
-      ...x.map((y) => missingDataToListen(y, user)),
+    const unlinkedDataAsListen = itemsOnThisPage.flatMap((x) => [
+      ...x.map((y) => unlinkedListenDataToListen(y, user)),
     ]);
     dispatch({
       type: "SET_AMBIENT_QUEUE",
-      data: missingMBDataAsListen,
+      data: unlinkedDataAsListen,
     });
   }, [dispatch, itemsOnThisPage, user]);
 
   return (
     <>
       <Helmet>
-        <title>Missing MusicBrainz Data of {user?.name}</title>
+        <title>Link with MusicBrainz</title>
       </Helmet>
-      <h2 className="page-title">Missing MusicBrainz Data of {user?.name}</h2>
+      <h2 className="page-title">Link with MusicBrainz</h2>
+      <ReactTooltip id="matching-tooltip" multiline>
+        We automatically match listens with MusicBrainz recordings when
+        possible, which provides rich data like tags, album, artists, cover art,
+        and more.
+        <br />
+        When a track can&apos;t be auto-matched you can manually link them on
+        this page.
+        <br />
+        Recordings may not exist in MusicBrainz, and need to be added there
+        first.
+      </ReactTooltip>
       <p>
-        Your top 1000 listens that haven&apos;t been automatically linked. Link
-        the listens below, or&nbsp;
+        You will find below your top 1000 listens (grouped by album) that
+        have&nbsp;
+        <u
+          className="link-listens-tooltip"
+          data-tip
+          data-for="matching-tooltip"
+        >
+          not been automatically linked
+        </u>
+        &nbsp; to a MusicBrainz recording. Link them below or&nbsp;
         <a href="https://wiki.musicbrainz.org/How_to_Contribute">
           submit new data to MusicBrainz
         </a>
         .
       </p>
-      <p>
+      <p className="small">
         <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
-        music encyclopedia that ListenBrainz uses to display information about
-        your music.
+        music encyclopedia that ListenBrainz uses to display more information
+        about your music.
       </p>
       {!isNil(lastUpdated) && (
         <p>Last updated {new Date(lastUpdated).toLocaleDateString()}</p>
       )}
       <br />
       <div>
-        <div id="missingMBData">
+        <div id="link-listens">
           <div
             style={{
               height: 0,
@@ -229,44 +292,8 @@ export default function MissingMBDataPage() {
                 className="btn btn-link btn-icon color-orange"
                 style={{ padding: "0", height: "initial" }}
                 type="button"
-                onClick={(e) => {
-                  NiceModal.show<MatchingTracksResults, any>(
-                    MultiTrackMBIDMappingModal,
-                    {
-                      missingData: group,
-                      releaseName,
-                    }
-                  ).then((matchedTracks) => {
-                    Object.entries(matchedTracks).forEach(
-                      ([recordingMsid, track]) => {
-                        // For deleting items from the BrainzPlayer queue, we need to use
-                        // the metadata it was created from rather than the matched track metadata
-                        const itemBeforeMatching = group.find(
-                          ({ recording_msid }) =>
-                            recordingMsid === recording_msid
-                        );
-                        if (itemBeforeMatching) {
-                          // Remove the listen from the BrainzPlayer queue
-                          dispatch({
-                            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-                            data: {
-                              track: missingDataToListen(
-                                itemBeforeMatching,
-                                user
-                              ),
-                              index: -1,
-                            },
-                          });
-                        }
-                      }
-                    );
-                    // Remove successfully matched items from the page
-                    setMissingData((prevValue) =>
-                      prevValue.filter(
-                        (md) => !matchedTracks[md.recording_msid]
-                      )
-                    );
-                  });
+                onClick={() => {
+                  openMultiTrackMappingModal(group, releaseName);
                 }}
                 data-toggle="modal"
                 data-target="#MultiTrackMBIDMappingModal"
@@ -284,7 +311,7 @@ export default function MissingMBDataPage() {
                 return undefined;
               }
               let additionalActions;
-              const listen = missingDataToListen(groupItem, user);
+              const listen = unlinkedListenDataToListen(groupItem, user);
               const additionalMenuItems = [];
               if (user?.auth_token) {
                 const recordingMSID = getRecordingMSID(listen);
@@ -323,7 +350,7 @@ export default function MissingMBDataPage() {
                             },
                           });
                           // Remove successfully matched item from the page
-                          setMissingData((prevValue) =>
+                          setUnlinkedListens((prevValue) =>
                             prevValue.filter(
                               (md) =>
                                 md.recording_msid !==

@@ -1,5 +1,7 @@
 import sentry_sdk
 import datetime
+
+from brainzutils.ratelimit import ratelimit
 from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.user as db_user
@@ -13,8 +15,9 @@ from listenbrainz.webserver.views.api_tools import _parse_bool_arg
 fresh_releases_bp = Blueprint('fresh_releases_v1', __name__)
 
 
-@fresh_releases_bp.route("/user/<user_name>/fresh_releases")
+@fresh_releases_bp.get("/user/<user_name>/fresh_releases")
 @crossdomain
+@ratelimit()
 def get_releases(user_name):
     """
     Get fresh releases data for the given user.

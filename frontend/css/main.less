@@ -41,6 +41,8 @@
 @import "donors-page.less";
 @import "donations.less";
 @import "scroll-container.less";
+@import "flairs.less";
+@import "utilities.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -231,7 +233,7 @@ pre code.hljs {
 .dropdown-menu > li {
   max-width: 300px;
   > * {
-    &:extend(.dropdown-menu>li>a all);
+    &:extend(.dropdown-menu > li > a all);
     background: inherit;
     border: none;
     width: 100%;
@@ -409,4 +411,13 @@ pre code.hljs {
     -webkit-transform: rotate(90deg);
     transform: rotate(90deg);
   }
+}
+
+.atom-button {
+  width: 1.4em;
+  height: 1.4em;
+  aspect-ratio: 1;
+  padding: 0.25em;
+  margin: 0;
+  margin-left: 5px;
 }
