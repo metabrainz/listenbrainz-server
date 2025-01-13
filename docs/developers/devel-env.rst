@@ -96,7 +96,7 @@ Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
-.. note::
+.. note:: 
     Make sure the ``OAUTH_CLIENT_ID`` and ``OAUTH_CLIENT_SECRET`` parameters are set properly,
     failing to do so will result in a basic browser auth popup like the one below:
 .. image:: ../images/auth-popup.png
@@ -277,7 +277,7 @@ This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development
 data. Note that all tests are run: Unit tests and integration tests.
 
-To run tests faster, you can use some options to start up the test infrastructure
+To run tests faster, you can use some options to start up the test infrastructure 
 once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
