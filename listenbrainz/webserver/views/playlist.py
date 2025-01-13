@@ -23,9 +23,10 @@ def playlist_page(playlist_mbid: str):
     if is_valid_uuid(playlist_mbid):
         playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, False)
         if playlist is not None and playlist.is_visible_by(current_user_id):
+            recordings_count = db_playlist.get_recordings_count_for_playlist(ts_conn, playlist.id)
             og_meta_tags = {
                 "title": f'{playlist.name} — Playlist on ListenBrainz',
-                "description": playlist.description,
+                "description": f'Playlist by {playlist.creator} — {recordings_count} track{"s" if recordings_count > 1 else ""} — ListenBrainz',
                 "type": "music:playlist",
                 "url": f'{current_app.config["SERVER_ROOT_URL"]}/playlist/{playlist_mbid}',
                 "music:creator": f'{current_app.config["SERVER_ROOT_URL"]}/user/{playlist.creator}',
