@@ -1,6 +1,8 @@
 import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { formatReleaseDate, useMediaQuery } from "../utils";
 import { SortDirection } from "../FreshReleases";
 
@@ -15,7 +17,7 @@ function createMarks(
   sortDirection: string,
   order: string
 ) {
-  let dataArr: Array<string> = [];
+  let dataArr: Array<React.ReactNode> = [];
   let percentArr: Array<number> = [];
   // We want to filter out the keys that have less than 1.5% of the total releases
   const minReleasesThreshold = Math.floor(releases.length * 0.015);
@@ -24,11 +26,26 @@ function createMarks(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
-    const filteredDates = Object.keys(releasesPerDate).filter(
-      (date) => releasesPerDate[date] >= minReleasesThreshold
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
+    const formattedTodayString = formatReleaseDate(todayString);
+    const filteredDates = Object.keys(releasesPerDate).filter((date) =>
+      date !== todayString
+        ? releasesPerDate[date] >= minReleasesThreshold
+        : releasesPerDate[date] > 0
     );
 
-    dataArr = filteredDates.map((item) => formatReleaseDate(item));
+    dataArr = filteredDates.map((item) =>
+      formatReleaseDate(item) === formattedTodayString ? (
+        <FontAwesomeIcon
+          icon={faCalendarCheck}
+          size="2xl"
+          style={{ color: "#353070" }}
+        />
+      ) : (
+        formatReleaseDate(item)
+      )
+    );
     percentArr = filteredDates
       .map((item) => (releasesPerDate[item] / releases.length) * 100)
       .map((_, index, arr) =>
@@ -103,7 +120,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
+  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>(
+    {}
+  );
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
