@@ -235,6 +235,7 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 self.assertEqual(expected["track_metadata"]["artist_name"], received["track_metadata"]["artist_name"])
                 self.assertEqual(expected["track_metadata"]["release_name"], received["track_metadata"]["release_name"])
                 self.assertEqual(expected["listened_at"], received["listened_at"])
+                self.assertEqual(expected["inserted_at"], received["inserted_at"])
                 if received["track_metadata"]["track_name"] == "Sister":
                     self.assertEqual({
                         "caa_id": self.recording["release_data"]["caa_id"],
