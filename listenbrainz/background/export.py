@@ -79,7 +79,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
     query = """
           WITH selected_listens AS (
                 SELECT l.listened_at
-                     , l.inserted_at
+                     , l.created as inserted_at
                      , l.data
                      , l.recording_msid
                      , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
@@ -143,6 +143,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
      LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
                     ON TRUE
               GROUP BY sl.listened_at
+                     , sl.inserted_at
                      , sl.recording_msid
                      , sl.data
                      , mbc.recording_mbid
