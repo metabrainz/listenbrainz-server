@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 from collections import defaultdict
 
 import listenbrainz.db.user as db_user
@@ -11,7 +12,7 @@ from psycopg2.extras import DictCursor
 
 from listenbrainz import webserver
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
+from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user, get_playlists_collaborated_on
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -21,7 +22,7 @@ from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
-from werkzeug.exceptions import NotFound
+from listenbrainz.webserver.views.api_tools import get_non_negative_param
 
 from brainzutils import cache
 
@@ -165,6 +166,9 @@ def stats(user_name: str):
 def playlists(user_name: str):
     """ Show user playlists """
 
+    page = get_non_negative_param("page", default=1)
+    type = request.args.get("type", "")
+
     user = _get_user(user_name)
     if not user:
         return jsonify({"error": "Cannot find user: %s" % user_name}), 404
@@ -177,10 +181,18 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(
-        db_conn, ts_conn, user.id, include_private=include_private,
-        load_recordings=False, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
-    )
+    offset = (page - 1) * DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+
+    if type == "collaborative":
+        user_playlists, playlist_count = get_playlists_collaborated_on(
+            db_conn, ts_conn, user.id, include_private=include_private,
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+        )
+    else:
+        user_playlists, playlist_count = get_playlists_for_user(
+            db_conn, ts_conn, user.id, include_private=include_private,
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+        )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -188,6 +200,7 @@ def playlists(user_name: str):
         "playlists": playlists,
         "user": user_data,
         "playlistCount": playlist_count,
+        "pageCount": ceil(playlist_count / DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL),
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
