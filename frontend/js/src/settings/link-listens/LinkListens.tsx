@@ -13,7 +13,7 @@ import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import { groupBy, isNil, isNull, pick, size, sortBy } from "lodash";
+import { groupBy, isNil, isNull, isString, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import ReactTooltip from "react-tooltip";
@@ -86,6 +86,15 @@ export default function LinkListensPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
 
+  const lastUpdatedHumanReadable = isString(lastUpdated)
+    ? new Date(lastUpdated).toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })
+    : "—";
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
   const [unlinkedListens, setUnlinkedListens] = React.useState<
@@ -269,7 +278,10 @@ export default function LinkListensPage() {
         .
       </p>
       {!isNil(lastUpdated) && (
-      <p className="small"> Updates Mondays, based on listen data. Last updated {new Date(lastUpdated).toLocaleDateString()}</p>
+        <p className="small">
+          Updates every Monday at 2AM (UTC). Last updated{" "}
+          {lastUpdatedHumanReadable}
+        </p>
       )}
       <br />
       <div>

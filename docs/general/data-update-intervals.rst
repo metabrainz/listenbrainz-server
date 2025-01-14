@@ -7,14 +7,14 @@ Expected schedule:
 System                                          Update schedule
 =============================================== =========================================
 Receiving listens, updating listen counts		Immediate [#f1]_
-Deleting listens					            Removed at the top of the next hour (UTC)
+Deleting listens					                  Removed at the top of the next hour (UTC)
 Updating statistics for new listens			    Daily [#f2]_
 Removing deleted listens from stats			    On the 2nd and 16th of each month
-Full dumps						                1st and 15th of each month
-Incremental dumps					            Daily
-Link listens						           Monday morning, based on the users timezone setting
-Weekly playlists						           Monday morning, based on the users timezone setting
-Daily playlists [#f3]_						          Every morning, based on the users timezone setting
+Full dumps						                      1st and 15th of each month
+Incremental dumps					                  Daily
+Link listens						                    Monday morning at 2AM (UTC)
+Weekly playlists						                Monday morning, based on the user's timezone setting
+Daily playlists [#f3]_						          Every morning, based on the user's timezone setting
 =============================================== =========================================
 
 Situations will occasionally arise where these take longer. If you have been a very patient user, and
