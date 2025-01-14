@@ -316,7 +316,7 @@ export default class SpotifyPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
-    const { show, volume } = this.props;
+    const { show } = this.props;
     if (!show) {
       return;
     }
@@ -462,7 +462,7 @@ export default class SpotifyPlayer
           );
         }
       },
-      volume, // Careful with this, now…
+      volume: volume ?? 100 / 100,
     });
 
     // Error handling

@@ -6,7 +6,6 @@ type VolumeControlButtonProps = {
 };
 
 function VolumeControlButton(props: VolumeControlButtonProps) {
-  const { volume } = props;
   const dispatch = useBrainzPlayerDispatch();
   const volumeRef = React.useRef<HTMLInputElement>(null);
   const handleVolumeChange = () => {
