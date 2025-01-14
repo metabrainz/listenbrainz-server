@@ -236,9 +236,9 @@ class ExportTestCase(ListenAPIIntegrationTestCase):
                 self.assertEqual(expected["track_metadata"]["release_name"], received["track_metadata"]["release_name"])
                 self.assertEqual(expected["listened_at"], received["listened_at"])
                 # The test data used in send_listens cannot have an inserted_at prop as that is not a valid listen format
-                self.assertNotIn("inserted_at",expected)
+                self.assertNotIn("inserted_at", expected)
                 # However inserted_at should be part of the exported listen data
-                self.assertIn("inserted_at",received)
+                self.assertIn("inserted_at", received)
                 if received["track_metadata"]["track_name"] == "Sister":
                     self.assertEqual({
                         "caa_id": self.recording["release_data"]["caa_id"],
