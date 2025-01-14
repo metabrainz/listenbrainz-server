@@ -13,7 +13,7 @@ import { Helmet } from "react-helmet";
 
 import NiceModal from "@ebay/nice-modal-react";
 
-import { groupBy, isNil, isNull, pick, size, sortBy } from "lodash";
+import { groupBy, isNil, isNull, isString, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import ReactTooltip from "react-tooltip";
@@ -86,6 +86,15 @@ export default function LinkListensPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
 
+  const lastUpdatedHumanReadable = isString(lastUpdated)
+    ? new Date(lastUpdated).toLocaleString(undefined, {
+        day: "2-digit",
+        month: "short",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })
+    : "—";
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
   const [unlinkedListens, setUnlinkedListens] = React.useState<
@@ -249,8 +258,7 @@ export default function LinkListensPage() {
         first.
       </ReactTooltip>
       <p>
-        You will find below your top 1000 listens (grouped by album) that
-        have&nbsp;
+        Your top 1,000 listens (grouped by album) that have&nbsp;
         <u
           className="link-listens-tooltip"
           data-tip
@@ -258,19 +266,22 @@ export default function LinkListensPage() {
         >
           not been automatically linked
         </u>
-        &nbsp; to a MusicBrainz recording. Link them below or&nbsp;
-        <a href="https://wiki.musicbrainz.org/How_to_Contribute">
-          submit new data to MusicBrainz
-        </a>
-        .
+        &nbsp;to a MusicBrainz recording.
       </p>
       <p className="small">
         <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
-        music encyclopedia that ListenBrainz uses to display more information
-        about your music.
+        music encyclopedia that ListenBrainz uses to display information about
+        your music.&nbsp;
+        <a href="https://wiki.musicbrainz.org/How_to_Contribute">
+          Submit missing data to MusicBrainz
+        </a>
+        .
       </p>
       {!isNil(lastUpdated) && (
-        <p>Last updated {new Date(lastUpdated).toLocaleDateString()}</p>
+        <p className="small">
+          Updates every Monday at 2AM (UTC). Last updated{" "}
+          {lastUpdatedHumanReadable}
+        </p>
       )}
       <br />
       <div>
