@@ -13,6 +13,7 @@ Removing deleted listens from stats			    On the 2nd and 16th of each month
 Full dumps						                1st and 15th of each month
 Incremental dumps					            Daily
 Weekly playlists						           Monday morning, based on the users timezone setting
+Link listens						           Monday morning, based on the users timezone setting
 Daily playlists [#f3]_						          Every morning, based on the users timezone setting
 =============================================== =========================================
 
