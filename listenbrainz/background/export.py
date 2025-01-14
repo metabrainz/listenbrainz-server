@@ -79,6 +79,7 @@ def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: 
     query = """
           WITH selected_listens AS (
                 SELECT l.listened_at
+                     , l.inserted_at
                      , l.data
                      , l.recording_msid
                      , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
