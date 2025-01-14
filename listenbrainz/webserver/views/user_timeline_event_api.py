@@ -54,7 +54,7 @@ DEFAULT_LISTEN_EVENT_WINDOW_NEW = timedelta(days=7) # to limit the search space 
 user_timeline_event_api_bp = Blueprint('user_timeline_event_api_bp', __name__)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recording', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/recording')
 @crossdomain
 @ratelimit()
 def create_user_recording_recommendation_event(user_name):
@@ -108,7 +108,7 @@ def create_user_recording_recommendation_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/notification', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/notification')
 @crossdomain
 @ratelimit()
 def create_user_notification_event(user_name):
@@ -164,7 +164,7 @@ def create_user_notification_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/review', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/review')
 @crossdomain
 @ratelimit()
 def create_user_cb_review_event(user_name):
@@ -183,7 +183,7 @@ def create_user_cb_review_event(user_name):
                 "entity_type": "<entity type, required>",
                 "text": "<the message to post, required>",
                 "language": "<language code, required>",
-                "rating": <rating, int>,
+                "rating": "<rating, int>",
             },
         }
 
@@ -231,7 +231,7 @@ def create_user_cb_review_event(user_name):
     return jsonify(event_data)
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
+@user_timeline_event_api_bp.get('/user/<user_name>/feed/events')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -284,7 +284,7 @@ def user_feed(user_name: str):
     }})
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/following', methods=['OPTIONS', 'GET'])
+@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/following')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -334,7 +334,7 @@ def user_feed_listens_following(user_name: str):
     }})
     
 
-@user_timeline_event_api_bp.route('/user/<user_name>/feed/events/listens/similar', methods=['OPTIONS', 'GET'])
+@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/similar')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -392,7 +392,7 @@ def user_feed_listens_similar(user_name: str):
     })
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/delete", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/delete")
 @crossdomain
 @ratelimit()
 def delete_feed_events(user_name):
@@ -450,7 +450,7 @@ def delete_feed_events(user_name):
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/hide", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/hide")
 @crossdomain
 @ratelimit()
 def hide_user_timeline_event(user_name):
@@ -518,7 +518,7 @@ def hide_user_timeline_event(user_name):
         raise APIUnauthorized("You cannot hide events of this user")
 
 
-@user_timeline_event_api_bp.route("/user/<user_name>/feed/events/unhide", methods=['OPTIONS', 'POST'])
+@user_timeline_event_api_bp.post("/user/<user_name>/feed/events/unhide")
 @crossdomain
 @ratelimit()
 def unhide_user_timeline_event(user_name):
@@ -560,7 +560,7 @@ def unhide_user_timeline_event(user_name):
     return jsonify({"status": "ok"})
 
 
-@user_timeline_event_api_bp.route('/user/<user_name>/timeline-event/create/recommend-personal', methods=['POST', 'OPTIONS'])
+@user_timeline_event_api_bp.post('/user/<user_name>/timeline-event/create/recommend-personal')
 @crossdomain
 @ratelimit()
 def create_personal_recommendation_event(user_name):
@@ -575,7 +575,7 @@ def create_personal_recommendation_event(user_name):
             "metadata": {
                 "recording_msid": "<The MessyBrainz ID of the recording, optional>",
                 "recording_mbid": "<The MusicBrainz ID of the recording>",
-                "users": [<usernames of the persons you want to recommend to, required>]
+                "users": [], // "<usernames of the persons you want to recommend to, required>"
                 "blurb_content": "<String containing personalized recommendation>"
             }
         }
@@ -585,7 +585,7 @@ def create_personal_recommendation_event(user_name):
     :statuscode 200: Successful query, recording has been recommended!
     :statuscode 400: Bad request, check ``response['error']`` for more details.
     :statuscode 401: Unauthorized, you do not have permissions to recommend
-    personal recordings on the behalf of this user
+        personal recordings on the behalf of this user
     :statuscode 403: Forbidden, you do not have permissions to recommend
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*

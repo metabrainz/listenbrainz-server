@@ -1,3 +1,4 @@
+import { isValid } from "date-fns";
 import { useEffect, useState } from "react";
 
 export function formatReleaseDate(
@@ -7,7 +8,7 @@ export function formatReleaseDate(
     day: "numeric",
   }
 ) {
-  if (!releaseDate) {
+  if (!releaseDate || !isValid(new Date(releaseDate))) {
     return "-";
   }
   return new Intl.DateTimeFormat(undefined, formatOptions).format(

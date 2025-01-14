@@ -10,13 +10,13 @@ import listenbrainz.db.playlist as db_playlist
 playlist_bp = Blueprint("playlist", __name__)
 
 
-@playlist_bp.route("/",  defaults={'path': ''})
-@playlist_bp.route('/<path:path>/')
+@playlist_bp.get("/",  defaults={'path': ''})
+@playlist_bp.get('/<path:path>/')
 def playlist_page(path):
     return render_template("index.html")
 
 
-@playlist_bp.route("/<playlist_mbid>/", methods=["POST"])
+@playlist_bp.post("/<playlist_mbid>/")
 @web_listenstore_needed
 def load_playlist(playlist_mbid: str):
     """Load a single playlist by id

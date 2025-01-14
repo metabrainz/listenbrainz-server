@@ -1,0 +1,86 @@
+{%- from 'art/svg-templates/macros.j2' import render_entity_link -%}
+<svg width="924" height="924" viewBox="0 0 924 924" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
+        text {
+            fill: {{ accent_color }};
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+        }
+        .branding {
+            font-size: 20px;
+            letter-spacing: 0em;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            text-anchor: middle;
+            font-size: 32px;
+        }
+        .background {
+            fill: {{ background_color }};
+        }
+        .artist-name {
+            font-size: 28px;
+        }
+    </style>
+  <g id="g138">
+    <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-06.png" height="250" width="250" x="700" y="450" style="pointer-events: none;" id="buddy-4">
+    </image>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-05.png" height="250" width="250" x="0" y="600" style="pointer-events: none;" id="buddy-3">
+    </image>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-04.png" height="250" width="250" x="660" y="45" style="pointer-events: none;" id="buddy-2">
+    </image>
+    <g id="g114">
+      <text class="branding" x="750" y="897" id="text102">LISTENBRAINZ</text>
+      <text class="branding" x="26" y="43" id="text104">{{user_name}}</text>
+      <text x="50%" y="90" id="my-year" class="subtitle">
+          <tspan>M</tspan>
+          <tspan dx="12">Y</tspan>
+          <tspan dx="30">Y</tspan>
+          <tspan dx="12">E</tspan>
+          <tspan dx="12">A</tspan>
+          <tspan dx="12">R</tspan>
+      </text>
+      <text x="50%" y="130" id="in-music" class="subtitle">
+          <tspan>I</tspan>
+          <tspan dx="12">N</tspan>
+          <tspan dx="30">M</tspan>
+          <tspan dx="12">U</tspan>
+          <tspan dx="12">S</tspan>
+          <tspan dx="12">I</tspan>
+          <tspan dx="12">C</tspan>
+      </text>
+      <text x="50%" y="800" id="top-artists" class="subtitle">
+          <tspan>T</tspan>
+          <tspan dx="12">O</tspan>
+          <tspan dx="12">P</tspan>
+          <tspan dx="30">A</tspan>
+          <tspan dx="12">R</tspan>
+          <tspan dx="12">T</tspan>
+          <tspan dx="12">I</tspan>
+          <tspan dx="12">S</tspan>
+          <tspan dx="12">T</tspan>
+          <tspan dx="12">S</tspan>
+      </text>
+      <text class="branding" text-anchor="middle" x="50%" y="897" id="text108">{{total_artists_count}} ARTISTS</text>
+      <text class="branding" font-style="italic" x="26" y="897" id="text110">#YEARINMUSIC</text>
+      <text class="branding" x="844" y="43" id="text112">2024</text>
+    </g>
+    <g>
+        {% set y_start = 259 %}
+        {% set gap = 45 %}
+        {% for artist in artists[:10] %}
+        <text class="artist-name" y="{{ y_start + loop.index0 * gap }}" x="180">
+            <tspan>{% if loop.index == 10 %}X{% else %}{{ loop.index }}{% endif %}</tspan>
+            <tspan dx="20">
+                {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name) }}
+            </tspan>
+        </text>
+        {% endfor %}
+    </g>
+  </g>
+</svg>

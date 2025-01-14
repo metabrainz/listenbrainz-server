@@ -21,7 +21,7 @@ feedback_api_bp = Blueprint('feedback_api_v1', __name__)
 FEEDBACK_DEFAULT_SCORE = 0
 
 
-@feedback_api_bp.route("/recording-feedback", methods=["POST", "OPTIONS"])
+@feedback_api_bp.post("/recording-feedback")
 @crossdomain
 @ratelimit()
 def recording_feedback():
@@ -71,7 +71,7 @@ def recording_feedback():
     return jsonify({'status': 'ok'})
 
 
-@feedback_api_bp.route("/user/<user_name>/get-feedback", methods=["GET"])
+@feedback_api_bp.get("/user/<user_name>/get-feedback")
 @crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
@@ -125,7 +125,7 @@ def get_feedback_for_user(user_name):
     })
 
 
-@feedback_api_bp.route("/recording/<recording_mbid>/get-feedback-mbid", methods=["GET"])
+@feedback_api_bp.get("/recording/<recording_mbid>/get-feedback-mbid")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recording_mbid(recording_mbid):
@@ -149,7 +149,7 @@ def get_feedback_for_recording_mbid(recording_mbid):
     return _get_feedback_for_recording("recording_mbid", recording_mbid)
 
 
-@feedback_api_bp.route("/recording/<recording_msid>/get-feedback", methods=["GET"])
+@feedback_api_bp.get("/recording/<recording_msid>/get-feedback")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recording_msid(recording_msid):
@@ -199,60 +199,8 @@ def _get_feedback_for_recording(recording_type, recording):
     })
 
 
-@feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["GET", "POST", "OPTIONS"])
-@crossdomain
-@ratelimit()
-def get_feedback_for_recordings_for_user(user_name):
-    """
-    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned
-    is defined in our :ref:`feedback-json-doc`.
-
-    If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
-
-    .. note::
-
-        If you get a 502 error while querying this endpoint using a GET request, consider reducing the number of total recordings you are
-        querying in 1 request. As a rule of thumb, requesting maximum ~75 recordings in 1 request will avert the error.
-
-        The reason this error occurs is because the recording uuids are query params which are part of the request url.
-        The length of the url is subject to a general limit imposed at the middleware level so requests with long urls
-        never reach the ListenBrainz backend. Due to the same reason, the backend cannot provide a meaningful error.
-    
-    @GET request
-    :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
-        this param is deprecated and will be removed in the future. use recording_msids instead.
-    :type recordings: ``str``
-    :param recording_msids: comma separated list of recording_msids for which feedback records are to be fetched.
-    :type recording_msids: ``str``
-    :param recording_mbids: comma separated list of recording_mbids for which feedback records are to be fetched.
-    :type recording_mbids: ``str``
-
-    @POST request
-    The format of the post data should look as follows:
-    .. code-block:: json
-
-        {
-            "recording_msids": "<msid1>,<msid2>,<msid3>",
-            "recording_mbids": "<mbid1>,<mbid2>,<mbid3>"
-        }
-
-    :statuscode 200: Yay, you have data!
-    :resheader Content-Type: *application/json*
-    """
-    recording_msids, recording_mbids = [], []
-    if request.method == "GET":
-        msids_unparsed = request.args.get("recording_msids")
-        if msids_unparsed is None:
-            msids_unparsed = request.args.get("recordings")
-        mbids_unparsed = request.args.get("recording_mbids")
-        if msids_unparsed:
-            recording_msids = parse_param_list(msids_unparsed)
-        if mbids_unparsed:
-            recording_mbids = parse_param_list(mbids_unparsed)
-    elif request.method == "POST":
-        recording_msids = request.json.get("recording_msids")
-        recording_mbids = request.json.get("recording_mbids")
-        
+def _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, recording_mbids):
+    """ Helper method to share logic between get and post, separate functions for documenting params properly """
     if not recording_msids and not recording_mbids:
         log_raise_400("No valid recording msid or recording mbid found.")
 
@@ -281,7 +229,76 @@ def get_feedback_for_recordings_for_user(user_name):
     })
 
 
-@feedback_api_bp.route("/import", methods=["POST", "OPTIONS"])
+@feedback_api_bp.post("/user/<user_name>/get-feedback-for-recordings")
+@crossdomain
+@ratelimit()
+def get_feedback_for_recordings_for_user_post(user_name):
+    """
+    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned
+    is defined in our :ref:`feedback-json-doc`.
+
+    If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
+
+    The format of the post data should look as follows:
+
+    .. code-block:: json
+
+        {
+            "recording_msids": ["<msid1>", "<msid2>", "<msid3>"],
+            "recording_mbids": ["<mbid1>", "<mbid2>", "<mbid3>"]
+        }
+
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
+    recording_msids = request.json.get("recording_msids", [])
+    recording_mbids = request.json.get("recording_mbids", [])
+    return _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, recording_mbids)
+
+
+@feedback_api_bp.get("/user/<user_name>/get-feedback-for-recordings")
+@crossdomain
+@ratelimit()
+def get_feedback_for_recordings_for_user_get(user_name):
+    """
+    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned
+    is defined in our :ref:`feedback-json-doc`.
+
+    If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
+
+    .. note::
+
+        If you get a 502 error while querying this endpoint using a GET request, consider reducing the number of total recordings you are
+        querying in 1 request. As a rule of thumb, requesting maximum ~75 recordings in 1 request will avert the error.
+
+        The reason this error occurs is because the recording uuids are query params which are part of the request url.
+        The length of the url is subject to a general limit imposed at the middleware level so requests with long urls
+        never reach the ListenBrainz backend. Due to the same reason, the backend cannot provide a meaningful error.
+
+    :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
+        this param is deprecated and will be removed in the future. use recording_msids instead.
+    :type recordings: ``str``
+    :param recording_msids: comma separated list of recording_msids for which feedback records are to be fetched.
+    :type recording_msids: ``str``
+    :param recording_mbids: comma separated list of recording_mbids for which feedback records are to be fetched.
+    :type recording_mbids: ``str``
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
+    recording_msids, recording_mbids = [], []
+    msids_unparsed = request.args.get("recording_msids")
+    if msids_unparsed is None:
+        msids_unparsed = request.args.get("recordings")
+    mbids_unparsed = request.args.get("recording_mbids")
+    if msids_unparsed:
+        recording_msids = parse_param_list(msids_unparsed)
+    if mbids_unparsed:
+        recording_mbids = parse_param_list(mbids_unparsed)
+    return _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, recording_mbids)
+
+
+
+@feedback_api_bp.post("/import")
 @crossdomain
 @ratelimit()
 def import_feedback():

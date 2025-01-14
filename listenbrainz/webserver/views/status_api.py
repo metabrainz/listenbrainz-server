@@ -1,12 +1,11 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-import requests
-from time import sleep, time
+from time import time
 
 from kombu import Connection, Queue, Exchange
 from kombu.exceptions import KombuError
-from werkzeug.exceptions import ServiceUnavailable
 
+from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
@@ -27,15 +26,14 @@ MONITORED_PLAYLIST_PATCHES = ('daily-jams',
 status_api_bp = Blueprint("status_api_v1", __name__)
 
 
-@status_api_bp.route("/get-dump-info", methods=["GET"])
+@status_api_bp.get("/get-dump-info")
+@crossdomain
 @ratelimit()
 def get_dump_info():
     """
     Get information about ListenBrainz data dumps.
     You need to pass the `id` parameter in a GET request to get data about that particular
     dump.
-
-    **Example response**:
 
     .. code-block:: json
 
@@ -169,6 +167,9 @@ def get_dump_timestamp():
 
 def get_service_status():
     """ Fetch the age of the last output of various services and return a dict:
+
+    .. code-block:: json
+
         {
           "dump_age": null,
           "incoming_listen_count": 2,
@@ -203,6 +204,9 @@ def get_service_status():
 
 def get_playlist_status():
     """ Fetch the age of the last output of recommendation playlists and return a dict:
+
+    .. code-block:: json
+
         {
           "playlists": [
                {
@@ -233,11 +237,12 @@ def get_playlist_status():
     }
 
 
-@status_api_bp.route("/service-status", methods=["GET"])
+@status_api_bp.get("/service-status")
+@crossdomain
 @ratelimit()
 def service_status():
     """ Fetch the recently updated metrics for age of stats, dumps and the number of items in the incoming
-        queue. This function returns JSON:
+    queue. This function returns JSON:
 
     .. code-block:: json
 
@@ -255,32 +260,31 @@ def service_status():
     return jsonify(get_service_status())
 
 
-@status_api_bp.route("/playlist-status", methods=["GET"])
+@status_api_bp.get("/playlist-status")
+@crossdomain
 @ratelimit()
 def playlist_status():
-    """ Fetch the recently updated metrics for age of recommendation playlists.
-        This function returns JSON:
+    """ Fetch the recently updated metrics for age of recommendation playlists. This function returns JSON:
 
     .. code-block:: json
 
         {
             "playlists": [
                 {
-                "age": 55671,
-                "name": "daily-jams"
+                    "age": 55671,
+                    "name": "daily-jams"
                 },
                 {
-                "age": 919392,
-                "name": "weekly-jams"
+                    "age": 919392,
+                    "name": "weekly-jams"
                 },
                 {
-                "age": 919184,
-                "name": "weekly-exploration"
+                    "age": 919184,
+                    "name": "weekly-exploration"
                 }
             ],
             "time": 1734013745
         }
-
 
     :statuscode 200: You have data.
     :resheader Content-Type: *application/json*
