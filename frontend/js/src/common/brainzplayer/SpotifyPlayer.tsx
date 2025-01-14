@@ -142,7 +142,9 @@ export default class SpotifyPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
+
     if (prevProps.show === true && show === false) {
       this.stopAndClear();
     }
@@ -516,7 +518,8 @@ export default class SpotifyPlayer
       track_window: { current_track, previous_tracks },
     } = playerState;
     const { currentSpotifyTrack, durationMs } = this.state;
-    const { playerPaused } = this.props;
+    const { playerPaused, volume } = this.props;
+    this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
     const {
       onPlayerPausedChange,
       onProgressChange,
@@ -612,8 +615,7 @@ export default class SpotifyPlayer
   };
 
   render() {
-    const { show, volume } = this.props;
-    this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
+    const { show } = this.props;
     if (!show) {
       return null;
     }

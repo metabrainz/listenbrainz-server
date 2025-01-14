@@ -153,7 +153,8 @@ export default class SoundcloudPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    this.soundcloudPlayer?.setVolume((volume ?? 100) / 100);
     if (prevProps.show && !show && this.soundcloudPlayer) {
       this.soundcloudPlayer.pause();
     }
@@ -405,8 +406,7 @@ export default class SoundcloudPlayer
   };
 
   render() {
-    const { show, volume } = this.props;
-    this.soundcloudPlayer?.setVolume((volume ?? 100) / 100);
+    const { show } = this.props;
 
     return (
       <div

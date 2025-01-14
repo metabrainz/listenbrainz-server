@@ -119,7 +119,8 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    this.youtubePlayer?.setVolume(volume ?? 100);
     if (prevProps.show && !show && this.youtubePlayer) {
       this.youtubePlayer.stopVideo();
       // Clear playlist
@@ -358,8 +359,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
   };
 
   render() {
-    const { show, volume } = this.props;
-    this.youtubePlayer?.setVolume(volume ?? 100);
+    const { show } = this.props;
     const options: Options = {
       playerVars: {
         controls: 0,

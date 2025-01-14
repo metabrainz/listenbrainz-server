@@ -149,7 +149,11 @@ export default class AppleMusicPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    const player = this.appleMusicPlayer;
+    if (player) {
+      player.volume = (volume ?? 100) / 100;
+    }
     if (prevProps.show && !show) {
       this.stopAndClear();
     }
@@ -467,11 +471,7 @@ export default class AppleMusicPlayer
   };
 
   render() {
-    const { show, volume } = this.props;
-    const player = this.appleMusicPlayer;
-    if (player) {
-      player.volume = (volume ?? 100) / 100;
-    }
+    const { show } = this.props;
     if (!show) {
       return null;
     }
