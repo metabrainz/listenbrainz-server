@@ -80,9 +80,10 @@ text editor.
 .. note::
 
      If you are accessing your development server using a port other than ``8100``,
-     ensure that you update all the addresses field (e.g., ``SERVER_ROOT_URL``) to reflect the appropriate port number.
+     ensure that you update the ``SERVER_BASE_URL`` to reflect the appropriate port number.
      If you are accessing your development server using a host other than ``localhost`` (e.g., GitHub Codespaces),
-     ensure that you update the ``SERVER_NAME`` and ``SERVER_ROOT_URL`` fields to reflect the appropriate host details.
+     ensure that you uncomment and update ``SERVER_NAME``, and ensure ``SERVER_ROOT_URL``is updated
+     accordingly to maintain consistency and support the appropriate host details.
 
 Next look for this section in the file.
 
@@ -96,7 +97,7 @@ Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
-.. note:: 
+.. note::
     Make sure the ``OAUTH_CLIENT_ID`` and ``OAUTH_CLIENT_SECRET`` parameters are set properly,
     failing to do so will result in a basic browser auth popup like the one below:
 .. image:: ../images/auth-popup.png
@@ -277,7 +278,7 @@ This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development
 data. Note that all tests are run: Unit tests and integration tests.
 
-To run tests faster, you can use some options to start up the test infrastructure 
+To run tests faster, you can use some options to start up the test infrastructure
 once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
