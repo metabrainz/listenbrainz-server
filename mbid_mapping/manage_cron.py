@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
 from functools import wraps
+from traceback import print_exception
+import sys
 
 import click
 import sentry_sdk
 from sentry_sdk import monitor
+from sentry_sdk.crons import capture_checkin
+from sentry_sdk.crons.consts import MonitorStatus
+
 
 import config
 from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
@@ -18,16 +23,32 @@ from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
 from mapping.mb_release_group_cache import create_mb_release_group_cache, incremental_update_mb_release_group_cache
 from similar.tag_similarity import create_tag_similarity
+from mapping.utils import log
+
 
 
 def cron(slug):
-
+    """ Cron decorator making it easy to monitor a cron job. The slug argument defines the sentry cron job identifier. """
     def wrapper(func):
         @wraps(func)
         def wrapped_f(*args, **kwargs):
             sentry_sdk.init(**config.LOG_SENTRY)
-            with monitor(slug):
+            check_in_id = capture_checkin(monitor_slug=slug, status=MonitorStatus.IN_PROGRESS)
+            try:
+                log("cron decorator enter")
                 func(*args, **kwargs)
+                log("cron decorator exit")
+                log("report success to sentry")
+                capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
+                log("report success to sentry done")
+                sys.exit(0)
+            except Exception as exc:
+                print_exception(exc)
+                log("report failture to sentry")
+                capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.ERROR)
+                log("report failture to sentry done")
+                sys.exit(-1)
+
         return wrapped_f
 
     return wrapper
@@ -73,10 +94,15 @@ def cron_build_all_mb_caches():
     """ Build all mb entity metadata cache and tables it depends on in production in appropriate
      databases. After building the cache, cleanup mbid_mapping table.
     """
+    log("cron_build_all_mb_caches 1")
     create_mb_metadata_cache(True)
+    log("cron_build_all_mb_caches 2")
     cleanup_mbid_mapping_table()
+    log("cron_build_all_mb_caches 3")
     create_mb_artist_metadata_cache(True)
+    log("cron_build_all_mb_caches 4")
     create_mb_release_group_cache(True)
+    log("cron_build_all_mb_caches 5")
 
 
 

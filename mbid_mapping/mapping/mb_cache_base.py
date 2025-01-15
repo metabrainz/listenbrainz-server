@@ -194,6 +194,7 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
+    log("Entering create_metadata_cache")
     psycopg2.extras.register_uuid()
 
     if use_lb_conn:
@@ -219,6 +220,7 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
         cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
         cache.run()
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
+    log("exiting create_metadata_cache")
 
 
 def incremental_update_metadata_cache(cache_cls, cache_key, use_lb_conn: bool):
