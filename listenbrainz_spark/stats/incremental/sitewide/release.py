@@ -1,85 +1,70 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, ArrayType
-
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityProvider
 
 
-class ReleaseSitewideEntity(SitewideEntity):
+class ReleaseSitewideEntity(SitewideEntityProvider):
 
-    def __init__(self, stats_range):
-        super().__init__(entity="releases", stats_range=stats_range)
+    def entity(self):
+        return "releases"
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("release_name", StringType(), nullable=False),
-            StructField("release_mbid", StringType(), nullable=False),
-            StructField("artist_name", StringType(), nullable=False),
-            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=False),
-            StructField("caa_id", IntegerType(), nullable=True),
-            StructField("caa_release_mbid", StringType(), nullable=True),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         user_listen_count_limit = self.get_listen_count_limit()
         cache_table = cache_tables[0]
-        result = run_query(f"""
-       WITH gather_release_data AS (
-            SELECT user_id
-                 , l.release_mbid
-                 , COALESCE(rel.release_name, l.release_name) AS release_name
-                 , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
-                 , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
-                 , rel.caa_id
-                 , rel.caa_release_mbid
-              FROM {table} l
-         LEFT JOIN {cache_table} rel
-                ON rel.release_mbid = l.release_mbid
-        ), user_counts AS (
-            SELECT user_id
-                 , first(release_name) AS any_release_name
-                 , release_mbid
-                 , first(release_artist_name) AS any_artist_name
-                 , artist_credit_mbids
-                 , caa_id
-                 , caa_release_mbid
-                 , LEAST(count(*), {user_listen_count_limit}) as listen_count
-              FROM gather_release_data
-             WHERE release_name != ''
-               AND release_name IS NOT NULL
-          GROUP BY user_id
-                 , lower(release_name)
-                 , release_mbid
-                 , lower(release_artist_name)
-                 , artist_credit_mbids
-                 , caa_id
-                 , caa_release_mbid
-        )
-            SELECT first(any_release_name) AS release_name
-                 , release_mbid
-                 , first(any_artist_name) AS artist_name
-                 , artist_credit_mbids
-                 , caa_id
-                 , caa_release_mbid
-                 , SUM(listen_count) as listen_count
-              FROM user_counts
-          GROUP BY lower(any_release_name)
-                 , release_mbid
-                 , lower(any_artist_name)
-                 , artist_credit_mbids
-                 , caa_id
-                 , caa_release_mbid
-        """)
-        return result
+        return f"""
+           WITH gather_release_data AS (
+                SELECT user_id
+                     , l.release_mbid
+                     , COALESCE(rel.release_name, l.release_name) AS release_name
+                     , COALESCE(rel.album_artist_name, l.artist_name) AS release_artist_name
+                     , COALESCE(rel.artist_credit_mbids, l.artist_credit_mbids) AS artist_credit_mbids
+                     , rel.caa_id
+                     , rel.caa_release_mbid
+                  FROM {table} l
+             LEFT JOIN {cache_table} rel
+                    ON rel.release_mbid = l.release_mbid
+            ), user_counts AS (
+                SELECT user_id
+                     , first(release_name) AS any_release_name
+                     , release_mbid
+                     , first(release_artist_name) AS any_artist_name
+                     , artist_credit_mbids
+                     , caa_id
+                     , caa_release_mbid
+                     , LEAST(count(*), {user_listen_count_limit}) as listen_count
+                  FROM gather_release_data
+                 WHERE release_name != ''
+                   AND release_name IS NOT NULL
+              GROUP BY user_id
+                     , lower(release_name)
+                     , release_mbid
+                     , lower(release_artist_name)
+                     , artist_credit_mbids
+                     , caa_id
+                     , caa_release_mbid
+            )
+                SELECT first(any_release_name) AS release_name
+                     , release_mbid
+                     , first(any_artist_name) AS artist_name
+                     , artist_credit_mbids
+                     , caa_id
+                     , caa_release_mbid
+                     , SUM(listen_count) as listen_count
+                  FROM user_counts
+              GROUP BY lower(any_release_name)
+                     , release_mbid
+                     , lower(any_artist_name)
+                     , artist_credit_mbids
+                     , caa_id
+                     , caa_release_mbid
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT release_name
                      , release_mbid
@@ -114,10 +99,9 @@ class ReleaseSitewideEntity(SitewideEntity):
                      , caa_id
                      , caa_release_mbid
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count AS (
                 SELECT count(*) AS total_count
                   FROM {final_aggregate}
@@ -125,7 +109,7 @@ class ReleaseSitewideEntity(SitewideEntity):
                 SELECT *
                   FROM {final_aggregate}
               ORDER BY listen_count DESC
-                 LIMIT {N}
+                 LIMIT {self.top_entity_limit}
             ), grouped_stats AS (
                 SELECT sort_array(
                             collect_list(
@@ -149,4 +133,3 @@ class ReleaseSitewideEntity(SitewideEntity):
                   JOIN entity_count
                     ON TRUE
         """
-        return run_query(query)

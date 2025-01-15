@@ -1,33 +1,25 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.user.entity import UserEntity
+from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
+from listenbrainz_spark.stats.incremental.user.entity import UserEntityProvider
 
 
-class ArtistUserEntity(UserEntity):
+class ArtistUserEntity(UserEntityProvider):
     """ See base class IncrementalStats for documentation. """
 
-    def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
-        super().__init__(entity="artists", stats_range=stats_range, database=database, message_type=message_type,
-                         from_date=from_date, to_date=to_date)
+    def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
+        super().__init__(selector=selector, top_entity_limit=top_entity_limit)
+
+    def entity(self):
+        return "artists"
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("user_id", IntegerType(), nullable=False),
-            StructField("artist_name", StringType(), nullable=False),
-            StructField("artist_mbid", StringType(), nullable=True),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         cache_table = cache_tables[0]
-        result = run_query(f"""
+        return f"""
             WITH exploded_listens AS (
                 SELECT user_id
                      , artist_name AS artist_credit_name
@@ -55,11 +47,10 @@ class ArtistUserEntity(UserEntity):
              GROUP BY user_id
                     , lower(artist_name)
                     , artist_mbid
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT user_id
                      , artist_name
@@ -82,10 +73,9 @@ class ArtistUserEntity(UserEntity):
                      , lower(artist_name)
                      , artist_mbid
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count AS (
                 SELECT user_id
                      , count(*) AS artists_count
@@ -111,7 +101,7 @@ class ArtistUserEntity(UserEntity):
                             , false
                        ) as artists
                   FROM ranked_stats
-                 WHERE rank <= {N}
+                 WHERE rank <= {self.top_entity_limit}
               GROUP BY user_id
             )
                 SELECT user_id
@@ -121,4 +111,3 @@ class ArtistUserEntity(UserEntity):
                   JOIN entity_count
                  USING (user_id)
         """
-        return run_query(query)
