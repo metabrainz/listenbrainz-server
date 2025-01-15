@@ -3,6 +3,7 @@ import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
+import { isToday } from "date-fns";
 import { formatReleaseDate, useMediaQuery } from "../utils";
 import { SortDirection } from "../FreshReleases";
 import { COLOR_LB_BLUE } from "../../../utils/constants";
@@ -18,7 +19,7 @@ function createMarks(
   sortDirection: string,
   order: string
 ) {
-  let dataArr: Array<React.ReactNode> = [];
+  let dataArr: Array<string | JSX.Element> = [];
   let percentArr: Array<number> = [];
   // We want to filter out the keys that have less than 1.5% of the total releases
   const minReleasesThreshold = Math.floor(releases.length * 0.015);
@@ -28,16 +29,14 @@ function createMarks(
       (item: FreshReleaseItem) => item.release_date
     );
     const today = new Date();
-    const todayString = today.toISOString().split("T")[0];
-    const formattedTodayString = formatReleaseDate(todayString);
     const filteredDates = Object.keys(releasesPerDate).filter((date) =>
-      date !== todayString
+      isToday(today)
         ? releasesPerDate[date] >= minReleasesThreshold
         : releasesPerDate[date] > 0
     );
 
     dataArr = filteredDates.map((item) =>
-      formatReleaseDate(item) === formattedTodayString ? (
+      isToday(new Date(item)) ? (
         <FontAwesomeIcon
           icon={faCalendarCheck}
           size="2xl"
