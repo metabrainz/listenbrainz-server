@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { formatReleaseDate, useMediaQuery } from "../utils";
 import { SortDirection } from "../FreshReleases";
+import { COLOR_LB_BLUE } from "../../../utils/constants";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -40,7 +41,7 @@ function createMarks(
         <FontAwesomeIcon
           icon={faCalendarCheck}
           size="2xl"
-          style={{ color: "#353070" }}
+          color={COLOR_LB_BLUE}
         />
       ) : (
         formatReleaseDate(item)
