@@ -1,30 +1,28 @@
 import calendar
 import itertools
-import json
 import logging
 from typing import List
 
 from pydantic import ValidationError
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
 from data.model.user_daily_activity import DailyActivityRecord
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.user.entity import UserEntity
+from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
+from listenbrainz_spark.stats.incremental.user.entity import UserProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class DailyActivityUserEntity(UserEntity):
+class DailyActivityUserEntity(UserProvider):
     """ See base class IncrementalStats for documentation. """
 
-    def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
-        super().__init__(
-            entity="daily_activity", stats_range=stats_range, database=database,
-            message_type=message_type, from_date=from_date, to_date=to_date
-        )
+    def __init__(self, selector: ListenRangeSelector):
+        super().__init__(selector)
         self.setup_time_range()
+
+    def entity(self):
+        return "daily_activity"
 
     def setup_time_range(self):
         """ Genarate a dataframe containing hours of all days of the week. """
@@ -37,16 +35,8 @@ class DailyActivityUserEntity(UserEntity):
     def get_cache_tables(self) -> List[str]:
         return []
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("user_id", IntegerType(), nullable=False),
-            StructField("day", StringType(), nullable=False),
-            StructField("hour", IntegerType(), nullable=False),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
-        result = run_query(f"""
+    def get_aggregate_query(self, table, cache_tables):
+        return f"""
             SELECT user_id
                  , date_format(listened_at, 'EEEE') as day
                  , date_format(listened_at, 'H') as hour
@@ -55,11 +45,10 @@ class DailyActivityUserEntity(UserEntity):
           GROUP BY user_id
                  , day
                  , hour
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT user_id
                      , day
@@ -82,10 +71,9 @@ class DailyActivityUserEntity(UserEntity):
                      , day
                      , hour
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
              SELECT user_id
                   , sort_array(
                        collect_list(
@@ -101,9 +89,14 @@ class DailyActivityUserEntity(UserEntity):
               USING (day, hour)
            GROUP BY user_id
         """
-        return run_query(query)
 
-    def parse_one_user_stats(self, entry: dict):
+
+class DailyActivityUserMessageCreator(UserStatsMessageCreator):
+
+    def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
+        super().__init__("daily_activity", message_type, selector, database)
+
+    def parse_row(self, entry: dict):
         try:
             UserStatRecords[DailyActivityRecord](
                 user_id=entry["user_id"],
