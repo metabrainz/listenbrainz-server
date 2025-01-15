@@ -120,7 +120,9 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show, volume } = this.props;
-    this.youtubePlayer?.setVolume(volume ?? 100);
+    if (this.youtubePlayer?.setVolume) {
+      this.youtubePlayer?.setVolume(volume ?? 100);
+    }
     if (prevProps.show && !show && this.youtubePlayer) {
       this.youtubePlayer.stopVideo();
       // Clear playlist

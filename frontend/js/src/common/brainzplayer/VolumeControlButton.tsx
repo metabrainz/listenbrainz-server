@@ -1,11 +1,7 @@
 import * as React from "react";
 import { useBrainzPlayerDispatch } from "./BrainzPlayerContext";
 
-type VolumeControlButtonProps = {
-  volume: number;
-};
-
-function VolumeControlButton(props: VolumeControlButtonProps) {
+function VolumeControlButton() {
   const dispatch = useBrainzPlayerDispatch();
   const volumeRef = React.useRef<HTMLInputElement>(null);
   const handleVolumeChange = () => {

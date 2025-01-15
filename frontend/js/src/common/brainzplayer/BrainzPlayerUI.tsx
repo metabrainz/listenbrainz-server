@@ -263,7 +263,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             disabled={disabled}
           />
         </div>
-        <VolumeControlButton volume={volume} />
+        <VolumeControlButton />
         <div className="actions">
           {isPlayingATrack && currentDataSourceName && (
             <a
