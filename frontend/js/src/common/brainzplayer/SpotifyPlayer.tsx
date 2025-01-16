@@ -143,7 +143,7 @@ export default class SpotifyPlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show, volume } = this.props;
-    if (this.spotifyPlayer?.setVolume) {
+    if (prevProps.volume !== volume && this.spotifyPlayer?.setVolume) {
       this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
     }
 

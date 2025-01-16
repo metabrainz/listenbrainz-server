@@ -351,6 +351,23 @@
   }
 }
 
+.volume {
+  position: fixed;
+  width: fit-content;
+  z-index: 109;
+  height: 10em;
+  background-color: #f8f8f8;
+  right: 16em;
+  .volume-input {
+    width: 7em;
+    margin-top: @brainzplayer-height;
+    transform: rotate(270deg);
+  }
+  &.show {
+    bottom: @brainzplayer-height;
+  }
+}
+
 .queue {
   position: fixed;
   padding: 1em;

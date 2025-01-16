@@ -151,7 +151,7 @@ export default class AppleMusicPlayer
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show, volume } = this.props;
     const player = this.appleMusicPlayer;
-    if (player) {
+    if (prevProps.volume !== volume && player) {
       player.volume = (volume ?? 100) / 100;
     }
     if (prevProps.show && !show) {
