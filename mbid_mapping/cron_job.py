@@ -8,6 +8,7 @@ import sys
 from time import sleep
 import os
 
+from mapping.utils import log
 import config
 
 LINES_IN_LOG_SNIPPET = 500
@@ -20,9 +21,9 @@ def post_telegram_message(msg):
     """ Post a message to the LB services Telegram channel """
 
     for retry in range(FAILURE_REPORT_RETRIES):
-        r = requests.post(url="https://api.telegram.org/bot%s/sendMessage" % config["SERVICE_MONITOR_TELEGRAM_BOT_TOKEN"],
+        r = requests.post(url="https://api.telegram.org/bot%s/sendMessage" % config.SERVICE_MONITOR_TELEGRAM_BOT_TOKEN,
                           data={
-                              'chat_id': config["SERVICE_MONITOR_TELEGRAM_CHAT_ID"],
+                              'chat_id': config.SERVICE_MONITOR_TELEGRAM_CHAT_ID,
                               'text': msg
                           })
         if r.status_code == 200:
@@ -31,7 +32,7 @@ def post_telegram_message(msg):
         if r.status_code in (400, 401, 403, 404, 429, 500):
             sleep(FAILURE_REPORT_DELAY)
 
-    sys.stderr.write("Failed to send error notification to the Telegram chat.\n")
+    log("Failed to send error notification to the Telegram chat.\n")
 
 
 def send_notification(script, return_code, stdout, stderr):
@@ -113,9 +114,10 @@ def monitor_process(cmd):
 
 
 def main():
+    log("cron job starting")
     args = sys.argv[1:]
     if not args:
-        sys.stderr.write("Error: Must provide one program to execute.")
+        log("Error: Must provide one program to execute.")
         sys.exit(-1)
 
     try:
@@ -128,7 +130,7 @@ def main():
         sys.exit(0)
 
     # We did not exit successfully, so report an error
-    send_notification(sys.argv[0], ret, stdout, stderr)
+    send_notification(" ".join(sys.argv[1:]), ret, stdout, stderr)
     sys.exit(ret)
 
 

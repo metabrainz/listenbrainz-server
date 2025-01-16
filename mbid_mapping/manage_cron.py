@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from functools import wraps
-from traceback import print_exception
+from traceback import format_exc
 import sys
 
 import click
@@ -38,15 +38,10 @@ def cron(slug):
                 log("cron decorator enter")
                 func(*args, **kwargs)
                 log("cron decorator exit")
-                log("report success to sentry")
                 capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
-                log("report success to sentry done")
-                sys.exit(0)
-            except Exception as exc:
-                print_exception(exc)
-                log("report failture to sentry")
+            except Exception:
+                log(format_exc()) 
                 capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.ERROR)
-                log("report failture to sentry done")
                 sys.exit(-1)
 
         return wrapped_f

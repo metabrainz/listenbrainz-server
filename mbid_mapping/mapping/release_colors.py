@@ -207,15 +207,15 @@ def sync_release_color_table():
 
     log("cover art sync starting...")
     mb_query = """SELECT caa.id AS caa_id
-                       , r.release AS release_id
-                       , release.gid AS release_mbid
+                       , r.id AS release_id
+                       , r.gid AS release_mbid
                        , mime_type
                        , year
                     FROM cover_art_archive.cover_art caa
                     JOIN cover_art_archive.cover_art_type cat
                       ON cat.id = caa.id
                     JOIN musicbrainz.release r
-                      ON caa.release = release.id
+                      ON caa.release = r.id
                     JOIN musicbrainz.release_first_release_date rfrd
                       ON rfrd.release = r.id
                    WHERE type_id = 1
