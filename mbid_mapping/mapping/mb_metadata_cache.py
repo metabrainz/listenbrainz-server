@@ -604,12 +604,14 @@ def create_mb_metadata_cache(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
+    log("entering create_mb_metadata_cache")
     create_metadata_cache(
         MusicBrainzMetadataCache,
         MB_METADATA_CACHE_TIMESTAMP_KEY,
         [CanonicalRecordingReleaseRedirect],
         use_lb_conn
     )
+    log("exiting create_mb_metadata_cache")
 
 
 def incremental_update_mb_metadata_cache(use_lb_conn: bool):
