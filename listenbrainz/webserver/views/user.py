@@ -22,7 +22,9 @@ from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+from listenbrainz.webserver.utils import number_readable
 from listenbrainz.webserver.views.api_tools import get_non_negative_param
+from werkzeug.exceptions import NotFound
 
 from brainzutils import cache
 
@@ -463,4 +465,19 @@ def year_in_music(user_name, year: int = 2024):
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)
-    return render_template("index.html", user=user)
+    if not user:
+        og_meta_tags = None
+    else:
+        listen_count = None
+        try:
+            listen_count = timescale_connection._ts.get_listen_count_for_user(user.id)
+        except psycopg2.OperationalError as err:
+            current_app.logger.error("cannot fetch user listen count: ", str(err))
+        og_meta_tags = {
+            "title": f"{user_name} on ListenBrainz",
+            "description": f'User{f" — {number_readable(listen_count)} listens" if listen_count else ""} — ListenBrainz',
+            "type": "profile",
+            "profile:username": user_name,
+            "url": f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/',
+        }
+    return render_template("index.html", og_meta_tags=og_meta_tags, user=user)
