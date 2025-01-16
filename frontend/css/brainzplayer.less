@@ -354,14 +354,19 @@
 .volume {
   position: fixed;
   width: fit-content;
-  z-index: 109;
+  z-index: 110;
   height: 10em;
   background-color: #f8f8f8;
-  right: 16em;
+  right: 17em;
+  bottom: -100px;
+  transition: bottom 0.5s ease-in-out;
+  border-top: 1px solid #ccc;
+  box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
   .volume-input {
-    width: 7em;
-    margin-top: @brainzplayer-height;
-    transform: rotate(270deg);
+    width: 3.5em;
+    writing-mode: vertical-rl;
+    direction: rtl;
+    margin: 1.5em 0.6em;
   }
   &.show {
     bottom: @brainzplayer-height;
