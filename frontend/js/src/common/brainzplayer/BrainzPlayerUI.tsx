@@ -288,7 +288,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               <FontAwesomeIcon
                 icon={faVolumeUp}
                 style={{ color: showVolume ? "green" : "" }}
-                onClick={() => setShowVolume((showVolume) => !showVolume)}
+                onClick={() => setShowVolume(!showVolume)}
                 className="hidden-sm hidden-xs"
               />
             </>
