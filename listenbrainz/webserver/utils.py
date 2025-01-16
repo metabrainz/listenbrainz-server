@@ -35,6 +35,18 @@ def sizeof_readable(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yb', suffix)
 
 
+def number_readable(num: int):
+    # Solution by rtaft from https://stackoverflow.com/a/45846841/4904467
+    """ Converts a number to a short human-readable format (1.2K, 6.6M, etc.)"""
+    suffixes = ['', 'K', 'M', 'B', 'T']
+    num = float('{:.2g}'.format(num))
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), suffixes[magnitude])
+
+
 def reformat_date(value, fmt="%b %d, %Y"):
     return value.strftime(fmt)
 

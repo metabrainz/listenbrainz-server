@@ -8,6 +8,7 @@ from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
+from listenbrainz.webserver.utils import number_readable
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
@@ -111,14 +112,40 @@ def release_redirect(release_mbid):
 
 
 @artist_bp.get("/",  defaults={'path': ''})
-@artist_bp.get('/<path:path>/')
-def artist_page(path):
-    return render_template("index.html")
+@artist_bp.get("/<artist_mbid>/")
+def artist_page(artist_mbid: str):
+    og_meta_tags = None
+    if is_valid_uuid(artist_mbid) and artist_mbid not in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
+        artist_data = get_metadata_for_artist(ts_conn, [artist_mbid])
+        if len(artist_data) == 0:
+            pass
+        else:
+            artist = artist_data[0]
+            artist_name = artist.artist_data.get("name")
+            release_group_data = artist.release_group_data
+            release_group_mbids = [rg["mbid"] for rg in release_group_data]
+            album_count = len(release_group_mbids)
+            listening_stats = get_entity_listener(
+                db_conn, "artists", artist_mbid, "all_time")
+            total_listen_count = 0
+            if listening_stats and "total_listen_count" in listening_stats:
+                total_listen_count = number_readable(
+                    listening_stats["total_listen_count"] or 0)
+
+            og_meta_tags = {
+                "title": f'{artist_name}',
+                "description": f'Artist — {total_listen_count} listens — {album_count} albums — ListenBrainz',
+                "type": "profile",
+                "profile:username": artist_name,
+                "profile.gender": artist.artist_data.get("gender"),
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/artist/{artist.artist_mbid}',
+            }
+    return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
 @artist_bp.post("/<artist_mbid>/")
 @web_listenstore_needed
-def artist_entity(artist_mbid):
+def artist_entity(artist_mbid: str):
     """ Show a artist page with all their relevant information """
     # VA artist mbid
     if artist_mbid in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
@@ -209,14 +236,54 @@ def artist_entity(artist_mbid):
 
 
 @album_bp.get("/",  defaults={'path': ''})
-@album_bp.get('/<path:path>/')
-def album_page(path):
-    return render_template("index.html")
+@album_bp.get("/<release_group_mbid>/")
+def album_page(release_group_mbid: str):
+    og_meta_tags = None
+    if is_valid_uuid(release_group_mbid):
+        metadata = fetch_release_group_metadata(
+            [release_group_mbid],
+            ["artist", "recording"]
+        )
+        if len(metadata) == 0:
+            pass
+        else:
+            release_group = metadata[release_group_mbid]
+
+            recording_data = release_group.pop("recording")
+            mediums = recording_data.get("mediums", [])
+            recording_mbids = []
+            for medium in mediums:
+                for track in medium["tracks"]:
+                    recording_mbids.append(track["recording_mbid"])
+
+            album_name = release_group.get("release_group").get("name")
+            artist_name = release_group.get("artist").get("name")
+            track_count = len(recording_mbids)
+            listening_stats = get_entity_listener(
+                db_conn, "release_groups", release_group_mbid, "all_time")
+            total_listen_count = 0
+            if listening_stats and "total_listen_count" in listening_stats:
+                total_listen_count = number_readable(
+                    listening_stats["total_listen_count"] or 0)
+
+            og_meta_tags = {
+                "title": f'{album_name} — {artist_name}',
+                "description": f'Album — {track_count} tracks — {total_listen_count} listens — ListenBrainz',
+                "type": "music.album",
+                "music:musician": artist_name,
+                "music:release_date": release_group.get("release_group").get("date"),
+                "image": f'https://coverartarchive.org/release-group/{release_group_mbid}/front-500',
+                "image:width": "500",
+                "image:alt": f"Cover art for {album_name}",
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/album/{release_group_mbid}',
+            }
+
+    return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
 @album_bp.post("/<release_group_mbid>/")
 @web_listenstore_needed
-def album_entity(release_group_mbid):
+def album_entity(release_group_mbid: str):
     """ Show an album page with all their relevant information """
 
     if not is_valid_uuid(release_group_mbid):
