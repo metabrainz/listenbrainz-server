@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, ScrollRestoration, useNavigate } from "react-router-dom";
 
-export default function EntityPageLayout() {
+export default function LayoutWithBackButton() {
   const navigate = useNavigate();
 
   const goBack = () => {
