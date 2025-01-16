@@ -1488,6 +1488,39 @@ export default class APIService {
     return response.json();
   };
 
+  exportPlaylistToAppleMusic = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/apple_music`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToAppleMusic = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/export-jspf/apple_music`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   exportJSPFPlaylistToSpotify = async (
     userToken: string,
     playlist: JSPFPlaylist
