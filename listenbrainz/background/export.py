@@ -77,17 +77,85 @@ def export_query_to_jsonl(conn, file_path, query, **kwargs):
 def export_listens_for_time_range(ts_conn, file_path, user_id: int, start_time: datetime, end_time: datetime):
     """ Export user's listens for a given time period. """
     query = """
-        SELECT jsonb_build_object(
-                    'listened_at'
-                  ,  extract(epoch from listened_at)
-                  , 'track_metadata'
-                  , jsonb_set(data, '{recording_msid}'::text[], to_jsonb(recording_msid::text))
-               )::text as line
-          FROM listen
-         WHERE listened_at >= :start_time
-           AND listened_at <= :end_time
-           AND user_id = :user_id
-      ORDER BY listened_at ASC
+          WITH selected_listens AS (
+                SELECT l.listened_at
+                     , l.created as inserted_at
+                     , l.data
+                     , l.recording_msid
+                     , COALESCE((data->'additional_info'->>'recording_mbid')::uuid, user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS recording_mbid
+                  FROM listen l
+             LEFT JOIN mbid_mapping mm
+                    ON l.recording_msid = mm.recording_msid
+             LEFT JOIN mbid_manual_mapping user_mm
+                    ON l.recording_msid = user_mm.recording_msid
+                   AND user_mm.user_id = l.user_id 
+             LEFT JOIN mbid_manual_mapping_top other_mm
+                    ON l.recording_msid = other_mm.recording_msid
+                 WHERE listened_at >= :start_time
+                   AND listened_at <= :end_time
+                   AND l.user_id = :user_id
+          )
+                SELECT jsonb_build_object(
+                            'listened_at'
+                          ,  extract(epoch from listened_at)
+                          , 'inserted_at'
+                          ,  extract(epoch from inserted_at)
+                          , 'track_metadata'
+                          , jsonb_set(
+                                jsonb_set(data, '{recording_msid}'::text[], to_jsonb(recording_msid::text)),
+                                    '{mbid_mapping}'::text[]
+                                  , CASE
+                                    WHEN mbc.recording_mbid IS NULL
+                                    THEN 'null'::jsonb
+                                    ELSE 
+                                       jsonb_build_object(
+                                          'recording_name'
+                                        , mbc.recording_data->>'name'
+                                        , 'recording_mbid'
+                                        , mbc.recording_mbid::text
+                                        , 'release_mbid'
+                                        , mbc.release_mbid::text
+                                        , 'artist_mbids'
+                                        , mbc.artist_mbids::TEXT[]
+                                        , 'caa_id'
+                                        , (mbc.release_data->>'caa_id')::bigint
+                                        , 'caa_release_mbid'
+                                        , (mbc.release_data->>'caa_release_mbid')::text
+                                        , 'artists'
+                                        , jsonb_agg(
+                                            jsonb_build_object(
+                                                'artist_credit_name'
+                                              , artist->>'name'
+                                              , 'join_phrase'
+                                              , artist->>'join_phrase'
+                                              , 'artist_mbid'
+                                              , mbc.artist_mbids[position]
+                                            )
+                                            ORDER BY position
+                                          )
+                                        )
+                                    END
+                            )
+                       )::text as line
+                  FROM selected_listens sl
+             LEFT JOIN mapping.mb_metadata_cache mbc
+                    ON sl.recording_mbid = mbc.recording_mbid
+     LEFT JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
+                    ON TRUE
+              GROUP BY sl.listened_at
+                     , sl.inserted_at
+                     , sl.recording_msid
+                     , sl.data
+                     , mbc.recording_mbid
+                     , recording_data->>'name'
+                     , release_mbid
+                     , artist_mbids
+                     , artist_data->>'name'
+                     , recording_data->>'name'
+                     , release_data->>'name'
+                     , release_data->>'caa_id'
+                     , release_data->>'caa_release_mbid'
+              ORDER BY listened_at
     """
     return export_query_to_jsonl(ts_conn, file_path, query, user_id=user_id, start_time=start_time, end_time=end_time)
 

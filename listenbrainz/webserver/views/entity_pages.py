@@ -83,13 +83,13 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.route("/",  defaults={'path': ''})
-@release_bp.route('/<path:path>/')
+@release_bp.get("/",  defaults={'path': ''})
+@release_bp.get('/<path:path>/')
 def release_page(path):
     return render_template("index.html")
 
 
-@release_bp.route("/<release_mbid>/", methods=["POST"])
+@release_bp.post("/<release_mbid>/")
 @web_listenstore_needed
 def release_redirect(release_mbid):
     if not is_valid_uuid(release_mbid):
@@ -111,8 +111,8 @@ def release_redirect(release_mbid):
         return jsonify({"releaseGroupMBID": result["release_group_mbid"]})
 
 
-@artist_bp.route("/",  defaults={'path': ''})
-@artist_bp.route("/<artist_mbid>/", methods=["GET"])
+@artist_bp.get("/",  defaults={'path': ''})
+@artist_bp.get("/<artist_mbid>/")
 def artist_page(artist_mbid: str):
     og_meta_tags = None
     if is_valid_uuid(artist_mbid) and artist_mbid not in {"89ad4ac3-39f7-470e-963a-56509c546377"}:
@@ -143,7 +143,7 @@ def artist_page(artist_mbid: str):
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
-@artist_bp.route("/<artist_mbid>/", methods=["POST"])
+@artist_bp.post("/<artist_mbid>/")
 @web_listenstore_needed
 def artist_entity(artist_mbid: str):
     """ Show a artist page with all their relevant information """
@@ -235,8 +235,8 @@ def artist_entity(artist_mbid: str):
     return jsonify(data)
 
 
-@album_bp.route("/",  defaults={'path': ''})
-@album_bp.route("/<release_group_mbid>/", methods=["GET"])
+@album_bp.get("/",  defaults={'path': ''})
+@album_bp.get("/<release_group_mbid>/")
 def album_page(release_group_mbid: str):
     og_meta_tags = None
     if is_valid_uuid(release_group_mbid):
@@ -281,7 +281,7 @@ def album_page(release_group_mbid: str):
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
-@album_bp.route("/<release_group_mbid>/", methods=["POST"])
+@album_bp.post("/<release_group_mbid>/")
 @web_listenstore_needed
 def album_entity(release_group_mbid: str):
     """ Show an album page with all their relevant information """
@@ -334,7 +334,7 @@ def album_entity(release_group_mbid: str):
     return jsonify(data)
 
 
-@release_group_bp.route("/",  defaults={'path': ''})
-@release_group_bp.route('/<path:path>/')
+@release_group_bp.get("/",  defaults={'path': ''})
+@release_group_bp.get('/<path:path>/')
 def release_group_redirect(path):
     return render_template("index.html")

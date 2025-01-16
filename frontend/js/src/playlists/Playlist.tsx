@@ -320,7 +320,7 @@ export default function PlaylistPage() {
 
   return (
     <div role="main">
-      <Helmet defer={false}>
+      <Helmet>
         <title>
           {playlist.title} by {playlist.creator}
         </title>

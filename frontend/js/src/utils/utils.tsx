@@ -468,7 +468,7 @@ const fullLocalizedDateFromTimestampOrISODate = (
 const convertDateToUnixTimestamp = (date: Date): number => {
   const newDate = new Date(date);
   const timestampInMs = newDate.getTime();
-  const unixTimestamp = Math.floor(newDate.getTime() / 1000);
+  const unixTimestamp = Math.floor(timestampInMs / 1000);
   return unixTimestamp;
 };
 
