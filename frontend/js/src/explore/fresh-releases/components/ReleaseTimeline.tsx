@@ -28,22 +28,21 @@ function createMarks(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
-    const today = new Date();
     const filteredDates = Object.keys(releasesPerDate).filter((date) =>
-      isToday(today)
-        ? releasesPerDate[date] >= minReleasesThreshold
-        : releasesPerDate[date] > 0
+      isToday(new Date(date))
+        ? releasesPerDate[date] >= 0
+        : releasesPerDate[date] > minReleasesThreshold
     );
 
-    dataArr = filteredDates.map((item) =>
-      isToday(new Date(item)) ? (
+    dataArr = filteredDates.map((date) =>
+      isToday(new Date(date)) ? (
         <FontAwesomeIcon
           icon={faCalendarCheck}
           size="2xl"
           color={COLOR_LB_BLUE}
         />
       ) : (
-        formatReleaseDate(item)
+        formatReleaseDate(date)
       )
     );
     percentArr = filteredDates
