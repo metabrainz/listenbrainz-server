@@ -58,6 +58,7 @@ export type DataSourceTypes =
 
 export type DataSourceProps = {
   show: boolean;
+  volume?: number;
   playerPaused: boolean;
   onPlayerPausedChange: (paused: boolean) => void;
   onProgressChange: (progressMs: number) => void;
@@ -153,6 +154,7 @@ export default function BrainzPlayer() {
     currentTrackURL,
     playerPaused,
     isActivated,
+    volume,
     durationMs,
     progressMs,
     listenSubmitted,
@@ -1023,6 +1025,7 @@ export default function BrainzPlayer() {
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1045,6 +1048,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
           <YoutubePlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1068,6 +1072,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
           <SoundcloudPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1090,6 +1095,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
           <AppleMusicPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
