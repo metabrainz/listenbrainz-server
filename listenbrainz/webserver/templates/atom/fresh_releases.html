@@ -1,0 +1,16 @@
+<p>
+    {% if artist_mbid -%}
+        <a href="{{ artist_page_base_url }}{{ artist_mbid }}">{{ artist_name }}</a>
+    {%- else -%}
+        {{ artist_name }}
+    {%- endif %}
+    released
+    {% if release_mbid -%}
+        <a href="{{ release_lb_page_base_url }}{{ release_mbid }}">{{ release_name }}</a>.
+    {%- else -%}
+        {{ release_name }}.
+    {%- endif %}
+</p>
+<p>
+    <a href="{{ explore_fresh_releases_url }}">Explore more</a>
+</p>

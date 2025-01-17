@@ -2,6 +2,7 @@ import * as React from "react";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as _ from "lodash";
 import Switch from "../../../components/Switch";
 import SideBar from "../../../components/Sidebar";
 import type {
@@ -11,12 +12,13 @@ import type {
 } from "../FreshReleases";
 import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
 
+const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
+
 type ReleaseFiltersProps = {
-  allFilters: {
-    releaseTypes: Array<string | undefined>;
-    releaseTags: Array<string | undefined>;
-  };
   releases: Array<FreshReleaseItem>;
+  releaseTypes: Array<string>;
+  releaseTags: Array<string>;
+  filteredList: Array<FreshReleaseItem>;
   setFilteredList: React.Dispatch<
     React.SetStateAction<Array<FreshReleaseItem>>
   >;
@@ -34,8 +36,10 @@ type ReleaseFiltersProps = {
 
 export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const {
-    allFilters,
+    releaseTypes,
+    releaseTags,
     releases,
+    filteredList,
     setFilteredList,
     range,
     handleRangeChange,
@@ -55,6 +59,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   const [releaseTagsCheckList, setReleaseTagsCheckList] = React.useState<
     Array<string | undefined>
   >([]);
+  const [includeVariousArtists, setIncludeVariousArtists] = React.useState<
+    boolean
+  >(false);
 
   const [
     releaseTagsExcludeCheckList,
@@ -141,10 +148,18 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         )
       : Object.values(filterRangeOptions);
 
+  // Reset filters when range changes
   React.useEffect(() => {
-    setCoverartOnly(false);
-    setCheckedList([]);
-  }, [allFilters]);
+    if (coverartOnly === true) {
+      setCoverartOnly(false);
+    }
+    if (checkedList?.length > 0) {
+      setCheckedList([]);
+    }
+    if (includeVariousArtists === true) {
+      setIncludeVariousArtists(false);
+    }
+  }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {
     const filteredReleases = releases.filter((item) => {
@@ -162,15 +177,23 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         releaseTagsExcludeCheckList.includes(tag)
       );
 
+      const isVariousArtists = item.artist_mbids.some(
+        (mbid) => mbid === VARIOUS_ARTISTS_MBID
+      );
+      const isVariousArtistsValid = !isVariousArtists || includeVariousArtists;
+
       return (
         isCoverArtValid &&
         isReleaseTypeValid &&
         isReleaseTagValid &&
-        !isReleaseTagExcluded
+        !isReleaseTagExcluded &&
+        isVariousArtistsValid
       );
     });
 
-    setFilteredList(filteredReleases);
+    if (!_.isEqual(filteredReleases, filteredList)) {
+      setFilteredList(filteredReleases);
+    }
     if (releaseCardGridRef.current) {
       window.scrollTo(0, releaseCardGridRef.current.offsetTop);
     }
@@ -179,12 +202,19 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     releaseTagsCheckList,
     releaseTagsExcludeCheckList,
     coverartOnly,
+    includeVariousArtists,
     releases,
+    filteredList,
+    releaseCardGridRef,
+    setFilteredList,
   ]);
 
   return (
-    <SideBar>
-      <div className="sidebar-header">
+    <SideBar className="sidebar-fresh-releases">
+      <div
+        className="sidebar-header"
+        data-testid="sidebar-header-fresh-releases"
+      >
         <p>Fresh Releases</p>
         <p>Listen to recent releases, and browse what&apos;s dropping soon.</p>
         <p>
@@ -246,10 +276,10 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               onChange={(e) => setShowFutureReleases(!showFutureReleases)}
               switchLabel="Future"
             />
-            {allFilters.releaseTypes.length > 0 && (
+            {releaseTypes.length > 0 && (
               <>
                 <span id="types">Types:</span>
-                {allFilters.releaseTypes?.map((type, index) => (
+                {releaseTypes?.map((type, index) => (
                   <Switch
                     id={`filters-item-${index}`}
                     key={`filters-item-${type}`}
@@ -262,7 +292,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               </>
             )}
 
-            {allFilters.releaseTags.length > 0 && (
+            {releaseTags.length > 0 && (
               <>
                 <span id="tags">Include (only):</span>
                 <select
@@ -274,7 +304,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   <option value="" disabled>
                     selection genre/tag...
                   </option>
-                  {allFilters.releaseTags
+                  {releaseTags
                     ?.filter((tag) => !releaseTagsCheckList.includes(tag))
                     ?.map((tag, index) => (
                       <option value={tag} key={tag}>
@@ -305,7 +335,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   <option value="" disabled>
                     selection genre/tag...
                   </option>
-                  {allFilters.releaseTags
+                  {releaseTags
                     ?.filter(
                       (tag) => !releaseTagsExcludeCheckList.includes(tag)
                     )
@@ -364,8 +394,17 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
               switchLabel="Only Releases with artwork"
             />
 
+            <Switch
+              id="include-various-artists-switch"
+              key="include-various-artists-switch"
+              value="various-artists"
+              checked={includeVariousArtists}
+              onChange={(e) => setIncludeVariousArtists(!includeVariousArtists)}
+              switchLabel="Releases by Various Artists"
+            />
+
             {Object.keys(displaySettings).map((setting, index) =>
-              (setting === "Tags" && allFilters.releaseTags.length === 0) ||
+              (setting === "Tags" && releaseTags.length === 0) ||
               (setting === "Listens" && !totalListenCount) ? null : (
                 <Switch
                   id={`display-item-${index}`}

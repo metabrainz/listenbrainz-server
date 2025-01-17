@@ -41,8 +41,8 @@ def load_all_releases():
     return listenbrainz_spark.session.createDataFrame(releases, schema=fresh_releases_schema)
 
 
-def get_query():
-    return """
+def get_query(threshold):
+    return f"""
         WITH artists AS (
             SELECT DISTINCT explode(artist_mbids) AS artist_mbid
               FROM fresh_releases
@@ -117,11 +117,12 @@ def get_query():
                     -- sort in descending order of confidence              
                ) AS releases
           FROM filtered_releases
+         WHERE confidence >= {threshold}
       GROUP BY user_id      
     """
 
 
-def main(days: Optional[int], database: str):
+def main(days: Optional[int], database: str, threshold: int):
     to_date = get_latest_listen_ts()
     if days:
         from_date = to_date + timedelta(days=-days)
@@ -137,7 +138,7 @@ def main(days: Optional[int], database: str):
         "database": database
     }
 
-    itr = run_query(get_query()).toLocalIterator()
+    itr = run_query(get_query(threshold)).toLocalIterator()
     for rows in chunked(itr, USERS_PER_MESSAGE):
         entries = []
         for row in rows:

@@ -1,5 +1,4 @@
 from datetime import datetime
-from operator import itemgetter
 
 import psycopg2
 import orjson
@@ -11,11 +10,12 @@ import listenbrainz.db.playlist as db_playlist
 import listenbrainz.db.user as db_user
 import listenbrainz.db.external_service_oauth as db_external_service_oauth
 import listenbrainz.webserver.redis_connection as redis_connection
+from listenbrainz.db.lb_radio_artist import lb_radio_artist
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import listens_importer, tags
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import api_listenstore_needed
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
@@ -25,7 +25,7 @@ from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
-    get_non_negative_param
+    get_non_negative_param, _parse_int_arg
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -33,7 +33,8 @@ DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
 SEARCH_USER_LIMIT = 10
 
-@api_bp.route('/search/users/', methods=['GET', 'OPTIONS'])
+
+@api_bp.get("/search/users/")
 @crossdomain
 @ratelimit()
 def search_user():
@@ -43,13 +44,13 @@ def search_user():
     """
     search_term = request.args.get("search_term")
     if search_term:
-        users = db_user.search_user_name(search_term, SEARCH_USER_LIMIT)
+        users = db_user.search_user_name(db_conn, search_term, SEARCH_USER_LIMIT)
     else:
         users = []
     return jsonify({'users': users})
 
 
-@api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
+@api_bp.post("/submit-listens")
 @crossdomain
 @ratelimit()
 def submit_listen():
@@ -71,7 +72,7 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header(fetch_email=True)
+    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
@@ -133,7 +134,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.route("/user/<user_name>/listens", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -152,7 +153,7 @@ def get_listens(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -179,7 +180,7 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/listen-count", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/listen-count")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -194,7 +195,7 @@ def get_listen_count(user_name):
     :statuscode 404: The requested user was not found.
     :resheader Content-Type: *application/json*
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -202,15 +203,14 @@ def get_listen_count(user_name):
         listen_count = timescale_connection._ts.get_listen_count_for_user(user["id"])
     except psycopg2.OperationalError as err:
         current_app.logger.error("cannot fetch user listen count: ", str(err))
-        raise APIServiceUnavailable(
-            "Cannot fetch user listen count right now.")
+        raise APIServiceUnavailable("Cannot fetch user listen count right now.")
 
     return jsonify({'payload': {
         'count': listen_count
     }})
 
 
-@api_bp.route("/user/<user_name>/playing-now", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/playing-now")
 @crossdomain
 @ratelimit()
 def get_playing_now(user_name):
@@ -227,7 +227,7 @@ def get_playing_now(user_name):
     :resheader Content-Type: *application/json*
     """
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
@@ -248,7 +248,7 @@ def get_playing_now(user_name):
     })
 
 
-@api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/similar-users")
 @crossdomain
 @ratelimit()
 def get_similar_users(user_name):
@@ -268,11 +268,11 @@ def get_similar_users(user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    similar_users = db_user.get_similar_users(user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
     return jsonify({
         "payload": [
             {
@@ -284,7 +284,7 @@ def get_similar_users(user_name):
     })
 
 
-@api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/similar-to/<other_user_name>")
 @crossdomain
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
@@ -305,11 +305,11 @@ def get_similar_to_user(user_name, other_user_name):
     :resheader Content-Type: *application/json*
     :statuscode 404: The requested user was not found.
     """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if not user:
         raise APINotFound("User %s not found" % user_name)
 
-    similar_users = db_user.get_similar_users(user['id'])
+    similar_users = db_user.get_similar_users(db_conn, user['id'])
 
     # Constructing an id-similarity map
     id_similarity_map = {r["musicbrainz_id"]: r["similarity"] for r in similar_users}
@@ -320,7 +320,7 @@ def get_similar_to_user(user_name, other_user_name):
         raise APINotFound("Similar-to user not found")
 
 
-@api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
+@api_bp.route("/latest-import", methods=["GET", "POST"])
 @crossdomain
 @ratelimit()
 def latest_import():
@@ -361,10 +361,10 @@ def latest_import():
             service = ExternalServiceType[service_name.upper()]
         except KeyError:
             raise APINotFound("Service does not exist: {}".format(service_name))
-        user = db_user.get_by_mb_id(user_name)
+        user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
-        latest_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+        latest_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
         return jsonify({
             'musicbrainz_id': user['musicbrainz_id'],
             'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
@@ -381,10 +381,10 @@ def latest_import():
             raise APIBadRequest('Invalid data sent')
 
         try:
-            last_import_ts = listens_importer.get_latest_listened_at(user["id"], service)
+            last_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
             last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
             if ts > last_import_ts:
-                listens_importer.update_latest_listened_at(user["id"], service, ts)
+                listens_importer.update_latest_listened_at(db_conn, user["id"], service, ts)
         except DatabaseException:
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
@@ -392,7 +392,7 @@ def latest_import():
         return jsonify({'status': 'ok'})
 
 
-@api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
+@api_bp.get("/validate-token")
 @crossdomain
 @ratelimit()
 def validate_token():
@@ -443,7 +443,7 @@ def validate_token():
 
     if not auth_token:
         raise APIBadRequest("You need to provide an Authorization token.")
-    user = db_user.get_by_token(auth_token)
+    user = db_user.get_by_token(db_conn, auth_token)
     if user is None:
         return jsonify({
             'code': 200,
@@ -459,7 +459,7 @@ def validate_token():
         })
 
 
-@api_bp.route('/delete-listen', methods=['POST', 'OPTIONS'])
+@api_bp.post("/delete-listen")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -537,7 +537,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
             "count": count}
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists")
 @crossdomain
 @ratelimit()
 def get_playlists_for_user(playlist_user_name):
@@ -560,19 +560,19 @@ def get_playlists_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_for_user(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_for_user(db_conn, ts_conn, playlist_user["id"],
                                                                    include_private=include_private,
                                                                    load_recordings=False, count=count, offset=offset)
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/createdfor")
 @crossdomain
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
@@ -593,17 +593,18 @@ def get_playlists_created_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists, playlist_count = db_playlist.get_playlists_created_for_user(playlist_user["id"],
-                                                                           load_recordings=False, count=count, offset=offset)
+    playlists, playlist_count = db_playlist.get_playlists_created_for_user(
+        db_conn, ts_conn, playlist_user["id"], load_recordings=False, count=count, offset=offset
+    )
 
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/collaborator")
 @crossdomain
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
@@ -626,13 +627,14 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     count = get_non_negative_param(
         'count', DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
     offset = get_non_negative_param('offset', 0)
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
     # TODO: This needs to be passed to the DB layer
     include_private = True if user and user["id"] == playlist_user["id"] else False
-    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(playlist_user["id"],
+    playlists, playlist_count = db_playlist.get_playlists_collaborated_on(db_conn, ts_conn,
+                                                                          playlist_user["id"],
                                                                           include_private=include_private,
                                                                           load_recordings=False,
                                                                           count=count,
@@ -641,7 +643,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/recommendations", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/recommendations")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -656,15 +658,45 @@ def user_recommendations(playlist_user_name):
     :resheader Content-Type: *application/json*
     """
 
-    playlist_user = db_user.get_by_mb_id(playlist_user_name)
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
     if playlist_user is None:
         raise APINotFound("Cannot find user: %s" % playlist_user_name)
 
-    playlists = db_playlist.get_recommendation_playlists_for_user(playlist_user.id)
+    playlists = db_playlist.get_recommendation_playlists_for_user(db_conn, ts_conn, playlist_user.id)
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
-@api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/search")
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def search_user_playlist(playlist_user_name):
+    """
+    Search for a playlist by name for a user.
+
+    :param playlist_user_name: the MusicBrainz ID of the user whose playlists are being searched.
+    :queryparam name: the name of the playlist to search for.
+    :queryparam count: the number of playlists to return. Default: 25.
+    :queryparam offset: the offset of the playlists to return. Default: 0.
+
+    :statuscode 200: success
+    :statuscode 404: user not found
+    :resheader Content-Type: *application/json*
+    """
+    playlist_user = db_user.get_by_mb_id(db_conn, playlist_user_name)
+    if playlist_user is None:
+        raise APINotFound("Cannot find user: %s" % playlist_user_name)
+
+    query = request.args.get("query")
+    count = get_non_negative_param("count", DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL)
+    offset = get_non_negative_param("offset", 0)
+
+    playlists, playlist_count = db_playlist.search_playlists_for_user(db_conn, ts_conn, playlist_user.id, query, count, offset)
+
+    return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
+
+
+@api_bp.get("/user/<user_name>/services")
 @crossdomain
 @ratelimit()
 def get_service_details(user_name):
@@ -689,27 +721,23 @@ def get_service_details(user_name):
     if user_name != user['musicbrainz_id']:
         raise APIForbidden("You don't have permissions to view this user's information.")
 
-    services = db_external_service_oauth.get_services(user["id"])
+    services = db_external_service_oauth.get_services(db_conn, user["id"])
     return jsonify({'user_name': user_name, 'services': services})
 
 
-@api_bp.route("/lb-radio/tags", methods=['GET', 'OPTIONS'])
+@api_bp.get("/lb-radio/tags")
 @crossdomain
 @ratelimit()
 def get_tags_dataset():
     """ Get recordings for use in LB radio with the specified tags that match the requested criteria.
 
-    .. code-block:: json
-
-
-
     :param tag: the MusicBrainz tag to fetch recordings for, this parameter can be specified multiple times. if more
-        than one tag is specified, the condition param should also be specified.
-    :param condition: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
+        than one tag is specified, the operator param should also be specified.
+    :param operator: specify AND to retrieve recordings that have all the tags, otherwise specify OR to retrieve
         recordings that have any one of the tags.
-    :param begin_percent: percent is a measure of the recording's popularity, begin_percent denotes a preferred
+    :param pop_begin: percent is a measure of the recording's popularity, pop_begin denotes a preferred
         lower bound on the popularity of recordings to be returned.
-    :param end_percent: percent is a measure of the recording's popularity, end_percent denotes a preferred
+    :param pop_end: percent is a measure of the recording's popularity, pop_end denotes a preferred
         upper bound on the popularity of recordings to be returned.
     :param count: number of recordings to return for the
     :resheader Content-Type: *application/json*
@@ -720,37 +748,37 @@ def get_tags_dataset():
     if tag is None:
         raise APIBadRequest("tag param is missing")
 
-    condition = request.args.get("condition")
+    operator = request.args.get("operator")
 
-    # if there is only one tag, then we can use any of the condition's query to retrieve data
-    if len(tag) == 1 and condition is None:
-        condition = "OR"
+    # if there is only one tag, then we can use any of the operator's query to retrieve data
+    if len(tag) == 1 and operator is None:
+        operator = "OR"
 
-    if condition is None:
-        raise APIBadRequest("multiple tags are specified but the condition param is missing")
-    condition = condition.upper()
-    if condition != "AND" and condition != "OR":
-        raise APIBadRequest("condition param should be either 'AND' or 'OR'")
-
-    try:
-        begin_percent = request.args.get("begin_percent")
-        if begin_percent is None:
-            raise APIBadRequest("begin_percent param is missing")
-        begin_percent = float(begin_percent) / 100
-        if begin_percent < 0 or begin_percent > 1:
-            raise APIBadRequest("begin_percent should be between the range: 0 to 100")
-    except ValueError:
-        raise APIBadRequest(f"begin_percent: '{begin_percent}' is not a valid number")
+    if operator is None:
+        raise APIBadRequest("multiple tags are specified but the operator param is missing")
+    operator = operator.upper()
+    if operator != "AND" and operator != "OR":
+        raise APIBadRequest("operator param should be either 'AND' or 'OR'")
 
     try:
-        end_percent = request.args.get("end_percent")
-        if end_percent is None:
-            raise APIBadRequest("end_percent param is missing")
-        end_percent = float(end_percent) / 100
-        if end_percent < 0 or end_percent > 1:
-            raise APIBadRequest("end_percent should be between the range: 0 to 100")
+        pop_begin = request.args.get("pop_begin")
+        if pop_begin is None:
+            raise APIBadRequest("pop_begin param is missing")
+        pop_begin = float(pop_begin) / 100
+        if pop_begin < 0 or pop_begin > 1:
+            raise APIBadRequest("pop_begin should be between the range: 0 to 100")
     except ValueError:
-        raise APIBadRequest(f"end_percent: '{end_percent}' is not a valid number")
+        raise APIBadRequest(f"pop_begin: '{pop_begin}' is not a valid number")
+
+    try:
+        pop_end = request.args.get("pop_end")
+        if pop_end is None:
+            raise APIBadRequest("pop_end param is missing")
+        pop_end = float(pop_end) / 100
+        if pop_end < 0 or pop_end > 1:
+            raise APIBadRequest("pop_end should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
 
     try:
         count = request.args.get("count")
@@ -762,11 +790,11 @@ def get_tags_dataset():
     except ValueError:
         raise APIBadRequest(f"count: '{count}' is not a valid positive number")
 
-    if condition == "AND":
-        results = tags.get_and(tag, begin_percent, end_percent, count)
+    if operator == "AND":
+        recordings = tags.get_and(tag, pop_begin, pop_end, count)
     else:
-        results = tags.get_or(tag, begin_percent, end_percent, count)
-    return jsonify(results)
+        recordings = tags.get_or(tag, pop_begin, pop_end, count)
+    return jsonify(recordings[:count])
 
 
 def _get_listen_type(listen_type):
@@ -775,3 +803,69 @@ def _get_listen_type(listen_type):
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
+
+
+@api_bp.get("/lb-radio/artist/<seed_artist_mbid>")
+@crossdomain
+@ratelimit()
+def get_artist_radio_recordings(seed_artist_mbid):
+    """ Get recordings for use in LB radio with the given seed artist. The endpoint
+    returns a dict of all the similar artists, including the seed artist. For each artists,
+    there will be a list of dicts that contain recording_mbid, similar_artist_mbid and total_listen_count:
+
+    .. code-block:: json
+
+            {
+              "recording_mbid": "401c1a5d-56e7-434d-b07e-a14d4e7eb83c",
+              "similar_artist_mbid": "cb67438a-7f50-4f2b-a6f1-2bb2729fd538",
+              "similar_artist_name": "Boo Hoo Boys",
+              "total_listen_count": 232361
+            }
+
+    :param mode: mode is the LB radio mode to be used for this query. Must be one of "easy", "medium", "hard".
+    :param max_similar_artists: The maximum number of similar artists to return recordings for.
+    :param max_recordings_per_artist: The maximum number of recordings to return for each artist. If there are aren't enough recordings, all available recordings will be returned.
+    :param pop_begin: Popularity range percentage lower bound. A popularity range is given to narrow down the recordings into a smaller target group. The most popular recording(s) on LB have a pop percent of 100. The least popular recordings have a score of 0. This range is not coupled to the specified mode, but the mode would often determine the popularity range, so that less popular recordings can be returned on the medium and harder modes.
+    :param pop_end: Popularity range percentage upper bound. See above.
+    :resheader Content-Type: *application/json*
+    :statuscode 200: Yay, you have data!
+    :statuscode 400: Invalid or missing param in request, see error message for details.
+    """
+    if not is_valid_uuid(seed_artist_mbid):
+        log_raise_400("Seed artist mbid is not a valid UUID.")
+
+    max_similar_artists = _parse_int_arg("max_similar_artists")
+    if max_similar_artists is None:
+        raise APIBadRequest("Argument max_similar_artists must be specified.")
+
+    max_recordings_per_artist = _parse_int_arg("max_recordings_per_artist")
+    if max_recordings_per_artist is None:
+        raise APIBadRequest("Argument max_recordings_per_artist must be specified.")
+
+    mode = request.args.get("mode")
+    if mode is None:
+        raise APIBadRequest("mode param is missing")
+    if mode not in ("easy", "medium", "hard"):
+        raise APIBadRequest("mode must be one of: easy, medium or hard.")
+
+    try:
+        pop_begin = request.args.get("pop_begin")
+        if pop_begin is None:
+            raise APIBadRequest("pop_begin param is missing")
+        pop_begin = float(pop_begin) / 100
+        if pop_begin < 0 or pop_begin > 1:
+            raise APIBadRequest("pop_begin should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"pop_begin: '{pop_begin}' is not a valid number")
+
+    try:
+        pop_end = request.args.get("pop_end")
+        if pop_end is None:
+            raise APIBadRequest("pop_end param is missing")
+        pop_end = float(pop_end) / 100
+        if pop_end < 0 or pop_end > 1:
+            raise APIBadRequest("pop_end should be between the range: 0 to 100")
+    except ValueError:
+        raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
+
+    return jsonify(lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist, pop_begin, pop_end))

@@ -1,15 +1,17 @@
 {% macro render_entity_link (entity, mbid, name) %}
   {%- if mbid is defined and mbid is not none -%}
     {% if entity == 'recording' %}
-      {% set host = 'musicbrainz' %}
+      {% set hostURL = 'https://musicbrainz.org' %}
     {% else %}
-      {% set host = 'listenbrainz' %}
+      {% set hostURL = 'https://listenbrainz.org' %}
     {% endif %}
-    <a href="https://{{ host }}.org/{{ entity }}/{{ mbid }}" target="_blank">
-      {{ name }}
+    <a href="{{ host }}/{{ entity }}/{{ mbid }}" target="_blank">
+      {{ name|upper|e }}
     </a>
+    <title>{{ name|e }}</title>
   {%- else -%}
-    {{ name }}
+    {{ name|upper|e }}
+    <title>{{ name|e }}</title>
   {%- endif -%}
 {% endmacro %}
 

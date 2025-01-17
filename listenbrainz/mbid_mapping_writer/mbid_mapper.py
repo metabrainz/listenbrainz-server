@@ -4,6 +4,7 @@ from time import sleep
 import typesense
 import typesense.exceptions
 import requests.exceptions
+from flask import current_app
 from markupsafe import Markup
 from unidecode import unidecode
 from Levenshtein import distance
@@ -55,7 +56,7 @@ class MBIDMapper:
     MATCH_TYPE_HIGH_QUALITY_MAX_EDIT_DISTANCE = 2
     MATCH_TYPE_MED_QUALITY_MAX_EDIT_DISTANCE = 5
 
-    def __init__(self, timeout=DEFAULT_TIMEOUT, remove_stop_words=False, debug=False):
+    def __init__(self, timeout=DEFAULT_TIMEOUT, remove_stop_words=False, debug=False, retry_on_timeout=True):
         self.debug = debug
         self.log = []
 
@@ -69,6 +70,7 @@ class MBIDMapper:
             'connection_timeout_seconds': timeout
         })
         self.remove_stop_words = remove_stop_words
+        self.retry_on_timeout = retry_on_timeout
 
     def _log(self, str):
         if self.debug:
@@ -269,9 +271,12 @@ class MBIDMapper:
                 hits = self.client.collections[collection].documents.search(search_parameters)
                 break
             except requests.exceptions.ReadTimeout:
-                print("Got socket timeout, sleeping 5 seconds, trying again.")
-                sleep(5)
-            except typesense.exceptions.RequestMalformed:
+                if self.retry_on_timeout:
+                    current_app.logger.error("Got socket timeout, sleeping 5 seconds, trying again.", exc_info=True)
+                    sleep(5)
+                else:
+                    raise
+            except (typesense.exceptions.RequestMalformed, requests.exceptions.ReadTimeout):
                 return None
 
         if len(hits["hits"]) == 0:

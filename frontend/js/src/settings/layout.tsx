@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+} from "react-router-dom";
 
 type Section = {
   title: string;
@@ -11,13 +17,15 @@ const sections: Section[] = [
     title: "Music",
     links: [
       { to: "music-services/details/", label: "Connect services" },
+      { to: "brainzplayer/", label: "Music player" },
       { to: "import/", label: "Import listens" },
-      { to: "missing-data/", label: "Missing data" },
+      { to: "link-listens/", label: "Link listens" },
     ],
   },
   {
     title: "Account",
     links: [
+      { to: "./", label: "User settings" },
       { to: "select_timezone/", label: "Timezone" },
       { to: "troi/", label: "Playlist preferences" },
       { to: "export/", label: "Export data" },
@@ -48,6 +56,7 @@ function SettingsLayout() {
 
   return (
     <>
+      <ScrollRestoration />
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>

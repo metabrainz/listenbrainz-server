@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from flask import url_for
-
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
@@ -11,12 +9,13 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class ArtViewsTestCase(IntegrationTestCase):
 
     def test_index(self):
-        resp = self.client.get(url_for('art.index'))
+        resp = self.client.get(self.custom_url_for('art.index'))
         self.assert200(resp)
 
-    @patch.object(CoverArtGenerator, "load_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
     @patch.object(CoverArtGenerator, "download_user_stats")
-    def test_cover_art_grid_stats(self, mock_download_user_stats, mock_get_caa_ids):
+    def test_cover_art_grid_stats(self, mock_download_user_stats, mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         mock_download_user_stats.return_value = [
             ReleaseRecord(
                 release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
@@ -26,7 +25,7 @@ class ArtViewsTestCase(IntegrationTestCase):
                 artist_mbids=["b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6"]
             )
         ], 1
-        mock_get_caa_ids.return_value = {
+        mock_get_release_caa_ids.return_value = {
             "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
                 "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
                 "caa_id": 6945,
@@ -35,13 +34,14 @@ class ArtViewsTestCase(IntegrationTestCase):
                 "artist": "Artist 1"
             }
         }
+        mock_get_release_group_caa_ids.return_value = {}
         resp = self.client.get(
-            url_for('art_api_v1.cover_art_grid_stats',
-                    user_name="rob",
-                    time_range="week",
-                    dimension=4,
-                    layout=0,
-                    image_size=500))
+            self.custom_url_for('art_api_v1.cover_art_grid_stats',
+                                user_name="rob",
+                                time_range="week",
+                                dimension=4,
+                                layout=0,
+                                image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
 
@@ -55,18 +55,20 @@ class ArtViewsTestCase(IntegrationTestCase):
             for _ in range(5)
         ], 5
         resp = self.client.get(
-            url_for('art_api_v1.cover_art_custom_stats',
-                    custom_name="designer-top-5",
-                    user_name="rob",
-                    time_range="week",
-                    image_size=500))
+            self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                custom_name="designer-top-5",
+                                user_name="rob",
+                                time_range="week",
+                                image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("ROB"), -1)
 
-    @patch.object(CoverArtGenerator, "load_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
     @patch.object(CoverArtGenerator, "download_user_stats")
-    def test_cover_art_custom_release_stats(self, mock_download_user_stats, mock_get_caa_ids):
+    def test_cover_art_custom_release_stats(self, mock_download_user_stats,
+                                            mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         mock_download_user_stats.return_value = [
             ReleaseRecord(
                 release_mbid="b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
@@ -77,7 +79,7 @@ class ArtViewsTestCase(IntegrationTestCase):
             )
             for _ in range(10)
         ], 10
-        mock_get_caa_ids.return_value = {
+        mock_get_release_caa_ids.return_value = {
             "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6": {
                 "original_mbid": "b757afbf-1b6a-4bd1-9d3f-2ad9cac9c3d6",
                 "caa_id": 6945,
@@ -86,22 +88,24 @@ class ArtViewsTestCase(IntegrationTestCase):
                 "artist": "Artist 1"
             }
         }
+        mock_get_release_group_caa_ids.return_value = {}
         resp = self.client.get(
-            url_for('art_api_v1.cover_art_custom_stats',
-                    custom_name="designer-top-10",
-                    user_name="rob",
-                    time_range="week",
-                    image_size=500))
+            self.custom_url_for('art_api_v1.cover_art_custom_stats',
+                                custom_name="designer-top-10",
+                                user_name="rob",
+                                time_range="week",
+                                image_size=500))
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("ROB"), -1)
 
-    @patch.object(CoverArtGenerator, "load_caa_ids")
-    def test_cover_art_grid_post(self, mock_get_caa_ids):
+    @patch.object(CoverArtGenerator, "load_release_group_caa_ids")
+    @patch.object(CoverArtGenerator, "load_release_caa_ids")
+    def test_cover_art_grid_post(self, mock_get_release_caa_ids, mock_get_release_group_caa_ids):
         with open("listenbrainz/art/misc/sample_cover_art_grid_post_request.json", "r") as f:
             post_json = f.read()
 
-        mock_get_caa_ids.return_value = {
+        mock_get_release_caa_ids.return_value = {
             "be5f714d-02eb-4c89-9a06-5e544f132604": {
                 "original_mbid": "be5f714d-02eb-4c89-9a06-5e544f132604",
                 "caa_id": 2273480607,
@@ -159,7 +163,10 @@ class ArtViewsTestCase(IntegrationTestCase):
                 "artist": None
             }
         }
-        resp = self.client.post(url_for('art_api_v1.cover_art_grid_post'), data=post_json, content_type="application/json")
+
+        mock_get_release_group_caa_ids.return_value = {}
+        resp = self.client.post(self.custom_url_for('art_api_v1.cover_art_grid_post'), data=post_json,
+                                content_type="application/json")
         self.assert200(resp)
         self.assertTrue(resp.text.startswith("<svg"))
         self.assertNotEqual(resp.text.find("2273480607"), -1)

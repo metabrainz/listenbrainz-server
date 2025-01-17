@@ -22,16 +22,16 @@ Get the User token
 Every account has a User token associated with it, to get the token:
 
 1. Sign up or Log in your an account using this `link`_.
-2. Navigate to `profile`_ page to find your user Token (See image below for reference).
+2. Navigate to `settings`_ page to find your user Token (See image below for reference).
   
   .. image:: ../../images/user-profile.png
     :width: 400
-    :alt: Screenshot showing the user profile.
+    :alt: Screenshot showing the user settings.
 
 3. Copy the User Token to your clipboard.
 
   .. note:: 
-    You may also reset your user token by clicking the Reset token button on the `profile`_ page.
+    You may also reset your user token by clicking the Reset token button on the `settings`_ page.
 
 Add the User token to your requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -74,11 +74,21 @@ Reference
    playlist
    recordings
    statistics
+   popularity
    metadata
    social
    recommendation
    art
+   settings
    misc
+
+
+OpenAPI specification
+---------------------
+
+Contributor `rain0r <https://github.com/rain0r>`_ went through the trouble of making
+an OpenAPI 3 specification for the ListenBrainz API. Many thanks! Check it out here:
+`<https://github.com/rain0r/listenbrainz-openapi>`_
 
 
 Rate limiting
@@ -110,4 +120,4 @@ receive higher rate limits than those without valid user tokens.
    ``X-RateLimit-Reset-In`` wherever possible
 
 .. _link: https://listenbrainz.org/login/
-.. _profile: https://listenbrainz.org/profile/
+.. _settings: https://listenbrainz.org/settings/

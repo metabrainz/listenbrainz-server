@@ -80,17 +80,25 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
 
         release_groups = []
         if row["release_groups"]:
-            for release_group_mbid, release_group_name, artist_credit_name, date, type, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
+            for release_group_mbid, release_group_name, artist_credit_name, year, month, day, type, secondary_types, release_group_artists, caa_id, caa_release_mbid in row["release_groups"]:
                 release_group = {
                     "name": release_group_name,
                     "mbid": release_group_mbid,
                     "artist_credit_name": artist_credit_name,
-                    "artists": release_group_artists
+                    "artists": sorted(release_group_artists, key=lambda x: x.pop("position", float('inf')))
                 }
-                if date is not None:
+                if year is not None:
+                    date = str(year)
+                    if month is not None:
+                        date += "-%02d" % month
+                        if day is not None:
+                            date += "-%02d" % day
                     release_group["date"] = date
+
                 if type is not None:
                     release_group["type"] = type
+                if secondary_types is not None:
+                    release_group["secondary_types"] = secondary_types
                 if caa_id is not None:
                     release_group["caa_id"] = caa_id
                 if caa_release_mbid is not None:
@@ -184,15 +192,19 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                  , ac.name AS artist_credit_name
                                  , rgca.caa_id AS caa_id
                                  , rgca.caa_release_mbid::TEXT AS caa_release_mbid
-                                 , (rgm.first_release_date_year::TEXT || '-' ||
-                                     LPAD(rgm.first_release_date_month::TEXT, 2, '0') || '-' ||
-                                     LPAD(rgm.first_release_date_day::TEXT, 2, '0')) AS date
+                                 , rgm.first_release_date_year AS year
+                                 , rgm.first_release_date_month AS month
+                                 , rgm.first_release_date_day AS day
                                  , rgpt.name AS type
-                                 , jsonb_agg(jsonb_build_object(
+                                 , array_agg(DISTINCT rgst.name ORDER BY rgst.name)
+                                     FILTER (WHERE rgst.name IS NOT NULL)
+                                   AS secondary_types
+                                 , jsonb_agg(DISTINCT jsonb_build_object(
                                         'artist_mbid', a2.gid::TEXT,
-                                        'artist_credit_name', a2.name,
-                                        'join_phrase', acn2.join_phrase
-                                   ) ORDER BY acn2.position) AS release_group_artists
+                                        'artist_credit_name', acn2.name,
+                                        'join_phrase', acn2.join_phrase,
+                                        'position', acn2.position
+                                   )) AS release_group_artists
                               FROM musicbrainz.artist a
                               JOIN musicbrainz.artist_credit_name acn
                                 ON a.id = acn.artist
@@ -204,6 +216,10 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                 ON rgm.id = rg.id
                          LEFT JOIN musicbrainz.release_group_primary_type rgpt
                                 ON rg.type = rgpt.id
+                         LEFT JOIN musicbrainz.release_group_secondary_type_join rgstj
+                                ON rgstj.release_group = rg.id
+                         LEFT JOIN musicbrainz.release_group_secondary_type rgst
+                                ON rgst.id = rgstj.secondary_type
                          LEFT JOIN rg_cover_art rgca
                                 ON rgca.release_group = rg.id
                         -- need a second join to artist_credit_name/artist to gather other release group artists' names
@@ -237,12 +253,15 @@ class MusicBrainzArtistMetadataCache(MusicBrainzEntityMetadataCache):
                                             rgd.release_group_mbid,
                                             rgd.release_group_name,
                                             rgd.artist_credit_name, 
-                                            rgd.date,
+                                            rgd.year,
+                                            rgd.month,
+                                            rgd.day,
                                             rgd.type,
+                                            rgd.secondary_types,
                                             rgd.release_group_artists,
                                             rgd.caa_id,
                                             rgd.caa_release_mbid
-                                        ) ORDER BY rgd.date
+                                        ) ORDER BY rgd.year, rgd.month, rgd.day
                                    )
                                     -- if the artist has no release groups, left join will cause a NULL row to be
                                     -- added to the array, filter ensures that it is removed
@@ -409,3 +428,4 @@ def create_mb_artist_metadata_cache(use_lb_conn: bool):
 def incremental_update_mb_artist_metadata_cache(use_lb_conn: bool):
     """ Update the MB metadata cache incrementally """
     incremental_update_metadata_cache(MusicBrainzArtistMetadataCache, MB_ARTIST_METADATA_CACHE_TIMESTAMP_KEY, use_lb_conn)
+

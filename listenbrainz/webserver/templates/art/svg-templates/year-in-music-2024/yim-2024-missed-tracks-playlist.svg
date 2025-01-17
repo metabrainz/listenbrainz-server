@@ -1,0 +1,118 @@
+{% if branding %}
+    {% set startX = 0 %}
+    {% set startY = 0 %}
+    {% set width = 924 %}
+    {% set height = 924 %}
+{% else %}
+    {% set startX = -60 %}
+    {% set startY = -60 %}
+    {% set width = 650 %}
+    {% set height = 650 %}
+{% endif %}
+<svg width="{{width}}" height="{{height}}" viewBox="{{startX}} {{startY}} {{width}} {{height}}" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900');
+        .album-art {
+        preserveAspectRatio: "xMidYMid slice";
+        height: 135px;
+        width: 135px;
+        }
+        text {
+        fill: {{ accent_color }};
+        font-family: 'Inter', sans-serif;
+        font-weight: 900;
+        }
+        .branding {
+        font-size: 20px;
+        letter-spacing: 0em;
+        text-transform: uppercase;
+        }
+        .subtitle {
+        text-anchor: middle;
+        font-size: 32px;
+        }
+        .background {
+        fill: {{ background_color }};
+        }
+    </style>
+    {% if branding %}
+    <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-01.png" width="702" height="702" x="96" y="122" style="pointer-events: none;" id="background-image">
+    </image>
+    <g id="g297">
+        <text class="branding" x="750" y="897" id="text279">LISTENBRAINZ</text>
+        <text class="branding" x="26" y="43" id="text281">{{user_name}}</text>
+        <text class="branding" font-style="italic" x="26" y="897" id="text283">#YEARINMUSIC</text>
+        <text class="branding" x="844" y="43" id="text285">2024</text>
+        <text x="50%" y="90" id="my-year" class="subtitle">
+          <tspan>M</tspan>
+          <tspan dx="12">Y</tspan>
+          <tspan dx="30">Y</tspan>
+          <tspan dx="12">E</tspan>
+          <tspan dx="12">A</tspan>
+          <tspan dx="12">R</tspan>
+        </text>
+        <text x="50%" y="130" id="in-music" class="subtitle">
+          <tspan>I</tspan>
+          <tspan dx="12">N</tspan>
+          <tspan dx="30">M</tspan>
+          <tspan dx="12">U</tspan>
+          <tspan dx="12">S</tspan>
+          <tspan dx="12">I</tspan>
+          <tspan dx="12">C</tspan>
+        </text>
+        <text x="50%" y="790" id="playlist" class="subtitle">
+          <tspan>P</tspan>
+          <tspan dx="12">L</tspan>
+          <tspan dx="12">A</tspan>
+          <tspan dx="12">Y</tspan>
+          <tspan dx="12">L</tspan>
+          <tspan dx="12">I</tspan>
+          <tspan dx="12">S</tspan>
+          <tspan dx="12">T</tspan>
+          <tspan dx="12">S</tspan>
+          <tspan dx="12">:</tspan>
+        </text>
+        <text x="50%" y="830" id="missed-tracks" class="subtitle">
+            <tspan>M</tspan>
+            <tspan dx="12">I</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">E</tspan>
+            <tspan dx="12">D</tspan>
+            <tspan dx="30">T</tspan>
+            <tspan dx="12">R</tspan>
+            <tspan dx="12">A</tspan>
+            <tspan dx="12">C</tspan>
+            <tspan dx="12">K</tspan>
+            <tspan dx="12">S</tspan>
+        </text>
+    </g>
+    <g transform="translate(195, 190)">
+    {% else %}
+    <image
+        href="{{ image_folder }}/playlists/yim24-playlist-01-no-bg.png" width="702" height="702" x="-100" y="-70" style="mix-blend-mode: multiply; pointer-events: none;" id="background-image">
+    </image>
+    <g>
+    {% endif %}
+        {% set x_s = [50, 50, 50, 185, 185, 185, 320, 320, 320] %}
+        {% set y_s = [80, 215, 350, 80, 215, 350, 80, 215, 350] %}
+        {% for image in images[:9] %}
+            <a href="https://listenbrainz.org/release/{{ image.entity_mbid }}" target="_blank">
+                <image
+                    class="album-art"
+                    preserveAspectRatio="xMidYMid slice"
+                    x="{{ x_s[loop.index0] }}"
+                    y="{{ y_s[loop.index0] }}"
+                    href="{{ image.url }}">
+                    {% if image.title and image.artist %}
+                        <title>
+                            {{- image.title|escape ~ " - " ~ image.artist|escape -}}
+                        </title>
+                    {% endif %}
+                </image>
+            </a>
+        {% endfor %}
+    </g>
+</svg>

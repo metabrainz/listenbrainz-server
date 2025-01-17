@@ -41,8 +41,16 @@ class RecordingRecommendationMetadata(MsidMbidModel):
     pass
 
 
-class PersonalRecordingRecommendationMetadata(MsidMbidModel):
+# while creating a personal recommendation, at least one user is required but the user might
+# delete their account in future, causing the list to become empty. use different models for
+# reading and writing to avoid errors.
+class WritePersonalRecordingRecommendationMetadata(MsidMbidModel):
     users: conlist(str, min_items=1)
+    blurb_content: Optional[str]
+
+
+class PersonalRecordingRecommendationMetadata(MsidMbidModel):
+    users: list[str]
     blurb_content: Optional[str]
 
 

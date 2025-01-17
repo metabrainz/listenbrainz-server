@@ -135,8 +135,8 @@ class DataTestCase(TimescaleTestCase):
                 'duration': 56000
             }
         ]
-        msids = messybrainz.insert_all_in_transaction(submissions)
-        with timescale.engine.begin() as conn, conn.connection.cursor(cursor_factory=DictCursor) as curs:
+        msids = messybrainz.insert_all_in_transaction(self.ts_conn, submissions)
+        with self.ts_conn.connection.cursor(cursor_factory=DictCursor) as curs:
             received = messybrainz.load_recordings_from_msids(curs, msids)
 
         submissions[0]['track_number'] = None

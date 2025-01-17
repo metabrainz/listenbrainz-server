@@ -8,6 +8,7 @@
 
   .add-listen-header {
     display: flex;
+    margin-bottom: 1em;
   }
 
   .option-active {
@@ -57,9 +58,19 @@
     }
   }
   .track-info {
-    > div {
+    > * {
       width: 100%;
       margin: 10px 0px;
+      &.content {
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+    }
+    .header-with-line {
+      gap: 5px;
+      margin-bottom: 0.5em;
+      align-items: baseline;
+      flex-wrap: wrap;
     }
   }
   .cross-details {
@@ -113,19 +124,10 @@
   }
 
   .timestamp {
-    margin-left: 18px;
+    margin-top: 1em;
     > h5 {
       font-weight: 700;
       font-size: 16px;
-    }
-  }
-  .timestamp-entities {
-    > button {
-      border-radius: 15px;
-      height: 30px;
-      margin-right: 15px;
-      outline: none;
-      padding: 0px 30px;
     }
   }
   .timestamp-active {
@@ -137,14 +139,61 @@
     border: 2px solid rgb(141, 141, 141);
     color: #000000;
   }
-  .timestamp-date-picker {
-    margin-left: 30px;
-    margin-top: 7px;
-  }
 
-  @media (min-width: 560px) {
-    .timestamp-entities {
-      display: flex;
+  .timestamp-entities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    align-items: flex-end;
+    .timestamp-date-picker {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .pill {
+      min-width: 7em;
+      margin: 0;
+    }
+    label + label {
+      margin-left: 1.3em;
+    }
+  }
+  .add-album-track {
+    display: flex;
+    gap: 1em;
+    position: relative;
+    .track-number {
+      align-self: end;
+    }
+    input[type="checkbox"] {
+      margin: 0;
+    }
+    .duration {
+      margin-left: auto;
+      padding: 0 0.4em;
+    }
+  }
+  .release-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
+  }
+  .default-duration {
+    &.heading {
+      right: 1.7em;
+      z-index: 1;
+    }
+    margin: 0;
+    position: absolute;
+    width: initial;
+    right: 0;
+    background-color: oldlace;
+  }
+  // Chevron indicator
+  #select-release {
+    > svg {
+      transition: rotate 0.4s ease-in-out;
+      rotate: -180deg;
+    }
+    &.collapsed > svg {
+      rotate: 0deg;
     }
   }
 }

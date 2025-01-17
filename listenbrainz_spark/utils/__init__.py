@@ -2,23 +2,24 @@ import errno
 import logging
 import os
 from datetime import datetime
-from typing import List, Optional
+from textwrap import dedent
+from typing import List
 
+from dateutil.relativedelta import relativedelta
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame, functions
 from pyspark.sql.utils import AnalysisException
 
 import listenbrainz_spark
-from hdfs.util import HdfsError
-from listenbrainz_spark import config, hdfs_connection, path
+from listenbrainz_spark import config, hdfs_connection
 from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            DataFrameNotCreatedException,
                                            FileNotFetchedException,
                                            FileNotSavedException,
-                                           HDFSDirectoryNotDeletedException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH
+from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH, \
+    LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
 from listenbrainz_spark.schema import listens_new_schema
 
 logger = logging.getLogger(__name__)
@@ -145,7 +146,7 @@ def get_listen_files_list() -> List[str]:
     return file_names
 
 
-def get_listens_from_dump(start: datetime = None, end: datetime = None) -> DataFrame:
+def get_listens_from_dump(start: datetime, end: datetime) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
@@ -157,23 +158,45 @@ def get_listens_from_dump(start: datetime = None, end: datetime = None) -> DataF
     """
     df = listenbrainz_spark.session.createDataFrame([], listens_new_schema)
 
-    # full dump directory always exists because the incremental dumps are stored in a nested dir inside it
-    # therefore to check existence of full dump, we instead need to check whether a parquet file of the full
-    # dump exists. since files are number from 0, we check for 0.parquet
-    full_dump_test_path = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "0.parquet")
-    if hdfs_connection.client.status(full_dump_test_path, strict=False):
-        full_df = read_files_from_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY)
+    if hdfs_connection.client.status(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, strict=False):
+        full_df = get_intermediate_stats_df(start, end)
         df = df.union(full_df)
+
     if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
         inc_df = read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH)
         df = df.union(inc_df)
 
-    if start:
-        df = df.where(f"listened_at >= to_timestamp('{start}')")
-    if end:
-        df = df.where(f"listened_at <= to_timestamp('{end}')")
+    df = df.where(f"listened_at >= to_timestamp('{start}')")
+    df = df.where(f"listened_at <= to_timestamp('{end}')")
 
     return df
+
+
+def get_intermediate_stats_df(start: datetime, end: datetime):
+    filters = []
+
+    current = start
+    step = relativedelta(months=1)
+    while current <= end:
+        filters.append(f"(year = {current.year} AND month = {current.month})")
+        current += step
+    combined_filter = "(\n       " + "\n    OR ".join(filters) + "\n       )"
+
+    query = dedent(f"""\
+        select listened_at
+             , created
+             , user_id
+             , recording_msid
+             , artist_name
+             , artist_credit_id
+             , release_name
+             , release_mbid
+             , recording_name
+             , recording_mbid
+             , artist_credit_mbids
+          from parquet.`{LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY}`
+         where """) + combined_filter
+    return listenbrainz_spark.sql_context.sql(query)
 
 
 def get_latest_listen_ts() -> datetime:

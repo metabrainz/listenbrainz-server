@@ -22,7 +22,6 @@ import logging
 import time
 
 import xmltodict
-from flask import url_for
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_session import Session
@@ -37,7 +36,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
-        self.lb_user = db_user.get_or_create(1, 'apicompattestuser')
+        self.lb_user = db_user.get_or_create(self.db_conn, 1, 'apicompattestuser')
         self.lfm_user = User(
             self.lb_user['id'],
             self.lb_user['created'],
@@ -59,14 +58,18 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'api_key': self.lfm_user.api_key,
             'format': 'json',
         }
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         token = r.json['token']
 
+        data = {
+            "token": token,
+        }
+
         r = self.client.post(
-            url_for('api_compat.api_auth_approve'),
-            data=f"token={token}",
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+            self.custom_url_for('api_compat.api_auth_approve'),
+            data=json.dumps(data),
+            content_type="application/json"
         )
         self.assert200(r)
 
@@ -76,7 +79,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'token': token,
             'format': 'json'
         }
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         sk = r.json['session']['key']
 
@@ -91,7 +94,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'duration[0]': 300,
             'timestamp[0]': int(time.time()),
         }
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
 
         expected = {
@@ -128,8 +131,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         time.sleep(0.5)
         recalculate_all_user_data()
 
-        url = url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
-        response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': data["timestamp[0]"] - 1})
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
+        response = self.wait_for_query_to_have_items(url, num_items=1,
+                                                     query_string={'from_ts': data["timestamp[0]"] - 1})
         listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 1)
 
@@ -138,9 +142,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             if valid information is provided.
         """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         data = {
             'method': 'track.updateNowPlaying',
@@ -153,7 +157,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'timestamp[0]': int(time.time()),
         }
 
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
 
         response = xmltodict.parse(r.data)
@@ -168,27 +172,27 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'api_key': self.lfm_user.api_key,
         }
 
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
 
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
 
-        token = Token.load(response['lfm']['token'], api_key=self.lfm_user.api_key)
+        token = Token.load(self.db_conn, response['lfm']['token'], api_key=self.lfm_user.api_key)
         self.assertIsNotNone(token)
 
     def test_get_session(self):
         """ Tests if the session key is valid and session is established correctly. """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
 
         data = {
             'method': 'auth.getsession',
             'api_key': self.lfm_user.api_key,
             'token': token.token,
         }
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
@@ -196,7 +200,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['session']['name'], self.lfm_user.name)
 
-        session_key = Session.load(response['lfm']['session']['key'])
+        session_key = Session.load(self.db_conn, response['lfm']['session']['key'])
         self.assertIsNotNone(session_key)
 
     def test_get_session_invalid_token(self):
@@ -209,7 +213,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'api_key': self.lfm_user.api_key,
             'token': '',
         }
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
@@ -223,9 +227,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
            requested format"""
         timescale_connection._ts = None
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         data = {
             'method': 'user.getInfo',
@@ -233,7 +237,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'sk': session.sid
         }
 
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
@@ -246,9 +250,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
     def test_record_listen(self):
         """ Tests if listen is recorded correctly if valid information is provided. """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -262,7 +266,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'timestamp[0]': timestamp,
         }
 
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
         self.assertEqual(r.headers["Content-type"], "application/xml; charset=utf-8")
 
@@ -274,16 +278,16 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         time.sleep(0.5)
         recalculate_all_user_data()
 
-        url = url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': timestamp - 1})
         listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 1)
 
     def test_record_invalid_listen(self):
         """ Tests that error is raised if submited data contains unicode null """
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -297,7 +301,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'timestamp[0]': timestamp,
         }
 
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert400(r)
         self.assertEqual(r.json["error"], "\u0000Kishore Kumar contains a unicode null")
 
@@ -306,9 +310,9 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             is provided.
         """
 
-        token = Token.generate(self.lfm_user.api_key)
-        token.approve(self.lfm_user.name)
-        session = Session.create(token)
+        token = Token.generate(self.db_conn, self.lfm_user.api_key)
+        token.approve(self.db_conn, self.lfm_user.name)
+        session = Session.create(self.db_conn, token)
 
         timestamp = int(time.time())
         data = {
@@ -323,10 +327,10 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'artist[1]': 'Fifth Harmony',
             'track[1]': 'Deliver',
             'duration[1]': 200,
-            'timestamp[1]': timestamp+300,
+            'timestamp[1]': timestamp + 300,
         }
 
-        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        r = self.client.post(self.custom_url_for('api_compat.api_methods'), data=data)
         self.assert200(r)
 
         response = xmltodict.parse(r.data)
@@ -337,7 +341,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
         time.sleep(0.5)
         recalculate_all_user_data()
 
-        url = url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
+        url = self.custom_url_for('api_v1.get_listens', user_name=self.lb_user['musicbrainz_id'])
         response = self.wait_for_query_to_have_items(url, num_items=1, query_string={'from_ts': timestamp - 1})
         listens = json.loads(response.data)['payload']['listens']
         self.assertEqual(len(listens), 2)
@@ -363,7 +367,7 @@ class APICompatTestCase(ListenAPIIntegrationTestCase):
             'listened_at': timestamp,
             'track_metadata': {
                 'artist_name': 'Kishore Kumar',
-                'track_name':  'Saamne Ye Kaun Aya',
+                'track_name': 'Saamne Ye Kaun Aya',
                 'release_name': 'Jawani Diwani',
                 'additional_info': {
                     'track_length': 300

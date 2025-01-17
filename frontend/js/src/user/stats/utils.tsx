@@ -1,8 +1,6 @@
 import * as React from "react";
-import {
-  getMBIDMappingArtistLink,
-  getStatsArtistLink,
-} from "../../utils/utils";
+import { Link } from "react-router-dom";
+import { getStatsArtistLink } from "../../utils/utils";
 
 export function getEntityLink(
   entityType: Entity,
@@ -11,6 +9,7 @@ export function getEntityLink(
 ): JSX.Element {
   if (entityMBID) {
     let link;
+    let newTab = false;
     switch (entityType) {
       case "artist":
       case "release":
@@ -20,16 +19,31 @@ export function getEntityLink(
         link = `/album/${entityMBID}`;
         break;
       case "recording":
+        newTab = true;
         link = `https://musicbrainz.org/${entityType}/${entityMBID}`;
         break;
       default:
         break;
     }
-    return (
-      <a href={link} target="_blank" rel="noopener noreferrer">
-        {entityName}
-      </a>
-    );
+    if (newTab) {
+      return (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={entityName}
+        >
+          {entityName}
+        </a>
+      );
+    }
+    if (link) {
+      return (
+        <Link to={link} title={entityName}>
+          {entityName}
+        </Link>
+      );
+    }
   }
   return <span>{entityName}</span>;
 }
@@ -117,7 +131,7 @@ export function getChartEntityDetails(datum: UserEntityDatum): JSX.Element {
 
   return (
     <>
-      <div title={entityName} className="ellipsis">
+      <div title={entityName} className="ellipsis-2-lines">
         {getEntityLink(entityType, entityName, entityMBID)}
       </div>
 

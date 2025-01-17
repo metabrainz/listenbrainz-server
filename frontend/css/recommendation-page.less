@@ -4,37 +4,6 @@
 }
 /* stylelint-enable */
 
-.playlists-masonry-container {
-  position: relative;
-  // hide overflow behind button with gradient to indicate there's more
-  .nav-button {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 55px;
-    border: none;
-    font-size: 2em;
-    color: @light-grey;
-    z-index: 1;
-    opacity: 1;
-    transition: opacity 300ms linear;
-    &.backward {
-      background: linear-gradient(to right, @white 10%, transparent);
-      text-align: left;
-      left: 0;
-    }
-    &.forward {
-      background: linear-gradient(to left, @white 10%, transparent);
-      right: 0;
-      text-align: right;
-    }
-  }
-  &.scroll-start .nav-button.backward,
-  &.scroll-end& .nav-button.forward {
-    opacity: 0;
-    pointer-events: none;
-  }
-}
 .playlists-masonry {
   width: 100%;
   display: grid;
@@ -42,7 +11,7 @@
   grid-auto-rows: 150px;
   grid-auto-columns: 300px;
   grid-auto-flow: column;
-  overflow-x: scroll;
+  overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
   &.dragging {
@@ -90,8 +59,9 @@
       height: 25px;
       border-radius: 50%;
       background: conic-gradient(
+        from 0deg,
         fade(white, 15%) var(--degrees-progress),
-        var(--timer-color) calc(360deg - var(--degrees-progress))
+        var(--timer-color) var(--degrees-progress)
       );
       align-self: flex-start;
       order: 3;
@@ -102,7 +72,7 @@
       &.pressing {
         animation: blink 1s ease-out alternate infinite;
         --timer-color: fade(red, 70%);
-        background-color: fade(white, 50%);
+        background-color: fade(white, 20%);
       }
       @keyframes blink {
         0% {
@@ -181,7 +151,7 @@
   align-items: flex-end;
   gap: 1em;
   margin-top: 2em;
-  border-top: 1px solid @light;
+  border-top: 1px solid @gray-light;
   padding-top: 2em;
 
   .playlist-items {
@@ -208,6 +178,9 @@
     }
     .buttons {
       padding: 0.7em 0;
+      .btn {
+        margin-left: 5px;
+      }
     }
   }
 }

@@ -6,9 +6,10 @@ import subprocess
 
 import click
 
-from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data
+from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
+from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
 from mapping.typesense_index import build_all as action_build_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
@@ -20,7 +21,9 @@ from mapping.mb_metadata_cache import create_mb_metadata_cache, incremental_upda
 from mapping.mb_release_group_cache import create_mb_release_group_cache, \
     incremental_update_mb_release_group_cache
 from mapping.spotify_metadata_index import create_spotify_metadata_index
+from mapping.apple_metadata_index import create_apple_metadata_index
 from similar.tag_similarity import create_tag_similarity
+
 
 
 @click.group()
@@ -45,6 +48,14 @@ def canonical_data(use_lb_conn):
     """
     create_canonical_musicbrainz_data(use_lb_conn)
 
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def update_canonical_releases(use_lb_conn):
+    """
+        Update only the canonical releases table
+    """
+    update_canonical_release_data(use_lb_conn)
 
 @cli.command()
 def test_mapping():
@@ -188,6 +199,9 @@ def cron_build_all_mb_caches(ctx):
 @click.pass_context
 def cron_update_all_mb_caches(ctx):
     """ Update all mb entity metadata cache in ListenBrainz. """
+
+    # In this context we want to use mb_conn, not lb_conn, like the functions that follow
+    update_canonical_release_data(False)
     ctx.invoke(update_mb_metadata_cache)
     ctx.invoke(update_mb_artist_metadata_cache)
     ctx.invoke(update_mb_release_group_cache)
@@ -201,6 +215,23 @@ def build_spotify_metadata_index(use_lb_conn):
     """
     create_spotify_metadata_index(use_lb_conn)
 
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_apple_metadata_index(use_lb_conn):
+    """
+        Build the Apple Music metadata index that LB uses
+    """
+    create_apple_metadata_index(use_lb_conn)
+
+
+@cli.command()
+@click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")
+def build_soundcloud_metadata_index(use_lb_conn):
+    """
+        Build the Soundcloud Music metadata index that LB uses
+    """
+    create_soundcloud_metadata_index(use_lb_conn)
 
 @cli.command()
 def build_tag_similarity():

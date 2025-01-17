@@ -1,12 +1,15 @@
 import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
+import { Link } from "react-router-dom";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import {
   getArtistName,
   getTrackName,
   searchForSoundcloudTrack,
 } from "../../utils/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 require("../../../lib/soundcloud-player-api");
 
@@ -60,13 +63,13 @@ export type SoundcloudPlayerState = {
 };
 
 export type SoundCloudPlayerProps = DataSourceProps & {
-  soundcloudUser?: SoundCloudUser;
   refreshSoundcloudToken: () => Promise<string>;
 };
 
 export default class SoundcloudPlayer
   extends React.Component<SoundCloudPlayerProps, SoundcloudPlayerState>
   implements DataSourceType {
+  static contextType = GlobalAppContext;
   static hasPermissions = (soundcloudUser?: SoundCloudUser) => {
     return Boolean(soundcloudUser?.access_token);
   };
@@ -89,6 +92,7 @@ export default class SoundcloudPlayer
   public name = "soundcloud";
   public domainName = "soundcloud.com";
   public icon = faSoundcloud;
+  public iconColor = dataSourcesInfo.soundcloud.color;
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;
@@ -111,19 +115,22 @@ export default class SoundcloudPlayer
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
   private authenticationRetries = 0;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: SoundCloudPlayerProps) {
     super(props);
-    this.accessToken = props.soundcloudUser?.access_token || "";
     this.state = { currentSound: undefined };
     this.iFrameRef = React.createRef();
-    // initial permissions check
-    if (!SoundcloudPlayer.hasPermissions(props.soundcloudUser)) {
-      this.handleAccountError();
-    }
   }
 
   componentDidMount() {
+    const { soundcloudAuth: soundcloudUser = undefined } = this.context;
+    this.accessToken = soundcloudUser?.access_token || "";
+    // initial permissions check
+    if (!SoundcloudPlayer.hasPermissions(soundcloudUser)) {
+      this.handleAccountError();
+    }
+
     const { onInvalidateDataSource } = this.props;
     if (!(window as any).SC) {
       onInvalidateDataSource(this, "Soundcloud JS API did not load properly.");
@@ -203,7 +210,7 @@ export default class SoundcloudPlayer
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    const { soundcloudUser } = this.props;
+    const { soundcloudAuth: soundcloudUser = undefined } = this.context;
     // check if the user is authed to search with the SoundCloud API
     return Boolean(soundcloudUser) && Boolean(soundcloudUser?.access_token);
   };
@@ -263,6 +270,7 @@ export default class SoundcloudPlayer
     callbackFunction: () => void
   ): Promise<void> => {
     const { refreshSoundcloudToken, onTrackNotFound, handleError } = this.props;
+    const { soundcloudAuth: soundcloudUser = undefined } = this.context;
     if (this.authenticationRetries > 5) {
       handleError(
         isString(error) ? error : error?.message,
@@ -275,6 +283,9 @@ export default class SoundcloudPlayer
     try {
       this.accessToken = await refreshSoundcloudToken();
       this.authenticationRetries = 0;
+      if (soundcloudUser) {
+        soundcloudUser.access_token = this.accessToken;
+      }
       callbackFunction();
     } catch (refreshError) {
       handleError(refreshError, "Error connecting to SoundCloud");
@@ -288,9 +299,9 @@ export default class SoundcloudPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/settings/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/">
           link for &quot;playing music&quot; feature
-        </a>{" "}
+        </Link>{" "}
         and refresh this page
       </p>
     );
@@ -395,7 +406,10 @@ export default class SoundcloudPlayer
   render() {
     const { show } = this.props;
     return (
-      <div className={`soundcloud ${!show ? "hidden" : ""}`}>
+      <div
+        className={`soundcloud ${!show ? "hidden" : ""}`}
+        data-testid={`soundcloud ${!show ? "hidden" : ""}`}
+      >
         <iframe
           id="soundcloud-iframe"
           ref={this.iFrameRef}

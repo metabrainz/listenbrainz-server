@@ -1,29 +1,27 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
 import {
   faGlobe,
   faInfoCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ErrorBoundary from "../../utils/ErrorBoundary";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
+
+import Tooltip from "react-tooltip";
+import NiceModal from "@ebay/nice-modal-react";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
-import { getPageProps } from "../../utils/utils";
-import { getAllStatRanges } from "./utils";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
+import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
-  apiUrl: string;
 };
 
 export type UserReportsState = {
@@ -31,222 +29,148 @@ export type UserReportsState = {
   user?: ListenBrainzUser;
 };
 
-export default class UserReports extends React.Component<
-  UserReportsProps,
-  UserReportsState
-> {
-  static contextType = GlobalAppContext;
-  declare context: React.ContextType<typeof GlobalAppContext>;
+export default function UserReports() {
+  const props = useLoaderData() as UserReportsProps;
+  const { user = undefined } = props ?? {};
 
-  constructor(props: UserReportsProps) {
-    super(props);
+  // Context
+  const { currentUser } = React.useContext(GlobalAppContext);
 
-    this.state = {
-      range: "" as UserStatsAPIRange,
-      user: props.user,
-    };
-  }
+  // Router
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  componentDidMount() {
-    window.addEventListener("popstate", this.syncStateWithURL);
+  const range = searchParams.get("range") as UserStatsAPIRange;
 
-    const range = this.getURLParams();
-    window.history.replaceState(
-      null,
-      "",
-      `?range=${range}${window.location.hash}`
-    );
-    this.syncStateWithURL();
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("popstate", this.syncStateWithURL);
-  }
-
-  setUser(userName?: string) {
-    if (userName) {
-      this.setState({ user: { name: userName } });
-    } else {
-      this.setState({ user: undefined });
+  React.useEffect(() => {
+    if (!range || isInvalidStatRange(range)) {
+      setSearchParams({ range: "week" }, { replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range]);
+
+  if (!range || isInvalidStatRange(range)) {
+    return null;
   }
 
-  changeRange = (newRange: UserStatsAPIRange): void => {
-    this.setURLParams(newRange);
-    this.syncStateWithURL();
+  const handleRangeChange = (newRange: UserStatsAPIRange) => {
+    setSearchParams({ range: newRange });
   };
 
-  syncStateWithURL = async (): Promise<void> => {
-    const range = this.getURLParams();
-    this.setState({ range });
-  };
+  const ranges = getAllStatRanges();
+  const userOrLoggedInUser: string | undefined =
+    user?.name ?? currentUser?.name;
 
-  getURLParams = (): UserStatsAPIRange => {
-    const url = new URL(window.location.href);
+  const userStatsTitle =
+    user?.name === currentUser?.name ? "Your" : `${userOrLoggedInUser}'s`;
 
-    let range: UserStatsAPIRange = "week";
-    if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserStatsAPIRange;
-    }
+  const statsExplanationModalButton = (
+    <button
+      type="button"
+      className="btn btn-link"
+      data-toggle="modal"
+      data-target="#StatsExplanationsModal"
+      onClick={() => {
+        NiceModal.show(StatsExplanationsModal);
+      }}
+    >
+      <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: "0.5rem" }} />
+      How and when are statistics calculated?
+    </button>
+  );
 
-    return range;
-  };
-
-  setURLParams = (range: UserStatsAPIRange): void => {
-    window.history.pushState(null, "", `?range=${range}`);
-  };
-
-  render() {
-    const { range, user } = this.state;
-    const { apiUrl } = this.props;
-    const { currentUser } = this.context;
-
-    const ranges = getAllStatRanges();
-    const userOrLoggedInUser: string | undefined =
-      user?.name ?? currentUser?.name;
-
-    return (
-      <div>
-        <div className="tertiary-nav dragscroll">
-          <div>
-            {Array.from(ranges, ([stat_type, stat_name]) => {
-              return (
-                <Pill
-                  active={range === stat_type}
-                  type="secondary"
-                  onClick={() => this.changeRange(stat_type)}
-                >
-                  {stat_name}
-                </Pill>
-              );
-            })}
-          </div>
-          <div>
-            {Boolean(userOrLoggedInUser) && (
-              <button
-                type="button"
-                onClick={() => {
-                  this.setUser(user?.name ?? currentUser?.name);
-                }}
-                className={`pill secondary ${user ? "active" : ""}`}
+  return (
+    <div data-testid="User Reports">
+      <Helmet>
+        <title>{userOrLoggedInUser ? userStatsTitle : "Sitewide"} Stats</title>
+      </Helmet>
+      <div className="tertiary-nav dragscroll">
+        <div>
+          {Array.from(ranges, ([stat_type, stat_name]) => {
+            return (
+              <Pill
+                key={`${stat_type}-${stat_name}`}
+                active={range === stat_type}
+                type="secondary"
+                onClick={() => handleRangeChange(stat_type)}
+                data-testid={`range-${stat_type}`}
               >
-                <FontAwesomeIcon icon={faUser} />{" "}
-                {user?.name ?? currentUser?.name}
-              </button>
-            )}
+                {stat_name}
+              </Pill>
+            );
+          })}
+        </div>
+        <div>
+          {Boolean(userOrLoggedInUser) && (
             <button
               type="button"
               onClick={() => {
-                this.setUser();
+                navigate(
+                  `/user/${
+                    user?.name ?? currentUser?.name
+                  }/stats/?range=${range}`
+                );
               }}
-              className={`pill secondary ${!user ? "active" : ""}`}
+              className={`pill secondary ${user ? "active" : ""}`}
             >
-              <FontAwesomeIcon icon={faGlobe} /> Global
+              <FontAwesomeIcon icon={faUser} />{" "}
+              {user?.name ?? currentUser?.name}
             </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              navigate(`/statistics/?range=${range}`);
+            }}
+            className={`pill secondary ${!user ? "active" : ""}`}
+          >
+            <FontAwesomeIcon icon={faGlobe} /> Global
+          </button>
+        </div>
+      </div>
+      <section id="listening-activity">
+        {statsExplanationModalButton}
+        <UserListeningActivity range={range} user={user} />
+      </section>
+      <section id="top-entity">
+        {statsExplanationModalButton}
+        <div className="row">
+          <div className="col-md-4">
+            <UserTopEntity
+              range={range}
+              entity="artist"
+              user={user}
+              terminology="artist"
+            />
+          </div>
+          <div className="col-md-4">
+            <UserTopEntity
+              range={range}
+              entity="release-group"
+              user={user}
+              terminology="album"
+            />
+          </div>
+          <div className="col-md-4">
+            <UserTopEntity
+              range={range}
+              entity="recording"
+              user={user}
+              terminology="track"
+            />
           </div>
         </div>
-        <small>
-          <FontAwesomeIcon icon={faInfoCircle} />
-          &nbsp;
-          <a
-            href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            How often are my stats updated?
-          </a>
-        </small>
-        <section id="listening-activity">
-          <ErrorBoundary>
-            <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
+      </section>
+      {user && (
+        <section id="daily-activity">
+          {statsExplanationModalButton}
+          <UserDailyActivity range={range} user={user} />
         </section>
-        <section id="top-entity">
-          <div className="row">
-            <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="artist"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="artist"
-                />
-              </ErrorBoundary>
-            </div>
-            <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="release-group"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="album"
-                />
-              </ErrorBoundary>
-            </div>
-            <div className="col-md-4">
-              <ErrorBoundary>
-                <UserTopEntity
-                  range={range}
-                  entity="recording"
-                  apiUrl={apiUrl}
-                  user={user}
-                  terminology="track"
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
-        </section>
-        {user && (
-          <section id="daily-activity">
-            <ErrorBoundary>
-              <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
-            </ErrorBoundary>
-          </section>
-        )}
-        <section id="artist-origin">
-          <ErrorBoundary>
-            <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
-          </ErrorBoundary>
-        </section>
-      </div>
-    );
-  }
+      )}
+      <section id="artist-origin">
+        {statsExplanationModalButton}
+        <UserArtistMap range={range} user={user} />
+      </section>
+    </div>
+  );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { user } = reactProps;
-  const UserReportsPageWithAlertNotifications = withAlertNotifications(
-    UserReports
-  );
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <UserReportsPageWithAlertNotifications
-            apiUrl={globalAppContext.APIService.APIBaseURI}
-            user={user}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

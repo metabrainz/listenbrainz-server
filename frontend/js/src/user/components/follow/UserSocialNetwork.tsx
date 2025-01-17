@@ -1,11 +1,14 @@
-import { isEmpty, isNil } from "lodash";
+import { isEmpty, isNil, intersectionBy } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Card from "../../../components/Card";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
+import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
+import FlairsExplanationButton from "../../../common/flairs/FlairsExplanationButton";
+import useUserFlairs from "../../../utils/FlairLoader";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
@@ -16,6 +19,12 @@ export type UserSocialNetworkState = {
   followingList: Array<string>;
   currentUserFollowingList: Array<string>;
   similarUsersList: Array<SimilarUser>;
+  similarArtists: Array<{
+    artist_name: string;
+    artist_mbid: string | null;
+    listen_count: number;
+  }>;
+  similarityScore: number;
 };
 
 export default class UserSocialNetwork extends React.Component<
@@ -32,6 +41,8 @@ export default class UserSocialNetwork extends React.Component<
       followingList: [],
       similarUsersList: [],
       currentUserFollowingList: [],
+      similarArtists: [],
+      similarityScore: 0,
     };
   }
 
@@ -40,6 +51,20 @@ export default class UserSocialNetwork extends React.Component<
     await this.getFollowers();
     await this.getSimilarUsers();
     await this.getCurrentUserFollowing();
+    await this.getSimilarity();
+    await this.getSimilarArtists();
+  }
+
+  async componentDidUpdate(prevProps: UserSocialNetworkProps) {
+    const { user: currentUser } = this.props;
+    if (prevProps.user.name !== currentUser.name) {
+      await this.getFollowing();
+      await this.getFollowers();
+      await this.getSimilarUsers();
+      await this.getCurrentUserFollowing();
+      await this.getSimilarity();
+      await this.getSimilarArtists();
+    }
   }
 
   getSimilarUsers = async () => {
@@ -65,6 +90,87 @@ export default class UserSocialNetwork extends React.Component<
           message={err.toString()}
         />,
         { toastId: "fetch-similar-error" }
+      );
+    }
+  };
+
+  getSimilarity = async () => {
+    const { user } = this.props;
+    const { APIService, currentUser } = this.context;
+    if (
+      isNil(currentUser) ||
+      isEmpty(currentUser) ||
+      currentUser?.name === user?.name
+    ) {
+      return;
+    }
+    const { getSimilarityBetweenUsers } = APIService;
+    try {
+      const response = await getSimilarityBetweenUsers(
+        currentUser.name,
+        user.name
+      );
+      const { payload } = response;
+      const similarityScore = payload.similarity;
+      this.setState({ similarityScore });
+    } catch (err) {
+      if (err.toString() === "Error: Similar-to user not found") {
+        // cannot get similarity if not in the list, so just return 0
+        this.setState({ similarityScore: 0 });
+      } else {
+        toast.error(
+          <ToastMsg
+            title="Error while fetching similarity"
+            message={err.toString()}
+          />,
+          { toastId: "fetch-similarity-error" }
+        );
+      }
+    }
+  };
+
+  getSimilarArtists = async () => {
+    const { user } = this.props;
+    const { APIService, currentUser } = this.context;
+    if (
+      isNil(currentUser) ||
+      isEmpty(currentUser) ||
+      currentUser?.name === user?.name
+    ) {
+      return;
+    }
+    const { getUserEntity } = APIService;
+    try {
+      let response = await getUserEntity(
+        user.name,
+        "artist",
+        "all_time",
+        0,
+        100
+      );
+      const userArtists = (response as UserArtistsResponse).payload.artists;
+      response = await getUserEntity(
+        currentUser.name,
+        "artist",
+        "all_time",
+        0,
+        100
+      );
+      const currentUserArtists = (response as UserArtistsResponse).payload
+        .artists;
+      const similarArtists = intersectionBy(
+        userArtists,
+        currentUserArtists,
+        "artist_name"
+      );
+      this.setState({ similarArtists });
+    } catch (err) {
+      toast.error(
+        <ToastMsg
+          title="Error while fetching user artists"
+          message={err.toString()}
+        />,
+        { toastId: "fetch-artists-error" }
       );
     }
   };
@@ -146,6 +252,8 @@ export default class UserSocialNetwork extends React.Component<
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => {
+    const { currentUser } = this.context;
+    const { user: profileUser } = this.props;
     const { followingList } = this.state;
     const newFollowingList = [...followingList];
     const index = newFollowingList.findIndex(
@@ -154,7 +262,11 @@ export default class UserSocialNetwork extends React.Component<
     if (action === "follow" && index === -1) {
       newFollowingList.push(user.name);
     }
-    if (action === "unfollow" && index !== -1) {
+    if (
+      action === "unfollow" &&
+      index !== -1 &&
+      profileUser.name === currentUser?.name
+    ) {
       newFollowingList.splice(index, 1);
     }
     this.setState({ followingList: newFollowingList });
@@ -162,10 +274,26 @@ export default class UserSocialNetwork extends React.Component<
 
   render() {
     const { user } = this.props;
-    const { followerList, followingList, similarUsersList } = this.state;
+    const { currentUser } = this.context;
+    const {
+      followerList,
+      followingList,
+      similarUsersList,
+      similarArtists,
+      similarityScore,
+    } = this.state;
+    const isAnotherUser =
+      Boolean(currentUser?.name) && currentUser.name !== user?.name;
     return (
       <>
-        <Card className="card-user-sn hidden-xs hidden-sm">
+        {isAnotherUser && (
+          <CompatibilityCard
+            user={user}
+            similarityScore={similarityScore}
+            similarArtists={similarArtists}
+          />
+        )}
+        <Card className="hidden-xs hidden-sm">
           <FollowerFollowingModal
             user={user}
             followerList={followerList}
@@ -174,6 +302,9 @@ export default class UserSocialNetwork extends React.Component<
             updateFollowingList={this.updateFollowingList}
           />
         </Card>
+        {isAnotherUser && (
+          <FlairsExplanationButton className="hidden-xs hidden-sm" />
+        )}
         <Card className="card-user-sn hidden-xs hidden-sm">
           <SimilarUsersModal
             user={user}

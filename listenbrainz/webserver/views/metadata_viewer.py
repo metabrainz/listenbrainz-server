@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template, jsonify
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.webserver.decorators import web_listenstore_needed
@@ -7,7 +7,14 @@ import orjson
 metadata_viewer_bp = Blueprint("metadata_viewer", __name__)
 
 
-@metadata_viewer_bp.route("/", methods=["GET"])
+@metadata_viewer_bp.get("/",  defaults={'path': ''})
+@metadata_viewer_bp.get('/<path:path>/')
+@login_required
+def playing_now_metadata_page(path):
+    return render_template("index.html")
+
+
+@metadata_viewer_bp.post("/")
 @web_listenstore_needed
 @login_required
 def playing_now_metadata_viewer():
@@ -24,11 +31,6 @@ def playing_now_metadata_viewer():
     # TODO: Load initial recording metadata for playing_now listen
     # and add to props as 'metadata'
 
-    props = {
-        "playing_now": playing_now
-    }
-
-    return render_template(
-        "player/metadata-viewer.html",
-        props=orjson.dumps(props).decode("utf-8")
-    )
+    return jsonify({
+        "playingNow": playing_now
+    })

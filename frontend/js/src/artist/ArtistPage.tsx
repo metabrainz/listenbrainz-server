@@ -1,24 +1,26 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty, isUndefined, partition, sortBy } from "lodash";
+import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
 import { sanitize } from "dompurify";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
-import { getPageProps, getReviewEventContent } from "../utils/utils";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
+import {
+  Link,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import NiceModal from "@ebay/nice-modal-react";
+import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -27,75 +29,161 @@ import {
   ListeningStats,
   popularRecordingToListen,
 } from "../album/utils";
-import type { PopularRecording, ReleaseGroup, SimilarArtist } from "../album/utils";
+import type {
+  PopularRecording,
+  ReleaseGroup,
+  SimilarArtist,
+} from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
+import { RouteQuery } from "../utils/Loader";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
+import CBReviewModal from "../cb-review/CBReviewModal";
+import Pill from "../components/Pill";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import Username from "../common/Username";
+
+function SortingButtons({
+  sort,
+  setSort,
+}: {
+  sort: "release_date" | "total_listen_count";
+  setSort: (sort: "release_date" | "total_listen_count") => void;
+}): JSX.Element {
+  return (
+    <div className="flex" role="group" aria-label="Sort by">
+      <Pill
+        type="secondary"
+        active={sort === "release_date"}
+        onClick={() => setSort("release_date")}
+        title="Sort by release date"
+      >
+        <FontAwesomeIcon icon={faCalendar} />
+      </Pill>
+      <Pill
+        type="secondary"
+        active={sort === "total_listen_count"}
+        onClick={() => setSort("total_listen_count")}
+        title="Sort by listen count"
+      >
+        <FontAwesomeIcon icon={faHeadphones} />
+      </Pill>
+    </div>
+  );
+}
+
+interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
+  secondary_types: string[];
+  total_listen_count: number | null;
+}
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroup[];
-  similarArtists: SimilarArtist[];
+  releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
+  similarArtists: {
+    artists: SimilarArtist[];
+    topReleaseGroupColor: ReleaseColor | undefined;
+    topRecordingColor: ReleaseColor | undefined;
+  };
   listeningStats: ListeningStats;
   coverArt?: string;
 };
 
-export default function ArtistPage(props: ArtistPageProps): JSX.Element {
-  const { APIService } = React.useContext(GlobalAppContext);
+const COVER_ART_SINGLE_ROW_COUNT = 8;
+
+export default function ArtistPage(): JSX.Element {
+  const _ = useLoaderData();
+  const location = useLocation();
+  const params = useParams() as { artistMBID: string };
+  const { artistMBID } = params;
+  const { data } = useQuery<ArtistPageProps>(
+    RouteQuery(["artist", params], location.pathname)
+  );
   const {
-    artist: initialArtist,
-    popularRecordings: initialPopularRecordings,
+    artist,
+    popularRecordings,
     releaseGroups,
     similarArtists,
     listeningStats,
     coverArt: coverArtSVG,
-  } = props;
+  } = data || {};
+
+  const navigate = useNavigate();
+
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
-  } = listeningStats;
+  } = listeningStats || {};
 
-  const [artist, setArtist] = React.useState(initialArtist);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const [wikipediaExtract, setWikipediaExtract] = React.useState<
     WikipediaExtract
   >();
-  // Data we get from the back end
-  const [popularRecordings, setPopularRecordings] = React.useState(
-    initialPopularRecordings
-  );
-  const [loading, setLoading] = React.useState(false);
 
-  const [albumsByThisArtist, alsoAppearsOn] = partition(
-    releaseGroups,
-    (rg) => rg.artists[0].artist_mbid === artist.artist_mbid
+  const [sort, setSort] = React.useState<"release_date" | "total_listen_count">(
+    "release_date"
   );
-  /** Navigation from one artist to a similar artist */
-  //   const onClickSimilarArtist: React.MouseEventHandler<HTMLElement> = (
-  //     event
-  //   ) => {
-  //     setLoading(true);
-  //   	try{
-  //     // Hit the API to get all the required info for the artist we clicked on
-  //    const response = await fetch(…)
-  //   if(!response.ok){
-  // 	throw new Error(response.status);
-  //   }
-  //	setArtist(response.artist)
-  //  setArtistTags(…)
-  //  setPopularRecordings(…)
-  // }
-  // catch(err){
-  // toast.error(<ToastMsg title={"Could no load similar artist"} message={err.toString()})
-  // }
-  //     setLoading(false);
-  //   };
+
+  const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
+    false
+  );
+  const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
+    false
+  );
+
+  // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
+  // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
+  const rgGroups = groupBy(
+    releaseGroups,
+    (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
+  );
+
+  const sortReleaseGroups = (
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
+  ) =>
+    orderBy(
+      releaseGroupsInput,
+      [
+        sort === "release_date"
+          ? (rg) => rg.date || ""
+          : (rg) => rg.total_listen_count ?? 0,
+        sort === "release_date"
+          ? (rg) => rg.total_listen_count ?? 0
+          : (rg) => rg.date || "",
+        "name",
+      ],
+      ["desc", "desc", "asc"]
+    );
+
+  const typeOrder = [
+    "Album",
+    "EP",
+    "Single",
+    "Live",
+    "Compilation",
+    "Remix",
+    "Broadcast",
+  ];
+  const last = Object.keys(rgGroups).length;
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
+    typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
+  );
+
+  const groupedReleaseGroups: Record<
+    string,
+    ReleaseGroupWithSecondaryTypesAndListenCount[]
+  > = {};
+  sortedRgGroupsKeys.forEach((type) => {
+    groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
+  });
 
   React.useEffect(() => {
     async function fetchReviews() {
       try {
         const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artist.artist_mbid}&entity_type=artist`
+          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${artistMBID}&entity_type=artist`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -109,7 +197,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     async function fetchWikipediaExtract() {
       try {
         const response = await fetch(
-          `https://musicbrainz.org/artist/${artist.artist_mbid}/wikipedia-extract`
+          `https://musicbrainz.org/artist/${artistMBID}/wikipedia-extract`
         );
         const body = await response.json();
         if (!response.ok) {
@@ -122,12 +210,22 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     }
     fetchReviews();
     fetchWikipediaExtract();
-  }, [artist, releaseGroups, APIService.APIBaseURI]);
+  }, [artistMBID]);
 
   const listensFromPopularRecordings =
-    popularRecordings.map(popularRecordingToListen) ?? [];
+    popularRecordings?.map(popularRecordingToListen) ?? [];
 
-  const filteredTags = chain(artist.tag?.artist)
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listensFromPopularRecordings,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listensFromPopularRecordings]);
+
+  const filteredTags = chain(artist?.tag?.artist)
     .sortBy("count")
     .value()
     .reverse();
@@ -139,6 +237,17 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
   const bigNumberFormatter = Intl.NumberFormat(undefined, {
     notation: "compact",
   });
+
+  const artistGraphNodeInfo = {
+    artist_mbid: artist?.artist_mbid,
+    name: artist?.name,
+  } as ArtistNodeInfo;
+
+  const onArtistChange = (artist_mbid: string) => {
+    navigate(`/artist/${artist_mbid}`);
+  };
+
+  const graphParentElementRef = React.useRef<HTMLDivElement>(null);
 
   const getReleaseCard = (rg: ReleaseGroup) => {
     return (
@@ -164,9 +273,29 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
     );
   };
 
+  React.useEffect(() => {
+    // Reset default view
+    setExpandDiscography(false);
+    setExpandPopularTracks(false);
+  }, [artist?.artist_mbid]);
+
+  const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
+
   return (
-    <div id="entity-page" className="artist-page">
-      <Loader isLoading={loading} />
+    <div id="entity-page" className="artist-page" role="main">
+      <Helmet>
+        <title>{artist?.name}</title>
+      </Helmet>
       <div className="entity-page-header flex">
         <div
           className="cover-art"
@@ -177,16 +306,16 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
-          title={`Album art for ${artist.name}`}
+          title={`Album art for ${artist?.name}`}
         />
         <div className="artist-info">
-          <h1>{artist.name}</h1>
+          <h1>{artist?.name}</h1>
           <div className="details">
             <small className="help-block">
-              {artist.begin_year}
-              {Boolean(artist.end_year) && ` — ${artist.end_year}`}
+              {artist?.begin_year}
+              {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
-              {artist.area}
+              {artist?.area}
             </small>
           </div>
           {wikipediaExtract && (
@@ -211,86 +340,77 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
         </div>
         <div className="right-side">
           <div className="entity-rels">
-            {!isEmpty(artist.rels) &&
+            {artist &&
+              !isEmpty(artist?.rels) &&
               Object.entries(artist.rels).map(([relName, relValue]) =>
                 getRelIconLink(relName, relValue)
               )}
             <OpenInMusicBrainzButton
               entityType="artist"
-              entityMBID={artist.artist_mbid}
+              entityMBID={artist?.artist_mbid}
             />
           </div>
-          <div className="btn-group lb-radio-button">
-            <a
-              type="button"
-              className="btn btn-info"
-              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artist.name
-              )})&mode=easy`}
-            >
-              <FontAwesomeIcon icon={faPlayCircle} /> Radio
-            </a>
-            <button
-              type="button"
-              className="btn btn-info dropdown-toggle"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <span className="caret" />
-              <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-              <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artist.name
-                  )})::nosim&mode=easy`}
-                >
-                  This artist
-                </a>
-              </li>
-              <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artist.name
-                  )})&mode=easy`}
-                >
-                  Similar artists
-                </a>
-              </li>
-              {Boolean(filteredTags?.length) && (
+          {artist && (
+            <div className="btn-group lb-radio-button">
+              <Link
+                type="button"
+                className="btn btn-info"
+                to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} /> Radio
+              </Link>
+              <button
+                type="button"
+                className="btn btn-info dropdown-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span className="caret" />
+                <span className="sr-only">Toggle Dropdown</span>
+              </button>
+              <ul className="dropdown-menu">
                 <li>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTagsAsString
-                    )})::or&mode=easy`}
+                  <Link
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
                   >
-                    Tags (
-                    <span className="tags-list">{filteredTagsAsString}</span>)
-                  </a>
+                    Artist radio
+                  </Link>
                 </li>
-              )}
-            </ul>
-          </div>
+                <li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
+                  >
+                    This artist only
+                  </Link>
+                </li>
+                {Boolean(filteredTags?.length) && (
+                  <li>
+                    <Link
+                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                        filteredTagsAsString
+                      )})::or&mode=easy`}
+                    >
+                      Tags (
+                      <span className="tags-list">{filteredTagsAsString}</span>)
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
       <div className="tags">
         <TagsComponent
-          key={artist.name}
+          key={artist?.name}
           tags={filteredTags}
           entityType="artist"
-          entityMBID={artist.artist_mbid}
+          entityMBID={artist?.artist_mbid}
         />
       </div>
       <div className="entity-page-content">
-        <div className="tracks">
+        <div className={`tracks ${expandPopularTracks ? "expanded" : ""}`}>
           <div className="header">
             <h3 className="header-with-line">
               Popular tracks
@@ -302,7 +422,7 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
+                        brainzplayer_event: "play-ambient-queue",
                         payload: listensFromPopularRecordings,
                       },
                       window.location.origin
@@ -335,11 +455,19 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
               />
             );
           })}
-          {/* <div className="read-more">
-            <button type="button" className="btn btn-outline">
-              See more…
-            </button>
-          </div> */}
+          {popularRecordings && popularRecordings?.length > 4 && (
+            <div className="read-more">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() =>
+                  setExpandPopularTracks((prevValue) => !prevValue)
+                }
+              >
+                See {expandPopularTracks ? "less" : "more"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
@@ -369,18 +497,12 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             <div className="top-listeners">
               <h3 className="header-with-line">Top listeners</h3>
               {topListeners
-                .slice(0, 10)
+                ?.slice(0, 10)
                 .map(
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <a
-                          href={`/user/${listener.user_name}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {listener.user_name}
-                        </a>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -393,141 +515,97 @@ export default function ArtistPage(props: ArtistPageProps): JSX.Element {
             </div>
           )}
         </div>
-        <div className="albums full-width scroll-start">
-          <h3 className="header-with-line">Albums</h3>
-          <div className="cover-art-container dragscroll">
-            {albumsByThisArtist.map(getReleaseCard)}
-          </div>
-        </div>
-        {Boolean(alsoAppearsOn?.length) && (
-          <div className="albums full-width scroll-start">
-            <h3 className="header-with-line">Also appears on</h3>
-            <div className="cover-art-container dragscroll">
-              {alsoAppearsOn.map(getReleaseCard)}
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
+          {releaseGroupTypesNames.map(([type, rgGroup]) => (
+            <div className="albums">
+              <div className="listen-header">
+                <h3 className="header-with-line">{type}</h3>
+                <SortingButtons sort={sort} setSort={setSort} />
+              </div>
+              <HorizontalScrollContainer
+                className={`cover-art-container ${
+                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                    ? "single-row"
+                    : ""
+                }`}
+              >
+                {rgGroup.map(getReleaseCard)}
+              </HorizontalScrollContainer>
             </div>
-          </div>
-        )}
-        <div className="similarity">
-          <h3 className="header-with-line">Similar artists</h3>
-          <div className="artists">
-            {sortBy(similarArtists, "score")
-              .reverse()
-              .map((similarArtist) => {
-                const listenDetails = (
-                  <div>
-                    <a href={`/artist/${similarArtist.artist_mbid}`}>
-                      {similarArtist.name}
-                    </a>
-                  </div>
-                );
-                const artistAsListen: BaseListenFormat = {
-                  listened_at: 0,
-                  track_metadata: {
-                    artist_name: similarArtist.name,
-                    track_name: "",
-                  },
-                };
-                return (
-                  <ListenCard
-                    key={similarArtist.artist_mbid}
-                    listenDetails={listenDetails}
-                    listen={artistAsListen}
-                    showTimestamp={false}
-                    showUsername={false}
-                    // no thumbnail for artist entities
-                    // eslint-disable-next-line react/jsx-no-useless-fragment
-                    customThumbnail={<></>}
-                    // eslint-disable-next-line react/jsx-no-useless-fragment
-                    feedbackComponent={<></>}
-                    compact
-                  />
-                );
-              })}
-          </div>
-        </div>
-        <div className="reviews">
-          <h3 className="header-with-line">Reviews</h3>
-          {reviews?.length ? (
-            <>
-              {reviews.slice(0, 3).map(getReviewEventContent)}
-              <a
-                href={`https://critiquebrainz.org/artist/${artist.artist_mbid}`}
-                className="critiquebrainz-button btn btn-link"
-              >
-                More on CritiqueBrainz…
-              </a>
-            </>
-          ) : (
-            <>
-              <p>Be the first to review this artist on CritiqueBrainz</p>
-              <a
-                href={`https://critiquebrainz.org/review/write/artist/${artist.artist_mbid}`}
+          ))}
+          {showFullDiscographyButton && (
+            <div className="read-more mb-10">
+              <button
+                type="button"
                 className="btn btn-outline"
+                onClick={() => setExpandDiscography((prevValue) => !prevValue)}
               >
-                Add my review
-              </a>
-            </>
+                See {expandDiscography ? "less" : "full discography"}
+              </button>
+            </div>
           )}
         </div>
       </div>
-      <BrainzPlayer
-        listens={listensFromPopularRecordings}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
+
+      {similarArtists && similarArtists.artists.length > 0 ? (
+        <>
+          <h3 className="header-with-line">Similar Artists</h3>
+          <div className="similarity">
+            <SimilarArtistComponent
+              onArtistChange={onArtistChange}
+              artistGraphNodeInfo={artistGraphNodeInfo}
+              similarArtistsList={similarArtists.artists as ArtistNodeInfo[]}
+              topAlbumReleaseColor={similarArtists.topReleaseGroupColor}
+              topRecordingReleaseColor={similarArtists.topRecordingColor}
+              similarArtistsLimit={18}
+              graphParentElementRef={graphParentElementRef}
+            />
+          </div>
+        </>
+      ) : null}
+      <div className="reviews">
+        <h3 className="header-with-line">Reviews</h3>
+        {reviews?.length ? (
+          <>
+            <div className="review-cards">
+              {reviews.slice(0, 3).map(getReviewEventContent)}
+            </div>
+            <a
+              href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
+              className="critiquebrainz-button btn btn-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              More on CritiqueBrainz…
+            </a>
+          </>
+        ) : (
+          <p>Be the first to review this artist on CritiqueBrainz</p>
+        )}
+        <button
+          type="button"
+          className="btn btn-info"
+          data-toggle="modal"
+          data-target="#CBReviewModal"
+          onClick={() => {
+            NiceModal.show(CBReviewModal, {
+              entityToReview: [
+                {
+                  type: "artist",
+                  mbid: artistMBID,
+                  name: artist?.name,
+                },
+              ],
+            });
+          }}
+        >
+          Add my review
+        </button>
+      </div>
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    artist_data,
-    popular_recordings,
-    release_groups,
-    similar_artists,
-    listening_stats,
-    cover_art,
-  } = reactProps;
-
-  const ArtistPageWithAlertNotifications = withAlertNotifications(ArtistPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <ArtistPageWithAlertNotifications
-            artist={artist_data}
-            popularRecordings={popular_recordings}
-            releaseGroups={release_groups}
-            similarArtists={similar_artists}
-            listeningStats={listening_stats}
-            coverArt={cover_art}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

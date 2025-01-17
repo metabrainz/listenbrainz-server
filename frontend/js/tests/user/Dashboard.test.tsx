@@ -1,4 +1,3 @@
-/* eslint-disable testing-library/no-unnecessary-act */
 import * as React from "react";
 
 import {
@@ -8,16 +7,14 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
-import fetchMock from "jest-fetch-mock";
 import WS from "jest-websocket-mock";
 import { SocketIO as mockSocketIO } from "mock-socket";
 import userEvent from "@testing-library/user-event";
-import type { UserEvent } from "@testing-library/user-event/dist/types/setup/setup";
-import APIServiceClass from "../../src/utils/APIService";
+import { http, HttpResponse } from "msw";
+import { SetupServerApi, setupServer } from "msw/node";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
-import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
-import * as recentListensPropsPlayingNow from "../__mocks__/recentListensPropsPlayingNow.json";
 import Listens, { ListensProps } from "../../src/user/Dashboard";
 import { renderWithProviders } from "../test-utils/rtl-test-utils";
 
@@ -31,6 +28,8 @@ jest.unmock("react-toastify");
 // Mocking Math.random() fixes this
 // https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+
+const userClickEvent = userEvent.setup();
 
 const {
   latestListenTs,
@@ -46,58 +45,256 @@ const props: ListensProps = {
   oldestListenTs,
   user,
   userPinnedRecording,
+  already_reported_user: false,
 };
 
-const APIService = new APIServiceClass("foo");
-const currentUser = { id: 1, name: "iliekcomputers", auth_token: "fnord" };
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
-const propsOneListen = {
-  ...recentListensPropsOneListen,
-};
+const queryKey = ["dashboard", {}, {}];
 
-fetchMock.mockIf(
-  (input) => input.url.endsWith("/listen-count"),
-  () => {
-    return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
-  }
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe("Listens page", () => {
-  jest.setTimeout(10000);
+const currentUser = { id: 1, name: "iliekcomputers", auth_token: "fnord" };
 
-  let userEventSession: UserEvent;
+let mockSearchParam = {};
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useSearchParams: () => {
+    const [params, setParams] = React.useState(
+      new URLSearchParams(mockSearchParam)
+    );
+    return [
+      params,
+      (newParams: typeof mockSearchParam) => {
+        mockSearchParam = newParams;
+        setParams(new URLSearchParams(newParams));
+      },
+    ];
+  },
+}));
+
+describe("Dashboard page", () => {
+  jest.setTimeout(10000);
+  let server: SetupServerApi;
   beforeAll(async () => {
-    userEventSession = await userEvent.setup();
+    const handlers = [
+      http.post("/", async (path) => HttpResponse.json(props)),
+      http.get("/1/user/*/following", async (path) =>
+        HttpResponse.json({ following: [] })
+      ),
+      http.get("/1/user/*/followers", async (path) =>
+        HttpResponse.json({ followers: [] })
+      ),
+      http.get("/1/user/*/similar-users", async (path) => {
+        HttpResponse.json({ payload: [] });
+      }),
+      http.get("/1/user/*/listen-count", async (path) =>
+        HttpResponse.json({ payload: { count: 42 } })
+      ),
+      http.post("/1/delete-listen", async (path) => HttpResponse.json({})),
+      http.get("/1/user/*/similar-to/*", async (path) =>
+        HttpResponse.json({ payload: [] })
+      ),
+      http.get("/1/stats/user/*/artists", async (path) =>
+        HttpResponse.json({ payload: [] })
+      ),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+  });
+  afterEach(async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+  });
+  afterAll(() => {
+    server.close();
   });
 
   it("renders correctly on the profile page", async () => {
-    /* eslint-disable testing-library/prefer-screen-queries */
-    const { findByTestId, getAllByTestId } = renderWithProviders(
-      <Listens {...props} />,
-      { APIService, currentUser }
+    renderWithProviders(
+      <Listens />,
+      {
+        currentUser,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
     );
-    await findByTestId("listens");
-    // 25 listens + one pinned recording listen
-    expect(getAllByTestId("listen")).toHaveLength(26);
-    /* eslint-enable testing-library/prefer-screen-queries */
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
+    });
+
+    expect(screen.getAllByTestId("listen")).toHaveLength(26);
   });
 
-  it("fetches the user's listen count", async () => {
-    const spy = jest.fn().mockImplementation(() => {
-      return Promise.resolve(42);
-    });
-    APIService.getUserListenCount = spy;
-
-    await act(async () => {
-      renderWithProviders(<Listens {...props} />, { APIService, currentUser });
-    });
-
-    const listenCountCard = await screen.findByTestId("listen-count-card");
-    // Due to the rendering of the card, the text representation appears with missing spaces
-    expect(listenCountCard).toHaveTextContent(
-      "You have listened to42songs so far"
+  it("shows the user's listen count component", async () => {
+    renderWithProviders(
+      <Listens />,
+      {
+        currentUser,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
     );
-    expect(spy).toHaveBeenCalledWith(user.name);
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
+    });
+    
+    // Ensure we show a listen count card component, but don't test the contents
+    // Tests for it are in ListenCountCard.test.tsx
+    screen.getByTestId("listen-count-card");
+  });
+
+  it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
+    renderWithProviders(
+      <Listens />,
+      {
+        currentUser,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
+    });
+
+    expect(await screen.findAllByTestId("listen")).toHaveLength(26);
+
+    const listensContainer = await screen.findByTestId("listens");
+    const listenCards = await within(listensContainer).findAllByTestId(
+      "listen"
+    );
+    const listenToDelete = listenCards[0];
+
+    const deleteButton = within(listenToDelete).getByRole("menuitem", {
+      name: "Delete Listen",
+    });
+
+    await userEvent.click(deleteButton);
+
+    await waitForElementToBeRemoved(
+      within(listenToDelete!).queryByRole("menuitem", {
+        name: "Delete Listen",
+      })
+    );
+
+    expect(await screen.findAllByTestId("listen")).toHaveLength(25);
+  });
+
+  it("does not render delete button if user is not logged in", async () => {
+    renderWithProviders(
+      <Listens />,
+      {
+        currentUser: {
+          name: "foobar",
+        },
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
+    });
+
+    const deleteButton = screen.queryAllByRole("menuitem", {
+      name: "Delete Listen",
+    });
+    expect(deleteButton).toHaveLength(0);
+  });
+
+  it("does nothing if the user has no auth token", async () => {
+    renderWithProviders(
+      <Listens />,
+      {
+        currentUser: {
+          name: "iliekcomputers",
+          auth_token: undefined,
+        },
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
+    });
+
+    const listensContainer = await screen.findByTestId("listens");
+    const listenCards = await within(listensContainer).findAllByTestId(
+      "listen"
+    );
+    expect(listenCards).toHaveLength(25);
+    const listenToDelete = listenCards[0];
+
+    const deleteButton = within(listenToDelete).getByRole("menuitem", {
+      name: "Delete Listen",
+    });
+    await userEvent.click(deleteButton);
+
+    expect(listenCards).toHaveLength(25);
+  });
+
+  it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
+    server.use(
+      http.post("/1/delete-listen", async (path) => {
+        return HttpResponse.json({}, { status: 500 });
+      })
+    );
+    renderWithProviders(
+      <Listens />,
+      {
+        currentUser,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
+
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      const state = queryClient.getQueryState(queryKey);
+      expect(state?.status === "success").toBeTruthy();
+    });
+
+    const listensContainer = await screen.findByTestId("listens");
+    const listenCards = await within(listensContainer).findAllByTestId(
+      "listen"
+    );
+    expect(listenCards).toHaveLength(25);
+    const listenToDelete = listenCards[0];
+
+    const deleteButton = within(listenToDelete).getByRole("menuitem", {
+      name: "Delete Listen",
+    });
+    await userEvent.click(deleteButton);
+
+    expect(listenCards).toHaveLength(25);
   });
 
   describe("websocket features", () => {
@@ -155,9 +352,23 @@ describe("Listens page", () => {
           }
         });
       });
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+
+      renderWithProviders(
+        <Listens />,
+        {
+          currentUser,
+        },
+        {
+          wrapper: reactQueryWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        // Wait for data to be successfully loaded
+        const state = queryClient.getQueryState(queryKey);
+        expect(state?.status === "success").toBeTruthy();
       });
+
       await websocketServer.connected;
       await returnPromise; // See at the beginning of this test
 
@@ -167,9 +378,22 @@ describe("Listens page", () => {
     });
 
     it('calls correct handler for "listen" event', async () => {
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+      renderWithProviders(
+        <Listens />,
+        {
+          currentUser,
+        },
+        {
+          wrapper: reactQueryWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        // Wait for data to be successfully loaded
+        const state = queryClient.getQueryState(queryKey);
+        expect(state?.status === "success").toBeTruthy();
       });
+
       await websocketServer.connected;
 
       expect(screen.queryByTestId("webSocketListens")).not.toBeInTheDocument();
@@ -191,9 +415,22 @@ describe("Listens page", () => {
     });
 
     it('calls correct event for "playing_now" event', async () => {
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+      renderWithProviders(
+        <Listens />,
+        {
+          currentUser,
+        },
+        {
+          wrapper: reactQueryWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        // Wait for data to be successfully loaded
+        const state = queryClient.getQueryState(queryKey);
+        expect(state?.status === "success").toBeTruthy();
       });
+
       await websocketServer.connected;
       expect(screen.queryAllByTestId("listen")).toHaveLength(26);
 
@@ -203,7 +440,7 @@ describe("Listens page", () => {
         playing_now: true,
       };
 
-      await act(async () => {
+      await waitFor(() => {
         websocketServer.server.emit(
           "playing_now",
           JSON.stringify(playingNowListen)
@@ -215,13 +452,26 @@ describe("Listens page", () => {
     });
 
     it("crops the websocket listens array to a maximum of 7", async () => {
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />);
+      renderWithProviders(
+        <Listens />,
+        {
+          currentUser,
+        },
+        {
+          wrapper: reactQueryWrapper,
+        }
+      );
+
+      await waitFor(() => {
+        // Wait for data to be successfully loaded
+        const state = queryClient.getQueryState(queryKey);
+        expect(state?.status === "success").toBeTruthy();
       });
+
       await websocketServer.connected;
 
       // Add 7 new listens
-      await act(async () => {
+      await waitFor(async () => {
         for (let index = 0; index < 8; index += 1) {
           // Prevent the "Encountered two children with the same key" warning message
           // by having a different timestamp for each listen
@@ -265,203 +515,36 @@ describe("Listens page", () => {
     });
   });
 
-  describe("deleteListen", () => {
-    it("calls API and removeListenFromListenList correctly, and updates the state", async () => {
-      const spy = jest
-        .spyOn(APIService, "deleteListen")
-        .mockImplementation(() => Promise.resolve(200));
-
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser,
-        });
-      });
-
-      expect(await screen.findAllByTestId("listen")).toHaveLength(26);
-
-      const listensContainer = await screen.findByTestId("listens");
-      const listenCards = await within(listensContainer).findAllByTestId(
-        "listen"
-      );
-      const listenToDelete = listenCards[0];
-
-      const deleteButton = within(listenToDelete).getByRole("menuitem", {
-        name: "Delete Listen",
-      });
-      await userEvent.click(deleteButton);
-
-      await waitForElementToBeRemoved(
-        within(listenToDelete!).queryByRole("menuitem", {
-          name: "Delete Listen",
-        })
-      );
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        "fnord",
-        "973e5620-829d-46dd-89a8-760d87076287",
-        1586523524
-      );
-      expect(await screen.findAllByTestId("listen")).toHaveLength(25);
-    });
-
-    it("does not render delete button if user is not logged in", async () => {
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          currentUser: undefined,
-        });
-      });
-
-      const deleteButton = screen.queryAllByRole("menuitem", {
-        name: "Delete Listen",
-      });
-      expect(deleteButton).toHaveLength(0);
-    });
-
-    it("does nothing if the user has no auth token", async () => {
-      const spy = jest
-        .spyOn(APIService, "deleteListen")
-        .mockImplementation(() => Promise.resolve(200));
-
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser: { auth_token: undefined, name: "iliekcomputers" },
-        });
-      });
-
-      const listensContainer = await screen.findByTestId("listens");
-      const listenCards = await within(listensContainer).findAllByTestId(
-        "listen"
-      );
-      expect(listenCards).toHaveLength(25);
-      const listenToDelete = listenCards[0];
-
-      const deleteButton = within(listenToDelete).getByRole("menuitem", {
-        name: "Delete Listen",
-      });
-      await userEvent.click(deleteButton);
-
-      expect(listenCards).toHaveLength(25);
-
-      expect(spy).not.toHaveBeenCalled();
-    });
-
-    it("doesn't call removeListenFromListenList or update state if status code is not 200", async () => {
-      const spy = jest.spyOn(APIService, "deleteListen");
-      spy.mockImplementation(() => Promise.resolve(500));
-
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser,
-        });
-      });
-
-      const listensContainer = await screen.findByTestId("listens");
-      const listenCards = await within(listensContainer).findAllByTestId(
-        "listen"
-      );
-      expect(listenCards).toHaveLength(25);
-      const listenToDelete = listenCards[0];
-
-      const deleteButton = within(listenToDelete).getByRole("menuitem", {
-        name: "Delete Listen",
-      });
-      await userEvent.click(deleteButton);
-
-      expect(listenCards).toHaveLength(25);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        "fnord",
-        "973e5620-829d-46dd-89a8-760d87076287",
-        1586523524
-      );
-
-      await waitFor(
-        () => {
-          expect(listenCards).toHaveLength(25);
-        },
-        { timeout: 1000 }
-      );
-    });
-
-    it("handles error for delete listen", async () => {
-      const spy = jest
-        .spyOn(APIService, "deleteListen")
-        .mockImplementation(() => {
-          throw new Error("My error message");
-        });
-
-      await act(async () => {
-        renderWithProviders(<Listens {...props} />, {
-          APIService,
-          currentUser,
-        });
-      });
-      const listensContainer = await screen.findByTestId("listens");
-      const listenCards = await within(listensContainer).findAllByTestId(
-        "listen"
-      );
-      expect(listenCards).toHaveLength(25);
-      const listenToDelete = listenCards[0];
-      const deleteButton = within(listenToDelete).getByRole("menuitem", {
-        name: "Delete Listen",
-      });
-      await userEvent.click(deleteButton);
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        "fnord",
-        "973e5620-829d-46dd-89a8-760d87076287",
-        1586523524
-      );
-      expect(
-        screen.getByText("Error while deleting listen")
-      ).toBeInTheDocument();
-      expect(screen.getByText("My error message")).toBeInTheDocument();
-
-      await waitFor(
-        () => {
-          expect(listenCards).toHaveLength(25);
-        },
-        { timeout: 1000 }
-      );
-    });
-  });
-
   describe("Pagination", () => {
-    const pushStateSpy = jest.spyOn(window.history, "pushState");
-    const getListensForUserSpy = jest
-      .spyOn(APIService, "getListensForUser")
-      .mockImplementation(() => Promise.resolve([]));
-
-    const mockListen: Listen = {
-      track_metadata: {
-        artist_name: "FNORD",
-        track_name: "Have you seen the FNORDs?",
-        additional_info: {
-          recording_msid: "a6a089da-475b-45cb-a5a8-087caa1a121a",
-        },
-      },
-      listened_at: 1586440100,
-      user_name: "mr_monkey",
-    };
     afterEach(() => {
       jest.clearAllMocks();
     });
 
     describe("handleClickOlder", () => {
-      it("does nothing if there is no older listens timestamp", async () => {
-        await act(async () => {
-          renderWithProviders(
-            <Listens
-              {...props}
-              oldestListenTs={listens[listens.length - 1].listened_at}
-            />,
-            { APIService }
-          );
+      it("older button should be disabled if there is no older listens timestamp", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              oldestListenTs: listens[listens.length - 1].listened_at,
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         // button should be disabled if last listen's listened_at <= oldestListenTs
@@ -469,111 +552,61 @@ describe("Listens page", () => {
           "Navigate to older listens"
         );
         expect(olderButton).toHaveAttribute("aria-disabled", "true");
-        expect(olderButton).not.toHaveAttribute("href");
-        await userEventSession.click(olderButton);
-
-        expect(getListensForUserSpy).not.toHaveBeenCalled();
+        await userClickEvent.click(olderButton);
       });
 
-      it("calls the API to get older listens", async () => {
-        const expectedListensArray = [
+      it("older button should have a link to older listen page", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              oldestListenTs: Math.round(
+                new Date("2019-04-09T10:12:04Z").getTime() / 1000
+              ),
+            });
+          })
+        );
+        renderWithProviders(
+          <Listens />,
           {
-            track_metadata: {
-              artist_name: "You mom",
-              track_name: "A unique track name",
-              release_name: "You mom's best of",
-            },
-            listened_at: 1586450001,
+            currentUser,
           },
-        ];
-        getListensForUserSpy.mockImplementation(() =>
-          Promise.resolve(expectedListensArray)
+          {
+            wrapper: reactQueryWrapper,
+          },
+          true
         );
 
-        await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
-        });
-        const expectedNextListenTimestamp =
-          listens[listens.length - 1].listened_at;
-
-        const olderButton = await screen.findByLabelText(
-          "Navigate to older listens"
-        );
-        await userEventSession.click(olderButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          undefined,
-          expectedNextListenTimestamp
-        );
-        await screen.findByText("A unique track name");
-      });
-
-      it("prevents further navigation if it receives not enough listens from API", async () => {
-        getListensForUserSpy.mockImplementationOnce(() =>
-          Promise.resolve([mockListen])
-        );
-        await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         const olderButton = await screen.findByLabelText(
           "Navigate to older listens"
         );
         expect(olderButton).toHaveAttribute("aria-disabled", "false");
-        await userEventSession.click(olderButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          undefined,
-          1586440536
-        );
-
-        expect(olderButton).toHaveAttribute("aria-disabled", "true");
-        expect(olderButton).not.toHaveAttribute("href");
-      });
-
-      it("updates the browser history", async () => {
-        getListensForUserSpy.mockImplementationOnce(
-          (username, minTs, maxTs) => {
-            return Promise.resolve([...listens, mockListen]);
-          }
-        );
-
-        await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
-        });
-
-        const olderButton = await screen.findByLabelText(
-          "Navigate to older listens"
-        );
-        expect(olderButton).toHaveAttribute("aria-disabled", "false");
-
-        await userEventSession.click(olderButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          undefined,
-          1586440536
-        );
-        expect(pushStateSpy).toHaveBeenCalledWith(
-          null,
-          "",
-          "?max_ts=1586440536"
-        );
-
-        expect(olderButton).toHaveAttribute("href", "?max_ts=1586440100");
-        expect(olderButton).toHaveAttribute("aria-disabled", "false");
+        expect(olderButton).toHaveAttribute("href", "/?max_ts=1586440536");
       });
     });
 
     describe("handleClickNewer", () => {
-      it("does nothing if there is no newer listens timestamp", async () => {
-        await act(async () => {
-          renderWithProviders(
-            <Listens {...props} latestListenTs={listens[0].listened_at} />,
-            { APIService }
-          );
+      it("newer button should be disabled if there is no newer listens timestamp", async () => {
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         // button should be disabled if last previousListenTs >= earliest timestamp
@@ -581,131 +614,67 @@ describe("Listens page", () => {
           "Navigate to more recent listens"
         );
         expect(newerButton).toHaveAttribute("aria-disabled", "true");
-        expect(newerButton).not.toHaveAttribute("href");
-        await userEventSession.click(newerButton);
-
-        expect(getListensForUserSpy).not.toHaveBeenCalled();
       });
 
-      it("calls the API to get newer listens", async () => {
-        const expectedListensArray = [
+      it("newer button should have a link to newer listen page", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              latestListenTs: new Date("2021-09-14T03:16:16.161Z").getTime(),
+            });
+          })
+        );
+        renderWithProviders(
+          <Listens />,
           {
-            track_metadata: {
-              artist_name: "You mom",
-              track_name: "Another unique track name",
-              release_name: "You mom's best of",
-            },
-            listened_at: Date.now(),
+            currentUser,
           },
-        ];
-        getListensForUserSpy.mockImplementation(() =>
-          Promise.resolve(expectedListensArray)
-        );
-
-        await act(async () => {
-          renderWithProviders(
-            <Listens {...props} latestListenTs={Date.now()} />,
-            { APIService }
-          );
-        });
-        const expectedPreviousListenTimestamp = listens[0].listened_at;
-
-        const newerButton = await screen.findByLabelText(
-          "Navigate to more recent listens"
-        );
-        await userEventSession.click(newerButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          expectedPreviousListenTimestamp,
-          undefined
-        );
-        await screen.findByText("Another unique track name");
-      });
-
-      it("prevents further navigation if it receives not enough listens from API", async () => {
-        getListensForUserSpy.mockImplementationOnce(() =>
-          Promise.resolve([mockListen])
-        );
-        await act(async () => {
-          renderWithProviders(
-            <Listens {...props} latestListenTs={Date.now()} />,
-            { APIService }
-          );
-        });
-
-        const newerButton = await screen.findByLabelText(
-          "Navigate to more recent listens"
-        );
-        expect(newerButton).toHaveAttribute("aria-disabled", "false");
-        await userEventSession.click(newerButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          listens[0].listened_at,
-          undefined
-        );
-
-        expect(newerButton).toHaveAttribute("aria-disabled", "true");
-        expect(newerButton).not.toHaveAttribute("href");
-      });
-
-      it("updates the browser history", async () => {
-        const mostRecentListenTs = listens[0].listened_at;
-        const timestamp = Date.now();
-        getListensForUserSpy.mockImplementationOnce(
-          (username, minTs, maxTs) => {
-            return Promise.resolve([
-              { ...mockListen, listened_at: timestamp },
-              ...listens,
-            ]);
+          {
+            wrapper: reactQueryWrapper,
           }
         );
 
-        await act(async () => {
-          renderWithProviders(
-            <Listens {...props} latestListenTs={timestamp + 100} />,
-            { APIService }
-          );
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         const newerButton = await screen.findByLabelText(
           "Navigate to more recent listens"
         );
+
         expect(newerButton).toHaveAttribute("aria-disabled", "false");
-        expect(newerButton).toHaveAttribute(
-          "href",
-          `?min_ts=${mostRecentListenTs}`
-        );
-
-        await userEventSession.click(newerButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          mostRecentListenTs,
-          undefined
-        );
-        expect(pushStateSpy).toHaveBeenCalledWith(
-          null,
-          "",
-          `?min_ts=${mostRecentListenTs}`
-        );
-
-        expect(newerButton).toHaveAttribute("href", `?min_ts=${timestamp}`);
-        expect(newerButton).toHaveAttribute("aria-disabled", "false");
+        expect(newerButton).toHaveAttribute("href", "/?min_ts=1586523524");
       });
     });
 
     describe("handleClickOldest", () => {
       it("does nothing if there is no older listens timestamp", async () => {
-        await act(async () => {
-          renderWithProviders(
-            <Listens
-              {...props}
-              oldestListenTs={listens[listens.length - 1].listened_at}
-            />,
-            { APIService }
-          );
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              oldestListenTs: listens[listens.length - 1].listened_at,
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         // button should be disabled if last listen's listened_at <= oldestListenTs
@@ -713,57 +682,67 @@ describe("Listens page", () => {
           "Navigate to oldest listens"
         );
         expect(oldestButton).toHaveAttribute("aria-disabled", "true");
-        expect(oldestButton).not.toHaveAttribute("href");
-        await userEventSession.click(oldestButton);
-
-        expect(getListensForUserSpy).not.toHaveBeenCalled();
       });
 
-      it("updates the browser history and disables navigation to oldest", async () => {
-        getListensForUserSpy.mockImplementationOnce(
-          (username, minTs, maxTs) => {
-            return Promise.resolve([
-              ...listens,
-              {
-                ...mockListen,
-                listened_at: oldestListenTs,
-              },
-            ]);
+      it("oldest button should have a link to oldest listen page", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              oldestListenTs: Math.round(
+                new Date("2019-04-09T10:12:04Z").getTime() / 1000
+              ),
+            });
+          })
+        );
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
           }
         );
 
-        await act(async () => {
-          renderWithProviders(<Listens {...props} />, { APIService });
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         const oldestButton = await screen.findByLabelText(
           "Navigate to oldest listens"
         );
         expect(oldestButton).toHaveAttribute("aria-disabled", "false");
-
-        await userEventSession.click(oldestButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(
-          user.name,
-          oldestListenTs - 1
-        );
-        expect(pushStateSpy).toHaveBeenCalledWith(
-          null,
-          "",
-          `?min_ts=${oldestListenTs - 1}`
-        );
-
-        expect(oldestButton).not.toHaveAttribute("href");
-        expect(oldestButton).toHaveAttribute("aria-disabled", "true");
+        expect(oldestButton).toHaveAttribute("href", "/?min_ts=1554804723");
       });
     });
     describe("handleClickNewest", () => {
-      it("does nothing if there is no more recent listens timestamp", async () => {
-        await act(async () => {
-          renderWithProviders(
-            <Listens {...props} latestListenTs={listens[0].listened_at} />,
-            { APIService }
-          );
+      it("newest button is disabled if there is no more recent listens timestamp", async () => {
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              latestListenTs: listens[0].listened_at,
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
         });
 
         // button should be disabled if last listen's listened_at <= oldestListenTs
@@ -771,25 +750,37 @@ describe("Listens page", () => {
           "Navigate to most recent listens"
         );
         expect(newestButton).toHaveAttribute("aria-disabled", "true");
-        expect(newestButton).toHaveAttribute("href", "/");
-        await userEventSession.click(newestButton);
-
-        expect(getListensForUserSpy).not.toHaveBeenCalled();
       });
 
-      it("updates the browser history and disables navigation to newest listens", async () => {
-        const timestamp = Math.round(Date.now() / 1000);
-        await act(async () => {
-          renderWithProviders(
-            <Listens {...props} latestListenTs={timestamp} />,
-            { APIService }
-          );
-        });
+      it("newest button should have a link to newest listen page", async () => {
+        const timestamp = Math.round(
+          new Date("2024-09-14T03:16:16.161Z").getTime() / 1000
+        );
 
-        getListensForUserSpy.mockResolvedValueOnce([
-          { ...mockListen, listened_at: timestamp },
-          ...listens,
-        ]);
+        server.use(
+          http.post("/", async (path) => {
+            return HttpResponse.json({
+              ...props,
+              latestListenTs: timestamp,
+            });
+          })
+        );
+
+        renderWithProviders(
+          <Listens />,
+          {
+            currentUser,
+          },
+          {
+            wrapper: reactQueryWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          // Wait for data to be successfully loaded
+          const state = queryClient.getQueryState(queryKey);
+          expect(state?.status === "success").toBeTruthy();
+        });
 
         const newestButton = await screen.findByLabelText(
           "Navigate to most recent listens"
@@ -797,15 +788,6 @@ describe("Listens page", () => {
 
         expect(newestButton).toHaveAttribute("href", "/");
         expect(newestButton).toHaveAttribute("aria-disabled", "false");
-
-        await userEventSession.click(newestButton);
-
-        expect(getListensForUserSpy).toHaveBeenCalledWith(user.name);
-
-        expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
-
-        expect(newestButton).toHaveAttribute("href", "/");
-        expect(newestButton).toHaveAttribute("aria-disabled", "true");
       });
     });
   });

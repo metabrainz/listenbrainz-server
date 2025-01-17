@@ -2,6 +2,7 @@
 @import "/node_modules/swiper/swiper.less";
 @import "/node_modules/swiper/modules/navigation/navigation.less";
 @import "/node_modules/swiper/modules/effect-coverflow/effect-coverflow.less";
+@import "/node_modules/swiper/modules/effect-cube/effect-cube.less";
 
 /* latin */
 @font-face {
@@ -49,7 +50,7 @@
   }
   .scrollable-area {
     max-height: 500px;
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 
   #header {
@@ -59,7 +60,7 @@
     }
   }
   .graph-container {
-    overflow-x: scroll;
+    overflow-x: auto;
     .graph {
       min-width: min(700px, 100%);
       width: 100%;
@@ -112,8 +113,7 @@
       }
     }
   }
-
-  .swiper {
+  #top-albums .swiper {
     width: 100%;
     perspective: 900px;
     background-color: whitesmoke;
@@ -194,6 +194,7 @@
   }
 
   &.yim-2022,
+  &.yim-2024,
   &.yim-2023 {
     --swiper-theme-color: @2022red;
     /* Main header section at the top with logo */
@@ -409,7 +410,8 @@
       box-shadow: inset 0px 11px 8px -10px #ccc;
     }
   }
-  &.yim-2023 {
+  &.yim-2023,
+  &.yim-2024 {
     --selectedColor: #4c6c52;
     --swiper-navigation-color: var(--selectedColor);
     @cream: #f0eee2;
@@ -568,7 +570,8 @@
       overflow: hidden;
       .graph {
         color: var(--selectedColor);
-        overflow: scroll;
+        overflow-x: auto;
+        overflow-y: hidden;
         > * {
           min-width: 550px;
         }
@@ -643,6 +646,85 @@
         height: 50px;
         background: linear-gradient(0deg, var(--selectedColor), transparent);
       }
+    }
+  }
+  &.yim-2024 {
+    --backgroundColor: #4c6c52;
+    --cardBackgroundColor: #fefff5;
+    --accentColor: #2b9f7a;
+    --selectedColor: var(--accentColor);
+    --swiper-navigation-color: var(--accentColor);
+    @text-color: var(--accentColor);
+    @content-background-color: var(--cardBackgroundColor);
+    background-color: var(--backgroundColor);
+    color: @text-color;
+    .content-card {
+      background: @content-background-color;
+      color: @text-color;
+      .heading,
+      .small-stat {
+        color: inherit;
+      }
+      .heading {
+        aspect-ratio: unset;
+        h3,
+        h4 {
+          margin: 0;
+        }
+      }
+      .img-header {
+        mix-blend-mode: multiply;
+      }
+    }
+    .small-stat {
+      font-weight: 300;
+    }
+    .scrollable-area::after {
+      background: linear-gradient(
+        0deg,
+        var(--cardBackgroundColor),
+        transparent
+      );
+    }
+    .btn-info,
+    .yim-share-button {
+      background-color: var(--accentColor);
+    }
+    .color-picker {
+      flex-wrap: wrap;
+      gap: 2em;
+      > div {
+        &:first-of-type {
+          width: 100%;
+          font-weight: bold;
+          font-size: larger;
+        }
+        text-align: center;
+        text-align: -webkit-center;
+        .color-selector {
+          background: none;
+        }
+      }
+    }
+    .swiper,
+    .graph-container {
+      background-color: var(--backgroundColor);
+    }
+    .swiper-cube .swiper-slide {
+      text-align: center;
+      img {
+        max-width: min(90vw, 90vh);
+      }
+    }
+    #buddies .buddy .img-container img {
+      width: 100%;
+      mix-blend-mode: multiply;
+    }
+    #main-header .header-image {
+      margin: 0;
+      width: initial;
+      mix-blend-mode: multiply;
+      margin-inline: auto;
     }
   }
 }

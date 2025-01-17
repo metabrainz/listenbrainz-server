@@ -1,19 +1,21 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
 import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { sanitize } from "dompurify";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -21,15 +23,18 @@ import {
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
-import { getPageProps } from "../utils/utils";
 import ListenControl from "../common/listens/ListenControl";
 import ListenCard from "../common/listens/ListenCard";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import { ToastMsg } from "../notifications/Notifications";
+import { RouteQuery } from "../utils/Loader";
+import { getObjectForURLSearchParams } from "../utils/utils";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export type PlayerPageProps = {
-  playlist: JSPFObject;
+  playlist?: JSPFObject;
 };
+
+type PlayerPageLoaderData = PlayerPageProps;
 
 export interface PlayerPageState {
   playlist: JSPFPlaylist;
@@ -40,14 +45,6 @@ export default class PlayerPage extends React.Component<
   PlayerPageState
 > {
   static contextType = GlobalAppContext;
-
-  static makeJSPFTrack(track: ACRMSearchResult): JSPFTrack {
-    return {
-      identifier: `${PLAYLIST_TRACK_URI_PREFIX}${track.recording_mbid}`,
-      title: track.recording_name,
-      creator: track.artist_credit_name,
-    };
-  }
 
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -62,9 +59,11 @@ export default class PlayerPage extends React.Component<
         jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
       }
     );
-    this.state = {
-      playlist: props.playlist?.playlist || {},
-    };
+    if (props.playlist) {
+      this.state = {
+        playlist: props.playlist?.playlist || {},
+      };
+    }
   }
 
   getAlbumDetails(): JSX.Element {
@@ -85,6 +84,9 @@ export default class PlayerPage extends React.Component<
       return;
     }
     const { playlist } = this.props;
+    if (!playlist) {
+      return;
+    }
     try {
       const newPlaylistId = await APIService.createPlaylist(
         currentUser.auth_token,
@@ -97,7 +99,7 @@ export default class PlayerPage extends React.Component<
             <div>
               {" "}
               Created a new public
-              <a href={`/playlist/${newPlaylistId}`}>instant playlist</a>
+              <Link to={`/playlist/${newPlaylistId}/`}>instant playlist</Link>
             </div>
           }
         />,
@@ -217,7 +219,6 @@ export default class PlayerPage extends React.Component<
 
   render() {
     const { playlist } = this.state;
-    const { APIService } = this.context;
 
     const { track: tracks } = playlist;
     if (!playlist || !playlist.track) {
@@ -242,47 +243,37 @@ export default class PlayerPage extends React.Component<
               })}
             </div>
           </div>
-          <BrainzPlayer
-            listens={tracks?.map(JSPFTrackToListen)}
-            listenBrainzAPIBaseURI={APIService.APIBaseURI}
-            refreshSpotifyToken={APIService.refreshSpotifyToken}
-            refreshYoutubeToken={APIService.refreshYoutubeToken}
-            refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-          />
         </div>
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const { playlist } = reactProps;
-
-  const PlayerPageWithAlertNotifications = withAlertNotifications(PlayerPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <PlayerPageWithAlertNotifications playlist={playlist} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
+export function PlayerPageWrapper() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObject = getObjectForURLSearchParams(searchParams);
+  const location = useLocation();
+  const { data } = useQuery<PlayerPageLoaderData>(
+    RouteQuery(["player", searchParamsObject], location.pathname)
   );
-});
+
+  // BrainzPlayer
+  const dispatch = useBrainzPlayerDispatch();
+  const playlist = data?.playlist?.playlist;
+  const { track: tracks } = playlist || {};
+  React.useEffect(() => {
+    const listens = tracks?.map(JSPFTrackToListen);
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listens,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tracks]);
+
+  return <PlayerPage playlist={data?.playlist} />;
+}
+
+export function PlayerPageRedirectToAlbum() {
+  const { releaseMBID } = useParams();
+  return <Navigate to={`/release/${releaseMBID}`} replace />;
+}

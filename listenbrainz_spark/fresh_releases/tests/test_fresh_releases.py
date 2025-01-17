@@ -24,6 +24,7 @@ class FreshReleasesTestCase(SparkNewTestCase):
             os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "0.parquet"),
             os.path.join(TEST_DATA_PATH, "fresh_releases_listens.parquet")
         )
+        self.uploader.process_full_listens_dump()
         
     def tearDown(self):
         super(FreshReleasesTestCase, self).tearDown()
@@ -40,7 +41,7 @@ class FreshReleasesTestCase(SparkNewTestCase):
 
         database = "fresh_releases_20220919"
 
-        itr = fresh_releases.main(None, database)
+        itr = fresh_releases.main(None, database, 0)
 
         self.assertEqual(next(itr), {
             "type": "couchdb_data_start",

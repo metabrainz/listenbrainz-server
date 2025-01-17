@@ -2,6 +2,7 @@ import * as React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import { omit } from "lodash";
+import { Link } from "react-router-dom";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   getPlaylistExtension,
@@ -22,7 +23,8 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const modal = useModal();
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 3000);
+    document?.body?.classList?.remove("modal-open");
+    setTimeout(modal.remove, 200);
   }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
@@ -87,7 +89,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
           message={
             <>
               Created new {isPublic ? "public" : "private"} playlist{" "}
-              <a href={`/playlist/${newPlaylistId}`}>{name}</a>
+              <Link to={`/playlist/${newPlaylistId}/`}>{name}</Link>
             </>
           }
         />,
@@ -244,7 +246,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
       (isEdit
         ? playlist?.creator.toLowerCase() === user.toLowerCase()
         : currentUser.name.toLowerCase() === user.toLowerCase());
-    if (!disabled && collaborators.includes(user)) {
+    if (!disabled && !collaborators.includes(user)) {
       setCollaborators([...collaborators, user]);
     }
   };

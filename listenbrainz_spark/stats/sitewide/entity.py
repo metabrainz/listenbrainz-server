@@ -43,6 +43,7 @@ entity_cache_map = {
     "release_groups": [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 }
 
+
 def get_listen_count_limit(stats_range: str) -> int:
     """ Return the per user per entity listen count above which it should
     be capped. The rationale is to avoid a single user's listens from
@@ -71,7 +72,6 @@ def get_entity_stats(entity: str, stats_range: str) -> Optional[List[SitewideEnt
         df_name = f"entity_data_cache_{idx}"
         cache_dfs.append(df_name)
         read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-
 
     handler = entity_handler_map[entity]
     data = handler(table_name, cache_dfs, listen_count_limit)
@@ -113,18 +113,12 @@ def create_messages(data, entity: str, stats_range: str, from_date: datetime, to
     entity_list = []
     for item in stats:
         try:
-            entity_list.append(entity_model_map[entity](**item))
+            entity_model_map[entity](**item)
+            entity_list.append(item)
         except ValidationError:
             logger.error("Invalid entry in entity stats", exc_info=True)
             count -= 1
     message["count"] = count
     message["data"] = entity_list
 
-    try:
-        model = SitewideEntityStatMessage(**message)
-        result = model.dict(exclude_none=True)
-        return [result]
-    except ValidationError:
-        logger.error(f"""ValidationError while calculating {stats_range} sitewide top {entity}. 
-        Data: {json.dumps(message, indent=4)}""", exc_info=True)
-        return None
+    return [message]

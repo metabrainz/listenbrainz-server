@@ -21,6 +21,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import { act } from "react-dom/test-utils";
+import { BrowserRouter } from "react-router-dom";
 import FollowerFollowingModal from "../../../src/user/components/follow/FollowerFollowingModal";
 import APIService from "../../../src/utils/APIService";
 import GlobalAppContext, {
@@ -28,6 +29,7 @@ import GlobalAppContext, {
 } from "../../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import UserListModalEntry from "../../../src/user/components/follow/UserListModalEntry";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 const props = {
   user: { name: "foobar" },
@@ -51,30 +53,40 @@ const globalContext: GlobalAppContextT = {
 
 describe("<FollowerFollowingModal />", () => {
   it("renders", () => {
-    const wrapper = mount<FollowerFollowingModal>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <FollowerFollowingModal {...props} />
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <FollowerFollowingModal {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     expect(wrapper.find(UserListModalEntry)).toHaveLength(1);
   });
   it("updates the mode correctly", async () => {
-    const wrapper = mount<FollowerFollowingModal>(
+    const wrapper = mount(
       <GlobalAppContext.Provider value={globalContext}>
-        <FollowerFollowingModal {...props} />
+        <ReactQueryWrapper>
+          <BrowserRouter>
+            <FollowerFollowingModal {...props} />
+          </BrowserRouter>
+        </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
-    const instance = wrapper.instance();
-  
+    const instance = wrapper
+      .find(FollowerFollowingModal)
+      .instance() as FollowerFollowingModal;
+
     // initial state after first fetch
     expect(instance.state.activeMode).toEqual("following");
-  
+
     // does nothing if the same mode as the current mode is passed
     await act(() => {
       instance.updateMode("following");
     });
     expect(instance.state.activeMode).toEqual("following");
-  
+
     // updates the mode correctly
     await act(() => {
       instance.updateMode("follower");

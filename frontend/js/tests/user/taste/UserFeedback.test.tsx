@@ -2,9 +2,12 @@ import * as React from "react";
 import fetchMock from "jest-fetch-mock";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import UserFeedback, { UserFeedbackProps } from "../../../src/user/taste/components/UserFeedback";
+import UserFeedback, {
+  UserFeedbackProps,
+} from "../../../src/user/taste/components/UserFeedback";
 import * as userFeedbackProps from "../../__mocks__/userFeedbackProps.json";
 import * as userFeedbackAPIResponse from "../../__mocks__/userFeedbackAPIResponse.json";
+import { ReactQueryWrapper } from "../../test-react-query";
 
 const { totalCount, user, feedback } = userFeedbackProps;
 
@@ -26,8 +29,16 @@ const props: UserFeedbackProps = {
 jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 describe("UserFeedback", () => {
+  beforeAll(() => {
+    fetchMock.enableMocks();
+  });
+
   it("renders ListenCard items for each feedback item", async () => {
-    render(<UserFeedback {...props} />);
+    render(
+      <ReactQueryWrapper>
+        <UserFeedback {...props} />
+      </ReactQueryWrapper>
+    );
     const listensContainer = screen.getByTestId("userfeedback-listens");
     expect(listensContainer).toBeInTheDocument();
     expect(screen.getAllByTestId("listen")).toHaveLength(15);
@@ -61,7 +72,11 @@ describe("UserFeedback", () => {
         },
       ],
     };
-    render(<UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />);
+    render(
+      <ReactQueryWrapper>
+        <UserFeedback {...(withoutTrackNameProps as UserFeedbackProps)} />
+      </ReactQueryWrapper>
+    );
     const listensContainer = screen.getByTestId("userfeedback-listens");
     expect(listensContainer).toBeInTheDocument();
     expect(screen.getAllByTestId("listen")).toHaveLength(1);
@@ -69,7 +84,11 @@ describe("UserFeedback", () => {
 
   describe("getFeedbackItemsFromAPI", () => {
     it("sets the state and updates browser history", async () => {
-      render(<UserFeedback {...props} />);
+      render(
+        <ReactQueryWrapper>
+          <UserFeedback {...props} />
+        </ReactQueryWrapper>
+      );
 
       fetchMock.mockResponseOnce(JSON.stringify(userFeedbackAPIResponse));
 

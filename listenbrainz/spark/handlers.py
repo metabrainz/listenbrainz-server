@@ -22,6 +22,7 @@ from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
 from listenbrainz.troi.year_in_music import process_yim_playlists, process_yim_playlists_end
+from listenbrainz.webserver import db_conn
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -71,12 +72,6 @@ def handle_user_daily_activity(message):
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
-        stats_range = message["stats_range"]
-        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
-        if not databases:
-            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
-            return
-
         stats = {
             "data": message["data"]
         }
@@ -84,7 +79,8 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
             stats["count"] = message["count"]
 
         db_stats.insert_sitewide_stats(
-            databases[0],
+            stat_type,
+            message["stats_range"],
             message["from_ts"],
             message["to_ts"],
             stats
@@ -147,7 +143,7 @@ def handle_missing_musicbrainz_data(data):
     """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    user = db_user.get(db_conn, user_id)
 
     if not user:
         return
@@ -159,6 +155,7 @@ def handle_missing_musicbrainz_data(data):
 
     try:
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            db_conn,
             user['id'],
             UserMissingMusicBrainzDataJson(missing_musicbrainz_data=missing_musicbrainz_data),
             source
@@ -213,7 +210,7 @@ def handle_recommendations(data):
     """ Take recommended recordings for a user and save it in the db.
     """
     user_id = data['user_id']
-    user = db_user.get(user_id)
+    user = db_user.get(db_conn, user_id)
     if not user:
         current_app.logger.info(f"Generated recommendations for a user that doesn't exist in the Postgres database: {user_id}")
         return
@@ -223,6 +220,7 @@ def handle_recommendations(data):
 
     try:
         db_recommendations_cf_recording.insert_user_recommendation(
+            db_conn,
             user_id,
             UserRecommendationsJson(**recommendations)
         )

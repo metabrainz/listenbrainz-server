@@ -18,6 +18,7 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -31,7 +32,7 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
-@stats_api_bp.route("/user/<user_name>/artists")
+@stats_api_bp.get("/user/<user_name>/artists")
 @crossdomain
 @ratelimit()
 def get_artist(user_name):
@@ -73,8 +74,8 @@ def get_artist(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - ``artist_mbids`` is an optional field and may not be present in all the responses
+        ``artist_mbids`` is an optional field and may not be present in all the responses
+
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -94,7 +95,7 @@ def get_artist(user_name):
     return _get_entity_stats(user_name, "artists", "total_artist_count")
 
 
-@stats_api_bp.route("/user/<user_name>/releases")
+@stats_api_bp.get("/user/<user_name>/releases")
 @crossdomain
 @ratelimit()
 def get_release(user_name):
@@ -141,9 +142,8 @@ def get_release(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - ``artist_mbids`` and ``release_mbid`` are optional fields and
-          may not be present in all the responses
+
+        ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -163,7 +163,7 @@ def get_release(user_name):
     return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
-@stats_api_bp.route("/user/<user_name>/release-groups")
+@stats_api_bp.get("/user/<user_name>/release-groups")
 @crossdomain
 @ratelimit()
 def get_release_group(user_name):
@@ -213,9 +213,8 @@ def get_release_group(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - ``artist_mbids`` and ``release_group_mbid`` are optional fields and
-          may not be present in all the responses
+
+        ``artist_mbids`` and ``release_group_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -235,7 +234,7 @@ def get_release_group(user_name):
     return _get_entity_stats(user_name, "release_groups", "total_release_group_count")
 
 
-@stats_api_bp.route("/user/<user_name>/recordings")
+@stats_api_bp.get("/user/<user_name>/recordings")
 @crossdomain
 @ratelimit()
 def get_recording(user_name):
@@ -279,10 +278,10 @@ def get_recording(user_name):
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - We only calculate the top 1000 all_time recordings
         - ``artist_mbids``, ``release_name``, ``release_mbid`` and ``recording_mbid`` are optional fields
-         and may not be present in all the responses
+          and may not be present in all the responses
 
     :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -326,7 +325,16 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     }})
 
 
-@stats_api_bp.route("/user/<user_name>/listening-activity")
+def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
+    if stats is None:
+        return None
+
+    entity_list, total_entity_count = _process_user_entity(stats, 0, 1)
+    return stats.last_updated
+
+@stats_api_bp.get("/user/<user_name>/listening-activity")
 @crossdomain
 @ratelimit()
 def get_listening_activity(user_name: str):
@@ -367,7 +375,7 @@ def get_listening_activity(user_name: str):
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - The example above shows the data for three days only, however we calculate the statistics for
           the current time range and the previous time range. For example for weekly statistics the data
           is calculated for the current as well as the past week.
@@ -401,7 +409,7 @@ def get_listening_activity(user_name: str):
     }})
 
 
-@stats_api_bp.route("/user/<user_name>/daily-activity")
+@stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
 @ratelimit()
 def get_daily_activity(user_name: str):
@@ -441,9 +449,6 @@ def get_daily_activity(user_name: str):
                 "user_id": "ishaanshah"
             }
         }
-
-    .. note::
-        - This endpoint is currently in beta
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
@@ -486,7 +491,7 @@ def get_daily_activity(user_name: str):
     }})
 
 
-@stats_api_bp.route("/user/<user_name>/artist-map")
+@stats_api_bp.get("/user/<user_name>/artist-map")
 @crossdomain
 @ratelimit()
 def get_artist_map(user_name: str):
@@ -523,7 +528,7 @@ def get_artist_map(user_name: str):
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - We cache the results for this query for a week to improve page load times, if you want to request fresh data
           you can use the ``force_recalculate`` flag.
 
@@ -553,7 +558,7 @@ def get_artist_map(user_name: str):
     })
 
 
-@stats_api_bp.route("/artist/<artist_mbid>/listeners")
+@stats_api_bp.get("/artist/<artist_mbid>/listeners")
 @crossdomain
 @ratelimit()
 def get_artist_listeners(artist_mbid):
@@ -614,7 +619,7 @@ def get_artist_listeners(artist_mbid):
     return _get_entity_listeners("artists", artist_mbid)
 
 
-@stats_api_bp.route("/release-group/<release_group_mbid>/listeners")
+@stats_api_bp.get("/release-group/<release_group_mbid>/listeners")
 @crossdomain
 @ratelimit()
 def get_release_group_listeners(release_group_mbid):
@@ -713,14 +718,14 @@ def _get_entity_listeners(entity, mbid):
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get_entity_listener(entity, mbid, stats_range)
+    stats = db_stats.get_entity_listener(db_conn, entity, mbid, stats_range)
     if stats is None:
         raise APINoContent("")
 
     return jsonify({"payload": stats})
 
 
-@stats_api_bp.route("/sitewide/artists")
+@stats_api_bp.get("/sitewide/artists")
 @crossdomain
 @ratelimit()
 def get_sitewide_artist():
@@ -756,7 +761,6 @@ def get_sitewide_artist():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - ``artist_mbids`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
@@ -778,7 +782,7 @@ def get_sitewide_artist():
     return _get_sitewide_stats("artists")
 
 
-@stats_api_bp.route("/sitewide/releases")
+@stats_api_bp.get("/sitewide/releases")
 @crossdomain
 @ratelimit()
 def get_sitewide_release():
@@ -824,7 +828,7 @@ def get_sitewide_release():
         }
 
     .. note::
-        - This endpoint is currently in beta
+
         - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
@@ -845,7 +849,7 @@ def get_sitewide_release():
     return _get_sitewide_stats("releases")
 
 
-@stats_api_bp.route("/sitewide/release-groups")
+@stats_api_bp.get("/sitewide/release-groups")
 @crossdomain
 @ratelimit()
 def get_sitewide_release_group():
@@ -894,7 +898,6 @@ def get_sitewide_release_group():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - ``artist_mbids`` and ``release_mbid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
@@ -915,7 +918,7 @@ def get_sitewide_release_group():
     return _get_sitewide_stats("release_groups")
 
 
-@stats_api_bp.route("/sitewide/recordings")
+@stats_api_bp.get("/sitewide/recordings")
 @crossdomain
 @ratelimit()
 def get_sitewide_recording():
@@ -958,10 +961,9 @@ def get_sitewide_recording():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - We only calculate the top 1000 all_time recordings
         - ``artist_mbids``, ``release_name``, ``release_mbid`` and ``recording_mbid`` are optional fields and
-         may not be present in all the responses
+          may not be present in all the responses
 
     :param count: Optional, number of artists to return for each time range,
         Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -989,25 +991,27 @@ def _get_sitewide_stats(entity: str):
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get(db_stats.SITEWIDE_STATS_USER_ID, entity, stats_range, EntityRecord)
+    stats = db_stats.get_sitewide_stats(entity, stats_range)
     if stats is None:
         raise APINoContent("")
 
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
+    count = min(count, MAX_ITEMS_PER_GET)
+    total_entity_count = stats["count"]
+
     return jsonify({
         "payload": {
-            entity: entity_list,
+            entity: stats["data"][offset:count + offset],
             "range": stats_range,
             "offset": offset,
             "count": total_entity_count,
-            "from_ts": stats.from_ts,
-            "to_ts": stats.to_ts,
-            "last_updated": stats.last_updated
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "last_updated": stats["last_updated"]
         }
     })
 
 
-@stats_api_bp.route("/sitewide/listening-activity")
+@stats_api_bp.get("/sitewide/listening-activity")
 @crossdomain
 @ratelimit()
 def get_sitewide_listening_activity():
@@ -1049,7 +1053,6 @@ def get_sitewide_listening_activity():
         }
 
     .. note::
-        - This endpoint is currently in beta
         - The example above shows the data for three days only, however we calculate the statistics for
           the current time range and the previous time range. For example for weekly statistics the data
           is calculated for the current as well as the past week.
@@ -1066,26 +1069,22 @@ def get_sitewide_listening_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get(
-        db_stats.SITEWIDE_STATS_USER_ID,
-        "listening_activity",
-        stats_range,
-        ListeningActivityRecord
-    )
+    stats = db_stats.get_sitewide_stats("listening_activity", stats_range)
     if stats is None:
         raise APINoContent('')
 
-    listening_activity = [x.dict() for x in stats.data.__root__]
-    return jsonify({"payload": {
-        "listening_activity": listening_activity,
-        "from_ts": stats.from_ts,
-        "to_ts": stats.to_ts,
-        "range": stats_range,
-        "last_updated": stats.last_updated
-    }})
+    return jsonify({
+        "payload": {
+            "listening_activity": stats["data"],
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "range": stats_range,
+            "last_updated": stats["last_updated"]
+        }
+    })
 
 
-@stats_api_bp.route("/sitewide/artist-map")
+@stats_api_bp.get("/sitewide/artist-map")
 @crossdomain
 @ratelimit()
 def get_sitewide_artist_map():
@@ -1121,9 +1120,8 @@ def get_sitewide_artist_map():
         }
 
     .. note::
-        - This endpoint is currently in beta
-        - We cache the results for this query for a week to improve page load times, if you want to request fresh data
-          you can use the ``force_recalculate`` flag.
+        We cache the results for this query for a week to improve page load times, if you want to request fresh data
+        you can use the ``force_recalculate`` flag.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
@@ -1141,15 +1139,48 @@ def get_sitewide_artist_map():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    result = _get_artist_map_stats(db_stats.SITEWIDE_STATS_USER_ID, stats_range)
+    stats = db_stats.get_sitewide_stats("artistmap", stats_range)
+    if stats is not None:
+        return jsonify({
+            "payload": {
+                "artist_map": stats["data"],
+                "from_ts": stats["from_ts"],
+                "to_ts": stats["to_ts"],
+                "last_updated": stats["last_updated"],
+                "stats_range": stats_range
+            }
+        })
+
+    artist_stats = db_stats.get_sitewide_stats("artists", stats_range)
+    if artist_stats is None:
+        raise APINoContent('')
+
+    # Calculate the data
+    artist_mbid_counts = defaultdict(int)
+    for artist in artist_stats["data"]:
+        if artist["artist_mbid"]:
+            artist_mbid_counts[artist["artist_mbid"]] += artist["listen_count"]
+
+    country_code_data = _get_country_wise_counts(artist_mbid_counts)
+    artist_map_stats = [x.dict() for x in country_code_data]
+    try:
+        db_stats.insert_sitewide_stats(
+            "artistmap",
+            stats_range,
+            artist_stats["from_ts"],
+            artist_stats["to_ts"],
+            {"data": artist_map_stats}
+        )
+    except HTTPError as e:
+        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
     return jsonify({
         "payload": {
-            "range": stats_range,
-            "from_ts": result.from_ts,
-            "to_ts": result.to_ts,
-            "last_updated": result.last_updated,
-            "artist_map": [x.dict() for x in result.data.__root__]
+            "artist_map": artist_map_stats,
+            "from_ts": artist_stats["from_ts"],
+            "to_ts": artist_stats["to_ts"],
+            "last_updated": artist_stats["last_updated"],
+            "stats_range": stats_range
         }
     })
 
@@ -1194,14 +1225,15 @@ def _get_artist_map_stats(user_id, stats_range):
     return stats
 
 
-@stats_api_bp.route("/user/<user_name>/year-in-music")
-@stats_api_bp.route("/user/<user_name>/year-in-music/<int:year>")
-def year_in_music(user_name: str, year: int = 2023):
+@stats_api_bp.get("/user/<user_name>/year-in-music")
+@stats_api_bp.get("/user/<user_name>/year-in-music/<int:year>")
+@crossdomain
+def year_in_music(user_name: str, year: int = 2024):
     """ Get data for year in music stuff """
-    if year != 2021 and year != 2022 and year != 2023:
+    if year != 2021 and year != 2022 and year != 2023 and year != 2024:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
 
@@ -1237,7 +1269,7 @@ def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) 
 
 def _validate_stats_user_params(user_name) -> Tuple[Dict, str]:
     """ Validate and return the user and common stats params """
-    user = db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:
         raise APINotFound(f"Cannot find user: {user_name}")
 

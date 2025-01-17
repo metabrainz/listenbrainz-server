@@ -1,31 +1,30 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 
-import NiceModal from "@ebay/nice-modal-react";
 import { merge } from "lodash";
 import * as React from "react";
 import { useState } from "react";
-import { createRoot } from "react-dom/client";
-import BrainzPlayer from "../../common/brainzplayer/BrainzPlayer";
+import { useLoaderData } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import Loader from "../../components/Loader";
-import withAlertNotifications from "../../notifications/AlertNotificationsHOC";
 import {
   JSPFTrackToListen,
   MUSICBRAINZ_JSPF_TRACK_EXTENSION,
   getRecordingMBIDFromJSPFTrack,
 } from "../../playlists/utils";
-import ErrorBoundary from "../../utils/ErrorBoundary";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getPageProps } from "../../utils/utils";
 import { LBRadioFeedback, Playlist } from "./components/Playlist";
 import Prompt, { Modes } from "./components/Prompt";
+import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 
-type LBRadioProps = {
-  modeArg: Modes;
-  promptArg: string;
+type LBRadioLoaderData = {
+  mode: Modes;
+  prompt: string;
 };
 
-function LBRadio(props: LBRadioProps) {
-  const { modeArg, promptArg } = props;
+export default function LBRadio() {
+  const data = useLoaderData() as LBRadioLoaderData;
+  const { mode: modeArg, prompt: promptArg } = data;
+
   const [jspfPlaylist, setJspfPlaylist] = React.useState<JSPFObject>();
   const [feedback, setFeedback] = React.useState<string[]>([]);
   const [isLoading, setLoading] = React.useState(false);
@@ -69,6 +68,15 @@ function LBRadio(props: LBRadioProps) {
                             caa_release_mbid:
                               recordingMetadataMap[mbid].release
                                 ?.caa_release_mbid,
+                            artists: recordingMetadataMap[
+                              mbid
+                            ].artist?.artists?.map((a) => {
+                              return {
+                                artist_credit_name: a.name,
+                                artist_mbid: a.artist_mbid,
+                                join_phrase: a.join_phrase || "",
+                              };
+                            }),
                           },
                         },
                       },
@@ -102,8 +110,21 @@ function LBRadio(props: LBRadioProps) {
     [setJspfPlaylist, setFeedback, APIService]
   );
 
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jspfPlaylist?.playlist?.track]);
+
   return (
-    <>
+    <div role="main">
+      <Helmet>
+        <title>LB Radio</title>
+      </Helmet>
       <div className="row">
         <div className="col-sm-12">
           <Prompt
@@ -122,31 +143,6 @@ function LBRadio(props: LBRadioProps) {
           </Loader>
         </div>
       </div>
-      <BrainzPlayer
-        listens={jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen) ?? []}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
-    </>
+    </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user, mode, prompt, token } = reactProps;
-  const renderRoot = createRoot(domContainer!);
-  const LBRadioWithAlertNotifications = withAlertNotifications(LBRadio);
-
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <LBRadioWithAlertNotifications modeArg={mode} promptArg={prompt} />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

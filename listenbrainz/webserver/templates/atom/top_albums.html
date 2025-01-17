@@ -1,0 +1,22 @@
+<p>
+    <ul>
+        {% for release_group in (release_groups or []) %}
+        <li>
+            {% if release_group.release_group_mbid %}
+                <a href="{{ album_page_base_url }}{{ release_group.release_group_mbid }}">{{ release_group.release_group_name }}</a>
+            {% else %}
+                {{ release_group.release_group_name }}
+            {% endif %}
+            by 
+            {% for artist in (release_group.artists or []) %}
+                {% if artist.artist_mbid %}
+                    <a href="{{ artist_page_base_url }}{{ artist.artist_mbid }}">{{ artist.artist_credit_name }}</a>{{ artist.join_phrase }}
+                {% else %}
+                    {{ artist.artist_credit_name }}{{ artist.join_phrase }}
+                {% endif %}
+            {% endfor %}:
+            {{ release_group.listen_count }} listens
+        </li>
+        {% endfor %}
+    </ul>
+</p>

@@ -138,5 +138,17 @@ ALTER TABLE user_setting
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;
-    
+
+ALTER TABLE background_tasks
+    ADD CONSTRAINT background_tasks_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE user_data_export
+    ADD CONSTRAINT user_data_export_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;

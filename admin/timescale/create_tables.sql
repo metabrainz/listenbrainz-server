@@ -224,6 +224,24 @@ CREATE TABLE apple_cache.rel_track_artist (
     position        INTEGER NOT NULL
 );
 
+CREATE TABLE soundcloud_cache.artist (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_id               TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE soundcloud_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    name                    TEXT NOT NULL,
+    artist_id               TEXT NOT NULL,
+    release_year            INTEGER,
+    release_month           INTEGER,
+    release_day             INTEGER,
+    data                    JSONB NOT NULL
+);
+
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
     value   TEXT
@@ -254,6 +272,12 @@ CREATE TABLE similarity.artist_credit_mbids (
     mbid0 UUID NOT NULL,
     mbid1 UUID NOT NULL,
     score INT NOT NULL
+);
+
+CREATE TABLE similarity.overhyped_artists (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    artist_mbid             UUID NOT NULL,
+    factor                  FLOAT
 );
 
 CREATE TABLE tags.lb_tag_radio (

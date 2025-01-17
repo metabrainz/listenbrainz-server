@@ -1,13 +1,16 @@
 from functools import wraps
 
-from brainzutils import musicbrainz_db
 from flask import request, current_app, make_response, redirect, url_for
 
 from listenbrainz.webserver import timescale_connection
 
 
 def crossdomain(f):
-    """ Decorator to add CORS headers to flask endpoints """
+    """ Decorator to add CORS headers to flask endpoints.
+
+    This decorator should be applied just after the route to ensure the provide_automatic_options
+    is set correctly.
+    """
     @wraps(f)
     def decorator(*args, **kwargs):
         options_resp = current_app.make_default_options_response()
@@ -24,7 +27,8 @@ def crossdomain(f):
         h["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         return resp
 
-    f.provide_automatic_options = False
+    decorator.provide_automatic_options = False
+    decorator.required_methods = ["OPTIONS"]
     return decorator
 
 
@@ -53,7 +57,7 @@ def web_listenstore_needed(func):
     @wraps(func)
     def decorator(*args, **kwargs):
         if timescale_connection._ts is None:
-            return redirect(url_for("index.listens_offline"))
+            return redirect(url_for("index.index_pages", page="listens-offline"))
         return func(*args, **kwargs)
 
     return decorator
@@ -70,6 +74,6 @@ def web_musicbrainz_needed(func):
         # if config item is missing, consider the database to be up (useful for local development)
         is_musicbrainz_up = current_app.config.get("IS_MUSICBRAINZ_UP", True)
         if not is_musicbrainz_up:
-            return redirect(url_for("index.musicbrainz_offline"))
+            return redirect(url_for("index.index_pages", page="musicbrainz-offline"))
         return func(*args, **kwargs)
     return decorator

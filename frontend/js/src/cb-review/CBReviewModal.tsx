@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { kebabCase, lowerCase } from "lodash";
+import { Link, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -25,7 +26,8 @@ import Loader from "../components/Loader";
 import { ToastMsg } from "../notifications/Notifications";
 
 export type CBReviewModalProps = {
-  listen: Listen;
+  listen?: Listen;
+  entityToReview?: ReviewableEntity[];
 };
 
 iso.registerLocale(eng); // library requires language of the language list to be initiated
@@ -38,12 +40,16 @@ const MBBaseUrl = "https://metabrainz.org"; // only used for href
 // gets all iso-639-1 languages and codes for dropdown
 const allLanguagesKeyValue = Object.entries(iso.getNames("en"));
 
-export default NiceModal.create(({ listen }: CBReviewModalProps) => {
+export default NiceModal.create((props: CBReviewModalProps) => {
+  const { listen, entityToReview: entityToReviewProps } = props;
   const modal = useModal();
+  const navigate = useNavigate();
 
   const closeModal = React.useCallback(() => {
     modal.hide();
-    setTimeout(modal.remove, 3000);
+    document?.body?.classList?.remove("modal-open");
+    document?.body?.getElementsByClassName("modal-backdrop")[0]?.remove();
+    setTimeout(modal.remove, 200);
   }, [modal]);
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
@@ -114,7 +120,9 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
   const getGroupMBIDFromRelease = React.useCallback(
     async (mbid: string): Promise<string> => {
       try {
-        const response = await APIService.lookupMBRelease(mbid);
+        const response = (await APIService.lookupMBRelease(
+          mbid
+        )) as MusicBrainzRelease & WithReleaseGroup;
         return response["release-group"].id;
       } catch (error) {
         handleError(error, "Could not fetch release group MBID");
@@ -155,6 +163,9 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
 
   React.useEffect(() => {
     /* determine entity functions */
+    if (!listen) {
+      return;
+    }
     const getAllEntities = async () => {
       if (!listen) {
         return;
@@ -229,6 +240,32 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
       handleError(err, "Please try again");
     }
   }, [listen, getGroupMBIDFromRelease, getRecordingMBIDFromTrack, handleError]);
+
+  React.useEffect(() => {
+    if (!entityToReviewProps || !entityToReviewProps.length) {
+      return;
+    }
+
+    const recordingEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "recording"
+    );
+
+    const releaseGroupEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "release_group"
+    );
+
+    const artistEntityToSet = entityToReviewProps.find(
+      (entity) => entity.type === "artist"
+    );
+
+    setRecordingEntity(recordingEntityToSet!);
+    setReleaseGroupEntity(releaseGroupEntityToSet!);
+    setArtistEntity(artistEntityToSet!);
+
+    setEntityToReview(
+      recordingEntityToSet! || releaseGroupEntityToSet! || artistEntityToSet!
+    );
+  }, [entityToReviewProps]);
 
   /* input handling */
   const handleLanguageChange = React.useCallback(
@@ -388,12 +425,16 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
           <br />
           <br />
           You can connect to your CritiqueBrainz account by visiting the
-          <a
-            href={`${window.location.origin}/settings/music-services/details/`}
+          <Link
+            to={`${window.location.origin}/settings/music-services/details/`}
+            onClick={() => {
+              navigate("/settings/music-services/details/");
+            }}
+            data-dismiss="modal"
           >
             {" "}
             music services page.
-          </a>
+          </Link>
         </div>
       );
     }
@@ -424,7 +465,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     return (
       <div>
         {/* Show warning when recordingEntity is not available */}
-        {!recordingEntity && (
+        {!recordingEntity && listen && (
           <div className="alert alert-danger">
             We could not find a recording for <b>{getTrackName(listen)}</b>.
           </div>
@@ -569,20 +610,25 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
     acceptLicense,
     handleLicenseChange,
     setEntityToReview,
+    navigate,
   ]);
 
   const modalFooter = React.useMemo(() => {
     /* User hasn't logged into CB yet: prompt them to authenticate */
     if (!hasPermissions)
       return (
-        <a
-          href={`${window.location.origin}/settings/music-services/details/`}
+        <Link
+          to={`${window.location.origin}/settings/music-services/details/`}
           className="btn btn-success"
           role="button"
+          onClick={() => {
+            navigate("/settings/music-services/details/");
+          }}
+          data-dismiss="modal"
         >
           {" "}
           Connect To CritiqueBrainz{" "}
-        </a>
+        </Link>
       );
 
     /* Submit review button */
@@ -610,7 +656,14 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
         Cancel
       </button>
     );
-  }, [hasPermissions, entityToReview, reviewValid, acceptLicense, closeModal]);
+  }, [
+    hasPermissions,
+    entityToReview,
+    reviewValid,
+    acceptLicense,
+    closeModal,
+    navigate,
+  ]);
 
   return (
     <div
@@ -619,7 +672,7 @@ export default NiceModal.create(({ listen }: CBReviewModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="CBReviewModalLabel"
-      data-backdrop="static"
+      data-backdrop="true"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content" onSubmit={submitReviewToCB}>

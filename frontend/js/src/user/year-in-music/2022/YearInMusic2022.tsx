@@ -1,4 +1,3 @@
-import { createRoot } from "react-dom/client";
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
@@ -24,19 +23,11 @@ import {
   faShareAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import NiceModal from "@ebay/nice-modal-react";
-import ErrorBoundary from "../../../utils/ErrorBoundary";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../../utils/GlobalAppContext";
-import BrainzPlayer from "../../../common/brainzplayer/BrainzPlayer";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
 
-import withAlertNotifications from "../../../notifications/AlertNotificationsHOC";
-
-import {
-  generateAlbumArtThumbnailLink,
-  getPageProps,
-} from "../../../utils/utils";
+import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
 import MagicShareButton from "./components/MagicShareButton";
 
@@ -46,10 +37,13 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
+import SEO, { YIMYearMetaTags } from "../SEO";
+import { RouteQuery } from "../../../utils/Loader";
+import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
-  yearInMusicData: {
+  yearInMusicData?: {
     day_of_week: string;
     top_artists: Array<{
       artist_name: string;
@@ -99,6 +93,15 @@ export type YearInMusicProps = {
       artists: Array<UserArtistMapArtist>;
     }>;
   };
+  topDiscoveriesPlaylist: JSPFPlaylist | undefined;
+  topMissedRecordingsPlaylist: JSPFPlaylist | undefined;
+  missingSomePlaylistData: boolean;
+  hasNoPlaylists: boolean;
+};
+
+type YearInMusicLoaderData = {
+  user: YearInMusicProps["user"];
+  data: YearInMusicProps["yearInMusicData"];
 };
 
 export type YearInMusicState = {
@@ -125,6 +128,13 @@ export default class YearInMusic extends React.Component<
     await this.getFollowing();
   }
 
+  async componentDidUpdate(prevProps: YearInMusicProps) {
+    const { user } = this.props;
+    if (user !== prevProps.user) {
+      await this.getFollowing();
+    }
+  }
+
   private getPlaylistByName(
     playlistName: string,
     description?: string
@@ -145,7 +155,13 @@ export default class YearInMusic extends React.Component<
       /* Add a track image if it exists in the `{playlistName}-coverart` key */
       playlist.track = playlist.track.map((track: JSPFTrack) => {
         const newTrack = { ...track };
-        const track_id = track.identifier;
+        let track_id;
+        if (Array.isArray(track.identifier)) {
+          // eslint-disable-next-line prefer-destructuring
+          track_id = track.identifier[0];
+        } else {
+          track_id = track.identifier;
+        }
         const found = track_id.match(uuidMatch);
         if (found) {
           const recording_mbid = found[0];
@@ -248,8 +264,7 @@ export default class YearInMusic extends React.Component<
   showTopLevelPlaylist = (
     index: number,
     topLevelPlaylist: JSPFPlaylist | undefined,
-    coverArtKey: string,
-    listens: Array<Listen>
+    coverArtKey: string
   ): JSX.Element | undefined => {
     if (!topLevelPlaylist) {
       return undefined;
@@ -285,7 +300,6 @@ export default class YearInMusic extends React.Component<
         <div>
           {topLevelPlaylist.track.slice(0, 5).map((playlistTrack) => {
             const listen = JSPFTrackToListen(playlistTrack);
-            listens.push(listen);
             let thumbnail;
             if (playlistTrack.image) {
               thumbnail = (
@@ -323,14 +337,22 @@ export default class YearInMusic extends React.Component<
   };
 
   render() {
-    const { user, yearInMusicData } = this.props;
+    const {
+      user,
+      yearInMusicData,
+      topDiscoveriesPlaylist,
+      topMissedRecordingsPlaylist,
+      missingSomePlaylistData,
+      hasNoPlaylists,
+    } = this.props;
     const { selectedMetric } = this.state;
     const { APIService, currentUser } = this.context;
-    const listens: BaseListenFormat[] = [];
 
     if (!yearInMusicData || isEmpty(yearInMusicData)) {
       return (
         <div id="year-in-music" className="yim-2022 container">
+          <SEO year={2022} userName={user?.name} />
+          <YIMYearMetaTags year={2022} />
           <div id="main-header" className="flex-center">
             <img
               className="img-responsive header-image"
@@ -345,12 +367,14 @@ export default class YearInMusic extends React.Component<
             </h3>
             <p className="center-p">
               Check out how you can submit listens by{" "}
-              <a href="/settings/music-services/details/">
+              <Link to="/settings/music-services/details/">
                 connecting a music service
-              </a>{" "}
+              </Link>{" "}
               or{" "}
-              <a href="/settings/import/">importing your listening history</a>,
-              and come back next year!
+              <Link to="/settings/import/">
+                importing your listening history
+              </Link>
+              , and come back next year!
             </p>
           </div>
         </div>
@@ -359,7 +383,7 @@ export default class YearInMusic extends React.Component<
 
     // Some data might not have been calculated for some users
     // This boolean lets us warn them of that
-    let missingSomeData = false;
+    let missingSomeData = missingSomePlaylistData;
 
     if (
       !yearInMusicData.top_releases ||
@@ -455,23 +479,6 @@ export default class YearInMusic extends React.Component<
         .filter(Boolean);
     }
 
-    /* Playlists */
-    let hasNoPlaylists = false;
-    const topDiscoveriesPlaylist = this.getPlaylistByName(
-      "playlist-top-discoveries-for-year",
-      `Highlights songs that ${user.name} first listened to (more than once) in 2022`
-    );
-    const topMissedRecordingsPlaylist = this.getPlaylistByName(
-      "playlist-top-missed-recordings-for-year",
-      `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
-    );
-    if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
-      missingSomeData = true;
-    }
-    if (!topDiscoveriesPlaylist && !topMissedRecordingsPlaylist) {
-      hasNoPlaylists = true;
-    }
-
     const noDataText = (
       <div className="center-p no-data">
         We were not able to calculate this data for {youOrUsername}
@@ -480,6 +487,8 @@ export default class YearInMusic extends React.Component<
     const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
     return (
       <div id="year-in-music" className="yim-2022">
+        <SEO year={2022} userName={user?.name} />
+        <YIMYearMetaTags year={2022} />
         <div id="main-header" className="flex-center">
           <img
             className="img-responsive header-image"
@@ -590,17 +599,13 @@ export default class YearInMusic extends React.Component<
                             />
                             <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
-                              <a
-                                href={
-                                  release.release_mbid
-                                    ? `/release/${release.release_mbid}/`
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {release.release_name}
-                              </a>
+                              {release.release_mbid ? (
+                                <Link to={`/release/${release.release_mbid}/`}>
+                                  {release.release_name}
+                                </Link>
+                              ) : (
+                                release.release_name
+                              )}
                               <div className="small text-muted">
                                 {release.artist_name}
                               </div>
@@ -662,7 +667,6 @@ export default class YearInMusic extends React.Component<
                               },
                             },
                           };
-                          listens.push(listenHere);
                           return (
                             <ListenCard
                               compact
@@ -727,7 +731,6 @@ export default class YearInMusic extends React.Component<
                               },
                             },
                           };
-                          listens.push(listenHere);
                           return (
                             <ListenCard
                               compact
@@ -986,15 +989,13 @@ export default class YearInMusic extends React.Component<
                 this.showTopLevelPlaylist(
                   0,
                   topDiscoveriesPlaylist,
-                  "discovery-playlist",
-                  listens
+                  "discovery-playlist"
                 )}
               {Boolean(topMissedRecordingsPlaylist) &&
                 this.showTopLevelPlaylist(
                   1,
                   topMissedRecordingsPlaylist,
-                  "missed-playlist",
-                  listens
+                  "missed-playlist"
                 )}
               {hasNoPlaylists && noDataText}
             </div>
@@ -1083,7 +1084,6 @@ export default class YearInMusic extends React.Component<
                               },
                             },
                           };
-                          listens.push(listenHere);
                           return (
                             <ListenCard
                               listenDetails={details}
@@ -1165,7 +1165,7 @@ export default class YearInMusic extends React.Component<
             </div>
           </div>
           <div className="composite-image">
-            <a href="/explore/cover-art-collage/2022">
+            <Link to="/explore/cover-art-collage/2022/">
               <LazyLoadImage
                 src="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
                 placeholderSrc="https://staticbrainz.org/LB/year-in-music/2022/rainbow1-100-7-small.jpeg"
@@ -1176,7 +1176,7 @@ export default class YearInMusic extends React.Component<
                 loading="lazy"
                 decoding="async"
               />
-            </a>
+            </Link>
           </div>
           <div className="container closing-remarks">
             <span className="bold">
@@ -1220,43 +1220,134 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <a href={`/user/${user.name}/year-in-music/2021`}>2021</a>
+            <Link to={`/user/${user.name}/year-in-music/2021/`}>2021</Link>
           </div>
           <div className="thanks-kc-green">
             With thanks to KC Green for the original &apos;this is fine&apos;
             cartoon.
           </div>
         </div>
-        <BrainzPlayer
-          listens={listens}
-          listenBrainzAPIBaseURI={APIService.APIBaseURI}
-          refreshSpotifyToken={APIService.refreshSpotifyToken}
-          refreshYoutubeToken={APIService.refreshYoutubeToken}
-          refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-        />
       </div>
     );
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  const { domContainer, reactProps, globalAppContext } = await getPageProps();
-
-  const { user, data: yearInMusicData } = reactProps;
-
-  const YearInMusicWithAlertNotifications = withAlertNotifications(YearInMusic);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <YearInMusicWithAlertNotifications
-            user={user}
-            yearInMusicData={yearInMusicData}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
+export function YearInMusicWrapper() {
+  const location = useLocation();
+  const params = useParams();
+  const { data } = useQuery<YearInMusicLoaderData>(
+    RouteQuery(["year-in-music-2022", params], location.pathname)
   );
-});
+  const fallbackUser = { name: "" };
+  const { user = fallbackUser, data: yearInMusicData } = data || {};
+  const listens: BaseListenFormat[] = [];
+
+  if (yearInMusicData?.top_recordings) {
+    yearInMusicData.top_recordings.forEach((recording) => {
+      const listen = {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: recording.artist_name,
+          track_name: recording.track_name,
+          release_name: recording.release_name,
+          additional_info: {
+            recording_mbid: recording.recording_mbid,
+            release_mbid: recording.release_mbid,
+            artist_mbids: recording.artist_mbids,
+          },
+        },
+      };
+      listens.push(listen);
+    });
+  }
+
+  function getPlaylistByName(
+    playlistName: string,
+    description?: string
+  ): JSPFPlaylist | undefined {
+    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    let playlist;
+    try {
+      playlist = get(yearInMusicData, playlistName);
+      if (!playlist) {
+        return undefined;
+      }
+      const coverArt = get(yearInMusicData, `${playlistName}-coverart`);
+      // Append manual description used in this page (rather than parsing HTML, ellipsis issues, etc.)
+      if (description) {
+        playlist.annotation = description;
+      }
+      /* Add a track image if it exists in the `{playlistName}-coverart` key */
+      playlist.track = playlist.track.map((track: JSPFTrack) => {
+        const newTrack = { ...track };
+        const track_id = Array.isArray(track.identifier)
+          ? track.identifier[0]
+          : track.identifier;
+        const found = track_id.match(uuidMatch);
+        if (found) {
+          const recording_mbid = found[0];
+          newTrack.id = recording_mbid;
+          const recording_coverart = coverArt?.[recording_mbid];
+          if (recording_coverart) {
+            newTrack.image = recording_coverart;
+          }
+        }
+        return newTrack;
+      });
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(`"Error parsing ${playlistName}:`, error);
+      return undefined;
+    }
+    return playlist;
+  }
+
+  /* Playlists */
+  let missingSomePlaylistData = false;
+  let hasNoPlaylists = false;
+  const topDiscoveriesPlaylist = getPlaylistByName(
+    "playlist-top-discoveries-for-year",
+    `Highlights songs that ${user.name} first listened to (more than once) in 2022`
+  );
+  const topMissedRecordingsPlaylist = getPlaylistByName(
+    "playlist-top-missed-recordings-for-year",
+    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
+  );
+  if (!topDiscoveriesPlaylist || !topMissedRecordingsPlaylist) {
+    missingSomePlaylistData = true;
+  }
+  if (!topDiscoveriesPlaylist && !topMissedRecordingsPlaylist) {
+    hasNoPlaylists = true;
+  }
+
+  if (topDiscoveriesPlaylist) {
+    topDiscoveriesPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+      const listen = JSPFTrackToListen(playlistTrack);
+      listens.push(listen);
+    });
+  }
+
+  if (topMissedRecordingsPlaylist) {
+    topMissedRecordingsPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+      const listen = JSPFTrackToListen(playlistTrack);
+      listens.push(listen);
+    });
+  }
+
+  const dispatch = useBrainzPlayerDispatch();
+  React.useEffect(() => {
+    dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listens]);
+
+  return (
+    <YearInMusic
+      user={user ?? fallbackUser}
+      yearInMusicData={yearInMusicData}
+      topDiscoveriesPlaylist={topDiscoveriesPlaylist}
+      topMissedRecordingsPlaylist={topMissedRecordingsPlaylist}
+      missingSomePlaylistData={missingSomePlaylistData}
+      hasNoPlaylists={hasNoPlaylists}
+    />
+  );
+}

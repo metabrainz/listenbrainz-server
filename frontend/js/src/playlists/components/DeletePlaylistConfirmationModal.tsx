@@ -14,7 +14,8 @@ export default NiceModal.create(
     const modal = useModal();
     const closeModal = React.useCallback(() => {
       modal.hide();
-      setTimeout(modal.remove, 3000);
+      document?.body?.classList?.remove("modal-open");
+      setTimeout(modal.remove, 200);
     }, [modal]);
 
     const { playlist } = props;

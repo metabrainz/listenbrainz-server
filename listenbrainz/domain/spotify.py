@@ -15,6 +15,7 @@ from listenbrainz.db import spotify
 from listenbrainz.domain.external_service import ExternalServiceError, \
     ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.domain.importer_service import ImporterService
+from listenbrainz.webserver import db_conn
 
 OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
@@ -76,7 +77,7 @@ class SpotifyService(ImporterService):
     def get_user(self, user_id: int, refresh: bool = False) -> Optional[dict]:
         """ If refresh = True, then check whether the access token has expired and refresh it
         before returning the user."""
-        user = spotify.get_user(user_id)
+        user = spotify.get_user(db_conn, user_id)
         if user and refresh and self.user_oauth_token_has_expired(user):
             user = self.refresh_access_token(user['user_id'], user['refresh_token'])
         return user
@@ -98,7 +99,7 @@ class SpotifyService(ImporterService):
         details = sp.current_user()
         external_user_id = details["id"]
 
-        external_service_oauth.save_token(user_id=user_id, service=self.service, access_token=access_token,
+        external_service_oauth.save_token(db_conn, user_id=user_id, service=self.service, access_token=access_token,
                                           refresh_token=refresh_token, token_expires_ts=expires_at,
                                           record_listens=active, scopes=scopes, external_user_id=external_user_id)
         return True
@@ -170,7 +171,7 @@ class SpotifyService(ImporterService):
         if "refresh_token" in response:
             refresh_token = response['refresh_token']
         expires_at = int(time.time()) + response['expires_in']
-        external_service_oauth.update_token(user_id=user_id, service=self.service,
+        external_service_oauth.update_token(db_conn, user_id=user_id, service=self.service,
                                             access_token=access_token, refresh_token=refresh_token,
                                             expires_at=expires_at)
         return self.get_user(user_id)
@@ -182,10 +183,10 @@ class SpotifyService(ImporterService):
         Args:
             user_id (int): the ListenBrainz row ID of the user
         """
-        external_service_oauth.delete_token(user_id, self.service, remove_import_log=False)
+        external_service_oauth.delete_token(db_conn, user_id, self.service, remove_import_log=False)
 
     def get_user_connection_details(self, user_id: int):
-        user = spotify.get_user_import_details(user_id)
+        user = spotify.get_user_import_details(db_conn, user_id)
         if user:
             def date_to_iso(date):
                 return date.isoformat() + "Z" if date else None
@@ -193,8 +194,3 @@ class SpotifyService(ImporterService):
             user['latest_listened_at_iso'] = date_to_iso(user['latest_listened_at'])
             user['last_updated_iso'] = date_to_iso(user['last_updated'])
         return user
-
-    def get_active_users_to_process(self):
-        """ Returns a list of Spotify user instances that need their Spotify listens imported.
-        """
-        return spotify.get_active_users_to_process()

@@ -158,7 +158,7 @@ export default class UserFeedback extends React.Component<
 
     return (
       <div>
-        <div style={{ marginTop: "1em" }}>
+        <div className="listen-header pills">
           <Pill
             active={selectedFeedbackScore === 1}
             type="secondary"
@@ -214,7 +214,7 @@ export default class UserFeedback extends React.Component<
               })}
             </div>
             <button
-              className={`btn btn-block ${
+              className={`mt-15 btn btn-block ${
                 noMoreFeedback ? "btn-default" : "btn-info"
               }`}
               disabled={noMoreFeedback}

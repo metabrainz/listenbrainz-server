@@ -10,6 +10,7 @@ import {
   difference,
 } from "lodash";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { Link } from "react-router-dom";
 import {
   searchForSpotifyTrack,
   loadScriptAsync,
@@ -17,6 +18,8 @@ import {
   getArtistName,
 } from "../../utils/utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
@@ -33,7 +36,6 @@ const fixSpotifyPlayerStyleIssue = () => {
 };
 
 export type SpotifyPlayerProps = DataSourceProps & {
-  spotifyUser?: SpotifyUser;
   refreshSpotifyToken: () => Promise<string>;
 };
 
@@ -47,6 +49,7 @@ export type SpotifyPlayerState = {
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
   implements DataSourceType {
+  static contextType = GlobalAppContext;
   static hasPermissions = (spotifyUser?: SpotifyUser) => {
     if (!spotifyUser) {
       return false;
@@ -102,17 +105,18 @@ export default class SpotifyPlayer
   public name = "spotify";
   public domainName = "spotify.com";
   public icon = faSpotify;
+  public iconColor = dataSourcesInfo.spotify.color;
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
   private authenticationRetries = 0;
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
 
-    this.accessToken = props.spotifyUser?.access_token || "";
     this.state = {
       durationMs: 0,
     };
@@ -121,9 +125,15 @@ export default class SpotifyPlayer
       leading: true,
       trailing: false,
     });
+  }
+
+  async componentDidMount(): Promise<void> {
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
+
+    this.accessToken = spotifyUser?.access_token || "";
 
     // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
-    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
+    if (SpotifyPlayer.hasPermissions(spotifyUser)) {
       window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
       loadScriptAsync(document, "https://sdk.scdn.co/spotify-player.js");
     } else {
@@ -164,18 +174,14 @@ export default class SpotifyPlayer
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
     const trackName = getTrackName(listen);
-    const artistName = getArtistName(listen);
+    // use only the first artist without feat. artists as it can confuse Spotify search
+    const artistName = getArtistName(listen, true);
     // Using the releaseName has paradoxically given worst search results,
     // so we're only using it when track name isn't provided (for example for an album search)
     const releaseName = trackName
       ? ""
       : _get(listen, "track_metadata.release_name");
-    const {
-      handleError,
-      handleWarning,
-      handleSuccess,
-      onTrackNotFound,
-    } = this.props;
+    const { handleError, handleWarning, onTrackNotFound } = this.props;
     if (!trackName && !artistName && !releaseName) {
       handleWarning(
         "We are missing a track title, artist or album name to search on Spotify",
@@ -223,14 +229,16 @@ export default class SpotifyPlayer
     retryCount = 0
   ): Promise<void> => {
     const { device_id } = this.state;
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     if (retryCount > 5) {
       handleError("Could not play Spotify track", "Playback error");
+      onTrackNotFound();
       return;
     }
     if (!this.spotifyPlayer || !device_id) {
       this.connectSpotifyPlayer(
-        this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1)
+        this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1),
+        retryCount + 1
       );
       return;
     }
@@ -288,12 +296,12 @@ export default class SpotifyPlayer
   };
 
   canSearchAndPlayTracks = (): boolean => {
-    const { spotifyUser } = this.props;
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
     return SpotifyPlayer.hasPermissions(spotifyUser);
   };
 
   datasourceRecordsListens = (): boolean => {
-    const { spotifyUser } = this.props;
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
     if (!spotifyUser?.permission) {
       return false;
     }
@@ -343,14 +351,14 @@ export default class SpotifyPlayer
       this.handleAccountError();
       return;
     }
-    const { onTrackNotFound } = this.props;
+    const { onInvalidateDataSource } = this.props;
     if (this.authenticationRetries > 5) {
       const { handleError } = this.props;
       handleError(
         isString(error) ? error : error?.message,
         "Spotify token error"
       );
-      onTrackNotFound();
+      onInvalidateDataSource();
       return;
     }
     this.authenticationRetries += 1;
@@ -365,9 +373,9 @@ export default class SpotifyPlayer
         account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
-        <a href="/settings/music-services/details/" target="_blank">
+        <Link to="/settings/music-services/details/">
           link for &quot;playing music&quot; feature
-        </a>{" "}
+        </Link>{" "}
         and refresh this page
       </p>
     );
@@ -410,14 +418,26 @@ export default class SpotifyPlayer
     );
   };
 
-  connectSpotifyPlayer = (callbackFunction?: () => void): void => {
+  connectSpotifyPlayer = (
+    callbackFunction?: () => void,
+    retryCount = 0
+  ): void => {
+    const { handleError, onInvalidateDataSource } = this.props;
     this.disconnectSpotifyPlayer();
-
+    if (retryCount > 5) {
+      handleError("Could not connect to Spotify", "Spotify error");
+      onInvalidateDataSource();
+      return;
+    }
     if (!window.Spotify) {
-      setTimeout(this.connectSpotifyPlayer.bind(this, callbackFunction), 1000);
+      setTimeout(
+        this.connectSpotifyPlayer.bind(this, callbackFunction, retryCount + 1),
+        1000
+      );
       return;
     }
     const { refreshSpotifyToken } = this.props;
+    const { spotifyAuth: spotifyUser = undefined } = this.context;
 
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
@@ -426,11 +446,18 @@ export default class SpotifyPlayer
           const userToken = await refreshSpotifyToken();
           this.accessToken = userToken;
           this.authenticationRetries = 0;
+          if (spotifyUser) {
+            spotifyUser.access_token = userToken;
+          }
           authCallback(userToken);
         } catch (error) {
           handleError(error, "Error connecting to Spotify");
           setTimeout(
-            this.connectSpotifyPlayer.bind(this, callbackFunction),
+            this.connectSpotifyPlayer.bind(
+              this,
+              callbackFunction,
+              retryCount + 1
+            ),
             1000
           );
         }
@@ -438,7 +465,6 @@ export default class SpotifyPlayer
       volume: 0.7, // Careful with this, now…
     });
 
-    const { handleError } = this.props;
     // Error handling
     this.spotifyPlayer.on(
       "initialization_error",
@@ -591,6 +617,6 @@ export default class SpotifyPlayer
     if (!show) {
       return null;
     }
-    return <div>{this.getAlbumArt()}</div>;
+    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
   }
 }

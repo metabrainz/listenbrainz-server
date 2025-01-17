@@ -4,6 +4,7 @@ import { useContext } from "react";
 import FollowButton from "./FollowButton";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import SimilarityScore from "./SimilarityScore";
+import Username from "../../../common/Username";
 
 export type UserListModalEntryProps = {
   mode: "follow-following" | "similar-users";
@@ -22,13 +23,7 @@ function UserListModalEntry(props: UserListModalEntryProps) {
   return (
     <div key={user.name}>
       <div>
-        <a
-          href={`/user/${user.name}/`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {user.name}
-        </a>
+        <Username username={user.name} />
         {isUserLoggedIn && mode === "similar-users" && (
           <SimilarityScore
             similarityScore={(user as SimilarUser).similarityScore}

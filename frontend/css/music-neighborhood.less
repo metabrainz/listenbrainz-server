@@ -18,6 +18,16 @@
       justify-content: space-between;
     }
 
+    #artist-search-button {
+      margin-right: 10px;
+      background-color: @blue;
+
+      &:hover {
+        background-color: @mb_blue_light;
+        border-color: @mb_blue_dark;
+      }
+    }
+
     .share-buttons {
       margin-left: 30px;
       display: flex;
@@ -131,7 +141,7 @@
             width: 100%;
             margin-right: -100%;
             margin-left: 10px;
-            border-top: 1.75px solid #d9d9d9;
+            border-top: 1.75px solid @gray-light;
           }
         }
         #artist-top-track,
@@ -146,39 +156,40 @@
         }
       }
     }
+  }
+}
 
-    .artist-similarity-graph-container {
-      flex: 1;
-      height: calc(100vh - @brainzplayer-height);
-      max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
-      overflow: scroll;
+.artist-similarity-graph-container {
+  flex: 1;
+  height: calc(100vh - @brainzplayer-height);
+  max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
+  overflow: auto;
 
-      .artist-similarity-graph-node {
-        cursor: pointer;
+  .artist-similarity-graph-node {
+    cursor: pointer;
 
-        .centered-text {
-          padding: 0 4px;
-          overflow: hidden;
+    .centered-text {
+      padding: 0 4px;
+      overflow: hidden;
 
-          display: flex;
-          align-items: center;
-          text-align: center;
-          border-radius: 50%;
-          height: inherit;
+      display: flex;
+      align-items: center;
+      text-align: center;
+      border-radius: 50%;
+      height: inherit;
 
-          .centered-text-inner {
-            width: 100%;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.1em;
-            // Hyphenation when possible
-            overflow-wrap: break-word;
-            hyphens: auto;
-          }
-        }
+      .centered-text-inner {
+        width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1em;
+        // Hyphenation when possible
+        overflow-wrap: break-word;
+        hyphens: auto;
       }
     }
   }

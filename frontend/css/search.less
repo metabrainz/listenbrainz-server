@@ -1,0 +1,44 @@
+.search-bar {
+  position: relative;
+  margin-top: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  max-width: 400px;
+  align-items: stretch;
+  input,
+  button {
+    background-color: @nav-tabs-border-color;
+    color: @nav-link-color;
+    border: none;
+  }
+  input {
+    border-radius: 33px 0 0 33px;
+    height: auto;
+    &:focus {
+      box-shadow: inset 3px 2px 4px darkgrey;
+      & ~ button {
+        // Adjacent sibling button
+        box-shadow: inset -3px 2px 4px darkgrey;
+      }
+    }
+  }
+  button {
+    font-size: 1.2em;
+    border-radius: 0 33px 33px 0;
+    padding-right: 0.5em;
+  }
+}
+
+.search-result-header {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.table-strong-header {
+  thead {
+    border-bottom: 2px solid;
+  }
+}

@@ -25,7 +25,7 @@ module.exports = {
   ],
 
   // The test environment that will be used for testing
-  testEnvironment: "jest-environment-jsdom",
+  testEnvironment: "jest-fixed-jsdom",
 
   // The glob patterns Jest uses to detect test files
   testMatch: ["**/?(*.)+(spec|test).(ts|js)?(x)"],
@@ -36,9 +36,15 @@ module.exports = {
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
   testEnvironmentOptions: {
     url: "http://localhost",
+    customExportConditions: [""],
+  },
+  moduleNameMapper: {
+    'react-markdown': '<rootDir>/node_modules/react-markdown/react-markdown.min.js',
+    '^localforage$': '<rootDir>/frontend/js/tests/__mocks__/localforage.ts'
   },
   transform: {
     "\\.[jt]sx?$": "ts-jest",
+    "^.+\\.(js|jsx)$": "babel-jest"
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation

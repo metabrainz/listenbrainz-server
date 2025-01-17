@@ -12,6 +12,7 @@ export type ListenControlProps = {
   iconClassName?: string;
   action?: (event: React.MouseEvent) => void;
   icon?: IconDefinition;
+  iconColor?: string;
   iconSize?: SizeProp;
   text: string;
   dataToggle?: string;
@@ -34,6 +35,7 @@ function ListenControl(props: ListenControlProps) {
     iconClassName,
     action,
     icon,
+    iconColor,
     iconSize,
     text,
     dataToggle,
@@ -55,7 +57,7 @@ function ListenControl(props: ListenControlProps) {
         title={title ?? text}
         {...anchorTagAttributes}
       >
-        {icon && <FontAwesomeIcon icon={icon} />}
+        {icon && <FontAwesomeIcon icon={icon} color={iconColor} />}
         &nbsp;{text}
       </a>
     );
@@ -68,6 +70,7 @@ function ListenControl(props: ListenControlProps) {
         icon={icon as IconProp}
         className={iconClassName}
         size={iconSize}
+        fixedWidth
       />
     );
   }

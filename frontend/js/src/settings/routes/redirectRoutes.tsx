@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Navigate, Outlet, Params } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import type { RouteObject } from "react-router-dom";
 
-const getRedirectRoutes = () => {
+const getRedirectRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/profile",
@@ -24,12 +25,8 @@ const getRedirectRoutes = () => {
           element: <Navigate to="/settings/import/" replace />,
         },
         {
-          path: "resetlatestimportts/",
-          element: <Navigate to="/settings/resetlatestimportts/" replace />,
-        },
-        {
-          path: "missing-data/",
-          element: <Navigate to="/settings/missing-data/" replace />,
+          path: "link-listens/",
+          element: <Navigate to="/settings/link-listens/" replace />,
         },
         {
           path: "select_timezone/",

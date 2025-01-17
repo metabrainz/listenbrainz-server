@@ -1,38 +1,38 @@
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import NiceModal from "@ebay/nice-modal-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
+  faInfoCircle,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import tinycolor from "tinycolor2";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation, useParams } from "react-router-dom";
+import NiceModal from "@ebay/nice-modal-react";
 import {
   getRelIconLink,
   ListeningStats,
   popularRecordingToListen,
 } from "./utils";
-import withAlertNotifications from "../notifications/AlertNotificationsHOC";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import Loader from "../components/Loader";
-import ErrorBoundary from "../utils/ErrorBoundary";
 import {
   generateAlbumArtThumbnailLink,
   getAlbumArtFromReleaseGroupMBID,
   getAverageRGBOfImage,
-  getPageProps,
   getReviewEventContent,
 } from "../utils/utils";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
+import { RouteQuery } from "../utils/Loader";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import CBReviewModal from "../cb-review/CBReviewModal";
+import Username from "../common/Username";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -62,8 +62,17 @@ export type AlbumPageProps = {
   listening_stats: ListeningStats;
 };
 
-export default function AlbumPage(props: AlbumPageProps): JSX.Element {
-  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+export default function AlbumPage(): JSX.Element {
+  const { APIService } = React.useContext(GlobalAppContext);
+  const location = useLocation();
+  const params = useParams() as { albumMBID: string };
+  const { albumMBID } = params;
+  const { data, isError } = useQuery<AlbumPageProps>({
+    ...RouteQuery(["album", params], location.pathname),
+    //  @ts-ignore  the expected "error" here is a Response
+    // as RouteLoaderURL throws a json response object
+    throwOnError: (response) => response?.status !== 404,
+  });
   const {
     release_group_metadata: initialReleaseGroupMetadata,
     recordings_release_mbid,
@@ -73,25 +82,20 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     caa_release_mbid,
     type,
     listening_stats,
-  } = props;
+  } = data || {};
+
   const {
     total_listen_count: listenCount,
     listeners: topListeners,
     total_user_count: userCount,
-  } = listening_stats;
+  } = listening_stats || {};
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
 
-  const {
-    tag,
-    release_group: album,
-    artist,
-    release,
-  } = metadata as ReleaseGroupMetadataLookup;
+  const { tag, release_group: album, artist, release } = (metadata ||
+    {}) as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
-
-  const [loading, setLoading] = React.useState(false);
 
   /** Album art and album color related */
   const [coverArtSrc, setCoverArtSrc] = React.useState(
@@ -127,6 +131,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
 
   React.useEffect(() => {
     async function fetchCoverArt() {
+      if (!release_group_mbid) {
+        return;
+      }
       try {
         const fetchedCoverArtSrc = await getAlbumArtFromReleaseGroupMBID(
           release_group_mbid,
@@ -188,6 +195,16 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
     listensFromAlbumRecordings
   );
 
+  const dispatch = useBrainzPlayerDispatch();
+
+  React.useEffect(() => {
+    dispatch({
+      type: "SET_AMBIENT_QUEUE",
+      data: listensFromAlbumsRecordingsFlattened,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listensFromAlbumsRecordingsFlattened]);
+
   const filteredTags = chain(releaseGroupTags)
     .sortBy("count")
     .value()
@@ -198,13 +215,71 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
   });
   const showMediumTitle = (mediums?.length ?? 0) > 1;
 
+  if (isError) {
+    return (
+      <div className="center-p">
+        <img
+          src="/static/img/broken-cd.jpg"
+          alt="Broken CD vector"
+          width={200}
+        />
+        <br />
+        <div className="help-block small mb-15">
+          Broken CD by{" "}
+          <a href="https://www.vecteezy.com/members/amandalamsyah/uploads">
+            amandalamsyah on Vecteezy
+          </a>
+        </div>
+        <p className="strong">
+          We could not find this album in ListenBrainz; please check the URL and
+          try again.
+        </p>
+        <p>
+          If you&apos;ve recently added this release/album to MusicBrainz,
+          please wait until it is processed.
+          <div>
+            Releases added to MusicBrainz are processed &nbsp;
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              every 6 hours
+            </a>
+            &nbsp;
+            <FontAwesomeIcon icon={faInfoCircle} />.
+          </div>
+        </p>
+        <p>
+          In the meantime, you can see this album on MusicBrainz:
+          <br />
+          <OpenInMusicBrainzButton
+            entityType="release-group"
+            entityMBID={albumMBID}
+          />
+        </p>
+      </div>
+    );
+  }
+  const artistsRadioPrompt: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})`;
+  const artistsRadioPromptNoSim: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})::nosim`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})::nosim`;
+
   return (
     <div
       id="entity-page"
+      role="main"
       className="album-page"
       style={{ ["--bg-color" as string]: adjustedAlbumColor }}
     >
-      <Loader isLoading={loading} />
+      <Helmet>
+        <title>{album?.name}</title>
+      </Helmet>
       <div className="entity-page-header flex">
         <div className="cover-art">
           <img
@@ -216,12 +291,12 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
-          <div className="details h3">
+          <div className="details h4">
             <div>
               {artist.artists.map((ar) => {
                 return (
                   <span key={ar.artist_mbid}>
-                    <a href={`/artist/${ar.artist_mbid}`}>{ar?.name}</a>
+                    <Link to={`/artist/${ar.artist_mbid}/`}>{ar?.name}</Link>
                     {ar.join_phrase}
                   </span>
                 );
@@ -246,15 +321,14 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             />
           </div>
           <div className="btn-group lb-radio-button">
-            <a
+            <Link
               type="button"
               className="btn btn-info"
-              href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artistName
-              )})&mode=easy`}
+              to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
             >
-              <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
-            </a>
+              <FontAwesomeIcon icon={faPlayCircle} /> Artist
+              {artist.artists?.length > 1 && "s"} Radio
+            </Link>
             <button
               type="button"
               className="btn btn-info dropdown-toggle"
@@ -267,33 +341,24 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             </button>
             <ul className="dropdown-menu">
               <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})::nosim&mode=easy`}
+                <Link
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
                 >
-                  This artist
-                </a>
+                  Artist{artist.artists?.length > 1 && "s"} radio
+                </Link>
               </li>
               <li>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})&mode=easy`}
+                <Link
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
                 >
-                  Similar artists
-                </a>
+                  {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
+                  only
+                </Link>
               </li>
               {Boolean(filteredTags?.length) && (
                 <li>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                  <Link
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
                       filteredTags
                         .map((filteredTag) => filteredTag.tag)
                         .join(",")
@@ -306,7 +371,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                         .join(",")}
                     </span>
                     )
-                  </a>
+                  </Link>
                 </li>
               )}
             </ul>
@@ -334,7 +399,7 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
                   onClick={() => {
                     window.postMessage(
                       {
-                        brainzplayer_event: "play-listen",
+                        brainzplayer_event: "play-ambient-queue",
                         payload: listensFromAlbumsRecordingsFlattened,
                       },
                       window.location.origin
@@ -423,18 +488,12 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
             <div className="top-listeners">
               <h3 className="header-with-line">Top listeners</h3>
               {topListeners
-                .slice(0, 10)
+                ?.slice(0, 10)
                 .map(
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <a
-                          href={`/user/${listener.user_name}/`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {listener.user_name}
-                        </a>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -451,7 +510,9 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
           <h3 className="header-with-line">Reviews</h3>
           {reviews?.length ? (
             <>
-              {reviews.slice(0, 3).map(getReviewEventContent)}
+              <div className="review-cards">
+                {reviews.slice(0, 3).map(getReviewEventContent)}
+              </div>
               <a
                 href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
                 className="critiquebrainz-button btn btn-link"
@@ -460,82 +521,34 @@ export default function AlbumPage(props: AlbumPageProps): JSX.Element {
               </a>
             </>
           ) : (
-            <>
-              <p>Be the first to review this album on CritiqueBrainz</p>
-              <a
-                href={`https://critiquebrainz.org/review/write/release_group/${release_group_mbid}`}
-                className="btn btn-outline"
-              >
-                Add my review
-              </a>
-            </>
+            <p>Be the first to review this album on CritiqueBrainz</p>
           )}
+          <button
+            type="button"
+            className="btn btn-info"
+            data-toggle="modal"
+            data-target="#CBReviewModal"
+            onClick={() => {
+              NiceModal.show(CBReviewModal, {
+                entityToReview: [
+                  {
+                    type: "release_group",
+                    mbid: albumMBID,
+                    name: album.name,
+                  },
+                  {
+                    type: "artist",
+                    mbid: artist.artists[0].artist_mbid,
+                    name: artist.artists[0].name,
+                  },
+                ],
+              });
+            }}
+          >
+            Add my review
+          </button>
         </div>
       </div>
-      <BrainzPlayer
-        listens={listensFromAlbumsRecordingsFlattened}
-        listenBrainzAPIBaseURI={APIService.APIBaseURI}
-        refreshSpotifyToken={APIService.refreshSpotifyToken}
-        refreshYoutubeToken={APIService.refreshYoutubeToken}
-        refreshSoundcloudToken={APIService.refreshSoundcloudToken}
-      />
     </div>
   );
 }
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const {
-    domContainer,
-    reactProps,
-    globalAppContext,
-    sentryProps,
-  } = await getPageProps();
-  const { sentry_dsn, sentry_traces_sample_rate } = sentryProps;
-
-  if (sentry_dsn) {
-    Sentry.init({
-      dsn: sentry_dsn,
-      integrations: [new Integrations.BrowserTracing()],
-      tracesSampleRate: sentry_traces_sample_rate,
-    });
-  }
-  const {
-    recordings_release_mbid,
-    mediums,
-    release_group_mbid,
-    caa_id,
-    caa_release_mbid,
-    type,
-    release_group_metadata,
-    listening_stats,
-  } = reactProps;
-
-  const AlbumPageWithAlertNotifications = withAlertNotifications(AlbumPage);
-
-  const renderRoot = createRoot(domContainer!);
-  renderRoot.render(
-    <ErrorBoundary>
-      <ToastContainer
-        position="bottom-right"
-        autoClose={8000}
-        hideProgressBar
-      />
-      <GlobalAppContext.Provider value={globalAppContext}>
-        <NiceModal.Provider>
-          <AlbumPageWithAlertNotifications
-            release_group_metadata={
-              release_group_metadata as ReleaseGroupMetadataLookup
-            }
-            recordings_release_mbid={recordings_release_mbid}
-            mediums={mediums}
-            release_group_mbid={release_group_mbid}
-            caa_id={caa_id}
-            caa_release_mbid={caa_release_mbid}
-            type={type}
-            listening_stats={listening_stats}
-          />
-        </NiceModal.Provider>
-      </GlobalAppContext.Provider>
-    </ErrorBoundary>
-  );
-});

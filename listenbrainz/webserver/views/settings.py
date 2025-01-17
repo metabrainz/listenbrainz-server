@@ -1,54 +1,48 @@
+import json
 from datetime import datetime
 
-import orjson
-import json
-from flask import Blueprint, Response, render_template, request, url_for, \
-    redirect, current_app, jsonify, stream_with_context
+from flask import Blueprint, render_template, request, url_for, \
+    redirect, current_app, jsonify
 from flask_login import current_user, login_required
-from flask_wtf import FlaskForm
 from werkzeug.exceptions import NotFound, BadRequest
 
-import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db import listens_importer
-from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
+from listenbrainz.background.background_tasks import add_task
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
+from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.webserver import flash
-from listenbrainz.webserver import timescale_connection
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
-from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError
+from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
+    APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.webserver.views.user import delete_user, delete_listens_history
-
 
 settings_bp = Blueprint("settings", __name__)
-profile_bp = Blueprint("profile", __name__)
-
-EXPORT_FETCH_COUNT = 5000
 
 
-@settings_bp.route("/resettoken/", methods=["POST"])
+@settings_bp.post("/resettoken/")
 @api_login_required
 def reset_token():
     try:
-        db_user.update_token(current_user.id)
+        db_user.update_token(db_conn, current_user.id)
         return jsonify({"success": True})
     except DatabaseException:
         raise APIInternalServerError("Something went wrong! Unable to reset token right now.")
 
 
-@settings_bp.route("/select_timezone/", methods=["POST"])
+@settings_bp.post("/select_timezone/")
 @api_login_required
 def select_timezone():
-    pg_timezones = db_usersetting.get_pg_timezone()
-    user_settings = db_usersetting.get(current_user.id)
+    pg_timezones = db_usersetting.get_pg_timezone(db_conn)
+    user_settings = db_usersetting.get(db_conn, current_user.id)
     user_timezone = user_settings['timezone_name']
     data = {
         "pg_timezones": pg_timezones,
@@ -57,46 +51,34 @@ def select_timezone():
     return jsonify(data)
 
 
-@settings_bp.route("/troi/", methods=["POST"])
+@settings_bp.post("/troi/")
 @login_required
 def set_troi_prefs():
-    current_troi_prefs = db_usersetting.get_troi_prefs(current_user.id)
+    current_troi_prefs = db_usersetting.get_troi_prefs(db_conn, current_user.id)
     data = {
         "troi_prefs": current_troi_prefs,
     }
     return jsonify(data)
 
 
-@settings_bp.route("/resetlatestimportts/", methods=["POST"])
-@api_login_required
-def reset_latest_import_timestamp():
-    try:
-        listens_importer.update_latest_listened_at(current_user.id, ExternalServiceType.LASTFM, 0)
-        return jsonify({"success": True})
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong! Unable to reset latest import timestamp right now.")
-
-
-@settings_bp.route("/import/", methods=["POST"])
+@settings_bp.post("/import/")
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
-    user = db_user.get(current_user.id, fetch_email=True)
+    user = db_user.get(db_conn, current_user.id, fetch_email=True)
     # if the flag is turned off (local development) then do not perform email check
     if current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"]:
         user_has_email = user["email"] is not None
     else:
         user_has_email = True
 
-    # Return error if LASTFM_API_KEY is not given in config.py
-    if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
-        return NotFound("LASTFM_API_KEY not specified.")
+    # Return error if LIBREFM_API_KEY is not given in config.py
+    if 'LIBREFM_API_KEY' not in current_app.config or current_app.config['LIBREFM_API_KEY'] == "":
+        return jsonify({"error": "LIBREFM_API_KEY not specified."}), 404
 
     data = {
         "user_has_email": user_has_email,
-        "profile_url": url_for('user.profile', user_name=current_user.musicbrainz_id),
-        "lastfm_api_url": current_app.config["LASTFM_API_URL"],
-        "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+        "profile_url": url_for('user.index', path="", user_name=current_user.musicbrainz_id),
         "librefm_api_url": current_app.config["LIBREFM_API_URL"],
         "librefm_api_key": current_app.config["LIBREFM_API_KEY"],
     }
@@ -104,84 +86,7 @@ def import_data():
     return jsonify(data)
 
 
-def fetch_listens(musicbrainz_id, to_ts):
-    """
-    Fetch all listens for the user from listenstore by making repeated queries
-    to listenstore until we get all the data. Returns a generator that streams
-    the results.
-    """
-    while True:
-        batch, _, _ = timescale_connection._ts.fetch_listens(current_user.to_dict(), to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
-        if not batch:
-            break
-        yield from batch
-        to_ts = batch[-1].timestamp.replace(tzinfo=None)  # new to_ts will be the the timestamp of the last listen fetched
-
-
-def fetch_feedback(user_id):
-    """
-    Fetch feedback by making repeated queries to DB until we get all the data.
-    Returns a generator that streams the results.
-    """
-    batch = []
-    offset = 0
-    while True:
-        batch = db_feedback.get_feedback_for_user(user_id=current_user.id, limit=EXPORT_FETCH_COUNT, offset=offset)
-        if not batch:
-            break
-        yield from batch
-        offset += len(batch)
-
-
-def stream_json_array(elements):
-    """ Return a generator of string fragments of the elements encoded as array. """
-    for i, element in enumerate(elements):
-        yield '[' if i == 0 else ','
-        yield orjson.dumps(element).decode("utf-8")
-    yield ']'
-
-
-@settings_bp.route("/export/", methods=["POST"])
-@api_login_required
-@web_listenstore_needed
-def export_data():
-    """ Exporting the data to json """
-    filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
-
-    # Build a generator that streams the json response. We never load all
-    # listens into memory at once, and we can start serving the response
-    # immediately.
-    to_ts = datetime.utcnow()
-    listens = fetch_listens(current_user.musicbrainz_id, to_ts)
-    output = stream_json_array(listen.to_api() for listen in listens)
-
-    response = Response(stream_with_context(output))
-    response.headers["Content-Disposition"] = "attachment; filename=" + filename
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    response.mimetype = "text/json"
-    return response
-
-
-@settings_bp.route("/export-feedback/", methods=["POST"])
-@login_required
-def export_feedback():
-    """ Exporting the feedback data to json """
-    filename = current_user.musicbrainz_id + "_lb_feedback-" + datetime.today().strftime('%Y-%m-%d') + ".json"
-
-    # Build a generator that streams the json response. We never load all
-    # feedback into memory at once, and we can start serving the response
-    # immediately.
-    feedback = fetch_feedback(current_user.id)
-    output = stream_json_array(fb.to_api() for fb in feedback)
-
-    response = Response(stream_with_context(output))
-    response.headers["Content-Disposition"] = "attachment; filename=" + filename
-    response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    response.mimetype = "text/json"
-    return response
-
-
-@settings_bp.route('/delete/', methods=['POST'])
+@settings_bp.post('/delete/')
 @api_login_required
 @web_listenstore_needed
 def delete():
@@ -195,14 +100,14 @@ def delete():
     that they wish to delete their ListenBrainz account.
     """
     try:
-        delete_user(current_user.id)
+        add_task(current_user.id, "delete_user")
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting user: %s', current_user.musicbrainz_id, exc_info=True)
-        raise APIInternalServerError('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
+        raise APIInternalServerError(f'Error while deleting user {current_user.musicbrainz_id}, please try again later.')
 
 
-@settings_bp.route('/delete-listens/', methods=['POST'])
+@settings_bp.post('/delete-listens/')
 @api_login_required
 @web_listenstore_needed
 def delete_listens():
@@ -216,14 +121,14 @@ def delete_listens():
     wish to delete their listens.
     """
     try:
-        delete_listens_history(current_user.id)
+        add_task(current_user.id, "delete_listens")
         return jsonify({"success": True})
     except Exception:
         current_app.logger.error('Error while deleting listens for user: %s', current_user.musicbrainz_id, exc_info=True)
-        raise APIInternalServerError("Error while deleting listens for user: %s" % current_user.musicbrainz_id)
+        raise APIInternalServerError(f"Error while deleting listens for user: {current_user.musicbrainz_id}")
 
 
-def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -238,13 +143,17 @@ def _get_service_or_raise_404(name: str, include_mb=False) -> ExternalService:
             return CritiqueBrainzService()
         elif service == ExternalServiceType.SOUNDCLOUD:
             return SoundCloudService()
+        elif service == ExternalServiceType.LASTFM:
+            return LastfmService()
+        elif not exclude_apple and service == ExternalServiceType.APPLE:
+            return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
     except KeyError:
-        raise NotFound("Service %s is invalid." % name)
+        raise NotFound("Service %s is invalid." % (name,))
 
 
-@settings_bp.route('/music-services/details/', methods=['POST'])
+@settings_bp.post('/music-services/details/')
 @api_login_required
 def music_services_details():
     spotify_service = SpotifyService()
@@ -269,32 +178,49 @@ def music_services_details():
     soundcloud_user = soundcloud_service.get_user(current_user.id)
     current_soundcloud_permissions = "listen" if soundcloud_user else "disable"
 
+    apple_service = AppleService()
+    apple_user = apple_service.get_user(current_user.id)
+    current_apple_permissions = "listen" if apple_user and apple_user["refresh_token"] else "disable"
+
+    lastfm_service = LastfmService()
+    lastfm_user = lastfm_service.get_user(current_user.id)
+    current_lastfm_permissions = "import" if lastfm_user else "disable"
+
     data = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
+        "current_apple_permissions": current_apple_permissions,
+        "current_lastfm_permissions": current_lastfm_permissions,
     }
+
+    if lastfm_user:
+        data["current_lastfm_settings"] = {
+            "external_user_id": lastfm_user["external_user_id"],
+            "latest_listened_at": lastfm_user["latest_listened_at"],
+        }
 
     return jsonify(data)
 
 
-@settings_bp.route('/music-services/<service_name>/callback/')
-@profile_bp.route('/music-services/<service_name>/callback/')
+@settings_bp.get('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name)
+    service = _get_service_or_raise_404(service_name, exclude_apple=True)
+
     code = request.args.get('code')
     if not code:
         raise BadRequest('missing code')
     token = service.fetch_access_token(code)
+
     service.add_new_user(current_user.id, token)
     return redirect(url_for('settings.index', path='music-services/details'))
 
 
-@settings_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/refresh/')
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name, include_mb=True)
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
     user = service.get_user(current_user.id)
     if not user:
         raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
@@ -311,7 +237,35 @@ def refresh_service_token(service_name: str):
     return jsonify({"access_token": user["access_token"]})
 
 
-@settings_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/connect/')
+@api_login_required
+def music_services_connect(service_name: str):
+    """ Connect last.fm/libre.fm account to ListenBrainz user. """
+    # TODO: add support for libre.fm
+    if service_name.lower() != "lastfm":
+        raise APINotFound("Service %s is invalid." % (service_name,))
+
+    data = request.json
+    if "external_user_id" not in data:
+        raise APIBadRequest("Missing 'external_user_id' in request.")
+
+    latest_listened_at = None
+    if data.get("latest_listened_at") is not None:
+        try:
+            latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
+        except (ValueError, TypeError):
+            raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
+
+    # TODO: make last.fm start import timestamp configurable
+    service = LastfmService()
+    service.add_new_user(current_user.id, {
+        "external_user_id": data["external_user_id"],
+        "latest_listened_at": latest_listened_at,
+    })
+    return jsonify({"success": True})
+
+
+@settings_bp.post('/music-services/<service_name>/disconnect/')
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -345,25 +299,44 @@ def music_services_disconnect(service_name: str):
         elif service_name == 'critiquebrainz':
             if action:
                 return jsonify({"url": service.get_authorize_url(CRITIQUEBRAINZ_SCOPES)})
+        elif service_name == 'apple':
+            service.add_new_user(user_id=current_user.id)
+            return jsonify({"success": True})
 
     raise BadRequest('Invalid action')
 
 
-@settings_bp.route('/missing-data/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/set-token/')
 @api_login_required
-def missing_mb_data():
-    """ Returns a list of missing data for the user """
-    missing_data, created = get_user_missing_musicbrainz_data(current_user.id, "cf")
+def music_services_set_token(service_name: str):
+    if service_name != 'apple':
+        raise APIInternalServerError("The set-token method not implemented for this service")
+
+    music_user_token = request.data.decode('UTF-8')
+
+    if not music_user_token:
+        raise BadRequest('Missing user token in request body')
+
+    apple_service = AppleService()
+    apple_service.set_token(user_id=current_user.id, music_user_token=music_user_token)
+
+    return jsonify({"success": True})
+
+
+@settings_bp.post('/link-listens/')
+@api_login_required
+def link_listens():
+    """ Returns a list of unlinked listens for the user """
+    unlinked_listens, created = get_user_missing_musicbrainz_data(db_conn, ts_conn, current_user.id, "cf")
     data = {
-        "missing_data": missing_data or [],
+        "unlinked_listens": unlinked_listens or [],
+        "last_updated": created,
     }
     return jsonify(data)
 
 
-@profile_bp.route('/', defaults={'path': ''})
-@profile_bp.route('/<path:path>/')
-@settings_bp.route('/', defaults={'path': ''})
-@settings_bp.route('/<path:path>/')
+@settings_bp.get('/', defaults={'path': ''})
+@settings_bp.get('/<path:path>/')
 @login_required
 def index(path):
-    return render_template("settings/index.html")
+    return render_template("index.html")
