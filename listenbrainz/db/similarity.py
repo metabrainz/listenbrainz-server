@@ -114,6 +114,6 @@ def get_artists(mb_curs, ts_curs, mbids, algorithm, count):
 
     metadata = load_artists_from_mbids_with_redirects(mb_curs, similar_mbids)
     for item in metadata:
-        item["score"] = score_idx.get(item["artist_mbid"])
+        item["score"] = score_idx.get(item["original_artist_mbid"])
         item["reference_mbid"] = mbid_idx.get(item["artist_mbid"])
     return metadata

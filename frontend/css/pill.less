@@ -30,4 +30,11 @@
     background: transparent;
     border: none;
   }
+
+  &.disabled,
+  &[disabled],
+  fieldset[disabled] & {
+    color: rgba(141, 141, 141, 0.5);
+    border-color: rgba(141, 141, 141, 0.5);
+  }
 }

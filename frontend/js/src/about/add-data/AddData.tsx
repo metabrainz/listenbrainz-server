@@ -5,7 +5,7 @@ export default function AddData() {
   return (
     <>
       <h2 className="page-title">Adding your data to Listenbrainz</h2>
-      <h3>Submitting Listens</h3>
+      <h3>Submit Listens</h3>
       <p>Submit your listening history to ListenBrainz.</p>
       <h4>Music players</h4>
       <ul>
@@ -134,6 +134,19 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://tidal.com/">TIDAL</a>
+          </em>
+          , a cross-platform music player and streaming service:{" "}
+          <a href="https://github.com/uwu/neptune">
+            <code>neptune client mod</code>
+          </a>
+          +{" "}
+          <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
+            <code>ListenBrainz plugin</code>
+          </a>
+        </li>
+        <li>
+          <em>
             <a href="https://www.videolan.org/vlc/">VLC</a>
           </em>
           , cross-platform multimedia player:{" "}
@@ -214,7 +227,7 @@ export default function AddData() {
           </em>
           , a free and open source media center:{" "}
           <a href="https://kodi.tv/addons/matrix/service.listenbrainz">
-            ListenBrainz add-on
+            <code>ListenBrainz add-on</code>
           </a>
         </li>
         <li>
@@ -255,7 +268,7 @@ export default function AddData() {
               OngakuKiroku
             </a>
           </em>
-          , a ListenBrainz scrobbler for Swinsian and Music.app on macOS devices
+          , a ListenBrainz submitter for Swinsian and Music.app on macOS devices
         </li>
         <li>
           <em>
@@ -267,9 +280,16 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://scrobblerad.io/">ScrobbleRadio</a>
+          </em>
+          , a streaming radio player and listen submitter for a curated list of
+          global radio stations
+        </li>
+        <li>
+          <em>
             <a href="https://www.smashbits.nl/smashtunes/">SmashTunes</a>
           </em>
-          , a Mac menu bar utility for displaying the current track. Submits
+          , a Mac menu bar utility for displaying the current track, submits
           Apple Music and Spotify listens
         </li>
       </ul>
@@ -324,6 +344,13 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://github.com/UnviableFriend/phooks">phooks</a>
+          </em>
+          , a python script that submits local Plex listens using web hooks and
+          file lookups
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/defvs/ytm-extractor">ytm-extractor</a>
           </em>
           , a Kotlin (Java) script to submit your YouTube Music watch history to
@@ -340,17 +367,17 @@ export default function AddData() {
         </li>
       </ul>
 
-      <h3>Submitting via Spotify</h3>
-      <p>Automatically submit your Spotify listens.</p>
+      <h3>Submit from Spotify and Last.fm</h3>
+      <p>Automatically submit your Spotify or Last.fm listens.</p>
       <p>
-        Importing the same listens from two different sources, such as Last.FM
+        Submitting the same listens from two different sources, such as Last.FM
         and Spotify, may cause duplicates in your listen history. When you opt
         into automatic Spotify submissions you may notice duplicates for your
-        last 50 listens on Spotify.
+        last 50 Spotify listens.
       </p>
       <p>
         <Link to="/settings/music-services/details/">
-          Connect your Spotify account to ListenBrainz
+          Connect your Spotify or Last.fm account to ListenBrainz
         </Link>
       </p>
 
@@ -375,13 +402,9 @@ export default function AddData() {
               ListenBrainz-SMP
             </a>
           </em>
-          , a{" "}
-          <em>
-            <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for submitting and retrieving playlists from ListenBrainz (+
-          Spotify), as well as retrieving recommendations or submitting feedback
-          on tracks.
+          , a Foobar2000 plugin for submitting and retrieving playlists from
+          ListenBrainz (+ Spotify). Can retrieve recommendations and submit
+          track feedback.
         </li>
         <li>
           <em>
@@ -393,9 +416,33 @@ export default function AddData() {
           <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
-          plugin for syncing local playlists (in multiple formats) with
-          ListenBrainz (+ Spotify). Tracks playlists changes and also allows to
-          resolve tracks with local content and YouTube links.
+          plugin for syncing local playlists with ListenBrainz (+ Spotify).
+          Tracks playlists changes and resolves tracks with local content and
+          YouTube links.
+        </li>
+        <li>
+          <em>
+            <a href="https://codeberg.org/scaglio/listenbrainz-scrobbler">
+              ListenBrainz macOS Scrobbler for Music.app
+            </a>
+          </em>
+          , a macOS Bash script to submit Music.app listens to ListenBrainz
+        </li>
+        <li>
+          <em>
+            <a href="https://yogo9.github.io/listenbrainz-recent-listens-to-playlist/">
+              ListenBrainz Playlist Tool
+            </a>
+          </em>{" "}
+          <em>
+            (
+            <a href="https://github.com/YoGo9/listenbrainz-recent-listens-to-playlist">
+              Github
+            </a>
+            )
+          </em>
+          , a standalone tool to select recent listens from a ListenBrainz
+          account and add them to a ListenBrainz playlist.
         </li>
       </ul>
 
@@ -407,15 +454,19 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://github.com/coopw1/BrainzBot">BrainzBot</a>
+          </em>
+          , a Discord bot that can be user-run or added to your server. Showcase
+          what you&apos;re listening to, share charts, album grids, tag clouds,
+          and more.
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
           </em>
-          , a{" "}
-          <em>
-            <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for creating reports based on user listens similar to the one
-          found at Spotify. Suggested playlists use ListenBrainz recommendations
-          (without requiring listens upload to the server).
+          , a Foobar2000 plugin that creates listening reports, similar to
+          Spotify&apos;s annual report. Can utilize ListenBrainz
+          recommendations.
         </li>
       </ul>
 

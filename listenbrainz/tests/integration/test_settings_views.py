@@ -35,25 +35,6 @@ class SettingsViewsTestCase(IntegrationTestCase):
         recalculate_all_user_data()
         return response
 
-    def test_export(self):
-        """
-        Test for the user export of ListenBrainz data.
-        """
-        # test get requests to export view first
-        self.temporary_login(self.user['login_id'])
-        resp = self.client.get(self.custom_url_for('settings.index', path='export'))
-        self.assert200(resp)
-
-        # send three listens for the user
-        resp = self.send_listens()
-        self.assert200(resp)
-
-        # now export data and check if contains all the listens we just sent
-        resp = self.client.post(self.custom_url_for('settings.export_data'))
-        self.assert200(resp)
-        data = json.loads(resp.data)
-        self.assertEqual(len(data), 3)
-
     def test_user_page_latest_listen(self):
         resp = self.send_listens()
         self.assert200(resp)
@@ -105,8 +86,8 @@ class SettingsViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, self.user["id"])
-            self.assertEquals(task.task, "delete_listens")
+            self.assertEqual(task.user_id, self.user["id"])
+            self.assertEqual(task.task, "delete_listens")
 
         # wait for background tasks to be processed -- max 30s allowed for the test to pass
 

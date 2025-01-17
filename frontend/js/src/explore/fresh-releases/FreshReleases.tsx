@@ -4,6 +4,10 @@ import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRss } from "@fortawesome/free-solid-svg-icons";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import ReleaseFilters from "./components/ReleaseFilters";
@@ -11,7 +15,8 @@ import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
 import ReleaseCardsGrid from "./components/ReleaseCardsGrid";
 import { COLOR_LB_ORANGE } from "../../utils/constants";
-import { useMediaQuery } from "./utils";
+import SyndicationFeedModal from "../../components/SyndicationFeedModal";
+import { getBaseUrl } from "../../utils/utils";
 
 export enum DisplaySettingsPropertiesEnum {
   releaseTitle = "Release Title",
@@ -105,6 +110,7 @@ type FreshReleasesData = {
 
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
@@ -144,14 +150,6 @@ export default function FreshReleases() {
       [setting]: !displaySettings[setting],
     });
   };
-
-  const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
-  let pillRowStyle = {};
-  if (screenMd) {
-    pillRowStyle = { justifyContent: "center" };
-  } else if (!isLoggedIn) {
-    pillRowStyle = { justifyContent: "flex-end" };
-  }
 
   const queryKey =
     pageType === PAGE_TYPE_SITEWIDE
@@ -287,6 +285,18 @@ export default function FreshReleases() {
     message = `0/${releases.length} releases match your filters.`;
   }
 
+  const handleLoginRedirect = () => {
+    toast.warning(
+      <ToastMsg
+        title="You must be logged in to view personalized releases"
+        message="Please log in to view personalized releases"
+      />,
+      { toastId: "login-error" }
+    );
+
+    navigate("/login");
+  };
+
   return (
     <>
       <Helmet>
@@ -294,31 +304,36 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div className="fresh-releases-pill-row" style={pillRowStyle}>
-            {isLoggedIn ? (
-              <div className="fresh-releases-row">
-                <Pill
-                  id="sitewide-releases"
-                  data-testid="sitewide-releases-pill"
-                  onClick={() => {
-                    setPageType(PAGE_TYPE_SITEWIDE);
-                    setSort("release_date");
-                  }}
-                  active={pageType === PAGE_TYPE_SITEWIDE}
-                  type="secondary"
-                >
-                  All
-                </Pill>
-                <Pill
-                  id="user-releases"
-                  onClick={() => setPageType(PAGE_TYPE_USER)}
-                  active={pageType === PAGE_TYPE_USER}
-                  type="secondary"
-                >
-                  For You
-                </Pill>
-              </div>
-            ) : null}
+          <div className="fresh-releases-pill-row">
+            <div className="fresh-releases-row">
+              <Pill
+                id="sitewide-releases"
+                data-testid="sitewide-releases-pill"
+                onClick={() => {
+                  setPageType(PAGE_TYPE_SITEWIDE);
+                  setSort("release_date");
+                }}
+                active={pageType === PAGE_TYPE_SITEWIDE}
+                type="secondary"
+              >
+                All
+              </Pill>
+              <Pill
+                id="user-releases"
+                onClick={() => {
+                  if (isLoggedIn) {
+                    setPageType(PAGE_TYPE_USER);
+                  } else {
+                    handleLoginRedirect();
+                  }
+                }}
+                active={pageType === PAGE_TYPE_USER}
+                type="secondary"
+                className={isLoggedIn ? "" : "disabled"}
+              >
+                For You
+              </Pill>
+            </div>
             <div className="fresh-releases-row">
               <span>Sort By:</span>{" "}
               <div className="input-group">
@@ -360,6 +375,43 @@ export default function FreshReleases() {
                   ))}
                 </select>
               </div>
+              <button
+                type="button"
+                className="btn btn-icon btn-info atom-button"
+                data-toggle="modal"
+                data-target="#SyndicationFeedModal"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  if (pageType === PAGE_TYPE_SITEWIDE) {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `Fresh Releases`,
+                      options: [
+                        {
+                          label: "Days",
+                          key: "days",
+                          type: "number",
+                          min: 1,
+                          max: 30,
+                          defaultValue: 3,
+                          tooltip:
+                            "Select how many days of past releases to include in the feed, starting from today. Only releases that have already been published will be included.",
+                        },
+                      ],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/fresh-releases`,
+                    });
+                  } else if (pageType === PAGE_TYPE_USER) {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `${currentUser.name}'s Fresh Releases`,
+                      options: [],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                        currentUser.name
+                      }/fresh-releases`,
+                    });
+                  }
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} size="sm" />
+              </button>
             </div>
           </div>
           {isLoading ? (

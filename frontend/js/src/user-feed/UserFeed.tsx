@@ -1,50 +1,55 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import * as React from "react";
-import { toast } from "react-toastify";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faBell,
   faCircle,
+  faComments,
+  faEye,
+  faEyeSlash,
   faHeadphones,
   faHeart,
+  faPaperPlane,
   faQuestion,
+  faRss,
   faThumbsUp,
+  faThumbtack,
+  faTrash,
   faUserPlus,
   faUserSecret,
   faUserSlash,
-  faThumbtack,
-  faTrash,
-  faEye,
-  faEyeSlash,
-  faComments,
-  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { reject as _reject } from "lodash";
 import { sanitize } from "dompurify";
+import { reject as _reject } from "lodash";
+import * as React from "react";
 import { Helmet } from "react-helmet";
+import { toast } from "react-toastify";
 
-import { Link, useParams } from "react-router-dom";
+import NiceModal from "@ebay/nice-modal-react";
 import {
+  InfiniteData,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
-  useInfiniteQuery,
-  InfiniteData,
 } from "@tanstack/react-query";
-import GlobalAppContext from "../utils/GlobalAppContext";
+import { Link, useParams } from "react-router-dom";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
+import ListenControl from "../common/listens/ListenControl";
+import Username from "../common/Username";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { ToastMsg } from "../notifications/Notifications";
+import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
+import GlobalAppContext from "../utils/GlobalAppContext";
 import {
-  preciseTimestamp,
-  getAdditionalContent,
   feedReviewEventToListen,
+  getAdditionalContent,
+  getBaseUrl,
+  getPersonalRecommendationEventContent,
   getReviewEventContent,
   personalRecommendationEventToListen,
-  getPersonalRecommendationEventContent,
+  preciseTimestamp,
 } from "../utils/utils";
-import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
-import ListenControl from "../common/listens/ListenControl";
-import { ToastMsg } from "../notifications/Notifications";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -508,23 +513,21 @@ export default function UserFeedPage() {
       if (currentUserFollows) {
         return (
           <span className="event-description-text">
-            You are now following{" "}
-            <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
+            You are now following <Username username={user_name_1} />
           </span>
         );
       }
       if (currentUserFollowed) {
         return (
           <span className="event-description-text">
-            <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
-            following you
+            <Username username={user_name_0} /> is now following you
           </span>
         );
       }
       return (
         <span className="event-description-text">
-          <Link to={`/user/${user_name_0}/`}>{user_name_0}</Link> is now
-          following <Link to={`/user/${user_name_1}/`}>{user_name_1}</Link>
+          <Username username={user_name_0} /> is now following{" "}
+          <Username username={user_name_1} />
         </span>
       );
     }
@@ -546,7 +549,7 @@ export default function UserFeedPage() {
       user_name === currentUser.name ? (
         "You"
       ) : (
-        <Link to={`/user/${user_name}/`}>{user_name}</Link>
+        <Username username={user_name} />
       );
     return (
       <span className="event-description-text">
@@ -562,6 +565,65 @@ export default function UserFeedPage() {
       </Helmet>
       <div className="listen-header">
         <h3 className="header-with-line">Latest activity</h3>
+        {/* Commented out as new OAuth is not merged yet. */}
+        {/* <button
+          type="button"
+          className="btn btn-icon btn-info atom-button"
+          data-toggle="modal"
+          data-target="#SyndicationFeedModal"
+          title="Subscribe to syndication feed (Atom)"
+          onClick={() => {
+            NiceModal.show(SyndicationFeedModal, {
+              feedTitle: `Latest activity`,
+              options: [
+                {
+                  label: "Time range",
+                  key: "minutes",
+                  type: "dropdown",
+                  tooltip:
+                    "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                  values: [
+                    {
+                      id: "10minutes",
+                      value: "10",
+                      displayValue: "10 minutes",
+                    },
+                    {
+                      id: "30minutes",
+                      value: "30",
+                      displayValue: "30 minutes",
+                    },
+                    {
+                      id: "1hour",
+                      value: "60",
+                      displayValue: "1 hour",
+                    },
+                    {
+                      id: "2hours",
+                      value: "120",
+                      displayValue: "2 hours",
+                    },
+                    {
+                      id: "4hours",
+                      value: "240",
+                      displayValue: "4 hours",
+                    },
+                    {
+                      id: "8hours",
+                      value: "480",
+                      displayValue: "8 hours",
+                    },
+                  ],
+                },
+              ],
+              baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                currentUser?.name
+              }/events`,
+            });
+          }}
+        >
+          <FontAwesomeIcon icon={faRss} size="sm" />
+        </button> */}
       </div>
       <div className="row">
         <div className="col-md-7 col-xs-12">

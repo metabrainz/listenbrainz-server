@@ -591,6 +591,24 @@ def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
             playlist_recordings_map[playlist_id] = []
     return dict(playlist_recordings_map)
 
+def get_recordings_count_for_playlist(ts_conn, playlist_id: int):
+    """ Get a count of recordings for a given playlist.
+
+    Arguments:
+        ts_conn: timsecale database connection
+        playlist_id: Numerical sequential id of a playlist (NOT its UUID)
+
+    Returns:
+        an integer of the number of recordings in the playlist """
+
+    query = text("""
+        SELECT COUNT(*)
+          FROM playlist.playlist_recording
+         WHERE playlist_id = :playlist_id
+    """)
+    result = ts_conn.execute(query, {"playlist_id": playlist_id})
+    return result.scalar()
+
 
 def _remove_old_collaborative_playlists(ts_conn, creator_id: int, created_for_id: int, source_patch: str):
     """
@@ -983,3 +1001,14 @@ def get_playlist_recordings_metadata(mb_curs, ts_curs, playlist: Playlist) -> Pl
             rec.additional_metadata = additional_metadata
 
     return playlist
+
+
+def get_playlist_count(ts_conn, creator_ids: List[str]) -> dict:
+    query = text("""
+        SELECT creator_id, COUNT(*) as count
+          FROM playlist.playlist
+         WHERE creator_id IN :creator_ids
+      GROUP BY creator_id
+    """)
+    result = ts_conn.execute(query, {"creator_ids": tuple(creator_ids)})
+    return {row[0]: row[1] for row in result.fetchall()}

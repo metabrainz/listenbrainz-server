@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { RouteObject } from "react-router-dom";
-import RouteLoader from "../../utils/Loader";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
 
 const getSettingsRoutes = (): RouteObject[] => {
@@ -55,20 +55,11 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "resetlatestimportts/",
+          path: "link-listens/",
+          loader: RouteQueryLoader("link-listens"),
           lazy: async () => {
-            const ResetImportTimestamp = await import(
-              "../resetlatestimportts/ResetLatestImports"
-            );
-            return { Component: ResetImportTimestamp.default };
-          },
-        },
-        {
-          path: "missing-data/",
-          loader: RouteLoader,
-          lazy: async () => {
-            const MissingMBData = await import("../missing-data/MissingMBData");
-            return { Component: MissingMBData.default };
+            const LinkListens = await import("../link-listens/LinkListens");
+            return { Component: LinkListens.default };
           },
         },
         {

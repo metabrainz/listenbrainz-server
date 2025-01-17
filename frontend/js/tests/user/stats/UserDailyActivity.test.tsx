@@ -1,201 +1,127 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
 
-import { act } from "react-dom/test-utils";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, waitFor } from "@testing-library/react";
+import { SetupServerApi, setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
 import UserDailyActivity, {
   UserDailyActivityProps,
-  UserDailyActivityState,
 } from "../../../src/user/stats/components/UserDailyActivity";
-import APIError from "../../../src/utils/APIError";
 import * as userDailyActivityResponse from "../../__mocks__/userDailyActivity.json";
-import * as userDailyActivityProcessedData from "../../__mocks__/userDailyActivityProcessData.json";
-import { waitForComponentToPaint } from "../../test-utils";
-import Heatmap from "../../../src/user/stats/components/HeatMap";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const props: UserDailyActivityProps = {
   user: {
     name: "foobar",
   },
   range: "week",
-  apiUrl: "barfoo",
 };
+
+jest.mock("@nivo/core", () => ({
+  ...jest.requireActual("@nivo/core"),
+  ResponsiveWrapper: ({ children }: any) =>
+    children({ width: 400, height: 400 }),
+}));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+const queryKey = ["userDailyActivity", props.user.name, "week"];
+
+const reactQueryWrapper = ({ children }: any) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 // Set timeZone to UTC+5:30 because the testdata is in that format
 // eslint-disable-next-line no-extend-native
 Date.prototype.getTimezoneOffset = () => -330;
 
 describe("UserDailyActivity", () => {
+  let server: SetupServerApi;
+  beforeAll(async () => {
+    const handlers = [
+      http.get("/1/stats/user/foobar/daily-activity", async (path) => {
+        return HttpResponse.json(userDailyActivityResponse);
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+  });
+  afterEach(() => {
+    queryClient.cancelQueries();
+    queryClient.clear();
+  });
   it("renders correctly", async () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...{ ...props, range: "all_time" }} />
+    renderWithProviders(
+      <UserDailyActivity {...props} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
     );
-    await act(async () => {
-      wrapper.setState({
-        data: (userDailyActivityProcessedData as unknown) as UserDailyActivityData,
-        loading: false,
-      });
-    });
 
-    expect(wrapper.find(Heatmap)).toHaveLength(1);
+    expect(screen.getByTestId("user-daily-activity")).toBeInTheDocument();
   });
 
-  it("renders corectly when range is invalid", async () => {
-    const wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+  it("displays error message when API call fails", async () => {
+    const errorMessage = "API Error";
 
-    await act(async () => {
-      wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
+    queryClient.ensureQueryData({
+      queryKey,
+      queryFn: () => {
+        return {
+          data: {},
+          hasError: true,
+          errorMessage,
+        };
+      },
     });
-    await waitForComponentToPaint(wrapper);
 
-    expect(wrapper.getDOMNode()).toHaveTextContent(
-      "Invalid range: invalid_range"
+    renderWithProviders(
+      <UserDailyActivity {...props} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
     );
-    expect(wrapper.find(Heatmap)).toHaveLength(0);
+    await waitFor(() => {
+      expect(screen.getByTestId("user-daily-activity")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    expect(screen.queryByTestId("heatmap")).not.toBeInTheDocument();
   });
 
-  describe("componentDidUpdate", () => {
-    it("it sets correct state if range is incorrect", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      await act(async () => {
-        wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
-      });
-
-      expect(wrapper.state()).toMatchObject({
-        loading: false,
-        hasError: true,
-        errorMessage: "Invalid range: invalid_range",
-      });
+  it("renders heatmap with processed data", async () => {
+    queryClient.ensureQueryData({
+      queryKey,
+      queryFn: () => {
+        return {
+          data: userDailyActivityResponse,
+          hasError: false,
+          errorMessage: "",
+        };
+      },
     });
 
-    it("calls loadData once if range is valid", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
+    renderWithProviders(
+      <UserDailyActivity {...props} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-      instance.loadData = jest.fn();
-      await act(async () => {
-        wrapper.setProps({ range: "month" });
-      });
-
-      expect(instance.loadData).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("getData", () => {
-    it("calls getUserDailyActivity with correct params", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
-      spy.mockImplementation(() =>
-        Promise.resolve(userDailyActivityResponse as UserDailyActivityResponse)
-      );
-      let result;
-      await act(async () => {
-        result = await instance.getData();
-      });
-
-      expect(spy).toHaveBeenCalledWith("foobar", "week");
-      expect(result).toEqual(userDailyActivityResponse);
+    await waitFor(() => {
+      expect(screen.getByTestId("heatmap")).toBeInTheDocument();
     });
 
-    it("sets state correctly if data is not calculated", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
-      const noContentError = new APIError("NO CONTENT");
-      noContentError.response = {
-        status: 204,
-      } as Response;
-      spy.mockImplementation(() => Promise.reject(noContentError));
-      await act(async () => {
-        await instance.getData();
-      });
-
-      expect(wrapper.state()).toMatchObject({
-        loading: false,
-        hasError: true,
-        errorMessage: "NO CONTENT",
-      });
-    });
-  });
-
-  describe("processData", () => {
-    it("processes data correctly for all_time", () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...{ ...props, range: "all_time" }} />
-      );
-      const instance = wrapper.instance();
-
-      const result = instance.processData(
-        userDailyActivityResponse as UserDailyActivityResponse
-      );
-
-      // Sort results for stable comparison with test fixture
-      result.forEach((day) => {
-        day.data.sort((a, b) => (a.x as number) - (b.x as number));
-      });
-      expect(result).toEqual(userDailyActivityProcessedData);
-    });
-    it("returns an empty array if no payload", () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...{ ...props, range: "all_time" }} />
-      );
-      const instance = wrapper.instance();
-
-      // When stats haven't been calculated, processData is called with an empty object
-      const result = instance.processData({} as UserDailyActivityResponse);
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe("loadData", () => {
-    it("calls getData once", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      instance.getData = jest.fn();
-      instance.processData = jest.fn();
-      await act(async () => {
-        await instance.loadData();
-      });
-
-      expect(instance.getData).toHaveBeenCalledTimes(1);
-    });
-
-    it("set state correctly", async () => {
-      const wrapper = mount<UserDailyActivity>(
-        <UserDailyActivity {...props} />
-      );
-      const instance = wrapper.instance();
-
-      instance.getData = jest
-        .fn()
-        .mockImplementationOnce(() =>
-          Promise.resolve(userDailyActivityResponse)
-        );
-      await act(async () => {
-        await instance.loadData();
-      });
-
-      expect(wrapper.state().loading).toEqual(false);
-      const { data } = wrapper.state();
-      // Sort results for stable comparison with test fixture
-      data.forEach((day) => {
-        day.data.sort((a, b) => (a.x as number) - (b.x as number));
-      });
-      expect(data).toEqual(userDailyActivityProcessedData);
-    });
+    const heatmap = screen.getByTestId("heatmap");
+    // eslint-disable-next-line testing-library/no-node-access
+    expect(heatmap.querySelectorAll("g")).toHaveLength(227);
   });
 });

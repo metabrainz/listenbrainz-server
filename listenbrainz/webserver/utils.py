@@ -5,10 +5,11 @@ import orjson
 from flask import current_app, request
 from flask_login import current_user
 
-from listenbrainz.webserver import db_conn
+from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
     get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user
 import listenbrainz.db.user_setting as db_usersetting
+import listenbrainz.db.donation as db_donation
 
 REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'The listens were rejected because the user does not has not provided an email. ' \
@@ -32,6 +33,18 @@ def sizeof_readable(num, suffix='B'):
             return "%3.1f %s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yb', suffix)
+
+
+def number_readable(num: int):
+    # Solution by rtaft from https://stackoverflow.com/a/45846841/4904467
+    """ Converts a number to a short human-readable format (1.2K, 6.6M, etc.)"""
+    suffixes = ['', 'K', 'M', 'B', 'T']
+    num = float('{:.2g}'.format(num))
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), suffixes[magnitude])
 
 
 def reformat_date(value, fmt="%b %d, %Y"):
@@ -77,11 +90,19 @@ def get_global_props():
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 
-    brainzplayer_props = db_usersetting.get_brainzplayer_prefs(
-                db_conn, current_user.id
-            ) if current_user.is_authenticated else None
-    if brainzplayer_props is not None:
-        props["user_preferences"] = brainzplayer_props
+    if current_user.is_authenticated:
+        brainzplayer_props = db_usersetting.get_brainzplayer_prefs(db_conn, current_user.id)
+        if brainzplayer_props is not None:
+            props["user_preferences"] = brainzplayer_props
+
+        flair_props = db_usersetting.get_flair(db_conn, current_user.id)
+        if flair_props is not None:
+            props["flair"] = flair_props
+
+        if meb_conn:
+            show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.id)
+            if show_flair is not None:
+                props["show_flair"] = show_flair
 
     return orjson.dumps(props).decode("utf-8")
 

@@ -17,7 +17,7 @@ import {
   uniqBy,
   without,
 } from "lodash";
-import { formatDuration } from "date-fns";
+import { formatDuration, isValid } from "date-fns";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-regular-svg-icons";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
@@ -33,7 +33,7 @@ interface AddAlbumListensProps {
   onPayloadChange: (listens: Listen[]) => void;
 }
 
-type MBReleaseWithMetadata = MusicBrainzRelease &
+export type MBReleaseWithMetadata = MusicBrainzRelease &
   WithMedia &
   WithArtistCredits &
   WithReleaseGroup;
@@ -67,7 +67,7 @@ type TrackRowProps = {
   ) => void;
 };
 
-function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
+export function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
   const trackDuration = track.length ?? track.recording.length;
   return (
     <div className="add-album-track">
@@ -242,7 +242,7 @@ export default function AddAlbumListens({
               >
                 <strong>{selectedAlbum.title}</strong>
               </a>
-              {selectedAlbum.date && (
+              {selectedAlbum.date && isValid(new Date(selectedAlbum.date)) && (
                 <span>
                   &nbsp;({new Date(selectedAlbum.date).getFullYear()})
                 </span>

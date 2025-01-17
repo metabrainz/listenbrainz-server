@@ -24,10 +24,7 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
-
-export type YoutubePlayerState = {
-  currentListen?: Listen;
-};
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
@@ -40,8 +37,7 @@ type ExtendedYoutubePlayer = {
   getVideoData?: () => { video_id?: string; author: string; title: string };
 } & YT.Player;
 
-export default class YoutubePlayer
-  extends React.Component<YoutubePlayerProps, YoutubePlayerState>
+export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
   implements DataSourceType {
   static getVideoIDFromListen(listen: Listen | JSPFTrack): string | undefined {
     // This may be either video ID or video link.
@@ -117,6 +113,7 @@ export default class YoutubePlayer
   public name = "youtube";
   public domainName = "youtube.com";
   public icon = faYoutube;
+  public iconColor = dataSourcesInfo.youtube.color;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
@@ -134,7 +131,7 @@ export default class YoutubePlayer
   };
 
   updateVideoInfo = (): void => {
-    let title;
+    let title = "";
     let images: MediaImage[] = [];
     const { onTrackInfoChange, onDurationChange } = this.props;
     const videoData =
@@ -146,10 +143,6 @@ export default class YoutubePlayer
       videoId = videoData.video_id as string;
       images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
       videoUrl = YoutubePlayer.getURLFromVideoID(videoId);
-    } else {
-      // Fallback to track name from the listen we are playing
-      const { currentListen } = this.state;
-      title = getTrackName(currentListen);
     }
     onTrackInfoChange(title, videoUrl, undefined, undefined, images);
     const duration = this.youtubePlayer?.getDuration();
@@ -182,7 +175,7 @@ export default class YoutubePlayer
       // The player info is sometimes missing a title initially.
       // We fallback to getting it with getVideoData method once the information is loaded in the player
       if (!title || !videoId) {
-        setTimeout(this.updateVideoInfo.bind(this), 2000);
+        setTimeout(this.updateVideoInfo, 2000);
       } else {
         const images: MediaImage[] = YoutubePlayer.getThumbnailsFromVideoid(
           videoId

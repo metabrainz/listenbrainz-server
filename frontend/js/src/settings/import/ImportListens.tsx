@@ -2,14 +2,13 @@ import * as React from "react";
 
 import { Link, useLoaderData } from "react-router-dom";
 import { Helmet } from "react-helmet";
-import LastFmImporter from "../../lastfm/LastFMImporter";
+import ReactTooltip from "react-tooltip";
+import LibreFmImporter from "../../lastfm/LibreFMImporter";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type ImportLoaderData = {
   user_has_email: boolean;
   profile_url?: string;
-  lastfm_api_url: string;
-  lastfm_api_key: string;
   librefm_api_url: string;
   librefm_api_key: string;
 };
@@ -21,8 +20,6 @@ export default function Import() {
   const {
     user_has_email: userHasEmail,
     profile_url: profileUrl,
-    lastfm_api_url: lastfmApiUrl,
-    lastfm_api_key: lastfmApiKey,
     librefm_api_url: librefmApiUrl,
     librefm_api_key: librefmApiKey,
   } = data;
@@ -47,38 +44,41 @@ export default function Import() {
         </div>
       )}
       <p>
-        Import your existing listen history from other databases. To submit{" "}
-        <em>new</em> listens, please visit the{" "}
-        <a href="https://listenbrainz.org/add-data/">Connect services</a> and{" "}
-        <a href="https://listenbrainz.org/settings/music-services/details/">
-          Submitting data
-        </a>{" "}
-        pages.
+        Import your existing{" "}
+        <span className="strong" data-tip data-for="info-tooltip">
+          listen
+        </span>{" "}
+        history from other databases.{" "}
+        <ReactTooltip id="info-tooltip" place="top">
+          Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
+          Last.fm, and we cannot use it.
+          <br />
+          Instead, we use the term <strong>listen</strong> for our data.
+        </ReactTooltip>
         <br />
-        Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
-        Last.fm, and we cannot use it. Instead, we use the term{" "}
-        <strong>listen</strong> for our data.
+        To submit <em>new</em> listens, please visit the{" "}
+        <a href="https://listenbrainz.org/settings/music-services/details/">
+          Connect services
+        </a>{" "}
+        and <a href="https://listenbrainz.org/add-data/">Submitting data</a>{" "}
+        pages.
       </p>
 
-      <h3>Import from Last.fm and Libre.fm</h3>
+      <h3>Import from Libre.fm</h3>
+      <div className="alert alert-warning">
+        Looking to import from Last.FM instead? Connect to your LFM account on
+        the{" "}
+        <Link to="/settings/music-services/details/">
+          connect services page
+        </Link>
+        .
+      </div>
       <p>
         The importer manually steps through your listen history and imports the
         listens one page at a time.
       </p>
 
       <ul>
-        <li>
-          In order for this to work, you must disable the &#34;Hide recent
-          listening information&#34; setting in your Last.fm{" "}
-          <a
-            href="https://www.last.fm/settings/privacy"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Privacy Settings
-          </a>
-          .
-        </li>
         <li>
           Should it fail for whatever reason, it is safe to restart the import
           process.
@@ -89,7 +89,7 @@ export default function Import() {
         </li>
         <li>
           Clicking the &quot;Import listens&quot; button will import your
-          profile without the need to open Last.fm.
+          profile without the need to open Libre.fm.
         </li>
         <li>
           Your listen counts may not be accurate for up to 24 hours after you
@@ -110,7 +110,7 @@ export default function Import() {
       </p>
 
       {userHasEmail && (
-        <LastFmImporter
+        <LibreFmImporter
           user={{
             id: currentUser.id?.toString(),
             name: currentUser.name,
@@ -118,29 +118,10 @@ export default function Import() {
           }}
           profileUrl={profileUrl}
           apiUrl={apiUrl}
-          lastfmApiUrl={lastfmApiUrl}
-          lastfmApiKey={lastfmApiKey}
           librefmApiUrl={librefmApiUrl}
           librefmApiKey={librefmApiKey}
         />
       )}
-
-      <br />
-      <h4> Reset Last.fm import timestamp </h4>
-      <p>
-        If you think that a import has missed listens, you can reset your
-        previous import timestamp. This will cause your next import to be a
-        complete import, which will add missing listens without adding
-        duplicates to your history.
-      </p>
-
-      <p>
-        <span className="btn btn-info btn-lg">
-          <Link to="/settings/resetlatestimportts/" style={{ color: "white" }}>
-            Reset import timestamp
-          </Link>
-        </span>
-      </p>
     </>
   );
 }

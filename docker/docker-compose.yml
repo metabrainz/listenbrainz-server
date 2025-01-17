@@ -59,6 +59,7 @@ services:
       - ../frontend:/static
     ports:
       - "8100:80"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
@@ -73,6 +74,7 @@ services:
       - "8101:8101"
     volumes:
       - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
@@ -83,6 +85,7 @@ services:
     command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     volumes:
       - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
@@ -93,6 +96,7 @@ services:
     command: python3 -m "listenbrainz.background.background_tasks"
     volumes:
       - ..:/code/listenbrainz:z
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
@@ -102,11 +106,23 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
+    command: python3 -m "listenbrainz.listens_importer.spotify"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
       - rabbitmq
+
+  lastfm_importer:
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
+    command: python3 -m "listenbrainz.listens_importer.lastfm"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - rabbitmq
+      - lb_db
 
   websockets:
     image: web
@@ -115,6 +131,7 @@ services:
     command: python manage.py run_websockets -h 0.0.0.0 -p 8102
     ports:
       - "8102:8102"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis
       - lb_db
@@ -126,7 +143,7 @@ services:
       dockerfile: Dockerfile
       target: listenbrainz-frontend-dev
     command: npm run build:dev
-    user: ${STATIC_BUILD_USER:-node}
+    user: "${LB_DOCKER_USER:-node}:${LB_DOCKER_GROUP:-node}"
     volumes:
       - ../frontend:/code/frontend:z
 

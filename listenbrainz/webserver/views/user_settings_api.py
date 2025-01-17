@@ -14,8 +14,49 @@ from listenbrainz.webserver.views.api_tools import (
 
 user_settings_api_bp = Blueprint('user_settings_api_v1', __name__)
 
+FLAIR_CHOICES = [
+    "shake",
+    "lb-colors-sweep",
+    "light-sweep",
+    "wave",
+    "flip-horizontal",
+    "flip-vertical",
+    "flip-3d",
+    "extruded",
+    "underline",
+    "tornado",
+    "highlighter",
+    "anaglyph",
+    "sliced",
+]
 
-@user_settings_api_bp.route('/timezone', methods=["POST", "OPTIONS"])
+
+@user_settings_api_bp.post("/flair")
+@crossdomain
+@ratelimit()
+def update_flair():
+    """ Update a given user's flair
+
+    To remove a user's flair, pass {"flair": null}.
+    """
+    user = validate_auth_header()
+    if "flair" not in request.json:
+        raise APIBadRequest("Missing flair field")
+
+    flair = request.json["flair"]
+    if flair:
+        if not isinstance(flair, str):
+            raise APIBadRequest("Flair must be a string")
+        if flair not in FLAIR_CHOICES:
+            raise APIBadRequest(f"Invalid flair: {flair}")
+    else:
+        flair = None
+
+    db_usersetting.update_flair(db_conn, user["id"], flair)
+    return jsonify({"success": True})
+
+
+@user_settings_api_bp.post('/timezone')
 @crossdomain
 @ratelimit()
 def reset_timezone():
@@ -46,7 +87,7 @@ def reset_timezone():
     return jsonify({"status": "ok"})
 
 
-@user_settings_api_bp.route('/troi', methods=["POST", "OPTIONS"])
+@user_settings_api_bp.post('/troi')
 @crossdomain
 @ratelimit()
 def update_troi_prefs():
@@ -90,7 +131,7 @@ brainzplayer_preferences_schema = {
 }
 
 
-@user_settings_api_bp.route('/brainzplayer', methods=["POST", "OPTIONS"])
+@user_settings_api_bp.post('/brainzplayer')
 @crossdomain
 @ratelimit()
 def update_brainzplayer_prefs():

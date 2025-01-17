@@ -78,12 +78,23 @@ const getIndexRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "playlist/:playlistID/",
+          path: "playlist/",
           lazy: async () => {
-            const PlaylistPage = await import("../playlists/Playlist");
-            return { Component: PlaylistPage.default };
+            const LayoutWithBackButton = await import(
+              "../layout/LayoutWithBackButton"
+            );
+            return { Component: LayoutWithBackButton.default };
           },
-          loader: RouteLoader,
+          children: [
+            {
+              path: ":playlistID/",
+              lazy: async () => {
+                const PlaylistPage = await import("../playlists/Playlist");
+                return { Component: PlaylistPage.default };
+              },
+              loader: RouteLoader,
+            },
+          ],
         },
         {
           path: "/statistics/",
@@ -96,7 +107,7 @@ const getIndexRoutes = (): RouteObject[] => {
               index: true,
               lazy: async () => {
                 const UserReports = await import("../user/stats/UserReports");
-                return { Component: UserReports.StatisticsPage };
+                return { Component: UserReports.default };
               },
             },
             {
@@ -168,6 +179,13 @@ const getIndexRoutes = (): RouteObject[] => {
           lazy: async () => {
             const APIAuth = await import("../api/auth/AuthPage");
             return { Component: APIAuth.default };
+          },
+        },
+        {
+          path: "donors/",
+          lazy: async () => {
+            const Donors = await import("../donors/Donors");
+            return { Component: Donors.default };
           },
         },
       ],

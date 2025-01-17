@@ -1,11 +1,8 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow, ShallowWrapper } from "enzyme";
+import { mount, shallow } from "enzyme";
 
 import { act } from "react-dom/test-utils";
-import YoutubePlayer, {
-  YoutubePlayerProps,
-  YoutubePlayerState,
-} from "../../../src/common/brainzplayer/YoutubePlayer";
+import YoutubePlayer from "../../../src/common/brainzplayer/YoutubePlayer";
 import { DataSourceTypes } from "../../../src/common/brainzplayer/BrainzPlayer";
 import APIService from "../../../src/utils/APIService";
 

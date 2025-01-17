@@ -9,6 +9,7 @@ import {
   searchForSoundcloudTrack,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 require("../../../lib/soundcloud-player-api");
 
@@ -91,6 +92,7 @@ export default class SoundcloudPlayer
   public name = "soundcloud";
   public domainName = "soundcloud.com";
   public icon = faSoundcloud;
+  public iconColor = dataSourcesInfo.soundcloud.color;
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   retries = 0;

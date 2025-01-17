@@ -1,8 +1,10 @@
+import logging
+from datetime import datetime
 from typing import Dict, Tuple
 from urllib.parse import urlparse
 
 import bleach
-from kombu import Producer
+import requests
 from kombu.entity import PERSISTENT_DELIVERY_MODE
 from more_itertools import chunked
 
@@ -24,6 +26,8 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, 
     ListenValidationError
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
+
+logger = logging.getLogger(__name__)
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -216,7 +220,7 @@ def validate_listen(listen: Dict, listen_type) -> Dict:
             validate_multiple_mbids_field(listen, key)
 
     # monitor performance of unicode null check because it might be a potential bottleneck
-    with sentry_sdk.start_span(op="null check", description="check for unicode null in submitted listen json"):
+    with sentry_sdk.start_span(op="null check", name="check for unicode null in submitted listen json"):
         # If unicode null is present in the listen, postgres will raise an
         # error while trying to insert it. hence, reject such listens.
         check_for_unicode_null_recursively(listen)
@@ -461,29 +465,58 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     return min_ts, max_ts, count
 
 
-def validate_auth_header(*, optional: bool = False, fetch_email: bool = False):
+def validate_auth_header(*, optional: bool = False, fetch_email: bool = False, scopes: list[str] = None):
     """ Examine the current request headers for an Authorization: Token <uuid>
         header that identifies a LB user and then load the corresponding user
-        object from the database and return it, if succesful. Otherwise raise
+        object from the database and return it, if successful. Otherwise raise
         APIUnauthorized() exception.
 
     Args:
         optional: If the optional flag is given, do not raise an exception
             if the Authorization header is not set.
         fetch_email: if True, include email in the returned dict
+        scopes: the scopes the access token is required to have access to
     """
-
-    auth_token = request.headers.get('Authorization')
+    auth_token = request.headers.get("Authorization")
     if not auth_token:
         if optional:
             return None
         raise APIUnauthorized("You need to provide an Authorization header.")
+
     try:
         auth_token = auth_token.split(" ")[1]
     except IndexError:
         raise APIUnauthorized("Provided Authorization header is invalid.")
 
-    user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
+    if auth_token.startswith("meba_"):
+        try:
+            response = requests.post(
+                current_app.config["OAUTH_INTROSPECTION_URL"],
+                data={
+                    "client_id": current_app.config["OAUTH_CLIENT_ID"],
+                    "client_secret": current_app.config["OAUTH_CLIENT_SECRET"],
+                    "token": auth_token,
+                    "token_type_hint": "access_token",
+                }
+            )
+            token = response.json()
+        except requests.exceptions.RequestException:
+            logger.error("Error while trying to introspect token:", exc_info=True)
+            raise APIServiceUnavailable("Something is wrong. Please try again later.")
+
+        if not token["active"] or datetime.fromtimestamp(token["expires_at"]) < datetime.now():
+            raise APIUnauthorized("Invalid access token.")
+
+        if scopes:
+            token_scopes = token["scope"]
+            for scope in scopes:
+                if scope not in token_scopes:
+                    raise APIUnauthorized("Insufficient scope.")
+
+        user = db_user.get_by_mb_id(db_conn, token["sub"], fetch_email=fetch_email)
+    else:
+        user = db_user.get_by_token(db_conn, auth_token, fetch_email=fetch_email)
+
     if user is None:
         raise APIUnauthorized("Invalid authorization token.")
 

@@ -176,7 +176,10 @@ export default function BarDualTone(props: BarDualToneProps) {
     return (Number(tick) % 3) - 1 === 0 ? tick : "";
   };
   return (
-    <div className="stats-full-width-graph user-listening-activity">
+    <div
+      className="stats-full-width-graph user-listening-activity"
+      data-testid="listening-activity-bar"
+    >
       <ResponsiveBar
         data={data}
         indexBy="id"
