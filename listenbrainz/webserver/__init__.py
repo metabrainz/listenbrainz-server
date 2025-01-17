@@ -177,7 +177,7 @@ def create_app(debug=None):
     @app.after_request
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
-    
+
     @app.after_request
     def add_cache_header(response):
         response.cache_control.private = True
