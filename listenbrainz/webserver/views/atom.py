@@ -12,7 +12,7 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     is_valid_uuid,
 )
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, ts_conn, API_PREFIX
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 from data.model.common_stat import StatisticsRange
@@ -881,14 +881,9 @@ def get_cover_art_grid_stats(user_name):
         )
 
     # Generate the data URL for the art
-    data_url = _external_url_for(
-        "art_api_v1.cover_art_grid_stats",
-        user_name=user_name,
-        time_range=range,
-        dimension=dimension,
-        layout=layout,
-        image_size=image_size,
-    )
+    # Using API_URL + API_PREFIX otherwise we link to lb.org/1/art/...
+    # which returns an error message to use api.lb.org/1/art/...
+    data_url = f'{current_app.config["API_URL"]}{API_PREFIX}/art/grid-stats/{user_name}/{range}/{dimension}/{layout}/{image_size}'
 
     this_feed_url = _external_url_for(".get_cover_art_grid_stats", user_name=user_name, range=range)
     user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name, range=range)
@@ -983,13 +978,11 @@ def get_cover_art_custom_stats(user_name):
             f"Image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}."
         )
 
-    data_url = _external_url_for(
-        "art_api_v1.cover_art_custom_stats",
-        custom_name=custom_name,
-        user_name=user_name,
-        time_range=range,
-        image_size=image_size,
-    )
+    # Generate the data URL for the art
+    # Using API_URL + API_PREFIX otherwise we link to lb.org/1/art/...
+    # which returns an error message to use api.lb.org/1/art/...
+    data_url = f'{current_app.config["API_URL"]}{API_PREFIX}/art/{custom_name}/{user_name}/{range}/{image_size}'
+
     this_feed_url = _external_url_for(".get_cover_art_custom_stats", user_name=user_name, range=range)
     user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name, range=range)
     
