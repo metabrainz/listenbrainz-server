@@ -191,6 +191,12 @@ def create_app(debug=None):
     def after_request_callbacks(response):
         return inject_x_rate_headers(response)
 
+    @app.after_request
+    def add_cache_header(response):
+        response.cache_control.private = True
+        response.cache_control.public = False
+        return response
+
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
     from listenbrainz.webserver import utils
