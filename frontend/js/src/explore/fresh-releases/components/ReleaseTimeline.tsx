@@ -3,7 +3,7 @@ import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
-import { isToday } from "date-fns";
+import { startOfDay, format, closestTo, parseISO } from "date-fns";
 import { formatReleaseDate, useMediaQuery } from "../utils";
 import { SortDirection } from "../FreshReleases";
 import { COLOR_LB_BLUE } from "../../../utils/constants";
@@ -28,18 +28,28 @@ function createMarks(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
+
+    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
+    const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
+    const closestDateStr = dates.length
+      ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
+      : recentDateStr;
+
     const filteredDates = Object.keys(releasesPerDate).filter((date) =>
-      isToday(new Date(date))
+      date === closestDateStr
         ? releasesPerDate[date] >= 0
         : releasesPerDate[date] > minReleasesThreshold
     );
 
+    const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
+
     dataArr = filteredDates.map((date) =>
-      isToday(new Date(date)) ? (
+      date === closestDateStr ? (
         <FontAwesomeIcon
           icon={faCalendarCheck}
           size="2xl"
           color={COLOR_LB_BLUE}
+          title={title}
         />
       ) : (
         formatReleaseDate(date)
@@ -119,7 +129,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>({});
+  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>(
+    {}
+  );
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
