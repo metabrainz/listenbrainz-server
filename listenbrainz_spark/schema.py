@@ -3,6 +3,11 @@ from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
 
+BOOKKEEPING_SCHEMA = StructType([
+    StructField('from_date', TimestampType(), nullable=False),
+    StructField('to_date', TimestampType(), nullable=False),
+    StructField('created', TimestampType(), nullable=False),
+])
 
 mlhd_schema = StructType([
     StructField('user_id', StringType(), nullable=False),
