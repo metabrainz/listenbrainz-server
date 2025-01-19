@@ -63,7 +63,7 @@ functions = {
     'similarity.recording.mlhd': listenbrainz_spark.mlhd.similarity.main,
     'similarity.recording': listenbrainz_spark.similarity.recording.main,
     'similarity.artist': listenbrainz_spark.similarity.artist.main,
-    'popularity.all': listenbrainz_spark.popularity.main.main,
+    'popularity.popularity': listenbrainz_spark.popularity.main.main,
     'year_in_music.new_releases_of_top_artists':
         listenbrainz_spark.year_in_music.new_releases_of_top_artists.get_new_releases_of_top_artists,
     'year_in_music.most_listened_year': listenbrainz_spark.year_in_music.most_listened_year.get_most_listened_year,
