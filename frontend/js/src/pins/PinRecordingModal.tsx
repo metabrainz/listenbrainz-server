@@ -198,7 +198,6 @@ export default NiceModal.create(
               </p>
               <div className="form-group">
                 <textarea
-                  disabled={!isCurrentUser}
                   className="form-control"
                   id="blurb-content"
                   placeholder="Let your followers know why you are showcasing this track..."
