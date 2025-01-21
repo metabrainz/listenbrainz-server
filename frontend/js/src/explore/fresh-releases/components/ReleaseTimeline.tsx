@@ -3,7 +3,14 @@ import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
-import { startOfDay, format, closestTo, parseISO } from "date-fns";
+import {
+  startOfDay,
+  format,
+  closestTo,
+  parseISO,
+  differenceInCalendarDays,
+  isEqual,
+} from "date-fns";
 import { formatReleaseDate, useMediaQuery } from "../utils";
 import { SortDirection } from "../FreshReleases";
 import { COLOR_LB_BLUE } from "../../../utils/constants";
@@ -29,19 +36,37 @@ function createMarks(
       (item: FreshReleaseItem) => item.release_date
     );
 
-    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
-    const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
-    const closestDateStr = dates.length
-      ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
-      : recentDateStr;
+    const parsedDates = Object.keys(releasesPerDate).map((d) => parseISO(d));
+    const todaysDate = startOfDay(new Date());
+    const closestDate = closestTo(todaysDate, parsedDates) ?? todaysDate;
+    const closestDateStr = format(closestDate, "yyyy-MM-dd");
+    const title = isEqual(closestDate, todaysDate) ? "Today" : "Nearest Date";
 
-    const filteredDates = Object.keys(releasesPerDate).filter((date) =>
-      date === closestDateStr
-        ? releasesPerDate[date] >= 0
-        : releasesPerDate[date] > minReleasesThreshold
+    const filteredDates = Object.keys(releasesPerDate).filter(
+      (date, idx, arr) => {
+        if (date === closestDateStr) {
+          // Always keep the closest-to-now date to show a 'today' calendar icon
+          return true;
+        }
+        if (releasesPerDate[date] > minReleasesThreshold) {
+          // multiple releases that day, keep this date in the timeline
+          return true;
+        }
+        if (idx === 0) {
+          // keep the first date
+          return true;
+        }
+        const daysSinceLastDate = differenceInCalendarDays(
+          parseISO(date),
+          parseISO(arr[idx - 1])
+        );
+        if (daysSinceLastDate >= 7) {
+          // A week since the last date, show this one to keep the timeline useful
+          return true;
+        }
+        return false;
+      }
     );
-
-    const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
 
     dataArr = filteredDates.map((date) =>
       date === closestDateStr ? (
@@ -128,13 +153,15 @@ function createMarks(
 export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
-  const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>({});
+  const [currentScrollValue, setCurrentScrollValue] = React.useState<number | number[]>();
+  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>(
+    {}
+  );
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
   const changeHandler = React.useCallback((percent: number | number[]) => {
-    setCurrentValue(percent);
+    setCurrentScrollValue(percent);
     const element: HTMLElement | null = document.getElementById(
       "release-card-grids"
     )!;
@@ -156,7 +183,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
       }
       const scrollPos =
         ((window.scrollY - container.offsetTop) / container.scrollHeight) * 100;
-      setCurrentValue(scrollPos);
+      setCurrentScrollValue(scrollPos);
     }, 500);
 
     window.addEventListener("scroll", handleScroll);
@@ -174,7 +201,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
         reverse={!screenMd}
         included={false}
         marks={marks}
-        value={currentValue}
+        value={currentScrollValue}
         onChange={changeHandler}
       />
     </div>
