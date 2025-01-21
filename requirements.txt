@@ -18,7 +18,7 @@ xmltodict==0.14.2
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v2.9.1
 spotipy==2.25.0
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@830ecb2b2120acbd5deed2dab4587784c7be04b6
-troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v2025.01.10.0
+troi@git+https://github.com/metabrainz/troi-recommendation-playground.git@v2025.01.16.0
 PyYAML==6.0.2
 eventlet==0.35.2
 # eventlet fails to patch dnspython >= 2.3 https://github.com/eventlet/eventlet/issues/781
