@@ -1,6 +1,6 @@
 from abc import ABC
 from datetime import datetime
-
+from time import sleep
 from typing import List, Set
 import uuid
 
@@ -204,22 +204,30 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
         mb_uri = config.MBID_MAPPING_DATABASE_URI
         unlogged = True
 
-    with psycopg2.connect(mb_uri) as mb_conn:
-        lb_conn = None
-        if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
-            lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+    for attempt in range(3):
+        try:
+            with psycopg2.connect(mb_uri) as mb_conn:
+                lb_conn = None
+                if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
+                    lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
-        for table_cls in required_tables:
-            table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
+                for table_cls in required_tables:
+                    table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
 
-            if not table.table_exists():
-                log(f"{table.table_name} table does not exist, first create the table normally")
-                return
+                    if not table.table_exists():
+                        log(f"{table.table_name} table does not exist, first create the table normally")
+                        return
 
-        new_timestamp = datetime.now()
-        cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
-        cache.run()
-        update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
+                new_timestamp = datetime.now()
+                cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
+                cache.run()
+                update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
+            break
+        except psycopg2.OperationalError:
+            log("DB connection failed. Retrying.")
+            sleep(5)
+            continue
+
     log("exiting create_metadata_cache")
 
 
