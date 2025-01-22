@@ -91,10 +91,10 @@ class PopularityMessageCreator(MessageCreator):
         self.is_mlhd = is_mlhd
 
     def create_start_message(self):
-        yield {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_start"}
+        return {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_start"}
 
     def create_end_message(self):
-        yield {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_end"}
+        return {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_end"}
 
     def parse_row(self, row: Dict) -> Optional[Dict]:
         return row
@@ -103,10 +103,9 @@ class PopularityMessageCreator(MessageCreator):
         itr = results.toLocalIterator()
         for chunk in chunked(itr, ROWS_PER_MESSAGE):
             multiple_stats = [row.asDict(recursive=True) for row in chunk]
-            message = {
+            yield {
                 "type": self.message_type,
                 "is_mlhd": self.is_mlhd,
                 "entity": self.entity,
                 "data": multiple_stats,
             }
-            yield message
