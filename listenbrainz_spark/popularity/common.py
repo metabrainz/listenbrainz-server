@@ -103,9 +103,10 @@ class PopularityMessageCreator(MessageCreator):
         itr = results.toLocalIterator()
         for chunk in chunked(itr, ROWS_PER_MESSAGE):
             multiple_stats = [row.asDict(recursive=True) for row in chunk]
-            yield {
+            message = {
                 "type": self.message_type,
                 "is_mlhd": self.is_mlhd,
                 "entity": self.entity,
                 "data": multiple_stats,
             }
+            yield message
