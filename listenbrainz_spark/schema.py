@@ -3,6 +3,10 @@ from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
 
+# Keeping track of the from_date and the to_date used to create the partial aggressive from full dump listens.
+# Assuming dumps are imported twice a month, the aggregates for weekly stats need to be refreshed (generated from
+# different range of listens in the full dump) sooner. The existing_aggrrgate_usable method reads this from/to date
+# from bookkeeping path and compares it with current day's request to determine if the aggregate needs to be recreated.
 BOOKKEEPING_SCHEMA = StructType([
     StructField('from_date', TimestampType(), nullable=False),
     StructField('to_date', TimestampType(), nullable=False),
