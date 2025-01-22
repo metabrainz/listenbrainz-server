@@ -116,7 +116,7 @@ class TopPerArtistPopularityProvider(Provider):
 
     def get_aggregate_query(self, table: str, cache_tables: List[str]) -> str:
         if self.entity == "release_group":
-            return get_release_group_popularity_query(table, cache_tables[0])
+            return get_release_group_popularity_per_artist_query(table, cache_tables[0])
         return get_popularity_per_artist_query(self.entity, table)
 
     def get_stats_query(self, final_aggregate: str) -> str:
