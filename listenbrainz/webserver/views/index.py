@@ -119,8 +119,8 @@ def recent_listens():
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:
         user_count = 'Unknown'
-    
-    #Get recent donors in production environment only.
+
+    # Get recent donors in production environment only.
     if current_app.config["SQLALCHEMY_METABRAINZ_URI"]:
         recent_donors, _ = get_recent_donors(meb_conn, db_conn, 25, 0)
     else:
