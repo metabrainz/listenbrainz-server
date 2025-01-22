@@ -1,6 +1,6 @@
 from typing import Iterator, Dict
 
-from peewee import chunked
+from more_itertools import chunked
 from pyspark.sql import DataFrame
 from typing import Optional
 
