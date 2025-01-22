@@ -6,6 +6,7 @@ from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityP
 
 class ReleaseSitewideEntity(SitewideEntityProvider):
 
+    @property
     def entity(self):
         return "releases"
 

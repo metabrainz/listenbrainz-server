@@ -6,6 +6,7 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntityProvider
 
 class ReleaseGroupUserEntity(UserEntityProvider):
 
+    @property
     def entity(self):
         return "release_groups"
 

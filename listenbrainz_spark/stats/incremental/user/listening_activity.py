@@ -20,6 +20,7 @@ class ListeningActivityUserEntity(UserProvider):
         self.step, self.date_format, self.spark_date_format = selector.step, selector.date_format, selector.spark_date_format
         create_time_range_df(self.from_date, self.to_date, self.step, self.date_format, self.spark_date_format)
 
+    @property
     def entity(self):
         return "listening_activity"
 

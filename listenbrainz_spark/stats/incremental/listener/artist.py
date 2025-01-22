@@ -7,6 +7,7 @@ from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerP
 class ArtistEntityListener(EntityListenerProvider):
     """ See base class IncrementalStats for documentation. """
 
+    @property
     def entity(self):
         return "artists"
 

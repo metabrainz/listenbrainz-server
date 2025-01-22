@@ -6,6 +6,7 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntityProvider
 
 class RecordingUserEntity(UserEntityProvider):
 
+    @property
     def entity(self):
         return "recordings"
 
