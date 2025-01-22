@@ -12,7 +12,7 @@ from listenbrainz_spark.utils import get_latest_listen_ts
 logger = logging.getLogger(__name__)
 
 
-def main(type, entity, is_mlhd):
+def main(type, entity, mlhd):
     """ Generate popularity data for MLHD data. """
     start = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
     end = get_latest_listen_ts()
@@ -24,9 +24,9 @@ def main(type, entity, is_mlhd):
         provider = PopularityProvider(selector, entity)
     else:
         provider = TopPerArtistPopularityProvider(selector, entity)
-    message_creator = PopularityMessageCreator(entity=entity, message_type=type, is_mlhd=is_mlhd)
+    message_creator = PopularityMessageCreator(entity=entity, message_type=type, is_mlhd=mlhd)
 
-    if is_mlhd:
+    if mlhd:
         aggregator = MlhdAggregator(provider, message_creator)
     else:
         aggregator = Aggregator(provider, message_creator)
