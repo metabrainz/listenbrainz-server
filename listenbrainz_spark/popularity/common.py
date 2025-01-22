@@ -2,6 +2,7 @@ from typing import Iterator, Dict
 
 from peewee import chunked
 from pyspark.sql import DataFrame
+from typing import Optional
 
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 
@@ -95,7 +96,7 @@ class PopularityMessageCreator(MessageCreator):
     def create_end_message(self):
         yield {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_end"}
 
-    def parse_row(self, row: Dict) -> Dict | None:
+    def parse_row(self, row: Dict) -> Optional[Dict]:
         return row
 
     def create_messages(self, results: DataFrame) -> Iterator[Dict]:
