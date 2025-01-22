@@ -91,10 +91,10 @@ class PopularityMessageCreator(MessageCreator):
         self.is_mlhd = is_mlhd
 
     def create_start_message(self):
-        return {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_start"}
+        return {"is_mlhd": self.is_mlhd, "entity": self.entity, "type": self.message_type + "_start"}
 
     def create_end_message(self):
-        return {"is_mlhd": self.is_mlhd, "entity": self.entity, "message_type": self.message_type + "_end"}
+        return {"is_mlhd": self.is_mlhd, "entity": self.entity, "type": self.message_type + "_end"}
 
     def parse_row(self, row: Dict) -> Optional[Dict]:
         return row
