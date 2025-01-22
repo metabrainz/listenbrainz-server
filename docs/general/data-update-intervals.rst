@@ -12,7 +12,7 @@ Updating statistics for new listens			    Daily [#f2]_
 Removing deleted listens from stats			    On the 2nd and 16th of each month
 Full dumps						                      1st and 15th of each month
 Incremental dumps					                  Daily
-Similarity dataset					                Sunday
+Artist and track similarity					        Every Sunday
 Link listens						                    Monday morning at 2AM (UTC)
 Weekly playlists						                Monday morning, based on the user's timezone setting
 Daily playlists [#f3]_						          Every morning, based on the user's timezone setting
