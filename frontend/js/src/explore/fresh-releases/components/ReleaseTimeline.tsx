@@ -35,14 +35,14 @@ function createMarks(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
-
-    const parsedDates = Object.keys(releasesPerDate).map((d) => parseISO(d));
+    const releasesperDateKeys = Object.keys(releasesPerDate);
+    const parsedDates = releasesperDateKeys.map((d) => parseISO(d));
     const todaysDate = startOfDay(new Date());
     const closestDate = closestTo(todaysDate, parsedDates) ?? todaysDate;
     const closestDateStr = format(closestDate, "yyyy-MM-dd");
     const title = isEqual(closestDate, todaysDate) ? "Today" : "Nearest Date";
 
-    const filteredDates = Object.keys(releasesPerDate).filter(
+    const filteredDates = releasesperDateKeys.filter(
       (date, idx, arr) => {
         if (date === closestDateStr) {
           // Always keep the closest-to-now date to show a 'today' calendar icon
@@ -67,6 +67,11 @@ function createMarks(
         return false;
       }
     );
+    // Used to calculate the percentage on the timeline for dates placement
+    const filteredReleasesTotal = filteredDates.reduce(
+      (acc, date) => acc + releasesPerDate[date],
+      0
+    );
 
     dataArr = filteredDates.map((date) =>
       date === closestDateStr ? (
@@ -81,7 +86,7 @@ function createMarks(
       )
     );
     percentArr = filteredDates
-      .map((item) => (releasesPerDate[item] / releases.length) * 100)
+      .map((item) => (releasesPerDate[item] / filteredReleasesTotal) * 100)
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
