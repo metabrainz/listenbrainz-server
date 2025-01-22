@@ -21,6 +21,7 @@ class DailyActivityUserEntity(UserProvider):
         super().__init__(selector)
         self.setup_time_range()
 
+    @property
     def entity(self):
         return "daily_activity"
 

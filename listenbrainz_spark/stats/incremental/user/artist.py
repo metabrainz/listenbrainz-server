@@ -11,6 +11,7 @@ class ArtistUserEntity(UserEntityProvider):
     def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
         super().__init__(selector=selector, top_entity_limit=top_entity_limit)
 
+    @property
     def entity(self):
         return "artists"
 
