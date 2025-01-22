@@ -604,14 +604,12 @@ def create_mb_metadata_cache(use_lb_conn: bool):
         Arguments:
             use_lb_conn: whether to use LB conn or not
     """
-    log("entering create_mb_metadata_cache")
     create_metadata_cache(
         MusicBrainzMetadataCache,
         MB_METADATA_CACHE_TIMESTAMP_KEY,
         [CanonicalRecordingReleaseRedirect],
         use_lb_conn
     )
-    log("exiting create_mb_metadata_cache")
 
 
 def incremental_update_mb_metadata_cache(use_lb_conn: bool):
@@ -633,6 +631,7 @@ def cleanup_mbid_mapping_table():
                  WHERE mbc.recording_mbid = mm.recording_mbid 
                )
     """
+    log("cleanup_mbid_mapping_table running")
     with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
         lb_curs.execute(query)
         log(f"mbid mapping: invalidated {lb_curs.rowcount} rows")

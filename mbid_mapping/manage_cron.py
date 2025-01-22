@@ -35,12 +35,9 @@ def cron(slug):
             sentry_sdk.init(**config.LOG_SENTRY)
             check_in_id = capture_checkin(monitor_slug=slug, status=MonitorStatus.IN_PROGRESS)
             try:
-                log("cron decorator enter")
                 func(*args, **kwargs)
-                log("cron decorator exit")
                 capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
             except Exception:
-                log(format_exc()) 
                 capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.ERROR)
                 sys.exit(-1)
 
