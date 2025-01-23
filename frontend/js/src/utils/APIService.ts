@@ -1333,6 +1333,35 @@ export default class APIService {
     return response.status;
   };
 
+  thankFeedEvent = async (
+    eventType: string,
+    username: string,
+    userToken: string,
+    event_id: number,
+    blurb_content: string
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/timeline-event/create/thanks`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        metadata: {
+          original_event_type: eventType,
+          original_event_id: event_id,
+          blurb_content,
+        },
+      }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   lookupRecordingMetadata = async (
     trackName: string,
     artistName: string,

@@ -6,6 +6,7 @@ import {
   faComments,
   faEye,
   faEyeSlash,
+  faHandshake,
   faHeadphones,
   faHeart,
   faPaperPlane,
@@ -62,6 +63,7 @@ export enum EventType {
   BLOCK_FOLLOW = "block_follow",
   NOTIFICATION = "notification",
   REVIEW = "critiquebrainz_review",
+  THANKS = "thanks",
 }
 
 export type UserFeedPageProps = {
@@ -86,7 +88,8 @@ function isEventListenable(event?: TimelineEvent): boolean {
     event_type === EventType.LIKE ||
     event_type === EventType.LISTEN ||
     event_type === EventType.REVIEW ||
-    event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
+    event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
+    event_type === EventType.THANKS
   );
 }
 
@@ -112,6 +115,8 @@ function getEventTypeIcon(eventType: EventTypeT) {
       return faComments;
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return faPaperPlane;
+    case EventType.THANKS:
+      return faHandshake;
     default:
       return faQuestion;
   }
@@ -148,6 +153,8 @@ function getEventTypePhrase(event: TimelineEvent): string {
     }
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return "personally recommended a track";
+    case EventType.THANKS:
+      return `thanked a ${event.event_type}`;
     default:
       return "";
   }
@@ -257,6 +264,33 @@ export default function UserFeedPage() {
     },
     [APIService, currentUser]
   );
+
+  const thankFeedEvent = React.useCallback(
+    async (event: TimelineEvent) => {
+      const { thankFeedEvent } = APIService;
+      try {
+        const status = await thankFeedEvent(
+          event.event_type,
+          currentUser.name,
+          currentUser.auth_token as string,
+          event.id!,
+          event.metadata?.blurb_content
+        );
+
+        if (status === 200) {
+          return event;
+        }
+      } catch (error) {
+        toast.error(
+          <ToastMsg title="Could not thank event" message={error.toString()} />,
+          { toastId: "hide-error" }
+        );
+      }
+      return undefined;
+    },
+    [APIService, currentUser]
+  );
+
   // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
@@ -411,29 +445,53 @@ export default function UserFeedPage() {
     ) {
       if (event.hidden) {
         return (
+          <>
+            <ListenControl
+              title="Thank Event"
+              text=""
+              icon={faHandshake}
+              buttonClassName="btn btn-link btn-xs"
+              // eslint-disable-next-line react/jsx-no-bind
+              action={() => {
+                thankFeedEvent(event);
+              }}
+            />
+            <ListenControl
+              title="Unhide Event"
+              text=""
+              icon={faEye}
+              buttonClassName="btn btn-link btn-xs"
+              // eslint-disable-next-line react/jsx-no-bind
+              action={() => {
+                hideEventMutation(event);
+              }}
+            />
+          </>
+        );
+      }
+      return (
+        <>
           <ListenControl
-            title="Unhide Event"
+            title="Thank Event"
             text=""
-            icon={faEye}
+            icon={faHandshake}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              thankFeedEvent(event);
+            }}
+          />
+          <ListenControl
+            title="Hide Event"
+            text=""
+            icon={faEyeSlash}
             buttonClassName="btn btn-link btn-xs"
             // eslint-disable-next-line react/jsx-no-bind
             action={() => {
               hideEventMutation(event);
             }}
           />
-        );
-      }
-      return (
-        <ListenControl
-          title="Hide Event"
-          text=""
-          icon={faEyeSlash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            hideEventMutation(event);
-          }}
-        />
+        </>
       );
     }
     return null;
