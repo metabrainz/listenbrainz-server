@@ -120,7 +120,11 @@ def recent_listens():
     except DatabaseException as e:
         user_count = 'Unknown'
 
-    recent_donors, _ = get_recent_donors(meb_conn, db_conn, 25, 0)
+    # Get recent donors in production environment only.
+    if current_app.config["SQLALCHEMY_METABRAINZ_URI"]:
+        recent_donors, _ = get_recent_donors(meb_conn, db_conn, 25, 0)
+    else:
+        recent_donors = []
 
     # Get MusicBrainz IDs for donors who are ListenBrainz users
     musicbrainz_ids = [donor["musicbrainz_id"]
