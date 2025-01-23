@@ -100,7 +100,7 @@ class TopPerArtistPopularityProvider(Provider):
             SELECT *
               FROM {existing_aggregate} ea
              WHERE EXISTS(SELECT 1
-                            FROM incremental_users iu
+                            FROM incremental_artists iu
                            WHERE iu.{entity_id} = ea.{entity_id}
                              AND iu.artist_mbid = ea.artist_mbid
              )
