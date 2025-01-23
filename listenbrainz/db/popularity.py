@@ -10,6 +10,7 @@ from listenbrainz.spark.spark_dataset import DatabaseDataset
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
 
 
+# todo: distinguish between full and incremental rebuild
 class PopularityDataset(DatabaseDataset):
     """ Dataset class for artists, recordings and releases with popularity info (listen count and unique listener count)
      from MLHD data """
@@ -36,7 +37,13 @@ class PopularityDataset(DatabaseDataset):
         """
 
     def get_inserts(self, message):
-        query = f"INSERT INTO {{table}} ({self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
+        if message["only_inc"]:
+            suffix = None
+        else:
+            suffix = "tmp"
+        table_name = self._get_table_name(suffix=suffix)
+        query = SQL("INSERT INTO {table} ({entity_mbid}, total_listen_count, total_user_count) VALUES %s") \
+            .format(table=Identifier(table_name), entity_mbid=Identifier(self.entity_mbid))
         values = [(r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
@@ -79,7 +86,13 @@ class PopularityTopDataset(DatabaseDataset):
         """
 
     def get_inserts(self, message):
-        query = f"INSERT INTO {{table}} (artist_mbid, {self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
+        if message["only_inc"]:
+            suffix = None
+        else:
+            suffix = "tmp"
+        table_name = self._get_table_name(suffix=suffix)
+        query = SQL("INSERT INTO {table} (artist_mbid, {entity_mbid}, total_listen_count, total_user_count) VALUES %s") \
+            .format(table=Identifier(table_name), entity_mbid=Identifier(self.entity_mbid))
         values = [(r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
