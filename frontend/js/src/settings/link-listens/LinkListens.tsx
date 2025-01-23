@@ -6,6 +6,7 @@ import {
   faLink,
   faQuestionCircle,
   faTrashAlt,
+  faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -17,6 +18,7 @@ import { groupBy, isNil, isNull, isString, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import ReactTooltip from "react-tooltip";
+import Fuse from "fuse.js";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
@@ -100,6 +102,41 @@ export default function LinkListensPage() {
   const [unlinkedListens, setUnlinkedListens] = React.useState<
     Array<UnlinkedListens>
   >(unlinkedListensProps);
+  const [filterType, setFilterType] = React.useState("album"); // Default filter type
+  const [searchQuery, setSearchQuery] = React.useState(""); // To store the search input
+  const handleSearch = () => {
+    if (filterType === "album") {
+      const fuzzysearch = new Fuse(unlinkedListensProps, {
+        keys: ["release_name"],
+      });
+      const filtered = fuzzysearch
+        .search(searchQuery)
+        .map((result) => result.item);
+      setUnlinkedListens(filtered);
+    } else if (filterType === "artist") {
+      const fuzzysearch = new Fuse(unlinkedListensProps, {
+        keys: ["artist_name"],
+      });
+      const albumsByArtist = fuzzysearch
+        .search(searchQuery)
+        .map((result) => result.item.release_name);
+      const filtered = unlinkedListensProps.filter((listen) =>
+        albumsByArtist.includes(listen.release_name)
+      );
+      setUnlinkedListens(filtered);
+    } else if (filterType === "song") {
+      const fuzzysearch = new Fuse(unlinkedListensProps, {
+        keys: ["recording_name"],
+      });
+      const albumsByArtist = fuzzysearch
+        .search(searchQuery)
+        .map((result) => result.item.release_name);
+      const filtered = unlinkedListensProps.filter((listen) =>
+        albumsByArtist.includes(listen.release_name)
+      );
+      setUnlinkedListens(filtered);
+    }
+  };
   const unsortedGroupedUnlinkedListens = groupBy(
     unlinkedListens,
     "release_name"
@@ -282,6 +319,35 @@ export default function LinkListensPage() {
           Updates every Monday at 2AM (UTC). Last updated{" "}
           {lastUpdatedHumanReadable}
         </p>
+      )}
+      {unlinkedListensProps.length > 0 && (
+        <div className="filter-div">
+          <div className="dropdown">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="filter-btn btn btn-info"
+            >
+              <option value="album">Album</option>
+              <option value="artist">Artist</option>
+              <option value="song">Song</option>
+            </select>
+          </div>
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="filter-search"
+          />
+          <button
+            onClick={handleSearch}
+            className="filter-btn btn btn-info"
+            type="submit"
+          >
+            <FontAwesomeIcon icon={faSearch} />
+          </button>
+        </div>
       )}
       <br />
       <div>
