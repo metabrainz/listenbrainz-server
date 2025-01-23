@@ -42,7 +42,7 @@ class PopularityDataset(DatabaseDataset):
             suffix = "tmp"
         table_name = self._get_table_name(suffix=suffix)
         query = SQL("INSERT INTO {table} ({entity_mbid}, total_listen_count, total_user_count) VALUES %s") \
-            .format(table=Identifier(table_name), entity_mbid=Identifier(self.entity_mbid))
+            .format(table=table_name, entity_mbid=Identifier(self.entity_mbid))
         values = [(r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
@@ -91,7 +91,7 @@ class PopularityTopDataset(DatabaseDataset):
             suffix = "tmp"
         table_name = self._get_table_name(suffix=suffix)
         query = SQL("INSERT INTO {table} (artist_mbid, {entity_mbid}, total_listen_count, total_user_count) VALUES %s") \
-            .format(table=Identifier(table_name), entity_mbid=Identifier(self.entity_mbid))
+            .format(table=table_name, entity_mbid=Identifier(self.entity_mbid))
         values = [(r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
