@@ -308,6 +308,7 @@ def user_feed_listens_following(user_name: str):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     '''
+    
 
     user = validate_auth_header()
     if user_name != user['musicbrainz_id']:
