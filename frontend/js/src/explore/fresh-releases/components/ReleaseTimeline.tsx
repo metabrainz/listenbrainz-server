@@ -55,11 +55,18 @@ function createMarks(
         formatReleaseDate(date)
       )
     );
-    percentArr = filteredDates
-      .map((item) => (releasesPerDate[item] / releases.length) * 100)
-      .map((_, index, arr) =>
-        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-      );
+    const totalSum = Object.values(releasesPerDate).reduce(
+      (acc, value) => acc + value,
+      0
+    );
+    let cumulativeSum = 0;
+    percentArr = filteredDates.map(
+      (item) =>
+        (((cumulativeSum += releasesPerDate[item] || 0) -
+          releasesPerDate[item]) *
+          100) /
+        totalSum
+    );
   } else if (order === "artist_credit_name") {
     const artistInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
       item.artist_credit_name.charAt(0).toUpperCase()
@@ -129,7 +136,9 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>({});
+  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>(
+    {}
+  );
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 
