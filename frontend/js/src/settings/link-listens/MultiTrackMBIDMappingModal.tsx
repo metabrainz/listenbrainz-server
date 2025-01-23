@@ -4,11 +4,13 @@ import {
   faInfoCircle,
   faQuestionCircle,
   faTimesCircle,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
+import { useNavigate } from "react-router-dom";
 import Fuse from "fuse.js";
 import { omit, size, uniq } from "lodash";
 import { isValid } from "date-fns";
@@ -42,6 +44,7 @@ const lucineSpecialCharRegex = /[+\-!(){}[\]^"~*?:\\/]|(?:&{2})|(?:\|{2})/gm;
 export default NiceModal.create(
   ({ unlinkedListens, releaseName }: MultiTrackMBIDMappingModalProps) => {
     const modal = useModal();
+    const navigate = useNavigate(); // React Router navigation hook
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
     const { lookupMBRelease, submitMBIDMapping } = APIService;
     const { auth_token } = currentUser;
@@ -110,6 +113,11 @@ export default NiceModal.create(
       },
       []
     );
+
+    const handleLinkClick = () => {
+      closeModal();
+      navigate("/settings/link-listens/");
+    };
 
     const submitMBIDMappingCallback = React.useCallback(
       async (event: React.FormEvent) => {
@@ -580,6 +588,22 @@ export default NiceModal.create(
                   name can result in worse matching. Tick this checkbox if you
                   have a poor matching rate.
                 </Tooltip>
+              </div>
+              <div
+                className="text-center"
+                style={{ marginTop: "25px" }}
+                title="Organize Your Unlinked Listens with MusicBrainz"
+              >
+                <button
+                  className="btn btn-success btn-rounded"
+                  onClick={handleLinkClick}
+                  data-tip
+                  data-for="link-all-tooltip"
+                  style={{ textDecoration: "none" }}
+                >
+                  <FontAwesomeIcon icon={faLink} size="lg" />
+                  {" Link other Listens"}
+                </button>
               </div>
             </div>
             <div className="modal-footer">

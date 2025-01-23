@@ -6,11 +6,13 @@ import {
   faExchangeAlt,
   faInfoCircle,
   faQuestionCircle,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
+import { useNavigate } from "react-router-dom";
 import ListenCard from "./ListenCard";
 import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -42,6 +44,7 @@ function getListenFromSelectedRecording(
 
 export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const modal = useModal();
+  const navigate = useNavigate(); // React Router navigation hook
   const { resolve, visible } = modal;
   const [copyTextClickCounter, setCopyTextClickCounter] = React.useState(0);
   const [selectedRecording, setSelectedRecording] = React.useState<
@@ -81,6 +84,11 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     },
     []
   );
+
+  const handleLinkClick = () => {
+    closeModal();
+    navigate("/settings/link-listens/");
+  };
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const { auth_token } = currentUser;
@@ -284,6 +292,22 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   />
                 </div>
               )}
+              <div
+                className="text-center"
+                style={{ marginTop: "25px" }}
+                title="Organize Your Unlinked Listens with MusicBrainz"
+              >
+                <button
+                  className="btn btn-success btn-rounded"
+                  onClick={handleLinkClick}
+                  data-tip
+                  data-for="link-all-tooltip"
+                  style={{ textDecoration: "none" }}
+                >
+                  <FontAwesomeIcon icon={faLink} size="lg" />
+                  {" Link other Listens"}
+                </button>
+              </div>
             </div>
             <div className="modal-footer">
               <button
