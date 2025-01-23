@@ -7,7 +7,7 @@ from typing import Optional
 from listenbrainz_spark.stats.incremental.aggregator import Aggregator
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 
-ROWS_PER_MESSAGE = 10000
+ROWS_PER_MESSAGE = 100
 
 
 def get_release_group_popularity_query(table, rel_cache_table):

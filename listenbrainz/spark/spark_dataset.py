@@ -8,7 +8,7 @@ from urllib.error import HTTPError
 from flask import current_app
 from more_itertools import chunked
 from psycopg2.extras import execute_values
-from psycopg2.sql import Identifier, SQL, Literal
+from psycopg2.sql import Identifier, SQL, Literal, Composable
 from sentry_sdk import start_transaction
 
 from listenbrainz.db import couchdb, timescale
@@ -256,7 +256,9 @@ class DatabaseDataset(SparkDataset, ABC):
         query = SQL("DROP TABLE IF EXISTS {table}").format(table=tmp_table)
         cursor.execute(query)
 
-        query = SQL(self.get_table()).format(table=tmp_table)
+        query = self.get_table()
+        if not isinstance(query, Composable):
+            query = SQL(query).format(table=tmp_table)
         cursor.execute(query)
 
     def create_indices(self, cursor):
@@ -289,6 +291,7 @@ class DatabaseDataset(SparkDataset, ABC):
         try:
             with conn.cursor() as curs:
                 self.create_table(curs)
+                self.create_indices(curs)
             conn.commit()
         finally:
             conn.close()
@@ -297,7 +300,6 @@ class DatabaseDataset(SparkDataset, ABC):
         conn = timescale.engine.raw_connection()
         try:
             with conn.cursor() as curs:
-                self.create_indices(curs)
                 self.rotate_tables(curs)
                 self.run_post_processing(curs, message)
             conn.commit()
@@ -306,8 +308,10 @@ class DatabaseDataset(SparkDataset, ABC):
 
     def handle_insert(self, message):
         query, template, values = self.get_inserts(message)
-        tmp_table = self._get_table_name("tmp")
-        query = SQL(query).format(table=tmp_table)
+
+        if not isinstance(query, Composable):
+            tmp_table = self._get_table_name("tmp")
+            query = SQL(query).format(table=tmp_table)
 
         if isinstance(template, str):
             template = SQL(template)
