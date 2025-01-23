@@ -28,11 +28,11 @@ def get_release_group_popularity_per_artist_query(table, rel_cache_table):
     """ Get the query to generate release group popularity per artists stats using both MLHD+ and listens data """
     return f"""
         WITH intermediate AS (
-            SELECT lower(explode(artist_credit_mbids)) AS artist_mbid
+            SELECT explode(artist_credit_mbids) AS artist_mbid
                  , lower(release_mbid) AS release_mbid
                  , user_id
               FROM {table}
-        )   SELECT artist_mbid
+        )   SELECT lower(artist_mbid) AS artist_mbid
                  , rel.release_group_mbid
                  , count(*) AS total_listen_count
                  , count(DISTINCT user_id) AS total_user_count
@@ -41,7 +41,7 @@ def get_release_group_popularity_per_artist_query(table, rel_cache_table):
                 ON i.release_mbid = rel.release_mbid
              WHERE artist_mbid IS NOT NULL
                AND rel.release_group_mbid != ""
-          GROUP BY artist_mbid
+          GROUP BY lower(artist_mbid)
                  , rel.release_group_mbid
     """
 
@@ -63,14 +63,16 @@ def get_popularity_query(entity, table):
 def get_popularity_per_artist_query(entity, table):
     """ Get the query to generate top popular entities per artists stats from MLHD+ and listens data """
     if entity == "artist":
-        select_clause = "artist_mbid"
-        explode_clause = "lower(explode(artist_credit_mbids)) AS artist_mbid"
+        select_clause = "lower(artist_mbid) AS artist_mbid"
+        explode_clause = "explode(artist_credit_mbids) AS artist_mbid"
         where_clause = "artist_mbid IS NOT NULL"
+        group_clause = "lower(artist_mbid)"
     else:
         entity_mbid = f"lower({entity}_mbid)"
-        select_clause = f"artist_mbid, {entity_mbid}"
-        explode_clause = f"lower(explode(artist_credit_mbids)) AS artist_mbid, lower({entity_mbid}) AS {entity_mbid}"
+        select_clause = f"lower(artist_mbid) AS artist_mbid, {entity_mbid}"
+        explode_clause = f"explode(artist_credit_mbids) AS artist_mbid, lower({entity_mbid}) AS {entity_mbid}"
         where_clause = f"artist_mbid IS NOT NULL AND {entity_mbid} IS NOT NULL AND {entity_mbid} != ''"
+        group_clause = f"lower(artist_mbid), {entity_mbid}"
     return f"""
         WITH intermediate AS (
             SELECT {explode_clause}
@@ -81,7 +83,7 @@ def get_popularity_per_artist_query(entity, table):
                  , count(DISTINCT user_id) AS total_user_count
               FROM intermediate
              WHERE {where_clause}
-          GROUP BY {select_clause}
+          GROUP BY {group_clause}
     """
 
 
