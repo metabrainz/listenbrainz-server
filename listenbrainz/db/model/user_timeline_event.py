@@ -35,6 +35,7 @@ class UserTimelineEventType(Enum):
     RECORDING_PIN = 'recording_pin'
     CRITIQUEBRAINZ_REVIEW = 'critiquebrainz_review'
     PERSONAL_RECORDING_RECOMMENDATION = 'personal_recording_recommendation'
+    THANKS = 'thanks'
 
 
 class RecordingRecommendationMetadata(MsidMbidModel):
@@ -57,6 +58,13 @@ class PersonalRecordingRecommendationMetadata(MsidMbidModel):
 class NotificationMetadata(BaseModel):
     creator: constr(min_length=1)
     message: constr(min_length=1)
+
+
+class ThanksMetadata(MsidMbidModel):
+    original_event_id: NonNegativeInt
+    original_event_type: UserTimelineEventType
+    blurb_content: Optional[str]
+
 
 
 UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
