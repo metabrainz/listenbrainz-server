@@ -668,7 +668,7 @@ def create_thanks_event(user_name):
         data = orjson.loads(request.get_data())
     except (ValueError, KeyError) as e:
         raise APIBadRequest(f"Invalid JSON: {str(e)}")
-    
+
     if 'metadata' not in data:
         raise APIBadRequest("JSON document must contain metadata", data)
 
