@@ -392,7 +392,7 @@ def user_feed_listens_similar(user_name: str):
             similar_users, min_ts, max_ts, count)
 
     # Constructing an id-similarity map
-    id_similarity_map = {user["musicbrainz_id"]                         : user["similarity"] for user in similar_users}
+    id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
@@ -451,7 +451,8 @@ def delete_feed_events(user_name):
         event = orjson.loads(request.get_data())
 
         if event["event_type"] in [UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                                   UserTimelineEventType.NOTIFICATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
+                                   UserTimelineEventType.NOTIFICATION.value,
+                                   UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             try:
                 event_deleted = db_user_timeline_event.delete_user_timeline_event(
                     db_conn, event["id"], user["id"])
@@ -716,7 +717,8 @@ def create_thanks_event(user_name):
         event_type = metadata["event_type"]
 
         if event_type in [
-                UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
+                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             result = db_user_timeline_event.get_user_timeline_event_by_id(
                 db_conn, row_id)
         elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
@@ -836,7 +838,8 @@ def get_feed_events_for_user(
 
     for hidden_event in hidden_events:
         if hidden_event.event_type.value in [
-                UserTimelineEventType.RECORDING_RECOMMENDATION.value, UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
+                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
+                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             hidden_events_recommendation[hidden_event.event_id] = hidden_event
         else:
             hidden_events_pin[hidden_event.event_id] = hidden_event
