@@ -18,7 +18,7 @@ def get_release_group_popularity_query(table, rel_cache_table):
              , count(DISTINCT user_id) AS total_user_count
           FROM {table} t
           JOIN {rel_cache_table} rel
-            ON t.release_mbid = rel.release_mbid
+            ON lower(t.release_mbid) = rel.release_mbid
            AND rel.release_group_mbid != ""
       GROUP BY rel.release_group_mbid
     """
@@ -28,8 +28,8 @@ def get_release_group_popularity_per_artist_query(table, rel_cache_table):
     """ Get the query to generate release group popularity per artists stats using both MLHD+ and listens data """
     return f"""
         WITH intermediate AS (
-            SELECT explode(artist_credit_mbids) AS artist_mbid
-                 , release_mbid
+            SELECT lower(explode(artist_credit_mbids)) AS artist_mbid
+                 , lower(release_mbid) AS release_mbid
                  , user_id
               FROM {table}
         )   SELECT artist_mbid
@@ -50,13 +50,13 @@ def get_popularity_query(entity, table):
     """ Get the query to generate popularity stats for the given entity using both MLHD+ and listens data """
     entity_mbid = f"{entity}_mbid"
     return f"""
-        SELECT {entity_mbid}
+        SELECT lower({entity_mbid}) AS {entity_mbid}
              , count(*) AS total_listen_count
              , count(DISTINCT user_id) AS total_user_count
           FROM {table}
          WHERE {entity_mbid} IS NOT NULL
            AND {entity_mbid} != ""
-      GROUP BY {entity_mbid}
+      GROUP BY lower({entity_mbid})
     """
 
 
@@ -64,12 +64,12 @@ def get_popularity_per_artist_query(entity, table):
     """ Get the query to generate top popular entities per artists stats from MLHD+ and listens data """
     if entity == "artist":
         select_clause = "artist_mbid"
-        explode_clause = "explode(artist_credit_mbids) AS artist_mbid"
+        explode_clause = "lower(explode(artist_credit_mbids)) AS artist_mbid"
         where_clause = "artist_mbid IS NOT NULL"
     else:
-        entity_mbid = f"{entity}_mbid"
+        entity_mbid = f"lower({entity}_mbid)"
         select_clause = f"artist_mbid, {entity_mbid}"
-        explode_clause = f"explode(artist_credit_mbids) AS artist_mbid, {entity_mbid}"
+        explode_clause = f"lower(explode(artist_credit_mbids)) AS artist_mbid, lower({entity_mbid}) AS {entity_mbid}"
         where_clause = f"artist_mbid IS NOT NULL AND {entity_mbid} IS NOT NULL AND {entity_mbid} != ''"
     return f"""
         WITH intermediate AS (

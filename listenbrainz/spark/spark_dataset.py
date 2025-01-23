@@ -291,7 +291,6 @@ class DatabaseDataset(SparkDataset, ABC):
         try:
             with conn.cursor() as curs:
                 self.create_table(curs)
-                self.create_indices(curs)
             conn.commit()
         finally:
             conn.close()
@@ -300,6 +299,7 @@ class DatabaseDataset(SparkDataset, ABC):
         conn = timescale.engine.raw_connection()
         try:
             with conn.cursor() as curs:
+                self.create_indices(curs)
                 self.rotate_tables(curs)
                 self.run_post_processing(curs, message)
             conn.commit()
