@@ -12,6 +12,7 @@ from brainzutils import cache
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.playlist import get_recommendation_playlists_for_user
 import listenbrainz.db.dump as db_dump
+import listenbrainz.db.stats as db_stats
 from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
@@ -99,6 +100,26 @@ def get_stats_timestamp():
     return last_updated
 
 
+def get_global_stats_timestamp():
+    """ Check to see when sitewide (global) statistics were last generated. Returns unix epoch timestamp"""
+
+    cache_key = STATUS_PREFIX + ".global-stats-timestamp"
+    last_updated = cache.get(cache_key)
+
+    if last_updated is None:
+        stats = stats = db_stats.get_sitewide_stats("artists", "all_time")
+        if stats is None:
+            return None
+
+        last_updated = stats["last_updated"]
+        if last_updated is None:
+            return None
+
+        cache.set(cache_key, last_updated, CACHE_TIME)
+
+    return last_updated
+
+
 def get_playlists_timestamp():
     """ Check to see when recommendations playlists were last generated for a "random" user. Returns unix epoch timestamp"""
 
@@ -128,7 +149,6 @@ def get_incoming_listens_count():
     cache_key = STATUS_PREFIX + ".incoming_listens"
     listen_count = cache.get(cache_key)
     if listen_count is None:
-        current_app.logger.warn("no cached data!")
         try:
             incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
             incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=incoming_exchange, durable=True)
@@ -194,10 +214,17 @@ def get_service_status():
     else:
         stats_age = current_ts - stats
 
+    global_stats = get_global_stats_timestamp()
+    if global_stats is None:
+        global_stats_age = None
+    else:
+        global_stats_age = current_ts - global_stats
+
     return {
         "time": current_ts,
         "dump_age": dump_age,
         "stats_age": stats_age,
+        "sitewide_stats_age": global_stats_age,
         "incoming_listen_count": listen_count
     }
 
