@@ -10,7 +10,6 @@ from listenbrainz.spark.spark_dataset import DatabaseDataset
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
 
 
-# todo: distinguish between full and incremental rebuild
 class PopularityDataset(DatabaseDataset):
     """ Dataset class for artists, recordings and releases with popularity info (listen count and unique listener count)
      from MLHD data """

@@ -88,6 +88,9 @@ def get_popularity_per_artist_query(entity, table):
 class PopularityMessageCreator(MessageCreator):
 
     def __init__(self, entity: str, message_type: str, is_mlhd: bool):
+        message_type = f"{message_type}_{entity}"
+        if is_mlhd:
+            message_type = f"mlhd_{message_type}"
         super().__init__(entity, message_type)
         self.is_mlhd = is_mlhd
 
