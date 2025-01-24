@@ -99,11 +99,18 @@ class PopularityTopDataset(DatabaseDataset):
     def get_inserts(self, message):
         if message["only_inc"]:
             suffix = None
+            query_suffix = """
+                ON CONFLICT (artist_mbid, {entity_mbid})
+                  DO UPDATE
+                        SET total_listen_count = EXCLUDED.total_listen_count
+                          , total_user_count = EXCLUDED.total_user_count
+            """
         else:
             suffix = "tmp"
+            query_suffix = ""
         table_name = self._get_table_name(suffix=suffix)
-        query = SQL("INSERT INTO {table} (artist_mbid, {entity_mbid}, total_listen_count, total_user_count) VALUES %s") \
-            .format(table=table_name, entity_mbid=Identifier(self.entity_mbid))
+        query = "INSERT INTO {table} (artist_mbid, {entity_mbid}, total_listen_count, total_user_count) VALUES %s " + query_suffix
+        query = SQL(query).format(table=table_name, entity_mbid=Identifier(self.entity_mbid))
         values = [(r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
@@ -114,7 +121,8 @@ class PopularityTopDataset(DatabaseDataset):
             prefix = "popularity_top"
         return [
             f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_artist_mbid_idx_{{suffix}} ON {{table}} (artist_mbid, {self.entity_mbid})"
         ]
 
 
