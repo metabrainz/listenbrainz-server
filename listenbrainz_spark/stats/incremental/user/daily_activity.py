@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class DailyActivityUserEntity(UserEntity):
+    """ See base class IncrementalStats for documentation. """
 
     def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
         super().__init__(
@@ -26,7 +27,7 @@ class DailyActivityUserEntity(UserEntity):
         self.setup_time_range()
 
     def setup_time_range(self):
-        # Genarate a dataframe containing hours of all days of the week
+        """ Genarate a dataframe containing hours of all days of the week. """
         weekdays = [calendar.day_name[day] for day in range(0, 7)]
         hours = [hour for hour in range(0, 24)]
         time_range = itertools.product(weekdays, hours)

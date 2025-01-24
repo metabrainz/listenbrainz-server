@@ -10,6 +10,7 @@ from listenbrainz_spark.stats.incremental.user.entity import UserEntity
 
 
 class ReleaseGroupUserEntity(UserEntity):
+    """ See base class IncrementalStats for documentation. """
 
     def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
         super().__init__(entity="release_groups", stats_range=stats_range, database=database, message_type=message_type,

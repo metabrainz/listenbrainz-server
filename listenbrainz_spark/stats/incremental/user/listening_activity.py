@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class ListeningActivityUserEntity(UserEntity):
+    """ See base class IncrementalStats for documentation. """
 
     def __init__(self, stats_range, database, message_type, year=None):
         super().__init__(

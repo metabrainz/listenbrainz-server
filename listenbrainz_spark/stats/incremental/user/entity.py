@@ -30,6 +30,7 @@ entity_model_map = {
 
 
 class UserEntity(IncrementalStats, abc.ABC):
+    """ See base class IncrementalStats for documentation. """
 
     def __init__(self, entity: str, stats_range: str = None, database: str = None, message_type: str = None,
                  from_date: datetime = None, to_date: datetime = None):
@@ -47,6 +48,9 @@ class UserEntity(IncrementalStats, abc.ABC):
         return f"user_{self.entity}_{self.stats_range}"
 
     def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
+        """ Filter listens from existing aggregate to only include listens for entities having listens in the
+        incremental dumps.
+        """
         query = f"""
             WITH incremental_users AS (
                 SELECT DISTINCT user_id FROM {incremental_aggregate}
