@@ -317,6 +317,8 @@ def create_app_rtfd():
         '..', 'rtd_config.py'
     ))
 
+    app.url_map.converters["not_api_path"] = NotApiPathConverter
+
     _register_blueprints(app)
     return app
 

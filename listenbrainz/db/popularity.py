@@ -47,7 +47,8 @@ class PopularityDataset(DatabaseDataset):
             prefix = "popularity"
         return [
             f"CREATE INDEX {prefix}_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX {prefix}_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_{self.entity}_mbid_idx_{{suffix}} ON {{table}} ({self.entity}_mbid)"
         ]
 
 

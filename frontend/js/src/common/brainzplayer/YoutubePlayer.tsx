@@ -24,6 +24,7 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type YoutubePlayerProps = DataSourceProps & {
@@ -118,7 +119,10 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    if (prevProps.volume !== volume && this.youtubePlayer?.setVolume) {
+      this.youtubePlayer?.setVolume(volume ?? 100);
+    }
     if (prevProps.show && !show && this.youtubePlayer) {
       this.youtubePlayer.stopVideo();
       // Clear playlist
@@ -375,6 +379,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
     // width of screen - padding on each side - youtube player width
     const leftBound =
       document.body.clientWidth - draggableBoundPadding * 2 - 350;
+
     return (
       <Draggable
         handle=".youtube-drag-handle"

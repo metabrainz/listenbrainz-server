@@ -180,14 +180,16 @@
 
       .centered-text-inner {
         width: 100%;
-      }
-      .ellipsis-3-lines {
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
         line-height: 1.1em;
+        // Hyphenation when possible
+        overflow-wrap: break-word;
+        hyphens: auto;
       }
     }
   }

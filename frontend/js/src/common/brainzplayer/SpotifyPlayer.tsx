@@ -142,7 +142,11 @@ export default class SpotifyPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    if (prevProps.volume !== volume && this.spotifyPlayer?.setVolume) {
+      this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
+    }
+
     if (prevProps.show === true && show === false) {
       this.stopAndClear();
     }
@@ -436,7 +440,7 @@ export default class SpotifyPlayer
       );
       return;
     }
-    const { refreshSpotifyToken } = this.props;
+    const { refreshSpotifyToken, volume } = this.props;
     const { spotifyAuth: spotifyUser = undefined } = this.context;
 
     this.spotifyPlayer = new window.Spotify.Player({
@@ -462,7 +466,7 @@ export default class SpotifyPlayer
           );
         }
       },
-      volume: 0.7, // Careful with this, now…
+      volume: volume ?? 100 / 100,
     });
 
     // Error handling
@@ -515,9 +519,9 @@ export default class SpotifyPlayer
       duration,
       track_window: { current_track, previous_tracks },
     } = playerState;
-
     const { currentSpotifyTrack, durationMs } = this.state;
-    const { playerPaused } = this.props;
+    const { playerPaused, volume } = this.props;
+    this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
     const {
       onPlayerPausedChange,
       onProgressChange,
