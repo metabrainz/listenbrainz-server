@@ -114,11 +114,6 @@ export default NiceModal.create(
       []
     );
 
-    const handleLinkClick = () => {
-      closeModal();
-      navigate("/settings/link-listens/");
-    };
-
     const submitMBIDMappingCallback = React.useCallback(
       async (event: React.FormEvent) => {
         event.preventDefault();
@@ -588,22 +583,6 @@ export default NiceModal.create(
                   name can result in worse matching. Tick this checkbox if you
                   have a poor matching rate.
                 </Tooltip>
-              </div>
-              <div
-                className="text-center"
-                style={{ marginTop: "25px" }}
-                title="Organize Your Unlinked Listens with MusicBrainz"
-              >
-                <button
-                  className="btn btn-success btn-rounded"
-                  onClick={handleLinkClick}
-                  data-tip
-                  data-for="link-all-tooltip"
-                  style={{ textDecoration: "none" }}
-                >
-                  <FontAwesomeIcon icon={faLink} size="lg" />
-                  {" Link other Listens"}
-                </button>
               </div>
             </div>
             <div className="modal-footer">

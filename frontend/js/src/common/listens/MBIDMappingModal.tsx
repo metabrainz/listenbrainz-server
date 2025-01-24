@@ -85,11 +85,6 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     []
   );
 
-  const handleLinkClick = () => {
-    closeModal();
-    navigate("/settings/link-listens/");
-  };
-
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const { auth_token } = currentUser;
   const [defaultValue, setDefaultValue] = React.useState("");
@@ -292,22 +287,6 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   />
                 </div>
               )}
-              <div
-                className="text-center"
-                style={{ marginTop: "25px" }}
-                title="Organize Your Unlinked Listens with MusicBrainz"
-              >
-                <button
-                  className="btn btn-success btn-rounded"
-                  onClick={handleLinkClick}
-                  data-tip
-                  data-for="link-all-tooltip"
-                  style={{ textDecoration: "none" }}
-                >
-                  <FontAwesomeIcon icon={faLink} size="lg" />
-                  {" Link other Listens"}
-                </button>
-              </div>
             </div>
             <div className="modal-footer">
               <button
