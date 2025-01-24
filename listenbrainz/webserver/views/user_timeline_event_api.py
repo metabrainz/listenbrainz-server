@@ -533,8 +533,7 @@ def hide_user_timeline_event(user_name):
         raise APIBadRequest("This event type is not supported for hiding")
 
     if not result:
-        raise APIBadRequest(f"{data['event_type']} event with id {
-                            row_id} not found")
+        raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
 
     if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
         db_user_timeline_event.hide_user_timeline_event(
@@ -728,8 +727,7 @@ def create_thanks_event(user_name):
                 "This event type is not supported for thanking")
 
         if not result:
-            raise APIBadRequest(f"{metadata['event_type']} event with id {
-                                row_id} not found")
+            raise APIBadRequest(f"{metadata['event_type']} event with id {row_id} not found")
 
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             event = db_user_timeline_event.create_thanks_event(
