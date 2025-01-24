@@ -68,7 +68,7 @@ def get_popularity_per_artist_query(entity, table):
         where_clause = "artist_mbid IS NOT NULL"
         group_clause = "lower(artist_mbid)"
     else:
-        entity_mbid = f"lower({entity}_mbid)"
+        entity_mbid = f"{entity}_mbid"
         select_clause = f"lower(artist_mbid) AS artist_mbid, {entity_mbid}"
         explode_clause = f"explode(artist_credit_mbids) AS artist_mbid, lower({entity_mbid}) AS {entity_mbid}"
         where_clause = f"artist_mbid IS NOT NULL AND {entity_mbid} IS NOT NULL AND {entity_mbid} != ''"
