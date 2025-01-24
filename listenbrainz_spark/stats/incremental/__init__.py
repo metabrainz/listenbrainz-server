@@ -191,6 +191,7 @@ class IncrementalStats(abc.ABC):
         return full_df
 
     def incremental_dump_exists(self) -> bool:
+        """ Check if incremental dump exists. """
         return hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False)
 
     def create_incremental_aggregate(self) -> DataFrame:
