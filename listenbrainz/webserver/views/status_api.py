@@ -107,7 +107,7 @@ def get_global_stats_timestamp():
     last_updated = cache.get(cache_key)
 
     if last_updated is None:
-        stats = stats = db_stats.get_sitewide_stats("artists", "all_time")
+        stats = db_stats.get_sitewide_stats("artists", "all_time")
         if stats is None:
             return None
 
