@@ -100,21 +100,33 @@ def get_stats_timestamp():
     return last_updated
 
 
-def get_global_stats_timestamp():
-    """ Check to see when sitewide (global) statistics were last generated. Returns unix epoch timestamp"""
+def get_global_stats_timestamp(entity):
+    """ Check to see when sitewide (global) statistics were last generated for the given entity. Returns unix epoch timestamp"""
 
-    cache_key = STATUS_PREFIX + ".global-stats-timestamp"
+    cache_key = STATUS_PREFIX + ".global-stats-timestamp-" + entity
     last_updated = cache.get(cache_key)
 
     if last_updated is None:
-        stats = db_stats.get_sitewide_stats("artists", "all_time")
-        if stats is None:
-            return None
+        oldest = None
+        for range in ("this_week", "this_month", "this_year", "week", "month", "quarter", "year", "half_yearly", "all_time"):
+            stats = db_stats.get_sitewide_stats(entity, range)
+            if stats is None:
+                current_app.logger.error("No stats found for %s-%s" % (entity, range))
+                return None
 
-        last_updated = stats["last_updated"]
-        if last_updated is None:
-            return None
+            last_updated = stats["last_updated"]
+            current_app.logger.warn("%s-%s: %d" % (entity, range, last_updated))
 
+            if last_updated is None:
+                return None
+
+            if oldest is None:
+                oldest = last_updated
+
+            if oldest < last_updated:
+                oldest = last_updated
+
+        last_updated = oldest
         cache.set(cache_key, last_updated, CACHE_TIME)
 
     return last_updated
@@ -214,11 +226,19 @@ def get_service_status():
     else:
         stats_age = current_ts - stats
 
-    global_stats = get_global_stats_timestamp()
-    if global_stats is None:
-        global_stats_age = None
-    else:
-        global_stats_age = current_ts - global_stats
+    global_stats_age = None
+    for entity in ("artists", "recordings", "release_groups"):
+        global_stats = get_global_stats_timestamp(entity)
+        if global_stats is None:
+            global_stats_age = None
+            break
+
+        age = current_ts - global_stats
+        if global_stats_age is None:
+            global_stats_age = age
+
+        if age > global_stats_age:
+            global_stats_age = age
 
     return {
         "time": current_ts,
