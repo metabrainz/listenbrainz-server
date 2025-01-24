@@ -4,13 +4,11 @@ import {
   faInfoCircle,
   faQuestionCircle,
   faTimesCircle,
-  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
-import { useNavigate } from "react-router-dom";
 import Fuse from "fuse.js";
 import { omit, size, uniq } from "lodash";
 import { isValid } from "date-fns";
@@ -44,7 +42,6 @@ const lucineSpecialCharRegex = /[+\-!(){}[\]^"~*?:\\/]|(?:&{2})|(?:\|{2})/gm;
 export default NiceModal.create(
   ({ unlinkedListens, releaseName }: MultiTrackMBIDMappingModalProps) => {
     const modal = useModal();
-    const navigate = useNavigate(); // React Router navigation hook
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
     const { lookupMBRelease, submitMBIDMapping } = APIService;
     const { auth_token } = currentUser;
