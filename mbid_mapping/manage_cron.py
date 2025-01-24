@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import datetime
 from functools import wraps
 from traceback import format_exc
 import sys
@@ -86,22 +87,25 @@ def cron_build_all_mb_caches():
     """ Build all mb entity metadata cache and tables it depends on in production in appropriate
      databases. After building the cache, cleanup mbid_mapping table.
     """
-    log("cron_build_all_mb_caches 1")
-    create_mb_metadata_cache(True)
-    log("cron_build_all_mb_caches 2")
-    cleanup_mbid_mapping_table()
-    log("cron_build_all_mb_caches 3")
-    create_mb_artist_metadata_cache(True)
-    log("cron_build_all_mb_caches 4")
-    create_mb_release_group_cache(True)
-    log("cron_build_all_mb_caches 5")
 
+    # We only want this cron job to run the fist week of the month:
+    dt = datetime.datetime.now(datetime.timezone.utc)
+    if dt.day <= 7:
+        log("day %d: Running cron job" % dt.day)
+        create_mb_metadata_cache(True)
+        cleanup_mbid_mapping_table()
+        create_mb_artist_metadata_cache(True)
+        create_mb_release_group_cache(True)
+
+    else:
+        log("day %d: skipping cron job" % dt.day)
 
 
 @cli.command()
 @cron("update-all-mb-caches")
 def cron_update_all_mb_caches():
     """ Update all mb entity metadata cache in ListenBrainz. """
+
     update_canonical_release_data(False)
     incremental_update_mb_metadata_cache(True)
     incremental_update_mb_artist_metadata_cache(True)
