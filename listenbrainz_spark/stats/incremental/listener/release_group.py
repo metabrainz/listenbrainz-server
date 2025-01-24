@@ -9,6 +9,7 @@ from listenbrainz_spark.stats.incremental.listener.entity import EntityListener
 
 
 class ReleaseGroupEntityListener(EntityListener):
+    """ See base class IncrementalStats for documentation. """
 
     def __init__(self, stats_range, database):
         super().__init__(

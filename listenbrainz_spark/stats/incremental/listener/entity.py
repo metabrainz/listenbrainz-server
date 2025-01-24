@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class EntityListener(UserEntity, abc.ABC):
+    """ See base class IncrementalStats for documentation. """
 
     def __init__(self, entity: str, stats_range: str, database: Optional[str], message_type: Optional[str]):
         if not database:
