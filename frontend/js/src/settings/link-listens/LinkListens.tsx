@@ -96,10 +96,47 @@ export default function LinkListensPage() {
       })
     : "—";
   // State
+  const list = [
+    {
+      artist_name: "home grown",
+      listened_at: "2025-01-18T20:43:47.000Z",
+      recording_msid: "e2b4433c-94ad-4c7f-aa69-45038fbc875f",
+      recording_name: "wayfarer",
+      release_name: "wayfarer",
+    },
+    {
+      artist_name: "May-Flowa",
+      listened_at: "2025-01-18T20:08:47.000Z",
+      recording_msid: "a0570ca2-003d-4b45-b6e4-3cf93091b9cd",
+      recording_name: "poolside",
+      release_name: "poolside",
+    },
+    {
+      artist_name: "May-Flowa",
+      listened_at: "2025-01-18T20:08:47.000Z",
+      recording_msid: "a0570ca2-003d-4b45-b6e4-3cf93091b9cd",
+      recording_name: "poolside",
+      release_name: "poolside",
+    },
+    {
+      artist_name: "Bastido, Donkeychote",
+      listened_at: "2025-01-18T19:42:54.000Z",
+      recording_msid: "a45ce2c0-a708-4130-8dae-26b1e2703fe0",
+      recording_name: "silver linings",
+      release_name: "rooftops",
+    },
+    {
+      artist_name: "ikeya",
+      listened_at: "2025-01-18T19:40:09.000Z",
+      recording_msid: "95762cd4-0cc0-4feb-94b5-e80b25b47c61",
+      recording_name: "chasing the sun",
+      release_name: "chasing the sun",
+    },
+  ];
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
   const [unlinkedListens, setUnlinkedListens] = React.useState<
     Array<UnlinkedListens>
-  >(unlinkedListensProps);
+  >(list);
   const unsortedGroupedUnlinkedListens = groupBy(
     unlinkedListens,
     "release_name"
