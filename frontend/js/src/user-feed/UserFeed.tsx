@@ -51,6 +51,7 @@ import {
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
+import ThanksModal from "./ThanksModal";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -265,32 +266,6 @@ export default function UserFeedPage() {
     [APIService, currentUser]
   );
 
-  const thankFeedEvent = React.useCallback(
-    async (event: TimelineEvent) => {
-      const { thankFeedEvent } = APIService;
-      try {
-        const status = await thankFeedEvent(
-          event.event_type,
-          currentUser.name,
-          currentUser.auth_token as string,
-          event.id!,
-          event.metadata?.blurb_content
-        );
-
-        if (status === 200) {
-          return event;
-        }
-      } catch (error) {
-        toast.error(
-          <ToastMsg title="Could not thank event" message={error.toString()} />,
-          { toastId: "hide-error" }
-        );
-      }
-      return undefined;
-    },
-    [APIService, currentUser]
-  );
-
   // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
@@ -445,41 +420,33 @@ export default function UserFeedPage() {
     ) {
       if (event.hidden) {
         return (
-          <>
-            <ListenControl
-              title="Thank Event"
-              text=""
-              icon={faHandshake}
-              buttonClassName="btn btn-link btn-xs"
-              // eslint-disable-next-line react/jsx-no-bind
-              action={() => {
-                thankFeedEvent(event);
-              }}
-            />
-            <ListenControl
-              title="Unhide Event"
-              text=""
-              icon={faEye}
-              buttonClassName="btn btn-link btn-xs"
-              // eslint-disable-next-line react/jsx-no-bind
-              action={() => {
-                hideEventMutation(event);
-              }}
-            />
-          </>
+          <ListenControl
+            title="Unhide Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
         );
       }
       return (
         <>
           <ListenControl
-            title="Thank Event"
+            title="Thanks"
             text=""
             icon={faHandshake}
             buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
             action={() => {
-              thankFeedEvent(event);
+              NiceModal.show(ThanksModal, {
+                original_event_id: event?.id,
+                original_event_type: event.event_type,
+              });
             }}
+            dataToggle="modal"
+            dataTarget="#ThanksModal"
           />
           <ListenControl
             title="Hide Event"

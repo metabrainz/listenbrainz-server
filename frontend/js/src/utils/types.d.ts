@@ -489,6 +489,8 @@ type UserRelationshipEventMetadata = {
 
 type ThanksMetadata = {
   blurb_content: string;
+  recording_mbid?: string;
+  recording_msid?: string;
 };
 
 type NotificationEventMetadata = {

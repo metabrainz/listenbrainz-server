@@ -1334,10 +1334,10 @@ export default class APIService {
   };
 
   thankFeedEvent = async (
-    eventType: string,
+    eventType: EventTypeT,
     username: string,
     userToken: string,
-    event_id: number,
+    event_id: number | undefined,
     blurb_content: string
   ): Promise<any> => {
     if (!event_id) {

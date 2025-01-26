@@ -711,16 +711,16 @@ def create_thanks_event(user_name):
             "Metadata must contain both original_event_type and original_event_id", metadata)
 
     try:
-        metadata = ThanksMetadata(**metadata)
-        row_id = metadata["event_id"]
-        event_type = metadata["event_type"]
+        validate = ThanksMetadata(**metadata)
+        row_id = metadata["original_event_id"]
+        event_type = metadata["original_event_type"]
 
         if event_type in [
                 UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             result = db_user_timeline_event.get_user_timeline_event_by_id(
                 db_conn, row_id)
-        elif data["event_type"] == UserTimelineEventType.RECORDING_PIN.value:
+        elif data["original_event_type"] == UserTimelineEventType.RECORDING_PIN.value:
             result = get_pin_by_id(db_conn, row_id)
         else:
             raise APIBadRequest(
@@ -734,7 +734,7 @@ def create_thanks_event(user_name):
                 db_conn, user['id'], metadata)
             event_data = event.dict()
             event_data['created'] = int(event_data['created'].timestamp())
-            event_data['event_type'] = event_data['event_type'].value
+            event_data['event_type'] = event_data['original_event_type'].value
             return jsonify(event_data)
         else:
             raise APIUnauthorized("You cannot thank events of this user")

@@ -60,7 +60,7 @@ class NotificationMetadata(BaseModel):
     message: constr(min_length=1)
 
 
-class ThanksMetadata(MsidMbidModel):
+class ThanksMetadata(BaseModel):
     original_event_id: NonNegativeInt
     original_event_type: UserTimelineEventType
     blurb_content: Optional[str]
