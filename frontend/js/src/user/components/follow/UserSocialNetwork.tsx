@@ -254,22 +254,36 @@ export default class UserSocialNetwork extends React.Component<
   ) => {
     const { currentUser } = this.context;
     const { user: profileUser } = this.props;
-    const { followingList } = this.state;
+    const { followingList, currentUserFollowingList } = this.state;
+
+    if (!currentUser) return;
+
+    // update the logged-in user's following list (for similar users pane)
+    const newCurrentUserFollowingList = [...currentUserFollowingList];
+    const currentUserIndex = newCurrentUserFollowingList.indexOf(user.name);
+
+    if (action === "follow" && currentUserIndex === -1) {
+      newCurrentUserFollowingList.push(user.name);
+    } else if (action === "unfollow" && currentUserIndex !== -1) {
+      newCurrentUserFollowingList.splice(currentUserIndex, 1);
+    }
+
+    // update the users following list (for followers/following pane)
     const newFollowingList = [...followingList];
-    const index = newFollowingList.findIndex(
-      (following) => following === user.name
-    );
-    if (action === "follow" && index === -1) {
-      newFollowingList.push(user.name);
+    if (profileUser.name === currentUser.name) {
+      const profileUserIndex = newFollowingList.indexOf(user.name);
+      if (action === "follow" && profileUserIndex === -1) {
+        newFollowingList.push(user.name);
+      } else if (action === "unfollow" && profileUserIndex !== -1) {
+        newFollowingList.splice(profileUserIndex, 1);
+      }
     }
-    if (
-      action === "unfollow" &&
-      index !== -1 &&
-      profileUser.name === currentUser?.name
-    ) {
-      newFollowingList.splice(index, 1);
-    }
-    this.setState({ followingList: newFollowingList });
+
+    // Update both lists in state
+    this.setState({
+      followingList: newFollowingList,
+      currentUserFollowingList: newCurrentUserFollowingList,
+    });
   };
 
   render() {
