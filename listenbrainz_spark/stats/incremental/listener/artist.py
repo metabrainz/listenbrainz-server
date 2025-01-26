@@ -1,11 +1,11 @@
 from typing import List
 
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
-from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerProvider
+from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider
 
 
-class ArtistEntityListener(EntityListenerProvider):
-    """ See base class IncrementalStats for documentation. """
+class ArtistEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     @property
     def entity(self):

@@ -7,13 +7,16 @@ from listenbrainz_spark.stats.common.listening_activity import get_time_range_bo
 
 
 class ListenRangeSelector(abc.ABC):
+    """ Abstract class to choose timeframe of listens to use for a particular job """
 
     @abc.abstractmethod
     def get_dates(self) -> Tuple[str, datetime, datetime]:
+        """ Returns the name of the stats range, and start date and end date to select listens """
         raise NotImplementedError()
 
 
 class StatsRangeListenRangeSelector(ListenRangeSelector):
+    """ Selector that chooses start and end date based on the given stats range """
 
     def __init__(self, stats_range):
         self.stats_range = stats_range
@@ -24,6 +27,7 @@ class StatsRangeListenRangeSelector(ListenRangeSelector):
 
 
 class FromToRangeListenRangeSelector(ListenRangeSelector):
+    """ Selector which uses the provided start and end data as is """
 
     def __init__(self, from_date: datetime, to_date: datetime):
         self.from_date = from_date
@@ -35,6 +39,7 @@ class FromToRangeListenRangeSelector(ListenRangeSelector):
 
 
 class ListeningActivityListenRangeSelector(ListenRangeSelector):
+    """ Selector to use for listening activity stats. """
 
     def __init__(self, stats_range: str, year: int = None):
         self.year = year

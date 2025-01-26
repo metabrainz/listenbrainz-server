@@ -2,13 +2,13 @@ import abc
 import logging
 
 from listenbrainz_spark.path import LISTENBRAINZ_LISTENER_STATS_DIRECTORY
-from listenbrainz_spark.stats.incremental.user.entity import UserEntityProvider, UserStatsMessageCreator
+from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class EntityListener(UserEntityProvider, abc.ABC):
-    """ See base class IncrementalStats for documentation. """
+class EntityListenerStatsQueryProvider(UserEntityStatsQueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def get_table_prefix(self) -> str:
         return f"{self.entity}_listener_{self.stats_range}"

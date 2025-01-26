@@ -7,13 +7,13 @@ from data.model.common_stat_spark import UserStatRecords
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz_spark.stats.common.listening_activity import create_time_range_df
 from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
-from listenbrainz_spark.stats.incremental.user.entity import UserProvider, UserStatsMessageCreator
+from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class ListeningActivityUserEntity(UserProvider):
-    """ See base class IncrementalStats for documentation. """
+class ListeningActivityUserStatsQueryEntity(UserStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListeningActivityListenRangeSelector):
         super().__init__(selector)

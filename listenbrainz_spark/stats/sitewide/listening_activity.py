@@ -1,9 +1,9 @@
 import logging
 from typing import Iterator, Optional, Dict
 
-from listenbrainz_spark.stats.incremental.aggregator import Aggregator
+from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
-from listenbrainz_spark.stats.incremental.sitewide.listening_activity import ListeningActivitySitewide, \
+from listenbrainz_spark.stats.incremental.sitewide.listening_activity import ListeningActivitySitewideStatsQuery, \
     ListeningActivitySitewideMessageCreator
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def get_listening_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     """
     logger.debug(f"Calculating listening_activity_{stats_range}")
     selector = ListeningActivityListenRangeSelector(stats_range)
-    entity_obj = ListeningActivitySitewide(selector)
+    entity_obj = ListeningActivitySitewideStatsQuery(selector)
     message_creator = ListeningActivitySitewideMessageCreator(selector)
-    aggregator = Aggregator(entity_obj, message_creator)
-    return aggregator.main()
+    engine = IncrementalStatsEngine(entity_obj, message_creator)
+    return aggregator.run()

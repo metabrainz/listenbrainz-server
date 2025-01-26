@@ -5,10 +5,11 @@ from pyspark.sql import DataFrame
 from listenbrainz_spark.stats.common.listening_activity import create_time_range_df
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
 from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideProvider
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideStatsQueryProvider
 
 
-class ListeningActivitySitewide(SitewideProvider):
+class ListeningActivitySitewideStatsQuery(SitewideStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListeningActivityListenRangeSelector):
         super().__init__(selector)

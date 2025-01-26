@@ -9,13 +9,13 @@ import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
 from data.model.user_daily_activity import DailyActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
-from listenbrainz_spark.stats.incremental.user.entity import UserProvider, UserStatsMessageCreator
+from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class DailyActivityUserEntity(UserProvider):
-    """ See base class IncrementalStats for documentation. """
+class DailyActivityUserStatsQueryEntity(UserStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector):
         super().__init__(selector)

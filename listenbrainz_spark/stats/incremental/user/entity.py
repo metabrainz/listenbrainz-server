@@ -1,7 +1,6 @@
 import abc
 import logging
-from datetime import date, datetime
-from typing import Optional, Iterator, Dict, Tuple
+from typing import Iterator, Dict
 
 from more_itertools import chunked
 from pydantic import ValidationError
@@ -12,12 +11,9 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental import IncrementalStats
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
-from listenbrainz_spark.stats.incremental.provider import Provider
+from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
-from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +25,8 @@ entity_model_map = {
 }
 
 
-class UserProvider(Provider, abc.ABC):
+class UserStatsQueryProvider(QueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def get_base_path(self) -> str:
         return LISTENBRAINZ_USER_STATS_DIRECTORY
@@ -55,7 +52,8 @@ class UserProvider(Provider, abc.ABC):
         """
 
 
-class UserEntityProvider(UserProvider, abc.ABC):
+class UserEntityStatsQueryProvider(UserStatsQueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
         super().__init__(selector)

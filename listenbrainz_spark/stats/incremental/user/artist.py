@@ -2,11 +2,11 @@ from typing import List
 
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
-from listenbrainz_spark.stats.incremental.user.entity import UserEntityProvider
+from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
 
-class ArtistUserEntity(UserEntityProvider):
-    """ See base class IncrementalStats for documentation. """
+class ArtistUserEntity(UserEntityStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
         super().__init__(selector=selector, top_entity_limit=top_entity_limit)

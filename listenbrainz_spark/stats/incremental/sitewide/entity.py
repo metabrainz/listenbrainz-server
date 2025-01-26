@@ -10,11 +10,9 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY
-from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
-from listenbrainz_spark.stats.incremental.message import MessageCreator
 
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
-from listenbrainz_spark.stats.incremental.provider import Provider
+from listenbrainz_spark.stats.incremental.provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
 logger = logging.getLogger(__name__)
@@ -27,7 +25,8 @@ entity_model_map = {
 }
 
 
-class SitewideProvider(Provider, abc.ABC):
+class SitewideStatsQueryProvider(QueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def get_base_path(self) -> str:
         return LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY
@@ -39,7 +38,8 @@ class SitewideProvider(Provider, abc.ABC):
         return f"SELECT * FROM {existing_aggregate}"
 
 
-class SitewideEntityProvider(SitewideProvider, abc.ABC):
+class SitewideEntityStatsQueryProvider(SitewideStatsQueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
         super().__init__(selector)
