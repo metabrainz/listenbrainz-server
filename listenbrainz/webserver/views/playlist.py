@@ -67,7 +67,7 @@ def get_cover_art_options(playlist: db_playlist.Playlist) -> list[dict]:
     return images
 
 
-def get_cover_art_for_playlist(playlist: model_playlist.Playlist, images: list[dict], selected_cover_art: dict):    
+def get_cover_art_for_playlist(playlist: model_playlist.Playlist, images: list[dict], selected_cover_art: dict):
     cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], selected_cover_art["dimension"], 500)
     if (validation_error := cac.validate_parameters()) is not None:
         return jsonify({"error": validation_error}), 400
