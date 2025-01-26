@@ -4,8 +4,8 @@ from datetime import datetime
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.popularity.common import PopularityMessageCreator
 from listenbrainz_spark.popularity.listens import PopularityProvider, TopPerArtistPopularityProvider
-from listenbrainz_spark.popularity.mlhd import MlhdAggregator
-from listenbrainz_spark.stats.incremental.aggregator import Aggregator
+from listenbrainz_spark.popularity.mlhd import MlhdStatsEngine
+from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import FromToRangeListenRangeSelector
 from listenbrainz_spark.utils import get_latest_listen_ts
 
@@ -27,7 +27,7 @@ def main(type, entity, mlhd):
     message_creator = PopularityMessageCreator(entity=entity, message_type=type, is_mlhd=mlhd)
 
     if mlhd:
-        aggregator = MlhdAggregator(provider, message_creator)
+        engine = MlhdStatsEngine(provider, message_creator)
     else:
-        aggregator = Aggregator(provider, message_creator)
-    return aggregator.main()
+        engine = IncrementalStatsEngine(provider, message_creator)
+    return engine.main()

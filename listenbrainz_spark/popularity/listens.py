@@ -2,12 +2,12 @@ from typing import List
 
 from listenbrainz_spark.path import LISTENBRAINZ_POPULARITY_DIRECTORY, RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.popularity.common import get_popularity_per_artist_query, \
-    get_release_group_popularity_per_artist_query, get_popularity_query, get_release_group_popularity_query
-from listenbrainz_spark.stats.incremental.provider import Provider
+    get_release_group_popularity_per_artist_query, get_popularity_query
+from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
 
-class PopularityProvider(Provider):
+class PopularityProvider(QueryProvider):
 
     def __init__(self, selector: ListenRangeSelector, entity: str):
         super().__init__(selector)
@@ -75,7 +75,7 @@ class PopularityProvider(Provider):
         """
 
 
-class TopPerArtistPopularityProvider(Provider):
+class TopPerArtistPopularityProvider(QueryProvider):
 
     def __init__(self, selector: ListenRangeSelector, entity: str):
         super().__init__(selector)

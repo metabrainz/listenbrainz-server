@@ -10,15 +10,15 @@ from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY
 from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
-from listenbrainz_spark.stats.incremental.provider import Provider
+from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
 
-class MlhdAggregator:
+class MlhdStatsEngine:
 
-    def __init__(self, provider: Provider, message_creator: MessageCreator):
+    def __init__(self, provider: QueryProvider, message_creator: MessageCreator):
         self.provider = provider
         self.message_creator = message_creator
         self._cache_tables = []
