@@ -826,7 +826,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     # Fetch the metadata for the playlist recordings
     fetch_playlist_recording_metadata(playlist)
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], dimension, 250)
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], dimension, 500)
     if (validation_error := cac.validate_parameters()) is not None:
         raise APIBadRequest(validation_error)
 
@@ -835,12 +835,12 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     images = _repeat_images(images, len(grid_design))
 
     # Generate the cover art images
-    cover_art_images = cac.generate_from_caa_ids(images, layout=layout, cover_art_size=250)
+    cover_art_images = cac.generate_from_caa_ids(images, layout=layout, cover_art_size=500)
 
     # Get the playlist name and description
     title = playlist.name
     desc = playlist.description
-    image_size = 250
+    image_size = 500
 
     # Render the cover art image template
     return render_template("art/svg-templates/simple-grid.svg",

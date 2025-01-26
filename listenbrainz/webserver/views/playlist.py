@@ -6,6 +6,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_metadata
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 
 playlist_bp = Blueprint("playlist", __name__)
@@ -66,6 +67,27 @@ def get_cover_art_options(playlist: db_playlist.Playlist) -> list[dict]:
     return images
 
 
+def get_cover_art_for_playlist(playlist: model_playlist.Playlist, images: list[dict], selected_cover_art: dict):    
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], selected_cover_art["dimension"], 500)
+    if (validation_error := cac.validate_parameters()) is not None:
+        return jsonify({"error": validation_error}), 400
+
+    cover_art_images = cac.generate_from_caa_ids(images, layout=selected_cover_art["layout"], cover_art_size=500)
+    title = playlist.name
+    desc = playlist.description
+
+    return render_template(
+        "art/svg-templates/simple-grid.svg",
+        background="transparent",
+        images=cover_art_images,
+        title=title,
+        desc=desc,
+        entity="album",
+        width=500,
+        height=500
+    )
+
+
 @playlist_bp.route("/<playlist_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def load_playlist(playlist_mbid: str):
@@ -96,7 +118,29 @@ def load_playlist(playlist_mbid: str):
                     "layout": layout_idx
                 })
 
+    serialized_playlist = playlist.serialize_jspf()
+
+    selected_cover_art = playlist.additional_metadata.get("cover_art")
+    if not selected_cover_art and len(options) > 0:
+        sorted_options = sorted(
+            options,
+            key=lambda x: (-x["dimension"], x["layout"])
+        )
+        selected_cover_art = sorted_options[0]
+
+    serialized_playlist["cover_art"] = selected_cover_art
+
+    try:
+        if selected_cover_art:
+            cover_art = get_cover_art_for_playlist(playlist, images, selected_cover_art)
+        else:
+            cover_art = None
+    except Exception:
+        current_app.logger.error("Error generating cover art for playlist:", exc_info=True)
+        cover_art = None
+
     return jsonify({
-        "playlist": playlist.serialize_jspf(),
-        "coverArtGridOptions": options
+        "playlist": serialized_playlist,
+        "coverArtGridOptions": options,
+        "coverArt": cover_art
     })
