@@ -4,7 +4,6 @@ from more_itertools import chunked
 from pyspark.sql import DataFrame
 from typing import Optional
 
-from listenbrainz_spark.stats.incremental.aggregator import Aggregator
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 
 ROWS_PER_MESSAGE = 10000
