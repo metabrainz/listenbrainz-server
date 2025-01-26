@@ -11,7 +11,7 @@ from listenbrainz_spark.stats.incremental.user.release_group import ReleaseGroup
 
 logger = logging.getLogger(__name__)
 
-incremental_entity_map: dict[str, Type[UserEntityStatsQueryProvider]] = {
+incremental_entity_map: Dict[str, Type[UserEntityStatsQueryProvider]] = {
     "artists": ArtistUserEntity,
     "releases": ReleaseUserEntity,
     "recordings": RecordingUserEntity,
@@ -28,4 +28,4 @@ def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Ite
     entity_obj = incremental_entity_map[entity](selector, NUMBER_OF_TOP_ENTITIES)
     message_creator = UserStatsMessageCreator(entity, "user_entity", selector, database)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
-    return aggregator.run()
+    return engine.run()

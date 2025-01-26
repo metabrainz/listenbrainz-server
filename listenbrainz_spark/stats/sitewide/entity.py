@@ -30,4 +30,4 @@ def get_entity_stats(entity: str, stats_range: str) -> Iterator[Dict]:
     message_creator = SitewideEntityStatsMessageCreator(entity, selector)
 
     engine = IncrementalStatsEngine(entity_obj, message_creator)
-    return aggregator.run()
+    return engine.run()
