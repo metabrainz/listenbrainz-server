@@ -4,15 +4,13 @@ from typing import List
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
 
-class Provider(abc.ABC):
+class QueryProvider(abc.ABC):
+    """ Base class for providing SQL queries and paths for aggregation. """
 
     def __init__(self, selector: ListenRangeSelector):
         """
         Args:
-            entity: The entity for which statistics are generated.
             selector: ListenRangeSelector to provide dates and stats range for listens to choose stat from
-
-        If both from_date and to_date are specified, they will be used instead of stats_range.
         """
         self.stats_range, self.from_date, self.to_date = selector.get_dates()
         self._cache_tables = []
@@ -20,6 +18,7 @@ class Provider(abc.ABC):
     @property
     @abc.abstractmethod
     def entity(self):
+        """ The entity for which statistics are generated. """
         raise NotImplementedError()
 
     @abc.abstractmethod

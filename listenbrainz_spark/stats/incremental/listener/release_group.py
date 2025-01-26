@@ -2,11 +2,11 @@ from typing import List
 
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerProvider
+from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider
 
 
-class ReleaseGroupEntityListener(EntityListenerProvider):
-    """ See base class IncrementalStats for documentation. """
+class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     @property
     def entity(self):

@@ -1,6 +1,6 @@
 import abc
-from datetime import datetime, date
-from typing import Iterator, Dict
+from datetime import date
+from typing import Iterator, Dict, Optional
 
 from pyspark.sql import DataFrame
 
@@ -15,18 +15,22 @@ class MessageCreator(abc.ABC):
 
     @abc.abstractmethod
     def create_start_message(self):
+        """ Generate a message marking the start of data generation. """
         raise NotImplementedError()
 
     @abc.abstractmethod
     def create_end_message(self):
+        """ Generate a message marking the end of data generation. """
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def parse_row(self, row: Dict) -> Dict | None:
+    def parse_row(self, row: Dict) -> Optional[Dict]:
+        """ Parse one statistic row in a message. """
         raise NotImplementedError()
 
     @abc.abstractmethod
     def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+        """ Chunk the query results data into multiple messages for storage in LB server. """
         raise NotImplementedError()
 
 

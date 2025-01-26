@@ -1,17 +1,17 @@
 import logging
-from typing import Iterator, Optional, Dict
+from typing import Iterator, Optional, Dict, Type
 
-from listenbrainz_spark.stats.incremental.aggregator import Aggregator
-from listenbrainz_spark.stats.incremental.listener.artist import ArtistEntityListener
-from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerProvider, EntityStatsMessageCreator
-from listenbrainz_spark.stats.incremental.listener.release_group import ReleaseGroupEntityListener
+from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
+from listenbrainz_spark.stats.incremental.listener.artist import ArtistEntityListenerStatsQuery
+from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider, EntityStatsMessageCreator
+from listenbrainz_spark.stats.incremental.listener.release_group import ReleaseGroupEntityListenerStatsQuery
 from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
 
 logger = logging.getLogger(__name__)
 
-incremental_entity_obj_map: Dict[str, type[EntityListenerProvider]] = {
-    "artists": ArtistEntityListener,
-    "release_groups": ReleaseGroupEntityListener,
+incremental_entity_obj_map: Dict[str, Type[EntityListenerStatsQueryProvider]] = {
+    "artists": ArtistEntityListenerStatsQuery,
+    "release_groups": ReleaseGroupEntityListenerStatsQuery,
 }
 
 NUMBER_OF_TOP_LISTENERS = 10  # number of top listeners to retain for user stats
@@ -24,5 +24,5 @@ def get_listener_stats(entity: str, stats_range: str, database: str = None) -> I
     entity_cls = incremental_entity_obj_map[entity]
     entity_obj = entity_cls(selector, NUMBER_OF_TOP_LISTENERS)
     message_creator = EntityStatsMessageCreator(entity, "entity_listener", selector, database)
-    aggregator = Aggregator(entity_obj, message_creator)
-    return aggregator.main()
+    engine = IncrementalStatsEngine(entity_obj, message_creator)
+    return engine.run()

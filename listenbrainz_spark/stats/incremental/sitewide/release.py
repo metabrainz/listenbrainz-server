@@ -1,10 +1,11 @@
 from typing import List
 
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityProvider
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
 
-class ReleaseSitewideEntity(SitewideEntityProvider):
+class ReleaseSitewideEntity(SitewideEntityStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
     @property
     def entity(self):

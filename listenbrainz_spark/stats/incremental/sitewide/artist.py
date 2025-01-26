@@ -1,10 +1,10 @@
 from typing import List
 
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityProvider
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
 
-class AritstSitewideEntity(SitewideEntityProvider):
+class AritstSitewideEntity(SitewideEntityStatsQueryProvider):
 
     @property
     def entity(self):
