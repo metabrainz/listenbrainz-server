@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from listenbrainz_spark.path import LISTENBRAINZ_POPULARITY_DIRECTORY, RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.popularity.common import get_popularity_per_artist_query, \
@@ -23,11 +24,13 @@ class PopularityProvider(QueryProvider):
     def get_base_path(self) -> str:
         return LISTENBRAINZ_POPULARITY_DIRECTORY
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
+                                   existing_created: Optional[datetime]) -> str:
+        inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""
             WITH incremental_users AS (
-                SELECT DISTINCT {entity_id} FROM {incremental_aggregate}
+                SELECT DISTINCT {entity_id} FROM {incremental_aggregate} {inc_where_clause}
             )
             SELECT *
               FROM {existing_aggregate} ea
@@ -91,11 +94,13 @@ class TopPerArtistPopularityProvider(QueryProvider):
     def get_base_path(self) -> str:
         return LISTENBRAINZ_POPULARITY_DIRECTORY
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
+                                   existing_created: Optional[datetime]) -> str:
+        inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""
             WITH incremental_artists AS (
-                SELECT DISTINCT artist_mbid, {entity_id} FROM {incremental_aggregate}
+                SELECT DISTINCT artist_mbid, {entity_id} FROM {incremental_aggregate} {inc_where_clause}
             )
             SELECT *
               FROM {existing_aggregate} ea
