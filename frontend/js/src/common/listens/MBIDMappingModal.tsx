@@ -278,9 +278,21 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                     type="button"
                     className="btn btn-default"
                     onClick={closeModal}
-                    style={{ backgroundColor: COLOR_LB_BLUE }}
+                    style={{
+                      backgroundColor: COLOR_LB_BLUE,
+                      display: "flex", // Enables flexbox
+                      alignItems: "center", // Vertically centers the content
+                      justifyContent: "center", // Optional: centers content horizontally
+                      marginTop: "15px",
+                    }}
                   >
-                    Mass-link listens tool
+                    <img
+                      src="/static/img/icons/stacked_link_icon.svg"
+                      width="20"
+                      height="20"
+                      alt="MetaBrainz"
+                    />
+                    &nbsp; Mass-link listens tool
                   </button>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -302,8 +314,8 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               </div>
               <small className="help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp; Mass-link tool will link all the other listens with the
-                same metadata.
+                &nbsp; This will also link your other listens with the same
+                metadata.
               </small>
               <small className="help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
