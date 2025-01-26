@@ -1822,4 +1822,21 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  getPlaylistCoverArt = async (
+    playlist_mbid: string,
+    dimension: number,
+    layout: number,
+    userToken: string
+  ): Promise<string> => {
+    const url = `${this.APIBaseURI}/art/playlist/${playlist_mbid}/${dimension}/${layout}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    return response.text();
+  };
 }
