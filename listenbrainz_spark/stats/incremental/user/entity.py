@@ -37,14 +37,15 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_entity_id(self):
         return "user_id"
 
-    def get_filter_aggregate_query(self, existing_aggregate, incremental_aggregate):
+    def get_filter_aggregate_query(self, existing_aggregate, incremental_aggregate, existing_created):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
+        inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""
             WITH incremental_users AS (
-                SELECT DISTINCT {entity_id} FROM {incremental_aggregate}
+                SELECT DISTINCT {entity_id} FROM {incremental_aggregate} {inc_where_clause}
             )
             SELECT *
               FROM {existing_aggregate} ea

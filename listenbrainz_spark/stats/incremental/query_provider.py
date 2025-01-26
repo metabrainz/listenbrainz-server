@@ -1,5 +1,6 @@
 import abc
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
@@ -41,7 +42,7 @@ class QueryProvider(abc.ABC):
         return f"{self.get_base_path()}/aggregates/{self.entity}/{self.stats_range}"
 
     def get_bookkeeping_path(self) -> str:
-        """ Returns the HDFS path for bookkeeping metadata. """
+        """ Returns the HDFS path for bookkeeping metadata directory. """
         return f"{self.get_base_path()}/bookkeeping/{self.entity}/{self.stats_range}"
 
     @abc.abstractmethod
@@ -68,7 +69,8 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
+                                   existing_created: Optional[datetime]) -> str:
         """
         Return the query to filter the existing aggregate based on the listens present in incremental
         aggregate.
