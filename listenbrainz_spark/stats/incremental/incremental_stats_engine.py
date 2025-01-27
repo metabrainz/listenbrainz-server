@@ -69,7 +69,7 @@ class IncrementalStatsEngine:
 
     def partial_aggregate_usable(self) -> bool:
         """ Checks whether a partial aggregate exists and is fresh to generate the required stats. """
-        metadata_path = Path(self.provider.get_bookkeeping_path()) / "full"
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/full"
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         try:
@@ -96,7 +96,7 @@ class IncrementalStatsEngine:
         Returns:
             DataFrame: The generated partial aggregate DataFrame.
         """
-        metadata_path = Path(self.provider.get_bookkeeping_path()) / "full"
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/full"
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         table = f"{self.provider.get_table_prefix()}_full_listens"
@@ -137,7 +137,7 @@ class IncrementalStatsEngine:
         return run_query(inc_query)
 
     def bookkeep_incremental_aggregate(self):
-        metadata_path = Path(self.provider.get_bookkeeping_path()) / "incremental"
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental"
         query = f"SELECT max(created) AS latest_created_at FROM {self.incremental_table}"
         latest_created_at = run_query(query).collect()[0]["latest_created_at"]
         metadata_df = listenbrainz_spark.session.createDataFrame(
@@ -147,7 +147,7 @@ class IncrementalStatsEngine:
         metadata_df.write.mode("overwrite").json(metadata_path)
 
     def get_incremental_dumps_existing_created(self):
-        metadata_path = Path(self.provider.get_bookkeeping_path()) / "incremental"
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental"
         try:
             metadata = listenbrainz_spark \
                 .session \
