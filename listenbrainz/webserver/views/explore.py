@@ -56,6 +56,7 @@ def ai_brainz():
 
     return render_template("index.html")
 
+
 def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list[dict], dict, list[dict]]:
     adj_matrix = defaultdict(list)
     id_name_map = {}
