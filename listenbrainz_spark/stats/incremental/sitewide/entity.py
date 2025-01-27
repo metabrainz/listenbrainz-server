@@ -12,7 +12,7 @@ from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY
 
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
-from listenbrainz_spark.stats.incremental.provider import QueryProvider
+from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
 logger = logging.getLogger(__name__)
