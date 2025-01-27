@@ -351,7 +351,7 @@ export default function LinkListensPage() {
             <button
               type="submit"
               className="btn btn-info"
-              disabled={searchQuery.length <= 3}
+              disabled={searchQuery.length <= 1}
             >
               <FontAwesomeIcon icon={faSearch} />
             </button>
