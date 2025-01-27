@@ -106,29 +106,32 @@ export default function LinkListensPage() {
   const [searchQuery, setSearchQuery] = React.useState(""); // To store the search input
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (filterType === "album") {
-      const fuzzysearch = new Fuse(unlinkedListensProps, {
-        keys: ["release_name"],
-      });
+    const searchOptions = {
+      threshold: 0.3,
+    };
+    let key;
+    switch (filterType) {
+      case "artist":
+        key = "artist_name";
+        break;
+      case "track":
+        key = "recording_name";
+        break;
+      case "album":
+      default:
+        key = "release_name";
+        break;
+    }
+    const fuzzysearch = new Fuse(unlinkedListens, {
+      keys: [key],
+      ...searchOptions,
+    });
+    if (filterType === "artist") {
       const filtered = fuzzysearch
         .search(searchQuery)
         .map((result) => result.item);
       setUnlinkedListens(filtered);
-    } else if (filterType === "artist") {
-      const fuzzysearch = new Fuse(unlinkedListensProps, {
-        keys: ["artist_name"],
-      });
-      const albumsByArtist = fuzzysearch
-        .search(searchQuery)
-        .map((result) => result.item.release_name);
-      const filtered = unlinkedListensProps.filter((listen) =>
-        albumsByArtist.includes(listen.release_name)
-      );
-      setUnlinkedListens(filtered);
-    } else if (filterType === "song") {
-      const fuzzysearch = new Fuse(unlinkedListensProps, {
-        keys: ["recording_name"],
-      });
+    } else {
       const albumsByArtist = fuzzysearch
         .search(searchQuery)
         .map((result) => result.item.release_name);
@@ -137,6 +140,12 @@ export default function LinkListensPage() {
       );
       setUnlinkedListens(filtered);
     }
+    setSearchQuery("");
+    setSearchParams({ page: "1" }, { preventScrollReset: true });
+  };
+  const handleReset = () => {
+    setSearchQuery("");
+    setUnlinkedListens(unlinkedListensProps); // Reset to the original list
     setSearchParams({ page: "1" }, { preventScrollReset: true });
   };
   const unsortedGroupedUnlinkedListens = groupBy(
@@ -325,7 +334,7 @@ export default function LinkListensPage() {
       {unlinkedListensProps.length > 0 && (
         <form
           className="input-group input-group-flex"
-          style={{ maxWidth: "400px", gap: "10px" }}
+          style={{ maxWidth: "400px" }}
           onSubmit={handleSearch}
         >
           <select
@@ -352,6 +361,13 @@ export default function LinkListensPage() {
             >
               <FontAwesomeIcon icon={faSearch} />
             </button>
+            <button
+              type="button"
+              className="btn btn-info"
+              onClick={handleReset}
+            >
+              Reset
+            </button>
           </div>
         </form>
       )}
@@ -368,6 +384,11 @@ export default function LinkListensPage() {
           >
             <Loader isLoading={isLoading} />
           </div>
+          {unlinkedListens.length === 0 && (
+            <p>
+              <strong>No unlinked listens found.</strong>
+            </p>
+          )}
           {itemsOnThisPage.map((group) => {
             const releaseName = group.at(0)?.release_name ?? null;
             const multiTrackMappingButton = (
