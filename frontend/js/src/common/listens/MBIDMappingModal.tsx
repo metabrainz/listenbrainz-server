@@ -282,15 +282,8 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 <div style={{ textAlign: "left", marginBottom: "10px" }}>
                   <button
                     type="button"
-                    className="btn btn-default"
+                    className="btn btn-default modal-mass-link-button"
                     onClick={massLinkButton}
-                    style={{
-                      backgroundColor: COLOR_LB_BLUE,
-                      display: "flex", // Enables flexbox
-                      alignItems: "center", // Vertically centers the content
-                      justifyContent: "center", // Optional: centers content horizontally
-                      marginTop: "15px",
-                    }}
                   >
                     <img
                       src="/static/img/icons/stacked_link_icon.svg"
