@@ -11,6 +11,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
+import { useNavigate } from "react-router-dom";
 import ListenCard from "./ListenCard";
 import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -51,6 +52,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const [selectedRecording, setSelectedRecording] = React.useState<
     TrackMetadata
   >();
+  const navigate = useNavigate();
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -59,6 +61,11 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     document?.body?.classList?.remove("modal-open");
     setTimeout(modal.remove, 200);
   }, [modal]);
+
+  const massLinkButton = React.useCallback(() => {
+    closeModal();
+    navigate("/settings/link-listens");
+  }, [closeModal, navigate]);
 
   React.useEffect(() => {
     const closeOnEscape = (e: KeyboardEvent) => {
@@ -276,7 +283,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   <button
                     type="button"
                     className="btn btn-default"
-                    onClick={closeModal}
+                    onClick={massLinkButton}
                     style={{
                       backgroundColor: COLOR_LB_BLUE,
                       display: "flex", // Enables flexbox
