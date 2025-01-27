@@ -1,18 +1,18 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-import requests
-from time import sleep, time
+from time import time
 
 from kombu import Connection, Queue, Exchange
 from kombu.exceptions import KombuError
-from werkzeug.exceptions import ServiceUnavailable
 
+from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
 from brainzutils.ratelimit import ratelimit
 from brainzutils import cache
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.db.playlist import get_recommendation_playlists_for_user
 import listenbrainz.db.dump as db_dump
+import listenbrainz.db.stats as db_stats
 from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
@@ -27,7 +27,8 @@ MONITORED_PLAYLIST_PATCHES = ('daily-jams',
 status_api_bp = Blueprint("status_api_v1", __name__)
 
 
-@status_api_bp.route("/get-dump-info", methods=["GET"])
+@status_api_bp.get("/get-dump-info")
+@crossdomain
 @ratelimit()
 def get_dump_info():
     """
@@ -99,6 +100,38 @@ def get_stats_timestamp():
     return last_updated
 
 
+def get_global_stats_timestamp(entity):
+    """ Check to see when sitewide (global) statistics were last generated for the given entity. Returns unix epoch timestamp"""
+
+    cache_key = STATUS_PREFIX + ".global-stats-timestamp-" + entity
+    last_updated = cache.get(cache_key)
+
+    if last_updated is None:
+        oldest = None
+        for range in ("this_week", "this_month", "this_year", "week", "month", "quarter", "year", "half_yearly", "all_time"):
+            stats = db_stats.get_sitewide_stats(entity, range)
+            if stats is None:
+                current_app.logger.error("No stats found for %s-%s" % (entity, range))
+                return None
+
+            last_updated = stats["last_updated"]
+            current_app.logger.warn("%s-%s: %d" % (entity, range, last_updated))
+
+            if last_updated is None:
+                return None
+
+            if oldest is None:
+                oldest = last_updated
+
+            if oldest < last_updated:
+                oldest = last_updated
+
+        last_updated = oldest
+        cache.set(cache_key, last_updated, CACHE_TIME)
+
+    return last_updated
+
+
 def get_playlists_timestamp():
     """ Check to see when recommendations playlists were last generated for a "random" user. Returns unix epoch timestamp"""
 
@@ -128,7 +161,6 @@ def get_incoming_listens_count():
     cache_key = STATUS_PREFIX + ".incoming_listens"
     listen_count = cache.get(cache_key)
     if listen_count is None:
-        current_app.logger.warn("no cached data!")
         try:
             incoming_exchange = Exchange(current_app.config["INCOMING_EXCHANGE"], "fanout", durable=False)
             incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=incoming_exchange, durable=True)
@@ -194,10 +226,22 @@ def get_service_status():
     else:
         stats_age = current_ts - stats
 
+    global_stats_age = None
+    for entity in ("artists", "recordings", "release_groups"):
+        global_stats = get_global_stats_timestamp(entity)
+        if global_stats is None:
+            global_stats_age = None
+            break
+
+        age = current_ts - global_stats
+        if global_stats_age is None or age > global_stats_age:
+            global_stats_age = age
+
     return {
         "time": current_ts,
         "dump_age": dump_age,
         "stats_age": stats_age,
+        "sitewide_stats_age": global_stats_age,
         "incoming_listen_count": listen_count
     }
 
@@ -237,7 +281,8 @@ def get_playlist_status():
     }
 
 
-@status_api_bp.route("/service-status", methods=["GET"])
+@status_api_bp.get("/service-status")
+@crossdomain
 @ratelimit()
 def service_status():
     """ Fetch the recently updated metrics for age of stats, dumps and the number of items in the incoming
@@ -259,7 +304,8 @@ def service_status():
     return jsonify(get_service_status())
 
 
-@status_api_bp.route("/playlist-status", methods=["GET"])
+@status_api_bp.get("/playlist-status")
+@crossdomain
 @ratelimit()
 def playlist_status():
     """ Fetch the recently updated metrics for age of recommendation playlists. This function returns JSON:

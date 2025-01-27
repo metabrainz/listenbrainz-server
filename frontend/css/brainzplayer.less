@@ -351,6 +351,26 @@
   }
 }
 
+.volume {
+  position: fixed;
+  z-index: 110;
+  background-color: #f8f8f8;
+  right: 17em;
+  bottom: -12em;
+  transition: bottom 0.5s ease-in-out;
+  border-top: 1px solid #ccc;
+  box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
+  .volume-input {
+    width: 3.5em;
+    writing-mode: vertical-rl;
+    direction: rtl;
+    margin: 1.5em 0.6em;
+  }
+  &.show {
+    bottom: @brainzplayer-height;
+  }
+}
+
 .queue {
   position: fixed;
   padding: 1em;

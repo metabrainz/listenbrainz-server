@@ -1,8 +1,12 @@
 import * as React from "react";
 import Slider from "rc-slider";
 import { countBy, debounce, zipObject } from "lodash";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
+import { startOfDay, format, closestTo, parseISO } from "date-fns";
 import { formatReleaseDate, useMediaQuery } from "../utils";
 import { SortDirection } from "../FreshReleases";
+import { COLOR_LB_BLUE } from "../../../utils/constants";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
@@ -15,7 +19,7 @@ function createMarks(
   sortDirection: string,
   order: string
 ) {
-  let dataArr: Array<string> = [];
+  let dataArr: Array<string | JSX.Element> = [];
   let percentArr: Array<number> = [];
   // We want to filter out the keys that have less than 1.5% of the total releases
   const minReleasesThreshold = Math.floor(releases.length * 0.015);
@@ -24,11 +28,33 @@ function createMarks(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
-    const filteredDates = Object.keys(releasesPerDate).filter(
-      (date) => releasesPerDate[date] >= minReleasesThreshold
+
+    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
+    const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
+    const closestDateStr = dates.length
+      ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
+      : recentDateStr;
+
+    const filteredDates = Object.keys(releasesPerDate).filter((date) =>
+      date === closestDateStr
+        ? releasesPerDate[date] >= 0
+        : releasesPerDate[date] > minReleasesThreshold
     );
 
-    dataArr = filteredDates.map((item) => formatReleaseDate(item));
+    const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
+
+    dataArr = filteredDates.map((date) =>
+      date === closestDateStr ? (
+        <FontAwesomeIcon
+          icon={faCalendarCheck}
+          size="2xl"
+          color={COLOR_LB_BLUE}
+          title={title}
+        />
+      ) : (
+        formatReleaseDate(date)
+      )
+    );
     percentArr = filteredDates
       .map((item) => (releasesPerDate[item] / releases.length) * 100)
       .map((_, index, arr) =>
@@ -103,7 +129,7 @@ export default function ReleaseTimeline(props: ReleaseTimelineProps) {
   const { releases, order, direction } = props;
 
   const [currentValue, setCurrentValue] = React.useState<number | number[]>();
-  const [marks, setMarks] = React.useState<{ [key: number]: string }>({});
+  const [marks, setMarks] = React.useState<{ [key: number]: React.ReactNode }>({});
 
   const screenMd = useMediaQuery("(max-width: 992px)"); // @screen-md
 

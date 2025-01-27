@@ -10,6 +10,7 @@ import {
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type AppleMusicPlayerProps = DataSourceProps;
@@ -148,7 +149,11 @@ export default class AppleMusicPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    const player = this.appleMusicPlayer;
+    if (prevProps.volume !== volume && player) {
+      player.volume = (volume ?? 100) / 100;
+    }
     if (prevProps.show && !show) {
       this.stopAndClear();
     }

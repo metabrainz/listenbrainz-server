@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 from collections import defaultdict
 
 import listenbrainz.db.user as db_user
@@ -11,7 +12,7 @@ from psycopg2.extras import DictCursor
 
 from listenbrainz import webserver
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
+from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user, get_playlists_collaborated_on
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -21,6 +22,8 @@ from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+from listenbrainz.webserver.utils import number_readable
+from listenbrainz.webserver.views.api_tools import get_non_negative_param
 from werkzeug.exceptions import NotFound
 
 from brainzutils import cache
@@ -42,7 +45,7 @@ def index(path):
     return render_template("index.html", user=current_user)
 
 
-@user_bp.route("/<user_name>/", methods=['POST'])
+@user_bp.post("/<user_name>/")
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -118,9 +121,9 @@ def profile(user_name):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/stats/top-artists/", methods=['POST'])
-@user_bp.route("/<user_name>/stats/top-albums/", methods=['POST'])
-@user_bp.route("/<user_name>/stats/top-tracks/", methods=['POST'])
+@user_bp.post("/<user_name>/stats/top-artists/")
+@user_bp.post("/<user_name>/stats/top-albums/")
+@user_bp.post("/<user_name>/stats/top-tracks/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -140,7 +143,7 @@ def charts(user_name):
     return jsonify(props)
 
 
-@user_bp.route("/<user_name>/stats/", methods=['POST'])
+@user_bp.post("/<user_name>/stats/")
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -160,10 +163,13 @@ def stats(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/playlists/", methods=['POST'])
+@user_bp.post("/<user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
+
+    page = get_non_negative_param("page", default=1)
+    type = request.args.get("type", "")
 
     user = _get_user(user_name)
     if not user:
@@ -177,10 +183,18 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(
-        db_conn, ts_conn, user.id, include_private=include_private,
-        load_recordings=False, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
-    )
+    offset = (page - 1) * DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+
+    if type == "collaborative":
+        user_playlists, playlist_count = get_playlists_collaborated_on(
+            db_conn, ts_conn, user.id, include_private=include_private,
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+        )
+    else:
+        user_playlists, playlist_count = get_playlists_for_user(
+            db_conn, ts_conn, user.id, include_private=include_private,
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+        )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -188,13 +202,14 @@ def playlists(user_name: str):
         "playlists": playlists,
         "user": user_data,
         "playlistCount": playlist_count,
+        "pageCount": ceil(playlist_count / DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL),
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/recommendations/", methods=['POST'])
+@user_bp.post("/<user_name>/recommendations/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -235,7 +250,7 @@ def recommendation_playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/report-user/", methods=['POST'])
+@user_bp.post("/<user_name>/report-user/")
 @api_login_required
 def report_abuse(user_name):
     data = request.json
@@ -279,7 +294,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.route("/<user_name>/taste/", methods=['POST'])
+@user_bp.post("/<user_name>/taste/")
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -401,8 +416,8 @@ def process_genre_data(yim_top_genre: list, data: list, user_name: str):
     }
 
 
-@user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
-@user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
+@user_bp.post("/<user_name>/year-in-music/")
+@user_bp.post("/<user_name>/year-in-music/<int:year>/")
 def year_in_music(user_name, year: int = 2024):
     """ Year in Music """
     if year not in (2021, 2022, 2023, 2024):
@@ -445,9 +460,24 @@ def year_in_music(user_name, year: int = 2024):
     })
 
 
-@user_bp.route("/<user_name>/",  defaults={'path': ''})
-@user_bp.route('/<user_name>/<path:path>/')
+@user_bp.get("/<user_name>/",  defaults={'path': ''})
+@user_bp.get('/<user_name>/<path:path>/')
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)
-    return render_template("index.html", user=user)
+    if not user:
+        og_meta_tags = None
+    else:
+        listen_count = None
+        try:
+            listen_count = timescale_connection._ts.get_listen_count_for_user(user.id)
+        except psycopg2.OperationalError as err:
+            current_app.logger.error("cannot fetch user listen count: ", str(err))
+        og_meta_tags = {
+            "title": f"{user_name} on ListenBrainz",
+            "description": f'User{f" — {number_readable(listen_count)} listens" if listen_count else ""} — ListenBrainz',
+            "type": "profile",
+            "profile:username": user_name,
+            "url": f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/',
+        }
+    return render_template("index.html", og_meta_tags=og_meta_tags, user=user)

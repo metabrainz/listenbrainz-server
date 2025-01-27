@@ -61,9 +61,7 @@ function CustomNodeComponent({
         y={to([animatedProps.size], (size) => -size / 2)}
       >
         <div className="centered-text" title={node.data.artist_name}>
-          <div className="centered-text-inner ellipsis-3-lines">
-            {node.data.artist_name}
-          </div>
+          <div className="centered-text-inner">{node.data.artist_name}</div>
         </div>
       </animated.foreignObject>
     </animated.g>

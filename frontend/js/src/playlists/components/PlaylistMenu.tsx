@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faSpotify } from "@fortawesome/free-brands-svg-icons";
+import { faSpotify, faItunesNote } from "@fortawesome/free-brands-svg-icons";
 import {
   faCopy,
   faFileExport,
@@ -36,7 +36,9 @@ function PlaylistMenu({
   onPlaylistCopied,
   disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
-  const { APIService, currentUser, spotifyAuth } = useContext(GlobalAppContext);
+  const { APIService, currentUser, spotifyAuth, appleAuth } = useContext(
+    GlobalAppContext
+  );
   const { auth_token } = currentUser;
   const playlistID = getPlaylistId(playlist);
   const playlistTitle = playlist.title;
@@ -159,6 +161,43 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
+  const exportToAppleMusic = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    let result;
+    if (playlistID) {
+      result = await APIService.exportPlaylistToAppleMusic(
+        auth_token,
+        playlistID
+      );
+    } else {
+      result = await APIService.exportJSPFPlaylistToAppleMusic(
+        auth_token,
+        playlist
+      );
+    }
+    const { external_url } = result;
+    const url = external_url?.replace(
+      "/v1/me/library/playlists/",
+      "https://music.apple.com/us/library/playlist/"
+    );
+    toast.success(
+      <ToastMsg
+        title="Playlist exported to Apple Music"
+        message={
+          <>
+            Successfully exported playlist:{" "}
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              {playlistTitle}
+            </a>
+          </>
+        }
+      />,
+      { toastId: "export-playlist" }
+    );
+  };
   const handlePlaylistExport = async (handler: () => Promise<void>) => {
     if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
@@ -179,6 +218,7 @@ function PlaylistMenu({
   const showSpotifyExportButton = spotifyAuth?.permission?.includes(
     "playlist-modify-public"
   );
+  const showAppleMusicExportButton = appleAuth;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"
@@ -233,20 +273,31 @@ function PlaylistMenu({
           </li>
         </>
       )}
+      <li role="separator" className="divider" />
       {showSpotifyExportButton && (
-        <>
-          <li role="separator" className="divider" />
-          <li>
-            <a
-              id="exportPlaylistToSpotify"
-              role="button"
-              href="#"
-              onClick={() => handlePlaylistExport(exportToSpotify)}
-            >
-              <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
-            </a>
-          </li>
-        </>
+        <li>
+          <a
+            id="exportPlaylistToSpotify"
+            role="button"
+            href="#"
+            onClick={() => handlePlaylistExport(exportToSpotify)}
+          >
+            <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
+          </a>
+        </li>
+      )}
+      {showAppleMusicExportButton && (
+        <li>
+          <a
+            id="exportPlaylistToAppleMusic"
+            role="button"
+            href="#"
+            onClick={() => handlePlaylistExport(exportToAppleMusic)}
+          >
+            <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
+            Music
+          </a>
+        </li>
       )}
       <li role="separator" className="divider" />
       <li>

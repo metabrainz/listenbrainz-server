@@ -13,6 +13,7 @@ from werkzeug.local import LocalProxy
 from listenbrainz import db
 from listenbrainz.db import create_test_database_connect_strings, timescale, donation
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
+from listenbrainz.webserver.converters import NotApiPathConverter
 
 API_PREFIX = '/1'
 
@@ -107,6 +108,8 @@ def create_app(debug=None):
     if app.debug:
         logger = logging.getLogger('listenbrainz')
         logger.setLevel(logging.DEBUG)
+
+    app.url_map.converters["not_api_path"] = NotApiPathConverter
 
     # initialize Flask-DebugToolbar if the debug option is True
     if app.debug and app.config['SECRET_KEY']:
@@ -313,6 +316,8 @@ def create_app_rtfd():
         os.path.dirname(os.path.realpath(__file__)),
         '..', 'rtd_config.py'
     ))
+
+    app.url_map.converters["not_api_path"] = NotApiPathConverter
 
     _register_blueprints(app)
     return app
