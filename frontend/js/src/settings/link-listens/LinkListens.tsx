@@ -335,7 +335,7 @@ export default function LinkListensPage() {
           >
             <option value="album">Album</option>
             <option value="artist">Artist</option>
-            <option value="song">Song</option>
+            <option value="track">Track</option>
           </select>
           <div className="input-group-btn">
             <input
