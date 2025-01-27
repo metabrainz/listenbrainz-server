@@ -321,33 +321,37 @@ export default function LinkListensPage() {
         </p>
       )}
       {unlinkedListensProps.length > 0 && (
-        <div className="filter-div">
-          <div className="dropdown">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="filter-btn btn btn-info"
-            >
-              <option value="album">Album</option>
-              <option value="artist">Artist</option>
-              <option value="song">Song</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="filter-search"
-          />
-          <button
-            onClick={handleSearch}
-            className="filter-btn btn btn-info"
-            type="submit"
+        <form
+          className="input-group input-group-flex"
+          style={{ maxWidth: "400px", gap: "10px" }}
+          onSubmit={handleSearch}
+        >
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="btn btn-info"
           >
-            <FontAwesomeIcon icon={faSearch} />
-          </button>
-        </div>
+            <option value="album">Album</option>
+            <option value="artist">Artist</option>
+            <option value="song">Song</option>
+          </select>
+          <div className="input-group-btn">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-control"
+            />
+            <button
+              type="submit"
+              className="btn btn-info"
+              disabled={searchQuery.length <= 3}
+            >
+              <FontAwesomeIcon icon={faSearch} />
+            </button>
+          </div>
+        </form>
       )}
       <br />
       <div>
