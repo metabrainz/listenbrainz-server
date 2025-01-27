@@ -77,7 +77,7 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
         else:
             adj_matrix[genre_id] = []
             parent_map[genre_id] = set()
-    
+
     if genre_mbid not in id_name_map:
         return None, None, None, None
 
@@ -175,7 +175,7 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
         else:
             adj_matrix[genre_id] = []
             parent_map[genre_id] = set()
-    
+
     if genre_mbid not in id_name_map:
         return None, None, None, None
 
