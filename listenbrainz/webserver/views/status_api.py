@@ -234,10 +234,7 @@ def get_service_status():
             break
 
         age = current_ts - global_stats
-        if global_stats_age is None:
-            global_stats_age = age
-
-        if age > global_stats_age:
+        if global_stats_age is None or age > global_stats_age:
             global_stats_age = age
 
     return {
