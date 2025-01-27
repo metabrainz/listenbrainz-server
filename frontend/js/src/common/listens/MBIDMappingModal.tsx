@@ -204,8 +204,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   data-for="musicbrainz-helptext"
                   size="sm"
                 />{" "}
-                below to link this Listen, as well as your other Listens with
-                the same metadata.
+                below to link this Listen.
               </p>
               <ListenCard
                 listen={listenToMap}
@@ -314,12 +313,12 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               </div>
               <small className="help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp; This will also link your other listens with the same
+                &nbsp;This will also link your other listens with the same
                 metadata.
               </small>
               <small className="help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;&nbsp;
+                &nbsp;
                 <a
                   href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
                   target="_blank"
@@ -330,7 +329,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               </small>
               <small className="help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;&nbsp;
+                &nbsp;
                 <a
                   href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
                   target="_blank"
