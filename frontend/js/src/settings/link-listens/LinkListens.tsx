@@ -106,10 +106,6 @@ export default function LinkListensPage() {
   const [searchQuery, setSearchQuery] = React.useState(""); // To store the search input
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery) {
-      setUnlinkedListens(unlinkedListensProps);
-      return;
-    }
     if (filterType === "album") {
       const fuzzysearch = new Fuse(unlinkedListensProps, {
         keys: ["release_name"],
@@ -141,6 +137,7 @@ export default function LinkListensPage() {
       );
       setUnlinkedListens(filtered);
     }
+    setSearchParams({ page: "1" }, { preventScrollReset: true });
   };
   const unsortedGroupedUnlinkedListens = groupBy(
     unlinkedListens,
