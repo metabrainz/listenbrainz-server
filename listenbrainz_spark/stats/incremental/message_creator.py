@@ -8,6 +8,7 @@ from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelec
 
 
 class MessageCreator(abc.ABC):
+    """ Base class for generating messages for sending to LB server from spark query results """
 
     def __init__(self, entity: str, message_type: str):
         self.entity = entity
