@@ -720,22 +720,23 @@ def create_thanks_event(user_name):
                 UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
             result = db_user_timeline_event.get_user_timeline_event_by_id(
                 db_conn, row_id)
-        elif data["original_event_type"] == UserTimelineEventType.RECORDING_PIN.value:
+        elif event_type == UserTimelineEventType.RECORDING_PIN.value:
             result = get_pin_by_id(db_conn, row_id)
         else:
             raise APIBadRequest(
                 "This event type is not supported for thanking")
 
         if not result:
-            raise APIBadRequest(f"{metadata['event_type']} event with id {row_id} not found")
+            raise APIBadRequest(f"{event_type} event with id {row_id} not found")
 
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             event = db_user_timeline_event.create_thanks_event(
                 db_conn, user['id'], metadata)
-            event_data = event.dict()
+            '''event_data = event.dict()
             event_data['created'] = int(event_data['created'].timestamp())
-            event_data['event_type'] = event_data['original_event_type'].value
-            return jsonify(event_data)
+            event_data['event_type'] = event_data['event_type'].value
+            return jsonify(event_data)'''
+            return jsonify({"status": "ok"})
         else:
             raise APIUnauthorized("You cannot thank events of this user")
     except pydantic.ValidationError as e:
