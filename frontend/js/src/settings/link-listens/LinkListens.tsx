@@ -104,7 +104,12 @@ export default function LinkListensPage() {
   >(unlinkedListensProps);
   const [filterType, setFilterType] = React.useState("album"); // Default filter type
   const [searchQuery, setSearchQuery] = React.useState(""); // To store the search input
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery) {
+      setUnlinkedListens(unlinkedListensProps);
+      return;
+    }
     if (filterType === "album") {
       const fuzzysearch = new Fuse(unlinkedListensProps, {
         keys: ["release_name"],
