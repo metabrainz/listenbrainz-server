@@ -24,4 +24,4 @@ def get_listening_activity(stats_range: str, database: str = None)\
     entity_obj = ListeningActivityUserStatsQueryEntity(selector)
     message_creator = ListeningActivityUserMessageCreator("user_listening_activity", selector, database)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
-    return aggregator.run()
+    return engine.run()

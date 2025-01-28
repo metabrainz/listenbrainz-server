@@ -16,4 +16,4 @@ def get_daily_activity(stats_range: str, database: str = None) -> Iterator[Optio
     entity_obj = DailyActivityUserStatsQueryEntity(selector)
     message_creator = DailyActivityUserMessageCreator("user_daily_activity", selector, database)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
-    return aggregator.run()
+    return engine.run()

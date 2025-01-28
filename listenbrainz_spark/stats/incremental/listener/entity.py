@@ -20,7 +20,7 @@ class EntityListenerStatsQueryProvider(UserEntityStatsQueryProvider, abc.ABC):
         raise NotImplementedError()
 
 
-class EntityStatsMessageCreator(UserStatsMessageCreator):
+class EntityListenerStatsMessageCreator(UserStatsMessageCreator):
 
     def items_per_message(self):
         return 10000

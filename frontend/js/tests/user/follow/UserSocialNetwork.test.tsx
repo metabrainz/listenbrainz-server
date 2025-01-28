@@ -166,11 +166,11 @@ describe("<UserSocialNetwork />", () => {
       });
 
       // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
+      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord"]);
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
+      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord", "Baldur"]);
     });
 
     it("updates the state when called with action unfollow", async () => {
@@ -249,13 +249,13 @@ describe("<UserSocialNetwork />", () => {
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
+      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord", "Baldur"]);
 
       // Ensure we can't add a user twice
       await act(async () => {
         instance.updateFollowingList({ name: "Baldur" }, "follow");
       });
-      expect(instance.state.followingList).toEqual(["jack", "fnord", "Baldur"]);
+      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord", "Baldur"]);
     });
 
     it("does nothing when trying to unfollow a user that is not followed", async () => {
