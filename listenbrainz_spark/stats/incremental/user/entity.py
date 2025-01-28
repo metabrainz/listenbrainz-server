@@ -11,6 +11,7 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
+from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
@@ -51,6 +52,7 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
         else:
             inc_clause = f"SELECT DISTINCT {entity_id} FROM {incremental_aggregate}"
         logger.info("Query: %s", inc_clause)
+        logger.info("RESULTS: %s", run_query(inc_clause).collect())
         return f"""
             WITH incremental_users AS (
                 {inc_clause}
