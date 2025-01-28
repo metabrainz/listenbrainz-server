@@ -41,11 +41,19 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
-        inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
+        if existing_created:
+            inc_clause = f"""
+                SELECT DISTINCT {entity_id}
+                  FROM {inc_listens_table}
+                 WHERE created >= to_timestamp('{existing_created}')
+            """
+        else:
+            inc_clause = f"SELECT DISTINCT {entity_id} FROM {incremental_aggregate}"
+
         return f"""
             WITH incremental_users AS (
-                SELECT DISTINCT {entity_id} FROM {inc_listens_table} {inc_where_clause}
+                {inc_clause}
             )
             SELECT *
               FROM {existing_aggregate} ea
