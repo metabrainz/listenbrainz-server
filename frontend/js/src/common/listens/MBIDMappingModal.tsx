@@ -17,11 +17,7 @@ import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchTrackOrMBID from "../../utils/SearchTrackOrMBID";
-import {
-  COLOR_LB_GREEN,
-  COLOR_LB_LIGHT_GRAY,
-  COLOR_LB_BLUE,
-} from "../../utils/constants";
+import { COLOR_LB_GREEN, COLOR_LB_LIGHT_GRAY } from "../../utils/constants";
 import {
   getArtistName,
   getRecordingMBID,
