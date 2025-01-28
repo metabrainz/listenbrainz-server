@@ -6,12 +6,13 @@ import {
   faExchangeAlt,
   faInfoCircle,
   faQuestionCircle,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import ListenCard from "./ListenCard";
 import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -48,7 +49,6 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const [selectedRecording, setSelectedRecording] = React.useState<
     TrackMetadata
   >();
-  const navigate = useNavigate();
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -57,11 +57,6 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     document?.body?.classList?.remove("modal-open");
     setTimeout(modal.remove, 200);
   }, [modal]);
-
-  const massLinkButton = React.useCallback(() => {
-    closeModal();
-    navigate("/settings/link-listens");
-  }, [closeModal, navigate]);
 
   React.useEffect(() => {
     const closeOnEscape = (e: KeyboardEvent) => {
@@ -269,26 +264,37 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
             </div>
             <div className="modal-footer" style={{ textAlign: "left" }}>
               <div
+                className="mb-10"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
                 }}
               >
-                <div style={{ textAlign: "left", marginBottom: "10px" }}>
-                  <button
+                <div>
+                  <Link
                     type="button"
-                    className="btn btn-default modal-mass-link-button"
-                    onClick={massLinkButton}
+                    className="btn btn-info"
+                    to="/settings/link-listens"
+                    onClick={closeModal}
                   >
-                    <img
-                      src="/static/img/icons/stacked_link_icon.svg"
-                      width="20"
-                      height="20"
-                      alt="MetaBrainz"
-                    />
+                    <span
+                      className="fa-layers fa-fw"
+                      style={{ marginRight: "0.5em" }}
+                    >
+                      <FontAwesomeIcon icon={faLink} />
+                      <FontAwesomeIcon
+                        icon={faLink}
+                        color="#FFFFFFA1"
+                        transform="right-5"
+                      />
+                      <FontAwesomeIcon
+                        icon={faLink}
+                        color="#ffffff42"
+                        transform="right-10"
+                      />
+                    </span>
                     &nbsp; Mass-link listens tool
-                  </button>
+                  </Link>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <button
@@ -307,12 +313,12 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   </button>
                 </div>
               </div>
-              <small className="help-block">
+              <div className="small help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
                 &nbsp;This will also link your other listens with the same
                 metadata.
-              </small>
-              <small className="help-block">
+              </div>
+              <div className="small help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
                 &nbsp;
                 <a
@@ -322,8 +328,8 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 >
                   How long until my stats reflect the change?
                 </a>
-              </small>
-              <small className="help-block">
+              </div>
+              <div className="small help-block">
                 <FontAwesomeIcon icon={faInfoCircle} />
                 &nbsp;
                 <a
@@ -334,7 +340,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   Recordings added within the last 4 hours may temporarily look
                   incomplete.
                 </a>
-              </small>
+              </div>
             </div>
           </form>
         </div>
