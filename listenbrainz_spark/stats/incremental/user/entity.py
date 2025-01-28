@@ -38,7 +38,7 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_entity_id(self):
         return "user_id"
 
-    def get_filter_aggregate_query_coarse(self, existing_aggregate, incremental_aggregate, inc_listens_table, existing_created):
+    def get_filter_aggregate_query(self, existing_aggregate, incremental_aggregate, inc_listens_table, existing_created):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
