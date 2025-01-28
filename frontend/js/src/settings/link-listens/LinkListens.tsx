@@ -79,26 +79,10 @@ export default function LinkListensPage() {
     RouteQuery(["link-listens"], location.pathname)
   );
   const {
-    unlinked_listens: unlinkedListensPropss = [],
+    unlinked_listens: unlinkedListensProps = [],
     last_updated: lastUpdated,
   } = loaderData || {};
 
-  const unlinkedListensProps = [
-    {
-      artist_name: "home grown",
-      listened_at: "2025-01-18T20:43:47.000Z",
-      recording_msid: "e2b4433c-94ad-4c7f-aa69-45038fbc875f",
-      recording_name: "wayfarer",
-      release_name: "wayfarer",
-    },
-    {
-      artist_name: "May-Flowa",
-      listened_at: "2025-01-18T20:08:47.000Z",
-      recording_msid: "a0570ca2-003d-4b45-b6e4-3cf93091b9cd",
-      recording_name: "poolside",
-      release_name: "poolside",
-    },
-  ];
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSearchParam = searchParams.get("page");
 
