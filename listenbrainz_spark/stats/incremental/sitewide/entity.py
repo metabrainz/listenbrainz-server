@@ -1,5 +1,5 @@
+import abc
 import logging
-from abc import ABC
 from typing import Iterator, Dict
 
 from pydantic import ValidationError
@@ -10,9 +10,10 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY
-from listenbrainz_spark.stats import SITEWIDE_STATS_ENTITY_LIMIT
-from listenbrainz_spark.stats.incremental import IncrementalStats
-from listenbrainz_spark.utils import read_files_from_HDFS
+
+from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
+from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
+from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +25,25 @@ entity_model_map = {
 }
 
 
-class SitewideEntity(IncrementalStats, ABC):
+class SitewideStatsQueryProvider(QueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def get_base_path(self) -> str:
         return LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY
 
     def get_table_prefix(self) -> str:
         return f"sitewide_{self.entity}_{self.stats_range}"
+
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+        return f"SELECT * FROM {existing_aggregate}"
+
+
+class SitewideEntityStatsQueryProvider(SitewideStatsQueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
+
+    def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
+        super().__init__(selector)
+        self.top_entity_limit = top_entity_limit
 
     def get_listen_count_limit(self) -> int:
         """ Return the per user per entity listen count above which it should
@@ -43,49 +56,15 @@ class SitewideEntity(IncrementalStats, ABC):
         """
         return 500
 
-    def generate_stats(self, top_entity_limit: int) -> DataFrame:
-        """
-        Generate statistics of the given type, entity and stats range.
 
-        Args:
-            top_entity_limit (int): The maximum number of top entities to retrieve.
+class SitewideEntityStatsMessageCreator(StatsMessageCreator):
 
-        Returns a DataFrame of the results.
-        """
-        self.setup_cache_tables()
-        prefix = self.get_table_prefix()
-
-        if not self.partial_aggregate_usable():
-            self.create_partial_aggregate()
-        partial_df = read_files_from_HDFS(self.get_existing_aggregate_path())
-        partial_table = f"{prefix}_existing_aggregate"
-        partial_df.createOrReplaceTempView(partial_table)
-
-        if self.incremental_dump_exists():
-            inc_df = self.create_incremental_aggregate()
-            inc_table = f"{prefix}_incremental_aggregate"
-            inc_df.createOrReplaceTempView(inc_table)
-            final_df = self.combine_aggregates(partial_table, inc_table)
-        else:
-            final_df = partial_df
-
-        final_table = f"{prefix}_final_aggregate"
-        final_df.createOrReplaceTempView(final_table)
-
-        return self.get_top_n(final_table, top_entity_limit)
+    def __init__(self, entity, selector):
+        super().__init__(entity, "sitewide_entity", selector)
 
     def create_messages(self, results: DataFrame) -> Iterator[Dict]:
-        """
-        Create messages to send the data to the webserver via RabbitMQ
-
-        Args:
-            results: Data to sent to the webserver
-
-        Returns:
-            messages: A list of messages to be sent via RabbitMQ
-        """
         message = {
-            "type": "sitewide_entity",
+            "type": self.message_type,
             "stats_range": self.stats_range,
             "from_ts": int(self.from_date.timestamp()),
             "to_ts": int(self.to_date.timestamp()),
@@ -108,7 +87,3 @@ class SitewideEntity(IncrementalStats, ABC):
         message["data"] = entity_list
 
         yield message
-
-    def main(self):
-        results = self.generate_stats(SITEWIDE_STATS_ENTITY_LIMIT)
-        return self.create_messages(results)

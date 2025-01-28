@@ -1,44 +1,27 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, ArrayType
-
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.listener.entity import EntityListener
+from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider
 
 
-class ReleaseGroupEntityListener(EntityListener):
-    """ See base class IncrementalStats for documentation. """
+class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
-    def __init__(self, stats_range, database):
-        super().__init__(
-            entity="release_groups", stats_range=stats_range,
-            database=database, message_type="entity_listener"
-        )
+    @property
+    def entity(self):
+        return "release_groups"
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("release_group_mbid", StringType(), nullable=False),
-            StructField("release_group_name", StringType(), nullable=False),
-            StructField("release_group_artist_name", StringType(), nullable=False),
-            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=False),
-            StructField("caa_id", IntegerType(), nullable=True),
-            StructField("caa_release_mbid", StringType(), nullable=True),
-            StructField("user_id", IntegerType(), nullable=False),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
     def get_entity_id(self):
         return "release_group_mbid"
 
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         rel_cache_table = cache_tables[0]
         rg_cache_table = cache_tables[1]
-        result = run_query(f"""
+        return f"""
             WITH gather_release_data AS (
                 SELECT user_id
                      , rg.release_group_mbid
@@ -71,11 +54,10 @@ class ReleaseGroupEntityListener(EntityListener):
                      , caa_id
                      , caa_release_mbid
                      , user_id
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT release_group_mbid
                      , release_group_name
@@ -114,10 +96,9 @@ class ReleaseGroupEntityListener(EntityListener):
                      , caa_release_mbid
                      , user_id
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count as (
             SELECT release_group_mbid
                  , SUM(listen_count) as total_listen_count
@@ -152,7 +133,7 @@ class ReleaseGroupEntityListener(EntityListener):
                         , false
                    ) as listeners
               FROM ranked_stats
-             WHERE rank < {N}
+             WHERE rank < {self.top_entity_limit}
           GROUP BY release_group_mbid
                  , release_group_name
                  , artist_name
@@ -173,4 +154,3 @@ class ReleaseGroupEntityListener(EntityListener):
               JOIN entity_count
              USING (release_group_mbid)
         """
-        return run_query(query)

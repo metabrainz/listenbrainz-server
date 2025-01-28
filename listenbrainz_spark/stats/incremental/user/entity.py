@@ -1,7 +1,6 @@
 import abc
 import logging
-from datetime import date, datetime
-from typing import Optional, Iterator, Dict, Tuple
+from typing import Iterator, Dict
 
 from more_itertools import chunked
 from pydantic import ValidationError
@@ -12,9 +11,9 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental import IncrementalStats
-from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
+from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
+from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
 logger = logging.getLogger(__name__)
 
@@ -26,17 +25,8 @@ entity_model_map = {
 }
 
 
-class UserEntity(IncrementalStats, abc.ABC):
-    """ See base class IncrementalStats for documentation. """
-
-    def __init__(self, entity: str, stats_range: str = None, database: str = None, message_type: str = None,
-                 from_date: datetime = None, to_date: datetime = None):
-        super().__init__(entity, stats_range, from_date, to_date)
-        if database:
-            self.database = database
-        else:
-            self.database = f"{self.entity}_{self.stats_range}_{date.today().strftime('%Y%m%d')}"
-        self.message_type = message_type
+class UserStatsQueryProvider(QueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
     def get_base_path(self) -> str:
         return LISTENBRAINZ_USER_STATS_DIRECTORY
@@ -47,16 +37,12 @@ class UserEntity(IncrementalStats, abc.ABC):
     def get_entity_id(self):
         return "user_id"
 
-    def items_per_message(self):
-        """ Get the number of items to chunk per message """
-        return 25
-
-    def filter_existing_aggregate(self, existing_aggregate, incremental_aggregate):
+    def get_filter_aggregate_query(self, existing_aggregate, incremental_aggregate):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
         entity_id = self.get_entity_id()
-        query = f"""
+        return f"""
             WITH incremental_users AS (
                 SELECT DISTINCT {entity_id} FROM {incremental_aggregate}
             )
@@ -64,51 +50,54 @@ class UserEntity(IncrementalStats, abc.ABC):
               FROM {existing_aggregate} ea
              WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.{entity_id} = ea.{entity_id})
         """
-        return run_query(query)
 
-    def generate_stats(self, top_entity_limit: int) -> Tuple[bool, DataFrame]:
-        self.setup_cache_tables()
-        prefix = self.get_table_prefix()
 
-        if not self.partial_aggregate_usable():
-            self.create_partial_aggregate()
-            only_inc_users = False
-        else:
-            only_inc_users = True
+class UserEntityStatsQueryProvider(UserStatsQueryProvider, abc.ABC):
+    """ See base class QueryProvider for details. """
 
-        partial_df = read_files_from_HDFS(self.get_existing_aggregate_path())
-        partial_table = f"{prefix}_existing_aggregate"
-        partial_df.createOrReplaceTempView(partial_table)
+    def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
+        super().__init__(selector)
+        self.top_entity_limit = top_entity_limit
 
-        if self.incremental_dump_exists():
-            inc_df = self.create_incremental_aggregate()
-            inc_table = f"{prefix}_incremental_aggregate"
-            inc_df.createOrReplaceTempView(inc_table)
 
-            if only_inc_users:
-                filtered_aggregate_df = self.filter_existing_aggregate(partial_table, inc_table)
-                filtered_table = f"{prefix}_filtered_aggregate"
-                filtered_aggregate_df.createOrReplaceTempView(filtered_table)
-            else:
-                filtered_table = partial_table
+class UserStatsMessageCreator(StatsMessageCreator):
 
-            final_df = self.combine_aggregates(filtered_table, inc_table)
-        else:
-            final_df = partial_df
-            only_inc_users = False
+    def items_per_message(self):
+        """ Get the number of items to chunk per message """
+        return 25
 
-        final_table = f"{prefix}_final_aggregate"
-        final_df.createOrReplaceTempView(final_table)
+    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+        from_ts = int(self.from_date.timestamp())
+        to_ts = int(self.to_date.timestamp())
 
-        results_df = self.get_top_n(final_table, top_entity_limit)
-        return only_inc_users, results_df
+        data = results.toLocalIterator()
+        for entries in chunked(data, self.items_per_message()):
+            multiple_rows = []
+            for entry in entries:
+                processed_row = entry.asDict(recursive=True)
+                processed_stat = self.parse_row(processed_row)
+                if processed_stat is not None:
+                    multiple_rows.append(processed_stat)
 
-    def parse_one_user_stats(self, entry: dict):
+            yield {
+                "type": self.message_type,
+                "stats_range": self.stats_range,
+                "from_ts": from_ts,
+                "to_ts": to_ts,
+                "entity": self.entity,
+                "data": multiple_rows,
+                "database": self.database
+            }
+
+
+class UserEntityStatsMessageCreator(UserStatsMessageCreator):
+
+    def parse_row(self, row):
         count_key = self.entity + "_count"
-        total_entity_count = entry[count_key]
+        total_entity_count = row[count_key]
 
         entity_list = []
-        for item in entry[self.entity]:
+        for item in row[self.entity]:
             try:
                 entity_model_map[self.entity](**item)
                 entity_list.append(item)
@@ -117,54 +106,7 @@ class UserEntity(IncrementalStats, abc.ABC):
                 total_entity_count -= 1
 
         return {
-            "user_id": entry["user_id"],
+            "user_id": row["user_id"],
             "data": entity_list,
             "count": total_entity_count
         }
-
-    def create_messages(self, only_inc_users, results: DataFrame) -> Iterator[Dict]:
-        """
-        Create messages to send the data to the webserver via RabbitMQ
-
-        Args:
-            only_inc_users: whether stats were generated only for users with listens present in incremental dumps
-            results: Data to sent to the webserver
-        """
-        if not only_inc_users:
-            yield {
-                "type": "couchdb_data_start",
-                "database": self.database
-            }
-
-        from_ts = int(self.from_date.timestamp())
-        to_ts = int(self.to_date.timestamp())
-
-        data = results.toLocalIterator()
-        for entries in chunked(data, self.items_per_message()):
-            multiple_user_stats = []
-            for entry in entries:
-                row = entry.asDict(recursive=True)
-                processed_stat = self.parse_one_user_stats(row)
-                if processed_stat is not None:
-                    multiple_user_stats.append(processed_stat)
-
-            yield {
-                "type": self.message_type,
-                "stats_range": self.stats_range,
-                "from_ts": from_ts,
-                "to_ts": to_ts,
-                "entity": self.entity,
-                "data": multiple_user_stats,
-                "database": self.database
-            }
-
-        if not only_inc_users:
-            yield {
-                "type": "couchdb_data_end",
-                "database": self.database
-            }
-
-    def main(self, top_entity_limit: int):
-        only_inc_users, results = self.generate_stats(top_entity_limit)
-        itr = self.create_messages(only_inc_users, results)
-        return itr

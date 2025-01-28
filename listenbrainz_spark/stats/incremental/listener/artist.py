@@ -1,35 +1,25 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.listener.entity import EntityListener
+from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider
 
 
-class ArtistEntityListener(EntityListener):
-    """ See base class IncrementalStats for documentation. """
+class ArtistEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
-    def __init__(self, stats_range, database):
-        super().__init__(entity="artists", stats_range=stats_range, database=database, message_type="entity_listener")
+    @property
+    def entity(self):
+        return "artists"
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("artist_name", StringType(), nullable=False),
-            StructField("artist_mbid", StringType(), nullable=True),
-            StructField("user_id", IntegerType(), nullable=False),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
     def get_entity_id(self):
         return "artist_mbid"
 
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         cache_table = cache_tables[0]
-        result = run_query(f"""
+        return f"""
             WITH exploded_listens AS (
                 SELECT user_id
                      , explode_outer(artist_credit_mbids) AS artist_mbid
@@ -50,11 +40,10 @@ class ArtistEntityListener(EntityListener):
               GROUP BY artist_mbid
                      , artist_name
                      , user_id
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT user_id
                      , artist_name
@@ -77,10 +66,9 @@ class ArtistEntityListener(EntityListener):
                      , artist_name
                      , user_id
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count as (
                 SELECT artist_mbid
                      , SUM(listen_count) as total_listen_count
@@ -107,7 +95,7 @@ class ArtistEntityListener(EntityListener):
                             , false
                        ) as listeners
                   FROM ranked_stats
-                 WHERE rank < {N}
+                 WHERE rank < {self.top_entity_limit}
               GROUP BY artist_mbid
                      , artist_name
             )
@@ -120,4 +108,3 @@ class ArtistEntityListener(EntityListener):
                   JOIN entity_count
                  USING (artist_mbid)
         """
-        return run_query(query)
