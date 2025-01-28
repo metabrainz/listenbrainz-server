@@ -50,7 +50,7 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
             """
         else:
             inc_clause = f"SELECT DISTINCT {entity_id} FROM {incremental_aggregate}"
-
+        logger.info("Query: %s", inc_clause)
         return f"""
             WITH incremental_users AS (
                 {inc_clause}
