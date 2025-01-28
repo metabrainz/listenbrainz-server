@@ -179,8 +179,7 @@ class IncrementalStatsEngine:
         results = self.generate_stats()
         if not self.only_inc:
             yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results):
-            message["only_inc"] = self.only_inc
+        for message in self.message_creator.create_messages(results, self.only_inc):
             yield message
         if not self.only_inc:
             yield self.message_creator.create_end_message()

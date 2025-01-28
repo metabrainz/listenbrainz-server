@@ -136,7 +136,10 @@ class _StatsDataset(SparkDataset):
             )
 
     def handle_insert(self, message):
-        database = message["database"]
+        if "database_prefix" in message:
+            database = couchdb.list_databases(message["database_prefix"])[0]
+        else:
+            database = message["database"]
         stats_range = message["stats_range"]
         from_ts = message["from_ts"]
         to_ts = message["to_ts"]

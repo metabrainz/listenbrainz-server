@@ -23,4 +23,4 @@ def get_listening_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     entity_obj = ListeningActivitySitewideStatsQuery(selector)
     message_creator = ListeningActivitySitewideMessageCreator(selector)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
-    return aggregator.run()
+    return engine.run()
