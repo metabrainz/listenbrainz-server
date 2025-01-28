@@ -4,7 +4,8 @@ from typing import Iterator, Optional, Dict, Type
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.artist import ArtistUserEntity
-from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider, UserStatsMessageCreator
+from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider, \
+    UserEntityStatsMessageCreator
 from listenbrainz_spark.stats.incremental.user.recording import RecordingUserEntity
 from listenbrainz_spark.stats.incremental.user.release import ReleaseUserEntity
 from listenbrainz_spark.stats.incremental.user.release_group import ReleaseGroupUserEntity
@@ -26,6 +27,6 @@ def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Ite
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
     selector = StatsRangeListenRangeSelector(stats_range)
     entity_obj = incremental_entity_map[entity](selector, NUMBER_OF_TOP_ENTITIES)
-    message_creator = UserStatsMessageCreator(entity, "user_entity", selector, database)
+    message_creator = UserEntityStatsMessageCreator(entity, "user_entity", selector, database)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
     return engine.run()
