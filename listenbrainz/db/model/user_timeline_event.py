@@ -61,14 +61,14 @@ class NotificationMetadata(BaseModel):
 
 
 class ThanksMetadata(BaseModel):
-    original_event_id: NonNegativeInt
     original_event_type: UserTimelineEventType
+    original_event_id: NonNegativeInt
     blurb_content: Optional[str]
 
 
 
 UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
-                                  RecordingRecommendationMetadata, NotificationMetadata]
+                                  RecordingRecommendationMetadata, NotificationMetadata, ThanksMetadata]
 
 
 class UserTimelineEvent(BaseModel):

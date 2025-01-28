@@ -440,8 +440,10 @@ export default function UserFeedPage() {
             icon={faHandshake}
             buttonClassName="btn btn-link btn-xs"
             action={() => {
+              console.log(event.id);
+              console.log(event.event_type);
               NiceModal.show(ThanksModal, {
-                original_event_id: event?.id,
+                original_event_id: event.id!,
                 original_event_type: event.event_type,
               });
             }}

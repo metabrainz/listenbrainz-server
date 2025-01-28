@@ -72,7 +72,7 @@ def create_user_track_recommendation_event(db_conn, user_id: int, metadata: Reco
         db_conn,
         user_id=user_id,
         event_type=UserTimelineEventType.RECORDING_RECOMMENDATION,
-        metadata=metadata,
+        metadata=metadata
     )
 
 
@@ -94,7 +94,7 @@ def create_thanks_event(db_conn, user_id: int, metadata: ThanksMetadata) -> User
         db_conn,
         user_id=user_id,
         event_type=UserTimelineEventType.THANKS,
-        metadata=metadata,
+        metadata=metadata
     )
 
 
@@ -164,7 +164,7 @@ def create_personal_recommendation_event(db_conn, user_id: int, metadata: WriteP
     except Exception as e:
         raise DatabaseException(str(e))
 
-
+'''
 def create_thanks_event(db_conn, user_id: int, metadata: ThanksMetadata)\
         -> UserTimelineEvent:
     """ Creates a thanks event in the database and returns it.
@@ -194,7 +194,7 @@ def create_thanks_event(db_conn, user_id: int, metadata: ThanksMetadata)\
         db_conn.commit()
         return UserTimelineEvent(**result.mappings().first())
     except Exception as e:
-        raise DatabaseException(str(e))
+        raise DatabaseException(str(e))'''
 
 
 def get_user_timeline_events(

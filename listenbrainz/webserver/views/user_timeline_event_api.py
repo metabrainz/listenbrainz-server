@@ -714,7 +714,6 @@ def create_thanks_event(user_name):
         validate = ThanksMetadata(**metadata)
         row_id = metadata["original_event_id"]
         event_type = metadata["original_event_type"]
-
         if event_type in [
                 UserTimelineEventType.RECORDING_RECOMMENDATION.value,
                 UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
@@ -729,6 +728,7 @@ def create_thanks_event(user_name):
         if not result:
             raise APIBadRequest(f"{event_type} event with id {row_id} not found")
 
+        #raise APIBadRequest(f"{data}")
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             event = db_user_timeline_event.create_thanks_event(
                 db_conn, user['id'], metadata)
