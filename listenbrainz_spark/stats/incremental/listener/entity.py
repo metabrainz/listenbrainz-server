@@ -11,7 +11,7 @@ class EntityListenerStatsQueryProvider(UserEntityStatsQueryProvider, abc.ABC):
     """ See base class QueryProvider for details. """
 
     def get_table_prefix(self) -> str:
-        return f"{self.entity}_listener_{self.stats_range}"
+        return f"{self.entity}_listeners_{self.stats_range}"
 
     def get_base_path(self) -> str:
         return LISTENBRAINZ_LISTENER_STATS_DIRECTORY
@@ -24,3 +24,7 @@ class EntityListenerStatsMessageCreator(UserStatsMessageCreator):
 
     def items_per_message(self):
         return 10000
+
+    @property
+    def default_database_prefix(self):
+        return f"{self.entity}_listeners_{self.stats_range}"

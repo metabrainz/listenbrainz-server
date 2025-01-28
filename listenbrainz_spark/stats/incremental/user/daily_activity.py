@@ -97,6 +97,10 @@ class DailyActivityUserMessageCreator(UserStatsMessageCreator):
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
         super().__init__("daily_activity", message_type, selector, database)
 
+    @property
+    def default_database_prefix(self):
+        return f"{self.entity}_{self.stats_range}"
+
     def parse_row(self, entry: dict):
         try:
             UserStatRecords[DailyActivityRecord](

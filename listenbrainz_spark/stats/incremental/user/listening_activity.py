@@ -83,6 +83,10 @@ class ListeningActivityUserMessageCreator(UserStatsMessageCreator):
     def __init__(self, message_type: str, selector: ListeningActivityListenRangeSelector, database=None):
         super().__init__("listening_activity", message_type, selector, database)
 
+    @property
+    def default_database_prefix(self):
+        return f"{self.entity}_{self.stats_range}"
+
     def parse_row(self, row):
         try:
             UserStatRecords[ListeningActivityRecord](
