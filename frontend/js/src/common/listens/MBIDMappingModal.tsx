@@ -313,12 +313,12 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   </button>
                 </div>
               </div>
-              <div className="small help-block">
+              <div className="small">
                 <FontAwesomeIcon icon={faInfoCircle} />
                 &nbsp;This will also link your other listens with the same
                 metadata.
               </div>
-              <div className="small help-block">
+              <div className="small">
                 <FontAwesomeIcon icon={faInfoCircle} />
                 &nbsp;
                 <a
@@ -329,7 +329,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                   How long until my stats reflect the change?
                 </a>
               </div>
-              <div className="small help-block">
+              <div className="small">
                 <FontAwesomeIcon icon={faInfoCircle} />
                 &nbsp;
                 <a
