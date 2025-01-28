@@ -24,8 +24,8 @@ class PopularityProvider(QueryProvider):
     def get_base_path(self) -> str:
         return LISTENBRAINZ_POPULARITY_DIRECTORY
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
-                                   existing_created: Optional[datetime]) -> str:
+    def get_filter_aggregate_query_coarse(self, existing_aggregate: str, incremental_aggregate: str,
+                                          existing_created: Optional[datetime]) -> str:
         inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""
@@ -94,8 +94,8 @@ class TopPerArtistPopularityProvider(QueryProvider):
     def get_base_path(self) -> str:
         return LISTENBRAINZ_POPULARITY_DIRECTORY
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
-                                   existing_created: Optional[datetime]) -> str:
+    def get_filter_aggregate_query_coarse(self, existing_aggregate: str, incremental_aggregate: str,
+                                          existing_created: Optional[datetime]) -> str:
         inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""

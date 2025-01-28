@@ -180,16 +180,29 @@ class IncrementalStatsEngine:
 
             if self._only_inc:
                 existing_created = self.get_incremental_dumps_existing_created()
-                filter_query = self.provider.get_filter_aggregate_query(
-                    partial_table, inc_table, self.incremental_table, existing_created
-                )
-                filtered_aggregate_df = run_query(filter_query)
-                filtered_table = f"{prefix}_filtered_aggregate"
-                filtered_aggregate_df.createOrReplaceTempView(filtered_table)
-            else:
-                filtered_table = partial_table
 
-            final_query = self.provider.get_combine_aggregates_query(filtered_table, inc_table)
+                filter_existing_query = self.provider.get_filter_aggregate_query(
+                    partial_table,
+                    self.incremental_table,
+                    existing_created
+                )
+                filtered_existing_aggregate_df = run_query(filter_existing_query)
+                filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
+                filtered_existing_aggregate_df.createOrReplaceTempView(filtered_existing_table)
+
+                filter_incremental_query = self.provider.get_filter_aggregate_query(
+                    inc_table,
+                    self.incremental_table,
+                    existing_created
+                )
+                filtered_incremental_aggregate_df = run_query(filter_incremental_query)
+                filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"
+                filtered_incremental_aggregate_df.createOrReplaceTempView(filtered_incremental_table)
+            else:
+                filtered_existing_table = partial_table
+                filtered_incremental_table = inc_table
+
+            final_query = self.provider.get_combine_aggregates_query(filtered_existing_table, filtered_incremental_table)
             final_df = run_query(final_query)
         else:
             final_df = partial_df
