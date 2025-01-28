@@ -180,7 +180,9 @@ class IncrementalStatsEngine:
 
             if self._only_inc:
                 existing_created = self.get_incremental_dumps_existing_created()
-                filter_query = self.provider.get_filter_aggregate_query(partial_table, inc_table, existing_created)
+                filter_query = self.provider.get_filter_aggregate_query(
+                    partial_table, inc_table, self.incremental_table, existing_created
+                )
                 filtered_aggregate_df = run_query(filter_query)
                 filtered_table = f"{prefix}_filtered_aggregate"
                 filtered_aggregate_df.createOrReplaceTempView(filtered_table)

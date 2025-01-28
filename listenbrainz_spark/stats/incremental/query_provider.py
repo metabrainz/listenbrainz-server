@@ -70,7 +70,7 @@ class QueryProvider(abc.ABC):
 
     @abc.abstractmethod
     def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
-                                   existing_created: Optional[datetime]) -> str:
+                                   inc_listens_table: str, existing_created: Optional[datetime]) -> str:
         """
         Return the query to filter the existing aggregate based on the listens present in incremental
         aggregate.
@@ -78,6 +78,8 @@ class QueryProvider(abc.ABC):
         Args:
             existing_aggregate: The table name for existing aggregate.
             incremental_aggregate: The table name for incremental aggregate.
+            inc_listens_table: The table name for incremental listens.
+            existing_created: The max listen created value last time incremental stats for this query was run.
         """
         raise NotImplementedError()
 
