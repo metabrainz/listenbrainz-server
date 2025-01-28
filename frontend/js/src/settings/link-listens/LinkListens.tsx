@@ -99,6 +99,9 @@ export default function LinkListensPage() {
     : "—";
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
+  const [originalUnlinkedListens, setOriginalUnlinkedListens] = React.useState<
+    Array<UnlinkedListens>
+  >(unlinkedListensProps);
   const [unlinkedListens, setUnlinkedListens] = React.useState<
     Array<UnlinkedListens>
   >(unlinkedListensProps);
@@ -122,7 +125,7 @@ export default function LinkListensPage() {
         key = "release_name";
         break;
     }
-    const fuzzysearch = new Fuse(unlinkedListens, {
+    const fuzzysearch = new Fuse(originalUnlinkedListens, {
       keys: [key],
       ...searchOptions,
     });
@@ -135,7 +138,7 @@ export default function LinkListensPage() {
       const albumsByArtist = fuzzysearch
         .search(searchQuery)
         .map((result) => result.item.release_name);
-      const filtered = unlinkedListensProps.filter((listen) =>
+      const filtered = originalUnlinkedListens.filter((listen) =>
         albumsByArtist.includes(listen.release_name)
       );
       setUnlinkedListens(filtered);
@@ -145,7 +148,7 @@ export default function LinkListensPage() {
   };
   const handleReset = () => {
     setSearchQuery("");
-    setUnlinkedListens(unlinkedListensProps); // Reset to the original list
+    setUnlinkedListens(originalUnlinkedListens);
     setSearchParams({ page: "1" }, { preventScrollReset: true });
   };
   const unsortedGroupedUnlinkedListens = groupBy(
@@ -238,10 +241,11 @@ export default function LinkListensPage() {
           releaseName,
         }
       );
-      // Remove successfully matched items from the page
-      setUnlinkedListens((prevValue) =>
-        prevValue.filter((md) => !matchedTracks[md.recording_msid])
-      );
+      // Remove successfully matched items from both states
+      const filterOutMatched = (prevValue: Array<UnlinkedListens>) =>
+        prevValue.filter((md) => !matchedTracks[md.recording_msid]);
+      setUnlinkedListens(filterOutMatched);
+      setOriginalUnlinkedListens(filterOutMatched);
       Object.entries(matchedTracks).forEach(([recordingMsid, track]) => {
         // For deleting items from the BrainzPlayer queue, we need to use
         // the metadata it was created from rather than the matched track metadata
