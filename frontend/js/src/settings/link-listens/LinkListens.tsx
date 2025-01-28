@@ -457,15 +457,17 @@ export default function LinkListensPage() {
                               index: -1,
                             },
                           });
-                          // Remove successfully matched item from the page
-                          setUnlinkedListens((prevValue) =>
+                          const filterOutMatched = (
+                            prevValue: Array<UnlinkedListens>
+                          ) =>
                             prevValue.filter(
                               (md) =>
                                 md.recording_msid !==
                                 listen.track_metadata.additional_info
                                   ?.recording_msid
-                            )
-                          );
+                            );
+                          setUnlinkedListens(filterOutMatched);
+                          setOriginalUnlinkedListens(filterOutMatched);
                         });
                       }}
                     />
