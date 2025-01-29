@@ -488,7 +488,10 @@ type UserRelationshipEventMetadata = {
 };
 
 type ThanksMetadata = {
+  original_event_id: number;
+  original_event_type: EventTypeT;
   blurb_content: string;
+  thanker_username: string;
 };
 
 type NotificationEventMetadata = {

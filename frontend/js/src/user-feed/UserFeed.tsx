@@ -571,6 +571,24 @@ export default function UserFeedPage() {
         />
       );
     }
+    if (event_type === EventType.THANKS) {
+      console.log(metadata);
+      const { blurb_content, thanker_username } = metadata as ThanksMetadata;
+      return (
+        <>
+          <Username username={thanker_username} /> thanked{" "}
+          <Username username={currentUser.name} />
+          <span
+            className="event-description-text"
+            // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{
+              __html: sanitize(blurb_content),
+            }}
+          />
+        </>
+      );
+    }
 
     const userLinkOrYou =
       user_name === currentUser.name ? (

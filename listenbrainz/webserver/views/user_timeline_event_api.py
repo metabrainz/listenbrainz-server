@@ -33,7 +33,7 @@ from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMet
     SimilarUserTimelineEvent, UserTimelineEventType, \
     APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
     CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent, \
-    WritePersonalRecordingRecommendationMetadata, ThanksMetadata
+    WritePersonalRecordingRecommendationMetadata, ThanksMetadata, APIThanksEvent
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
@@ -711,15 +711,15 @@ def create_thanks_event(user_name):
             "Metadata must contain both original_event_type and original_event_id", metadata)
 
     try:
-        validate = ThanksMetadata(**metadata)
-        row_id = metadata["original_event_id"]
-        event_type = metadata["original_event_type"]
+        metadata = ThanksMetadata(**metadata)
+        row_id = metadata.original_event_id
+        event_type = metadata.original_event_type
         if event_type in [
-                UserTimelineEventType.RECORDING_RECOMMENDATION.value,
-                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value]:
+                UserTimelineEventType.RECORDING_RECOMMENDATION,
+                UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION]:
             result = db_user_timeline_event.get_user_timeline_event_by_id(
                 db_conn, row_id)
-        elif event_type == UserTimelineEventType.RECORDING_PIN.value:
+        elif event_type == UserTimelineEventType.RECORDING_PIN:
             result = get_pin_by_id(db_conn, row_id)
         else:
             raise APIBadRequest(
@@ -730,8 +730,7 @@ def create_thanks_event(user_name):
 
         #raise APIBadRequest(f"{data}")
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
-            event = db_user_timeline_event.create_thanks_event(
-                db_conn, user['id'], metadata)
+            event = db_user_timeline_event.create_thanks_event(db_conn, user['id'], result.user_name, metadata)
             '''event_data = event.dict()
             event_data['created'] = int(event_data['created'].timestamp())
             event_data['event_type'] = event_data['event_type'].value
@@ -809,6 +808,13 @@ def get_feed_events_for_user(
         count=count,
     )
 
+    thanks_events = get_thanks_events(
+        user=user,
+        min_ts=min_ts or 0,
+        max_ts=max_ts or int(time.time()),
+        count=count,
+    )
+
     cb_review_events = get_cb_review_events(
         users_for_events=users_for_events,
         min_ts=min_ts or 0,
@@ -860,7 +866,7 @@ def get_feed_events_for_user(
         listen_events + follow_events +
         recording_recommendation_events + recording_pin_events
         + cb_review_events + notification_events +
-        personal_recording_recommendation_events,
+        personal_recording_recommendation_events + thanks_events,
         key=lambda event: -event.created,
     )
     return all_events
@@ -1208,6 +1214,48 @@ def get_personal_recording_recommendation_events(
                 user_name=event.user_name,
                 created=event.created.timestamp(),
                 metadata=personal_recommendation,
+                hidden=False,
+            ))
+        except pydantic.ValidationError as e:
+            current_app.logger.error(
+                'Validation error: ' + str(e), exc_info=True)
+            continue
+    return events
+
+
+def get_thanks_events(
+    user: dict,
+    min_ts: int,
+    max_ts: int,
+    count: int
+) -> List[APITimelineEvent]:
+    """ Gets all thanks events in the feed.
+    """
+
+    thanks_events_db = db_user_timeline_event.get_thanks_events_for_feed(
+        db_conn,
+        user_id=user['id'],
+        min_ts=min_ts,
+        max_ts=max_ts,
+        count=count,
+    )
+
+    events = []
+    for event in thanks_events_db:
+        try:
+            thank = APIThanksEvent(
+                user_id=event.user_id,
+                created=event.created.timestamp(),
+                blurb_content=event.metadata.blurb_content,
+                thanker_username=event.metadata.thanker_username
+            )
+
+            events.append(APITimelineEvent(
+                id=event.id,
+                event_type=UserTimelineEventType.THANKS,
+                user_name=event.user_name,
+                created=event.created.timestamp(),
+                metadata=thank,
                 hidden=False,
             ))
         except pydantic.ValidationError as e:
