@@ -146,12 +146,13 @@ def get_listen_files_list() -> List[str]:
     return file_names
 
 
-def get_listens_from_dump(start: datetime, end: datetime) -> DataFrame:
+def get_listens_from_dump(start: datetime, end: datetime, include_incremental=True) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
             start: minimum time to include a listen in the dataframe
             end: maximum time to include a listen in the dataframe
+            include_incremental: if True, also include listens from incremental dumps
 
         Returns:
             dataframe of listens with listened_at between start and end
@@ -162,17 +163,22 @@ def get_listens_from_dump(start: datetime, end: datetime) -> DataFrame:
         full_df = get_intermediate_stats_df(start, end)
         df = df.union(full_df)
 
-    if hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
+    if include_incremental and hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False):
         inc_df = read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH)
         df = df.union(inc_df)
 
-    df = df.where(f"listened_at >= to_timestamp('{start}')")
-    df = df.where(f"listened_at <= to_timestamp('{end}')")
+    if start:
+        df = df.where(f"listened_at >= to_timestamp('{start}')")
+    if end:
+        df = df.where(f"listened_at <= to_timestamp('{end}')")
 
     return df
 
 
 def get_intermediate_stats_df(start: datetime, end: datetime):
+    if start is None and end is None:
+        return read_files_from_HDFS(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
+
     filters = []
 
     current = start
