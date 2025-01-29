@@ -71,7 +71,10 @@ class ListeningActivitySitewideMessageCreator(StatsMessageCreator):
     def __init__(self, selector, database=None):
         super().__init__("listening_activty", "sitewide_listening_activity", selector, database)
 
-    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+    def default_database_prefix(self):
+        return ""
+
+    def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         message = {
             "type": self.message_type,
             "stats_range": self.stats_range,

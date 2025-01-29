@@ -60,13 +60,13 @@ class UserEntityStatsQueryProvider(UserStatsQueryProvider, abc.ABC):
         self.top_entity_limit = top_entity_limit
 
 
-class UserStatsMessageCreator(StatsMessageCreator):
+class UserStatsMessageCreator(StatsMessageCreator, abc.ABC):
 
     def items_per_message(self):
         """ Get the number of items to chunk per message """
         return 25
 
-    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+    def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         from_ts = int(self.from_date.timestamp())
         to_ts = int(self.to_date.timestamp())
 
@@ -79,18 +79,28 @@ class UserStatsMessageCreator(StatsMessageCreator):
                 if processed_stat is not None:
                     multiple_rows.append(processed_stat)
 
-            yield {
+            message = {
                 "type": self.message_type,
                 "stats_range": self.stats_range,
                 "from_ts": from_ts,
                 "to_ts": to_ts,
                 "entity": self.entity,
                 "data": multiple_rows,
-                "database": self.database
             }
+            if self.database:
+                message["database"] = self.database
+            elif only_inc:
+                message["database_prefix"] = self.default_database_prefix
+            else:
+                message["database"] = self.default_database
+            yield message
 
 
 class UserEntityStatsMessageCreator(UserStatsMessageCreator):
+
+    @property
+    def default_database_prefix(self):
+        return f"{self.entity}_{self.stats_range}"
 
     def parse_row(self, row):
         count_key = self.entity + "_count"

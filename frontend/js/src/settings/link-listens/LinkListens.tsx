@@ -6,6 +6,7 @@ import {
   faLink,
   faQuestionCircle,
   faTrashAlt,
+  faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -17,6 +18,7 @@ import { groupBy, isNil, isNull, isString, pick, size, sortBy } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import ReactTooltip from "react-tooltip";
+import Fuse from "fuse.js";
 import Loader from "../../components/Loader";
 import ListenCard from "../../common/listens/ListenCard";
 import ListenControl from "../../common/listens/ListenControl";
@@ -97,9 +99,57 @@ export default function LinkListensPage() {
     : "—";
   // State
   const [deletedListens, setDeletedListens] = React.useState<Array<string>>([]);
+  const [originalUnlinkedListens, setOriginalUnlinkedListens] = React.useState<
+    Array<UnlinkedListens>
+  >(unlinkedListensProps);
   const [unlinkedListens, setUnlinkedListens] = React.useState<
     Array<UnlinkedListens>
   >(unlinkedListensProps);
+  const [filterType, setFilterType] = React.useState("album"); // Default filter type
+  const [searchQuery, setSearchQuery] = React.useState(""); // To store the search input
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const searchOptions = {
+      threshold: 0.3,
+    };
+    let key;
+    switch (filterType) {
+      case "artist":
+        key = "artist_name";
+        break;
+      case "track":
+        key = "recording_name";
+        break;
+      case "album":
+      default:
+        key = "release_name";
+        break;
+    }
+    const fuzzysearch = new Fuse(originalUnlinkedListens, {
+      keys: [key],
+      ...searchOptions,
+    });
+    if (filterType === "artist") {
+      const filtered = fuzzysearch
+        .search(searchQuery)
+        .map((result) => result.item);
+      setUnlinkedListens(filtered);
+    } else {
+      const albumsByArtist = fuzzysearch
+        .search(searchQuery)
+        .map((result) => result.item.release_name);
+      const filtered = originalUnlinkedListens.filter((listen) =>
+        albumsByArtist.includes(listen.release_name)
+      );
+      setUnlinkedListens(filtered);
+    }
+    setSearchParams({ page: "1" }, { preventScrollReset: true });
+  };
+  const handleReset = () => {
+    setSearchQuery("");
+    setUnlinkedListens(originalUnlinkedListens);
+    setSearchParams({ page: "1" }, { preventScrollReset: true });
+  };
   const unsortedGroupedUnlinkedListens = groupBy(
     unlinkedListens,
     "release_name"
@@ -190,10 +240,11 @@ export default function LinkListensPage() {
           releaseName,
         }
       );
-      // Remove successfully matched items from the page
-      setUnlinkedListens((prevValue) =>
-        prevValue.filter((md) => !matchedTracks[md.recording_msid])
-      );
+      // Remove successfully matched items from both states
+      const filterOutMatched = (prevValue: Array<UnlinkedListens>) =>
+        prevValue.filter((md) => !matchedTracks[md.recording_msid]);
+      setUnlinkedListens(filterOutMatched);
+      setOriginalUnlinkedListens(filterOutMatched);
       Object.entries(matchedTracks).forEach(([recordingMsid, track]) => {
         // For deleting items from the BrainzPlayer queue, we need to use
         // the metadata it was created from rather than the matched track metadata
@@ -283,6 +334,46 @@ export default function LinkListensPage() {
           {lastUpdatedHumanReadable}
         </p>
       )}
+      {unlinkedListensProps.length > 0 && (
+        <form
+          className="input-group input-group-flex"
+          style={{ maxWidth: "400px" }}
+          onSubmit={handleSearch}
+        >
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="btn btn-info"
+          >
+            <option value="album">Album</option>
+            <option value="artist">Artist</option>
+            <option value="track">Track</option>
+          </select>
+          <div className="input-group-btn">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-control"
+            />
+            <button
+              type="submit"
+              className="btn btn-info"
+              disabled={searchQuery.length <= 1}
+            >
+              <FontAwesomeIcon icon={faSearch} />
+            </button>
+            <button
+              type="button"
+              className="btn btn-info"
+              onClick={handleReset}
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+      )}
       <br />
       <div>
         <div id="link-listens">
@@ -296,6 +387,11 @@ export default function LinkListensPage() {
           >
             <Loader isLoading={isLoading} />
           </div>
+          {unlinkedListens.length === 0 && (
+            <p>
+              <strong>No unlinked listens found.</strong>
+            </p>
+          )}
           {itemsOnThisPage.map((group) => {
             const releaseName = group.at(0)?.release_name ?? null;
             const multiTrackMappingButton = (
@@ -360,15 +456,17 @@ export default function LinkListensPage() {
                               index: -1,
                             },
                           });
-                          // Remove successfully matched item from the page
-                          setUnlinkedListens((prevValue) =>
+                          const filterOutMatched = (
+                            prevValue: Array<UnlinkedListens>
+                          ) =>
                             prevValue.filter(
                               (md) =>
                                 md.recording_msid !==
                                 listen.track_metadata.additional_info
                                   ?.recording_msid
-                            )
-                          );
+                            );
+                          setUnlinkedListens(filterOutMatched);
+                          setOriginalUnlinkedListens(filterOutMatched);
                         });
                       }}
                     />

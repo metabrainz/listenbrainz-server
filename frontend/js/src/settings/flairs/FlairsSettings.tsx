@@ -67,8 +67,8 @@ export default function FlairsSettings() {
           `https://metabrainz.org/donations/nag-check?editor=${name}`
         );
         const values = await response.text();
-        const [shouldNag, daysLeft] = values.split(",");
-        setFlairUnlocked(!Number(shouldNag));
+        // discard the "shouldNag" value
+        const [_, daysLeft] = values.split(",");
         setUnlockDaysLeft(Math.max(Number(daysLeft), 0));
       } catch (error) {
         // eslint-disable-next-line no-console

@@ -412,7 +412,10 @@ export default function MusicServices() {
               Connect to your Last.FM account to import your entire listening
               history and automatically add your new scrobbles to ListenBrainz.
             </p>
-            <p className="alert alert-warning">
+            <div
+              className="alert alert-warning alert-dismissible fade in"
+              role="alert"
+            >
               You must first disable the &#34;Hide recent listening
               information&#34; setting in your Last.fm{" "}
               <a
@@ -423,7 +426,15 @@ export default function MusicServices() {
                 privacy settings
               </a>
               .
-            </p>
+              <button
+                type="button"
+                className="close"
+                data-dismiss="alert"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
             <form onSubmit={handleConnectToLaftFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>

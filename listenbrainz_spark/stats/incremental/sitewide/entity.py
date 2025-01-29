@@ -62,7 +62,10 @@ class SitewideEntityStatsMessageCreator(StatsMessageCreator):
     def __init__(self, entity, selector):
         super().__init__(entity, "sitewide_entity", selector)
 
-    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+    def default_database_prefix(self):
+        return ""
+
+    def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         message = {
             "type": self.message_type,
             "stats_range": self.stats_range,

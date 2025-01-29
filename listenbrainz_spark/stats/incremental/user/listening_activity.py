@@ -59,22 +59,31 @@ class ListeningActivityUserStatsQueryEntity(UserStatsQueryProvider):
         """
 
     def get_stats_query(self, final_aggregate):
+        # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
+        # group without listens are counted as 0, count(*) gives 1.
+        # use cross join to create all time range rows for all users (otherwise ranges in which user was inactive
+        # would be missing from final output)
         return f"""
-             SELECT user_id
-                  , sort_array(
-                       collect_list(
+           WITH dist_user_id AS (
+               SELECT DISTINCT user_id FROM {final_aggregate}
+           )
+               SELECT d.user_id AS user_id
+                    , sort_array(
+                        collect_list(
                             struct(
-                                  to_unix_timestamp(start) AS from_ts
-                                , to_unix_timestamp(end) AS to_ts
-                                , time_range
-                                , COALESCE(listen_count, 0) AS listen_count
+                                  to_unix_timestamp(tr.start) AS from_ts
+                                , to_unix_timestamp(tr.end) AS to_ts
+                                , tr.time_range AS time_range
+                                , COALESCE(fa.listen_count, 0) AS listen_count
                             )
                         )
-                    ) AS listening_activity
-               FROM time_range
-          LEFT JOIN {final_aggregate}
-              USING (time_range)
-           GROUP BY user_id
+                      ) AS listening_activity
+                 FROM dist_user_id d
+           CROSS JOIN time_range tr
+            LEFT JOIN {final_aggregate} fa
+                   ON fa.time_range = tr.time_range
+                  AND fa.user_id = d.user_id
+             GROUP BY d.user_id
         """
 
 
@@ -82,6 +91,10 @@ class ListeningActivityUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: ListeningActivityListenRangeSelector, database=None):
         super().__init__("listening_activity", message_type, selector, database)
+
+    @property
+    def default_database_prefix(self):
+        return f"{self.entity}_{self.stats_range}"
 
     def parse_row(self, row):
         try:

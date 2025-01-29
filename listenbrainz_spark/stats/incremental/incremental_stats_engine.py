@@ -81,7 +81,7 @@ class IncrementalStatsEngine:
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
             existing_aggregate_fresh = existing_from_date.date() == self.provider.from_date.date() \
                 and existing_to_date.date() <= self.provider.to_date.date()
-        except AnalysisException:
+        except (AnalysisException, IndexError):
             existing_aggregate_fresh = False
 
         existing_aggregate_exists = hdfs_connection.client.status(existing_aggregate_path, strict=False)
@@ -179,8 +179,7 @@ class IncrementalStatsEngine:
         results = self.generate_stats()
         if not self.only_inc:
             yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results):
-            message["only_inc"] = self.only_inc
+        for message in self.message_creator.create_messages(results, self.only_inc):
             yield message
         if not self.only_inc:
             yield self.message_creator.create_end_message()

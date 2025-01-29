@@ -30,7 +30,7 @@ class MessageCreator(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+    def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         """ Chunk the query results data into multiple messages for storage in LB server. """
         raise NotImplementedError()
 
@@ -41,16 +41,25 @@ class StatsMessageCreator(MessageCreator, abc.ABC):
         super().__init__(entity, message_type)
         self.selector = selector
         self.stats_range, self.from_date, self.to_date = self.selector.get_dates()
-        if database:
-            self.database = database
-        else:
-            self.database = f"{self.entity}_{self.stats_range}_{date.today().strftime('%Y%m%d')}"
+        self.database = database
+
+    @property
+    @abc.abstractmethod
+    def default_database_prefix(self):
+        raise NotImplementedError()
+
+    @property
+    def default_database(self):
+        return f"{self.default_database_prefix}_{date.today().strftime('%Y%m%d')}"
+
+    def get_database(self):
+        return self.database or self.default_database
 
     def create_start_message(self):
-        return {"type": "couchdb_data_start", "database": self.database}
+        return {"type": "couchdb_data_start", "database": self.get_database()}
 
     def create_end_message(self):
-        return {"type": "couchdb_data_end", "database": self.database}
+        return {"type": "couchdb_data_end", "database": self.get_database()}
 
     def parse_row(self, row):
         return row
