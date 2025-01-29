@@ -81,7 +81,7 @@ class IncrementalStatsEngine:
             existing_from_date, existing_to_date = metadata["from_date"], metadata["to_date"]
             existing_aggregate_fresh = existing_from_date.date() == self.provider.from_date.date() \
                 and existing_to_date.date() <= self.provider.to_date.date()
-        except AnalysisException:
+        except (AnalysisException, IndexError):
             existing_aggregate_fresh = False
 
         existing_aggregate_exists = hdfs_connection.client.status(existing_aggregate_path, strict=False)
