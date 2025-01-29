@@ -143,7 +143,6 @@ export default function LinkListensPage() {
       );
       setUnlinkedListens(filtered);
     }
-    setSearchQuery("");
     setSearchParams({ page: "1" }, { preventScrollReset: true });
   };
   const handleReset = () => {
