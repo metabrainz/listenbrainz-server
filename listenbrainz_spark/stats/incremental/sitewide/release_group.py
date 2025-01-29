@@ -1,36 +1,24 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, ArrayType
-
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
 
-class ReleaseGroupSitewideEntity(SitewideEntity):
+class ReleaseGroupSitewideEntity(SitewideEntityStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
-    def __init__(self, stats_range):
-        super().__init__(entity="release_groups", stats_range=stats_range)
+    @property
+    def entity(self):
+        return "release_groups"
 
     def get_cache_tables(self) -> List[str]:
         return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("release_group_name", StringType(), nullable=False),
-            StructField("release_group_mbid", StringType(), nullable=False),
-            StructField("artist_name", StringType(), nullable=False),
-            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=False),
-            StructField("caa_id", IntegerType(), nullable=True),
-            StructField("caa_release_mbid", StringType(), nullable=True),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         user_listen_count_limit = self.get_listen_count_limit()
         rel_cache_table = cache_tables[0]
         rg_cache_table = cache_tables[1]
-        result = run_query(f"""
+        return f"""
         WITH gather_release_group_data AS (
             SELECT l.user_id
                  , rg.release_group_mbid
@@ -80,11 +68,10 @@ class ReleaseGroupSitewideEntity(SitewideEntity):
                  , artist_credit_mbids
                  , caa_id
                  , caa_release_mbid
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT release_group_name
                      , release_group_mbid
@@ -119,10 +106,9 @@ class ReleaseGroupSitewideEntity(SitewideEntity):
                      , caa_id
                      , caa_release_mbid
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count AS (
                 SELECT count(*) AS total_count
                   FROM {final_aggregate}
@@ -130,7 +116,7 @@ class ReleaseGroupSitewideEntity(SitewideEntity):
                 SELECT *
                   FROM {final_aggregate}
               ORDER BY listen_count DESC
-                 LIMIT {N}
+                 LIMIT {self.top_entity_limit}
             ), grouped_stats AS (
                 SELECT sort_array(
                             collect_list(
@@ -154,4 +140,3 @@ class ReleaseGroupSitewideEntity(SitewideEntity):
                   JOIN entity_count
                     ON TRUE
         """
-        return run_query(query)

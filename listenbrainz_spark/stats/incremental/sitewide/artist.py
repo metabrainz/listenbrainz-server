@@ -1,31 +1,22 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
 
-class AritstSitewideEntity(SitewideEntity):
+class AritstSitewideEntity(SitewideEntityStatsQueryProvider):
 
-    def __init__(self, stats_range):
-        super().__init__(entity="artists", stats_range=stats_range)
+    @property
+    def entity(self):
+        return "artists"
 
     def get_cache_tables(self) -> List[str]:
         return [ARTIST_COUNTRY_CODE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("artist_name", StringType(), nullable=False),
-            StructField("artist_mbid", StringType(), nullable=True),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         user_listen_count_limit = self.get_listen_count_limit()
         cache_table = cache_tables[0]
-        result = run_query(f"""
+        return f"""
             WITH exploded_listens AS (
                 SELECT user_id
                      , artist_name AS artist_credit_name
@@ -54,11 +45,10 @@ class AritstSitewideEntity(SitewideEntity):
                   FROM user_counts
               GROUP BY lower(any_artist_name)
                      , artist_mbid
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT artist_name
                      , artist_mbid
@@ -77,10 +67,9 @@ class AritstSitewideEntity(SitewideEntity):
               GROUP BY lower(artist_name)
                      , artist_mbid
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count AS (
                 SELECT count(*) AS total_count
                   FROM {final_aggregate}
@@ -88,7 +77,7 @@ class AritstSitewideEntity(SitewideEntity):
                 SELECT *
                   FROM {final_aggregate}
               ORDER BY listen_count DESC
-                 LIMIT {N}
+                 LIMIT {self.top_entity_limit}
             ), grouped_stats AS (
                 SELECT sort_array(
                             collect_list(
@@ -108,4 +97,3 @@ class AritstSitewideEntity(SitewideEntity):
                   JOIN entity_count
                     ON TRUE
         """
-        return run_query(query)

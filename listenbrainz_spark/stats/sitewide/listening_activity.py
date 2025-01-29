@@ -1,8 +1,10 @@
 import logging
-from datetime import datetime
 from typing import Iterator, Optional, Dict
 
-from listenbrainz_spark.stats.incremental.sitewide.listening_activity import ListeningActivitySitewideEntity
+from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
+from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
+from listenbrainz_spark.stats.incremental.sitewide.listening_activity import ListeningActivitySitewideStatsQuery, \
+    ListeningActivitySitewideMessageCreator
 
 logger = logging.getLogger(__name__)
 
@@ -17,5 +19,8 @@ def get_listening_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     details). These values are used on the listening activity reports.
     """
     logger.debug(f"Calculating listening_activity_{stats_range}")
-    entity_obj = ListeningActivitySitewideEntity(stats_range)
-    return entity_obj.main()
+    selector = ListeningActivityListenRangeSelector(stats_range)
+    entity_obj = ListeningActivitySitewideStatsQuery(selector)
+    message_creator = ListeningActivitySitewideMessageCreator(selector)
+    engine = IncrementalStatsEngine(entity_obj, message_creator)
+    return aggregator.run()
