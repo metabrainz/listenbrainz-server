@@ -166,15 +166,6 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
         aria-labelledby="MBIDMappingModalLabel"
       >
         <div className="modal-dialog" role="document">
-          <Tooltip id="musicbrainz-helptext" type="light" multiline>
-            Use the MusicBrainz search (musicbrainz.org/search) to search for
-            recordings (songs). When you have found the one that matches your
-            listen, copy its URL (link) into the field on this page.
-            <br />
-            You can also search for the album you listened to. When you have
-            found the album, click on the matching recording (song) in the track
-            listing, and copy its URL into the field on this page.
-          </Tooltip>
           <form className="modal-content" onSubmit={submitMBIDMapping}>
             <div className="modal-header">
               <button
@@ -186,30 +177,19 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="MBIDMappingModalLabel">
-                Link this Listen with MusicBrainz
+                Link this listen with{" "}
+                <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>
               </h4>
             </div>
             <div className="modal-body">
-              <p>
-                Sometimes ListenBrainz is unable to automatically link your
-                Listen with a MusicBrainz recording. Search by track and artist
-                name or paste a{" "}
-                <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>{" "}
-                recording URL or MBID{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="musicbrainz-helptext"
-                  size="sm"
-                />{" "}
-                below to link this Listen.
-              </p>
               <ListenCard
                 listen={listenToMap}
                 showTimestamp={false}
                 showUsername={false}
                 // eslint-disable-next-line react/jsx-no-useless-fragment
                 feedbackComponent={<></>}
+                // eslint-disable-next-line react/jsx-no-useless-fragment
+                customThumbnail={<></>}
                 compact
               />
 
