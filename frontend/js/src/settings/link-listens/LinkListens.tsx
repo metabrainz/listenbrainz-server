@@ -318,8 +318,9 @@ export default function LinkListensPage() {
       <h2 className="page-title">Link with MusicBrainz</h2>
       <ReactTooltip id="matching-tooltip" multiline>
         We automatically match listens with MusicBrainz recordings when
-        possible, which provides rich data like tags, album, artists, cover art,
-        and more.
+        possible,
+        <br />
+        which provides rich data like tags, album, artists, cover art, and more.
         <br />
         When a track can&apos;t be auto-matched you can manually link them on
         this page.
