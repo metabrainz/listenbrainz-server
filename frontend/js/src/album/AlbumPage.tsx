@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
+  faInfoCircle,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
@@ -31,6 +32,7 @@ import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import CBReviewModal from "../cb-review/CBReviewModal";
+import Username from "../common/Username";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -65,9 +67,12 @@ export default function AlbumPage(): JSX.Element {
   const location = useLocation();
   const params = useParams() as { albumMBID: string };
   const { albumMBID } = params;
-  const { data } = useQuery<AlbumPageProps>(
-    RouteQuery(["album", params], location.pathname)
-  );
+  const { data, isError } = useQuery<AlbumPageProps>({
+    ...RouteQuery(["album", params], location.pathname),
+    //  @ts-ignore  the expected "error" here is a Response
+    // as RouteLoaderURL throws a json response object
+    throwOnError: (response) => response?.status !== 404,
+  });
   const {
     release_group_metadata: initialReleaseGroupMetadata,
     recordings_release_mbid,
@@ -88,12 +93,8 @@ export default function AlbumPage(): JSX.Element {
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
 
-  const {
-    tag,
-    release_group: album,
-    artist,
-    release,
-  } = metadata as ReleaseGroupMetadataLookup;
+  const { tag, release_group: album, artist, release } = (metadata ||
+    {}) as ReleaseGroupMetadataLookup;
   const releaseGroupTags = tag?.release_group;
 
   /** Album art and album color related */
@@ -215,6 +216,61 @@ export default function AlbumPage(): JSX.Element {
   });
   const showMediumTitle = (mediums?.length ?? 0) > 1;
 
+  if (isError) {
+    return (
+      <div className="center-p">
+        <img
+          src="/static/img/broken-cd.jpg"
+          alt="Broken CD vector"
+          width={200}
+        />
+        <br />
+        <div className="help-block small mb-15">
+          Broken CD by{" "}
+          <a href="https://www.vecteezy.com/members/amandalamsyah/uploads">
+            amandalamsyah on Vecteezy
+          </a>
+        </div>
+        <p className="strong">
+          We could not find this album in ListenBrainz; please check the URL and
+          try again.
+        </p>
+        <p>
+          If you&apos;ve recently added this release/album to MusicBrainz,
+          please wait until it is processed.
+          <div>
+            Releases added to MusicBrainz are processed &nbsp;
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              every 6 hours
+            </a>
+            &nbsp;
+            <FontAwesomeIcon icon={faInfoCircle} />.
+          </div>
+        </p>
+        <p>
+          In the meantime, you can see this album on MusicBrainz:
+          <br />
+          <OpenInMusicBrainzButton
+            entityType="release-group"
+            entityMBID={albumMBID}
+          />
+        </p>
+      </div>
+    );
+  }
+  const artistsRadioPrompt: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})`;
+  const artistsRadioPromptNoSim: string =
+    artist.artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.name})::nosim`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist.name)})::nosim`;
+
   return (
     <div
       id="entity-page"
@@ -236,7 +292,7 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
-          <div className="details h3">
+          <div className="details h4">
             <div>
               {artist.artists.map((ar) => {
                 return (
@@ -269,11 +325,10 @@ export default function AlbumPage(): JSX.Element {
             <Link
               type="button"
               className="btn btn-info"
-              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artistName
-              )})&mode=easy`}
+              to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
             >
-              <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
+              <FontAwesomeIcon icon={faPlayCircle} /> Artist
+              {artist.artists?.length > 1 && "s"} Radio
             </Link>
             <button
               type="button"
@@ -288,20 +343,17 @@ export default function AlbumPage(): JSX.Element {
             <ul className="dropdown-menu">
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})::nosim&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
                 >
-                  This artist
+                  Artist{artist.artists?.length > 1 && "s"} radio
                 </Link>
               </li>
               <li>
                 <Link
-                  to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                    artistName
-                  )})&mode=easy`}
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
                 >
-                  Similar artists
+                  {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
+                  only
                 </Link>
               </li>
               {Boolean(filteredTags?.length) && (
@@ -442,9 +494,7 @@ export default function AlbumPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Link to={`/user/${listener.user_name}/`}>
-                          {listener.user_name}
-                        </Link>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;

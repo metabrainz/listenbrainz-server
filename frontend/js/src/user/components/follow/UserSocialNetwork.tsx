@@ -7,6 +7,8 @@ import FollowerFollowingModal from "./FollowerFollowingModal";
 import SimilarUsersModal from "./SimilarUsersModal";
 import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
+import FlairsExplanationButton from "../../../common/flairs/FlairsExplanationButton";
+import useUserFlairs from "../../../utils/FlairLoader";
 
 export type UserSocialNetworkProps = {
   user: ListenBrainzUser;
@@ -250,18 +252,38 @@ export default class UserSocialNetwork extends React.Component<
     user: ListenBrainzUser,
     action: "follow" | "unfollow"
   ) => {
-    const { followingList } = this.state;
+    const { currentUser } = this.context;
+    const { user: profileUser } = this.props;
+    const { followingList, currentUserFollowingList } = this.state;
+
+    if (!currentUser) return;
+
+    // update the logged-in user's following list (for similar users pane)
+    const newCurrentUserFollowingList = [...currentUserFollowingList];
+    const currentUserIndex = newCurrentUserFollowingList.indexOf(user.name);
+
+    if (action === "follow" && currentUserIndex === -1) {
+      newCurrentUserFollowingList.push(user.name);
+    } else if (action === "unfollow" && currentUserIndex !== -1) {
+      newCurrentUserFollowingList.splice(currentUserIndex, 1);
+    }
+
+    // update the users following list (for followers/following pane)
     const newFollowingList = [...followingList];
-    const index = newFollowingList.findIndex(
-      (following) => following === user.name
-    );
-    if (action === "follow" && index === -1) {
-      newFollowingList.push(user.name);
+    if (profileUser.name === currentUser.name) {
+      const profileUserIndex = newFollowingList.indexOf(user.name);
+      if (action === "follow" && profileUserIndex === -1) {
+        newFollowingList.push(user.name);
+      } else if (action === "unfollow" && profileUserIndex !== -1) {
+        newFollowingList.splice(profileUserIndex, 1);
+      }
     }
-    if (action === "unfollow" && index !== -1) {
-      newFollowingList.splice(index, 1);
-    }
-    this.setState({ followingList: newFollowingList });
+
+    // Update both lists in state
+    this.setState({
+      followingList: newFollowingList,
+      currentUserFollowingList: newCurrentUserFollowingList,
+    });
   };
 
   render() {
@@ -274,17 +296,18 @@ export default class UserSocialNetwork extends React.Component<
       similarArtists,
       similarityScore,
     } = this.state;
+    const isAnotherUser =
+      Boolean(currentUser?.name) && currentUser.name !== user?.name;
     return (
       <>
-        {!(isNil(currentUser) || isEmpty(currentUser)) &&
-          currentUser.name !== user?.name && (
-            <CompatibilityCard
-              user={user}
-              similarityScore={similarityScore}
-              similarArtists={similarArtists}
-            />
-          )}
-        <Card className="card-user-sn hidden-xs hidden-sm">
+        {isAnotherUser && (
+          <CompatibilityCard
+            user={user}
+            similarityScore={similarityScore}
+            similarArtists={similarArtists}
+          />
+        )}
+        <Card className="hidden-xs hidden-sm">
           <FollowerFollowingModal
             user={user}
             followerList={followerList}
@@ -293,6 +316,9 @@ export default class UserSocialNetwork extends React.Component<
             updateFollowingList={this.updateFollowingList}
           />
         </Card>
+        {isAnotherUser && (
+          <FlairsExplanationButton className="hidden-xs hidden-sm" />
+        )}
         <Card className="card-user-sn hidden-xs hidden-sm">
           <SimilarUsersModal
             user={user}

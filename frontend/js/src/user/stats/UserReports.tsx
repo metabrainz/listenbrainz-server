@@ -44,7 +44,7 @@ export default function UserReports() {
 
   React.useEffect(() => {
     if (!range || isInvalidStatRange(range)) {
-      setSearchParams({ range: "week" });
+      setSearchParams({ range: "week" }, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range]);
@@ -74,8 +74,8 @@ export default function UserReports() {
         NiceModal.show(StatsExplanationsModal);
       }}
     >
-      <FontAwesomeIcon icon={faInfoCircle} />
-      &nbsp; How and when are statistics calculated?
+      <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: "0.5rem" }} />
+      How and when are statistics calculated?
     </button>
   );
 

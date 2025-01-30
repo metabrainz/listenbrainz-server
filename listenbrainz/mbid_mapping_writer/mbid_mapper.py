@@ -276,7 +276,7 @@ class MBIDMapper:
                     sleep(5)
                 else:
                     raise
-            except typesense.exceptions.RequestMalformed:
+            except (typesense.exceptions.RequestMalformed, requests.exceptions.ReadTimeout):
                 return None
 
         if len(hits["hits"]) == 0:

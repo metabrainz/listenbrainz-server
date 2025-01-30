@@ -126,7 +126,7 @@ CREATE TABLE external_service_oauth (
     user_id                 INTEGER NOT NULL,  -- FK to "user".id
     external_user_id        TEXT,
     service                 external_service_oauth_type NOT NULL,
-    access_token            TEXT NOT NULL,
+    access_token            TEXT,
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -172,7 +172,8 @@ CREATE TABLE release_color (
     green                   SMALLINT NOT NULL,
     blue                    SMALLINT NOT NULL,
     color                   CUBE,
-    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    year                    INTEGER DEFAULT NULL
 );
 
 CREATE TABLE user_relationship (

@@ -17,7 +17,7 @@ from listenbrainz.webserver.views.playlist_api import fetch_playlist_recording_m
 player_bp = Blueprint("player", __name__)
 
 
-@player_bp.route("/", methods=["POST"])
+@player_bp.post("/")
 def load_instant():
     """
     This endpoint takes in a list of recording_mbids and optional desc/name arguments  and then loads
@@ -69,7 +69,7 @@ def load_instant():
     return jsonify({"playlist": playlist.serialize_jspf()})
 
 
-@player_bp.route("/release/<release_mbid>/", methods=["POST"])
+@player_bp.post("/release/<release_mbid>/")
 def load_release(release_mbid):
     """
     This endpoint takes a release mbid, loads the tracks for this release and makes a playlist from it and
@@ -124,7 +124,7 @@ def load_release(release_mbid):
     return jsonify({"playlist": playlist.serialize_jspf() if playlist is not None else {}})
 
 
-@player_bp.route('/', defaults={'path': ''})
-@player_bp.route('/<path:path>/')
+@player_bp.get('/', defaults={'path': ''})
+@player_bp.get('/<path:path>/')
 def index(path):
     return render_template("index.html")

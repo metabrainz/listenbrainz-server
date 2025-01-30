@@ -210,7 +210,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
   ]);
 
   return (
-    <SideBar>
+    <SideBar className="sidebar-fresh-releases">
       <div
         className="sidebar-header"
         data-testid="sidebar-header-fresh-releases"

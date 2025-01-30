@@ -55,20 +55,11 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "resetlatestimportts/",
+          path: "link-listens/",
+          loader: RouteQueryLoader("link-listens"),
           lazy: async () => {
-            const ResetImportTimestamp = await import(
-              "../resetlatestimportts/ResetLatestImports"
-            );
-            return { Component: ResetImportTimestamp.default };
-          },
-        },
-        {
-          path: "missing-data/",
-          loader: RouteQueryLoader("missing-data"),
-          lazy: async () => {
-            const MissingMBData = await import("../missing-data/MissingMBData");
-            return { Component: MissingMBData.default };
+            const LinkListens = await import("../link-listens/LinkListens");
+            return { Component: LinkListens.default };
           },
         },
         {

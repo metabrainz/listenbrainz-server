@@ -41,6 +41,7 @@ import SimilarArtistComponent from "../explore/music-neighborhood/components/Sim
 import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import Username from "../common/Username";
 
 function SortingButtons({
   sort,
@@ -55,6 +56,7 @@ function SortingButtons({
         type="secondary"
         active={sort === "release_date"}
         onClick={() => setSort("release_date")}
+        title="Sort by release date"
       >
         <FontAwesomeIcon icon={faCalendar} />
       </Pill>
@@ -62,6 +64,7 @@ function SortingButtons({
         type="secondary"
         active={sort === "total_listen_count"}
         onClick={() => setSort("total_listen_count")}
+        title="Sort by listen count"
       >
         <FontAwesomeIcon icon={faHeadphones} />
       </Pill>
@@ -69,14 +72,15 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
+interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
   secondary_types: string[];
+  total_listen_count: number | null;
 }
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroupWithSecondaryTypes[];
+  releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
   similarArtists: {
     artists: SimilarArtist[];
     topReleaseGroupColor: ReleaseColor | undefined;
@@ -125,36 +129,51 @@ export default function ArtistPage(): JSX.Element {
   const [expandPopularTracks, setExpandPopularTracks] = React.useState<boolean>(
     false
   );
+  const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
+    false
+  );
 
+  // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
+  // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
   const rgGroups = groupBy(
     releaseGroups,
-    (rg) =>
-      (rg.type ?? "Other") +
-      (rg.secondary_types?.[0] ? ` + ${rg.secondary_types?.[0]}` : "")
+    (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
   );
 
   const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypes[]
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
   ) =>
     orderBy(
       releaseGroupsInput,
       [
-        sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
-        sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
+        sort === "release_date"
+          ? (rg) => rg.date || ""
+          : (rg) => rg.total_listen_count ?? 0,
+        sort === "release_date"
+          ? (rg) => rg.total_listen_count ?? 0
+          : (rg) => rg.date || "",
         "name",
       ],
       ["desc", "desc", "asc"]
     );
 
-  const typeOrder = ["Album", "Single", "EP", "Broadcast", "Other"];
-  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), [
-    (type) => typeOrder.indexOf(type.split(" + ")[0]),
-    (type) => type.split(" + ")[1] ?? "",
-  ]);
+  const typeOrder = [
+    "Album",
+    "EP",
+    "Single",
+    "Live",
+    "Compilation",
+    "Remix",
+    "Broadcast",
+  ];
+  const last = Object.keys(rgGroups).length;
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
+    typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
+  );
 
   const groupedReleaseGroups: Record<
     string,
-    ReleaseGroupWithSecondaryTypes[]
+    ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
     groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
@@ -254,6 +273,24 @@ export default function ArtistPage(): JSX.Element {
     );
   };
 
+  React.useEffect(() => {
+    // Reset default view
+    setExpandDiscography(false);
+    setExpandPopularTracks(false);
+  }, [artist?.artist_mbid]);
+
+  const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
+
   return (
     <div id="entity-page" className="artist-page" role="main">
       <Helmet>
@@ -318,9 +355,7 @@ export default function ArtistPage(): JSX.Element {
               <Link
                 type="button"
                 className="btn btn-info"
-                to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                  artist?.name
-                )})&mode=easy`}
+                to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
               >
                 <FontAwesomeIcon icon={faPlayCircle} /> Radio
               </Link>
@@ -337,20 +372,16 @@ export default function ArtistPage(): JSX.Element {
               <ul className="dropdown-menu">
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                      artist?.name
-                    )})::nosim&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
                   >
-                    This artist
+                    Artist radio
                   </Link>
                 </li>
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                      artist?.name
-                    )})&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
                   >
-                    Similar artists
+                    This artist only
                   </Link>
                 </li>
                 {Boolean(filteredTags?.length) && (
@@ -424,15 +455,19 @@ export default function ArtistPage(): JSX.Element {
               />
             );
           })}
-          <div className="read-more">
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => setExpandPopularTracks((prevValue) => !prevValue)}
-            >
-              See {expandPopularTracks ? "less" : "more"}
-            </button>
-          </div>
+          {popularRecordings && popularRecordings?.length > 4 && (
+            <div className="read-more">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() =>
+                  setExpandPopularTracks((prevValue) => !prevValue)
+                }
+              >
+                See {expandPopularTracks ? "less" : "more"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="stats">
           <div className="listening-stats card flex-center">
@@ -467,9 +502,7 @@ export default function ArtistPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Link to={`/user/${listener.user_name}/`}>
-                          {listener.user_name}
-                        </Link>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -482,21 +515,40 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        {Object.entries(groupedReleaseGroups).map(([type, rgGroup]) => (
-          <div className="albums">
-            <div className="listen-header">
-              <h3 className="header-with-line">{type}</h3>
-              <SortingButtons sort={sort} setSort={setSort} />
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
+          {releaseGroupTypesNames.map(([type, rgGroup]) => (
+            <div className="albums">
+              <div className="listen-header">
+                <h3 className="header-with-line">{type}</h3>
+                <SortingButtons sort={sort} setSort={setSort} />
+              </div>
+              <HorizontalScrollContainer
+                className={`cover-art-container ${
+                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                    ? "single-row"
+                    : ""
+                }`}
+              >
+                {rgGroup.map(getReleaseCard)}
+              </HorizontalScrollContainer>
             </div>
-            <HorizontalScrollContainer
-              className={`cover-art-container ${
-                rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT ? "single-row" : ""
-              }`}
-            >
-              {rgGroup.map(getReleaseCard)}
-            </HorizontalScrollContainer>
-          </div>
-        ))}
+          ))}
+          {showFullDiscographyButton && (
+            <div className="read-more mb-10">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setExpandDiscography((prevValue) => !prevValue)}
+              >
+                See {expandDiscography ? "less" : "full discography"}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {similarArtists && similarArtists.artists.length > 0 ? (

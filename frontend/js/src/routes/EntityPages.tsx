@@ -6,7 +6,7 @@ const getEntityPages = (): RouteObject[] => {
     {
       path: "/",
       lazy: async () => {
-        const EntityPageLayout = await import("../layout/EntityPages");
+        const EntityPageLayout = await import("../layout/LayoutWithBackButton");
         return { Component: EntityPageLayout.default };
       },
       children: [
@@ -24,7 +24,11 @@ const getEntityPages = (): RouteObject[] => {
             const AlbumPage = await import("../album/AlbumPage");
             return { Component: AlbumPage.default };
           },
-          loader: RouteQueryLoader("album"),
+          loader: RouteQueryLoader("album", undefined, (response: Response) => {
+            // Don't throw an error on 404, allowing the isError state
+            // in the AlbumPage query client state, to show custom error text
+            return response?.status !== 404;
+          }),
         },
         {
           path: "release-group/:releaseGroupMBID/",

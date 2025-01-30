@@ -216,6 +216,10 @@
       align-items: center;
       padding: 0;
 
+      @media (max-width: @screen-phone) {
+        flex: 0;
+      }
+
       .listen-controls {
         margin-left: 1.5em;
       }
@@ -486,9 +490,12 @@
 #navigation.pager {
   display: flex;
   flex-wrap: wrap;
-  & > .date-time-picker {
+  & > .feed-button-and-date-time-picker {
     flex: 1;
     order: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     @media (max-width: @screen-phone) {
       // on phones, put the datepicker below the arrow nav
@@ -496,19 +503,6 @@
       margin-top: 10px;
     }
   }
-}
-
-.ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ellipsis-2-lines {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 #spacer {
@@ -578,4 +572,9 @@
 .user-charts-pill {
   color: unset !important;
   text-decoration: unset !important;
+}
+
+.link-listens-tooltip {
+  border-bottom: 1px dotted #000;
+  text-decoration: none;
 }

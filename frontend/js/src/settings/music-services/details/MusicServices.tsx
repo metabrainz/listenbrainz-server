@@ -1,9 +1,10 @@
 import * as React from "react";
 
 import { capitalize } from "lodash";
-import { useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { format } from "date-fns";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
 import {
@@ -18,6 +19,11 @@ type MusicServicesLoaderData = {
   current_critiquebrainz_permissions: string;
   current_soundcloud_permissions: string;
   current_apple_permissions: string;
+  current_lastfm_permissions: string;
+  current_lastfm_settings: {
+    external_user_id?: string;
+    latest_listened_at?: string;
+  };
 };
 
 export default function MusicServices() {
@@ -27,14 +33,29 @@ export default function MusicServices() {
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
-  const { appleAuth } = React.useContext(GlobalAppContext);
+  const { appleAuth, APIService, currentUser } = React.useContext(
+    GlobalAppContext
+  );
 
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
     critiquebrainz: loaderData.current_critiquebrainz_permissions,
     soundcloud: loaderData.current_soundcloud_permissions,
     appleMusic: loaderData.current_apple_permissions,
+    lastfm: loaderData.current_lastfm_permissions,
   });
+
+  const [lastfmUserId, setLastfmUserId] = React.useState(
+    loaderData.current_lastfm_settings?.external_user_id
+  );
+  const [lastfmLatestListenedAt, setLastfmLatestListenedAt] = React.useState(
+    loaderData.current_lastfm_settings?.latest_listened_at
+      ? format(
+          new Date(loaderData.current_lastfm_settings?.latest_listened_at),
+          "yyyy-MM-dd'T'HH:mm:ss"
+        )
+      : undefined
+  );
 
   const handlePermissionChange = async (
     serviceName: string,
@@ -157,6 +178,98 @@ export default function MusicServices() {
           title="Error"
           message={`Failed to change permissions for Apple Music:${error.toString()}`}
         />
+      );
+    }
+  };
+
+  const handleConnectToLaftFM = async (
+    evt: React.FormEvent<HTMLFormElement>
+  ) => {
+    evt.preventDefault();
+    try {
+      const response = await fetch(`/settings/music-services/lastfm/connect/`, {
+        method: "POST",
+        body: JSON.stringify({
+          external_user_id: lastfmUserId,
+          latest_listened_at: lastfmLatestListenedAt
+            ? new Date(lastfmLatestListenedAt).toISOString()
+            : null,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        toast.success(
+          <ToastMsg
+            title="Success"
+            message="Your Last.FM account is connected to ListenBrainz"
+          />
+        );
+
+        setPermissions((prevState) => ({
+          ...prevState,
+          lastfm: "import",
+        }));
+      } else {
+        if (response.bodyUsed) {
+          const body = await response.json();
+          if (body.error) {
+            throw body.error;
+          }
+        }
+        throw response.statusText;
+      }
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Failed to connect to Last.FM"
+          message={error.toString()}
+        />
+      );
+    }
+  };
+  const handleImportFeedback = async (
+    evt: React.MouseEvent<HTMLButtonElement>,
+    service: ImportService
+  ) => {
+    evt.preventDefault();
+    try {
+      const form = evt.currentTarget.closest("form");
+      if (!form) {
+        throw Error("Could not find a form with lastfmUsername");
+      }
+      const formData = new FormData(form);
+      const username = formData.get("lastfmUsername");
+      if (!currentUser?.auth_token || !username) {
+        throw Error("You must fill in your LastFM username above");
+      }
+      const { importFeedback } = APIService;
+      const response = await importFeedback(
+        currentUser.auth_token,
+        username.toString(),
+        service
+      );
+      const { inserted, total } = response;
+      toast.success(
+        <div>
+          Succesfully imported {inserted} out of {total} tracks feedback from{" "}
+          {capitalize(service)}
+          <br />
+          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
+        </div>
+      );
+    } catch (error) {
+      toast.error(
+        <div>
+          We were unable to import your loved tracks from {capitalize(service)},
+          please try again later.
+          <br />
+          If the problem persists please{" "}
+          <a href="mailto:support@metabrainz.org">contact us</a>.
+          <pre>{error.toString()}</pre>
+        </div>
       );
     }
   };
@@ -287,6 +400,131 @@ export default function MusicServices() {
                 />
               </form>
             </div>
+          </div>
+        </div>
+
+        <div className="panel panel-default">
+          <div className="panel-heading">
+            <h3 className="panel-title">Last.FM</h3>
+          </div>
+          <div className="panel-body">
+            <p>
+              Connect to your Last.FM account to import your entire listening
+              history and automatically add your new scrobbles to ListenBrainz.
+            </p>
+            <div
+              className="alert alert-warning alert-dismissible fade in"
+              role="alert"
+            >
+              You must first disable the &#34;Hide recent listening
+              information&#34; setting in your Last.fm{" "}
+              <a
+                href="https://www.last.fm/settings/privacy"
+                target="_blank"
+                rel="noreferrer"
+              >
+                privacy settings
+              </a>
+              .
+              <button
+                type="button"
+                className="close"
+                data-dismiss="alert"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <form onSubmit={handleConnectToLaftFM}>
+              <div className="flex flex-wrap" style={{ gap: "1em" }}>
+                <div>
+                  <label htmlFor="lastfmUsername">Your Last.FM username:</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="lastfmUsername"
+                    title="Last.FM Username"
+                    placeholder="Last.FM Username"
+                    value={lastfmUserId}
+                    onChange={(e) => {
+                      setLastfmUserId(e.target.value);
+                    }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="datetime">
+                    Start import from (optional):
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    value={lastfmLatestListenedAt}
+                    onChange={(e) => {
+                      setLastfmLatestListenedAt(e.target.value);
+                    }}
+                    name="lastFMStartDatetime"
+                    title="Date and time to start import at"
+                  />
+                </div>
+              </div>
+              <br />
+              <div className="music-service-selection">
+                <button
+                  type="submit"
+                  className="music-service-option"
+                  style={{ width: "100%" }}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id="lastfm_import"
+                    name="lastfm"
+                    value="import"
+                    checked={permissions.lastfm === "import"}
+                  />
+                  <label htmlFor="lastfm_import">
+                    <div className="title">
+                      Connect{permissions.lastfm === "import" ? "ed" : ""} to
+                      Last.FM
+                    </div>
+                    <div className="details">
+                      We will periodically check your Last.FM account and add
+                      your new scrobbles to ListenBrainz
+                    </div>
+                  </label>
+                </button>
+                <button
+                  type="button"
+                  className="music-service-option"
+                  onClick={(e) => handleImportFeedback(e, "lastfm")}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id="lastfm_import_loved_tracks"
+                    name="lastfm"
+                    value="loved_tracks"
+                    checked={false}
+                  />
+                  <label htmlFor="lastfm_import_loved_tracks">
+                    <div className="title">Import loved tracks</div>
+                    <div className="details">
+                      Can only be run manually to import your loved tracks from
+                      Last.FM. You can run it again without creating duplicates.
+                    </div>
+                  </label>
+                </button>
+                <ServicePermissionButton
+                  service="lastfm"
+                  current={permissions.lastfm ?? "disable"}
+                  value="disable"
+                  title="Disable"
+                  details="New scrobbles won't be imported from Last.FM"
+                  handlePermissionChange={handlePermissionChange}
+                />
+              </div>
+            </form>
           </div>
         </div>
 

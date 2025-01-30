@@ -27,8 +27,12 @@
       flex-grow: 2;
       display: flex;
       flex-direction: column;
-      min-width: 200px;
-      max-height: 410px;
+      min-width: 15em;
+      max-height: 29em;
+      overflow: hidden;
+      > *:first-child {
+        line-height: 1em;
+      }
       .wikipedia-extract {
         margin-top: 2em;
         overflow: hidden;
@@ -162,21 +166,34 @@
         margin-top: 2em;
       }
     }
-    .albums {
+    .discography {
+      max-height: 860px;
       width: 100%;
-      .cover-art-container {
-        display: grid;
-        grid-gap: 2em;
-        grid-auto-flow: column;
-        justify-items: center;
-        grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
-        grid-template-rows: repeat(2, 1fr);
-        &.single-row {
-          grid-template-rows: repeat(1, 1fr);
+      overflow: hidden;
+      position: relative; // For the .read-more button absolute positioning
+      &.expanded {
+        max-height: fit-content;
+        .read-more {
+          position: relative;
+          bottom: 0;
         }
-        .cover-art {
-          aspect-ratio: 1;
-          background: lightgrey;
+      }
+      .albums {
+        width: 100%;
+        .cover-art-container {
+          display: grid;
+          grid-gap: 1.5em;
+          grid-auto-flow: column;
+          justify-items: center;
+          grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
+          grid-template-rows: repeat(2, 1fr);
+          &.single-row {
+            grid-template-rows: repeat(1, 1fr);
+          }
+          .cover-art {
+            aspect-ratio: 1;
+            background: lightgrey;
+          }
         }
       }
     }
@@ -258,6 +275,7 @@
 .read-more {
   position: absolute;
   bottom: -10px;
+  z-index: 2;
   width: 100%;
   text-align: center;
   padding: 40px 0 0;

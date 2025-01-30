@@ -14,7 +14,7 @@ import {
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import {
   ToastMsg,
@@ -58,6 +58,7 @@ export type DataSourceTypes =
 
 export type DataSourceProps = {
   show: boolean;
+  volume?: number;
   playerPaused: boolean;
   onPlayerPausedChange: (paused: boolean) => void;
   onProgressChange: (progressMs: number) => void;
@@ -153,6 +154,7 @@ export default function BrainzPlayer() {
     currentTrackURL,
     playerPaused,
     isActivated,
+    volume,
     durationMs,
     progressMs,
     listenSubmitted,
@@ -972,6 +974,18 @@ export default function BrainzPlayer() {
     };
   }, []);
 
+  const { pathname } = useLocation();
+
+  // Hide the player if user is on homepage and the player is not activated, and there are nothing in both the queue
+  if (
+    pathname === "/" &&
+    !isActivated &&
+    queueRef.current.length === 0 &&
+    ambientQueueRef.current.length === 0
+  ) {
+    return null;
+  }
+
   return (
     <div data-testid="brainzplayer">
       {!playerPaused && (
@@ -1014,6 +1028,7 @@ export default function BrainzPlayer() {
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1036,6 +1051,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
           <YoutubePlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1059,6 +1075,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
           <SoundcloudPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof
@@ -1081,6 +1098,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
           <AppleMusicPlayer
+            volume={volume}
             show={
               isActivated &&
               dataSourceRefs[currentDataSourceIndex]?.current instanceof

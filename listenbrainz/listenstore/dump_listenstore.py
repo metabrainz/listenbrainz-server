@@ -386,6 +386,7 @@ class DumpListenStore:
                        FROM listen_with_mbid l
                   LEFT JOIN mapping.mb_metadata_cache mbc
                          ON l.m_recording_mbid = mbc.recording_mbid
+                   ORDER BY {criteria}
                 """).format(criteria=psycopg2.sql.Identifier("l", criteria))  # l is the listen table's alias
 
         listen_count = 0

@@ -1,10 +1,9 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { saveAs } from "file-saver";
 import { findIndex } from "lodash";
 import * as React from "react";
 
-import { faCog, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import { faCog, faPlusCircle, faRss } from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -16,6 +15,7 @@ import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
 import { Link, useLoaderData, useNavigate } from "react-router-dom";
 import { formatDuration, intervalToDuration } from "date-fns";
+import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -28,10 +28,13 @@ import {
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
   JSPFTrackToListen,
+  LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
 } from "./utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { getBaseUrl } from "../utils/utils";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
@@ -318,7 +321,28 @@ export default function PlaylistPage() {
   return (
     <div role="main">
       <Helmet>
-        <title>{playlist.title} - Playlist</title>
+        <title>
+          {playlist.title} by {playlist.creator}
+        </title>
+        <meta property="og:type" content="music.playlist" />
+        <meta
+          property="og:title"
+          content={`${playlist.title} by ${playlist.creator} (${
+            playlist.track?.length ?? 0
+          } tracks) — ListenBrainz`}
+        />
+        <meta property="og:description" content={playlist.annotation} />
+        <meta
+          property="music:creator"
+          content={`${LISTENBRAINZ_URI_PREFIX}user/${playlist.creator}`}
+        />
+        {totalDurationMs && (
+          <meta
+            property="music:duration"
+            content={String(totalDurationMs / 1000)}
+          />
+        )}
+        <meta property="og:url" content={playlist.identifier} />
       </Helmet>
       <div className="row">
         <div
@@ -327,37 +351,55 @@ export default function PlaylistPage() {
           className="col-md-8 col-md-offset-2"
         >
           <div className="playlist-details row">
-            <h1 className="title">
-              <div>
-                {playlist.title}
-                <span className="dropdown pull-right">
-                  <button
-                    className="btn btn-info dropdown-toggle"
-                    type="button"
-                    id="playlistOptionsDropdown"
-                    data-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="true"
-                  >
-                    <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
-                    &nbsp;Options
-                  </button>
-                  <PlaylistMenu
-                    playlist={playlist}
-                    onPlaylistSaved={onPlaylistSave}
-                    onPlaylistDeleted={onDeletePlaylist}
-                    disallowEmptyPlaylistExport
-                  />
-                </span>
+            <div className="flex-center">
+              <h1 className="header-with-line">{playlist.title}</h1>
+              <div className="dropdown">
+                <button
+                  className="btn btn-info dropdown-toggle"
+                  type="button"
+                  id="playlistOptionsDropdown"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="true"
+                >
+                  <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
+                  &nbsp;Options
+                </button>
+                <PlaylistMenu
+                  playlist={playlist}
+                  onPlaylistSaved={onPlaylistSave}
+                  onPlaylistDeleted={onDeletePlaylist}
+                  disallowEmptyPlaylistExport
+                />
               </div>
-              <small>
-                {customFields?.public ? "Public " : "Private "}
-                playlist by{" "}
-                <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
-                  {playlist.creator}
-                </Link>
-              </small>
-            </h1>
+              {customFields?.public && (
+                <button
+                  type="button"
+                  className="btn btn-icon btn-info btn-sm atom-button"
+                  data-toggle="modal"
+                  data-target="#SyndicationFeedModal"
+                  title="Subscribe to syndication feed (Atom)"
+                  onClick={() => {
+                    NiceModal.show(SyndicationFeedModal, {
+                      feedTitle: `Playlist - ${playlist.title}`,
+                      options: [],
+                      baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
+                        playlist
+                      )}`,
+                    });
+                  }}
+                >
+                  <FontAwesomeIcon icon={faRss} size="sm" fixedWidth />
+                </button>
+              )}
+            </div>
+            <p>
+              {customFields?.public ? "Public " : "Private "}
+              playlist by{" "}
+              <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
+                {playlist.creator}
+              </Link>
+            </p>
             <div className="info">
               <div>
                 {playlist.track?.length} tracks

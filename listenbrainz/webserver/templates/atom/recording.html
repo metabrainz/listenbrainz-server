@@ -1,0 +1,13 @@
+<p>
+    {% if recording_mbid -%}
+        <a href="{{ recording_mb_page_base_url }}{{ recording_mbid }}">{{ recording_title }}</a>
+    {%- else -%}
+        {{ recording_title }}
+    {%- endif %}
+    by
+    {% if artist_mbid -%}
+        <a href="{{ artist_page_base_url }}{{ artist_mbid }}">{{ artist_credit }}</a>
+    {%- else -%}
+        {{ artist_credit }}.
+    {%- endif %}
+</p>

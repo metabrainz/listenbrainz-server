@@ -9,6 +9,7 @@ import {
   searchForSoundcloudTrack,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 require("../../../lib/soundcloud-player-api");
@@ -152,7 +153,11 @@ export default class SoundcloudPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
+    if (prevProps.volume !== volume && this.soundcloudPlayer?.setVolume) {
+      this.soundcloudPlayer?.setVolume((volume ?? 100) / 100);
+    }
+
     if (prevProps.show && !show && this.soundcloudPlayer) {
       this.soundcloudPlayer.pause();
     }
@@ -405,6 +410,7 @@ export default class SoundcloudPlayer
 
   render() {
     const { show } = this.props;
+
     return (
       <div
         className={`soundcloud ${!show ? "hidden" : ""}`}
