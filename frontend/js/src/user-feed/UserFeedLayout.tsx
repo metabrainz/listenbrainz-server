@@ -24,17 +24,17 @@ function NavItem({
 
 function UserFeedLayout() {
   const location = useLocation();
-  const locationArr = location?.pathname?.split("/");
+  const locationArr = location?.pathname?.split("/").filter(Boolean);
   const { currentUser } = React.useContext(GlobalAppContext);
 
   const loggedIn = currentUser?.name;
 
   const [activeSection, setActiveSection] = React.useState<string>(
-    locationArr[1]
+    locationArr.at(-1) ?? ""
   );
 
   React.useEffect(() => {
-    setActiveSection(locationArr[1]);
+    setActiveSection(locationArr.at(-1) ?? "");
   }, [locationArr]);
 
   return (
@@ -49,8 +49,9 @@ function UserFeedLayout() {
           />
           <NavItem
             label="My friends"
-            url="/friends/"
+            url={loggedIn ? "/feed/friends/" : "#"}
             isActive={activeSection === "friends"}
+            isDisabled={!loggedIn}
           />
           <NavItem
             label="Global"
