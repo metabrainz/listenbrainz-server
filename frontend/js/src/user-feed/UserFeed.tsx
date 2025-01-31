@@ -624,105 +624,107 @@ export default function UserFeedPage() {
           <FontAwesomeIcon icon={faRss} size="sm" />
         </button> */}
       </div>
-      <div>
-        {isError ? (
-          <>
-            <div className="alert alert-warning text-center">
-              There was an error while trying to load your feed. Please try
-              again
-            </div>
-            <div className="text-center">
-              <button
-                type="button"
-                className="btn btn-warning"
-                onClick={() => {
-                  refetch();
-                }}
-              >
-                Reload feed
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-center">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  refetch();
-                }}
-                disabled={isFetching}
-              >
-                <FontAwesomeIcon icon={faRefresh} />
-                &nbsp;
-                {isLoading || isFetching ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
-            <div
-              id="timeline"
-              data-testid="timeline"
-              style={{ opacity: isLoading ? "0.4" : "1" }}
-            >
-              <ul>
-                {events?.map((event) => {
-                  const { created, event_type, user_name } = event;
-                  return (
-                    <li
-                      className="timeline-event"
-                      key={`event-${user_name}-${created}`}
-                    >
-                      <div className="event-description">
-                        <span className={`event-icon ${event_type}`}>
-                          <span className="fa-layers">
-                            <FontAwesomeIcon
-                              icon={faCircle as IconProp}
-                              transform="grow-8"
-                            />
-                            <FontAwesomeIcon
-                              icon={getEventTypeIcon(event_type) as IconProp}
-                              inverse
-                              transform="shrink-4"
-                            />
-                          </span>
-                        </span>
-                        {renderEventText(event)}
-
-                        <span className="event-time">
-                          {preciseTimestamp(created * 1000)}
-                          {renderEventActionButton(event)}
-                        </span>
-                      </div>
-
-                      {renderEventContent(event)}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            {Boolean(events?.length) && (
-              <div
-                className="text-center"
-                style={{
-                  width: "50%",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                }}
-              >
+      <div className="row">
+        <div className="col-md-9">
+          {isError ? (
+            <>
+              <div className="alert alert-warning text-center">
+                There was an error while trying to load your feed. Please try
+                again
+              </div>
+              <div className="text-center">
                 <button
                   type="button"
-                  className="btn btn-primary btn-block"
-                  onClick={() => fetchNextPage()}
-                  disabled={!hasNextPage || isFetchingNextPage}
+                  className="btn btn-warning"
+                  onClick={() => {
+                    refetch();
+                  }}
                 >
-                  {(isLoading || isFetchingNextPage) && "Loading more..."}
-                  {!(isLoading || isFetchingNextPage) &&
-                    (hasNextPage ? "Load More" : "Nothing more to load")}
+                  Reload feed
                 </button>
               </div>
-            )}
-          </>
-        )}
+            </>
+          ) : (
+            <>
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    refetch();
+                  }}
+                  disabled={isFetching}
+                >
+                  <FontAwesomeIcon icon={faRefresh} />
+                  &nbsp;
+                  {isLoading || isFetching ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
+              <div
+                id="timeline"
+                data-testid="timeline"
+                style={{ opacity: isLoading ? "0.4" : "1" }}
+              >
+                <ul>
+                  {events?.map((event) => {
+                    const { created, event_type, user_name } = event;
+                    return (
+                      <li
+                        className="timeline-event"
+                        key={`event-${user_name}-${created}`}
+                      >
+                        <div className="event-description">
+                          <span className={`event-icon ${event_type}`}>
+                            <span className="fa-layers">
+                              <FontAwesomeIcon
+                                icon={faCircle as IconProp}
+                                transform="grow-8"
+                              />
+                              <FontAwesomeIcon
+                                icon={getEventTypeIcon(event_type) as IconProp}
+                                inverse
+                                transform="shrink-4"
+                              />
+                            </span>
+                          </span>
+                          {renderEventText(event)}
+
+                          <span className="event-time">
+                            {preciseTimestamp(created * 1000)}
+                            {renderEventActionButton(event)}
+                          </span>
+                        </div>
+
+                        {renderEventContent(event)}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              {Boolean(events?.length) && (
+                <div
+                  className="text-center"
+                  style={{
+                    width: "50%",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => fetchNextPage()}
+                    disabled={!hasNextPage || isFetchingNextPage}
+                  >
+                    {(isLoading || isFetchingNextPage) && "Loading more..."}
+                    {!(isLoading || isFetchingNextPage) &&
+                      (hasNextPage ? "Load More" : "Nothing more to load")}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </>
   );
