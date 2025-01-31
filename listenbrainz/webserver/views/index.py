@@ -236,23 +236,18 @@ def friends_feed():
     max_ts = request.args.get("max_ts", int(time.time()))
 
     users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
-    current_app.logger.info("preparing to fetch friends' listens")
-    user_events = get_all_listen_events(
+    user_listens = get_all_listen_events(
         users=users_following,
         min_ts=min_ts,
         max_ts=max_ts,
         limit=count,
     )
 
-    user_events = user_events[:count]
-
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(user_events):
-        user_events[index].event_type = event.event_type.value
+    user_listens = user_listens[:count]
 
     return jsonify(
         {
-            "events": [event.dict() for event in user_events],
+            "events": [event.dict() for event in user_listens],
         }
     )
 
