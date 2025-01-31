@@ -48,6 +48,11 @@ function UserFeedLayout() {
             isDisabled={!loggedIn}
           />
           <NavItem
+            label="My friends"
+            url="/friends/"
+            isActive={activeSection === "following"}
+          />
+          <NavItem
             label="Global"
             url="/recent/"
             isActive={activeSection === "recent"}

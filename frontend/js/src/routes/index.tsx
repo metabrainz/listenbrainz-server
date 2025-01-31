@@ -163,6 +163,13 @@ const getIndexRoutes = (): RouteObject[] => {
               },
             },
             {
+              path: "/friends/",
+              lazy: async () => {
+                const FriendsFeed = await import("../user-feed/FriendsFeed");
+                return { Component: FriendsFeed.default };
+              },
+            },
+            {
               path: "/recent/",
               lazy: async () => {
                 const RecentListens = await import("../recent/RecentListens");
