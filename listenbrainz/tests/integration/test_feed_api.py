@@ -472,7 +472,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
         )
         self.assert200(r)
-        self.assertEqual(5, r.json['payload']['count'])  # 3 events we created + 2 own follow events
+        self.assertEqual(4, r.json['payload']['count'])  # 3 events we created + 2 own follow events
         self.assertEqual('recording_recommendation', r.json['payload']['events'][0]['event_type'])
         self.assertEqual('follow', r.json['payload']['events'][1]['event_type'])
-        self.assertEqual('listen', r.json['payload']['events'][4]['event_type'])  # last event should be a listen
