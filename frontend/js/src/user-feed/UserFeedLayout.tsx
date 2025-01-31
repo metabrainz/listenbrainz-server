@@ -50,7 +50,7 @@ function UserFeedLayout() {
           <NavItem
             label="My friends"
             url="/friends/"
-            isActive={activeSection === "following"}
+            isActive={activeSection === "friends"}
           />
           <NavItem
             label="Global"
