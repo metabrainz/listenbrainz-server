@@ -5,6 +5,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
@@ -96,7 +97,7 @@ export default function FriendsFeedPage() {
   return (
     <>
       <Helmet>
-        <title>Friends feed</title>
+        <title>My friends feed</title>
       </Helmet>
       <div className="listen-header">
         <h3 className="header-with-line">What are my friends listening to?</h3>
@@ -126,7 +127,7 @@ export default function FriendsFeedPage() {
               <div className="text-center">
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-outline"
                   onClick={() => {
                     refetch();
                   }}
@@ -158,7 +159,7 @@ export default function FriendsFeedPage() {
                 </div>
               )}
               <div
-                className="text-center"
+                className="text-center mb-15"
                 style={{
                   width: "50%",
                   marginLeft: "auto",
@@ -167,10 +168,12 @@ export default function FriendsFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-primary btn-block"
+                  className="btn btn-outline btn-block"
                   onClick={() => fetchNextPage()}
                   disabled={!hasNextPage || isFetchingNextPage}
                 >
+                  <FontAwesomeIcon icon={faCalendarPlus} />
+                  &nbsp;
                   {(isLoading || isFetchingNextPage) && "Loading more..."}
                   {!(isLoading || isFetchingNextPage) &&
                     (hasNextPage ? "Load More" : "Nothing more to load")}
