@@ -99,10 +99,10 @@ export default function FriendsFeedPage() {
         <title>Friends feed</title>
       </Helmet>
       <div className="listen-header">
-        <h3 className="header-with-line">Latest listens from your friends</h3>
+        <h3 className="header-with-line">What are my friends listening to?</h3>
       </div>
       <div className="row">
-        <div className="col-md-8 col-xs-12">
+        <div className="col-sm-8 col-xs-12">
           {isError ? (
             <>
               <div className="alert alert-warning text-center">
@@ -123,17 +123,10 @@ export default function FriendsFeedPage() {
             </>
           ) : (
             <>
-              <div
-                className="text-center"
-                style={{
-                  width: "50%",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                }}
-              >
+              <div className="text-center">
                 <button
                   type="button"
-                  className="btn btn-primary btn-block"
+                  className="btn btn-primary"
                   onClick={() => {
                     refetch();
                   }}
@@ -141,7 +134,7 @@ export default function FriendsFeedPage() {
                 >
                   <FontAwesomeIcon icon={faRefresh} />
                   &nbsp;
-                  {isLoading || isFetching ? "Loading more..." : "Refresh"}
+                  {isLoading || isFetching ? "Refreshing..." : "Refresh"}
                 </button>
               </div>
               {!listenEvents?.length && (
@@ -186,7 +179,7 @@ export default function FriendsFeedPage() {
             </>
           )}
         </div>
-        <div className="col-md-4">
+        <div className="col-sm-4">
           <UserSocialNetwork user={currentUser} />
         </div>
       </div>
