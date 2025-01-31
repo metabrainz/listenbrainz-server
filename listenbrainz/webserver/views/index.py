@@ -1,7 +1,7 @@
 import locale
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 from brainzutils import cache
@@ -26,7 +26,10 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.status_api import get_service_status
-from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
+from listenbrainz.webserver.views.user_timeline_event_api import (
+    get_feed_events_for_user,
+    get_all_listen_events,
+)
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -218,6 +221,40 @@ def feed():
     return jsonify({
         'events': [event.dict() for event in user_events],
     })
+
+
+@index_bp.post("/friends/")
+@login_required
+def friends_feed():
+    user_id = current_user.id
+    count = request.args.get("count", 25)
+    min_ts = request.args.get(
+        "min_ts",
+        #  Get listens from up to a week ago by default
+        datetime.now() - timedelta(weeks=1),
+    )
+    max_ts = request.args.get("max_ts", int(time.time()))
+
+    users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
+    current_app.logger.info("preparing to fetch friends' listens")
+    user_events = get_all_listen_events(
+        users=users_following,
+        min_ts=min_ts,
+        max_ts=max_ts,
+        limit=count,
+    )
+
+    user_events = user_events[:count]
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    for index, event in enumerate(user_events):
+        user_events[index].event_type = event.event_type.value
+
+    return jsonify(
+        {
+            "events": [event.dict() for event in user_events],
+        }
+    )
 
 
 @index_bp.get("/delete-user/<int:musicbrainz_row_id>")
