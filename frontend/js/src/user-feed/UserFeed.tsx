@@ -10,6 +10,7 @@ import {
   faHeart,
   faPaperPlane,
   faQuestion,
+  faRefresh,
   faRss,
   faThumbsUp,
   faThumbtack,
@@ -32,19 +33,17 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";
 import Username from "../common/Username";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { ToastMsg } from "../notifications/Notifications";
-import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   feedReviewEventToListen,
   getAdditionalContent,
-  getBaseUrl,
   getPersonalRecommendationEventContent,
   getReviewEventContent,
   personalRecommendationEventToListen,
@@ -625,69 +624,83 @@ export default function UserFeedPage() {
           <FontAwesomeIcon icon={faRss} size="sm" />
         </button> */}
       </div>
-      <div className="row">
-        <div className="col-md-7 col-xs-12">
-          {isError ? (
-            <>
-              <div className="alert alert-warning text-center">
-                There was an error while trying to load your feed. Please try
-                again
-              </div>
-              <div className="text-center">
-                <button
-                  type="button"
-                  className="btn btn-warning"
-                  onClick={() => {
-                    refetch();
-                  }}
-                >
-                  Reload feed
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div
-                id="timeline"
-                data-testid="timeline"
-                style={{ opacity: isLoading ? "0.4" : "1" }}
+      <div>
+        {isError ? (
+          <>
+            <div className="alert alert-warning text-center">
+              There was an error while trying to load your feed. Please try
+              again
+            </div>
+            <div className="text-center">
+              <button
+                type="button"
+                className="btn btn-warning"
+                onClick={() => {
+                  refetch();
+                }}
               >
-                <ul>
-                  {events?.map((event) => {
-                    const { created, event_type, user_name } = event;
-                    return (
-                      <li
-                        className="timeline-event"
-                        key={`event-${user_name}-${created}`}
-                      >
-                        <div className="event-description">
-                          <span className={`event-icon ${event_type}`}>
-                            <span className="fa-layers">
-                              <FontAwesomeIcon
-                                icon={faCircle as IconProp}
-                                transform="grow-8"
-                              />
-                              <FontAwesomeIcon
-                                icon={getEventTypeIcon(event_type) as IconProp}
-                                inverse
-                                transform="shrink-4"
-                              />
-                            </span>
+                Reload feed
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  refetch();
+                }}
+                disabled={isFetching}
+              >
+                <FontAwesomeIcon icon={faRefresh} />
+                &nbsp;
+                {isLoading || isFetching ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+            <div
+              id="timeline"
+              data-testid="timeline"
+              style={{ opacity: isLoading ? "0.4" : "1" }}
+            >
+              <ul>
+                {events?.map((event) => {
+                  const { created, event_type, user_name } = event;
+                  return (
+                    <li
+                      className="timeline-event"
+                      key={`event-${user_name}-${created}`}
+                    >
+                      <div className="event-description">
+                        <span className={`event-icon ${event_type}`}>
+                          <span className="fa-layers">
+                            <FontAwesomeIcon
+                              icon={faCircle as IconProp}
+                              transform="grow-8"
+                            />
+                            <FontAwesomeIcon
+                              icon={getEventTypeIcon(event_type) as IconProp}
+                              inverse
+                              transform="shrink-4"
+                            />
                           </span>
-                          {renderEventText(event)}
+                        </span>
+                        {renderEventText(event)}
 
-                          <span className="event-time">
-                            {preciseTimestamp(created * 1000)}
-                            {renderEventActionButton(event)}
-                          </span>
-                        </div>
+                        <span className="event-time">
+                          {preciseTimestamp(created * 1000)}
+                          {renderEventActionButton(event)}
+                        </span>
+                      </div>
 
-                        {renderEventContent(event)}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+                      {renderEventContent(event)}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            {Boolean(events?.length) && (
               <div
                 className="text-center"
                 style={{
@@ -707,12 +720,9 @@ export default function UserFeedPage() {
                     (hasNextPage ? "Load More" : "Nothing more to load")}
                 </button>
               </div>
-            </>
-          )}
-        </div>
-        <div className="col-md-offset-1 col-md-4">
-          <UserSocialNetwork user={currentUser} />
-        </div>
+            )}
+          </>
+        )}
       </div>
     </>
   );
