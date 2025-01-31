@@ -142,7 +142,7 @@ export default function FriendsFeedPage() {
                 <h5 className="text-center">No listens to show</h5>
               )}
               {Boolean(listenEvents?.length) && (
-                <div id="listens">
+                <div id="listens" data-testid="listens">
                   {listenEvents?.map((event) => {
                     const listen = event.metadata;
                     return (

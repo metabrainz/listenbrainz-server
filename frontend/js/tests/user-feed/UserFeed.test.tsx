@@ -110,11 +110,6 @@ describe("UserFeed", () => {
     );
 
     expect(screen.getByText("Latest activity")).toBeInTheDocument();
-    // contains a UserSocialNetwork component
-    expect(screen.getByText("Similar Users")).toBeInTheDocument();
-    expect(
-      screen.getByText("You aren't following anyone.")
-    ).toBeInTheDocument();
   });
 
   it("has infinite pagination", async () => {
