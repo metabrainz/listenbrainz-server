@@ -65,17 +65,17 @@ export enum EventType {
 }
 
 export type UserFeedPageProps = {
-  events: TimelineEvent[];
+  events: TimelineEvent<EventMetadata>[];
 };
 
 export type UserFeedPageState = {
   nextEventTs?: number;
   previousEventTs?: number;
   earliestEventTs?: number;
-  events: TimelineEvent[];
+  events: TimelineEvent<EventMetadata>[];
 };
 
-function isEventListenable(event?: TimelineEvent): boolean {
+function isEventListenable(event?: TimelineEvent<EventMetadata>): boolean {
   if (!event) {
     return false;
   }
@@ -130,7 +130,7 @@ function getReviewEntityName(entity_type: ReviewableEntityType): string {
   }
 }
 
-function getEventTypePhrase(event: TimelineEvent): string {
+function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
   const { event_type } = event;
   let review: CritiqueBrainzReview;
   switch (event_type) {
@@ -229,7 +229,7 @@ export default function UserFeedPage() {
   }, [listens]);
 
   const changeEventVisibility = React.useCallback(
-    async (event: TimelineEvent) => {
+    async (event: TimelineEvent<EventMetadata>) => {
       const { hideFeedEvent, unhideFeedEvent } = APIService;
       // if the event was previously hidden, unhide it. Otherwise, hide the event
       const action = event.hidden ? unhideFeedEvent : hideFeedEvent;
@@ -282,7 +282,7 @@ export default function UserFeedPage() {
   });
 
   const deleteFeedEvent = React.useCallback(
-    async (event: TimelineEvent) => {
+    async (event: TimelineEvent<EventMetadata>) => {
       if (
         event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -382,7 +382,7 @@ export default function UserFeedPage() {
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent) => {
+  const renderEventActionButton = (event: TimelineEvent<EventMetadata>) => {
     if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -439,7 +439,7 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const renderEventContent = (event: TimelineEvent) => {
+  const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
     if (isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
       let listen: Listen;
@@ -494,7 +494,7 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const renderEventText = (event: TimelineEvent) => {
+  const renderEventText = (event: TimelineEvent<EventMetadata>) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
       return (

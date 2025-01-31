@@ -87,7 +87,7 @@ export default class APIService {
     minTs?: number,
     maxTs?: number,
     count?: number
-  ): Promise<Array<TimelineEvent>> => {
+  ): Promise<Array<TimelineEvent<EventMetadata>>> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
