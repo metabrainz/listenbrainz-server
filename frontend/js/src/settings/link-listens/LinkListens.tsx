@@ -4,7 +4,6 @@ import * as React from "react";
 
 import {
   faLink,
-  faQuestionCircle,
   faTrashAlt,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
@@ -25,13 +24,17 @@ import ListenControl from "../../common/listens/ListenControl";
 import MBIDMappingModal from "../../common/listens/MBIDMappingModal";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { getRecordingMSID } from "../../utils/utils";
+import {
+  getObjectForURLSearchParams,
+  getRecordingMSID,
+} from "../../utils/utils";
 import MultiTrackMBIDMappingModal, {
   MatchingTracksResults,
 } from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { RouteQuery } from "../../utils/Loader";
+import Pagination from "../../common/Pagination";
 
 export type LinkListensProps = {
   unlinkedListens?: Array<UnlinkedListens>;
@@ -86,6 +89,7 @@ export default function LinkListensPage() {
   } = loaderData || {};
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamsObj = getObjectForURLSearchParams(searchParams);
   const pageSearchParam = searchParams.get("page");
 
   const lastUpdatedHumanReadable = isString(lastUpdated)
@@ -129,14 +133,15 @@ export default function LinkListensPage() {
       keys: [key],
       ...searchOptions,
     });
+    const trimmedSearchQuery = searchQuery.trim();
     if (filterType === "artist") {
       const filtered = fuzzysearch
-        .search(searchQuery)
+        .search(trimmedSearchQuery)
         .map((result) => result.item);
       setUnlinkedListens(filtered);
     } else {
       const albumsByArtist = fuzzysearch
-        .search(searchQuery)
+        .search(trimmedSearchQuery)
         .map((result) => result.item.release_name);
       const filtered = originalUnlinkedListens.filter((listen) =>
         albumsByArtist.includes(listen.release_name)
@@ -184,6 +189,20 @@ export default function LinkListensPage() {
   );
 
   // Functions
+
+  const handleClickPrevious = () => {
+    setSearchParams({
+      ...searchParamsObj,
+      page: Math.max(currPage - 1, 1).toString(),
+    });
+  };
+
+  const handleClickNext = () => {
+    setSearchParams({
+      ...searchParamsObj,
+      page: Math.min(currPage + 1, totalPages).toString(),
+    });
+  };
 
   const deleteListen = async (data: UnlinkedListens) => {
     if (user?.auth_token) {
@@ -299,8 +318,9 @@ export default function LinkListensPage() {
       <h2 className="page-title">Link with MusicBrainz</h2>
       <ReactTooltip id="matching-tooltip" multiline>
         We automatically match listens with MusicBrainz recordings when
-        possible, which provides rich data like tags, album, artists, cover art,
-        and more.
+        possible,
+        <br />
+        which provides rich data like tags, album, artists, cover art, and more.
         <br />
         When a track can&apos;t be auto-matched you can manually link them on
         this page.
@@ -320,10 +340,20 @@ export default function LinkListensPage() {
         &nbsp;to a MusicBrainz recording.
       </p>
       <p className="small">
-        <a href="https://musicbrainz.org/">MusicBrainz</a> is the open-source
-        music encyclopedia that ListenBrainz uses to display information about
-        your music.&nbsp;
-        <a href="https://wiki.musicbrainz.org/How_to_Contribute">
+        <a
+          href="https://musicbrainz.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          MusicBrainz
+        </a>
+        &nbsp; is the open-source music encyclopedia that ListenBrainz uses to
+        display information about your music.&nbsp;
+        <a
+          href="https://wiki.musicbrainz.org/How_to_Contribute"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Submit missing data to MusicBrainz
         </a>
         .
@@ -360,7 +390,9 @@ export default function LinkListensPage() {
             <button
               type="submit"
               className="btn btn-info"
-              disabled={searchQuery.length <= 1}
+              disabled={!searchQuery.trim()}
+              aria-disabled={!searchQuery.trim()}
+              title="Search"
             >
               <FontAwesomeIcon icon={faSearch} />
             </button>
@@ -368,6 +400,7 @@ export default function LinkListensPage() {
               type="button"
               className="btn btn-info"
               onClick={handleReset}
+              title="Reset"
             >
               Reset
             </button>
@@ -510,29 +543,12 @@ export default function LinkListensPage() {
             );
           })}
         </div>
-        <ul className="pager" style={{ display: "flex" }}>
-          <li className={`previous ${currPage <= 1 ? "disabled" : ""}`}>
-            <Link
-              to={`?page=${Math.max(currPage - 1, 1)}`}
-              role="button"
-              aria-disabled={currPage >= totalPages}
-            >
-              &larr; Previous
-            </Link>
-          </li>
-          <li
-            className={`next ${currPage >= totalPages ? "disabled" : ""}`}
-            style={{ marginLeft: "auto" }}
-          >
-            <Link
-              to={`?page=${Math.min(currPage + 1, totalPages)}`}
-              role="button"
-              aria-disabled={currPage >= totalPages}
-            >
-              Next &rarr;
-            </Link>
-          </li>
-        </ul>
+        <Pagination
+          currentPageNo={currPage}
+          totalPageCount={totalPages}
+          handleClickPrevious={handleClickPrevious}
+          handleClickNext={handleClickNext}
+        />
       </div>
     </>
   );
