@@ -255,56 +255,64 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assert401(r)
 
     def test_it_honors_request_parameters(self):
-        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
-            payload = json.load(f)
 
-        # send a listen per user with timestamp 1, 2, 3
+        msid = self.insert_metadata()
+        # send a recommendation event at different timestamps
         ts = int(time.time())
         for i in range(1, 4):
-            payload['payload'][0]['listened_at'] = ts + i
-            response = self.send_data(payload, user=self.following_user_1)
-            self.assert200(response)
-            self.assertEqual(response.json['status'], 'ok')
+            # create a recording recommendation for users we follow
+            db_user_timeline_event.create_user_track_recommendation_event(
+                self.db_conn,
+                user_id=self.following_user_1["id"],
+                metadata=RecordingRecommendationMetadata(
+                    recording_mbid="34c208ee-2de7-4d38-b47e-907074866dd3",
+                    recording_msid=msid
+                ),
+            )
+            # Sleep after each insert because we can't set a specific timestamp
+            time.sleep(2)
 
-            response = self.send_data(payload, user=self.following_user_2)
-            self.assert200(response)
-            self.assertEqual(response.json['status'], 'ok')
-
-        time.sleep(2)
-
-        # max_ts = 2, should have sent back 2 listens
+        r = self.client.get(
+            self.custom_url_for(
+                "user_timeline_event_api_bp.user_feed",
+                user_name=self.main_user["musicbrainz_id"],
+            ),
+            headers={"Authorization": f"Token {self.main_user['auth_token']}"},
+        )
+        payload = self.remove_own_follow_events(r.json["payload"])
+        # max_ts = +1, should have sent back 1 event
         r = self.client.get(
             self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
-            query_string={'max_ts': ts + 2}
+            query_string={'max_ts': ts+1}
         )
         self.assert200(r)
         # the payload contains events for the users we've followed, but we don't care about those
         # for now, so let's remove them for this test.
         payload = self.remove_own_follow_events(r.json['payload'])
+        self.assertEqual(1, payload['count'])
+
+        # max_ts = +3, should have sent back 2 events
+        r = self.client.get(
+            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
+            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
+            query_string={'max_ts': ts + 3}
+        )
+        self.assert200(r)
+        payload = self.remove_own_follow_events(r.json['payload'])
         self.assertEqual(2, payload['count'])
 
-        # max_ts = 4, should have sent back 4 listens
+        # min_ts = ts, should have sent back 3 events
         r = self.client.get(
             self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
-            query_string={'max_ts': ts + 4}
+            query_string={'min_ts': ts}
         )
         self.assert200(r)
         payload = self.remove_own_follow_events(r.json['payload'])
-        self.assertEqual(4, payload['count'])
+        self.assertEqual(3, payload['count'])
 
-        # min_ts = 1, should have sent back 4 listens
-        r = self.client.get(
-            self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
-            headers={'Authorization': f"Token {self.main_user['auth_token']}"},
-            query_string={'min_ts': ts + 1}
-        )
-        self.assert200(r)
-        payload = self.remove_own_follow_events(r.json['payload'])
-        self.assertEqual(4, payload['count'])
-
-        # min_ts = 2, should have sent back 2 listens
+        # min_ts = +2, should have sent back 2 events
         r = self.client.get(
             self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
@@ -314,7 +322,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         payload = self.remove_own_follow_events(r.json['payload'])
         self.assertEqual(2, payload['count'])
 
-        # min_ts = 1, max_ts = 3, should have sent back 2 listens
+        # min_ts = 1, max_ts = 3, should have sent back 1 events
         r = self.client.get(
             self.custom_url_for('user_timeline_event_api_bp.user_feed', user_name=self.main_user['musicbrainz_id']),
             headers={'Authorization': f"Token {self.main_user['auth_token']}"},
@@ -322,7 +330,7 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(r)
         payload = self.remove_own_follow_events(r.json['payload'])
-        self.assertEqual(2, payload['count'])
+        self.assertEqual(1, payload['count'])
 
         # should honor count
         r = self.client.get(
@@ -394,7 +402,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
             query_string={'max_ts': int(time.time()) + 1}
         )
         self.assert200(r)
-        print(json.dumps(r.json['payload'], indent=4))
 
         # first, let's remove the own follow events, we don't care about those in this test.
         payload = self.remove_own_follow_events(r.json['payload'])
