@@ -76,6 +76,9 @@ def submit_listen():
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
+    if user['is_paused']:
+        raise APIUnauthorized("user_id is paused.")
+
     raw_data = request.get_data()
 
     if len(raw_data) > MAX_LISTEN_PAYLOAD_SIZE:
