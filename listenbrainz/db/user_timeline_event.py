@@ -39,6 +39,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from typing import List, Tuple, Iterable
 
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
+from listenbrainz.webserver.errors import APIInternalServerError
 
 
 def create_user_timeline_event(
@@ -88,15 +89,18 @@ def create_user_notification_event(db_conn, user_id: int, metadata: Notification
     )
 
 
-def create_thanks_event(db_conn, user_id: int, thanker_username: str, metadata: ThanksMetadata) -> UserTimelineEvent:
+def create_thanks_event(db_conn, thanker_id: int, thanker_username: str, thankee_id: int, thankee_username: str, metadata: ThanksMetadata) -> UserTimelineEvent:
     """ Creates a thanks event in the database and returns it.
     """
     event_metadata = dict(metadata)
+    event_metadata["thanker_id"] = thanker_id
     event_metadata["thanker_username"] = thanker_username
+    event_metadata["thankee_id"] = thankee_id
+    event_metadata["thankee_username"] = thankee_username
     event_metadata = ThanksEventMetadata(**event_metadata)
     return create_user_timeline_event(
         db_conn,
-        user_id=user_id,
+        user_id=thanker_id,
         event_type=UserTimelineEventType.THANKS,
         metadata=event_metadata
     )
@@ -313,10 +317,11 @@ def get_thanks_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, 
                "user".musicbrainz_id as user_name
           FROM user_timeline_event
           INNER JOIN "user"
-            ON user_timeline_event.user_id = "user".id
+            ON user_timeline_event.user_id = "user".id 
          WHERE (
                (user_timeline_event.metadata -> 'users') @> to_jsonb(array[:user_id])
                OR user_timeline_event.user_id = :user_id
+               OR (user_timeline_event.metadata ->> 'thankee_id')::int = :user_id
          )
            AND user_timeline_event.created > :min_ts
            AND user_timeline_event.created < :max_ts
@@ -330,7 +335,7 @@ def get_thanks_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, 
         "count": count,
         "event_type": UserTimelineEventType.THANKS.value,
     })
-
+    
     return [UserTimelineEvent(
         id=row.id,
         user_id=row.user_id,

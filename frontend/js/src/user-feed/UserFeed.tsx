@@ -573,19 +573,20 @@ export default function UserFeedPage() {
     }
     if (event_type === EventType.THANKS) {
       console.log(metadata);
-      const { blurb_content, thanker_username } = metadata as ThanksMetadata;
+      const {
+        original_event_id,
+        original_event_type,
+        thanker_id,
+        thanker_username,
+        thankee_id,
+        thankee_username,
+        blurb_content,
+      } = metadata as ThanksMetadata;
+
       return (
         <>
           <Username username={thanker_username} /> thanked{" "}
-          <Username username={currentUser.name} />
-          <span
-            className="event-description-text"
-            // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{
-              __html: sanitize(blurb_content),
-            }}
-          />
+          <Username username={thankee_username} />
         </>
       );
     }

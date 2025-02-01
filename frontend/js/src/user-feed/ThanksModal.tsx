@@ -27,7 +27,6 @@ export default NiceModal.create(
     const [blurbContent, setBlurbContent] = React.useState("");
 
     const { APIService, currentUser } = React.useContext(GlobalAppContext);
-    const { name: currentUserName } = currentUser;
 
     const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
@@ -66,16 +65,12 @@ export default NiceModal.create(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         if (currentUser?.auth_token) {
-          const metadata: ThanksMetadata = {
-            blurb_content: blurbContent,
-          };
-
           try {
             const status = await APIService.thankFeedEvent(
-              original_event_type,
-              currentUser.name,
-              currentUser.auth_token,
               original_event_id,
+              original_event_type,
+              currentUser.auth_token,
+              currentUser.name,
               blurbContent
             );
             if (status === 200) {

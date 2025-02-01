@@ -69,7 +69,10 @@ class ThanksEventMetadata(BaseModel):
     original_event_type: UserTimelineEventType
     original_event_id: NonNegativeInt
     blurb_content: Optional[str]
-    thanker_username: Optional[constr(min_length=1)]
+    thanker_id: NonNegativeInt
+    thanker_username: constr(min_length=1)
+    thankee_id: NonNegativeInt
+    thankee_username: constr(min_length=1)
 
 
 UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
@@ -116,10 +119,14 @@ class APIPersonalRecommendationEvent(BaseModel):
     track_metadata: TrackMetadata
 
 class APIThanksEvent(BaseModel):
-    user_id: NonNegativeInt
     created: NonNegativeInt
     blurb_content: Optional[str]
+    original_event_id: NonNegativeInt
+    original_event_type: str
+    thanker_id: NonNegativeInt
     thanker_username: constr(min_length=1)
+    thankee_id: NonNegativeInt
+    thankee_username: constr(min_length=1)
 
 
 APIEventMetadata = Union[APIPersonalRecommendationEvent, APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent, APIThanksEvent]

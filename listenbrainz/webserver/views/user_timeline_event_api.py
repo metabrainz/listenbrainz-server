@@ -694,7 +694,7 @@ def create_thanks_event(user_name):
 
     if user_name != user['musicbrainz_id']:
         raise APIForbidden(
-            "You don't have permissions to hide events from this user's timeline.")
+            "You don't have permissions to thank events from this user's timeline.")
 
     try:
         data = orjson.loads(request.get_data())
@@ -727,10 +727,14 @@ def create_thanks_event(user_name):
 
         if not result:
             raise APIBadRequest(f"{event_type} event with id {row_id} not found")
-
-        #raise APIBadRequest(f"{data}")
+        # result.user_id -> thankee's id
+        # user_name -> thanker's username
+        # get thankee's username from get_users_by_id function
+        # user['id'] -> thanker's id
+        thankee_username = db_user.get_users_by_id(db_conn, [result.user_id])[result.user_id]
+        #raise APIBadRequest(f"{thankee_username}")
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
-            event = db_user_timeline_event.create_thanks_event(db_conn, user['id'], result.user_name, metadata)
+            event = db_user_timeline_event.create_thanks_event(db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
             '''event_data = event.dict()
             event_data['created'] = int(event_data['created'].timestamp())
             event_data['event_type'] = event_data['event_type'].value
@@ -1246,8 +1250,13 @@ def get_thanks_events(
             thank = APIThanksEvent(
                 user_id=event.user_id,
                 created=event.created.timestamp(),
+                original_event_id=event.metadata.original_event_id,
+                original_event_type=event.metadata.original_event_type.value,
                 blurb_content=event.metadata.blurb_content,
-                thanker_username=event.metadata.thanker_username
+                thanker_id=event.metadata.thanker_id,
+                thanker_username=event.metadata.thanker_username,
+                thankee_id=event.metadata.thanker_id,
+                thankee_username=event.metadata.thankee_username,
             )
 
             events.append(APITimelineEvent(
@@ -1258,6 +1267,7 @@ def get_thanks_events(
                 metadata=thank,
                 hidden=False,
             ))
+
         except pydantic.ValidationError as e:
             current_app.logger.error(
                 'Validation error: ' + str(e), exc_info=True)
