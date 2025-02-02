@@ -586,22 +586,47 @@ def pause(db_conn,id):
             'id': id,
         })
         db_conn.commit()
-        notify_user_email(db_conn,id)
+        _notify_user_email(db_conn,id,1)
 
     except sqlalchemy.exc.ProgrammingError as err:
         logger.error(err)
         raise DatabaseException("Couldn't pause user: %s" % str(err))
 
 
+def unpause(db_conn,id):
+    """ Sets the user's is_paused flag to false
+    with specified row ID from the database.
+    
+    Args:
+        db_conn: database connection
+        id (int): the row ID of the listenbrainz user
+    """
+    try:
+        db_conn.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET is_paused = false
+             WHERE id = :id
+            """), {
+            'id': id,
+        })
+        db_conn.commit()
+        _notify_user_email(db_conn,id,0)
 
-def notify_user_email(db_conn, user_id):
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException("Couldn't pause user: %s" % str(err))
+
+
+def _notify_user_email(db_conn, user_id,paused):
     user = get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
         return
     url = current_app.config['SERVER_ROOT_URL']
-    content = render_template('emails/id_paused.txt', username=user["musicbrainz_id"], url=url)
+    template = 'emails/id_paused.txt' if paused else 'emails/id_unpaused.txt'
+    subject = 'ListenBrainz UserID Paused' if paused else 'ListenBrainz UserID Unpaused'
+    content = render_template(template, username=user["musicbrainz_id"], url=url)
     send_mail(
-        subject='ListenBrainz UserID Paused',
+        subject=subject,
         text=content,
         recipients=[user["email"]],
         from_name='ListenBrainz',

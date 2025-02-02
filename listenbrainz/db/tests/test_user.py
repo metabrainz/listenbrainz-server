@@ -110,6 +110,20 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get(self.db_conn, user_id)
         self.assertEqual(user['is_paused'], True)
         
+    def test_unpause(self):
+        user_id = db_user.create(self.db_conn, 39, 'anne')
+
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], False)
+
+        db_user.pause(self.db_conn, user_id)
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], True)
+
+        db_user.unpause(self.db_conn, user_id)
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], False)
+
     def test_delete_when_spotify_import_activated(self):
         user_id = db_user.create(self.db_conn, 11, 'kishore')
         user = db_user.get(self.db_conn, user_id)

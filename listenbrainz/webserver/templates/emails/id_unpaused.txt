@@ -1,0 +1,7 @@
+Hi {{ username }}!
+
+We have unpaused your listenbrainz ID, you will now be able to import new listens.
+Start importing your listens again {{ url }} .
+
+Best,
+The ListenBrainz Team
