@@ -1,6 +1,7 @@
 import * as React from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import { FeedModes } from "./FriendsFeed";
 
 function NavItem({
   label,
@@ -48,9 +49,12 @@ function UserFeedLayout() {
             isDisabled={!loggedIn}
           />
           <NavItem
-            label="My friends"
-            url={loggedIn ? "/feed/friends/" : "#"}
-            isActive={activeSection === "friends"}
+            label="My Network"
+            url={loggedIn ? `/feed/${FeedModes.Follows}/` : "#"}
+            isActive={
+              activeSection === FeedModes.Follows ||
+              activeSection === FeedModes.Similar
+            }
             isDisabled={!loggedIn}
           />
           <NavItem

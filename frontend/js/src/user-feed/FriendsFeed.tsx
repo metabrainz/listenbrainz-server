@@ -2,9 +2,13 @@ import * as React from "react";
 import { Helmet } from "react-helmet";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRefresh } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPeopleArrows,
+  faRefresh,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
@@ -15,6 +19,7 @@ import { getTrackName } from "../utils/utils";
 export type FriendsFeedPageProps = {
   events: TimelineEvent<Listen>[];
 };
+type FriendsFeedLoaderData = FriendsFeedPageProps;
 
 export type FriendsFeedPageState = {
   nextEventTs?: number;
@@ -23,20 +28,38 @@ export type FriendsFeedPageState = {
   events: TimelineEvent<Listen>[];
 };
 
-type FriendsFeedLoaderData = FriendsFeedPageProps;
+export enum FeedModes {
+  Follows = "follows",
+  Similar = "similar",
+}
+
 export default function FriendsFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const { getListensFromFriends, getListensFromSimilarUsers } = APIService;
   const dispatch = useBrainzPlayerDispatch();
-
   const prevListens = React.useRef<Listen[]>([]);
 
-  const params = useParams();
+  const navigate = useNavigate();
 
-  const queryKey = ["friends-feed", params];
+  const params = useParams();
+  const { mode } = params as { mode: FeedModes };
+
+  React.useEffect(() => {
+    if (mode !== FeedModes.Follows && mode !== FeedModes.Similar) {
+      // We use a dynamic segment ":mode" on the route, and need to enforce valid values and default here
+      navigate(`/feed/${FeedModes.Follows}`, { replace: true });
+    }
+  }, [mode, navigate]);
+
+  const queryKey = ["network-feed", params];
 
   const fetchEvents = React.useCallback(
     async ({ pageParam }: any) => {
-      const newEvents = await APIService.getListensFromFriends(
+      const fetchFunction =
+        mode === FeedModes.Follows
+          ? getListensFromFriends
+          : getListensFromSimilarUsers;
+      const newEvents = await fetchFunction(
         currentUser.name,
         currentUser.auth_token!,
         undefined,
@@ -44,7 +67,7 @@ export default function FriendsFeedPage() {
       );
       return { events: newEvents };
     },
-    [APIService, currentUser]
+    [currentUser, getListensFromFriends, getListensFromSimilarUsers, mode]
   );
 
   const {
@@ -84,6 +107,9 @@ export default function FriendsFeedPage() {
       const newListens = listens?.filter(
         (listen) => !prevListens.current?.includes(listen)
       );
+      if (!listens?.length) {
+        return;
+      }
       dispatch({
         type: "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
         data: newListens,
@@ -91,19 +117,46 @@ export default function FriendsFeedPage() {
     }
 
     prevListens.current = listens ?? [];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listens]);
+  }, [dispatch, listens]);
 
   return (
     <>
       <Helmet>
-        <title>My friends feed</title>
+        <title>My Network Feed</title>
       </Helmet>
-      <div className="listen-header">
-        <h3 className="header-with-line">What are my friends listening to?</h3>
-      </div>
       <div className="row">
         <div className="col-sm-8 col-xs-12">
+          <div className="listen-header pills">
+            <h3 className="header-with-line">
+              What are{" "}
+              {mode === FeedModes.Follows ? "users I follow" : "similar users"}{" "}
+              listening to?
+            </h3>
+            <div style={{ flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(`/feed/${FeedModes.Follows}/`);
+                }}
+                className={`pill secondary ${
+                  mode === FeedModes.Follows ? "active" : ""
+                }`}
+              >
+                <FontAwesomeIcon icon={faUser} /> Following
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(`/feed/${FeedModes.Similar}/`);
+                }}
+                className={`pill secondary ${
+                  mode === FeedModes.Similar ? "active" : ""
+                }`}
+              >
+                <FontAwesomeIcon icon={faPeopleArrows} /> Similar users
+              </button>
+            </div>
+          </div>
           {isError ? (
             <>
               <div className="alert alert-warning text-center">

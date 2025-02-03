@@ -223,34 +223,6 @@ def feed():
     })
 
 
-@index_bp.post("/friends/")
-@login_required
-def friends_feed():
-    user_id = current_user.id
-    count = request.args.get("count", 25)
-    min_ts = request.args.get(
-        "min_ts",
-        #  Get listens from up to a week ago by default
-        datetime.now() - timedelta(weeks=1),
-    )
-    max_ts = request.args.get("max_ts", int(time.time()))
-
-    users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
-    user_listens = get_all_listen_events(
-        users=users_following,
-        min_ts=min_ts,
-        max_ts=max_ts,
-        limit=count,
-    )
-
-    user_listens = user_listens[:count]
-
-    return jsonify(
-        {
-            "events": [event.dict() for event in user_listens],
-        }
-    )
-
 
 @index_bp.get("/delete-user/<int:musicbrainz_row_id>")
 def mb_user_deleter(musicbrainz_row_id):

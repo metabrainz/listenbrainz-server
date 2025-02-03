@@ -42,7 +42,7 @@ const queryClient = new QueryClient({
     },
   },
 });
-const queryKey = ["friends-feed", {}];
+const queryKey = ["network-feed", {}];
 
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -109,7 +109,7 @@ describe("FriendsFeed", () => {
     );
 
     expect(
-      screen.getByText("What are my friends listening to?")
+      screen.getByText("What are users I follow listening to?")
     ).toBeInTheDocument();
     // contains a UserSocialNetwork component
     expect(screen.getByText("Similar Users")).toBeInTheDocument();
