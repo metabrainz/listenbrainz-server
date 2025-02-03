@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Helmet } from "react-helmet";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -21,17 +21,12 @@ export type FriendsFeedPageProps = {
 };
 type FriendsFeedLoaderData = FriendsFeedPageProps;
 
-export type FriendsFeedPageState = {
-  nextEventTs?: number;
-  previousEventTs?: number;
-  earliestEventTs?: number;
-  events: TimelineEvent<Listen>[];
-};
-
 export enum FeedModes {
   Follows = "follows",
   Similar = "similar",
 }
+
+type FetchParams = { minTs?: number; maxTs?: number };
 
 export default function FriendsFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
@@ -56,6 +51,7 @@ export default function FriendsFeedPage() {
   const fetchEvents = React.useCallback(
     async ({ pageParam }: any) => {
       let fetchFunction;
+      const { minTs, maxTs } = pageParam;
       if (mode === FeedModes.Follows) {
         fetchFunction = getListensFromFriends;
       } else if (mode === FeedModes.Similar) {
@@ -66,8 +62,8 @@ export default function FriendsFeedPage() {
       const newEvents = await fetchFunction(
         currentUser.name,
         currentUser.auth_token!,
-        undefined,
-        pageParam
+        minTs,
+        maxTs
       );
       return { events: newEvents };
     },
@@ -80,16 +76,31 @@ export default function FriendsFeedPage() {
     isLoading,
     isError,
     fetchNextPage,
+    fetchPreviousPage,
     hasNextPage,
     isFetching,
     isFetchingNextPage,
-  } = useInfiniteQuery<FriendsFeedLoaderData>({
+  } = useInfiniteQuery<
+    FriendsFeedLoaderData,
+    unknown,
+    InfiniteData<FriendsFeedLoaderData>,
+    unknown[],
+    FetchParams
+  >({
     queryKey,
-    initialPageParam: Math.ceil(Date.now() / 1000),
+    initialPageParam: { maxTs: Math.ceil(Date.now() / 1000) },
     queryFn: fetchEvents,
-    getNextPageParam: (lastPage, pages) =>
-      lastPage.events[lastPage.events.length - 1]?.metadata?.listened_at ??
-      undefined,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => ({
+      maxTs:
+        lastPage.events[lastPage.events.length - 1]?.metadata?.listened_at ??
+        lastPageParam.maxTs,
+    }),
+    getPreviousPageParam: (lastPage, allPages, lastPageParam) => ({
+      minTs:
+        lastPage.events[0]?.metadata?.listened_at ??
+        lastPageParam.minTs ??
+        Math.ceil(Date.now() / 1000),
+    }),
   });
 
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
@@ -186,7 +197,7 @@ export default function FriendsFeedPage() {
                   type="button"
                   className="btn btn-outline"
                   onClick={() => {
-                    refetch();
+                    fetchPreviousPage();
                   }}
                   disabled={isFetching}
                 >
