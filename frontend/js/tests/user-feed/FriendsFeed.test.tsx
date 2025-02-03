@@ -25,13 +25,11 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import userEvent from "@testing-library/user-event";
-import FriendsFeedPage from "../../src/user-feed/FriendsFeed";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import * as timelineProps from "../__mocks__/listensTimelineProps.json";
 
-import {
-  renderWithProviders,
-  textContentMatcher,
-} from "../test-utils/rtl-test-utils";
+import { renderWithProviders } from "../test-utils/rtl-test-utils";
+import getIndexRoutes from "../../src/routes";
 
 jest.unmock("react-toastify");
 
@@ -42,11 +40,22 @@ const queryClient = new QueryClient({
     },
   },
 });
-const queryKey = ["network-feed", {}];
+const queryKey = ["network-feed", { mode: "follows" }];
 
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
+
+const routes = getIndexRoutes();
+const router = createMemoryRouter(routes, {
+  initialEntries: ["/feed/follows"],
+});
+
+const currentUser = {
+  id: 1,
+  name: "FNORD",
+  auth_token: "never_gonna",
+};
 
 describe("FriendsFeed", () => {
   let server: SetupServerApi;
@@ -58,6 +67,15 @@ describe("FriendsFeed", () => {
         async (path) => {
           // return feed events
           return HttpResponse.json({ payload: timelineProps });
+        }
+      ),
+      http.get(
+        "http://localhost/1/user/*/feed/events/listens/similar",
+        async (path) => {
+          // return feed events
+          return HttpResponse.json({
+            payload: { ...timelineProps, events: timelineProps.events.pop() },
+          });
         }
       ),
       http.get("http://localhost/1/user/*/following", () =>
@@ -83,17 +101,14 @@ describe("FriendsFeed", () => {
 
   it("renders correctly", async () => {
     renderWithProviders(
-      <FriendsFeedPage />,
+      <RouterProvider router={router} />,
       {
-        currentUser: {
-          id: 1,
-          name: "FNORD",
-          auth_token: "never_gonna",
-        },
+        currentUser,
       },
       {
         wrapper: reactQueryWrapper,
-      }
+      },
+      false
     );
 
     await waitFor(() => {
@@ -120,11 +135,14 @@ describe("FriendsFeed", () => {
 
   it("has infinite pagination", async () => {
     renderWithProviders(
-      <FriendsFeedPage />,
-      {},
+      <RouterProvider router={router} />,
+      {
+        currentUser,
+      },
       {
         wrapper: reactQueryWrapper,
-      }
+      },
+      false
     );
 
     await waitFor(() => {
@@ -148,11 +166,14 @@ describe("FriendsFeed", () => {
 
   it("renders listen events", async () => {
     renderWithProviders(
-      <FriendsFeedPage />,
-      {},
+      <RouterProvider router={router} />,
+      {
+        currentUser,
+      },
       {
         wrapper: reactQueryWrapper,
-      }
+      },
+      false
     );
 
     await waitFor(() => {
@@ -166,6 +187,40 @@ describe("FriendsFeed", () => {
     screen.getByText("Psychlona");
     screen.getByText("Jasmine");
     screen.getByText("Jan 31, 2023, 4:05 PM");
+    screen.getByText("reosarevok");
+    screen.getByText("Kust on tulnud muodike");
+    screen.getByText("Feb 16, 2021, 11:38 AM");
+  });
+
+  it("allows navigating to similar users listens", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {
+        currentUser,
+      },
+      {
+        wrapper: reactQueryWrapper,
+      },
+      false
+    );
+    await waitFor(() => {
+      // Wait for data to be successfully loaded
+      expect(queryClient.getQueryState(queryKey)?.status).toEqual("success");
+    });
+
+    const similarUsersNavButton = screen.getByText("Similar users");
+    await userEvent.click(similarUsersNavButton);
+    await waitFor(() => {
+      const similarUsersQueryKey = ["network-feed", { mode: "similar" }];
+      // Wait for data to be successfully loaded
+      expect(queryClient.getQueryState(similarUsersQueryKey)?.status).toEqual(
+        "success"
+      );
+    });
+
+    const timeline = screen.getByTestId("listens");
+    expect(timeline).toBeInTheDocument();
+    expect(within(timeline).getAllByTestId("listen")).toHaveLength(1);
     screen.getByText("reosarevok");
     screen.getByText("Kust on tulnud muodike");
     screen.getByText("Feb 16, 2021, 11:38 AM");

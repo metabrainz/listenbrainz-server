@@ -55,10 +55,14 @@ export default function FriendsFeedPage() {
 
   const fetchEvents = React.useCallback(
     async ({ pageParam }: any) => {
-      const fetchFunction =
-        mode === FeedModes.Follows
-          ? getListensFromFriends
-          : getListensFromSimilarUsers;
+      let fetchFunction;
+      if (mode === FeedModes.Follows) {
+        fetchFunction = getListensFromFriends;
+      } else if (mode === FeedModes.Similar) {
+        fetchFunction = getListensFromSimilarUsers;
+      } else {
+        return { events: [] };
+      }
       const newEvents = await fetchFunction(
         currentUser.name,
         currentUser.auth_token!,
