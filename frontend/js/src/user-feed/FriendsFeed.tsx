@@ -187,11 +187,10 @@ export default function FriendsFeedPage() {
             </>
           ) : (
             <>
-              <div className="mb-15" style={{ display: "flex" }}>
+              <div className="mb-15" style={{ display: 'flex', justifyContent: 'center', gap: '1em' }}>
                 <button
                   type="button"
                   className="btn btn-outline"
-                  style={{ marginLeft: "auto" }}
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -205,7 +204,6 @@ export default function FriendsFeedPage() {
                   type="button"
                   className="btn btn-info btn-rounded play-tracks-button"
                   title="Play album"
-                  style={{ marginLeft: "auto" }}
                   onClick={() => {
                     window.postMessage(
                       {
