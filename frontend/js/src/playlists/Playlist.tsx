@@ -18,7 +18,12 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
-import { Link, useLoaderData, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useRevalidator,
+} from "react-router-dom";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";
@@ -73,6 +78,7 @@ export default function PlaylistPage() {
     GlobalAppContext
   );
   const dispatch = useBrainzPlayerDispatch();
+  const revalidator = useRevalidator();
   const navigate = useNavigate();
   // Loader data
   const {
@@ -183,6 +189,7 @@ export default function PlaylistPage() {
   const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
     setPlaylist(newPlaylist);
     emitPlaylistChanged(newPlaylist);
+    revalidator.revalidate();
   };
 
   const hasRightToEdit = (): boolean => {
