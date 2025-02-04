@@ -4,18 +4,16 @@ from markupsafe import Markup
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
-import listenbrainz.db.playlist as db_playlist
 
 from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
-from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg, validate_auth_header
-from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI, fetch_playlist_recording_metadata
-from listenbrainz.webserver.views.playlist import get_cover_art_options
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
+from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg
+from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
