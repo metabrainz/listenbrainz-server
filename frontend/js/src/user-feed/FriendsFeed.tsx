@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPeopleArrows,
+  faPlayCircle,
   faRefresh,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -186,10 +187,11 @@ export default function FriendsFeedPage() {
             </>
           ) : (
             <>
-              <div className="text-center mb-15">
+              <div className="mb-15" style={{ display: "flex" }}>
                 <button
                   type="button"
                   className="btn btn-outline"
+                  style={{ marginLeft: "auto" }}
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -198,6 +200,23 @@ export default function FriendsFeedPage() {
                   <FontAwesomeIcon icon={faRefresh} />
                   &nbsp;
                   {isLoading || isFetching ? "Refreshing..." : "Refresh"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-info btn-rounded play-tracks-button"
+                  title="Play album"
+                  style={{ marginLeft: "auto" }}
+                  onClick={() => {
+                    window.postMessage(
+                      {
+                        brainzplayer_event: "play-ambient-queue",
+                        payload: listens,
+                      },
+                      window.location.origin
+                    );
+                  }}
+                >
+                  <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
                 </button>
               </div>
               {!listenEvents?.length && (

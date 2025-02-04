@@ -9,6 +9,7 @@ import {
   faHeadphones,
   faHeart,
   faPaperPlane,
+  faPlayCircle,
   faQuestion,
   faRefresh,
   faRss,
@@ -558,70 +559,86 @@ export default function UserFeedPage() {
       <Helmet>
         <title>Feed</title>
       </Helmet>
-      <div className="listen-header">
-        <h3 className="header-with-line">Latest activity</h3>
-        {/* Commented out as new OAuth is not merged yet. */}
-        {/* <button
-          type="button"
-          className="btn btn-icon btn-info atom-button"
-          data-toggle="modal"
-          data-target="#SyndicationFeedModal"
-          title="Subscribe to syndication feed (Atom)"
-          onClick={() => {
-            NiceModal.show(SyndicationFeedModal, {
-              feedTitle: `Latest activity`,
-              options: [
-                {
-                  label: "Time range",
-                  key: "minutes",
-                  type: "dropdown",
-                  tooltip:
-                    "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
-                  values: [
-                    {
-                      id: "10minutes",
-                      value: "10",
-                      displayValue: "10 minutes",
-                    },
-                    {
-                      id: "30minutes",
-                      value: "30",
-                      displayValue: "30 minutes",
-                    },
-                    {
-                      id: "1hour",
-                      value: "60",
-                      displayValue: "1 hour",
-                    },
-                    {
-                      id: "2hours",
-                      value: "120",
-                      displayValue: "2 hours",
-                    },
-                    {
-                      id: "4hours",
-                      value: "240",
-                      displayValue: "4 hours",
-                    },
-                    {
-                      id: "8hours",
-                      value: "480",
-                      displayValue: "8 hours",
-                    },
-                  ],
-                },
-              ],
-              baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                currentUser?.name
-              }/events`,
-            });
-          }}
-        >
-          <FontAwesomeIcon icon={faRss} size="sm" />
-        </button> */}
-      </div>
       <div className="row">
         <div className="col-md-9">
+          <div className="listen-header">
+            <h3 className="header-with-line">Latest activity</h3>
+            {/* Commented out as new OAuth is not merged yet. */}
+            {/* <button
+              type="button"
+              className="btn btn-icon btn-info atom-button"
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              title="Subscribe to syndication feed (Atom)"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Latest activity`,
+                  options: [
+                    {
+                      label: "Time range",
+                      key: "minutes",
+                      type: "dropdown",
+                      tooltip:
+                        "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                      values: [
+                        {
+                          id: "10minutes",
+                          value: "10",
+                          displayValue: "10 minutes",
+                        },
+                        {
+                          id: "30minutes",
+                          value: "30",
+                          displayValue: "30 minutes",
+                        },
+                        {
+                          id: "1hour",
+                          value: "60",
+                          displayValue: "1 hour",
+                        },
+                        {
+                          id: "2hours",
+                          value: "120",
+                          displayValue: "2 hours",
+                        },
+                        {
+                          id: "4hours",
+                          value: "240",
+                          displayValue: "4 hours",
+                        },
+                        {
+                          id: "8hours",
+                          value: "480",
+                          displayValue: "8 hours",
+                        },
+                      ],
+                    },
+                  ],
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    currentUser?.name
+                  }/events`,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faRss} size="sm" />
+            </button> */}
+            <button
+              type="button"
+              className="btn btn-info btn-rounded play-tracks-button"
+              title="Play album"
+              onClick={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-ambient-queue",
+                    payload: listens,
+                  },
+                  window.location.origin
+                );
+              }}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+            </button>
+          </div>
           {isError ? (
             <>
               <div className="alert alert-warning text-center">
