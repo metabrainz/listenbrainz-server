@@ -586,7 +586,7 @@ def pause(db_conn,id):
             'id': id,
         })
         db_conn.commit()
-        _notify_user_email(db_conn,id,1)
+        _notify_user_email(db_conn,id,True)
 
     except sqlalchemy.exc.ProgrammingError as err:
         logger.error(err)
@@ -610,20 +610,21 @@ def unpause(db_conn,id):
             'id': id,
         })
         db_conn.commit()
-        _notify_user_email(db_conn,id,0)
+        _notify_user_email(db_conn,id,False)
 
     except sqlalchemy.exc.ProgrammingError as err:
         logger.error(err)
-        raise DatabaseException("Couldn't pause user: %s" % str(err))
+        raise DatabaseException("Couldn't unpause user: %s" % str(err))
 
 
 def _notify_user_email(db_conn, user_id,paused):
     user = get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
-        return
+        logger.error("%s's email not found" % user["musicbrainz_id"])
     url = current_app.config['SERVER_ROOT_URL']
     template = 'emails/id_paused.txt' if paused else 'emails/id_unpaused.txt'
-    subject = 'ListenBrainz UserID Paused' if paused else 'ListenBrainz UserID Unpaused'
+    subject = ("Your ListenBrainz account %s has been paused and is not accepting incoming listens" % user["musicbrainz_id"] if paused
+                 else "Your ListenBrainz account %s has been unpaused and is accepting incoming listens" % user["musicbrainz_id"])
     content = render_template(template, username=user["musicbrainz_id"], url=url)
     send_mail(
         subject=subject,

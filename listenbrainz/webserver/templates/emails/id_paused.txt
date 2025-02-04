@@ -1,7 +1,3 @@
-Hi {{ username }}!
-
-We have paused your listenbrainz ID due to sus activities, you wont be able to import new listens.
-Rectify your actions and contact the team {{ url }} to get unpaused.
-
-Best,
-The ListenBrainz Team
+We have paused your ListenBrainz account {{ username }} because of a problem with your account.
+Our community manager will reach out to you with the details as to why we took this step.
+Feel free to Contact Us {{ url }} if you have any questions about this.
