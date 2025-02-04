@@ -621,6 +621,7 @@ def _notify_user_email(db_conn, user_id,paused):
     user = get(db_conn, user_id, fetch_email=True)
     if user["email"] is None:
         logger.error("%s's email not found" % user["musicbrainz_id"])
+        return
     url = current_app.config['SERVER_ROOT_URL']
     template = 'emails/id_paused.txt' if paused else 'emails/id_unpaused.txt'
     subject = ("Your ListenBrainz account %s has been paused and is not accepting incoming listens" % user["musicbrainz_id"] if paused
