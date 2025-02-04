@@ -4,6 +4,7 @@ from datetime import date
 
 import click
 import orjson
+from dateutil.relativedelta import relativedelta, MO
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
@@ -87,7 +88,7 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'listeners']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -95,24 +96,13 @@ def send_request_to_spark_cluster(query, **params):
               help="Entity for which statistics should be calculated")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
 def request_user_stats(type_, range_, entity, database):
-    """ Send a user stats request to the spark cluster
-    """
+    """ Send a user stats request to the spark cluster """
     params = {
-        "stats_range": range_
+        "stats_range": range_,
+        "database": database
     }
-    if type_ in ["entity", "listener"] and entity:
+    if type_ == "entity" and entity:
         params["entity"] = entity
-
-    if not database and type_ != "entity":
-        today = date.today().strftime("%Y%m%d")
-        if type_ == "listeners":
-            prefix = f"{entity}_listeners"
-        else:
-            prefix = type_
-        database = f"{prefix}_{range_}_{today}"
-
-    params["database"] = database
-
     send_request_to_spark_cluster(f"stats.user.{type_}", **params)
 
 
@@ -146,15 +136,9 @@ def request_entity_stats(type_, range_, entity, database):
     """ Send an entity stats request to the spark cluster """
     params = {
         "stats_range": range_,
-        "entity": entity
+        "entity": entity,
+        "database": database
     }
-
-    if not database and type_ != "listeners":
-        today = date.today().strftime("%Y%m%d")
-        database = f"{type_}_{range_}_{today}"
-
-    params["database"] = database
-
     send_request_to_spark_cluster(f"stats.entity.{type_}", **params)
 
 
@@ -463,11 +447,20 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
     )
 
 
-@cli.command(name='request_popularity')
+@cli.command(name="request_popularity")
 @click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
-def request_popularity(mlhd):
+@click.option("--entity", "entity", type=click.Choice(["artist", "recording", "release", "release_group"]))
+def request_popularity(mlhd, entity):
     """ Request mlhd popularity data using the specified dataset. """
-    send_request_to_spark_cluster("popularity.all", mlhd=mlhd)
+    send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity")
+
+
+@cli.command(name="request_per_artist_popularity")
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
+@click.option("--entity", "entity", type=click.Choice(["recording", "release", "release_group"]))
+def request_per_artist_popularity(mlhd, entity):
+    """ Request mlhd popularity data using the specified dataset. """
+    send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity_top")
 
 
 @cli.command(name="request_yim_similar_users")

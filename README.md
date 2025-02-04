@@ -4,6 +4,9 @@
 </h1>
 <h4 align="center">Server for the ListenBrainz project</h4>
 <p align="center">
+    <a href="https://app.readthedocs.org/projects/listenbrainz/">
+    <img src="https://readthedocs.org/projects/listenbrainz/badge/"
+         alt="Readthedocs status"></a>
     <a href="https://github.com/metabrainz/listenbrainz-server/commits/master">
     <img src="https://img.shields.io/github/last-commit/metabrainz/listenbrainz-server.svg?style=flat-square&logo=github&logoColor=white"
          alt="GitHub last commit"></a>

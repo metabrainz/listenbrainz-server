@@ -1,39 +1,38 @@
 from typing import List, Iterator, Dict
 
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.common.listening_activity import setup_time_range
-from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntity
+from listenbrainz_spark.stats.common.listening_activity import create_time_range_df
+from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
+from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
+from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideStatsQueryProvider
 
 
-class ListeningActivitySitewideEntity(SitewideEntity):
+class ListeningActivitySitewideStatsQuery(SitewideStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
-    def __init__(self, stats_range):
-        super().__init__(entity="listening_activity", stats_range=stats_range)
-        self.from_date, self.to_date, _, __, self.spark_date_format = setup_time_range(stats_range)
+    def __init__(self, selector: ListeningActivityListenRangeSelector):
+        super().__init__(selector)
+        self.step, self.date_format, self.spark_date_format = selector.step, selector.date_format, selector.spark_date_format
+        create_time_range_df(self.from_date, self.to_date, self.step, self.date_format, self.spark_date_format)
+
+    @property
+    def entity(self):
+        return "listening_activity"
 
     def get_cache_tables(self) -> List[str]:
         return []
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("time_range", StringType(), nullable=False),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
-        result = run_query(f"""
+    def get_aggregate_query(self, table, cache_tables):
+        return f"""
             SELECT date_format(listened_at, '{self.spark_date_format}') AS time_range
                  , count(listened_at) AS listen_count
               FROM {table}
           GROUP BY time_range
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT time_range
                      , listen_count
@@ -48,10 +47,9 @@ class ListeningActivitySitewideEntity(SitewideEntity):
                   FROM intermediate_table
               GROUP BY time_range
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
              SELECT sort_array(
                        collect_list(
                             struct(
@@ -66,11 +64,19 @@ class ListeningActivitySitewideEntity(SitewideEntity):
           LEFT JOIN {final_aggregate}
               USING (time_range)
         """
-        return run_query(query)
 
-    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+
+class ListeningActivitySitewideMessageCreator(StatsMessageCreator):
+
+    def __init__(self, selector, database=None):
+        super().__init__("listening_activty", "sitewide_listening_activity", selector, database)
+
+    def default_database_prefix(self):
+        return ""
+
+    def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         message = {
-            "type": "sitewide_listening_activity",
+            "type": self.message_type,
             "stats_range": self.stats_range,
             "from_ts": int(self.from_date.timestamp()),
             "to_ts": int(self.to_date.timestamp())

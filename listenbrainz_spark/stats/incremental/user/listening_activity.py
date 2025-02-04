@@ -2,51 +2,43 @@ import logging
 from typing import List
 
 from pydantic import ValidationError
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
 from data.model.common_stat_spark import UserStatRecords
 from data.model.user_listening_activity import ListeningActivityRecord
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.common.listening_activity import setup_time_range
-from listenbrainz_spark.stats.incremental.user.entity import UserEntity
+from listenbrainz_spark.stats.common.listening_activity import create_time_range_df
+from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
+from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class ListeningActivityUserEntity(UserEntity):
-    """ See base class IncrementalStats for documentation. """
+class ListeningActivityUserStatsQueryEntity(UserStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
-    def __init__(self, stats_range, database, message_type, year=None):
-        super().__init__(
-            entity="listening_activity", stats_range=stats_range,
-            database=database, message_type=message_type
-        )
-        self.year = year
-        self.from_date, self.to_date, _, __, self.spark_date_format = setup_time_range(self.stats_range, self.year)
+    def __init__(self, selector: ListeningActivityListenRangeSelector):
+        super().__init__(selector)
+        self.step, self.date_format, self.spark_date_format = selector.step, selector.date_format, selector.spark_date_format
+        create_time_range_df(self.from_date, self.to_date, self.step, self.date_format, self.spark_date_format)
+
+    @property
+    def entity(self):
+        return "listening_activity"
 
     def get_cache_tables(self) -> List[str]:
         return []
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("user_id", IntegerType(), nullable=False),
-            StructField("time_range", StringType(), nullable=False),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
-        result = run_query(f"""
+    def get_aggregate_query(self, table, cache_tables):
+        return f"""
             SELECT user_id
                  , date_format(listened_at, '{self.spark_date_format}') AS time_range
                  , count(listened_at) AS listen_count
               FROM {table}
           GROUP BY user_id
                  , time_range
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT user_id
                      , time_range
@@ -65,37 +57,54 @@ class ListeningActivityUserEntity(UserEntity):
               GROUP BY user_id
                      , time_range
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
-             SELECT user_id
-                  , sort_array(
-                       collect_list(
+    def get_stats_query(self, final_aggregate):
+        # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
+        # group without listens are counted as 0, count(*) gives 1.
+        # use cross join to create all time range rows for all users (otherwise ranges in which user was inactive
+        # would be missing from final output)
+        return f"""
+           WITH dist_user_id AS (
+               SELECT DISTINCT user_id FROM {final_aggregate}
+           )
+               SELECT d.user_id AS user_id
+                    , sort_array(
+                        collect_list(
                             struct(
-                                  to_unix_timestamp(start) AS from_ts
-                                , to_unix_timestamp(end) AS to_ts
-                                , time_range
-                                , COALESCE(listen_count, 0) AS listen_count
+                                  to_unix_timestamp(tr.start) AS from_ts
+                                , to_unix_timestamp(tr.end) AS to_ts
+                                , tr.time_range AS time_range
+                                , COALESCE(fa.listen_count, 0) AS listen_count
                             )
                         )
-                    ) AS listening_activity
-               FROM time_range
-          LEFT JOIN {final_aggregate}
-              USING (time_range)
-           GROUP BY user_id
+                      ) AS listening_activity
+                 FROM dist_user_id d
+           CROSS JOIN time_range tr
+            LEFT JOIN {final_aggregate} fa
+                   ON fa.time_range = tr.time_range
+                  AND fa.user_id = d.user_id
+             GROUP BY d.user_id
         """
-        return run_query(query)
 
-    def parse_one_user_stats(self, entry: dict):
+
+class ListeningActivityUserMessageCreator(UserStatsMessageCreator):
+
+    def __init__(self, message_type: str, selector: ListeningActivityListenRangeSelector, database=None):
+        super().__init__("listening_activity", message_type, selector, database)
+
+    @property
+    def default_database_prefix(self):
+        return f"{self.entity}_{self.stats_range}"
+
+    def parse_row(self, row):
         try:
             UserStatRecords[ListeningActivityRecord](
-                user_id=entry["user_id"],
-                data=entry["listening_activity"]
+                user_id=row["user_id"],
+                data=row["listening_activity"]
             )
             return {
-                "user_id": entry["user_id"],
-                "data": entry["listening_activity"]
+                "user_id": row["user_id"],
+                "data": row["listening_activity"]
             }
         except ValidationError:
             logger.error("Invalid entry in entity stats:", exc_info=True)
