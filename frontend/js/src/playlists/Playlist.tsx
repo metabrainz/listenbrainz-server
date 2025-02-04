@@ -39,12 +39,7 @@ import {
 } from "./utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
-import { getAlbumArtFromReleaseGroupMBID, getBaseUrl } from "../utils/utils";
-
-type CoverArtGridOptions = {
-  dimention: number;
-  layout: number;
-};
+import { getBaseUrl } from "../utils/utils";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -92,6 +87,8 @@ export default function PlaylistPage() {
       jspfTrack.id = getRecordingMBIDFromJSPFTrack(jspfTrack);
     }
   );
+
+  const currentCoverArt = playlistProps?.cover_art;
 
   // Ref
   const socketRef = React.useRef<Socket | null>(null);
@@ -465,6 +462,8 @@ export default function PlaylistPage() {
               </button>
               <PlaylistMenu
                 playlist={playlist}
+                coverArtGridOptions={coverArtGridOptions}
+                currentCoverArt={currentCoverArt}
                 onPlaylistSaved={onPlaylistSave}
                 onPlaylistDeleted={onDeletePlaylist}
                 disallowEmptyPlaylistExport

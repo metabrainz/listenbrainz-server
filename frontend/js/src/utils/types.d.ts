@@ -362,6 +362,11 @@ declare type ACRMSearchResult = {
   release_name: string;
 };
 
+type CoverArtGridOptions = {
+  dimension: number;
+  layout: number;
+};
+
 // XSPF/JSPF format: https://www.xspf.org/jspf/
 declare type JSPFObject = {
   playlist: JSPFPlaylist;
@@ -369,10 +374,11 @@ declare type JSPFObject = {
 
 declare type JSPFPlaylistMetadata = {
   external_urls?: { [key: string]: any };
-  algorithm_metadata: {
+  algorithm_metadata?: {
     source_patch: string;
   };
   expires_at?: string; // ISO date string
+  cover_art?: CoverArtGridOptions;
 };
 
 declare type JSPFPlaylistExtension = {
