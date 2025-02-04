@@ -16,7 +16,7 @@ import ListenCard from "../common/listens/ListenCard";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getTrackName } from "../utils/utils";
-import { FeedFetchParams, FeedModes } from "./types";
+import { type FeedFetchParams, FeedModes } from "./types";
 
 export type FriendsFeedPageProps = {
   events: TimelineEvent<Listen>[];

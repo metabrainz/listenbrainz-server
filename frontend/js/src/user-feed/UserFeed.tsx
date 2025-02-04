@@ -51,7 +51,7 @@ import {
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
-import { EventType, FeedFetchParams } from "./types";
+import { EventType, type FeedFetchParams } from "./types";
 
 type UserFeedPageProps = {
   events: TimelineEvent<EventMetadata>[];
