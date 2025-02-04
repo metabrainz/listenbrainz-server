@@ -1,7 +1,6 @@
 Hi {{ username }}!
 
-We have unpaused your listenbrainz ID, you will now be able to import new listens.
-Start importing your listens again {{ url }} .
+Your ListenBrainz account {{ username }} has been restored and is now accepting listens again.
 
 Best,
 The ListenBrainz Team
