@@ -15,18 +15,12 @@ import ListenCard from "../common/listens/ListenCard";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getTrackName } from "../utils/utils";
+import { FeedFetchParams, FeedModes } from "./types";
 
 export type FriendsFeedPageProps = {
   events: TimelineEvent<Listen>[];
 };
 type FriendsFeedLoaderData = FriendsFeedPageProps;
-
-export enum FeedModes {
-  Follows = "follows",
-  Similar = "similar",
-}
-
-type FetchParams = { minTs?: number; maxTs?: number };
 
 export default function FriendsFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
@@ -85,7 +79,7 @@ export default function FriendsFeedPage() {
     unknown,
     InfiniteData<FriendsFeedLoaderData>,
     unknown[],
-    FetchParams
+    FeedFetchParams
   >({
     queryKey,
     initialPageParam: { maxTs: Math.ceil(Date.now() / 1000) },

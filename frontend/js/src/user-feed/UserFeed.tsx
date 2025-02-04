@@ -50,28 +50,9 @@ import {
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
+import { EventType, FeedFetchParams } from "./types";
 
-export enum EventType {
-  RECORDING_RECOMMENDATION = "recording_recommendation",
-  PERSONAL_RECORDING_RECOMMENDATION = "personal_recording_recommendation",
-  RECORDING_PIN = "recording_pin",
-  LIKE = "like",
-  LISTEN = "listen",
-  FOLLOW = "follow",
-  STOP_FOLLOW = "stop_follow",
-  BLOCK_FOLLOW = "block_follow",
-  NOTIFICATION = "notification",
-  REVIEW = "critiquebrainz_review",
-}
-
-export type UserFeedPageProps = {
-  events: TimelineEvent<EventMetadata>[];
-};
-
-export type UserFeedPageState = {
-  nextEventTs?: number;
-  previousEventTs?: number;
-  earliestEventTs?: number;
+type UserFeedPageProps = {
   events: TimelineEvent<EventMetadata>[];
 };
 

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { FeedModes } from "./FriendsFeed";
+import { FeedModes } from "./types";
 
 function NavItem({
   label,
