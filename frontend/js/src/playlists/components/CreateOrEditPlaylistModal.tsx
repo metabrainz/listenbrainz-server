@@ -222,6 +222,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
     description,
     isPublic,
     collaboratorsWithoutOwner,
+    selectedCoverArt,
     APIService,
   ]);
 
