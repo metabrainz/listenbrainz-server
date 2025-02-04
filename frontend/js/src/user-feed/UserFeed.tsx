@@ -147,11 +147,12 @@ export default function UserFeedPage() {
 
   const fetchEvents = React.useCallback(
     async ({ pageParam }: any) => {
+      const { minTs, maxTs } = pageParam;
       const newEvents = await APIService.getFeedForUser(
         currentUser.name,
         currentUser.auth_token!,
-        undefined,
-        pageParam
+        minTs,
+        maxTs
       );
       return { events: newEvents };
     },
@@ -164,17 +165,30 @@ export default function UserFeedPage() {
     isLoading,
     isError,
     fetchNextPage,
+    fetchPreviousPage,
     hasNextPage,
     isFetching,
     isFetchingNextPage,
-  } = useInfiniteQuery<UserFeedLoaderData>({
+  } = useInfiniteQuery<
+    UserFeedLoaderData,
+    unknown,
+    InfiniteData<UserFeedLoaderData>,
+    unknown[],
+    FeedFetchParams
+  >({
     queryKey,
-    initialPageParam: Math.ceil(Date.now() / 1000),
+    initialPageParam: { maxTs: Math.ceil(Date.now() / 1000) },
     queryFn: fetchEvents,
-    getNextPageParam: (lastPage, pages) =>
-      lastPage?.events?.length
-        ? lastPage.events[lastPage.events.length - 1].created
-        : undefined,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => ({
+      maxTs:
+        lastPage.events[lastPage.events.length - 1]?.created ??
+        lastPageParam.maxTs,
+    }),
+    getPreviousPageParam: (lastPage, allPages, lastPageParam) => ({
+      minTs: lastPage?.events?.length
+        ? lastPage.events[0].created + 1
+        : lastPageParam.minTs ?? Math.ceil(Date.now() / 1000),
+    }),
   });
 
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
@@ -628,12 +642,12 @@ export default function UserFeedPage() {
             </>
           ) : (
             <>
-              <div className="text-center">
+              <div className="text-center mb-15">
                 <button
                   type="button"
                   className="btn btn-outline"
                   onClick={() => {
-                    refetch();
+                    fetchPreviousPage();
                   }}
                   disabled={isFetching}
                 >

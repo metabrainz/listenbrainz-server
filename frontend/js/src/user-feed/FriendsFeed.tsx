@@ -186,7 +186,7 @@ export default function FriendsFeedPage() {
             </>
           ) : (
             <>
-              <div className="text-center">
+              <div className="text-center mb-15">
                 <button
                   type="button"
                   className="btn btn-outline"
