@@ -17,7 +17,7 @@ import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getTrackName } from "../utils/utils";
 import { type FeedFetchParams, FeedModes } from "./types";
-
+import { FeedFetchParams, FeedModes } from "./types";
 export type FriendsFeedPageProps = {
   events: TimelineEvent<Listen>[];
 };
@@ -37,7 +37,7 @@ export default function FriendsFeedPage() {
   React.useEffect(() => {
     if (mode !== FeedModes.Follows && mode !== FeedModes.Similar) {
       // We use a dynamic segment ":mode" on the route, and need to enforce valid values and default here
-      navigate(`/feed/${FeedModes.Follows}`, { replace: true });
+      navigate(`/feed/${FeedModes.Follows}/`, { replace: true });
     }
   }, [mode, navigate]);
 
