@@ -101,6 +101,8 @@ class UserTestCase(DatabaseTestCase):
         self.assertIsNone(user)
 
     def test_pause(self):
+        """ Tests that pauses the given user """
+
         user_id = db_user.create(self.db_conn, 39, 'anne')
 
         user = db_user.get(self.db_conn, user_id)
