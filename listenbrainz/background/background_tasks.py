@@ -5,7 +5,6 @@ from sqlalchemy import text
 
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
-from listenbrainz.background.pause import pause_user, unpause_user
 from listenbrainz.webserver import create_app, db_conn, ts_conn
 
 
@@ -39,10 +38,6 @@ class BackgroundTasks:
             delete_user(db_conn, task.user_id, task.created)
         elif task.task == "export_all_user_data":
             export_user(db_conn, ts_conn, task.user_id, task.metadata)
-        elif task.task == "pause_user":
-            pause_user(db_conn,task.user_id)
-        elif task.task == "unpause_user":
-            unpause_user(db_conn,task.user_id)
         else:
             current_app.logger.error(f"Unknown task type: {task}")
         return True

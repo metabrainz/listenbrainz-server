@@ -7,6 +7,8 @@ from listenbrainz.model import db
 from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 from listenbrainz.background.background_tasks import add_task
+from listenbrainz.db import user as db_user
+from listenbrainz.webserver import create_app, db_conn, ts_conn
 
 
 class User(db.Model):
@@ -71,6 +73,7 @@ class UserAdminView(AdminModelView):
             return False
 
 
+    # With select action to pause users.
     @action(
         name="pause_users",  # Unique name for the action
         text="Pause", 
@@ -82,7 +85,8 @@ class UserAdminView(AdminModelView):
             user = User.query.get(user_id)
             if user:
                 try:
-                    add_task(user.id, 'pause_user')
+                    db_user.pause(db_conn,user.id)
+                    db_conn.commit()
                     flash(f"{user.musicbrainz_id} paused", "success")
                 except Exception as e:
                     flash(f"Failed for {user.musicbrainz_id}: {str(e)}", "error")
@@ -91,6 +95,7 @@ class UserAdminView(AdminModelView):
         return redirect('/admin/user_model/')
 
 
+    # With select action to unpause users.
     @action(
         name="unpause_users",
         text="Unpause", 
@@ -102,7 +107,8 @@ class UserAdminView(AdminModelView):
             user = User.query.get(user_id)
             if user:
                 try:
-                    add_task(user.id, 'unpause_user')
+                    db_user.unpause(db_conn,user.id)
+                    db_conn.commit()
                     flash(f"{user.musicbrainz_id} unpaused", "success")
                 except Exception as e:
                     flash(f"Failed for {user.musicbrainz_id}: {str(e)}", "error")

@@ -8,7 +8,7 @@ from flask import Blueprint, request, render_template, current_app, Response, js
 from flask_login import login_required, current_user
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError
+from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError, ListenValidationError, LastFMError, APIUnauthorized
 import xmltodict
 
 from listenbrainz.webserver.models import SubmitListenUserMetadata
@@ -240,7 +240,8 @@ def record_listens(data):
     user = db_user.get(db_conn, session.user_id, fetch_email=True)
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
-
+    if user['is_paused']:
+        raise APIUnauthorized("user_id is paused and is currently not accepting listens. Feel free to contact us if you have any questions about this. https://listenbrainz.org/about/")
     lookup = defaultdict(dict)
     for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig", "format"]:
