@@ -77,7 +77,7 @@ def submit_listen():
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user['is_paused']:
-        raise APIUnauthorized("user_id is paused and is currently not accepting listens. Feel free to Contact Us if you have any questions about this.")
+        raise APIUnauthorized("user_id is paused and is currently not accepting listens. Feel free to contact us if you have any questions about this. https://listenbrainz.org/about/")
 
     raw_data = request.get_data()
 
