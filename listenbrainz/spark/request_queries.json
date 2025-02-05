@@ -237,9 +237,9 @@
     "description": "Generate the tags dataset with percent rank",
     "params": []
   },
-  "popularity.all": {
-    "name": "popularity.all",
+  "popularity.popularity": {
+    "name": "popularity.popularity",
     "description": "Calculate all popularity data from mlhd or listenbrainz data.",
-    "params": ["mlhd"]
+    "params": ["mlhd", "entity", "type"]
   }
 }
