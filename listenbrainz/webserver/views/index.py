@@ -1,7 +1,7 @@
 import locale
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
 
 from brainzutils import cache
@@ -26,10 +26,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.status_api import get_service_status
-from listenbrainz.webserver.views.user_timeline_event_api import (
-    get_feed_events_for_user,
-    get_all_listen_events,
-)
+from listenbrainz.webserver.views.user_timeline_event_api import get_feed_events_for_user
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -221,7 +218,6 @@ def feed():
     return jsonify({
         'events': [event.dict() for event in user_events],
     })
-
 
 
 @index_bp.get("/delete-user/<int:musicbrainz_row_id>")
