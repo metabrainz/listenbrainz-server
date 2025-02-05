@@ -307,7 +307,7 @@ export default class UserSocialNetwork extends React.Component<
             similarArtists={similarArtists}
           />
         )}
-        <Card className="hidden-xs hidden-sm">
+        <Card className="hidden-xs">
           <FollowerFollowingModal
             user={user}
             followerList={followerList}
@@ -316,10 +316,8 @@ export default class UserSocialNetwork extends React.Component<
             updateFollowingList={this.updateFollowingList}
           />
         </Card>
-        {isAnotherUser && (
-          <FlairsExplanationButton className="hidden-xs hidden-sm" />
-        )}
-        <Card className="card-user-sn hidden-xs hidden-sm">
+        {isAnotherUser && <FlairsExplanationButton className="hidden-xs" />}
+        <Card className="mt-15 card-user-sn hidden-xs">
           <SimilarUsersModal
             user={user}
             similarUsersList={similarUsersList}

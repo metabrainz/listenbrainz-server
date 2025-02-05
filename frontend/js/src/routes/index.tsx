@@ -149,21 +149,37 @@ const getIndexRoutes = (): RouteObject[] => {
           ],
         },
         {
-          path: "/",
+          path: "feed/",
           lazy: async () => {
             const UserFeedLayout = await import("../user-feed/UserFeedLayout");
             return { Component: UserFeedLayout.default };
           },
           children: [
             {
-              path: "/feed/",
+              index: true,
               lazy: async () => {
                 const UserFeed = await import("../user-feed/UserFeed");
                 return { Component: UserFeed.default };
               },
             },
             {
-              path: "/recent/",
+              path: ":mode/",
+              lazy: async () => {
+                const NetworkFeed = await import("../user-feed/NetworkFeed");
+                return { Component: NetworkFeed.default };
+              },
+            },
+          ],
+        },
+        {
+          path: "recent/",
+          lazy: async () => {
+            const UserFeedLayout = await import("../user-feed/UserFeedLayout");
+            return { Component: UserFeedLayout.default };
+          },
+          children: [
+            {
+              index: true,
               lazy: async () => {
                 const RecentListens = await import("../recent/RecentListens");
                 return {
