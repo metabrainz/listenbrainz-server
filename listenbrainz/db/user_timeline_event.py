@@ -39,7 +39,6 @@ from listenbrainz.db.exceptions import DatabaseException
 from typing import List, Tuple, Iterable
 
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
-from listenbrainz.webserver.errors import APIInternalServerError
 
 
 def create_user_timeline_event(

@@ -52,6 +52,7 @@ import {
   preciseTimestamp,
 } from "../utils/utils";
 import ThanksModal from "./ThanksModal";
+import Card from "../components/Card";
 
 export enum EventType {
   RECORDING_RECOMMENDATION = "recording_recommendation",
@@ -65,6 +66,12 @@ export enum EventType {
   NOTIFICATION = "notification",
   REVIEW = "critiquebrainz_review",
   THANKS = "thanks",
+}
+
+export enum EventTypeinMessage {
+  personal_recording_recommendation = "personally recommending a track",
+  recording_recommendation = "recommending a track",
+  recording_pin = "pinning a track",
 }
 
 export type UserFeedPageProps = {
@@ -89,8 +96,7 @@ function isEventListenable(event?: TimelineEvent): boolean {
     event_type === EventType.LIKE ||
     event_type === EventType.LISTEN ||
     event_type === EventType.REVIEW ||
-    event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-    event_type === EventType.THANKS
+    event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION
   );
 }
 
@@ -518,6 +524,16 @@ export default function UserFeedPage() {
         </div>
       );
     }
+    if (event.event_type === EventType.THANKS) {
+      console.log("hi");
+      return (
+        <div className="event-content">
+          <Card className="listen-card">
+            <div className="main-content">{event.metadata?.blurb_content}</div>
+          </Card>
+        </div>
+      );
+    }
     return null;
   };
 
@@ -583,12 +599,22 @@ export default function UserFeedPage() {
         blurb_content,
       } = metadata as ThanksMetadata;
 
-      return (
-        <>
-          <Username username={thanker_username} /> thanked{" "}
-          <Username username={thankee_username} />
-        </>
-      );
+      if (thanker_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            You thanked <Username username={thankee_username} /> for{" "}
+            {EventTypeinMessage[original_event_type]}
+          </span>
+        );
+      }
+      if (thankee_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            <Username username={thanker_username} /> thanked you for{" "}
+            {EventTypeinMessage[original_event_type]}
+          </span>
+        );
+      }
     }
 
     const userLinkOrYou =
