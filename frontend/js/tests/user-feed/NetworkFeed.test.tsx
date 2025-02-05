@@ -57,7 +57,7 @@ const currentUser = {
   auth_token: "never_gonna",
 };
 
-describe("FriendsFeed", () => {
+describe("NetworkFeed", () => {
   let server: SetupServerApi;
   beforeAll(async () => {
     // Mock the server responses

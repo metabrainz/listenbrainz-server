@@ -165,8 +165,8 @@ const getIndexRoutes = (): RouteObject[] => {
             {
               path: ":mode/",
               lazy: async () => {
-                const FriendsFeed = await import("../user-feed/FriendsFeed");
-                return { Component: FriendsFeed.default };
+                const NetworkFeed = await import("../user-feed/NetworkFeed");
+                return { Component: NetworkFeed.default };
               },
             },
           ],

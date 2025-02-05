@@ -81,7 +81,7 @@ export default class APIService {
     return result.payload.listens;
   };
 
-  getListensFromFriends = async (
+  getListensFromFollowedUsers = async (
     userName: string,
     userToken: string,
     minTs?: number,

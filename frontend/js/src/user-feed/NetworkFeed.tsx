@@ -15,17 +15,20 @@ import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerCont
 import ListenCard from "../common/listens/ListenCard";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { getTrackName } from "../utils/utils";
-import { type FeedFetchParams, FeedModes } from "./types";
+import { getListenCardKey } from "../utils/utils";
 import { FeedFetchParams, FeedModes } from "./types";
-export type FriendsFeedPageProps = {
+
+export type NetworkFeedPageProps = {
   events: TimelineEvent<Listen>[];
 };
-type FriendsFeedLoaderData = FriendsFeedPageProps;
+type NetworkFeedLoaderData = NetworkFeedPageProps;
 
-export default function FriendsFeedPage() {
+export default function NetworkFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { getListensFromFriends, getListensFromSimilarUsers } = APIService;
+  const {
+    getListensFromFollowedUsers,
+    getListensFromSimilarUsers,
+  } = APIService;
   const dispatch = useBrainzPlayerDispatch();
   const prevListens = React.useRef<Listen[]>([]);
 
@@ -48,7 +51,7 @@ export default function FriendsFeedPage() {
       let fetchFunction;
       const { minTs, maxTs } = pageParam;
       if (mode === FeedModes.Follows) {
-        fetchFunction = getListensFromFriends;
+        fetchFunction = getListensFromFollowedUsers;
       } else if (mode === FeedModes.Similar) {
         fetchFunction = getListensFromSimilarUsers;
       } else {
@@ -62,7 +65,7 @@ export default function FriendsFeedPage() {
       );
       return { events: newEvents };
     },
-    [currentUser, getListensFromFriends, getListensFromSimilarUsers, mode]
+    [currentUser, getListensFromFollowedUsers, getListensFromSimilarUsers, mode]
   );
 
   const {
@@ -76,9 +79,9 @@ export default function FriendsFeedPage() {
     isFetching,
     isFetchingNextPage,
   } = useInfiniteQuery<
-    FriendsFeedLoaderData,
+    NetworkFeedLoaderData,
     unknown,
-    InfiniteData<FriendsFeedLoaderData>,
+    InfiniteData<NetworkFeedLoaderData>,
     unknown[],
     FeedFetchParams
   >({
@@ -187,7 +190,14 @@ export default function FriendsFeedPage() {
             </>
           ) : (
             <>
-              <div className="mb-15" style={{ display: 'flex', justifyContent: 'center', gap: '1em' }}>
+              <div
+                className="mb-15"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "1em",
+                }}
+              >
                 <button
                   type="button"
                   className="btn btn-outline"
@@ -217,7 +227,7 @@ export default function FriendsFeedPage() {
                   <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
                 </button>
               </div>
-              {!listenEvents?.length && (
+              {!isFetching && !listenEvents?.length && (
                 <h5 className="text-center">No listens to show</h5>
               )}
               {Boolean(listenEvents?.length) && (
@@ -226,9 +236,7 @@ export default function FriendsFeedPage() {
                     const listen = event.metadata;
                     return (
                       <ListenCard
-                        key={`${listen.listened_at}-${getTrackName(listen)}-${
-                          listen.user_name
-                        }`}
+                        key={getListenCardKey(listen)}
                         showTimestamp
                         showUsername
                         listen={listen}
