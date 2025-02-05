@@ -786,7 +786,7 @@ def cover_art_yim(user_name, year: int = 2024):
     return svg, 200, {"Content-Type": "image/svg+xml"}
 
 
-@art_api_bp.route("/playlist/<uuid:playlist_mbid>/<int:dimension>/<int:layout>", methods=["POST", "OPTIONS"])
+@art_api_bp.post("/playlist/<uuid:playlist_mbid>/<int:dimension>/<int:layout>")
 @crossdomain
 @ratelimit()
 def playlist_cover_art_generate(playlist_mbid, dimension, layout):
