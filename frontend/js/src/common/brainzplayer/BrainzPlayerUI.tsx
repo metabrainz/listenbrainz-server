@@ -10,6 +10,8 @@ import {
   faPlayCircle,
   faSlash,
   faVolumeUp,
+  faCompactDisc,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 
@@ -291,6 +293,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       </div>
 
       <div className={`queue ${showQueue ? "show" : ""}`}>
+        <FontAwesomeIcon
+          className="btn hide-queue"
+          icon={faXmark}
+          title="Close queue"
+          onClick={() => setShowQueue(false)}
+        />
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
@@ -405,7 +413,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           )}
 
           <FontAwesomeIcon
-            icon={faBarsStaggered}
+            icon={isMobile ? faCompactDisc : faBarsStaggered}
             style={{ color: showMusicPlayer ? "green" : "" }}
             onClick={
               isMobile && isPlayingATrack ? toggleMusicPlayer : toggleQueue

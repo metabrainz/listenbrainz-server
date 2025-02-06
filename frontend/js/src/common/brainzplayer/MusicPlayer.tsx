@@ -102,6 +102,41 @@ type MusicPlayerProps = {
   mostReadableTextColor: string;
 };
 
+type FeedbackButtonsProps = {
+  currentListenFeedback: number;
+  isPlayingATrack: boolean;
+  submitLikeFeedback: () => void;
+  submitDislikeFeedback: () => void;
+};
+
+const FeedbackButtons = React.memo(
+  ({
+    currentListenFeedback,
+    isPlayingATrack,
+    submitLikeFeedback,
+    submitDislikeFeedback,
+  }: FeedbackButtonsProps) => (
+    <div className="feedback-buttons-wrapper">
+      <FontAwesomeIcon
+        icon={faHeart}
+        title="Love"
+        className={`love ${
+          currentListenFeedback === FeedbackValue.LIKE ? " loved" : ""
+        }${!isPlayingATrack ? " disabled" : ""}`}
+        onClick={submitLikeFeedback}
+      />
+      <FontAwesomeIcon
+        icon={faHeartCrack}
+        title="Hate"
+        className={`hate ${
+          currentListenFeedback === FeedbackValue.DISLIKE ? " hated" : ""
+        }${!isPlayingATrack ? " disabled" : ""}`}
+        onClick={submitDislikeFeedback}
+      />
+    </div>
+  )
+);
+
 function MusicPlayer(props: MusicPlayerProps) {
   const {
     onHide,
@@ -210,17 +245,9 @@ function MusicPlayer(props: MusicPlayerProps) {
           }}
           onClick={onHide}
         />
-        <AnimateTextOnOverflow text={currentTrackAlbum} />
-
-        <FontAwesomeIcon
-          className="btn toggle-info"
-          icon={faEllipsis}
-          title="Hide queue"
-          style={{
-            fontSize: "x-large",
-            padding: "5px 10px",
-          }}
-        />
+        <div className="header-text">
+          <AnimateTextOnOverflow text={currentTrackAlbum} />
+        </div>
       </div>
       <div className="cover-art-scroll-wrapper">
         <div className="cover-art cover-art-wrapper">
@@ -248,24 +275,12 @@ function MusicPlayer(props: MusicPlayerProps) {
             {currentTrackArtist}
           </span>
         </div>
-        <div className="feedback-buttons-wrapper">
-          <FontAwesomeIcon
-            icon={faHeart}
-            title="Love"
-            className={`love ${
-              currentListenFeedback === FeedbackValue.LIKE ? " loved" : ""
-            }${!isPlayingATrack ? " disabled" : ""}`}
-            onClick={submitLikeFeedback}
-          />
-          <FontAwesomeIcon
-            icon={faHeartCrack}
-            title="Hate"
-            className={`hate ${
-              currentListenFeedback === FeedbackValue.DISLIKE ? " hated" : ""
-            }${!isPlayingATrack ? " disabled" : ""}`}
-            onClick={submitDislikeFeedback}
-          />
-        </div>
+        <FeedbackButtons
+          currentListenFeedback={currentListenFeedback}
+          isPlayingATrack={isPlayingATrack}
+          submitLikeFeedback={submitLikeFeedback}
+          submitDislikeFeedback={submitDislikeFeedback}
+        />
       </div>
       <div className="progress-bar-wrapper">
         <ProgressBar
