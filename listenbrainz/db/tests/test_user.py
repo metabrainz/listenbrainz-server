@@ -91,6 +91,8 @@ class UserTestCase(DatabaseTestCase):
                     self.assertNotIn(column, user)
 
     def test_delete(self):
+        """Tests that deletes the given user"""
+
         user_id = db_user.create(self.db_conn, 10, 'frank')
 
         user = db_user.get(self.db_conn, user_id)
@@ -113,6 +115,8 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(user['is_paused'], True)
         
     def test_unpause(self):
+        """ Tests that pauses the given user """
+
         user_id = db_user.create(self.db_conn, 39, 'anne')
 
         user = db_user.get(self.db_conn, user_id)
