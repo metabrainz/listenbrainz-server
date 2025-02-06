@@ -1,6 +1,5 @@
 import * as React from "react";
 import type { RouteObject } from "react-router-dom";
-import ErrorBoundary from "../../error/ErrorBoundary";
 
 const getFeedRoutes = (): RouteObject[] => {
   const routes = [
@@ -10,7 +9,6 @@ const getFeedRoutes = (): RouteObject[] => {
         const UserFeedLayout = await import("../UserFeedLayout");
         return { Component: UserFeedLayout.default };
       },
-      errorElement: <ErrorBoundary />,
       children: [
         {
           index: true,
