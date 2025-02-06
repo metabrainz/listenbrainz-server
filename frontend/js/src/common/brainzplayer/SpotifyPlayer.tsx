@@ -466,7 +466,7 @@ export default class SpotifyPlayer
           );
         }
       },
-      volume: volume ?? 100 / 100,
+      volume: (volume ?? 100) / 100,
     });
 
     // Error handling
