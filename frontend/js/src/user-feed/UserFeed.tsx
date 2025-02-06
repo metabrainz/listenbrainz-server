@@ -10,6 +10,7 @@ import {
   faHeadphones,
   faHeart,
   faPaperPlane,
+  faPlus,
   faQuestion,
   faRss,
   faThumbsUp,
@@ -399,6 +400,40 @@ export default function UserFeedPage() {
 
   const renderEventActionButton = (event: TimelineEvent) => {
     if (
+      (event.event_type === EventType.RECORDING_PIN ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
+      event.user_name !== currentUser.name &&
+      event.subevent
+    ) {
+      if (event.hidden) {
+        return (
+          <ListenControl
+            title="Unhide Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+        );
+      }
+      return (
+        <ListenControl
+          title="Hide Event"
+          text=""
+          icon={faEyeSlash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+          action={() => {
+            hideEventMutation(event);
+          }}
+        />
+      );
+    }
+    if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
         event.event_type === EventType.RECORDING_PIN) &&
@@ -469,6 +504,39 @@ export default function UserFeedPage() {
         </>
       );
     }
+    if (
+      event.event_type === EventType.THANKS &&
+      event.user_name !== currentUser.name
+    ) {
+      if (event.hidden) {
+        return (
+          <ListenControl
+            title="Unhide Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+        );
+      }
+
+      return (
+        <ListenControl
+          title="Hide Event"
+          text=""
+          icon={faEyeSlash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+          action={() => {
+            hideEventMutation(event);
+          }}
+        />
+      );
+    }
+
     return null;
   };
 
@@ -497,7 +565,8 @@ export default function UserFeedPage() {
       if (
         (event.event_type === EventType.RECORDING_RECOMMENDATION ||
           event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-          event.event_type === EventType.RECORDING_PIN) &&
+          event.event_type === EventType.RECORDING_PIN ||
+          event.event_type === EventType.THANKS) &&
         event.user_name === currentUser.name
       ) {
         additionalMenuItems = [
@@ -524,7 +593,7 @@ export default function UserFeedPage() {
         </div>
       );
     }
-    if (event.event_type === EventType.THANKS) {
+    if (event.event_type === EventType.THANKS && !event.hidden) {
       console.log("hi");
       return (
         <div className="event-content">
@@ -537,40 +606,78 @@ export default function UserFeedPage() {
     return null;
   };
 
+  const [visibleOriginalEvents, setVisibleOriginalEvents] = React.useState<{
+    [key: number]: boolean;
+  }>({});
+
   const renderSubEvent = (event_id: number, event_type: EventTypeT) => {
-    const subEvent = events?.filter(
+    const subEvent = events?.find(
       (event) => event.id === event_id && event.event_type === event_type
     );
-    if (subEvent?.length) {
-      const originalEvent: TimelineEvent = subEvent[0];
-      return (
-        <>
-          <div className="event-description">
-            <span className={`event-icon ${event_type}`}>
-              <span className="fa-layers">
-                <FontAwesomeIcon
-                  icon={faCircle as IconProp}
-                  transform="grow-8"
-                />
-                <FontAwesomeIcon
-                  icon={getEventTypeIcon(event_type) as IconProp}
-                  inverse
-                  transform="shrink-4"
-                />
-              </span>
-            </span>
-            {renderEventText(originalEvent)}
 
-            <span className="event-time">
-              {preciseTimestamp(originalEvent.created * 1000)}
-              {renderEventActionButton(originalEvent)}
-            </span>
+    if (!subEvent) return null;
+
+    subEvent.subevent = true;
+
+    return (
+      <>
+        {visibleOriginalEvents[event_id] ? (
+          <div>
+            <div className="event-description">
+              <span className={`event-icon ${event_type}`}>
+                <span className="fa-layers">
+                  <FontAwesomeIcon
+                    icon={faCircle as IconProp}
+                    transform="grow-8"
+                  />
+                  <FontAwesomeIcon
+                    icon={getEventTypeIcon(event_type) as IconProp}
+                    inverse
+                    transform="shrink-4"
+                  />
+                </span>
+              </span>
+              {renderEventText(subEvent)}
+
+              <span className="event-time">
+                {preciseTimestamp(subEvent.created * 1000)}
+                {renderEventActionButton(subEvent)}
+              </span>
+            </div>
+            {renderEventContent(subEvent)}
           </div>
-          {renderEventContent(originalEvent)}
-        </>
-      );
-    }
-    return null;
+        ) : (
+          <>
+            <div className="event-description">
+              <span className={`event-icon ${event_type}`}>
+                <span className="fa-layers">
+                  <FontAwesomeIcon
+                    icon={faCircle as IconProp}
+                    transform="grow-8"
+                  />
+                  <FontAwesomeIcon
+                    icon={faPlus as IconProp}
+                    inverse
+                    transform="shrink-4"
+                  />
+                </span>
+              </span>
+            </div>
+            <button
+              className="show-subevent"
+              onClick={() =>
+                setVisibleOriginalEvents((prev) => ({
+                  ...prev,
+                  [event_id]: !prev[event_id],
+                }))
+              }
+            >
+              Show Track
+            </button>
+          </>
+        )}
+      </>
+    );
   };
 
   const renderEventText = (event: TimelineEvent) => {
@@ -792,7 +899,8 @@ export default function UserFeedPage() {
 
                         {renderEventContent(event)}
 
-                        {event.event_type === EventType.THANKS ? (
+                        {event.event_type === EventType.THANKS &&
+                        !event.hidden ? (
                           <ul>
                             <li className="timeline-event timeline-sub-event">
                               {renderSubEvent(
