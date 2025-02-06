@@ -87,123 +87,6 @@ function AnimateTextOnOverflow(props: {
   );
 }
 
-function CoverArtScrollWrapper({
-  previousTrackCoverURL,
-  currentTrackCoverURL,
-  nextTrackCoverURL,
-  musicPlayerCoverArtRef,
-  playPreviousTrack,
-  playNextTrack,
-}: {
-  previousTrackCoverURL?: string;
-  currentTrackCoverURL?: string;
-  nextTrackCoverURL?: string;
-  musicPlayerCoverArtRef: React.RefObject<HTMLImageElement>;
-  playPreviousTrack: () => void;
-  playNextTrack: () => void;
-}) {
-  const coverArtScrollRef = React.useRef<HTMLDivElement>(null);
-  const previousCoverArtRef = React.useRef<HTMLDivElement>(null);
-  const currentCoverArtRef = React.useRef<HTMLDivElement>(null);
-  const nextCoverArtRef = React.useRef<HTMLDivElement>(null);
-  const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
-
-  const [isChangingTrack, setIsChangingTrack] = React.useState(false);
-
-  const handleTrackChange = React.useCallback(
-    (changeTrack: () => void) => {
-      if (!isChangingTrack) {
-        setIsChangingTrack(true);
-        changeTrack();
-      }
-    },
-    [isChangingTrack]
-  );
-
-  const throttledPlayNextTrack = React.useMemo(
-    () => throttle(() => handleTrackChange(playNextTrack), 500),
-    [handleTrackChange, playNextTrack]
-  );
-
-  const throttledPlayPreviousTrack = React.useMemo(
-    () => throttle(() => handleTrackChange(playPreviousTrack), 500),
-    [handleTrackChange, playPreviousTrack]
-  );
-
-  React.useEffect(() => {
-    setIsChangingTrack(false);
-    currentCoverArtRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
-    });
-  }, [currentTrackCoverURL]);
-
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            if (entry.target === previousCoverArtRef.current) {
-              throttledPlayPreviousTrack();
-            } else if (entry.target === nextCoverArtRef.current) {
-              throttledPlayNextTrack();
-            }
-          }
-        });
-      },
-      { root: coverArtScrollRef.current, threshold: 0.5 }
-    );
-
-    [previousCoverArtRef, currentCoverArtRef, nextCoverArtRef].forEach(
-      (ref) => ref.current && observer.observe(ref.current)
-    );
-
-    return () => {
-      observer.disconnect();
-      throttledPlayNextTrack.cancel();
-      throttledPlayPreviousTrack.cancel();
-    };
-  }, [
-    previousTrackCoverURL,
-    currentTrackCoverURL,
-    nextTrackCoverURL,
-    throttledPlayPreviousTrack,
-    throttledPlayNextTrack,
-  ]);
-
-  const renderCoverArt = (
-    url: string | undefined,
-    ref: React.RefObject<HTMLDivElement>
-  ) =>
-    url && (
-      <div className="cover-art cover-art-wrapper" ref={ref}>
-        <img
-          alt="coverart"
-          className="img-responsive"
-          src={url}
-          crossOrigin="anonymous"
-        />
-      </div>
-    );
-
-  return (
-    <div className="cover-art-scroll-wrapper" ref={coverArtScrollRef}>
-      {renderCoverArt(previousTrackCoverURL, previousCoverArtRef)}
-      <div className="cover-art cover-art-wrapper" ref={currentCoverArtRef}>
-        <img
-          alt="coverart"
-          className="img-responsive"
-          src={currentTrackCoverURL || COVERART_PLACEHOLDER}
-          crossOrigin="anonymous"
-          ref={musicPlayerCoverArtRef}
-        />
-      </div>
-      {renderCoverArt(nextTrackCoverURL, nextCoverArtRef)}
-    </div>
-  );
-}
-
 type MusicPlayerProps = {
   onHide: () => void;
   toggleQueue: () => void;
@@ -312,6 +195,8 @@ function MusicPlayer(props: MusicPlayerProps) {
     }
   }, [APIService, ambientQueue, currentListenIndex, queue, spotifyAuth]);
 
+  const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
+
   return (
     <>
       <div className="header">
@@ -337,14 +222,17 @@ function MusicPlayer(props: MusicPlayerProps) {
           }}
         />
       </div>
-      <CoverArtScrollWrapper
-        previousTrackCoverURL={previousTrackCoverURL}
-        currentTrackCoverURL={currentTrackCoverURL}
-        nextTrackCoverURL={nextTrackCoverURL}
-        musicPlayerCoverArtRef={musicPlayerCoverArtRef}
-        playPreviousTrack={playPreviousTrack}
-        playNextTrack={playNextTrack}
-      />
+      <div className="cover-art-scroll-wrapper">
+        <div className="cover-art cover-art-wrapper">
+          <img
+            alt="coverart"
+            className="img-responsive"
+            src={currentTrackCoverURL || COVERART_PLACEHOLDER}
+            crossOrigin="anonymous"
+            ref={musicPlayerCoverArtRef}
+          />
+        </div>
+      </div>
       <div className="info">
         <div className="info-text-wrapper">
           <AnimateTextOnOverflow
