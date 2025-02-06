@@ -29,7 +29,7 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import * as timelineProps from "../__mocks__/listensTimelineProps.json";
 
 import { renderWithProviders } from "../test-utils/rtl-test-utils";
-import getIndexRoutes from "../../src/routes";
+import getFeedRoutes from "../../src/user-feed/routes";
 
 jest.unmock("react-toastify");
 
@@ -46,7 +46,7 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-const routes = getIndexRoutes();
+const routes = getFeedRoutes();
 const router = createMemoryRouter(routes, {
   initialEntries: ["/feed/follows"],
 });

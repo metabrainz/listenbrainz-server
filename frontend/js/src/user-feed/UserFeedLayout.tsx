@@ -44,13 +44,17 @@ function UserFeedLayout() {
         <ul className="nav nav-tabs" role="tablist">
           <NavItem
             label="My Feed"
-            url={loggedIn ? "/feed/" : "#"}
+            url={loggedIn ? "/feed/" : `/login/?next=/feed/`}
             isActive={activeSection === "feed"}
             isDisabled={!loggedIn}
           />
           <NavItem
             label="My Network"
-            url={loggedIn ? `/feed/${FeedModes.Follows}/` : "#"}
+            url={
+              loggedIn
+                ? `/feed/${FeedModes.Follows}/`
+                : `/login/?next=/feed/${FeedModes.Follows}/`
+            }
             isActive={
               activeSection === FeedModes.Follows ||
               activeSection === FeedModes.Similar
