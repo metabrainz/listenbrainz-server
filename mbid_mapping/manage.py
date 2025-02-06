@@ -11,6 +11,7 @@ from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
 from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
 from mapping.typesense_index import build_all as action_build_index
+from mapping.typesense_artist_index import build_all as action_build_artist_index
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
 from mapping.utils import log, CRON_LOG_FILE
 from mapping.release_colors import sync_release_color_table, incremental_update_release_color_table
@@ -30,6 +31,9 @@ from similar.tag_similarity import create_tag_similarity
 def cli():
     pass
 
+@cli.command()
+def create_artist_index():
+    action_build_artist_index()
 
 @cli.command()
 def create_all():

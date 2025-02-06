@@ -14,11 +14,15 @@ from mapping.utils import log
 BATCH_SIZE = 5000
 
 
-def prepare_string(text):
-    return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).lower())
+def prepare_string(text, max_len):
+    return unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text))[:max_len].lower())
+
+def prepare_string_v2(text, max_len):
+    s = unidecode(re.sub(" +", " ", re.sub(r'[^\w ]+', '', text)).lower())
+    return s[:max_len], s[max_len:]
 
 
-def build_index(collection_name_prefix, table, combiner):
+def build_index(max_len, collection_name_prefix, table):
 
     client = typesense.Client({
         'nodes': [{
@@ -30,10 +34,10 @@ def build_index(collection_name_prefix, table, combiner):
         'connection_timeout_seconds': 1000000
     })
 
-    collection_name = collection_name_prefix + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    collection_name = collection_name_prefix # + datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     try:
         log("typesense index: build index '%s'" % collection_name)
-        build(client, collection_name, table, combiner)
+        build(client, collection_name, table, max_len)
     except typesense.exceptions.TypesenseClientError as err:
         log("typesense index: Cannot build index: ", str(err))
         return -1
@@ -47,30 +51,34 @@ def build_index(collection_name_prefix, table, combiner):
         log("typesense index: Cannot build index: ", str(err))
         return -2
 
-    try:
-        for collection in client.collections.retrieve():
-            if collection["name"] == collection_name:
-                continue
-
-            if collection["name"].startswith(collection_name_prefix):
-                log("typesense index: delete collection '%s'" % collection["name"])
-                client.collections[collection["name"]].delete()
-            else:
-                log("typesense index: ignore collection '%s'" % collection["name"])
-
-    except typesense.exceptions.ObjectNotFound as err:
-        log("typesense index: Failed to delete collection '%s'.", str(err))
+#    try:
+#        for collection in client.collections.retrieve():
+#            if collection["name"] == collection_name:
+#                continue
+#
+#            if collection["name"].startswith(collection_name_prefix):
+#                log("typesense index: delete collection '%s'" % collection["name"])
+#                client.collections[collection["name"]].delete()
+#            else:
+#                log("typesense index: ignore collection '%s'" % collection["name"])
+#
+#    except typesense.exceptions.ObjectNotFound as err:
+#        log("typesense index: Failed to delete collection '%s'.", str(err))
 
     return 0
 
 
-def build(client, collection_name, table, combiner):
+def build(client, collection_name, table, max_len):
 
     schema = {
         'name': collection_name,
         'fields': [
           {
-            'name':  'combined',
+            'name':  'artist',
+            'type':  'string'
+          },
+          {
+            'name':  'recording',
             'type':  'string'
           },
           {
@@ -84,7 +92,7 @@ def build(client, collection_name, table, combiner):
 
     client.collections.create(schema)
 
-    with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as conn:
+    with psycopg2.connect(config.MBID_MAPPING_DATABASE_URI) as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
             curs.execute(f"SELECT max(score) FROM {table}")
@@ -108,7 +116,8 @@ def build(client, collection_name, table, combiner):
                 document = dict(row)
                 document['artist_mbids'] = "{" + row["artist_mbids"][1:-1] + "}"
                 document['score'] = max_score - document['score']
-                document['combined'] = prepare_string(combiner(document))
+                document['artist'], document["artist_rem"] = prepare_string_v2(row["artist_credit_name"], max_len)
+                document['recording'], document["recording_rem"] = prepare_string_v2(row["recording_name"], max_len)
                 documents.append(document)
 
                 if len(documents) == BATCH_SIZE:
@@ -126,12 +135,11 @@ def build(client, collection_name, table, combiner):
 
 
 def build_all():
-    def combine_artist_recording(document):
-        return document['recording_name'] + " " + document['artist_credit_name']
-
-    def combine_artist_recording_release(document):
-        return document['recording_name'] + " " + document['artist_credit_name'] + " " + document['release_name']
-
-    build_index("canonical_musicbrainz_data_", "mapping.canonical_musicbrainz_data", combine_artist_recording)
-    build_index("canonical_musicbrainz_data_release_", "mapping.canonical_musicbrainz_data_release_support", combine_artist_recording_release)
+    # other things to test: 
+    #   keep or remove spaces from the prepared_string
+    build_index(10, "mf_index_20", "mapping.canonical_musicbrainz_data")
+    build_index(20, "mf_index_20", "mapping.canonical_musicbrainz_data")
+    build_index(40, "mf_index_20", "mapping.canonical_musicbrainz_data")
+    build_index(60, "mf_index_20", "mapping.canonical_musicbrainz_data")
+#    build_index("canonical_musicbrainz_data_release_", "mapping.canonical_musicbrainz_data_release_support")
 
