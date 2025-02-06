@@ -813,7 +813,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     try:
         grid_design = CoverArtGenerator.GRID_TILE_DESIGNS[dimension][layout]
     except IndexError:
-        return APIBadRequest(f"layout {layout} is not available for dimension {dimension}.")
+        raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}.")
 
     playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
     if playlist is None or not playlist.is_visible_by(user["id"]):
