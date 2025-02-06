@@ -491,7 +491,10 @@ type ThanksMetadata = {
   original_event_id: number;
   original_event_type: EventTypeT;
   blurb_content: string;
+  thanker_id: number;
   thanker_username: string;
+  thankee_id: number;
+  thankee_username: string;
 };
 
 type NotificationEventMetadata = {
@@ -514,6 +517,7 @@ type TimelineEvent<T extends EventMetadata> = {
   created: number;
   metadata: T;
   hidden: boolean;
+  subevent?: boolean;
 };
 
 type SimilarUser = {
