@@ -47,7 +47,8 @@
       margin-right: 1em;
       // Show big preview of the cover art when hovering over it
       @media (min-width: @grid-float-breakpoint) {
-        &:hover > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
+        &:hover
+          > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
           height: min(80vw, @big-cover-art-size);
           width: min(80vw, @big-cover-art-size);
           bottom: @brainzplayer-height + @progress-bar-height;
@@ -398,7 +399,7 @@
     font-size: 1.5em;
     cursor: pointer;
     z-index: 1;
-    
+
     @media (max-width: @grid-float-breakpoint) {
       padding: 1em;
       font-size: 2em; // Bigger touch target on mobile
