@@ -10,7 +10,9 @@ import {
   faHeadphones,
   faHeart,
   faPaperPlane,
+  faPlayCircle,
   faQuestion,
+  faRefresh,
   faRss,
   faThumbsUp,
   faThumbtack,
@@ -33,52 +35,31 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";
 import Username from "../common/Username";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { ToastMsg } from "../notifications/Notifications";
-import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   feedReviewEventToListen,
   getAdditionalContent,
-  getBaseUrl,
   getPersonalRecommendationEventContent,
   getReviewEventContent,
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
 import ThanksModal from "./ThanksModal";
+import { EventType, type FeedFetchParams } from "./types";
 
-export enum EventType {
-  RECORDING_RECOMMENDATION = "recording_recommendation",
-  PERSONAL_RECORDING_RECOMMENDATION = "personal_recording_recommendation",
-  RECORDING_PIN = "recording_pin",
-  LIKE = "like",
-  LISTEN = "listen",
-  FOLLOW = "follow",
-  STOP_FOLLOW = "stop_follow",
-  BLOCK_FOLLOW = "block_follow",
-  NOTIFICATION = "notification",
-  REVIEW = "critiquebrainz_review",
-  THANKS = "thanks",
-}
-
-export type UserFeedPageProps = {
-  events: TimelineEvent[];
+type UserFeedPageProps = {
+  events: TimelineEvent<EventMetadata>[];
 };
 
-export type UserFeedPageState = {
-  nextEventTs?: number;
-  previousEventTs?: number;
-  earliestEventTs?: number;
-  events: TimelineEvent[];
-};
-
-function isEventListenable(event?: TimelineEvent): boolean {
+function isEventListenable(event?: TimelineEvent<EventMetadata>): boolean {
   if (!event) {
     return false;
   }
@@ -136,7 +117,7 @@ function getReviewEntityName(entity_type: ReviewableEntityType): string {
   }
 }
 
-function getEventTypePhrase(event: TimelineEvent): string {
+function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
   const { event_type } = event;
   let review: CritiqueBrainzReview;
   switch (event_type) {
@@ -174,11 +155,12 @@ export default function UserFeedPage() {
 
   const fetchEvents = React.useCallback(
     async ({ pageParam }: any) => {
+      const { minTs, maxTs } = pageParam;
       const newEvents = await APIService.getFeedForUser(
         currentUser.name,
         currentUser.auth_token!,
-        undefined,
-        pageParam
+        minTs,
+        maxTs
       );
       return { events: newEvents };
     },
@@ -191,17 +173,30 @@ export default function UserFeedPage() {
     isLoading,
     isError,
     fetchNextPage,
+    fetchPreviousPage,
     hasNextPage,
     isFetching,
     isFetchingNextPage,
-  } = useInfiniteQuery<UserFeedLoaderData>({
+  } = useInfiniteQuery<
+    UserFeedLoaderData,
+    unknown,
+    InfiniteData<UserFeedLoaderData>,
+    unknown[],
+    FeedFetchParams
+  >({
     queryKey,
-    initialPageParam: Math.ceil(Date.now() / 1000),
+    initialPageParam: { maxTs: Math.ceil(Date.now() / 1000) },
     queryFn: fetchEvents,
-    getNextPageParam: (lastPage, pages) =>
-      lastPage?.events?.length
-        ? lastPage.events[lastPage.events.length - 1].created
-        : undefined,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => ({
+      maxTs:
+        lastPage.events[lastPage.events.length - 1]?.created ??
+        lastPageParam.maxTs,
+    }),
+    getPreviousPageParam: (lastPage, allPages, lastPageParam) => ({
+      minTs: lastPage?.events?.length
+        ? lastPage.events[0].created + 1
+        : lastPageParam.minTs ?? Math.ceil(Date.now() / 1000),
+    }),
   });
 
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
@@ -237,7 +232,7 @@ export default function UserFeedPage() {
   }, [listens]);
 
   const changeEventVisibility = React.useCallback(
-    async (event: TimelineEvent) => {
+    async (event: TimelineEvent<EventMetadata>) => {
       const { hideFeedEvent, unhideFeedEvent } = APIService;
       // if the event was previously hidden, unhide it. Otherwise, hide the event
       const action = event.hidden ? unhideFeedEvent : hideFeedEvent;
@@ -291,7 +286,7 @@ export default function UserFeedPage() {
   });
 
   const deleteFeedEvent = React.useCallback(
-    async (event: TimelineEvent) => {
+    async (event: TimelineEvent<EventMetadata>) => {
       if (
         event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -391,7 +386,7 @@ export default function UserFeedPage() {
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent) => {
+  const renderEventActionButton = (event: TimelineEvent<EventMetadata>) => {
     if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -466,7 +461,7 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const renderEventContent = (event: TimelineEvent) => {
+  const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
     if (isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
       let listen: Listen;
@@ -521,7 +516,7 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const renderEventText = (event: TimelineEvent) => {
+  const renderEventText = (event: TimelineEvent<EventMetadata>) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
       return (
@@ -608,70 +603,86 @@ export default function UserFeedPage() {
       <Helmet>
         <title>Feed</title>
       </Helmet>
-      <div className="listen-header">
-        <h3 className="header-with-line">Latest activity</h3>
-        {/* Commented out as new OAuth is not merged yet. */}
-        {/* <button
-          type="button"
-          className="btn btn-icon btn-info atom-button"
-          data-toggle="modal"
-          data-target="#SyndicationFeedModal"
-          title="Subscribe to syndication feed (Atom)"
-          onClick={() => {
-            NiceModal.show(SyndicationFeedModal, {
-              feedTitle: `Latest activity`,
-              options: [
-                {
-                  label: "Time range",
-                  key: "minutes",
-                  type: "dropdown",
-                  tooltip:
-                    "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
-                  values: [
+      <div className="row">
+        <div className="col-md-9">
+          <div className="listen-header">
+            <h3 className="header-with-line">Latest activity</h3>
+            {/* Commented out as new OAuth is not merged yet. */}
+            {/* <button
+              type="button"
+              className="btn btn-icon btn-info atom-button"
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              title="Subscribe to syndication feed (Atom)"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Latest activity`,
+                  options: [
                     {
-                      id: "10minutes",
-                      value: "10",
-                      displayValue: "10 minutes",
-                    },
-                    {
-                      id: "30minutes",
-                      value: "30",
-                      displayValue: "30 minutes",
-                    },
-                    {
-                      id: "1hour",
-                      value: "60",
-                      displayValue: "1 hour",
-                    },
-                    {
-                      id: "2hours",
-                      value: "120",
-                      displayValue: "2 hours",
-                    },
-                    {
-                      id: "4hours",
-                      value: "240",
-                      displayValue: "4 hours",
-                    },
-                    {
-                      id: "8hours",
-                      value: "480",
-                      displayValue: "8 hours",
+                      label: "Time range",
+                      key: "minutes",
+                      type: "dropdown",
+                      tooltip:
+                        "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                      values: [
+                        {
+                          id: "10minutes",
+                          value: "10",
+                          displayValue: "10 minutes",
+                        },
+                        {
+                          id: "30minutes",
+                          value: "30",
+                          displayValue: "30 minutes",
+                        },
+                        {
+                          id: "1hour",
+                          value: "60",
+                          displayValue: "1 hour",
+                        },
+                        {
+                          id: "2hours",
+                          value: "120",
+                          displayValue: "2 hours",
+                        },
+                        {
+                          id: "4hours",
+                          value: "240",
+                          displayValue: "4 hours",
+                        },
+                        {
+                          id: "8hours",
+                          value: "480",
+                          displayValue: "8 hours",
+                        },
+                      ],
                     },
                   ],
-                },
-              ],
-              baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                currentUser?.name
-              }/events`,
-            });
-          }}
-        >
-          <FontAwesomeIcon icon={faRss} size="sm" />
-        </button> */}
-      </div>
-      <div className="row">
-        <div className="col-md-7 col-xs-12">
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    currentUser?.name
+                  }/events`,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faRss} size="sm" />
+            </button> */}
+            <button
+              type="button"
+              className="btn btn-info btn-rounded play-tracks-button"
+              title="Play album"
+              onClick={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-ambient-queue",
+                    payload: listens,
+                  },
+                  window.location.origin
+                );
+              }}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+            </button>
+          </div>
           {isError ? (
             <>
               <div className="alert alert-warning text-center">
@@ -692,6 +703,20 @@ export default function UserFeedPage() {
             </>
           ) : (
             <>
+              <div className="text-center mb-15">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    fetchPreviousPage();
+                  }}
+                  disabled={isFetching}
+                >
+                  <FontAwesomeIcon icon={faRefresh} />
+                  &nbsp;
+                  {isLoading || isFetching ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
               <div
                 id="timeline"
                 data-testid="timeline"
@@ -733,30 +758,31 @@ export default function UserFeedPage() {
                   })}
                 </ul>
               </div>
-              <div
-                className="text-center"
-                style={{
-                  width: "50%",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn btn-primary btn-block"
-                  onClick={() => fetchNextPage()}
-                  disabled={!hasNextPage || isFetchingNextPage}
+              {Boolean(events?.length) && (
+                <div
+                  className="text-center mb-15"
+                  style={{
+                    width: "50%",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
                 >
-                  {(isLoading || isFetchingNextPage) && "Loading more..."}
-                  {!(isLoading || isFetchingNextPage) &&
-                    (hasNextPage ? "Load More" : "Nothing more to load")}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-block"
+                    onClick={() => fetchNextPage()}
+                    disabled={!hasNextPage || isFetchingNextPage}
+                  >
+                    <FontAwesomeIcon icon={faCalendarPlus} />
+                    &nbsp;
+                    {(isLoading || isFetchingNextPage) && "Loading more..."}
+                    {!(isLoading || isFetchingNextPage) &&
+                      (hasNextPage ? "Load More" : "Nothing more to load")}
+                  </button>
+                </div>
+              )}
             </>
           )}
-        </div>
-        <div className="col-md-offset-1 col-md-4">
-          <UserSocialNetwork user={currentUser} />
         </div>
       </div>
     </>

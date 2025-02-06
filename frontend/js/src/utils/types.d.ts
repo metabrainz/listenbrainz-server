@@ -507,12 +507,12 @@ type EventMetadata =
   | CritiqueBrainzReview
   | ThanksMetadata;
 
-type TimelineEvent = {
+type TimelineEvent<T extends EventMetadata> = {
   event_type: EventTypeT;
   id?: number;
   user_name: string;
   created: number;
-  metadata: EventMetadata;
+  metadata: T;
   hidden: boolean;
 };
 

@@ -777,14 +777,7 @@ def get_feed_events_for_user(
     max_ts: int,
     count: int,
 ) -> List[APITimelineEvent]:
-    """ Gets all user events in the feed.
-    """
-    # TODO: Remove these listen events from event list after listen events endpoint is active.
-    # get all listen events
-    if len(followed_users) == 0:
-        listen_events = []
-    else:
-        listen_events = get_listen_events(followed_users, min_ts, max_ts)
+    """Gets all user events in the feed."""
 
     users_for_events = followed_users + [user]
     follow_events = get_follow_events(
@@ -863,10 +856,13 @@ def get_feed_events_for_user(
 
     # TODO: add playlist event and like event
     all_events = sorted(
-        listen_events + follow_events +
-        recording_recommendation_events + recording_pin_events
-        + cb_review_events + notification_events +
-        personal_recording_recommendation_events + thanks_events,
+        follow_events
+        + recording_recommendation_events
+        + recording_pin_events
+        + cb_review_events
+        + notification_events
+        + personal_recording_recommendation_events
+        + thanks_events,
         key=lambda event: -event.created,
     )
     return all_events
