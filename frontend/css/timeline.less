@@ -82,6 +82,27 @@
         padding-top: 1em;
         padding-left: 2.5em;
       }
+
+      ul {
+        opacity: 0.8;
+        // Horizontal line
+        &::before {
+          content: "";
+          height: 1px;
+          width: 2em;
+          background-color: @gray-light;
+          position: absolute;
+          top: 8.25em;
+          left: 0.5em;
+          z-index: -1;
+        }
+
+        list-style: none;
+        padding-top: 1em;
+        padding-left: 2.5em;
+        
+      }
+      
     }
   }
 }

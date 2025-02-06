@@ -537,6 +537,42 @@ export default function UserFeedPage() {
     return null;
   };
 
+  const renderSubEvent = (event_id: number, event_type: EventTypeT) => {
+    const subEvent = events?.filter(
+      (event) => event.id === event_id && event.event_type === event_type
+    );
+    if (subEvent?.length) {
+      const originalEvent: TimelineEvent = subEvent[0];
+      return (
+        <>
+          <div className="event-description">
+            <span className={`event-icon ${event_type}`}>
+              <span className="fa-layers">
+                <FontAwesomeIcon
+                  icon={faCircle as IconProp}
+                  transform="grow-8"
+                />
+                <FontAwesomeIcon
+                  icon={getEventTypeIcon(event_type) as IconProp}
+                  inverse
+                  transform="shrink-4"
+                />
+              </span>
+            </span>
+            {renderEventText(originalEvent)}
+
+            <span className="event-time">
+              {preciseTimestamp(originalEvent.created * 1000)}
+              {renderEventActionButton(originalEvent)}
+            </span>
+          </div>
+          {renderEventContent(originalEvent)}
+        </>
+      );
+    }
+    return null;
+  };
+
   const renderEventText = (event: TimelineEvent) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
@@ -755,6 +791,19 @@ export default function UserFeedPage() {
                         </div>
 
                         {renderEventContent(event)}
+
+                        {event.event_type === EventType.THANKS ? (
+                          <ul>
+                            <li className="timeline-event timeline-sub-event">
+                              {renderSubEvent(
+                                event?.metadata?.original_event_id,
+                                event?.metadata?.original_event_type
+                              )}
+                            </li>
+                          </ul>
+                        ) : (
+                          <></>
+                        )}
                       </li>
                     );
                   })}
