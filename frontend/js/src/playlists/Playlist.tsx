@@ -511,7 +511,7 @@ export default function PlaylistPage() {
               <button
                 type="button"
                 className="btn btn-info btn-rounded play-tracks-button"
-                title="Play popular tracks"
+                title="Play all tracks"
                 onClick={() => {
                   window.postMessage(
                     {
