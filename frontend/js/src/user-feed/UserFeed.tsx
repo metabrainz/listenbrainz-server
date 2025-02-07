@@ -470,22 +470,25 @@ export default function UserFeedPage() {
       }
       return (
         <>
-          <ListenControl
-            title="Thanks"
-            text=""
-            icon={faHandshake}
-            buttonClassName="btn btn-link btn-xs"
-            action={() => {
-              console.log(event.id);
-              console.log(event.event_type);
-              NiceModal.show(ThanksModal, {
-                original_event_id: event.id!,
-                original_event_type: event.event_type,
-              });
-            }}
-            dataToggle="modal"
-            dataTarget="#ThanksModal"
-          />
+          {!event.subevent ? (
+            <ListenControl
+              title="Thanks"
+              text=""
+              icon={faHandshake}
+              buttonClassName="btn btn-link btn-xs"
+              action={() => {
+                NiceModal.show(ThanksModal, {
+                  original_event_id: event.id!,
+                  original_event_type: event.event_type,
+                });
+              }}
+              dataToggle="modal"
+              dataTarget="#ThanksModal"
+            />
+          ) : (
+            <></>
+          )}
+
           <ListenControl
             title="Hide Event"
             text=""
@@ -726,7 +729,6 @@ export default function UserFeedPage() {
       );
     }
     if (event_type === EventType.THANKS) {
-      console.log(metadata);
       const {
         original_event_id,
         original_event_type,
