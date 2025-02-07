@@ -171,38 +171,6 @@ def create_personal_recommendation_event(db_conn, user_id: int, metadata: WriteP
     except Exception as e:
         raise DatabaseException(str(e))
 
-'''
-def create_thanks_event(db_conn, user_id: int, metadata: ThanksMetadata)\
-        -> UserTimelineEvent:
-    """ Creates a thanks event in the database and returns it.
-        The User ID in the table is the person thanking meanwhile the original_event_id and original_event_type refer to
-        the event id and type being thanked respectively.
-    """
-    try:
-        result = db_conn.execute(text("""
-            INSERT INTO user_timeline_event (user_id, event_type, metadata)
-                VALUES (
-                    :user_id,
-                    'thanks',
-                    jsonb_build_object(
-                        'original_event_id', :original_event_id,
-                        'original_event_type', :original_event_type,
-                        'blurb_content', :blurb_content
-                    )
-                )
-            RETURNING id, user_id, event_type, metadata, created
-            """), {
-                'user_id': user_id,
-                'original_event_id': metadata.original_event_id,
-                'original_event_type': metadata.original_event_type,
-                'blurb_content': metadata.blurb_content
-            }
-        )
-        db_conn.commit()
-        return UserTimelineEvent(**result.mappings().first())
-    except Exception as e:
-        raise DatabaseException(str(e))'''
-
 
 def get_user_timeline_events(
     db_conn,

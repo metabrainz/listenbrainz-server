@@ -83,37 +83,54 @@
         padding-left: 2.5em;
       }
 
-      ul {
+      &.timeline-sub-event {
         opacity: 0.8;
         // Horizontal line
         &::before {
           content: "";
-          height: 1px;
+          height: 1.25px;
           width: 2em;
           background-color: @gray-light;
           position: absolute;
-          top: 8.25em;
-          left: 0.5em;
+          top: 2em;
+          left: -2.3em;
           z-index: -1;
+
+          
+
         }
 
         list-style: none;
-        padding-top: 1em;
-        padding-left: 2.5em;
+        padding-top: 1.3em;
 
-        .show-subevent {
-          padding: 0.25em 1em;
-          margin-left: 2.5em;
-          color: @asphalt;
-          background: none;
-          border-radius: 0.5em;
-          border: 1px solid @blue;
-          margin-top: -1em;
-          &:hover {
-            background-color: @asphalt;
-            color: @white;
-          }
+        .event-description-text {
+          margin-left: 2em;
         }
+
+        details .event-icon:before {
+          content: "+";
+          font-weight: bold;
+          background-color: @gray;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          width: 0.7em;
+          display: block;
+          color: white;
+          font-size: 2em;
+          border: none;
+          line-height: 0.65em;
+          text-align: center;
+          margin-top: 0.65em;
+          margin-left: -0.5em;
+        }
+
+        details[open] .event-icon:before {
+          background-color: @gray-light;
+          content: "-";
+        }
+
+        
+      
         
       }
       

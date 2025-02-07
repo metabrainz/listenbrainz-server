@@ -665,20 +665,7 @@ def create_personal_recommendation_event(user_name):
 @ratelimit()
 def create_thanks_event(user_name):
     '''
-    Make the user recommend a recording to their followers. The request should post
-    the following data about the recording being recommended (either one of recording_msid
-    or recording_mbid is sufficient), and also the list of followers getting recommended:
-
-    .. code-block:: json
-
-        {
-            "metadata": {
-                "recording_msid": "<The MessyBrainz ID of the recording, optional>",
-                "recording_mbid": "<The MusicBrainz ID of the recording>",
-                "users": [], // "<usernames of the persons you want to recommend to, required>"
-                "blurb_content": "<String containing personalized recommendation>"
-            }
-        }
+    Make the user thank a pin/suggestion. The request should post
 
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
@@ -735,11 +722,7 @@ def create_thanks_event(user_name):
         thankee_username = db_user.get_users_by_id(db_conn, [result.user_id])[result.user_id]
         #raise APIBadRequest(f"{thankee_username}")
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
-            event = db_user_timeline_event.create_thanks_event(db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
-            '''event_data = event.dict()
-            event_data['created'] = int(event_data['created'].timestamp())
-            event_data['event_type'] = event_data['event_type'].value
-            return jsonify(event_data)'''
+            db_user_timeline_event.create_thanks_event(db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
             return jsonify({"status": "ok"})
         else:
             raise APIUnauthorized("You cannot thank events of this user")
@@ -747,32 +730,6 @@ def create_thanks_event(user_name):
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
     except DatabaseException:
         raise APIInternalServerError("Something went wrong, please try again.")
-
-    '''
-    try:
-        metadata = ThanksMetadata(**metadata)
-        follower_results = db_user_relationship.multiple_users_by_username_following_user(
-            db_conn,
-            user['id'],
-            metadata.users
-        )
-        non_followers = []
-        for follower in metadata.users:
-            if not follower_results or not follower_results[follower]:
-                non_followers.append(follower)
-        if non_followers:
-            raise APIBadRequest(f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
-        event = db_user_timeline_event.create_personal_recommendation_event(db_conn, user['id'], metadata)
-    except pydantic.ValidationError as e:
-        raise APIBadRequest(f"Invalid metadata: {str(e)}")
-    except DatabaseException:
-        raise APIInternalServerError("Something went wrong, please try again.")
-
-    event_data = event.dict()
-    event_data['created'] = int(event_data['created'].timestamp())
-    event_data['event_type'] = event_data['event_type'].value
-    return jsonify(event_data)
-    '''
 
 
 def get_feed_events_for_user(

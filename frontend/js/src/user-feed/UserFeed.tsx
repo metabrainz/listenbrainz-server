@@ -604,10 +604,6 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const [visibleOriginalEvents, setVisibleOriginalEvents] = React.useState<{
-    [key: number]: boolean;
-  }>({});
-
   const renderSubEvent = (event_id: number, event_type: EventTypeT) => {
     const subEvent = events?.find(
       (event) => event.id === event_id && event.event_type === event_type
@@ -618,63 +614,20 @@ export default function UserFeedPage() {
     subEvent.subevent = true;
 
     return (
-      <>
-        {visibleOriginalEvents[event_id] ? (
-          <div>
-            <div className="event-description">
-              <span className={`event-icon ${event_type}`}>
-                <span className="fa-layers">
-                  <FontAwesomeIcon
-                    icon={faCircle as IconProp}
-                    transform="grow-8"
-                  />
-                  <FontAwesomeIcon
-                    icon={getEventTypeIcon(event_type) as IconProp}
-                    inverse
-                    transform="shrink-4"
-                  />
-                </span>
-              </span>
+      <div>
+        <details>
+            <summary className="event-description">
+              <span className={`event-icon ${event_type}`} />
               {renderEventText(subEvent)}
-
+              
               <span className="event-time">
                 {preciseTimestamp(subEvent.created * 1000)}
                 {renderEventActionButton(subEvent)}
               </span>
-            </div>
+            </summary>
             {renderEventContent(subEvent)}
-          </div>
-        ) : (
-          <>
-            <div className="event-description">
-              <span className={`event-icon ${event_type}`}>
-                <span className="fa-layers">
-                  <FontAwesomeIcon
-                    icon={faCircle as IconProp}
-                    transform="grow-8"
-                  />
-                  <FontAwesomeIcon
-                    icon={faPlus as IconProp}
-                    inverse
-                    transform="shrink-4"
-                  />
-                </span>
-              </span>
-            </div>
-            <button
-              className="show-subevent"
-              onClick={() =>
-                setVisibleOriginalEvents((prev) => ({
-                  ...prev,
-                  [event_id]: !prev[event_id],
-                }))
-              }
-            >
-              Show Track
-            </button>
-          </>
-        )}
-      </>
+          </details>
+        </div>
     );
   };
 
