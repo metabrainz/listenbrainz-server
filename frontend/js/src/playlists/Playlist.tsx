@@ -35,6 +35,7 @@ import {
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
+import DuplicateTrackModal from "./components/DuplicateTrackModal";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject;
@@ -195,6 +196,20 @@ export default function PlaylistPage() {
     }
     try {
       const jspfTrack = makeJSPFTrack(selectedTrackMetadata);
+
+      // check if the track is already in the playlist
+      const trackMBID = getRecordingMBIDFromJSPFTrack(jspfTrack);
+      const isDuplicate = playlist.track.some((track) => {
+        const existingMBID = getRecordingMBIDFromJSPFTrack(track);
+        return existingMBID === trackMBID;
+      });
+      if (isDuplicate) {
+        const confirmed = await NiceModal.show(DuplicateTrackModal);
+        if (!confirmed) {
+          return;
+        }
+      }
+
       await APIService.addPlaylistItems(
         currentUser.auth_token,
         getPlaylistId(playlist),
