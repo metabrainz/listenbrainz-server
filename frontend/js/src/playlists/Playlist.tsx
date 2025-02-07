@@ -77,6 +77,7 @@ export default function PlaylistPage() {
 
   // Ref
   const socketRef = React.useRef<Socket | null>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   // States
   const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
@@ -459,6 +460,9 @@ export default function PlaylistPage() {
                 type="button"
                 href="#add-track"
                 style={{ marginBottom: "1em" }}
+                onClick={() => {
+                  searchInputRef.current?.focus();
+                }}
               >
                 <FontAwesomeIcon icon={faPlusCircle as IconProp} />
                 &nbsp;&nbsp;Add a track
@@ -498,6 +502,8 @@ export default function PlaylistPage() {
                   &nbsp;&nbsp;Add a track
                 </span>
                 <SearchTrackOrMBID
+                  ref={searchInputRef}
+                  autofocus={false}
                   onSelectRecording={addTrack}
                   expectedPayload="trackmetadata"
                 />
