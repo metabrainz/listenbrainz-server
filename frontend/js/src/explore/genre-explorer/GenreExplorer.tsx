@@ -3,7 +3,16 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import tinycolor from "tinycolor2";
+import { kebabCase } from "lodash";
+import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { RouteQuery } from "../../utils/Loader";
+import {
+  copyImageToClipboard,
+  downloadComponentAsImage,
+} from "../music-neighborhood/utils/utils";
+import { ToastMsg } from "../../notifications/Notifications";
 import GenreGraph from "./components/GenreGraph";
 import Panel from "./components/Panel";
 
@@ -95,14 +104,62 @@ export default function GenreExplorer() {
     navigate(`/explore/genre-explorer/${newGenreMBID}`);
   };
 
+  const onClickDownload = React.useCallback(async () => {
+    if (!graphParentElementRef?.current) {
+      return;
+    }
+
+    try {
+      downloadComponentAsImage(
+        graphParentElementRef.current,
+        `${kebabCase(data?.genre.name)}-genre-explorer.png`
+      );
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not save as an image"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />,
+        { toastId: "download-svg-error" }
+      );
+    }
+  }, [data, graphParentElementRef]);
+
+  const copyImage = React.useCallback(async () => {
+    if (!graphParentElementRef?.current) {
+      return;
+    }
+
+    await copyImageToClipboard(graphParentElementRef.current);
+  }, [graphParentElementRef]);
+
+  const browserHasClipboardAPI = "clipboard" in navigator;
+
   return (
     <>
       <Helmet>
-        <title>Genre Explorer - {data?.genre.name}</title>
+        <title>Genre Explorer</title>
       </Helmet>
       <div className="genre-explorer-main-container" role="main">
         <div className="genre-explorer-header">
-          <h1>Genre Explorer - {data?.genre.name}</h1>
+          <div className="share-buttons">
+            <button
+              type="button"
+              className="btn btn-icon btn-info"
+              onClick={onClickDownload}
+            >
+              <FontAwesomeIcon icon={faDownload} color="white" />
+            </button>
+            {browserHasClipboardAPI && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info"
+                onClick={copyImage}
+              >
+                <FontAwesomeIcon icon={faCopy} color="white" />
+              </button>
+            )}
+          </div>
         </div>
         <div className="genre-explorer-content">
           <GenreGraph
