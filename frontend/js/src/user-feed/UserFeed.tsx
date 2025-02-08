@@ -470,7 +470,7 @@ export default function UserFeedPage() {
       }
       return (
         <>
-          {!event.subevent ? (
+          {!isSubEvent ? (
             <ListenControl
               title="Thanks"
               text=""
@@ -690,7 +690,7 @@ export default function UserFeedPage() {
         return (
           <span className="event-description-text">
             You thanked <Username username={thankee_username} /> for{" "}
-            {EventTypeinMessage[original_event_type]}
+            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
           </span>
         );
       }
@@ -698,7 +698,7 @@ export default function UserFeedPage() {
         return (
           <span className="event-description-text">
             <Username username={thanker_username} /> thanked you for{" "}
-            {EventTypeinMessage[original_event_type]}
+            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
           </span>
         );
       }
