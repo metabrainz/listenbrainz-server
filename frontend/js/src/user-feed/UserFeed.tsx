@@ -487,7 +487,7 @@ export default function UserFeedPage() {
             />
           ) : (
             null
-          )}
+          )} 
 
           <ListenControl
             title="Hide Event"
