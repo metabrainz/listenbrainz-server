@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 import tinycolor from "tinycolor2";
 import { RouteQuery } from "../../utils/Loader";
 import GenreGraph from "./components/GenreGraph";
+import Panel from "./components/Panel";
 
 type GenreExplorerParams = {
   genreMBID: string;
@@ -97,17 +98,20 @@ export default function GenreExplorer() {
   return (
     <>
       <Helmet>
-        <title>Genre Explorer</title>
+        <title>Genre Explorer - {data?.genre.name}</title>
       </Helmet>
       <div className="genre-explorer-main-container" role="main">
         <div className="genre-explorer-header">
           <h1>Genre Explorer - {data?.genre.name}</h1>
         </div>
-        <GenreGraph
-          data={graphData}
-          onGenreChange={handleGenreChange}
-          graphParentElementRef={graphParentElementRef}
-        />
+        <div className="genre-explorer-content">
+          <GenreGraph
+            data={graphData}
+            onGenreChange={handleGenreChange}
+            graphParentElementRef={graphParentElementRef}
+          />
+          <Panel genre={data?.genre ?? null} />
+        </div>
       </div>
     </>
   );
