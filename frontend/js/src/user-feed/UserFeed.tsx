@@ -393,13 +393,13 @@ export default function UserFeedPage() {
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent<EventMetadata>) => {
+  const renderEventActionButton = (event: TimelineEvent<EventMetadata>, isSubEvent=false) => {
     if (
       (event.event_type === EventType.RECORDING_PIN ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
         event.event_type === EventType.RECORDING_RECOMMENDATION) &&
       event.user_name !== currentUser.name &&
-      event.subevent
+      isSubEvent
     ) {
       if (event.hidden) {
         return (
@@ -604,25 +604,19 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const renderSubEvent = (event_id: number, event_type: EventTypeT) => {
-    const subEvent = events?.find(
-      (event) => event.id === event_id && event.event_type === event_type
-    );
-
+  const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
     if (!subEvent) return null;
-
-    subEvent.subevent = true;
 
     return (
       <div>
         <details>
             <summary className="event-description">
-              <span className={`event-icon ${event_type}`} />
+              <span className={`event-icon ${subEvent.event_type}`} />
               {renderEventText(subEvent)}
               
               <span className="event-time">
                 {preciseTimestamp(subEvent.created * 1000)}
-                {renderEventActionButton(subEvent)}
+                {renderEventActionButton(subEvent, true)}
               </span>
             </summary>
             {renderEventContent(subEvent)}
@@ -849,7 +843,16 @@ export default function UserFeedPage() {
               >
                 <ul>
                   {events?.map((event) => {
-                    const { created, event_type, user_name } = event;
+                    const { created, event_type, user_name, metadata } = event;
+                    let subEventElement;
+                    if(event_type === EventType.THANKS && !event.hidden){
+                      const {original_event_id, original_event_type} = metadata as ThanksMetadata;
+                      const subEvent = events?.find(
+                        (evt) => evt.id === original_event_id && evt.event_type === original_event_type
+                      );
+                      subEventElement = renderSubEvent(subEvent);
+                    }
+
                     return (
                       <li
                         className="timeline-event"
@@ -879,19 +882,14 @@ export default function UserFeedPage() {
 
                         {renderEventContent(event)}
 
-                        {event.event_type === EventType.THANKS &&
-                        !event.hidden ? (
-                          <ul>
-                            <li className="timeline-event timeline-sub-event">
-                              {renderSubEvent(
-                                event?.metadata?.original_event_id,
-                                event?.metadata?.original_event_type
-                              )}
-                            </li>
-                          </ul>
-                        ) : (
-                          <></>
-                        )}
+                          {subEventElement &&
+                            <ul>
+                              <li className="timeline-event timeline-sub-event">
+                                {subEventElement}
+                              </li>
+                            </ul>
+                          }
+                        
                       </li>
                     );
                   })}

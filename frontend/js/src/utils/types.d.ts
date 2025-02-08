@@ -517,7 +517,6 @@ type TimelineEvent<T extends EventMetadata> = {
   created: number;
   metadata: T;
   hidden: boolean;
-  subevent?: boolean;
 };
 
 type SimilarUser = {
