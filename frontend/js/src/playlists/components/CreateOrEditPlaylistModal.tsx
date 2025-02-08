@@ -1,7 +1,7 @@
 import * as React from "react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
-import { omit } from "lodash";
+import { omit, isEqual } from "lodash";
 import { Link } from "react-router-dom";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
@@ -17,6 +17,8 @@ import { ToastMsg } from "../../notifications/Notifications";
 type CreateOrEditPlaylistModalProps = {
   playlist?: JSPFPlaylist;
   initialTracks?: JSPFTrack[];
+  coverArtGridOptions?: CoverArtGridOptions[];
+  currentCoverArt?: CoverArtGridOptions;
 };
 
 export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
@@ -28,7 +30,12 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const { playlist, initialTracks } = props;
+  const {
+    playlist,
+    initialTracks,
+    coverArtGridOptions,
+    currentCoverArt,
+  } = props;
   const customFields = getPlaylistExtension(props.playlist);
   const playlistId = getPlaylistId(playlist);
   const isEdit = Boolean(playlistId);
@@ -36,6 +43,9 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const [name, setName] = React.useState(playlist?.title ?? "");
   const [description, setDescription] = React.useState(
     playlist?.annotation ?? ""
+  );
+  const [selectedCoverArt, setSelectedCoverArt] = React.useState(
+    currentCoverArt ?? coverArtGridOptions?.[0]
   );
   const [isPublic, setIsPublic] = React.useState(customFields?.public ?? true);
   const [collaborators, setCollaborators] = React.useState<string[]>(
@@ -174,6 +184,9 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
             collaborators: collaboratorsWithoutOwner,
+            additional_metadata: {
+              cover_art: selectedCoverArt,
+            },
           },
         },
       };
@@ -209,6 +222,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
     description,
     isPublic,
     collaboratorsWithoutOwner,
+    selectedCoverArt,
     APIService,
   ]);
 
@@ -300,6 +314,33 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
                 onChange={(event) => setDescription(event.target.value)}
               />
             </div>
+            {isEdit && coverArtGridOptions && (
+              <div className="form-group">
+                <label htmlFor="artwork">Cover Art</label>
+                <div className="cover-art-grid">
+                  {coverArtGridOptions?.map((option, index) => (
+                    <label className="cover-art-option">
+                      <input
+                        type="radio"
+                        name="artwork"
+                        value={`artwork-${option.dimension}-${option.layout}`}
+                        key={`artwork-${option.dimension}-${option.layout}`}
+                        className="cover-art-radio"
+                        checked={isEqual(selectedCoverArt, option)}
+                        onChange={() => setSelectedCoverArt(option)}
+                      />
+                      <img
+                        height={80}
+                        width={80}
+                        src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
+                        alt={`Cover art option ${option.dimension}-${option.layout}`}
+                        className="cover-art-image"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="checkbox">
               <label>
                 <input
