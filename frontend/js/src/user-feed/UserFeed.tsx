@@ -486,7 +486,7 @@ export default function UserFeedPage() {
               dataTarget="#ThanksModal"
             />
           ) : (
-            <></>
+            null
           )}
 
           <ListenControl
