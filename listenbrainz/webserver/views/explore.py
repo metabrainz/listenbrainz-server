@@ -66,17 +66,19 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
     for row in data:
         genre_id = row["genre_gid"]
         id_name_map[genre_id] = row.get("genre")
+        
+        # Initialize parent_map entry for genre_id if not exists
+        if genre_id not in parent_map:
+            parent_map[genre_id] = set()
 
         subgenre_id = row["subgenre_gid"]
         if subgenre_id:
             id_name_map[subgenre_id] = row.get("subgenre")
-            if subgenre_id not in parent_map:
-                parent_map[subgenre_id] = set()
+            # Add parent relationship
             parent_map[subgenre_id].add(genre_id)
             adj_matrix[genre_id].append(subgenre_id)
         else:
             adj_matrix[genre_id] = []
-            parent_map[genre_id] = set()
 
     if genre_mbid not in id_name_map:
         return None, None, None, None
@@ -84,45 +86,34 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
     # 1. Current genre
     current_genre = {"id": genre_mbid, "name": id_name_map[genre_mbid]}
 
-    # 2. All children of the genre
-    children = adj_matrix[genre_mbid]
+    # 2. Get children
+    children = [
+        {"id": child_id, "name": id_name_map[child_id]}
+        for child_id in adj_matrix[genre_mbid]
+    ]
 
-    # 3. Parent graph data
-    parent_nodes = set()
-    parent_edges = set()
+    # 3. Get immediate parents only
+    parent_nodes = []
+    parent_edges = []
+    
+    # Get immediate parents of the current genre
+    for parent in parent_map[genre_mbid]:
+        parent_nodes.append({"id": parent, "name": id_name_map[parent]})
+        parent_edges.append({"source": parent, "target": genre_mbid})
 
-    def collect_parents(genre):
-        """Recursively collect all parents and their relationships"""
-        if genre in parent_nodes:
-            return
+    parent_graph = {
+        "nodes": parent_nodes,
+        "edges": parent_edges
+    }
 
-        parent_nodes.add(genre)
-        for parent in parent_map[genre]:
-            parent_edges.add((parent, genre))
-            collect_parents(parent)
-
-    # Start collection from our target genre
-    collect_parents(genre_mbid)
-
-    # 4. All siblings of the genre
+    # 4. Get siblings (keeping this as is)
     siblings = set()
     for parent in parent_map[genre_mbid]:
         siblings.update(adj_matrix[parent])
     siblings.discard(genre_mbid)
+    siblings_list = [{"id": genre, "name": id_name_map[genre]} for genre in siblings]
 
-    def format_genre_list(genre_list: list) -> list:
-        return [{"id": genre, "name": id_name_map[genre]} for genre in genre_list]
-
-    # Format parent graph data
-    parent_graph = {
-        "nodes": format_genre_list(parent_nodes),
-        "edges": [{"source": source, "target": target} for source, target in parent_edges]
-    }
-
-    return current_genre, \
-        format_genre_list(children), \
-        parent_graph, \
-        format_genre_list(siblings)
+    return current_genre, children, parent_graph, siblings_list
 
 
 @explore_bp.post("/genre-explorer/<genre_mbid>/")
