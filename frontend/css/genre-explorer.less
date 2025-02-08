@@ -1,0 +1,46 @@
+.genre-explorer-main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+
+  .genre-explorer-header {
+    padding: 1em;
+    
+    h1 {
+      margin: 0;
+    }
+  }
+
+  .genre-graph-container {
+    flex: 1;
+    height: calc(100vh - @brainzplayer-height);
+    max-height: 1120px;
+    overflow: auto;
+
+    .genre-graph-node {
+      cursor: pointer;
+
+      .centered-text {
+        padding: 0 4px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        height: inherit;
+
+        .centered-text-inner {
+          width: 100%;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.1em;
+          overflow-wrap: break-word;
+          hyphens: auto;
+        }
+      }
+    }
+  }
+} 
