@@ -4,17 +4,94 @@
   height: 100vh;
 
   .genre-explorer-header {
-    padding: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-wrap: wrap;
+    padding: 2vh 0;
 
-    h1 {
-      margin: 0;
+    @media screen and (max-width: @screen-sm) {
+      justify-content: space-between;
+    }
+
+    #genre-search-button {
+      margin-right: 10px;
+      background-color: @blue;
+
+      &:hover {
+        background-color: @mb_blue_light;
+        border-color: @mb_blue_dark;
+      }
+    }
+
+    .share-buttons {
+      margin-left: 30px;
+      display: flex;
+      align-items: center;
+    }
+
+    // Search box specific styles
+    .dropdown-search {
+      position: relative;
+
+      input {
+        min-width: 300px;
+
+        @media screen and (max-width: @screen-sm) {
+          min-width: 200px;
+        }
+      }
+
+      .dropdown-search-suggestions {
+        display: none; // hidden by default
+        position: absolute;
+        width: calc(100% - 55px);
+        left: 0;
+        top: 33px;
+        z-index: 6;
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
+        list-style: none;
+        border: 1px solid @gray-light;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background-color: @white-background;
+        overflow-y: auto;
+        border-radius: 0;
+        padding: 0;
+        cursor: pointer;
+
+        // Options within the dropdown menu
+        > option {
+          display: block;
+          width: 100%;
+          outline: inherit;
+          padding: 5px 20px;
+          font: inherit;
+          text-align: left;
+          background: none;
+          color: inherit;
+          border: none;
+          cursor: pointer;
+
+          &:hover,
+          &:focus {
+            color: #fff;
+            background-color: #353070;
+          }
+        }
+      }
+    }
+
+    // Show dropdown when parent is focused
+    .dropdown-search:focus-within .dropdown-search-suggestions {
+      display: block;
     }
   }
 
   .genre-explorer-content {
-    display: flex;
     flex: 1;
-    min-height: 0;
+    display: flex;
+    position: relative;
+    overflow: hidden;
 
     .genre-graph-container {
       flex: 1;
@@ -50,16 +127,16 @@
     }
 
     .sidebar-header {
-        background: #353070;
-        color: white;
-        padding-top: 20px;
+      background: #353070;
+      color: white;
+      padding-top: 20px;
 
-        p{
-          font-size: 25px;
-          font-weight: 900;
-          margin-bottom: 5px;
-        }
+      p {
+        font-size: 25px;
+        font-weight: 900;
+        margin-bottom: 5px;
       }
+    }
 
     .genre-panel-info {
       padding: 1rem;

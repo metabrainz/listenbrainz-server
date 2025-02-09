@@ -15,6 +15,7 @@ import {
 import { ToastMsg } from "../../notifications/Notifications";
 import GenreGraph from "./components/GenreGraph";
 import Panel from "./components/Panel";
+import SearchBox from "./components/SearchBox";
 
 type GenreExplorerParams = {
   genreMBID: string;
@@ -142,6 +143,7 @@ export default function GenreExplorer() {
       </Helmet>
       <div className="genre-explorer-main-container" role="main">
         <div className="genre-explorer-header">
+          <SearchBox onGenreSelect={handleGenreChange} />
           <div className="share-buttons">
             <button
               type="button"

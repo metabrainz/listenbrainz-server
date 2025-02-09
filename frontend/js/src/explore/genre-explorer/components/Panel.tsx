@@ -59,6 +59,8 @@ function Panel({ genre }: PanelProps) {
             <div className="genre-mb-link">
               <Link
                 id="genre-mb-link-button"
+                target="_blank"
+                rel="noopener noreferrer"
                 to={`https://musicbrainz.org/genre/${genre.id}`}
               >
                 <strong>Genre page</strong>
