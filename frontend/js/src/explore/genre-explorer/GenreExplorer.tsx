@@ -6,7 +6,6 @@ import { kebabCase, merge } from "lodash";
 import { Helmet } from "react-helmet";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import tinycolor from "tinycolor2";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import Loader from "../../components/Loader";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -25,28 +24,7 @@ import {
 import GenreGraph from "./components/GenreGraph";
 import Panel from "./components/Panel";
 import SearchBox from "./components/SearchBox";
-
-type GenreExplorerParams = {
-  genreMBID: string;
-};
-
-type GenreNode = {
-  id: string;
-  name: string;
-};
-
-type GenreExplorerLoaderData = {
-  children: GenreNode[];
-  parents: {
-    nodes: GenreNode[];
-    edges: {
-      source: string;
-      target: string;
-    }[];
-  };
-  siblings: GenreNode[];
-  genre: GenreNode;
-};
+import { transformGenreData } from "./utils/utils";
 
 type LBRadioPlaylistResponse = {
   payload: {
@@ -54,56 +32,6 @@ type LBRadioPlaylistResponse = {
     feedback: string[];
   };
 };
-
-function transformGenreData(data: GenreExplorerLoaderData) {
-  if (!data) return { nodes: [], links: [] };
-
-  const mainNodeSize = 150;
-  const childNodeSize = 85;
-  const mainColor = "#353070";
-
-  const nodes = [
-    // Main genre node
-    {
-      id: data.genre.id,
-      name: data.genre.name,
-      size: mainNodeSize,
-      color: mainColor,
-    },
-    // Child genre nodes
-    ...data.children.map((child) => ({
-      id: child.id,
-      name: child.name,
-      size: childNodeSize,
-      color: tinycolor(mainColor).lighten(30).toString(),
-    })),
-    // Parent genre nodes with different color
-    ...data.parents.nodes.map((parent) => ({
-      id: parent.id,
-      name: parent.name,
-      size: childNodeSize,
-      color: tinycolor(mainColor).darken(15).toString(),
-    })),
-  ];
-
-  // Remove duplicate nodes
-  const uniqueNodes = nodes.filter(
-    (node, index, self) => index === self.findIndex((t) => t.id === node.id)
-  );
-
-  // Create links
-  const links = [
-    // Links to children
-    ...data.children.map((child) => ({
-      source: data.genre.id,
-      target: child.id,
-    })),
-    // Links to parents
-    ...data.parents.edges,
-  ];
-
-  return { nodes: uniqueNodes, links };
-}
 
 export default function GenreExplorer() {
   const location = useLocation();
