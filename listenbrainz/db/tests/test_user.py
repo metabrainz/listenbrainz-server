@@ -91,6 +91,8 @@ class UserTestCase(DatabaseTestCase):
                     self.assertNotIn(column, user)
 
     def test_delete(self):
+        """Tests that deletes the given user"""
+
         user_id = db_user.create(self.db_conn, 10, 'frank')
 
         user = db_user.get(self.db_conn, user_id)
@@ -99,6 +101,34 @@ class UserTestCase(DatabaseTestCase):
         db_user.delete(self.db_conn, user_id)
         user = db_user.get(self.db_conn, user_id)
         self.assertIsNone(user)
+
+    def test_pause(self):
+        """ Tests that pauses the given user """
+
+        user_id = db_user.create(self.db_conn, 39, 'anne')
+
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], False)
+
+        db_user.pause(self.db_conn, user_id)
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], True)
+        
+    def test_unpause(self):
+        """ Tests that pauses the given user """
+
+        user_id = db_user.create(self.db_conn, 39, 'anne')
+
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], False)
+
+        db_user.pause(self.db_conn, user_id)
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], True)
+
+        db_user.unpause(self.db_conn, user_id)
+        user = db_user.get(self.db_conn, user_id)
+        self.assertEqual(user['is_paused'], False)
 
     def test_delete_when_spotify_import_activated(self):
         user_id = db_user.create(self.db_conn, 11, 'kishore')
@@ -191,4 +221,6 @@ class UserTestCase(DatabaseTestCase):
         )
 
         results = db_user.search(self.db_conn, "cif", 10, searcher_id)
-        self.assertEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.09090909, 0.61)])
+        # changing this because the order of the list isnt being returned in a stable manner. 
+        self.assertCountEqual(results, [("Cécile", 0.1, None), ("Cecile", 0.1, 0.42), ("lucifer", 0.09090909, 0.61)])
+
