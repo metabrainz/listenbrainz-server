@@ -29,7 +29,7 @@ class TagSimilarity(BulkInsertTable):
                 ("count",                    "INTEGER NOT NULL")]
 
     def get_insert_queries(self):
-        return [("MB", """SELECT array_agg(t.name) AS tag_name
+        return ["""SELECT array_agg(t.name) AS tag_name
                      FROM artist a
                      JOIN artist_tag at
                        ON at.artist = a.id
@@ -63,7 +63,7 @@ class TagSimilarity(BulkInsertTable):
                      JOIN tag t
                        ON rect.tag = t.id 
                  GROUP BY rec.gid
-                   HAVING t.count > 0""")]
+                   HAVING t.count > 0"""]
 
 
     def get_index_names(self):
