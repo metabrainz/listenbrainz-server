@@ -10,7 +10,12 @@ from pyspark.sql.types import StructField, StructType, ArrayType, StringType, Ti
 BOOKKEEPING_SCHEMA = StructType([
     StructField('from_date', TimestampType(), nullable=False),
     StructField('to_date', TimestampType(), nullable=False),
+    StructField('updated_at', TimestampType(), nullable=False),
+])
+
+INCREMENTAL_BOOKKEEPING_SCHEMA = StructType([
     StructField('created', TimestampType(), nullable=False),
+    StructField('updated_at', TimestampType(), nullable=False),
 ])
 
 mlhd_schema = StructType([
