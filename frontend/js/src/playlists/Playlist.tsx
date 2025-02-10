@@ -37,7 +37,6 @@ import {
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
-  JSPFTrackToListen,
   LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
@@ -98,14 +97,12 @@ export default function PlaylistPage() {
 
   // Ref
   const socketRef = React.useRef<Socket | null>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   // States
   const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
     playlistProps?.playlist || {}
   );
-  const [coverArtConfig, setCoverArtConfig] = React.useState<
-    CoverArtGridOptions
-  >(playlistProps?.cover_art || {});
   const { track: tracks } = playlist;
 
   // Functions
@@ -529,15 +526,17 @@ export default function PlaylistPage() {
         </div>
         {userHasRightToEdit && tracks && tracks.length > 10 && (
           <div className="text-center">
-            <a
+            <button
               className="btn btn-primary"
               type="button"
-              href="#add-track"
               style={{ marginBottom: "1em" }}
+              onClick={() => {
+                searchInputRef.current?.focus();
+              }}
             >
               <FontAwesomeIcon icon={faPlusCircle as IconProp} />
               &nbsp;&nbsp;Add a track
-            </a>
+            </button>
           </div>
         )}
         <div id="listens row">
@@ -573,6 +572,8 @@ export default function PlaylistPage() {
                 &nbsp;&nbsp;Add a track
               </span>
               <SearchTrackOrMBID
+                ref={searchInputRef}
+                autofocus={false}
                 onSelectRecording={addTrack}
                 expectedPayload="trackmetadata"
               />
