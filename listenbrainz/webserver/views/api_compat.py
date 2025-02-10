@@ -20,6 +20,8 @@ from listenbrainz.db.lastfm_token import Token
 import calendar
 from datetime import datetime
 from listenbrainz.webserver import timescale_connection, db_conn
+from listenbrainz.webserver.utils import REJECT_LISTENS_FROM_PAUSED_USER_ERROR
+
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -241,7 +243,7 @@ def record_listens(data):
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and user["email"] is None:
         raise InvalidAPIUsage(CompatError.NO_EMAIL, output_format=output_format)  # No email available for user in LB
     if user['is_paused']:
-        raise APIUnauthorized("user_id is paused and is currently not accepting listens. Feel free to contact us if you have any questions about this. https://metabrainz.org/contact")
+        raise InvalidAPIUsage(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
     lookup = defaultdict(dict)
     for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig", "format"]:

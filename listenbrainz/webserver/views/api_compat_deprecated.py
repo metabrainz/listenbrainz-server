@@ -33,8 +33,8 @@ from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.errors import ListenValidationError,APIUnauthorized
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.errors import ListenValidationError
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW, \
     is_valid_uuid, check_for_unicode_null_recursively, validate_listened_at
 
@@ -127,7 +127,7 @@ def submit_listens():
 
     user = db_user.get(db_conn, session.user_id)
     if user['is_paused']:
-        raise APIUnauthorized("user_id is paused and is currently not accepting listens. Feel free to contact us if you have any questions about this. https://metabrainz.org/contact")
+        return REJECT_LISTENS_FROM_PAUSED_USER_ERROR + '\n', 401
     user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
     insert_payload(listens, user_metadata)
 
