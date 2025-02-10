@@ -184,6 +184,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
           [MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION]: {
             public: isPublic,
             collaborators: collaboratorsWithoutOwner,
+            last_modified_at: new Date().toISOString(),
             additional_metadata: {
               cover_art: selectedCoverArt,
             },

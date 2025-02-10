@@ -105,6 +105,10 @@ export default function PlaylistPage() {
   );
   const { track: tracks } = playlist;
 
+  React.useEffect(() => {
+    setPlaylist(playlistProps?.playlist || {});
+  }, [playlistProps?.playlist]);
+
   // Functions
   const alertMustBeLoggedIn = () => {
     toast.error(
@@ -184,7 +188,6 @@ export default function PlaylistPage() {
   };
 
   const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
-    setPlaylist(newPlaylist);
     emitPlaylistChanged(newPlaylist);
     revalidator.revalidate();
   };
@@ -238,8 +241,8 @@ export default function PlaylistPage() {
         ...playlist,
         track: [...playlist.track, jspfTrack],
       };
-      setPlaylist(newPlaylist);
       emitPlaylistChanged(newPlaylist);
+      revalidator.revalidate();
     } catch (error) {
       handleError(error);
     }
@@ -276,8 +279,8 @@ export default function PlaylistPage() {
             index: -1,
           },
         });
-        setPlaylist(newPlaylist);
         emitPlaylistChanged(newPlaylist);
+        revalidator.revalidate();
       }
     } catch (error) {
       handleError(error);
@@ -307,6 +310,7 @@ export default function PlaylistPage() {
         data: evt,
       });
       emitPlaylistChanged(playlist);
+      revalidator.revalidate();
     } catch (error) {
       handleError(error);
       // Revert the move in state.playlist order
@@ -317,6 +321,7 @@ export default function PlaylistPage() {
       newTracks[evt.oldIndex] = toMoveBack;
 
       setPlaylist({ ...playlist, track: newTracks });
+      revalidator.revalidate();
     }
   };
 
