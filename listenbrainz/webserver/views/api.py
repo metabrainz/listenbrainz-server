@@ -21,7 +21,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -77,7 +77,7 @@ def submit_listen():
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
     if user['is_paused']:
-        raise APIUnauthorized("user_id is paused and is currently not accepting listens. Feel free to contact us if you have any questions about this. https://metabrainz.org/contact")
+        raise APIUnauthorized(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
 
     raw_data = request.get_data()
 
