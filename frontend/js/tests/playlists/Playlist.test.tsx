@@ -43,8 +43,7 @@ describe("PlaylistPage", () => {
       false
     );
     screen.getByTestId("playlist");
-    const h1 = screen.getByRole("heading");
-    expect(h1).toHaveTextContent("1980s flashback jams");
+    screen.getByText(textContentMatcher("1980s flashback jams"));
     screen.getByText(textContentMatcher("Your lame 80s music"));
   });
 

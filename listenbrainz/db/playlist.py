@@ -750,9 +750,16 @@ def update_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist):
            SET name = :name
              , description = :description
              , public = :public
+             , additional_metadata = :additional_metadata
          WHERE id = :id
     """)
-    params = playlist.dict(include={'id', 'name', 'description', 'public'})
+    params = {
+        'id': playlist.id,
+        'name': playlist.name,
+        'description': playlist.description,
+        'public': playlist.public,
+        'additional_metadata': orjson.dumps(playlist.additional_metadata or {}).decode('utf-8')
+    }
     ts_conn.execute(query, params)
     # Unconditionally add collaborators, this allows us to delete all collaborators
     # if [] is passed in.

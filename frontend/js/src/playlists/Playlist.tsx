@@ -3,7 +3,12 @@
 import { findIndex } from "lodash";
 import * as React from "react";
 
-import { faCog, faPlusCircle, faRss } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCog,
+  faPlayCircle,
+  faPlusCircle,
+  faRss,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -13,7 +18,12 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
-import { Link, useLoaderData, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useRevalidator,
+} from "react-router-dom";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";
@@ -27,7 +37,6 @@ import {
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
-  JSPFTrackToListen,
   LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
@@ -37,7 +46,11 @@ import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
 
 export type PlaylistPageProps = {
-  playlist: JSPFObject;
+  playlist: JSPFObject & {
+    cover_art: CoverArtGridOptions;
+  };
+  coverArtGridOptions: CoverArtGridOptions[];
+  coverArt: string;
 };
 
 export interface PlaylistPageState {
@@ -64,9 +77,14 @@ export default function PlaylistPage() {
     GlobalAppContext
   );
   const dispatch = useBrainzPlayerDispatch();
+  const revalidator = useRevalidator();
   const navigate = useNavigate();
   // Loader data
-  const { playlist: playlistProps } = useLoaderData() as PlaylistPageProps;
+  const {
+    playlist: playlistProps,
+    coverArtGridOptions,
+    coverArt,
+  } = useLoaderData() as PlaylistPageProps;
   // React-SortableJS expects an 'id' attribute and we can't change it, so add it to each object
   playlistProps?.playlist?.track?.forEach(
     (jspfTrack: JSPFTrack, index: number) => {
@@ -75,8 +93,11 @@ export default function PlaylistPage() {
     }
   );
 
+  const currentCoverArt = playlistProps?.cover_art;
+
   // Ref
   const socketRef = React.useRef<Socket | null>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   // States
   const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
@@ -165,6 +186,7 @@ export default function PlaylistPage() {
   const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
     setPlaylist(newPlaylist);
     emitPlaylistChanged(newPlaylist);
+    revalidator.revalidate();
   };
 
   const hasRightToEdit = (): boolean => {
@@ -344,70 +366,31 @@ export default function PlaylistPage() {
         )}
         <meta property="og:url" content={playlist.identifier} />
       </Helmet>
-      <div className="row">
+      <div className="entity-page-header flex">
         <div
-          id="playlist"
-          data-testid="playlist"
-          className="col-md-8 col-md-offset-2"
-        >
-          <div className="playlist-details row">
-            <div className="flex-center">
-              <h1 className="header-with-line">{playlist.title}</h1>
-              <div className="dropdown">
-                <button
-                  className="btn btn-info dropdown-toggle"
-                  type="button"
-                  id="playlistOptionsDropdown"
-                  data-toggle="dropdown"
-                  aria-haspopup="true"
-                  aria-expanded="true"
-                >
-                  <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
-                  &nbsp;Options
-                </button>
-                <PlaylistMenu
-                  playlist={playlist}
-                  onPlaylistSaved={onPlaylistSave}
-                  onPlaylistDeleted={onDeletePlaylist}
-                  disallowEmptyPlaylistExport
-                />
-              </div>
-              {customFields?.public && (
-                <button
-                  type="button"
-                  className="btn btn-icon btn-info btn-sm atom-button"
-                  data-toggle="modal"
-                  data-target="#SyndicationFeedModal"
-                  title="Subscribe to syndication feed (Atom)"
-                  onClick={() => {
-                    NiceModal.show(SyndicationFeedModal, {
-                      feedTitle: `Playlist - ${playlist.title}`,
-                      options: [],
-                      baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
-                        playlist
-                      )}`,
-                    });
-                  }}
-                >
-                  <FontAwesomeIcon icon={faRss} size="sm" fixedWidth />
-                </button>
-              )}
-            </div>
-            <p>
+          className="cover-art"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: sanitize(
+              coverArt ??
+                "<img src='/static/img/cover-art-placeholder.jpg'></img>"
+            ),
+          }}
+          title={`Cover art for ${playlist.title}`}
+        />
+        <div className="playlist-info">
+          <h1>{playlist.title}</h1>
+          <div className="details h4">
+            <div>
               {customFields?.public ? "Public " : "Private "}
               playlist by{" "}
               <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
                 {playlist.creator}
               </Link>
-            </p>
-            <div className="info">
-              <div>
-                {playlist.track?.length} tracks
-                {totalDurationForDisplay && (
-                  <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
-                )}
-              </div>
-              <div>Created: {new Date(playlist.date).toLocaleString()}</div>
+            </div>
+          </div>
+          <div className="details">
+            <div>
               {customFields?.collaborators &&
                 Boolean(customFields.collaborators.length) && (
                   <div>
@@ -424,13 +407,26 @@ export default function PlaylistPage() {
                     ))}
                   </div>
                 )}
-              {customFields?.last_modified_at && (
+            </div>
+            <div>
+              {playlist.track?.length} tracks
+              {totalDurationForDisplay && (
+                <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
+              )}
+            </div>
+            <small className="help-block">
+              <div>Created: {new Date(playlist.date).toLocaleString()}</div>
+            </small>
+            {customFields?.last_modified_at && (
+              <small className="help-block">
                 <div>
                   Last modified:{" "}
                   {new Date(customFields.last_modified_at).toLocaleString()}
                 </div>
-              )}
-              {customFields?.copied_from && (
+              </small>
+            )}
+            {customFields?.copied_from && (
+              <small className="help-block">
                 <div>
                   Copied from:
                   <a href={sanitizeUrl(customFields.copied_from)}>
@@ -439,71 +435,150 @@ export default function PlaylistPage() {
                     )}
                   </a>
                 </div>
-              )}
-            </div>
-            {playlist.annotation && (
+              </small>
+            )}
+          </div>
+          {playlist.annotation && (
+            <div className="wikipedia-extract">
               <div
-                // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
+                className="content"
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
                   __html: sanitize(playlist.annotation),
                 }}
               />
-            )}
-            <hr />
-          </div>
-          {userHasRightToEdit && tracks && tracks.length > 10 && (
-            <div className="text-center">
-              <a
-                className="btn btn-primary"
-                type="button"
-                href="#add-track"
-                style={{ marginBottom: "1em" }}
-              >
-                <FontAwesomeIcon icon={faPlusCircle as IconProp} />
-                &nbsp;&nbsp;Add a track
-              </a>
             </div>
           )}
-          <div id="listens row">
-            {tracks && tracks.length > 0 ? (
-              <ReactSortable
-                handle=".drag-handle"
-                list={tracks as (JSPFTrack & { id: string })[]}
-                onEnd={movePlaylistItem}
-                setList={(newState) =>
-                  setPlaylist({ ...playlist, track: newState })
-                }
+        </div>
+        <div className="right-side">
+          <div className="entity-rels">
+            <div className="dropdown">
+              <button
+                className="btn btn-info dropdown-toggle"
+                type="button"
+                id="playlistOptionsDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="true"
               >
-                {tracks.map((track: JSPFTrack, index) => {
-                  return (
-                    <PlaylistItemCard
-                      key={`${track.id}-${index.toString()}`}
-                      canEdit={userHasRightToEdit}
-                      track={track}
-                      removeTrackFromPlaylist={deletePlaylistItem}
-                    />
-                  );
-                })}
-              </ReactSortable>
-            ) : (
-              <div className="lead text-center">
-                <p>Nothing in this playlist yet</p>
-              </div>
-            )}
-            {userHasRightToEdit && (
-              <Card className="listen-card row" id="add-track">
-                <span>
-                  <FontAwesomeIcon icon={faPlusCircle as IconProp} />
-                  &nbsp;&nbsp;Add a track
-                </span>
-                <SearchTrackOrMBID
-                  onSelectRecording={addTrack}
-                  expectedPayload="trackmetadata"
-                />
-              </Card>
+                <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
+                &nbsp;Options
+              </button>
+              <PlaylistMenu
+                playlist={playlist}
+                coverArtGridOptions={coverArtGridOptions}
+                currentCoverArt={currentCoverArt}
+                onPlaylistSaved={onPlaylistSave}
+                onPlaylistDeleted={onDeletePlaylist}
+                disallowEmptyPlaylistExport
+              />
+            </div>
+            {customFields?.public && (
+              <button
+                type="button"
+                className="btn btn-icon btn-info btn-sm atom-button"
+                data-toggle="modal"
+                data-target="#SyndicationFeedModal"
+                title="Subscribe to syndication feed (Atom)"
+                onClick={() => {
+                  NiceModal.show(SyndicationFeedModal, {
+                    feedTitle: `Playlist - ${playlist.title}`,
+                    options: [],
+                    baseUrl: `${getBaseUrl()}/syndication-feed/playlist/${getPlaylistId(
+                      playlist
+                    )}`,
+                  });
+                }}
+              >
+                <FontAwesomeIcon icon={faRss} size="sm" fixedWidth />
+              </button>
             )}
           </div>
+        </div>
+      </div>
+      <div
+        id="playlist"
+        data-testid="playlist"
+        className="col-md-8 col-md-offset-2"
+      >
+        <div className="header">
+          <h3 className="header-with-line">
+            Tracks
+            {Boolean(playlist.track?.length) && (
+              <button
+                type="button"
+                className="btn btn-info btn-rounded play-tracks-button"
+                title="Play all tracks"
+                onClick={() => {
+                  window.postMessage(
+                    {
+                      brainzplayer_event: "play-ambient-queue",
+                      payload: tracks,
+                    },
+                    window.location.origin
+                  );
+                }}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+              </button>
+            )}
+          </h3>
+        </div>
+        {userHasRightToEdit && tracks && tracks.length > 10 && (
+          <div className="text-center">
+            <button
+              className="btn btn-primary"
+              type="button"
+              style={{ marginBottom: "1em" }}
+              onClick={() => {
+                searchInputRef.current?.focus();
+              }}
+            >
+              <FontAwesomeIcon icon={faPlusCircle as IconProp} />
+              &nbsp;&nbsp;Add a track
+            </button>
+          </div>
+        )}
+        <div id="listens row">
+          {tracks && tracks.length > 0 ? (
+            <ReactSortable
+              handle=".drag-handle"
+              list={tracks as (JSPFTrack & { id: string })[]}
+              onEnd={movePlaylistItem}
+              setList={(newState) =>
+                setPlaylist({ ...playlist, track: newState })
+              }
+            >
+              {tracks.map((track: JSPFTrack, index) => {
+                return (
+                  <PlaylistItemCard
+                    key={`${track.id}-${index.toString()}`}
+                    canEdit={userHasRightToEdit}
+                    track={track}
+                    removeTrackFromPlaylist={deletePlaylistItem}
+                  />
+                );
+              })}
+            </ReactSortable>
+          ) : (
+            <div className="lead text-center">
+              <p>Nothing in this playlist yet</p>
+            </div>
+          )}
+          {userHasRightToEdit && (
+            <Card className="listen-card row" id="add-track">
+              <span>
+                <FontAwesomeIcon icon={faPlusCircle as IconProp} />
+                &nbsp;&nbsp;Add a track
+              </span>
+              <SearchTrackOrMBID
+                ref={searchInputRef}
+                autofocus={false}
+                onSelectRecording={addTrack}
+                expectedPayload="trackmetadata"
+              />
+            </Card>
+          )}
         </div>
       </div>
     </div>
