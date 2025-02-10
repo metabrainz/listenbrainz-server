@@ -321,7 +321,6 @@ export default function PlaylistPage() {
       newTracks[evt.oldIndex] = toMoveBack;
 
       setPlaylist({ ...playlist, track: newTracks });
-      revalidator.revalidate();
     }
   };
 
