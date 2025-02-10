@@ -526,10 +526,9 @@ export default function PlaylistPage() {
         </div>
         {userHasRightToEdit && tracks && tracks.length > 10 && (
           <div className="text-center">
-            <a
+            <button
               className="btn btn-primary"
               type="button"
-              href="#add-track"
               style={{ marginBottom: "1em" }}
               onClick={() => {
                 searchInputRef.current?.focus();
@@ -537,7 +536,7 @@ export default function PlaylistPage() {
             >
               <FontAwesomeIcon icon={faPlusCircle as IconProp} />
               &nbsp;&nbsp;Add a track
-            </a>
+            </button>
           </div>
         )}
         <div id="listens row">
