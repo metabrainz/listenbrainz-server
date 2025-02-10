@@ -288,6 +288,17 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistActivityResponse = {
+  result: Array<{
+    name: string;
+    listen_count: number;
+    albums: Array<{
+      name: string;
+      listen_count: number;
+    }>;
+  }>;
+};
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;

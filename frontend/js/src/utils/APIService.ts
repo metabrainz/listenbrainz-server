@@ -574,6 +574,24 @@ export default class APIService {
     return response.json();
   };
 
+  getUserArtistActivity = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
   getUserArtistMap = async (
     userName?: string,
     range: UserStatsAPIRange = "all_time",
