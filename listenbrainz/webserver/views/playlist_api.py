@@ -500,6 +500,15 @@ def edit_playlist(playlist_mbid):
             log_raise_400("Collaborator {} doesn't exist".format(collaborator))
         collaborator_ids.append(users[collaborator.lower()]["id"])
 
+    try:
+        if "additional_metadata" in data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]:
+            if playlist.additional_metadata is None:
+                playlist.additional_metadata = {}
+
+            playlist.additional_metadata = data["playlist"]["extension"][PLAYLIST_EXTENSION_URI]["additional_metadata"]
+    except KeyError:
+        pass
+
     playlist.collaborators = collaborators
     playlist.collaborator_ids = collaborator_ids
 
