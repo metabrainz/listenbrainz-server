@@ -37,7 +37,6 @@ import {
   getPlaylistId,
   getRecordingMBIDFromJSPFTrack,
   isPlaylistOwner,
-  JSPFTrackToListen,
   LISTENBRAINZ_URI_PREFIX,
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
@@ -104,9 +103,6 @@ export default function PlaylistPage() {
   const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
     playlistProps?.playlist || {}
   );
-  const [coverArtConfig, setCoverArtConfig] = React.useState<
-    CoverArtGridOptions
-  >(playlistProps?.cover_art || {});
   const { track: tracks } = playlist;
 
   // Functions
