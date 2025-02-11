@@ -241,7 +241,7 @@ export default function PlaylistCard({
 
   return (
     <Card className="playlist" key={playlistId}>
-      <Link to={`/playlist/${sanitize(playlistId)}/`}>
+      <Link to={`/playlist/${sanitize(playlistId)}/`} title={playlist.title}>
         <div
           className="cover-art"
           // eslint-disable-next-line react/no-danger
@@ -286,7 +286,7 @@ export default function PlaylistCard({
             <FontAwesomeIcon
               icon={faCog as IconProp}
               fixedWidth
-              title="More options"
+              title="Options"
             />
           </button>
           <PlaylistMenu
