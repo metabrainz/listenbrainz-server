@@ -41,72 +41,112 @@ export default function PlaylistCard({
   onPlaylistDeleted,
   showOptions = true,
 }: PlaylistCardProps) {
-  const { APIService, currentUser, spotifyAuth } = React.useContext(
-    GlobalAppContext
-  );
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { copyPlaylist, getPlaylist, getPlaylistImage } = APIService;
   const navigate = useNavigate();
+
+  const [playlistImageString, setPlaylistImageString] = React.useState<
+    string
+  >();
 
   const playlistId = getPlaylistId(playlist);
   const customFields = getPlaylistExtension(playlist);
 
-  const onCopyPlaylist = React.useCallback(async (): Promise<void> => {
-    if (!currentUser?.auth_token) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message="You must be logged in for this operation"
-        />,
-        { toastId: "auth-error" }
-      );
+  const onCopyPlaylist = React.useCallback(
+    async (evt: React.MouseEvent): Promise<void> => {
+      evt.preventDefault();
+      if (!currentUser?.auth_token) {
+        toast.error(
+          <ToastMsg
+            title="Error"
+            message="You must be logged in for this operation"
+          />,
+          { toastId: "auth-error" }
+        );
 
-      return;
-    }
-    if (!playlistId?.length) {
-      toast.error(
-        <ToastMsg
-          title="Error"
-          message="No playlist to copy; missing a playlist ID"
-        />,
-        { toastId: "copy-playlist-error" }
-      );
-      return;
-    }
-    try {
-      const newPlaylistId = await APIService.copyPlaylist(
-        currentUser.auth_token,
-        playlistId
-      );
-      // Fetch the newly created playlist and add it to the state if it's the current user's page
-      const JSPFObject: JSPFObject = await APIService.getPlaylist(
-        newPlaylistId,
-        currentUser.auth_token
-      ).then((res) => res.json());
-      toast.success(
-        <ToastMsg
-          title="Duplicated playlist"
-          message={
-            <>
-              Duplicated to playlist&ensp;
-              <Link to={`/playlist/${newPlaylistId}/`}>
-                {JSPFObject.playlist.title}
-              </Link>
-            </>
-          }
-        />,
-        { toastId: "copy-playlist-success" }
-      );
+        return;
+      }
+      if (!playlistId?.length) {
+        toast.error(
+          <ToastMsg
+            title="Error"
+            message="No playlist to copy; missing a playlist ID"
+          />,
+          { toastId: "copy-playlist-error" }
+        );
+        return;
+      }
+      try {
+        const newPlaylistId = await copyPlaylist(
+          currentUser.auth_token,
+          playlistId
+        );
+        // Fetch the newly created playlist and add it to the state if it's the current user's page
+        const JSPFObject: JSPFObject = await getPlaylist(
+          newPlaylistId,
+          currentUser.auth_token
+        ).then((res) => res.json());
+        toast.success(
+          <ToastMsg
+            title="Duplicated playlist"
+            message={
+              <>
+                Duplicated to playlist&ensp;
+                <Link to={`/playlist/${newPlaylistId}/`}>
+                  {JSPFObject.playlist.title}
+                </Link>
+              </>
+            }
+          />,
+          { toastId: "copy-playlist-success" }
+        );
 
-      onSuccessfulCopy(JSPFObject.playlist);
-    } catch (error) {
-      toast.error(<ToastMsg title="Error" message={error.message} />, {
-        toastId: "copy-playlist-error",
-      });
-    }
-  }, [currentUser.auth_token, playlistId, APIService, onSuccessfulCopy]);
+        onSuccessfulCopy(JSPFObject.playlist);
+      } catch (error) {
+        toast.error(<ToastMsg title="Error" message={error.message} />, {
+          toastId: "copy-playlist-error",
+        });
+      }
+    },
+    [
+      currentUser.auth_token,
+      playlistId,
+      copyPlaylist,
+      getPlaylist,
+      onSuccessfulCopy,
+    ]
+  );
 
   const navigateToPlaylist = () => {
     navigate(`/playlist/${sanitize(playlistId)}/`);
   };
+
+  React.useEffect(() => {
+    const fetchCoverArtImage = async () => {
+      const savedLayout = customFields?.additional_metadata?.cover_art;
+      const svgString = await getPlaylistImage(
+        playlistId,
+        currentUser?.auth_token!,
+        savedLayout?.dimension,
+        savedLayout?.layout
+      );
+      setPlaylistImageString(svgString);
+    };
+    // Only fetch the image in grid view and if user is logged in (requires auth token for playlist privacy check)
+    if (view === PlaylistView.GRID && currentUser?.auth_token) {
+      fetchCoverArtImage().catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error(error);
+        // setPlaylistImageString("");
+      });
+    }
+  }, [
+    view,
+    playlistId,
+    customFields?.additional_metadata?.cover_art,
+    currentUser?.auth_token,
+    getPlaylistImage,
+  ]);
 
   if (view === PlaylistView.LIST) {
     return (
@@ -179,6 +219,7 @@ export default function PlaylistCard({
               <li>
                 <a onClick={onCopyPlaylist} role="button" href="#">
                   <FontAwesomeIcon
+                    fixedWidth
                     icon={faSave as IconProp}
                     title="Save to my playlists"
                   />
@@ -191,33 +232,62 @@ export default function PlaylistCard({
       </div>
     );
   }
+  const dateToDisplay = new Date(
+    customFields?.last_modified_at ?? playlist.date
+  ).toLocaleString(undefined, {
+    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+    dateStyle: "short",
+  });
 
   return (
     <Card className="playlist" key={playlistId}>
+      <Link to={`/playlist/${sanitize(playlistId)}/`}>
+        <div
+          className="cover-art"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html:
+              playlistImageString ??
+              "<img src='/static/img/cover-art-placeholder.jpg'></img>",
+          }}
+          title={`Cover art for ${playlist.title}`}
+        />
+        <div className="info">
+          <div className="ellipsis-2-lines mt-5 mb-10">{playlist.title}</div>
+          <small>
+            {playlist.track.length} track{playlist.track.length > 1 && "s"}
+            <br />
+            <span className="help-block">Last modified: {dateToDisplay}</span>
+          </small>
+        </div>
+      </Link>
       {!showOptions ? (
         <button
-          className="playlist-card-action-button"
+          className="playlist-card-action-button btn btn-info"
           onClick={onCopyPlaylist}
           type="button"
         >
           <FontAwesomeIcon
+            fixedWidth
             icon={faSave as IconProp}
             title="Save to my playlists"
           />
-          &nbsp;Save
         </button>
       ) : (
         <div className="dropup playlist-card-action-dropdown">
           <button
-            className="dropdown-toggle playlist-card-action-button"
+            className="dropdown-toggle playlist-card-action-button btn btn-info"
             type="button"
             id="playlistOptionsDropdown"
             data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="true"
           >
-            <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
-            &nbsp;Options
+            <FontAwesomeIcon
+              icon={faCog as IconProp}
+              fixedWidth
+              title="More options"
+            />
           </button>
           <PlaylistMenu
             playlist={playlist}
@@ -227,35 +297,6 @@ export default function PlaylistCard({
           />
         </div>
       )}
-      <Link className="info" to={`/playlist/${sanitize(playlistId)}/`}>
-        <h4>{playlist.title}</h4>
-        {playlist.annotation && (
-          <div
-            className="description"
-            // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{
-              __html: sanitize(playlist.annotation),
-            }}
-          />
-        )}
-        <div>
-          Created:{" "}
-          {new Date(playlist.date).toLocaleString(undefined, {
-            // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
-            dateStyle: "short",
-          })}
-        </div>
-        <div>
-          {customFields?.last_modified_at &&
-            `Last Modified: ${new Date(
-              customFields.last_modified_at
-            ).toLocaleString(undefined, {
-              // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
-              dateStyle: "short",
-            })}`}
-        </div>
-      </Link>
     </Card>
   );
 }
