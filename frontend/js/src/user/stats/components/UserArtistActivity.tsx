@@ -73,16 +73,10 @@ export default function UserArtistActivity({
 
   React.useEffect(() => {
     if (rawData && rawData.result.length > 0) {
-      console.log("rawData", rawData);
       const processedData = processData(rawData);
-      console.log("processedData", processedData);
       setChartData(processedData);
     }
   }, [rawData]);
-
-  React.useEffect(() => {
-    console.log("Updated chartData", chartData);
-  }, [chartData]);
 
   return (
     <Card className="user-stats-card" data-testid="user-artist-activity">
