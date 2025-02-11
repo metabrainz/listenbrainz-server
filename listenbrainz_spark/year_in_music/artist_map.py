@@ -28,16 +28,12 @@ def get_artist_map_stats(year):
         .parquet(config.HDFS_CLUSTER_URI + ARTIST_COUNTRY_CODE_DATAFRAME)\
         .createOrReplaceTempView("artist_metadata_cache")
 
-    create_iso_country_codes_df()
-
     query = f"""
           WITH exploded_listens as (
             SELECT user_id
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM listens
-             WHERE listened_at >= to_timestamp('{start}')
-               AND listened_at <= to_timestamp('{end}')
-               AND artist_credit_mbids IS NOT NULL
+             WHERE artist_credit_mbids IS NOT NULL
           ), artist_counts AS (
             SELECT user_id
                  , artist_mbid
@@ -48,14 +44,12 @@ def get_artist_map_stats(year):
           ), artist_data AS (
             SELECT user_id
                  , artist_name
-                 , ic.alpha_3 AS country
+                 , amc.country_code AS country
                  , artist_mbid
                  , listen_count
               FROM artist_counts ac
               JOIN artist_metadata_cache amc
              USING (artist_mbid)
-              JOIN iso_codes ic
-                ON ic.alpha_2 = amc.country_code
           ), user_country_data AS (
             SELECT user_id
                  , country
@@ -84,14 +78,3 @@ def get_artist_map_stats(year):
             "year": year,
             "data": [row.asDict(recursive=True) for row in entry],
         }
-
-
-def create_iso_country_codes_df():
-    """ Create a dataframe mapping 2 letter iso codes to 3 letter iso country codes because
-    MB stores the 2 letter iso code but the frontend needs the 3 letter iso code."""
-    iso_codes = []
-    for country in pycountry.countries:
-        iso_codes.append((country.alpha_2, country.alpha_3))
-
-    df = listenbrainz_spark.session.createDataFrame(iso_codes, schema=["alpha_2", "alpha_3"])
-    df.createOrReplaceTempView("iso_codes")

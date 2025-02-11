@@ -98,7 +98,7 @@ class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
                      , user_id
         """
 
-    def get_stats_query(self, final_aggregate):
+    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
         return f"""
             WITH entity_count as (
             SELECT release_group_mbid

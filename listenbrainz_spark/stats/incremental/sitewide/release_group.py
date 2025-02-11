@@ -107,7 +107,7 @@ class ReleaseGroupSitewideEntity(SitewideEntityStatsQueryProvider):
                      , caa_release_mbid
         """
 
-    def get_stats_query(self, final_aggregate):
+    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
         return f"""
             WITH entity_count AS (
                 SELECT count(*) AS total_count
