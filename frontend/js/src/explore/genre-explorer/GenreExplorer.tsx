@@ -60,7 +60,7 @@ export default function GenreExplorer() {
 
       const request = await fetch(
         `${APIService.APIBaseURI}/explore/lb-radio?prompt=${encodeURIComponent(
-          `tag:${genreData.genre.name}`
+          `tag:(${genreData.genre.name})`
         )}&mode=easy`
       );
 
