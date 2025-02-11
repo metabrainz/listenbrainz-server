@@ -105,6 +105,7 @@ export default function PlaylistPage() {
     playlistProps?.playlist || {}
   );
   const { track: tracks } = playlist;
+  const [dontAskAgain, setDontAskAgain] = React.useState(false);
 
   React.useEffect(() => {
     setPlaylist(playlistProps?.playlist || {});
@@ -228,8 +229,13 @@ export default function PlaylistPage() {
         const existingMBID = getRecordingMBIDFromJSPFTrack(track);
         return existingMBID === trackMBID;
       });
-      if (isDuplicate) {
-        const confirmed = await NiceModal.show(DuplicateTrackModal);
+      if (isDuplicate && !dontAskAgain) {
+        const confirmed = await NiceModal.show(DuplicateTrackModal, {
+          message:
+            "This track is already in the playlist. Do you want to add it anyway?",
+          dontAskAgain,
+          setDontAskAgain,
+        });
         if (!confirmed) {
           return;
         }

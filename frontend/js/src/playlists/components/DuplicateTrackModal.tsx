@@ -1,51 +1,72 @@
 import * as React from "react";
-import NiceModal from "@ebay/nice-modal-react";
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
 
-const DuplicateTrackModal = NiceModal.create(
-  ({ message }: { message: string }) => {
-    const modal = NiceModal.useModal();
+type DuplicateTrackModalProps = {
+  message: string;
+  dontAskAgain: boolean;
+  setDontAskAgain: (value: boolean) => void;
+};
 
-    const confirm = () => {
-      modal.resolve(true);
-      modal.remove();
-    };
+export default NiceModal.create((props: DuplicateTrackModalProps) => {
+  const modal = useModal();
+  const { message, dontAskAgain: initialDontAskAgain, setDontAskAgain } = props;
 
-    const cancel = () => {
-      modal.resolve(false);
-      modal.remove();
-    };
+  // Tried to use dontAskAgain directly, but the checkbox state wasnt updating when toggled.
+  const [localDontAskAgain, setLocalDontAskAgain] = React.useState(
+    initialDontAskAgain
+  );
 
-    return (
+  const confirm = () => {
+    setDontAskAgain(localDontAskAgain);
+    modal.resolve(true);
+    modal.remove();
+  };
+
+  const cancel = () => {
+    setDontAskAgain(localDontAskAgain);
+    modal.resolve(false);
+    modal.remove();
+  };
+
+  return (
+    <div
+      className="modal fade in"
+      tabIndex={-1}
+      role="dialog"
+      style={{ display: "block" }}
+    >
       <div
-        className="modal fade in"
-        tabIndex={-1}
-        role="dialog"
-        style={{ display: "block" }}
+        className="modal-dialog"
+        role="document"
+        style={{ margin: "20% auto" }}
       >
-        <div
-          className="modal-dialog"
-          role="document"
-          style={{ margin: "20% auto" }}
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <button
-                type="button"
-                className="close"
-                onClick={cancel}
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 className="modal-title">Duplicate Track</h4>
+        <div className="modal-content">
+          <div className="modal-header">
+            <button
+              type="button"
+              className="close"
+              onClick={cancel}
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 className="modal-title">Duplicate Track</h4>
+          </div>
+          <div className="modal-body">
+            <p>{message}</p>
+          </div>
+          <div className="modal-footer">
+            <div className="checkbox pull-left">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={localDontAskAgain}
+                  onChange={(e) => setLocalDontAskAgain(e.target.checked)}
+                />
+                Don&apos;t ask me again until I close this page
+              </label>
             </div>
-            <div className="modal-body">
-              <p>
-                This track is already in the playlist. Do you want to add it
-                anyway?
-              </p>
-            </div>
-            <div className="modal-footer">
+            <div className="pull-right">
               <button
                 type="button"
                 className="btn btn-default"
@@ -64,8 +85,6 @@ const DuplicateTrackModal = NiceModal.create(
           </div>
         </div>
       </div>
-    );
-  }
-);
-
-export default DuplicateTrackModal;
+    </div>
+  );
+});
