@@ -213,7 +213,7 @@ class IncrementalStatsEngine:
         final_table = f"{prefix}_final_aggregate"
         final_df.createOrReplaceTempView(final_table)
 
-        results_query = self.provider.get_stats_query(final_table)
+        results_query = self.provider.get_stats_query(final_table, self._cache_tables)
         results_df = run_query(results_query)
         return results_df
 

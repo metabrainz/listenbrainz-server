@@ -58,7 +58,7 @@ class ListeningActivityUserStatsQueryEntity(UserStatsQueryProvider):
                      , time_range
         """
 
-    def get_stats_query(self, final_aggregate):
+    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
         # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
         # group without listens are counted as 0, count(*) gives 1.
         # use cross join to create all time range rows for all users (otherwise ranges in which user was inactive

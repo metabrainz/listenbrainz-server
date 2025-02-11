@@ -53,7 +53,7 @@ class PopularityProvider(QueryProvider):
         else:
             return get_popularity_query(self.entity, table)
 
-    def get_stats_query(self, final_aggregate: str) -> str:
+    def get_stats_query(self, final_aggregate: str, cache_tables: List[str]) -> str:
         return f"SELECT * FROM {final_aggregate}"
 
     def get_combine_aggregates_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
@@ -124,7 +124,7 @@ class TopPerArtistPopularityProvider(QueryProvider):
             return get_release_group_popularity_per_artist_query(table, cache_tables[0])
         return get_popularity_per_artist_query(self.entity, table)
 
-    def get_stats_query(self, final_aggregate: str) -> str:
+    def get_stats_query(self, final_aggregate: str, cache_tables: List[str]) -> str:
         return f"SELECT * FROM {final_aggregate}"
 
     def get_combine_aggregates_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
