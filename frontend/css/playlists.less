@@ -84,24 +84,6 @@
       width: 100%;
       background-color: @playlistBackgroundColor;
     }
-    @media (hover: hover) {
-      .info {
-        bottom: -60px;
-        transition: .3s ease-in-out;
-        transition-property: bottom, background-color;
-      }
-      &:hover .info {
-        bottom: 0;
-        background-color: @playlistBackgroundColorHover
-      }
-      .playlist-card-action-button {
-        transition: opacity .3s ease-in-out;
-        opacity: 0;
-      }
-       &:hover .playlist-card-action-button {
-        opacity: 1;
-      }
-    }
 
     .cover-art {
       position: absolute;
@@ -109,11 +91,36 @@
       left: 0;
       width: 100%;
       aspect-ratio: 1;
+      opacity: 0.75;
       > * {
         width: inherit;
         height: auto;
       }
     }
+    
+    @media (hover: hover) {
+      .info {
+        bottom: -65px;
+        transition: .3s ease-in-out;
+        transition-property: bottom, background-color;
+      }
+      .cover-art, .playlist-card-action-button  {
+        transition: opacity .3s ease-in-out;
+      }
+      .playlist-card-action-button {
+        opacity: 0;
+      }
+      &:hover {
+        .info {
+          bottom: 0;
+          background-color: @playlistBackgroundColorHover
+        }
+        .cover-art, .playlist-card-action-button {
+          opacity: 1;
+        }
+      }
+    }
+
   }
 
   .playlist-card-list-view {
