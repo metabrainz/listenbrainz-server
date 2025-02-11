@@ -203,7 +203,7 @@ def notify_yim_users(db_conn, ts_conn, year):
         # cannot use url_for because we do not set SERVER_NAME and
         # a request_context will not be available in this script.
         base_url = "https://listenbrainz.org"
-        year_in_music = f"{base_url}/user/{user_name}/year-in-music/"
+        year_in_music = f"{base_url}/user/{user_name}/year-in-music/{year}/"
         params = {
             "user_name": user_name,
             "logo_cid": logo_cid[1:-1]

@@ -30,9 +30,10 @@ class RoutesTestCase(ServerTestCase):
             if rule.rule.startswith(API_PREFIX) and rule.endpoint not in CORS_DISABLED_ENDPOINTS:
                 with self.subTest(rule=rule):
                     url = rule.rule
-                    # replace path args requiring an integer with arbitrary integer to ensure path matches
+                    # replace path args requiring an integer with arbitrary integer, and uuid with arbitrary uuid to ensure path matches
                     for arg in rule.arguments:
                         url = url.replace(f"<int:{arg}>", "1")
+                        url = url.replace(f"<uuid:{arg}>", "123e4567-e89b-12d3-a456-426614174000")
                     response = self.client.options(url)
                     headers = set(response.headers.keys())
                     self.assertIn("Access-Control-Allow-Origin", headers)

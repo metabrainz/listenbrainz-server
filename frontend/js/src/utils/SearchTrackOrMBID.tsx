@@ -35,12 +35,18 @@ type ConditionalReturnValue =
     };
 
 type SearchTrackOrMBIDProps = {
+  autofocus?: boolean;
   defaultValue?: string;
   expectedPayload: PayloadType;
 } & ConditionalReturnValue;
 
 const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
-  { onSelectRecording, expectedPayload, defaultValue }: SearchTrackOrMBIDProps,
+  {
+    onSelectRecording,
+    expectedPayload,
+    defaultValue,
+    autofocus = true,
+  }: SearchTrackOrMBIDProps,
   inputRefForParent
 ) {
   const { APIService } = useContext(GlobalAppContext);
@@ -69,10 +75,12 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
 
   // Autofocus once on load
   useEffect(() => {
-    setTimeout(() => {
-      inputRefLocal?.current?.focus();
-    }, 500);
-  }, []);
+    if (autofocus) {
+      setTimeout(() => {
+        inputRefLocal?.current?.focus();
+      }, 500);
+    }
+  }, [autofocus]);
 
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {

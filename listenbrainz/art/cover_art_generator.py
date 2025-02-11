@@ -18,7 +18,7 @@ MIN_IMAGE_SIZE = 128
 MAX_IMAGE_SIZE = 1024
 
 #: Minimum dimension
-MIN_DIMENSION = 2
+MIN_DIMENSION = 1
 
 #: Maximum dimension
 MAX_DIMENSION = 5
@@ -39,6 +39,9 @@ class CoverArtGenerator:
     # the bounding box of these cells. The cover art in question will be placed inside this
     # area.
     GRID_TILE_DESIGNS = {
+        1: [
+            ["0"],
+        ],
         2: [
             ["0", "1", "2", "3"],
         ],

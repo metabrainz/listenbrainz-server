@@ -1,43 +1,23 @@
 from typing import List
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, ArrayType
-
-from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RECORDING_ARTIST_DATAFRAME, \
-    RELEASE_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.schema import artists_column_schema
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats.incremental.user.entity import UserEntity
+from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
 
-class RecordingUserEntity(UserEntity):
-    """ See base class IncrementalStats for documentation. """
+class RecordingUserEntity(UserEntityStatsQueryProvider):
+    """ See base class QueryProvider for details. """
 
-    def __init__(self, stats_range, database, message_type, from_date=None, to_date=None):
-        super().__init__(entity="recordings", stats_range=stats_range, database=database, message_type=message_type,
-                         from_date=from_date, to_date=to_date)
+    @property
+    def entity(self):
+        return "recordings"
 
     def get_cache_tables(self) -> List[str]:
         return [RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME]
 
-    def get_partial_aggregate_schema(self):
-        return StructType([
-            StructField("user_id", IntegerType(), nullable=False),
-            StructField("recording_name", StringType(), nullable=False),
-            StructField("recording_mbid", StringType(), nullable=True),
-            StructField("artist_name", StringType(), nullable=False),
-            StructField("artist_credit_mbids", ArrayType(StringType()), nullable=True),
-            StructField("release_name", StringType(), nullable=True),
-            StructField("release_mbid", StringType(), nullable=True),
-            StructField("artists", artists_column_schema, nullable=True),
-            StructField("caa_id", IntegerType(), nullable=True),
-            StructField("caa_release_mbid", StringType(), nullable=True),
-            StructField("listen_count", IntegerType(), nullable=False),
-        ])
-
-    def aggregate(self, table, cache_tables):
+    def get_aggregate_query(self, table, cache_tables):
         rec_cache_table = cache_tables[0]
         rel_cache_table = cache_tables[1]
-        result = run_query(f"""
+        return f"""
             SELECT user_id
                  , first(l.recording_name) AS recording_name
                  , nullif(l.recording_mbid, '') AS recording_mbid
@@ -64,11 +44,10 @@ class RecordingUserEntity(UserEntity):
                  , rec.artists
                  , rel.caa_id
                  , rel.caa_release_mbid
-        """)
-        return result
+        """
 
-    def combine_aggregates(self, existing_aggregate, incremental_aggregate):
-        query = f"""
+    def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
+        return f"""
             WITH intermediate_table AS (
                 SELECT user_id
                      , recording_name
@@ -119,10 +98,9 @@ class RecordingUserEntity(UserEntity):
                      , caa_id
                      , caa_release_mbid
         """
-        return run_query(query)
 
-    def get_top_n(self, final_aggregate, N):
-        query = f"""
+    def get_stats_query(self, final_aggregate):
+        return f"""
             WITH entity_count AS (
                 SELECT user_id
                      , count(*) AS recordings_count
@@ -162,7 +140,7 @@ class RecordingUserEntity(UserEntity):
                             , false
                        ) as recordings
                   FROM ranked_stats
-                 WHERE rank <= {N}
+                 WHERE rank <= {self.top_entity_limit}
               GROUP BY user_id
             )
                 SELECT user_id
@@ -172,4 +150,3 @@ class RecordingUserEntity(UserEntity):
                   JOIN entity_count
                  USING (user_id)
         """
-        return run_query(query)
