@@ -12,10 +12,18 @@ from flask import request, render_template, Blueprint, current_app
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound
+from listenbrainz.webserver.errors import (
+    APIBadRequest,
+    APIInternalServerError,
+    APINotFound,
+    APINoContent,
+)
 from listenbrainz.webserver.views.api_tools import is_valid_uuid, _parse_bool_arg, validate_auth_header
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI, fetch_playlist_recording_metadata
-from listenbrainz.webserver.views.playlist import get_cover_art_options
+from listenbrainz.webserver.views.playlist import (
+    get_cover_art_images,
+    get_cover_art_grid_options,
+)
 
 art_api_bp = Blueprint('art_api_v1', __name__)
 
@@ -188,8 +196,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                       and 3 images down, for a total of 9 images.
     :type dimension: ``int``
     :param layout: The layout to be used for this grid. Layout 0 is always a simple grid, but other layouts
-                   may have image images be of different sizes. See https://art.listenbrainz.org for examples
-                   of the available layouts.
+                   may have image images be of different sizes.
     :type layout: ``int``
     :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
@@ -241,8 +248,7 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
     """
     Create a custom cover art SVG file from the stats of a given user.
 
-    :param cover_name: The name of cover art to be generated. See https://art.listenbrainz.org for the different types
-                       that are available.
+    :param cover_name: The name of cover art to be generated.
     :type cover_name: ``str``
     :param user_name: The name of the user for whom to create the cover art.
     :type user_name: ``str``
@@ -786,21 +792,105 @@ def cover_art_yim(user_name, year: int = 2024):
     return svg, 200, {"Content-Type": "image/svg+xml"}
 
 
-@art_api_bp.post("/playlist/<uuid:playlist_mbid>/<int:dimension>/<int:layout>")
+@art_api_bp.get("/playlist/<uuid:playlist_mbid>")
 @crossdomain
 @ratelimit()
-def playlist_cover_art_generate(playlist_mbid, dimension, layout):
+def playlist_cover_art_generate(playlist_mbid):
+    """
+    Create a cover art grid SVG file from the playlist, without specifying a dimension or layout.
+    The layout saved in playlist metadata will be used if available, otherwise a default will be used.
+    To retrieve a specific dimension and layout, use the
+    `~webserver.views.art_api.playlist_cover_art_generate_with_dimensions` endpoint
+
+    :param playlist_mbid: The mbid of the playlist for which to create the cover art.
+    :type playlist_mbid: ``str``
+    :statuscode 200: cover art created successfully.
+    :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
+    :resheader Content-Type: *image/svg+xml*
+
+    """
+    user = validate_auth_header()
+
+    playlist = db_playlist.get_by_mbid(db_conn, ts_conn, playlist_mbid, True)
+    if playlist is None or not playlist.is_visible_by(user["id"]):
+        raise APINotFound("Cannot find playlist: %s" % playlist_mbid)
+
+    # Check if the playlist has enough tracks to fill the grid
+    if len(playlist.recordings) == 0:
+        raise APIBadRequest("Playlist has no tracks in order to generate cover art")
+
+    # Fetch the metadata for the playlist recordings
+    fetch_playlist_recording_metadata(playlist)
+
+    images = get_cover_art_images(playlist)
+    if len(images) == 0:
+        raise APINoContent("No cover art images found for this playlist")
+
+    options = get_cover_art_grid_options(len(images))
+
+    # Use the saved layout and dimension, or use a default option if not available on the playlist
+    selected_cover_art = playlist.additional_metadata.get("cover_art")
+    if not selected_cover_art and len(options) > 0:
+        selected_cover_art = options[0]
+
+    dimension = selected_cover_art["dimension"] if selected_cover_art else 1
+    layout = selected_cover_art["layout"] if selected_cover_art else 0
+
+    try:
+        grid_design = CoverArtGenerator.GRID_TILE_DESIGNS[dimension][layout]
+    except IndexError:
+        raise APIBadRequest(
+            f"layout {layout} is not available for dimension {dimension}."
+        )
+
+    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], dimension, 500)
+    if (validation_error := cac.validate_parameters()) is not None:
+        raise APIBadRequest(validation_error)
+
+    # Repeat images if needed
+    images = _repeat_images(images, len(grid_design))
+
+    # Generate the cover art images
+    cover_art_images = cac.generate_from_caa_ids(
+        images, layout=layout, cover_art_size=500
+    )
+
+    # Get the playlist name and description
+    title = playlist.name
+    desc = playlist.description
+    image_size = 500
+
+    # Render the cover art image template
+    return (
+        render_template(
+            "art/svg-templates/simple-grid.svg",
+            background=cac.background,
+            images=cover_art_images,
+            title=title,
+            desc=desc,
+            entity="release",
+            width=image_size,
+            height=image_size,
+        ),
+        200,
+        {"Content-Type": "image/svg+xml"},
+    )
+
+
+@art_api_bp.get("/playlist/<uuid:playlist_mbid>/<int:dimension>/<int:layout>")
+@crossdomain
+@ratelimit()
+def playlist_cover_art_generate_with_dimensions(playlist_mbid, dimension, layout):
     """
     Create a cover art grid SVG file from the playlist.
 
-    :param playlist_mbid: The mbid of the playlist for whom to create the cover art.
+    :param playlist_mbid: The mbid of the playlist for which to create the cover art.
     :type playlist_mbid: ``str``
     :param dimension: The dimension to use for this grid. A grid of dimension 3 has 3 images across
                       and 3 images down, for a total of 9 images.
     :type dimension: ``int``
     :param layout: The layout to be used for this grid. Layout 0 is always a simple grid, but other layouts
-                   may have image images be of different sizes. See https://art.listenbrainz.org for examples
-                   of the available layouts.
+                   may have image images be of different sizes.
     :type layout: ``int``
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
@@ -831,7 +921,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
         raise APIBadRequest(validation_error)
 
     # Get cover art options and repeat images if needed
-    images = get_cover_art_options(playlist)
+    images = get_cover_art_images(playlist)
     images = _repeat_images(images, len(grid_design))
 
     # Generate the cover art images
