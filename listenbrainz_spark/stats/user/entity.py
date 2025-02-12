@@ -36,7 +36,7 @@ def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Ite
     selector = StatsRangeListenRangeSelector(stats_range)
     entity_obj = incremental_entity_map[entity](selector, NUMBER_OF_TOP_ENTITIES)
     if entity == "artist_map":
-        entity_cls = ArtistMapUserEntity
+        entity_cls = ArtistMapStatsMessageCreator
     else:
         entity_cls = UserEntityStatsMessageCreator
     message_creator = entity_cls(entity, "user_entity", selector, database)
