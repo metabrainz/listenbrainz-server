@@ -85,6 +85,11 @@ export default function TrackSearch(props: TrackSearchProps) {
       return null;
     });
 
+    let trackNameWithDisambiguation = recording.title;
+    if (recording.disambiguation) {
+      trackNameWithDisambiguation = `${recording.title} (${recording.disambiguation})`;
+    }
+
     const listen = {
       listened_at: 0,
       track_metadata: {
@@ -98,12 +103,13 @@ export default function TrackSearch(props: TrackSearchProps) {
         artist_name: artistCredit
           .map((ac) => ac.name + (ac?.joinphrase ?? ""))
           .join(""),
-        track_name: recording.title,
+        track_name: trackNameWithDisambiguation,
         release_name:
           recording.releases?.length > 0 ? recording.releases[0].title : "",
         additional_info: {
           artist_mbids: artistMBIDs,
           recording_mbid: recording.id,
+          duration_ms: recording.length,
           release_mbid:
             recording.releases?.length > 0 ? recording.releases[0].id : "",
         },
