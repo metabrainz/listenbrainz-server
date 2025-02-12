@@ -158,6 +158,7 @@ class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
 
     def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime,
                                    cache_tables: List[str]) -> str:
+        rel_cache_table = cache_tables[0]
         return f"""
             WITH incremental_release_groups AS (
                 SELECT DISTINCT rel.release_group_mbid
