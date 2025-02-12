@@ -22,12 +22,10 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.setUpClass()
 
     def setUp(self):
-        print("\nSetting up test:", self._testMethodName)
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
 
     def tearDown(self):
-        print("\nTearing down test:", self._testMethodName)
         with self.app.app_context():
             r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
             r.flushall()
