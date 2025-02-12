@@ -275,42 +275,45 @@ def get_thanks_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, 
 
     user_id is a tuple of user row IDs.
     """
-    result = db_conn.execute(sqlalchemy.text("""
-        SELECT user_timeline_event.id,
-               user_timeline_event.user_id,
-               user_timeline_event.event_type,
-               user_timeline_event.metadata,
-               user_timeline_event.created,
-               "user".musicbrainz_id as user_name
-          FROM user_timeline_event
-          INNER JOIN "user"
-            ON user_timeline_event.user_id = "user".id 
-         WHERE (
-               (user_timeline_event.metadata -> 'users') @> to_jsonb(array[:user_id])
-               OR user_timeline_event.user_id = :user_id
-               OR (user_timeline_event.metadata ->> 'thankee_id')::int = :user_id
-         )
-           AND user_timeline_event.created > :min_ts
-           AND user_timeline_event.created < :max_ts
-           AND user_timeline_event.event_type = :event_type
-      ORDER BY user_timeline_event.created DESC
-         LIMIT :count
-    """), {
-        "user_id": user_id,
-        "min_ts": datetime.utcfromtimestamp(min_ts),
-        "max_ts": datetime.utcfromtimestamp(max_ts),
-        "count": count,
-        "event_type": UserTimelineEventType.THANKS.value,
-    })
-    
-    return [UserTimelineEvent(
-        id=row.id,
-        user_id=row.user_id,
-        user_name=row.user_name,
-        event_type=row.event_type,
-        metadata=ThanksEventMetadata(**row.metadata),
-        created=row.created
-    ) for row in result]
+    try:
+        result = db_conn.execute(sqlalchemy.text("""
+            SELECT user_timeline_event.id,
+                user_timeline_event.user_id,
+                user_timeline_event.event_type,
+                user_timeline_event.metadata,
+                user_timeline_event.created,
+                "user".musicbrainz_id as user_name
+            FROM user_timeline_event
+            INNER JOIN "user"
+                ON user_timeline_event.user_id = "user".id 
+            WHERE (
+                (user_timeline_event.metadata -> 'users') @> to_jsonb(array[:user_id])
+                OR user_timeline_event.user_id = :user_id
+                OR (user_timeline_event.metadata ->> 'thankee_id')::int = :user_id
+            )
+            AND user_timeline_event.created > :min_ts
+            AND user_timeline_event.created < :max_ts
+            AND user_timeline_event.event_type = :event_type
+        ORDER BY user_timeline_event.created DESC
+            LIMIT :count
+        """), {
+            "user_id": user_id,
+            "min_ts": datetime.utcfromtimestamp(min_ts),
+            "max_ts": datetime.utcfromtimestamp(max_ts),
+            "count": count,
+            "event_type": UserTimelineEventType.THANKS.value,
+        })
+
+        return [UserTimelineEvent(
+            id=row.id,
+            user_id=row.user_id,
+            user_name=row.user_name,
+            event_type=row.event_type,
+            metadata=ThanksEventMetadata(**row.metadata),
+            created=row.created
+        ) for row in result]
+    except Exception as e:
+        raise DatabaseException(str(e))
 
 
 def get_cb_review_events(db_conn, user_ids: List[int], min_ts: int, max_ts: int, count: int) -> List[UserTimelineEvent]:
