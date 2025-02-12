@@ -50,6 +50,7 @@ class IncrementalStatsEngine:
         self.message_creator = message_creator
         self._cache_tables = []
         self._only_inc = None
+        self._final_table = None
         self.incremental_table = None
 
     @property
@@ -159,7 +160,7 @@ class IncrementalStatsEngine:
         except AnalysisException:
             return None
 
-    def generate_stats(self) -> DataFrame:
+    def prepare_final_aggregate(self):
         self._setup_cache_tables()
         prefix = self.provider.get_table_prefix()
 
@@ -210,19 +211,26 @@ class IncrementalStatsEngine:
             final_df = partial_df
             self._only_inc = False
 
-        final_table = f"{prefix}_final_aggregate"
-        final_df.createOrReplaceTempView(final_table)
+        self._final_table = f"{prefix}_final_aggregate"
+        final_df.createOrReplaceTempView(self._final_table)
 
-        results_query = self.provider.get_stats_query(final_table, self._cache_tables)
+    def generate_stats(self) -> DataFrame:
+        results_query = self.provider.get_stats_query(self._final_table, self._cache_tables)
         results_df = run_query(results_query)
         return results_df
 
-    def run(self) -> Iterator[Dict]:
-        results = self.generate_stats()
-        if not self.only_inc:
-            yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results, self.only_inc):
+    @staticmethod
+    def create_messages(results, only_inc, message_creator) -> Iterator[Dict]:
+        if not only_inc:
+            yield message_creator.create_start_message()
+        for message in message_creator.create_messages(results, only_inc):
             yield message
-        if not self.only_inc:
-            yield self.message_creator.create_end_message()
+        if not only_inc:
+            yield message_creator.create_end_message()
+
+    def run(self) -> Iterator[Dict]:
+        self.prepare_final_aggregate()
+        results = self.generate_stats()
+        for message in self.create_messages(results, self.only_inc, self.message_creator):
+            yield message
         self.bookkeep_incremental_aggregate()

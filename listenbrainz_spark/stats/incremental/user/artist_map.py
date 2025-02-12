@@ -1,9 +1,8 @@
 from typing import List
 
-from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.artist import ArtistUserEntity
-from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
+from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsMessageCreator
 
 
 class ArtistMapUserEntity(ArtistUserEntity):
@@ -59,3 +58,9 @@ class ArtistMapUserEntity(ArtistUserEntity):
                   FROM ranked_countries
               GROUP BY user_id
         """
+
+
+class ArtistMapStatsMessageCreator(UserEntityStatsMessageCreator):
+
+    def parse_row(self, row):
+        return row

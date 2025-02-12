@@ -6,7 +6,7 @@ from pandas import DataFrame
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.artist import ArtistUserEntity
-from listenbrainz_spark.stats.incremental.user.artist_map import ArtistMapUserEntity
+from listenbrainz_spark.stats.incremental.user.artist_map import ArtistMapUserEntity, ArtistMapStatsMessageCreator
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider, \
     UserEntityStatsMessageCreator
 from listenbrainz_spark.stats.incremental.user.recording import RecordingUserEntity
@@ -20,28 +20,9 @@ incremental_entity_map: Dict[str, Type[UserEntityStatsQueryProvider]] = {
     "releases": ReleaseUserEntity,
     "recordings": RecordingUserEntity,
     "release_groups": ReleaseGroupUserEntity,
-    "artist_map": ArtistMapUserEntity,
 }
 
 NUMBER_OF_TOP_ENTITIES = 1000  # number of top entities to retain for user stats
-
-
-class ArtistMapStatsMessageCreator(UserEntityStatsMessageCreator):
-
-    def parse_row(self, row):
-        return row
-
-
-class ArtistMapIncrementalStatsEngine(IncrementalStatsEngine):
-    """ Stats engine with disk writes stubbed out because we only want to read from the aggregates from the disk
-    and not write new ones
-    """
-
-    def create_partial_aggregate(self) -> DataFrame:
-        pass
-
-    def bookkeep_incremental_aggregate(self):
-        pass
 
 
 def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Iterator[Optional[Dict]]:
@@ -49,12 +30,20 @@ def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Ite
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
     selector = StatsRangeListenRangeSelector(stats_range)
     entity_obj = incremental_entity_map[entity](selector, NUMBER_OF_TOP_ENTITIES)
-    if entity == "artist_map":
-        message_cls = ArtistMapStatsMessageCreator
-        engine_cls = ArtistMapIncrementalStatsEngine
+    message_creator = UserEntityStatsMessageCreator(entity, "user_entity", selector, database)
+    engine = IncrementalStatsEngine(entity_obj, message_creator)
+    if entity == "artists":
+        artist_stats = engine.run()
+        for message in artist_stats:
+            yield message
+
+        artist_map_database = database.replace("artists", "artist_map") if database else None
+        artist_map_entity = ArtistMapUserEntity(selector, NUMBER_OF_TOP_ENTITIES)
+        artist_map_message_creator = ArtistMapStatsMessageCreator(entity, "user_entity", selector, artist_map_database)
+        artist_map_results = artist_map_entity.get_stats_query(engine._final_table, engine._cache_tables)
+        artist_map_stats = engine.create_messages(artist_map_results, engine._only_inc, artist_map_message_creator)
+
+        for message in artist_map_stats:
+            yield message
     else:
-        message_cls = UserEntityStatsMessageCreator
-        engine_cls = IncrementalStatsEngine
-    message_creator = message_cls(entity, "user_entity", selector, database)
-    engine = engine_cls(entity_obj, message_creator)
-    return engine.run()
+        return engine.run()
