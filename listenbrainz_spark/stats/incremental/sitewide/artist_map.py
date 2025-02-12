@@ -57,7 +57,7 @@ class ArtistMapSitewideEntity(AritstSitewideEntity):
 class ArtistMapSitewideStatsMessageCreator(StatsMessageCreator):
 
     def __init__(self, selector):
-        super().__init__("artist_map", "sitewide_entity", selector)
+        super().__init__("artist_map", "sitewide_artist_map", selector)
 
     @property
     def default_database_prefix(self):

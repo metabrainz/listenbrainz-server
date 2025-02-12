@@ -34,7 +34,9 @@ from listenbrainz.spark.handlers import (
     handle_troi_playlists_end,
     handle_yim_top_genres,
     handle_yim_playlists,
-    handle_yim_playlists_end, handle_echo
+    handle_yim_playlists_end,
+    handle_echo,
+    handle_sitewide_artist_map
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
     ListeningActivityStatsDataset, EntityListenerStatsDataset
@@ -143,6 +145,7 @@ class BackgroundJobProcessor:
             "echo": handle_echo,
             "sitewide_entity": handle_sitewide_entity,
             "sitewide_listening_activity": handle_sitewide_listening_activity,
+            "sitewide_artist_map": handle_sitewide_artist_map,
             "fresh_releases": handle_fresh_releases,
             "import_full_dump": handle_dump_imported,
             "import_incremental_dump": handle_dump_imported,
