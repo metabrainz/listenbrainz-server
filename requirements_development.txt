@@ -7,4 +7,3 @@ requests-mock==1.12.1
 pytest-subtests==0.14.1
 python-socketio[client]
 lxml==5.3.0
-pytest-timeout==2.1.0
