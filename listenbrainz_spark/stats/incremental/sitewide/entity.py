@@ -1,7 +1,7 @@
 import abc
 import logging
 from datetime import datetime
-from typing import Iterator, Dict, Optional
+from typing import Iterator, Dict, Optional, List
 
 from pydantic import ValidationError
 from pyspark.sql import DataFrame
@@ -36,7 +36,7 @@ class SitewideStatsQueryProvider(QueryProvider, abc.ABC):
         return f"sitewide_{self.entity}_{self.stats_range}"
 
     def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
-                                   existed_created: Optional[datetime]) -> str:
+                                   existed_created: Optional[datetime], cache_tables: List[str]) -> str:
         return f"SELECT * FROM {existing_aggregate}"
 
 

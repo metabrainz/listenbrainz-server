@@ -184,7 +184,8 @@ class IncrementalStatsEngine:
                 filter_existing_query = self.provider.get_filter_aggregate_query(
                     partial_table,
                     self.incremental_table,
-                    existing_created
+                    existing_created,
+                    self._cache_tables
                 )
                 filtered_existing_aggregate_df = run_query(filter_existing_query)
                 filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
@@ -193,7 +194,8 @@ class IncrementalStatsEngine:
                 filter_incremental_query = self.provider.get_filter_aggregate_query(
                     inc_table,
                     self.incremental_table,
-                    existing_created
+                    existing_created,
+                    self._cache_tables
                 )
                 filtered_incremental_aggregate_df = run_query(filter_incremental_query)
                 filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"

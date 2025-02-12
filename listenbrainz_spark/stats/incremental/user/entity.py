@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Iterator, Dict
+from typing import Iterator, Dict, List
 
 from more_itertools import chunked
 from pydantic import ValidationError
@@ -35,26 +35,19 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"user_{self.entity}_{self.stats_range}"
 
-    def get_entity_id(self):
-        return "user_id"
-
-    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created):
+    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created, cache_tables: List[str]):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
-        entity_id = self.get_entity_id()
-        inc_clause = f"""
-            SELECT DISTINCT {entity_id}
+        return f"""
+              WITH incremental_users AS (
+            SELECT DISTINCT user_id
               FROM {inc_listens_table}
              WHERE created >= to_timestamp('{existing_created}')
-        """
-        return f"""
-            WITH incremental_users AS (
-                {inc_clause}
             )
             SELECT *
               FROM {aggregate} ea
-             WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.{entity_id} = ea.{entity_id})
+             WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.user_id = ea.user_id)
         """
 
 
