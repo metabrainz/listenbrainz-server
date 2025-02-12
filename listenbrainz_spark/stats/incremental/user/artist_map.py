@@ -22,15 +22,17 @@ class ArtistMapUserEntity(ArtistUserEntity):
                      , listen_count
                      , row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rank
                   FROM {final_aggregate}
-            )
+            ), ranked_countries AS (
                 SELECT user_id
+                     , country_code AS country
+                     , count(*) as artist_count
+                     , sum(listen_count) as listen_count
                      , sort_array(
                             collect_list(
                                 struct(
                                     listen_count
                                   , rs.artist_name
                                   , rs.artist_mbid
-                                  , country_code
                                 )
                             )
                             , false
@@ -39,5 +41,21 @@ class ArtistMapUserEntity(ArtistUserEntity):
                   JOIN {cache_table}
                  USING (artist_mbid)
                  WHERE rank <= {self.top_entity_limit}
+              GROUP BY user_id
+                     , country_code
+            )
+                SELECT user_id
+                     , sort_array(
+                            collect_list(
+                                struct(
+                                    artist_count
+                                  , listen_count
+                                  , country
+                                  , artists
+                                )
+                              , false
+                            )
+                       ) AS artist_map
+                  FROM ranked_countries
               GROUP BY user_id
         """
