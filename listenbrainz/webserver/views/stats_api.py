@@ -545,15 +545,17 @@ def get_artist_map(user_name: str):
 
     """
     user, stats_range = _validate_stats_user_params(user_name)
-    result = _get_artist_map_stats(user["id"], stats_range)
+    stats = db_stats.get(user["id"], "artist_map", stats_range, UserArtistMapRecord)
+    if stats is None:
+        raise APINoContent('')
     return jsonify({
         "payload": {
             "user_id": user_name,
             "range": stats_range,
-            "from_ts": result.from_ts,
-            "to_ts": result.to_ts,
-            "last_updated": result.last_updated,
-            "artist_map": [x.dict() for x in result.data.__root__]
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
+            "last_updated": stats.last_updated,
+            "artist_map": [x.dict() for x in stats.data.__root__]
         }
     })
 
