@@ -1,6 +1,8 @@
 import logging
 from typing import Iterator, Optional, Dict, Type
 
+from pandas import DataFrame
+
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.artist import ArtistUserEntity
@@ -30,15 +32,29 @@ class ArtistMapStatsMessageCreator(UserEntityStatsMessageCreator):
         return row
 
 
+class ArtistMapIncrementalStatsEngine(IncrementalStatsEngine):
+    """ Stats engine with disk writes stubbed out because we only want to read from the aggregates from the disk
+    and not write new ones
+    """
+
+    def create_partial_aggregate(self) -> DataFrame:
+        pass
+
+    def bookkeep_incremental_aggregate(self):
+        pass
+
+
 def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Iterator[Optional[Dict]]:
     """ Get the top entity for all users for specified stats_range """
     logger.debug(f"Calculating user_{entity}_{stats_range}...")
     selector = StatsRangeListenRangeSelector(stats_range)
     entity_obj = incremental_entity_map[entity](selector, NUMBER_OF_TOP_ENTITIES)
     if entity == "artist_map":
-        entity_cls = ArtistMapStatsMessageCreator
+        message_cls = ArtistMapStatsMessageCreator
+        engine_cls = ArtistMapIncrementalStatsEngine
     else:
-        entity_cls = UserEntityStatsMessageCreator
-    message_creator = entity_cls(entity, "user_entity", selector, database)
-    engine = IncrementalStatsEngine(entity_obj, message_creator)
+        message_cls = UserEntityStatsMessageCreator
+        engine_cls = IncrementalStatsEngine
+    message_creator = message_cls(entity, "user_entity", selector, database)
+    engine = engine_cls(entity_obj, message_creator)
     return engine.run()
