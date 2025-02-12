@@ -54,7 +54,7 @@ class ArtistMapUserEntity(ArtistUserEntity):
                                 )
                             )
                             , false
-                       ) AS artist_map
+                       ) AS data
                   FROM ranked_countries
               GROUP BY user_id
         """
