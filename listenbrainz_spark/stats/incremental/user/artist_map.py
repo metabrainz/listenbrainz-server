@@ -28,14 +28,14 @@ class ArtistMapUserEntity(ArtistUserEntity):
                             collect_list(
                                 struct(
                                     listen_count
-                                  , artist_name
-                                  , artist_mbid
+                                  , rs.artist_name
+                                  , rs.artist_mbid
                                   , country_code
                                 )
                             )
                             , false
                        ) as artists
-                  FROM ranked_stats
+                  FROM ranked_stats rs
                   JOIN {cache_table}
                  USING (artist_mbid)
                  WHERE rank <= {self.top_entity_limit}
