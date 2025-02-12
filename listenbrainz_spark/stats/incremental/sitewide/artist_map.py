@@ -16,9 +16,10 @@ class ArtistMapSitewideEntity(AritstSitewideEntity):
                 SELECT artist_name
                      , artist_mbid
                      , listen_count
-                     , row_number() OVER (ORDER BY listen_count DESC) AS rank
                   FROM {final_aggregate}
                  WHERE artist_mbid IS NOT NULL
+              ORDER BY listen_count DESC
+                 LIMIT {self.top_entity_limit}
             ), ranked_countries AS (
                 SELECT country_code AS country
                      , count(*) as artist_count
@@ -36,7 +37,6 @@ class ArtistMapSitewideEntity(AritstSitewideEntity):
                   FROM ranked_stats rs
                   JOIN {cache_table}
                  USING (artist_mbid)
-                 WHERE rank <= {self.top_entity_limit}
               GROUP BY country_code
             )
                 SELECT sort_array(
