@@ -1,9 +1,9 @@
 import pycountry
-from google.api_core.operations_v1.operations_client_config import config
 
 import listenbrainz_spark
+from listenbrainz_spark import config
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
-from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs, load_from_db
+from listenbrainz_spark.postgres.utils import load_from_db
 from listenbrainz_spark.stats import run_query
 
 
