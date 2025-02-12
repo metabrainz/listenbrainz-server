@@ -157,7 +157,7 @@ export default function LinkListensPage() {
   };
   const unsortedGroupedUnlinkedListens = groupBy(
     unlinkedListens,
-    "release_name"
+    (listen) => `${listen.release_name} —  ${listen.artist_name}`
   );
   // remove and store a catchall group with no release name
   const noReleaseNameGroup = pick(unsortedGroupedUnlinkedListens, "null");
