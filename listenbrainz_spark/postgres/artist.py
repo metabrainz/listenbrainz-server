@@ -25,7 +25,6 @@ def create_iso_country_codes_df():
     df.createOrReplaceTempView("iso_codes")
 
 
-
 def create_artist_country_cache():
     """ Import artist country from postgres to HDFS for use in artist map stats calculation. """
     query = """
