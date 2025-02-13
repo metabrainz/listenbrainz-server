@@ -231,6 +231,5 @@ class IncrementalStatsEngine:
     def run(self) -> Iterator[Dict]:
         self.prepare_final_aggregate()
         results = self.generate_stats()
-        for message in self.create_messages(results, self.only_inc, self.message_creator):
-            yield message
+        yield from self.create_messages(results, self.only_inc, self.message_creator)
         self.bookkeep_incremental_aggregate()
