@@ -86,4 +86,4 @@ def get_artist_country_cache():
         _artist_country_df = read_files_from_HDFS(ARTIST_COUNTRY_CODE_DATAFRAME)
         _artist_country_df.persist(StorageLevel.DISK_ONLY)
         _artist_country_df.createOrReplaceTempView(_ARTIST_COUNTRY_CACHE)
-    return _artist_country_df
+    return _ARTIST_COUNTRY_CACHE
