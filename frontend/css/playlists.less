@@ -1,5 +1,6 @@
 @playlistBackgroundColor: #fafafa;
 @descriptionLines: 3;
+@playlistDescriptionLines: 8;
 
 #playlists-page .playlist-view-options {
   display: flex;
@@ -107,7 +108,7 @@
       .playlist-info {
         display: flex;
         align-items: center;
-        gap: 2rem;
+        gap: 2rem;    
 
         .playlist-index {
           min-width: 2rem;
@@ -275,5 +276,30 @@
 
   .cover-art-radio:focus + .cover-art-image {
     box-shadow: 0 0 0 2px rgba(53, 48, 112, 0.5);
+  }
+}
+
+
+
+.wikipedia-extract {
+  
+  .playlist-description {
+    overflow: hidden;
+    position: relative;
+    line-height: 1.2em;
+    max-height: @playlistDescriptionLines * 1.2em;
+    text-align: justify;
+    padding-right: 2em;
+    display: -webkit-box;
+    line-clamp: @playlistDescriptionLines;
+    margin-top: 0.5rem;
+    -webkit-line-clamp: @playlistDescriptionLines;
+    -webkit-box-orient: vertical;
+  }
+
+  .show-more-button {
+    cursor: pointer;
+    float: right;
+    margin-right: 2em;
   }
 }
