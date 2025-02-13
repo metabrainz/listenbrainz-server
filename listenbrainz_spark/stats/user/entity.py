@@ -1,8 +1,6 @@
 import logging
 from typing import Iterator, Optional, Dict, Type
 
-from pandas import DataFrame
-
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
@@ -34,17 +32,13 @@ def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Ite
     message_creator = UserEntityStatsMessageCreator(entity, "user_entity", selector, database)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
     if entity == "artists":
-        artist_stats = engine.run()
-        for message in artist_stats:
-            yield message
+        yield from engine.run()
 
         artist_map_database = database.replace("artists", "artist_map") if database else None
         artist_map_entity = ArtistMapUserEntity(selector, NUMBER_OF_TOP_ENTITIES)
         artist_map_message_creator = ArtistMapStatsMessageCreator("artist_map", "user_entity", selector, artist_map_database)
         artist_map_query = artist_map_entity.get_stats_query(engine._final_table, engine._cache_tables)
         artist_map_results = run_query(artist_map_query)
-        artist_map_stats = engine.create_messages(artist_map_results, engine._only_inc, artist_map_message_creator)
-        for message in artist_map_stats:
-            yield message
+        yield from engine.create_messages(artist_map_results, engine._only_inc, artist_map_message_creator)
     else:
-        return engine.run()
+        yield from engine.run()
