@@ -82,7 +82,7 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_stats_query(self, final_aggregate: str) -> str:
+    def get_stats_query(self, final_aggregate: str, cache_tables: List[str]) -> str:
         """ Return the query to generate final statistics from final aggregate. """
         raise NotImplementedError()
 

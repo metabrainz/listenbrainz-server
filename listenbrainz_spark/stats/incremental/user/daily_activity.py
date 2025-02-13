@@ -73,7 +73,7 @@ class DailyActivityUserStatsQueryEntity(UserStatsQueryProvider):
                      , hour
         """
 
-    def get_stats_query(self, final_aggregate):
+    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
         return f"""
              SELECT user_id
                   , sort_array(

@@ -64,7 +64,7 @@ class MlhdStatsEngine:
         partial_table = f"{prefix}_existing_aggregate"
         partial_df.createOrReplaceTempView(partial_table)
 
-        results_query = self.provider.get_stats_query(partial_table)
+        results_query = self.provider.get_stats_query(partial_table, self._cache_tables)
         results_df = run_query(results_query)
         return results_df
 
