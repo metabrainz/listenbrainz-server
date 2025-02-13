@@ -36,7 +36,7 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"user_{self.entity}_{self.stats_range}"
 
-    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created, cache_tables: List[str]):
+    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """

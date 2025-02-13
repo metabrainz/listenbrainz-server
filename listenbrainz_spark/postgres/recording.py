@@ -7,6 +7,7 @@ from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, RECORDING_ARTIST
 from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 from listenbrainz_spark.utils import read_files_from_HDFS
 
+_RECORDING_ARTIST_CACHE = "recording_artist_cache"
 _recording_artist_df: Optional[DataFrame] = None
 
 
@@ -50,10 +51,13 @@ def create_recording_artist_cache():
         _recording_artist_df = None
 
 
-def get_recording_artist_df():
+def get_recording_artist_cache():
+    """ Read the RECORDING_ARTIST_CACHE parquet files from HDFS and create a spark SQL view
+     if one already doesn't exist """
     global _recording_artist_df
     if _recording_artist_df is None:
         _recording_artist_df = read_files_from_HDFS(RECORDING_ARTIST_DATAFRAME)
         _recording_artist_df.persist(StorageLevel.DISK_ONLY)
+        _recording_artist_df.createOrReplaceTempView(_RECORDING_ARTIST_CACHE)
     return _recording_artist_df
 

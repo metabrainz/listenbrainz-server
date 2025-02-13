@@ -49,7 +49,6 @@ class IncrementalStatsEngine:
     def __init__(self, provider: QueryProvider, message_creator: MessageCreator):
         self.provider = provider
         self.message_creator = message_creator
-        self._cache_tables = []
         self._only_inc = None
         self._final_table = None
         self.incremental_table = None
@@ -59,15 +58,6 @@ class IncrementalStatsEngine:
         if self._only_inc is None:
             raise Exception("only_inc is not initialized, call generate_stats first.")
         return self._only_inc
-
-    def _setup_cache_tables(self):
-        """ Set up metadata cache tables by reading data from HDFS and creating temporary views. """
-        cache_tables = []
-        for idx, df_path in enumerate(self.provider.get_cache_tables()):
-            df_name = f"entity_data_cache_{idx}"
-            cache_tables.append(df_name)
-            read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-        self._cache_tables = cache_tables
 
     def partial_aggregate_usable(self) -> bool:
         """ Checks whether a partial aggregate exists and is fresh to generate the required stats. """
@@ -107,7 +97,7 @@ class IncrementalStatsEngine:
 
         logger.info("Creating partial aggregate from full dump listens")
         hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
-        full_query = self.provider.get_aggregate_query(table, self._cache_tables)
+        full_query = self.provider.get_aggregate_query(table)
         full_df = run_query(full_query)
         full_df.write.mode("overwrite").parquet(existing_aggregate_path)
 
@@ -134,7 +124,7 @@ class IncrementalStatsEngine:
         """
         self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
         get_incremental_listens_df().createOrReplaceTempView(self.incremental_table)
-        inc_query = self.provider.get_aggregate_query(self.incremental_table, self._cache_tables)
+        inc_query = self.provider.get_aggregate_query(self.incremental_table)
         return run_query(inc_query)
 
     def bookkeep_incremental_aggregate(self):
@@ -161,7 +151,6 @@ class IncrementalStatsEngine:
             return None
 
     def prepare_final_aggregate(self):
-        self._setup_cache_tables()
         prefix = self.provider.get_table_prefix()
 
         if self.provider.force_partial_aggregate() or not self.partial_aggregate_usable():
@@ -185,8 +174,7 @@ class IncrementalStatsEngine:
                 filter_existing_query = self.provider.get_filter_aggregate_query(
                     partial_table,
                     self.incremental_table,
-                    existing_created,
-                    self._cache_tables
+                    existing_created
                 )
                 filtered_existing_aggregate_df = run_query(filter_existing_query)
                 filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
@@ -195,8 +183,7 @@ class IncrementalStatsEngine:
                 filter_incremental_query = self.provider.get_filter_aggregate_query(
                     inc_table,
                     self.incremental_table,
-                    existing_created,
-                    self._cache_tables
+                    existing_created
                 )
                 filtered_incremental_aggregate_df = run_query(filter_incremental_query)
                 filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"
@@ -215,7 +202,7 @@ class IncrementalStatsEngine:
         final_df.createOrReplaceTempView(self._final_table)
 
     def generate_stats(self) -> DataFrame:
-        results_query = self.provider.get_stats_query(self._final_table, self._cache_tables)
+        results_query = self.provider.get_stats_query(self._final_table)
         results_df = run_query(results_query)
         return results_df
 

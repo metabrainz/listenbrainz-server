@@ -1,7 +1,6 @@
 from typing import List
 
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.postgres.release import get_release_metadata_df
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
 
@@ -12,12 +11,8 @@ class ReleaseUserEntity(UserEntityStatsQueryProvider):
     def entity(self):
         return "releases"
 
-    def get_cache_tables(self) -> List[str]:
-        return []
-
-    def get_aggregate_query(self, table, cache_tables):
-        cache_table = "release_metadata_cache_df"
-        get_release_metadata_df().createOrReplaceTempView(cache_table)
+    def get_aggregate_query(self, table):
+        cache_table = get_release_metadata_cache()
         return f"""
             WITH gather_release_data AS (
                 SELECT user_id
@@ -99,7 +94,7 @@ class ReleaseUserEntity(UserEntityStatsQueryProvider):
                      , caa_release_mbid
         """
 
-    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
+    def get_stats_query(self, final_aggregate):
         return f"""
             WITH entity_count AS (
                 SELECT user_id

@@ -11,6 +11,7 @@ from listenbrainz_spark.postgres.utils import load_from_db
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
+_ARTIST_COUNTRY_CACHE = "artist_country_cache"
 _artist_country_df: Optional[DataFrame] = None
 
 
@@ -77,9 +78,12 @@ def create_artist_country_cache():
         _artist_country_df = None
 
 
-def get_artist_country_df():
+def get_artist_country_cache():
+    """ Read the ARTIST_COUNTRY_CACHE parquet files from HDFS and create a spark SQL view
+     if one already doesn't exist """
     global _artist_country_df
     if _artist_country_df is None:
         _artist_country_df = read_files_from_HDFS(ARTIST_COUNTRY_CODE_DATAFRAME)
         _artist_country_df.persist(StorageLevel.DISK_ONLY)
+        _artist_country_df.createOrReplaceTempView(_ARTIST_COUNTRY_CACHE)
     return _artist_country_df
