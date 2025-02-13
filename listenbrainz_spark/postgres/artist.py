@@ -1,10 +1,17 @@
+from typing import Optional
+
 import pycountry
+from pyspark import StorageLevel
+from pyspark.sql import DataFrame
 
 import listenbrainz_spark
 from listenbrainz_spark import config
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.postgres.utils import load_from_db
 from listenbrainz_spark.stats import run_query
+from listenbrainz_spark.utils import read_files_from_HDFS
+
+_artist_country_df: Optional[DataFrame] = None
 
 
 def create_iso_country_codes_df():
@@ -64,3 +71,16 @@ def create_artist_country_cache():
         .write \
         .format("parquet") \
         .save(config.HDFS_CLUSTER_URI + ARTIST_COUNTRY_CODE_DATAFRAME, mode="overwrite")
+
+    global _artist_country_df
+    if _artist_country_df is not None:
+        _artist_country_df.unpersist()
+        _artist_country_df = None
+
+
+def get_artist_country_df():
+    global _artist_country_df
+    if _artist_country_df is None:
+        _artist_country_df: DataFrame = read_files_from_HDFS(ARTIST_COUNTRY_CODE_DATAFRAME)
+        _artist_country_df.persist(StorageLevel.DISK_ONLY)
+    return _artist_country_df

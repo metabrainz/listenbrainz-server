@@ -10,6 +10,7 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.config import HDFS_CLUSTER_URI
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
+from listenbrainz_spark.persisted import get_incremental_listens_df
 from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA, INCREMENTAL_BOOKKEEPING_SCHEMA
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
@@ -132,8 +133,7 @@ class IncrementalStatsEngine:
             DataFrame: The generated incremental aggregate DataFrame.
         """
         self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
-        read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
-            .createOrReplaceTempView(self.incremental_table)
+        get_incremental_listens_df().createOrReplaceTempView(self.incremental_table)
         inc_query = self.provider.get_aggregate_query(self.incremental_table, self._cache_tables)
         return run_query(inc_query)
 
