@@ -48,7 +48,7 @@ class ListeningActivitySitewideStatsQuery(SitewideStatsQueryProvider):
               GROUP BY time_range
         """
 
-    def get_stats_query(self, final_aggregate):
+    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
         return f"""
              SELECT sort_array(
                        collect_list(
