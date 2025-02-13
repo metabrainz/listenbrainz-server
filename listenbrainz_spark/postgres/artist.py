@@ -81,6 +81,6 @@ def create_artist_country_cache():
 def get_artist_country_df():
     global _artist_country_df
     if _artist_country_df is None:
-        _artist_country_df: DataFrame = read_files_from_HDFS(ARTIST_COUNTRY_CODE_DATAFRAME)
+        _artist_country_df = read_files_from_HDFS(ARTIST_COUNTRY_CODE_DATAFRAME)
         _artist_country_df.persist(StorageLevel.DISK_ONLY)
     return _artist_country_df
