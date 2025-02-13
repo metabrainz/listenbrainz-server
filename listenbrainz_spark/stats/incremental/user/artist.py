@@ -1,6 +1,7 @@
 from typing import List
 
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
+from listenbrainz_spark.postgres.artist import get_artist_country_df
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
@@ -16,10 +17,11 @@ class ArtistUserEntity(UserEntityStatsQueryProvider):
         return "artists"
 
     def get_cache_tables(self) -> List[str]:
-        return [ARTIST_COUNTRY_CODE_DATAFRAME]
+        return []
 
     def get_aggregate_query(self, table, cache_tables):
-        cache_table = cache_tables[0]
+        get_artist_country_df().createOrReplaceTempView("artist_country_code")
+        cache_table = "artist_country_code"
         return f"""
             WITH exploded_listens AS (
                 SELECT user_id
