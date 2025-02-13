@@ -59,5 +59,5 @@ def get_recording_artist_cache():
         _recording_artist_df = read_files_from_HDFS(RECORDING_ARTIST_DATAFRAME)
         _recording_artist_df.persist(StorageLevel.DISK_ONLY)
         _recording_artist_df.createOrReplaceTempView(_RECORDING_ARTIST_CACHE)
-    return _recording_artist_df
+    return _RECORDING_ARTIST_CACHE
 

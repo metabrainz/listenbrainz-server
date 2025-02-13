@@ -1,5 +1,3 @@
-from typing import List
-
 from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
