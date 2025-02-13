@@ -459,6 +459,13 @@ export default function PlaylistPage() {
               <a
                 className="show-more-button"
                 onClick={() => setShowMore(!showMore)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setShowMore(!showMore);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
                 {showMore ? "Show More" : "Show Less"}
               </a>
