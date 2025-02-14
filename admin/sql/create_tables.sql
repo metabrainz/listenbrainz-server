@@ -10,7 +10,8 @@ CREATE TABLE "user" (
   gdpr_agreed           TIMESTAMP WITH TIME ZONE,
   musicbrainz_row_id    INTEGER NOT NULL,
   login_id              TEXT NOT NULL DEFAULT uuid_generate_v4()::text,
-  email                 TEXT
+  email                 TEXT,
+  is_paused             BOOLEAN NOT NULL DEFAULT FALSE
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);

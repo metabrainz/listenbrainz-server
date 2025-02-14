@@ -100,6 +100,7 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
              , latest_listened_at
              , external_service_oauth.external_user_id
              , error_message
+             , is_paused
           FROM external_service_oauth
           JOIN "user"
             ON "user".id = external_service_oauth.user_id

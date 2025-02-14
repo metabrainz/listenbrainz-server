@@ -139,6 +139,9 @@ class ListensImporter(abc.ABC):
         failure = 0
         for user in users:
             try:
+                if user['is_paused']:
+                    continue
+
                 self._listens_imported_since_last_update += self.process_one_user(user)
                 success += 1
             except (DatabaseException, DatabaseError, SQLAlchemyError):
