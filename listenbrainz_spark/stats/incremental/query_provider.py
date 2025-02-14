@@ -69,7 +69,8 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime) -> str:
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime,
+                                   cache_tables: List[str]) -> str:
         """
         Return the query to filter the aggregate based on the listens submitted since existing created timestamp.
 
@@ -81,7 +82,7 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_stats_query(self, final_aggregate: str) -> str:
+    def get_stats_query(self, final_aggregate: str, cache_tables: List[str]) -> str:
         """ Return the query to generate final statistics from final aggregate. """
         raise NotImplementedError()
 

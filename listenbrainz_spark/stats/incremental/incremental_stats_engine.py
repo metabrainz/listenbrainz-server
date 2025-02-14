@@ -50,6 +50,7 @@ class IncrementalStatsEngine:
         self.message_creator = message_creator
         self._cache_tables = []
         self._only_inc = None
+        self._final_table = None
         self.incremental_table = None
 
     @property
@@ -159,7 +160,7 @@ class IncrementalStatsEngine:
         except AnalysisException:
             return None
 
-    def generate_stats(self) -> DataFrame:
+    def prepare_final_aggregate(self):
         self._setup_cache_tables()
         prefix = self.provider.get_table_prefix()
 
@@ -184,7 +185,8 @@ class IncrementalStatsEngine:
                 filter_existing_query = self.provider.get_filter_aggregate_query(
                     partial_table,
                     self.incremental_table,
-                    existing_created
+                    existing_created,
+                    self._cache_tables
                 )
                 filtered_existing_aggregate_df = run_query(filter_existing_query)
                 filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
@@ -193,7 +195,8 @@ class IncrementalStatsEngine:
                 filter_incremental_query = self.provider.get_filter_aggregate_query(
                     inc_table,
                     self.incremental_table,
-                    existing_created
+                    existing_created,
+                    self._cache_tables
                 )
                 filtered_incremental_aggregate_df = run_query(filter_incremental_query)
                 filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"
@@ -208,19 +211,25 @@ class IncrementalStatsEngine:
             final_df = partial_df
             self._only_inc = False
 
-        final_table = f"{prefix}_final_aggregate"
-        final_df.createOrReplaceTempView(final_table)
+        self._final_table = f"{prefix}_final_aggregate"
+        final_df.createOrReplaceTempView(self._final_table)
 
-        results_query = self.provider.get_stats_query(final_table)
+    def generate_stats(self) -> DataFrame:
+        results_query = self.provider.get_stats_query(self._final_table, self._cache_tables)
         results_df = run_query(results_query)
         return results_df
 
-    def run(self) -> Iterator[Dict]:
-        results = self.generate_stats()
-        if not self.only_inc:
-            yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results, self.only_inc):
+    @staticmethod
+    def create_messages(results, only_inc, message_creator) -> Iterator[Dict]:
+        if not only_inc:
+            yield message_creator.create_start_message()
+        for message in message_creator.create_messages(results, only_inc):
             yield message
-        if not self.only_inc:
-            yield self.message_creator.create_end_message()
+        if not only_inc:
+            yield message_creator.create_end_message()
+
+    def run(self) -> Iterator[Dict]:
+        self.prepare_final_aggregate()
+        results = self.generate_stats()
+        yield from self.create_messages(results, self.only_inc, self.message_creator)
         self.bookkeep_incremental_aggregate()

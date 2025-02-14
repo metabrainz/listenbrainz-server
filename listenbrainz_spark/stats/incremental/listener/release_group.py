@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, \
@@ -97,7 +98,7 @@ class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
                      , user_id
         """
 
-    def get_stats_query(self, final_aggregate):
+    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
         return f"""
             WITH entity_count as (
             SELECT release_group_mbid
@@ -154,3 +155,20 @@ class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
               JOIN entity_count
              USING (release_group_mbid)
         """
+
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime,
+                                   cache_tables: List[str]) -> str:
+        rel_cache_table = cache_tables[0]
+        return f"""
+            WITH incremental_release_groups AS (
+                SELECT DISTINCT rel.release_group_mbid
+                  FROM {inc_listens_table} l
+             LEFT JOIN {rel_cache_table} rel
+                    ON rel.release_mbid = l.release_mbid
+                 WHERE created >= to_timestamp('{existing_created}')
+            )
+                SELECT *
+                  FROM {aggregate} ea
+                 WHERE EXISTS(SELECT 1 FROM incremental_release_groups irg WHERE irg.release_group_mbid = ea.release_group_mbid)
+        """
+

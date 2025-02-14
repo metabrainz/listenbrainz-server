@@ -94,6 +94,10 @@ def handle_sitewide_entity(message):
     _handle_sitewide_stats(message, message["entity"], has_count=True)
 
 
+def handle_sitewide_artist_map(message):
+    _handle_sitewide_stats(message, "artist_map")
+
+
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
 

@@ -140,15 +140,6 @@ def get_entity_listener(db_conn, entity, entity_id, stats_range) -> Optional[dic
     return None
 
 
-def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, data: list[UserArtistMapRecord]):
-    """ Insert artist map stats in database.
-
-        We do not know the database name in advance here so first find the latest artist map database.
-    """
-    databases = couchdb.list_databases(f"artistmap_{stats_range}")
-    insert(databases[0], from_ts, to_ts, [{"user_id": user_id, "data": [x.dict() for x in data]}])
-
-
 def insert_sitewide_stats(stats_type: str, stats_range: str, from_ts: int, to_ts: int, data: dict):
     """ Insert sitewide stats in couchdb.
 
