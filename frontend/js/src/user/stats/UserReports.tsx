@@ -169,7 +169,7 @@ export default function UserReports() {
         </section>
       )}
       {user && (
-        <section id="daily-artisti-activity">
+        <section id="artist-activity">
           {statsExplanationModalButton}
           <UserArtistActivity range={range} user={user} />
         </section>

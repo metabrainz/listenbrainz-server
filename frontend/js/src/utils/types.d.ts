@@ -288,6 +288,11 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type ChartDataItem = {
+  label: string;
+  [albumName: string]: number | string;
+};
+
 declare type UserArtistActivityResponse = {
   result: Array<{
     name: string;

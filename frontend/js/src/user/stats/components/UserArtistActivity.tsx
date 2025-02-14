@@ -65,10 +65,6 @@ export default function UserArtistActivity({
     })) as ChartDataItem[];
   };
 
-  type ChartDataItem = {
-    label: string;
-  } & Record<string, number>;
-
   const [chartData, setChartData] = React.useState<ChartDataItem[]>([]);
 
   React.useEffect(() => {

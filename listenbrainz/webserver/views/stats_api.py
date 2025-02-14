@@ -453,9 +453,17 @@ def get_artist_activity(user_name: str):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    data = _get_entity_stats(user_name, "release_groups", "total_release_group_count")
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(user["id"], "release_groups", stats_range, EntityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    release_group_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    
     result = {}
-    for release_group in data["payload"]["release_groups"]:
+    for release_group in release_group_list:
         artist_name = release_group["artist_name"]
         listen_count = release_group["listen_count"]
         release_group_name = release_group["release_group_name"]
