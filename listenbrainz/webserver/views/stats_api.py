@@ -301,7 +301,7 @@ def get_recording(user_name):
     return _get_entity_stats(user_name, "recordings", "total_recording_count")
 
 
-def _get_entity_stats(user_name: str, entity: str, count_key: str):
+def _get_entity_stats(user_name: str, entity: str, count_key: str, entire_range: bool = False):
     user, stats_range = _validate_stats_user_params(user_name)
 
     offset = get_non_negative_param("offset", default=0)
@@ -311,7 +311,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count, entire_range)
     return jsonify({"payload": {
         "user_id": user_name,
         entity: entity_list,
@@ -408,6 +408,77 @@ def get_listening_activity(user_name: str):
         "last_updated": stats.last_updated
     }})
 
+
+@stats_api_bp.get("/user/<user_name>/artist-activity")
+@crossdomain
+@ratelimit()
+def get_artist_activity(user_name: str):
+    """
+    Get the artist activity for user ``user_name``. The artist activity shows the total number of listens
+    for each artist along with their albums and corresponding listen counts.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "name": "Radiohead",
+                    "listen_count": 120,
+                    "albums": [
+                        {"name": "OK Computer", "listen_count": 45},
+                        {"name": "In Rainbows", "listen_count": 75}
+                    ]
+                },
+                {
+                    "name": "The Beatles",
+                    "listen_count": 95,
+                    "albums": [
+                        {"name": "Abbey Road", "listen_count": 60},
+                        {"name": "Revolver", "listen_count": 35}
+                    ]
+                }
+            ]
+        }
+
+    .. note::
+
+        - The example above shows artist activity data with two artists and their respective albums.
+        - The statistics are aggregated based on the number of listens recorded for each artist and their albums.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(user["id"], "release_groups", stats_range, EntityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    release_group_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    
+    result = {}
+    for release_group in release_group_list:
+        artist_name = release_group["artist_name"]
+        listen_count = release_group["listen_count"]
+        release_group_name = release_group["release_group_name"]
+
+        if artist_name in result:
+            result[artist_name]["listen_count"] += listen_count
+            result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count})
+        else:
+            result[artist_name] = {
+                "name": artist_name,
+                "listen_count": listen_count,
+                "albums": [{"name": release_group_name, "listen_count": listen_count}]
+            }
+    sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
+    return jsonify({"result": sorted_data})
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1164,7 +1235,7 @@ def year_in_music(user_name: str, year: int = 2024):
     })
 
 
-def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) -> Tuple[list[dict], int]:
+def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int, entire_range: bool) -> Tuple[list[dict], int]:
     """ Process the statistics data according to query params
 
         Args:
@@ -1181,7 +1252,10 @@ def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) 
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = stats.count
-    entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
+    if entire_range:
+        entity_list = [x.dict() for x in stats.data.__root__]
+    else:
+        entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
 
     return entity_list, total_entity_count
 
