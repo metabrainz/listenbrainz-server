@@ -1,16 +1,15 @@
 """ Spark job that downloads the latest listenbrainz dumps and imports into HDFS
 """
 import logging
-import shutil
 import tempfile
-import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 import listenbrainz_spark.request_consumer.jobs.utils as utils
 from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
+from listenbrainz_spark.persisted import unpersist_incremental_df
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,8 @@ def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
         uploader = ListenbrainzDataUploader()
         uploader.upload_new_listens_full_dump(src)
         uploader.process_full_listens_dump()
-    utils.insert_dump_data(dump_id, DumpType.FULL, datetime.utcnow())
+    utils.insert_dump_data(dump_id, DumpType.FULL, datetime.now(tz=timezone.utc))
+    unpersist_incremental_listens_df()
     return dump_name
 
 
@@ -68,8 +68,11 @@ def import_incremental_dump_to_hdfs(dump_id: int = None, local: bool = False) ->
         # instantiating ListenbrainzDataUploader creates a spark session which
         # is a bit non-intuitive.
         # FIXME in future to make initializing of spark session more explicit?
-        ListenbrainzDataUploader().upload_new_listens_incremental_dump(src)
-    utils.insert_dump_data(dump_id, DumpType.INCREMENTAL, datetime.utcnow())
+        uploader = ListenbrainzDataUploader()
+        uploader.upload_new_listens_incremental_dump(src)
+        uploader.process_incremental_listens_dump()
+    utils.insert_dump_data(dump_id, DumpType.INCREMENTAL, datetime.now(tz=timezone.utc))
+    unpersist_incremental_df()
     return dump_name
 
 

@@ -14,7 +14,6 @@ class QueryProvider(abc.ABC):
             selector: ListenRangeSelector to provide dates and stats range for listens to choose stat from
         """
         self.stats_range, self.from_date, self.to_date = selector.get_dates()
-        self._cache_tables = []
 
     @property
     @abc.abstractmethod
@@ -25,11 +24,6 @@ class QueryProvider(abc.ABC):
     @abc.abstractmethod
     def get_table_prefix(self) -> str:
         """ Get the prefix for table names based on the stat type, entity and stats range. """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_cache_tables(self) -> List[str]:
-        """ Returns the list of HDFS paths for the metadata cache tables required by the statistic. """
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -46,13 +40,12 @@ class QueryProvider(abc.ABC):
         return f"{self.get_base_path()}/bookkeeping/{self.entity}/{self.stats_range}"
 
     @abc.abstractmethod
-    def get_aggregate_query(self, table: str, cache_tables: List[str]) -> str:
+    def get_aggregate_query(self, table: str) -> str:
         """
         Returns the query to create (partial) aggregates from the given listens.
 
         Args:
             table: The listen table to aggregation.
-            cache_tables: List of metadata cache tables.
         """
         raise NotImplementedError()
 
@@ -69,8 +62,7 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime,
-                                   cache_tables: List[str]) -> str:
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime) -> str:
         """
         Return the query to filter the aggregate based on the listens submitted since existing created timestamp.
 
@@ -82,7 +74,7 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_stats_query(self, final_aggregate: str, cache_tables: List[str]) -> str:
+    def get_stats_query(self, final_aggregate: str) -> str:
         """ Return the query to generate final statistics from final aggregate. """
         raise NotImplementedError()
 

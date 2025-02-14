@@ -183,3 +183,15 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
         if path_exists(path.LISTENBRAINZ_BASE_STATS_DIRECTORY):
             hdfs_connection.client.delete(path.LISTENBRAINZ_BASE_STATS_DIRECTORY, recursive=True, skip_trash=True)
+
+    def process_incremental_listens_dump(self):
+        query = f"""
+            SELECT user_id
+                 , max(created) AS created
+              FROM parquet.`{path.INCREMENTAL_DUMPS_SAVE_PATH}`
+          GROUP BY user_id
+        """
+        run_query(query) \
+            .write \
+            .mode("overwrite") \
+            .parquet(path.INCREMENTAL_USERS_DF)

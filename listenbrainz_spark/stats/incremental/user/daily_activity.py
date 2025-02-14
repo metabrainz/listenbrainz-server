@@ -33,10 +33,7 @@ class DailyActivityUserStatsQueryEntity(UserStatsQueryProvider):
         time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=["day", "hour"])
         time_range_df.createOrReplaceTempView("time_range")
 
-    def get_cache_tables(self) -> List[str]:
-        return []
-
-    def get_aggregate_query(self, table, cache_tables):
+    def get_aggregate_query(self, table):
         return f"""
             SELECT user_id
                  , date_format(listened_at, 'EEEE') as day
@@ -73,7 +70,7 @@ class DailyActivityUserStatsQueryEntity(UserStatsQueryProvider):
                      , hour
         """
 
-    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
+    def get_stats_query(self, final_aggregate):
         return f"""
              SELECT user_id
                   , sort_array(

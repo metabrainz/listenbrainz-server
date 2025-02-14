@@ -36,7 +36,7 @@ class SitewideStatsQueryProvider(QueryProvider, abc.ABC):
         return f"sitewide_{self.entity}_{self.stats_range}"
 
     def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
-                                   existed_created: Optional[datetime], cache_tables: List[str]) -> str:
+                                   existed_created: Optional[datetime]) -> str:
         return f"SELECT * FROM {existing_aggregate}"
 
 

@@ -2,6 +2,7 @@ from typing import List, Iterator, Dict
 
 from pyspark.sql import DataFrame
 
+from listenbrainz_spark.postgres.artist import get_artist_country_cache
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
 from listenbrainz_spark.stats.incremental.sitewide.artist import AritstSitewideEntity
 
@@ -9,8 +10,8 @@ from listenbrainz_spark.stats.incremental.sitewide.artist import AritstSitewideE
 class ArtistMapSitewideEntity(AritstSitewideEntity):
     """ See base class QueryProvider for details. """
 
-    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
-        cache_table = cache_tables[0]
+    def get_stats_query(self, final_aggregate):
+        cache_table = get_artist_country_cache()
         return f"""
             WITH ranked_stats AS (
                 SELECT artist_name

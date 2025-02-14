@@ -37,7 +37,7 @@ def get_entity_stats(entity: str, stats_range: str, database: str = None) -> Ite
         artist_map_database = database.replace("artists", "artist_map") if database else None
         artist_map_entity = ArtistMapUserEntity(selector, NUMBER_OF_TOP_ENTITIES)
         artist_map_message_creator = ArtistMapStatsMessageCreator("artist_map", "user_entity", selector, artist_map_database)
-        artist_map_query = artist_map_entity.get_stats_query(engine._final_table, engine._cache_tables)
+        artist_map_query = artist_map_entity.get_stats_query(engine._final_table)
         artist_map_results = run_query(artist_map_query)
         yield from engine.create_messages(artist_map_results, engine._only_inc, artist_map_message_creator)
     else:

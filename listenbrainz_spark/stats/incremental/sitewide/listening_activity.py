@@ -20,10 +20,7 @@ class ListeningActivitySitewideStatsQuery(SitewideStatsQueryProvider):
     def entity(self):
         return "listening_activity"
 
-    def get_cache_tables(self) -> List[str]:
-        return []
-
-    def get_aggregate_query(self, table, cache_tables):
+    def get_aggregate_query(self, table):
         return f"""
             SELECT date_format(listened_at, '{self.spark_date_format}') AS time_range
                  , count(listened_at) AS listen_count
@@ -48,7 +45,7 @@ class ListeningActivitySitewideStatsQuery(SitewideStatsQueryProvider):
               GROUP BY time_range
         """
 
-    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
+    def get_stats_query(self, final_aggregate):
         return f"""
              SELECT sort_array(
                        collect_list(

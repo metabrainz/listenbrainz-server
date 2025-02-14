@@ -51,7 +51,7 @@ def calculate_top_entity_stats(year):
         if entity == "artists":
             artist_map_entity = ArtistMapUserEntity(selector, NUMBER_OF_YIM_ENTITIES)
             artist_map_message_creator = YIMArtistMapMessageCreator(selector)
-            artist_map_query = artist_map_entity.get_stats_query(engine._final_table, engine._cache_tables)
+            artist_map_query = artist_map_entity.get_stats_query(engine._final_table)
             artist_map_results = run_query(artist_map_query)
             for message in engine.create_messages(artist_map_results, engine._only_inc, artist_map_message_creator):
                 if message["type"] == "couchdb_data_start" or message["type"] == "couchdb_data_end":
