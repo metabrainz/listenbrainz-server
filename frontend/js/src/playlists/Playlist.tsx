@@ -230,12 +230,15 @@ export default function PlaylistPage() {
         return existingMBID === trackMBID;
       });
       if (isDuplicate && !dontAskAgain) {
-        const confirmed = await NiceModal.show(DuplicateTrackModal, {
+        const [confirmed, dontAskAgainValue] = await NiceModal.show<
+          [boolean, boolean],
+          any
+        >(DuplicateTrackModal, {
           message:
             "This track is already in the playlist. Do you want to add it anyway?",
           dontAskAgain,
-          setDontAskAgain,
         });
+        setDontAskAgain(dontAskAgainValue);
         if (!confirmed) {
           return;
         }

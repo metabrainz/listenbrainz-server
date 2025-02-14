@@ -4,27 +4,23 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 type DuplicateTrackModalProps = {
   message: string;
   dontAskAgain: boolean;
-  setDontAskAgain: (value: boolean) => void;
 };
 
 export default NiceModal.create((props: DuplicateTrackModalProps) => {
   const modal = useModal();
-  const { message, dontAskAgain: initialDontAskAgain, setDontAskAgain } = props;
+  const { message, dontAskAgain: initialDontAskAgain } = props;
 
-  // Tried to use dontAskAgain directly, but the checkbox state wasnt updating when toggled.
   const [localDontAskAgain, setLocalDontAskAgain] = React.useState(
     initialDontAskAgain
   );
 
   const confirm = () => {
-    setDontAskAgain(localDontAskAgain);
-    modal.resolve(true);
+    modal.resolve([true, localDontAskAgain]);
     modal.remove();
   };
 
   const cancel = () => {
-    setDontAskAgain(localDontAskAgain);
-    modal.resolve(false);
+    modal.resolve([false, localDontAskAgain]);
     modal.remove();
   };
 
