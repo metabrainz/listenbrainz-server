@@ -27,7 +27,7 @@ from listenbrainz.utils import create_path
 
 # These values are defined to create spark parquet files that are at most 128MB in size.
 # This compression ration allows us to roughly estimate how full we can make files before starting a new one
-PARQUET_APPROX_COMPRESSION_RATIO = .57
+PARQUET_APPROX_COMPRESSION_RATIO = 0.25
 
 # This is the approximate amount of data to write to a parquet file in order to meet the max size
 PARQUET_TARGET_SIZE = 134217728 / PARQUET_APPROX_COMPRESSION_RATIO  # 128MB / compression ratio
@@ -44,7 +44,7 @@ SPARK_LISTENS_SCHEMA = pa.schema([
     pa.field("release_mbid", pa.string(), True),
     pa.field("recording_name", pa.string(), False),
     pa.field("recording_mbid", pa.string(), True),
-    pa.field('artist_credit_mbids', pa.list_(pa.string()), True),
+    pa.field("artist_credit_mbids", pa.list_(pa.string()), True),
 ])
 
 
@@ -462,7 +462,7 @@ class DumpListenStore:
                 # Create a pandas dataframe, then write that to a parquet files
                 df = pd.DataFrame(data, dtype=object)
                 table = pa.Table.from_pandas(df, schema=SPARK_LISTENS_SCHEMA, preserve_index=False)
-                pq.write_table(table, filename, flavor="spark")
+                pq.write_table(table, filename, flavor="spark", compression="zstd")
                 file_size = os.path.getsize(filename)
                 tar_file.add(filename, arcname=os.path.join(archive_dir, "%d.parquet" % parquet_file_id))
                 os.unlink(filename)
