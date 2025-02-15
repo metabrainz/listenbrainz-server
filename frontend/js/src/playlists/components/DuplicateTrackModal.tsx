@@ -20,7 +20,7 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
   };
 
   const cancel = () => {
-    modal.resolve([false, localDontAskAgain]);
+    modal.resolve([false, false]);
     modal.remove();
   };
 
