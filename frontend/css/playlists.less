@@ -23,27 +23,6 @@
     flex-direction: column;
   }
 
-  /* Pure CSS multiline ellipsis by Sagi Shrieber:
-			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
-			*/
-  .description {
-    overflow: hidden;
-    position: relative;
-    line-height: 1.2em;
-    max-height: @descriptionLines * 1.2em;
-    text-align: justify;
-    padding-right: 2em;
-    display: -webkit-box;
-    line-clamp: @descriptionLines;
-    margin-top: 0.5rem;
-    -webkit-line-clamp: @descriptionLines;
-    -webkit-box-orient: vertical;
-
-    p {
-      margin-bottom: 0;
-    }
-  }
-
   .playlist {
     margin: 0.5em;
     width: 15em;
@@ -279,24 +258,35 @@
   }
 }
 
-.wikipedia-extract {
-  .playlist-description {
-    overflow: hidden;
-    position: relative;
-    line-height: 1.2em;
+/* Pure CSS multiline ellipsis by Sagi Shrieber:
+    http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
+*/
+.description {
+  overflow: hidden;
+  position: relative;
+  line-height: 1.2em;
+  max-height: @descriptionLines * 1.2em;
+  text-align: justify;
+  padding-right: 2em;
+  display: -webkit-box;
+  line-clamp: @descriptionLines;
+  margin-top: 0.5rem;
+  -webkit-line-clamp: @descriptionLines;
+  -webkit-box-orient: vertical;
+
+  &.playlist-description {
     max-height: @playlistDescriptionLines * 1.2em;
-    text-align: justify;
-    padding-right: 2em;
-    display: -webkit-box;
     line-clamp: @playlistDescriptionLines;
-    margin-top: 0.5rem;
     -webkit-line-clamp: @playlistDescriptionLines;
-    -webkit-box-orient: vertical;
   }
 
-  .show-more-button {
-    cursor: pointer;
-    float: right;
-    margin-right: 2em;
+  &.expanded {
+    line-clamp: none;
+    -webkit-line-clamp: none;
+    max-height: unset;
+  }
+
+  p {
+    margin-bottom: 0;
   }
 }

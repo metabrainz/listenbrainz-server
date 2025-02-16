@@ -448,27 +448,23 @@ export default function PlaylistPage() {
             )}
           </div>
           {playlist.annotation && (
-            <div className="wikipedia-extract">
+            <div className="text-summary">
               <div
-                className={`content ${showMore ? "playlist-description" : ""}`}
+                className={`description playlist-description ${
+                  showMore ? "" : "expanded"
+                }`}
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
                   __html: sanitize(playlist.annotation),
                 }}
               />
-              <a
-                className="show-more-button"
+              <button
+                className="btn btn-link pull-right"
+                type="button"
                 onClick={() => setShowMore(!showMore)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setShowMore(!showMore);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
               >
                 {showMore ? "Show More" : "Show Less"}
-              </a>
+              </button>
             </div>
           )}
         </div>
