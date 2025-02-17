@@ -40,7 +40,7 @@ def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
         uploader.upload_new_listens_full_dump(src)
         uploader.process_full_listens_dump()
     utils.insert_dump_data(dump_id, DumpType.FULL, datetime.now(tz=timezone.utc))
-    unpersist_incremental_listens_df()
+    unpersist_incremental_df()
     return dump_name
 
 
