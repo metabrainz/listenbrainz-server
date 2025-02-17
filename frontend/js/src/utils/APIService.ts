@@ -575,10 +575,16 @@ export default class APIService {
   };
 
   getUserArtistActivity = async (
-    userName: string,
+    userName?: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserArtistActivityResponse> => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity?range=${range}`;
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-activity`;
+    }
+    url += `?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {

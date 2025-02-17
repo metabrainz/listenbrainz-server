@@ -168,12 +168,10 @@ export default function UserReports() {
           <UserDailyActivity range={range} user={user} />
         </section>
       )}
-      {user && (
-        <section id="artist-activity">
-          {statsExplanationModalButton}
-          <UserArtistActivity range={range} user={user} />
-        </section>
-      )}
+      <section id="artist-activity">
+        {statsExplanationModalButton}
+        <UserArtistActivity range={range} user={user} />
+      </section>
       <section id="artist-origin">
         {statsExplanationModalButton}
         <UserArtistMap range={range} user={user} />

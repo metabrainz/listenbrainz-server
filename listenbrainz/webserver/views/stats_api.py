@@ -481,7 +481,7 @@ def get_artist_activity(user_name: str):
     sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
     count = 15
     N = min(count, len(sorted_data))
-    
+
     return jsonify({"result": sorted_data[:N]})
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
@@ -1058,7 +1058,7 @@ def get_sitewide_recording():
     return _get_sitewide_stats("recordings")
 
 
-def _get_sitewide_stats(entity: str):
+def _get_sitewide_stats(entity: str, entire_range: bool = False):
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
@@ -1072,10 +1072,15 @@ def _get_sitewide_stats(entity: str):
 
     count = min(count, MAX_ITEMS_PER_GET)
     total_entity_count = stats["count"]
+    
+    if entire_range:
+        entity_list = stats["data"]
+    else:
+        entity_list = stats["data"][offset:count + offset]
 
     return jsonify({
         "payload": {
-            entity: stats["data"][offset:count + offset],
+            entity: entity_list,
             "range": stats_range,
             "offset": offset,
             "count": total_entity_count,
@@ -1157,6 +1162,89 @@ def get_sitewide_listening_activity():
             "last_updated": stats["last_updated"]
         }
     })
+
+
+@stats_api_bp.get("/sitewide/artist-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_artist_activity():
+    """
+    Get the sitewide artist activity. The daily activity shows the number of listens
+    submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "daily_activity": {
+                    "Monday": [
+                        {
+                            "hour": 0
+                            "listen_count": 26,
+                        },
+                        {
+                            "hour": 1
+                            "listen_count": 30,
+                        },
+                        {
+                            "hour": 2
+                            "listen_count": 4,
+                        },
+                        "..."
+                    ],
+                    "Tuesday": ["..."],
+                    "..."
+                },
+                "stats_range": "all_time",
+                "to_ts": 1589155200,
+                "user_id": "ishaanshah"
+            }
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    
+    stats = db_stats.get_sitewide_stats("artists", stats_range)
+    if stats is None:
+        raise APINoContent('')
+    
+    release_groups_list = stats["data"]
+
+    result = {}
+    for release_group in release_groups_list:
+        artist_name = release_group["artist_name"].split(",")[0]
+        listen_count = release_group["listen_count"]
+        release_group_name = release_group["release_group_name"]
+        
+        if artist_name in result:
+            result[artist_name]["listen_count"] += listen_count
+            result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count})
+        else:
+            result[artist_name] = {
+                "name": artist_name,
+                "listen_count": listen_count,
+                "albums": [{"name": release_group_name, "listen_count": listen_count}]
+            }
+
+    sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
+    count = 15
+    N = min(count, len(sorted_data))
+    return jsonify({"result": sorted_data[:N]})
 
 
 @stats_api_bp.get("/sitewide/artist-map")

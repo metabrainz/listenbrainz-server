@@ -11,7 +11,7 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistActivityProps = {
   range: UserStatsAPIRange;
-  user: ListenBrainzUser;
+  user?: ListenBrainzUser;
 };
 
 export declare type ChartDataItem = {
@@ -19,18 +19,18 @@ export declare type ChartDataItem = {
   [albumName: string]: number | string;
 };
 
-export default function UserArtistActivity({
-  range,
-  user,
-}: UserArtistActivityProps) {
+export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
 
+  // Props
+  const { user, range } = props;
+
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["userArtistActivity", user.name, range],
+    queryKey: ["userArtistActivity", user?.name, range],
     queryFn: async () => {
       try {
         const queryData = await APIService.getUserArtistActivity(
-          user.name,
+          user?.name,
           range
         );
         return { data: queryData, hasError: false, errorMessage: "" };
