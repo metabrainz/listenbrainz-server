@@ -13,7 +13,7 @@ import {
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
@@ -399,7 +399,7 @@ export default function PlaylistPage() {
           className="cover-art"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(
+            __html: DOMPurify.sanitize(
               coverArt ??
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
@@ -472,7 +472,7 @@ export default function PlaylistPage() {
                 className="content"
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: sanitize(playlist.annotation),
+                  __html: DOMPurify.sanitize(playlist.annotation),
                 }}
               />
             </div>

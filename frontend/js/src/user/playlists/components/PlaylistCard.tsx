@@ -12,7 +12,7 @@ import {
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../../../components/Card";
@@ -105,7 +105,7 @@ export default function PlaylistCard({
   }, [currentUser.auth_token, playlistId, APIService, onSuccessfulCopy]);
 
   const navigateToPlaylist = () => {
-    navigate(`/playlist/${sanitize(playlistId)}/`);
+    navigate(`/playlist/${DOMPurify.sanitize(playlistId)}/`);
   };
 
   if (view === PlaylistView.LIST) {
@@ -125,7 +125,7 @@ export default function PlaylistCard({
             <div className="playlist-index">{index + 1}</div>
             <div className="playlist-info-content">
               <div className="playlist-title">
-                <Link to={`/playlist/${sanitize(playlistId)}/`}>
+                <Link to={`/playlist/${DOMPurify.sanitize(playlistId)}/`}>
                   {playlist.title}
                 </Link>
               </div>
@@ -227,7 +227,10 @@ export default function PlaylistCard({
           />
         </div>
       )}
-      <Link className="info" to={`/playlist/${sanitize(playlistId)}/`}>
+      <Link
+        className="info"
+        to={`/playlist/${DOMPurify.sanitize(playlistId)}/`}
+      >
         <h4>{playlist.title}</h4>
         {playlist.annotation && (
           <div
@@ -235,7 +238,7 @@ export default function PlaylistCard({
             // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{
-              __html: sanitize(playlist.annotation),
+              __html: DOMPurify.sanitize(playlist.annotation),
             }}
           />
         )}
