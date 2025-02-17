@@ -84,12 +84,14 @@ def load_recordings_from_mbids(ts_curs, mbids: Iterable[str]) -> dict:
              , release_data->>'caa_release_mbid' AS caa_release_mbid
              , array_agg(artist->>'name' ORDER BY position) AS ac_names
              , array_agg(artist->>'join_phrase' ORDER BY position) AS ac_join_phrases
+             , tag_data->'recording' AS tags
           FROM (VALUES %s) AS m (recording_mbid)
           JOIN mapping.mb_metadata_cache mbc
             ON mbc.recording_mbid = m.recording_mbid::uuid
   JOIN LATERAL jsonb_array_elements(artist_data->'artists') WITH ORDINALITY artists(artist, position)
             ON TRUE
       GROUP BY mbc.recording_mbid
+             , tag_data->'recording'
              , release_mbid
              , artist_mbids
              , artist_data->>'name'
@@ -146,6 +148,7 @@ def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
                 "caa_id": data["caa_id"],
                 "caa_release_mbid": data["caa_release_mbid"],
                 "artists": data["artists"],
+                "tags": data["tags"],
                 "original_recording_mbid": mbid,
                 "canonical_recording_mbid": canonical_index.get(redirected_mbid, redirected_mbid)
             }
@@ -162,6 +165,7 @@ def load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, mbids):
                 'caa_id': None,
                 'caa_release_mbid': None,
                 'artists': [],
+                'tags': [],
                 'canonical_recording_mbid': None,
                 'original_recording_mbid': mbid
             }
