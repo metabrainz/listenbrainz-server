@@ -11,6 +11,7 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
+from listenbrainz_spark.persisted import get_incremental_users_df
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
@@ -35,14 +36,16 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"user_{self.entity}_{self.stats_range}"
 
-    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created, cache_tables: List[str]):
+    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
         """
+        inc_users_df = get_incremental_users_df()
+        inc_users_df.createOrReplaceTempView("inc_users_table")
         return f"""
               WITH incremental_users AS (
-            SELECT DISTINCT user_id
-              FROM {inc_listens_table}
+            SELECT user_id
+              FROM inc_users_table
              WHERE created >= to_timestamp('{existing_created}')
             )
             SELECT *

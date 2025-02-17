@@ -1,8 +1,7 @@
 from more_itertools import chunked
 
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
 from listenbrainz_spark.postgres import create_release_metadata_cache
-from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 from listenbrainz_spark.stats import run_query
 
@@ -13,9 +12,9 @@ def get_most_listened_year(year):
     setup_listens_for_year(year)
 
     create_release_metadata_cache()
-    read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("releases_all")
+    rel_cache_table = get_release_metadata_cache()
 
-    data = run_query(_get_releases_with_date()).collect()
+    data = run_query(_get_releases_with_date(rel_cache_table)).collect()
     for entries in chunked(data, USERS_PER_MESSAGE):
         yield {
             "type": "year_in_music_most_listened_year",
@@ -24,14 +23,14 @@ def get_most_listened_year(year):
         }
 
 
-def _get_releases_with_date():
-    return """
+def _get_releases_with_date(rel_cache_table):
+    return f"""
         WITH listen_year AS (
         SELECT user_id
              , rel.first_release_date_year AS year
              , count(*) AS listen_count
           FROM listens_of_year l
-          JOIN releases_all rel
+          JOIN {rel_cache_table} rel
             ON l.release_mbid = rel.release_mbid
          WHERE first_release_date_year IS NOT NULL
       GROUP BY user_id
