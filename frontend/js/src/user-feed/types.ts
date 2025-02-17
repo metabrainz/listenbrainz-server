@@ -16,4 +16,5 @@ export enum EventType {
   BLOCK_FOLLOW = "block_follow",
   NOTIFICATION = "notification",
   REVIEW = "critiquebrainz_review",
+  THANKS = "thanks",
 }

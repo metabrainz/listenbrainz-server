@@ -6,10 +6,12 @@ import {
   faComments,
   faEye,
   faEyeSlash,
+  faHandshake,
   faHeadphones,
   faHeart,
   faPaperPlane,
   faPlayCircle,
+  faPlus,
   faQuestion,
   faRefresh,
   faRss,
@@ -51,7 +53,15 @@ import {
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
+import ThanksModal from "./ThanksModal";
 import { EventType, type FeedFetchParams } from "./types";
+import Card from "../components/Card";
+
+enum EventTypeinMessage {
+  personal_recording_recommendation = "personally recommending a track",
+  recording_recommendation = "recommending a track",
+  recording_pin = "pinning a track",
+}
 
 type UserFeedPageProps = {
   events: TimelineEvent<EventMetadata>[];
@@ -94,6 +104,8 @@ function getEventTypeIcon(eventType: EventTypeT) {
       return faComments;
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return faPaperPlane;
+    case EventType.THANKS:
+      return faHandshake;
     default:
       return faQuestion;
   }
@@ -130,6 +142,8 @@ function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
     }
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return "personally recommended a track";
+    case EventType.THANKS:
+      return `thanked a ${event.event_type}`;
     default:
       return "";
   }
@@ -253,6 +267,7 @@ export default function UserFeedPage() {
     },
     [APIService, currentUser]
   );
+
   // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
@@ -378,7 +393,41 @@ export default function UserFeedPage() {
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent<EventMetadata>) => {
+  const renderEventActionButton = (event: TimelineEvent<EventMetadata>, isSubEvent=false) => {
+    if (
+      (event.event_type === EventType.RECORDING_PIN ||
+        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
+        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
+      event.user_name !== currentUser.name &&
+      isSubEvent
+    ) {
+      if (event.hidden) {
+        return (
+          <ListenControl
+            title="Unhide Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+        );
+      }
+      return (
+        <ListenControl
+          title="Hide Event"
+          text=""
+          icon={faEyeSlash}
+          buttonClassName="btn btn-link btn-xs"
+          // eslint-disable-next-line react/jsx-no-bind
+          action={() => {
+            hideEventMutation(event);
+          }}
+        />
+      );
+    }
     if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -420,6 +469,59 @@ export default function UserFeedPage() {
         );
       }
       return (
+        <>
+          {!isSubEvent ? (
+            <ListenControl
+              title="Thanks"
+              text=""
+              icon={faHandshake}
+              buttonClassName="btn btn-link btn-xs"
+              action={() => {
+                NiceModal.show(ThanksModal, {
+                  original_event_id: event.id!,
+                  original_event_type: event.event_type,
+                });
+              }}
+              dataToggle="modal"
+              dataTarget="#ThanksModal"
+            />
+          ) : (
+            null
+          )} 
+
+          <ListenControl
+            title="Hide Event"
+            text=""
+            icon={faEyeSlash}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+        </>
+      );
+    }
+    if (
+      event.event_type === EventType.THANKS &&
+      event.user_name !== currentUser.name
+    ) {
+      if (event.hidden) {
+        return (
+          <ListenControl
+            title="Unhide Event"
+            text=""
+            icon={faEye}
+            buttonClassName="btn btn-link btn-xs"
+            // eslint-disable-next-line react/jsx-no-bind
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+        );
+      }
+
+      return (
         <ListenControl
           title="Hide Event"
           text=""
@@ -432,6 +534,7 @@ export default function UserFeedPage() {
         />
       );
     }
+
     return null;
   };
 
@@ -460,7 +563,8 @@ export default function UserFeedPage() {
       if (
         (event.event_type === EventType.RECORDING_RECOMMENDATION ||
           event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-          event.event_type === EventType.RECORDING_PIN) &&
+          event.event_type === EventType.RECORDING_PIN ||
+          event.event_type === EventType.THANKS) &&
         event.user_name === currentUser.name
       ) {
         additionalMenuItems = [
@@ -487,7 +591,38 @@ export default function UserFeedPage() {
         </div>
       );
     }
+    if (event.event_type === EventType.THANKS && !event.hidden) {
+      const { metadata } = event as TimelineEvent<ThanksMetadata>;
+      return (
+        <div className="event-content">
+          <Card className="listen-card">
+            <div className="main-content">{metadata?.blurb_content}</div>
+          </Card>
+        </div>
+      );
+    }
     return null;
+  };
+
+  const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
+    if (!subEvent) return null;
+
+    return (
+      <div>
+        <details>
+            <summary className="event-description">
+              <span className={`event-icon ${subEvent.event_type}`} />
+              {renderEventText(subEvent)}
+              
+              <span className="event-time">
+                {preciseTimestamp(subEvent.created * 1000)}
+                {renderEventActionButton(subEvent, true)}
+              </span>
+            </summary>
+            {renderEventContent(subEvent)}
+          </details>
+        </div>
+    );
   };
 
   const renderEventText = (event: TimelineEvent<EventMetadata>) => {
@@ -539,6 +674,34 @@ export default function UserFeedPage() {
           }}
         />
       );
+    }
+    if (event_type === EventType.THANKS) {
+      const {
+        original_event_id,
+        original_event_type,
+        thanker_id,
+        thanker_username,
+        thankee_id,
+        thankee_username,
+        blurb_content,
+      } = metadata as ThanksMetadata;
+
+      if (thanker_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            You thanked <Username username={thankee_username} /> for{" "}
+            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
+          </span>
+        );
+      }
+      if (thankee_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            <Username username={thanker_username} /> thanked you for{" "}
+            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
+          </span>
+        );
+      }
     }
 
     const userLinkOrYou =
@@ -680,7 +843,16 @@ export default function UserFeedPage() {
               >
                 <ul>
                   {events?.map((event) => {
-                    const { created, event_type, user_name } = event;
+                    const { created, event_type, user_name, metadata } = event;
+                    let subEventElement;
+                    if(event_type === EventType.THANKS && !event.hidden){
+                      const {original_event_id, original_event_type} = metadata as ThanksMetadata;
+                      const subEvent = events?.find(
+                        (evt) => evt.id === original_event_id && evt.event_type === original_event_type
+                      );
+                      subEventElement = renderSubEvent(subEvent);
+                    }
+
                     return (
                       <li
                         className="timeline-event"
@@ -709,6 +881,15 @@ export default function UserFeedPage() {
                         </div>
 
                         {renderEventContent(event)}
+
+                          {subEventElement &&
+                            <ul>
+                              <li className="timeline-event timeline-sub-event">
+                                {subEventElement}
+                              </li>
+                            </ul>
+                          }
+                        
                       </li>
                     );
                   })}
