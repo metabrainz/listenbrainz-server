@@ -368,6 +368,8 @@ export default function PlaylistPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
 
+  const [showMore, setShowMore] = React.useState(true);
+
   return (
     <div role="main">
       <Helmet>
@@ -406,7 +408,10 @@ export default function PlaylistPage() {
           }}
           title={`Cover art for ${playlist.title}`}
         />
-        <div className="playlist-info">
+        <div
+          className="playlist-info"
+          style={showMore ? {} : { maxHeight: "fit-content" }}
+        >
           <h1>{playlist.title}</h1>
           <div className="details h4">
             <div>
@@ -467,14 +472,23 @@ export default function PlaylistPage() {
             )}
           </div>
           {playlist.annotation && (
-            <div className="wikipedia-extract">
+            <div className="text-summary">
               <div
-                className="content"
+                className={`description playlist-description ${
+                  showMore ? "" : "expanded"
+                }`}
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
                   __html: sanitize(playlist.annotation),
                 }}
               />
+              <button
+                className="btn btn-link pull-right"
+                type="button"
+                onClick={() => setShowMore(!showMore)}
+              >
+                {showMore ? "Show More" : "Show Less"}
+              </button>
             </div>
           )}
         </div>
