@@ -12,10 +12,14 @@ import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
 interface AddSingleListenProps {
   onPayloadChange: (listens: Listen[]) => void;
+  switchMode: (text: string) => void;
+  initialText?: string;
 }
 
 export default function AddSingleListen({
   onPayloadChange,
+  switchMode,
+  initialText,
 }: AddSingleListenProps) {
   const [selectedRecordings, setSelectedRecordings] = useState<
     MusicBrainzRecordingWithReleasesAndRGs[]
@@ -26,7 +30,22 @@ export default function AddSingleListen({
       | undefined;
   }>({});
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<{
+    focus(): void;
+    triggerSearch(newText: string): void;
+  }>(null);
+
+  const initialTextRef = useRef(initialText);
+  React.useEffect(() => {
+    // Trigger search manually if auto-switching from album to recording search
+    if (initialText && initialTextRef.current !== initialText) {
+      searchInputRef.current?.triggerSearch(initialText);
+      initialTextRef.current = initialText;
+    }
+    return () => {
+      initialTextRef.current = undefined;
+    };
+  }, [initialText]);
 
   const removeRecording = (recordingMBID: string) => {
     setSelectedRecordings((prevRecordings) =>
@@ -77,6 +96,7 @@ export default function AddSingleListen({
         ref={searchInputRef}
         expectedPayload="recording"
         onSelectRecording={selectRecording}
+        switchMode={switchMode}
       />
       <div className="track-info">
         <div className="content">
