@@ -14,11 +14,9 @@ export type UserArtistActivityProps = {
   user: ListenBrainzUser;
 };
 
-export type UserArtistActivityState = {
-  data: UserArtistActivityResponse;
-  loading: boolean;
-  errorMessage: string;
-  hasError: boolean;
+export declare type ChartDataItem = {
+  label: string;
+  [albumName: string]: number | string;
 };
 
 export default function UserArtistActivity({
@@ -57,7 +55,7 @@ export default function UserArtistActivity({
       return [];
     }
     return data.result.map((artist) => ({
-      label: artist.name.split(",")[0],
+      label: artist.name,
       ...artist.albums.reduce(
         (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
         {} as Record<string, number>
@@ -129,7 +127,7 @@ export default function UserArtistActivity({
                   margin={{ top: 20, right: 80, bottom: 60, left: 80 }}
                   padding={0.2}
                   layout="vertical"
-                  colors={{ scheme: "pink_yellowGreen" }}
+                  colors={{ scheme: "nivo" }}
                   borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
                   enableLabel={false}
                 />

@@ -464,7 +464,7 @@ def get_artist_activity(user_name: str):
     
     result = {}
     for release_group in release_group_list:
-        artist_name = release_group["artist_name"]
+        artist_name = release_group["artist_name"].split(",")[0]
         listen_count = release_group["listen_count"]
         release_group_name = release_group["release_group_name"]
 
@@ -477,8 +477,12 @@ def get_artist_activity(user_name: str):
                 "listen_count": listen_count,
                 "albums": [{"name": release_group_name, "listen_count": listen_count}]
             }
+
     sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
-    return jsonify({"result": sorted_data})
+    count = 15
+    N = min(count, len(sorted_data))
+    
+    return jsonify({"result": sorted_data[:N]})
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
