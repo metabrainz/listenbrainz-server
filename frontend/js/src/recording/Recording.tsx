@@ -6,7 +6,8 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
-import { chain, isEmpty } from "lodash";
+import { chain } from "lodash";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
 import {
@@ -16,6 +17,7 @@ import {
 } from "../utils/utils";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
+import CBReviewModal from "../cb-review/CBReviewModal";
 
 export type RecordingPageProps = {
   recording: {
@@ -69,13 +71,6 @@ export default function RecordingPage(): JSX.Element {
   } = recording || ({} as RecordingPageProps["recording"]);
 
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
-
-  /** Album art and album color related */
-  const [coverArtSrc, setCoverArtSrc] = React.useState(
-    caa_id && caa_release_mbid
-      ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
-      : "/static/img/cover-art-placeholder.jpg"
-  );
 
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtColor, setAlbumArtColor] = React.useState({
@@ -137,17 +132,20 @@ export default function RecordingPage(): JSX.Element {
 
   const filteredTags = chain(tags).sortBy("count").value().reverse();
 
+  const coverArtSrc =
+    caa_id && caa_release_mbid
+      ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
+      : "/static/img/cover-art-placeholder.jpg";
+
   return (
-    <div
-      id="entity-page"
-      role="main"
-      className="recording-page"
-      style={{ ["--bg-color" as string]: adjustedAlbumColor }}
-    >
+    <div id="entity-page" role="main" className="recording-page">
       <Helmet>
         <title>{recordingName}</title>
       </Helmet>
-      <div className="entity-page-header flex">
+      <div
+        className="entity-page-header flex"
+        style={{ ["--bg-color" as string]: adjustedAlbumColor }}
+      >
         <div className="cover-art">
           <img
             src={coverArtSrc}
@@ -186,7 +184,7 @@ export default function RecordingPage(): JSX.Element {
               type="button"
               className="btn btn-info"
               to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                recordingName
+                artist_credit_name
               )})&mode=easy`}
             >
               <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
@@ -248,13 +246,31 @@ export default function RecordingPage(): JSX.Element {
             </>
           ) : (
             <>
-              <p>Be the first to review this album on CritiqueBrainz</p>
-              <a
-                href={`https://critiquebrainz.org/review/write/recording/${recording_mbid}`}
-                className="btn btn-outline"
+              <p>Be the first to review this recording on CritiqueBrainz</p>
+              <button
+                type="button"
+                className="btn btn-info"
+                data-toggle="modal"
+                data-target="#CBReviewModal"
+                onClick={() => {
+                  NiceModal.show(CBReviewModal, {
+                    entityToReview: [
+                      {
+                        type: "recording",
+                        mbid: recording_mbid,
+                        name: recording_name,
+                      },
+                      {
+                        type: "artist",
+                        mbid: artists[0].artist_mbid,
+                        name: artists[0].artist_credit_name,
+                      },
+                    ],
+                  });
+                }}
               >
                 Add my review
-              </a>
+              </button>
             </>
           )}
         </div>
