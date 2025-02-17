@@ -152,8 +152,11 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
 
         recording = {
             "name": row["recording_name"],
-            "rels": recording_rels
+            "rels": recording_rels,
+            "isrcs": row["isrcs"],
         }
+        if row["first_release_date"]:
+            recording["first_release_date"] = row["first_release_date"]
         if row["length"]:
             recording["length"] = row["length"]
 
@@ -359,6 +362,11 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , r.name AS recording_name
                                  , r.artist_credit AS artist_credit_id
                                  , ac.name AS artist_credit_name
+                                 , (rfdr.year::TEXT || '-' ||
+                                    LPAD(rfdr.month::TEXT, 2, '0') || '-' ||
+                                    LPAD(rfdr.day::TEXT, 2, '0')) AS first_release_date
+                                 , ARRAY_AGG(isrc.isrc ORDER BY isrc.created) 
+                                     FILTER (WHERE isrc.isrc IS NOT NULL) AS isrcs
                                  , artist_data
                                  , artist_tags
                                  , recording_tags
@@ -375,6 +383,10 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                               FROM musicbrainz.recording r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
+                         LEFT JOIN recording_first_release_date rfdr
+                                ON rfdr.recording = r.id
+                         LEFT JOIN isrc
+                                ON isrc.recording = r.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
                          LEFT JOIN recording_rels rrl
@@ -392,6 +404,9 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                                  , r.name
                                  , r.artist_credit
                                  , ac.name
+                                 , rfdr.year
+                                 , rfdr.month
+                                 , rfdr.day
                                  , rd.name
                                  , r.length
                                  , recording_links
