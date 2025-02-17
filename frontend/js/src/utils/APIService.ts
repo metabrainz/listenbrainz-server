@@ -1,4 +1,11 @@
-import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
+import {
+  isFinite,
+  isNil,
+  isUndefined,
+  kebabCase,
+  lowerCase,
+  omit,
+} from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
@@ -986,6 +993,33 @@ export default class APIService {
     });
     await this.checkStatus(response);
     return response.status;
+  };
+
+  getPlaylistImage = async (
+    playlistId: string,
+    userToken: string,
+    dimension?: number,
+    layout?: number
+  ): Promise<string> => {
+    if (!playlistId) {
+      throw new SyntaxError("Playlist ID is missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+    let url = `${this.APIBaseURI}/art/playlist/${playlistId}`;
+    if (isFinite(dimension) && isFinite(layout)) {
+      url += `/${dimension}/${layout}`;
+    }
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const svgBody = await response.text();
+    return svgBody;
   };
 
   submitRecommendationFeedback = async (
