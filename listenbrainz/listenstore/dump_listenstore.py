@@ -15,6 +15,7 @@ import sqlalchemy
 import tempfile
 import orjson
 from psycopg2.extras import execute_values
+from sqlalchemy import text
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH, db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
@@ -549,3 +550,11 @@ class DumpListenStore:
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
+
+    def cleanup_listen_delete_metadata(self):
+        """ Cleanup listen delete metadata after spark full dump is complete """
+        self.log.info("Cleaning up listen_delete_metadata")
+        with timescale.engine.connect() as connection:
+            connection.execute(text("DELETE FROM listen_delete_metadata WHERE deleted"))
+            connection.commit()
+        self.log.info("Cleaning up listen_delete_metadata done!")
