@@ -12,7 +12,10 @@ CREATE TABLE listen_delete_metadata (
     id                  SERIAL                      NOT NULL,
     user_id             INTEGER                     NOT NULL,
     listened_at         TIMESTAMP WITH TIME ZONE    NOT NULL,
-    recording_msid      UUID                        NOT NULL
+    recording_msid      UUID                        NOT NULL,
+    deleted             BOOLEAN                     NOT NULL DEFAULT FALSE,
+    listen_created      TIMESTAMP WITH TIME ZONE
+    CHECK ( deleted IS FALSE OR (deleted IS TRUE AND listen_created IS NOT NULL) )
 );
 
 CREATE TABLE listen_user_metadata (
