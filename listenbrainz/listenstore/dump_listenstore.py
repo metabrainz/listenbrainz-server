@@ -344,7 +344,7 @@ class DumpListenStore:
         -- setting multiple columns at once.
                 WITH listen_with_mbid AS (
                      SELECT l.listened_at
-                          , l.created
+                          , l.created::timestamp(3) with time zone AS created -- reduce timestamp resolution to ms
                           , l.user_id
                           , l.recording_msid
                           -- converting jsonb array to text array is non-trivial, so return a jsonb array not text
