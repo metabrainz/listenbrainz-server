@@ -4,10 +4,9 @@ import time
 import tarfile
 import tempfile
 import logging
-from typing import List
 
-from listenbrainz_spark import schema, path, utils, hdfs_connection
-from listenbrainz_spark.hdfs.utils import create_dir
+from listenbrainz_spark import path, utils, hdfs_connection
+from listenbrainz_spark.hdfs.utils import create_dir, move
 from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.hdfs.utils import upload_to_HDFS
@@ -96,22 +95,10 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         src_path = self.upload_archive_to_temp(archive, ".parquet")
         dest_path = path.LISTENBRAINZ_NEW_DATA_DIRECTORY
-        # Delete existing dumps if any
-        if path_exists(dest_path):
-            logger.info(f'Removing {dest_path} from HDFS...')
-            delete_dir(dest_path, recursive=True)
-            logger.info('Done!')
 
-        logger.info(f"Moving the processed files from {src_path} to {dest_path}")
         t0 = time.monotonic()
-
-        # Check if parent directory exists, if not create a directory
-        dest_path_parent = str(Path(dest_path).parent)
-        if not path_exists(dest_path_parent):
-            create_dir(dest_path_parent)
-
-        rename(src_path, dest_path)
-        utils.logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
+        move(src_path, dest_path)
+        logger.info(f"Full dump uploaded! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_mlhd_dump_chunk(self, archive: str):
         """ Upload MLHD+ dump to HDFS """
