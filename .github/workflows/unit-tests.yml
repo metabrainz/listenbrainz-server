@@ -19,6 +19,7 @@ on:
       - 'docker/spark-cluster-config/**'
       - 'docs/**'
       - '**.less'
+      - '**.scss'
       - '**.md'
 
 concurrency:
