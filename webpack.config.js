@@ -92,6 +92,14 @@ module.exports = function (env, argv) {
           },
         },
         {
+          test: /\.sass$/i,
+          type: "asset/resource",
+          loader: "sass-loader",
+          generator: {
+            filename: isProd ? "[name].[contenthash].css" : "[name].css",
+          },
+        },
+        {
           // Supportthis library used by markdown-react, needs nodeJS style `process`
           test: /node_modules\/kleur\/index\.js/,
           use: [
