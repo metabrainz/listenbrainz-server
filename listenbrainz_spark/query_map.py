@@ -33,6 +33,7 @@ import listenbrainz_spark.mlhd.download
 import listenbrainz_spark.mlhd.similarity
 import listenbrainz_spark.popularity.main
 import listenbrainz_spark.echo.echo
+import listenbrainz_spark.request_consumer.jobs.delete_listens
 
 functions = {
     'echo.echo': listenbrainz_spark.echo.echo.handler,
@@ -82,6 +83,7 @@ functions = {
     'releases.fresh': listenbrainz_spark.fresh_releases.fresh_releases.main,
     'troi.playlists': listenbrainz_spark.troi.periodic_jams.main,
     'tags.default': listenbrainz_spark.tags.tags.main,
+    'import.deleted_listens': listenbrainz_spark.request_consumer.jobs.delete_listens.main,
 }
 
 

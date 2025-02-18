@@ -19,7 +19,7 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH, \
-    LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
+    LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, DELETED_LISTENS_SAVE_PATH
 from listenbrainz_spark.schema import listens_new_schema
 
 logger = logging.getLogger(__name__)
@@ -146,13 +146,14 @@ def get_listen_files_list() -> List[str]:
     return file_names
 
 
-def get_listens_from_dump(start: datetime, end: datetime, include_incremental=True) -> DataFrame:
+def get_listens_from_dump(start: datetime, end: datetime, include_incremental=True, remove_deleted=False) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
             start: minimum time to include a listen in the dataframe
             end: maximum time to include a listen in the dataframe
             include_incremental: if True, also include listens from incremental dumps
+            remove_deleted: if True, also remove deleted listens from the dataframe
 
         Returns:
             dataframe of listens with listened_at between start and end
@@ -171,6 +172,10 @@ def get_listens_from_dump(start: datetime, end: datetime, include_incremental=Tr
         df = df.where(f"listened_at >= to_timestamp('{start}')")
     if end:
         df = df.where(f"listened_at <= to_timestamp('{end}')")
+
+    if remove_deleted and hdfs_connection.client.status(DELETED_LISTENS_SAVE_PATH, strict=False):
+        delete_df = read_files_from_HDFS(DELETED_LISTENS_SAVE_PATH)
+        df = df.join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti").select(*df.columns)
 
     return df
 
