@@ -17,6 +17,10 @@ const userProps: UserArtistActivityProps = {
   range: "week",
 };
 
+const sitewideProps: UserArtistActivityProps = {
+  range: "week",
+};
+
 jest.mock("@nivo/bar", () => ({
   ...jest.requireActual("@nivo/bar"),
   ResponsiveBar: ({ data }: any) => (
@@ -36,11 +40,28 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe("UserArtistActivity", () => {
+describe.each([
+  ["User Stats", userProps],
+  ["Sitewide Stats", sitewideProps],
+])("%s", (name, props) => {
   let server: SetupServerApi;
   beforeAll(() => {
     const handlers = [
       http.get("/1/stats/user/foobar/artist-activity", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistActivityResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
+      }),
+      http.get("/1/stats/sitewide/artist-activity", async ({ request }) => {
         const url = new URL(request.url);
         const range = url.searchParams.get("range");
 
@@ -68,7 +89,7 @@ describe("UserArtistActivity", () => {
 
   it("renders correctly", async () => {
     renderWithProviders(
-      <UserArtistActivity {...userProps} />,
+      <UserArtistActivity {...props} />,
       {},
       {
         wrapper: reactQueryWrapper,
@@ -82,7 +103,7 @@ describe("UserArtistActivity", () => {
 
   it("displays error message when API call fails", async () => {
     renderWithProviders(
-      <UserArtistActivity {...{ ...userProps, range: "month" }} />,
+      <UserArtistActivity {...{ ...props, range: "month" }} />,
       {},
       {
         wrapper: reactQueryWrapper,
