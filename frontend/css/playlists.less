@@ -1,6 +1,6 @@
 @playlistBackgroundColor: #fafafa;
 @descriptionLines: 3;
-@playlistDescriptionLines: 8;
+@longDescriptionLines: 8;
 
 #playlists-page .playlist-view-options {
   display: flex;
@@ -261,29 +261,32 @@
 /* Pure CSS multiline ellipsis by Sagi Shrieber:
     http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
 */
-.description {
+.text-summary {
   overflow: hidden;
   position: relative;
   line-height: 1.2em;
   max-height: @descriptionLines * 1.2em;
-  text-align: justify;
-  padding-right: 2em;
-  display: -webkit-box;
   line-clamp: @descriptionLines;
-  margin-top: 0.5rem;
   -webkit-line-clamp: @descriptionLines;
+  display: -webkit-box;
   -webkit-box-orient: vertical;
+  padding-right: 2em;
+  margin-top: 0.5rem;
+  mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
 
-  &.playlist-description {
-    max-height: @playlistDescriptionLines * 1.2em;
-    line-clamp: @playlistDescriptionLines;
-    -webkit-line-clamp: @playlistDescriptionLines;
+  &.long {
+    max-height: @longDescriptionLines * 1.2em;
+    line-clamp: @longDescriptionLines;
+    -webkit-line-clamp: @longDescriptionLines;
   }
 
   &.expanded {
     line-clamp: none;
     -webkit-line-clamp: none;
     max-height: unset;
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 
   p {
