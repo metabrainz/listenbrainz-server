@@ -665,7 +665,7 @@ def create_personal_recommendation_event(user_name):
 @ratelimit()
 def create_thanks_event(user_name):
     '''
-    Make the user thank a pin/suggestion. The request should post
+    Make the user thank a pin/suggestion.
 
     :reqheader Authorization: Token <user token>
     :reqheader Content-Type: *application/json*
@@ -715,12 +715,7 @@ def create_thanks_event(user_name):
 
         if not result:
             raise APIBadRequest(f"{event_type} event with id {row_id} not found")
-        # result.user_id -> thankee's id
-        # user_name -> thanker's username
-        # get thankee's username from get_users_by_id function
-        # user['id'] -> thanker's id
         thankee_username = db_user.get_users_by_id(db_conn, [result.user_id])[result.user_id]
-        #raise APIBadRequest(f"{thankee_username}")
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
             db_user_timeline_event.create_thanks_event(db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
             return jsonify({"status": "ok"})
@@ -1209,7 +1204,7 @@ def get_thanks_events(
                 blurb_content=event.metadata.blurb_content,
                 thanker_id=event.metadata.thanker_id,
                 thanker_username=event.metadata.thanker_username,
-                thankee_id=event.metadata.thanker_id,
+                thankee_id=event.metadata.thankee_id,
                 thankee_username=event.metadata.thankee_username,
             )
 

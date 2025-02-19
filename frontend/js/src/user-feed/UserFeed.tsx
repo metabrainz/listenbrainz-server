@@ -395,40 +395,6 @@ export default function UserFeedPage() {
 
   const renderEventActionButton = (event: TimelineEvent<EventMetadata>, isSubEvent=false) => {
     if (
-      (event.event_type === EventType.RECORDING_PIN ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
-      event.user_name !== currentUser.name &&
-      isSubEvent
-    ) {
-      if (event.hidden) {
-        return (
-          <ListenControl
-            title="Unhide Event"
-            text=""
-            icon={faEye}
-            buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
-            action={() => {
-              hideEventMutation(event);
-            }}
-          />
-        );
-      }
-      return (
-        <ListenControl
-          title="Hide Event"
-          text=""
-          icon={faEyeSlash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            hideEventMutation(event);
-          }}
-        />
-      );
-    }
-    if (
       ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
         event.event_type === EventType.RECORDING_PIN) &&
@@ -470,7 +436,8 @@ export default function UserFeedPage() {
       }
       return (
         <>
-          {!isSubEvent ? (
+
+          {!isSubEvent && (
             <ListenControl
               title="Thanks"
               text=""
@@ -485,8 +452,6 @@ export default function UserFeedPage() {
               dataToggle="modal"
               dataTarget="#ThanksModal"
             />
-          ) : (
-            null
           )} 
 
           <ListenControl
@@ -604,27 +569,6 @@ export default function UserFeedPage() {
     return null;
   };
 
-  const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
-    if (!subEvent) return null;
-
-    return (
-      <div>
-        <details>
-            <summary className="event-description">
-              <span className={`event-icon ${subEvent.event_type}`} />
-              {renderEventText(subEvent)}
-              
-              <span className="event-time">
-                {preciseTimestamp(subEvent.created * 1000)}
-                {renderEventActionButton(subEvent, true)}
-              </span>
-            </summary>
-            {renderEventContent(subEvent)}
-          </details>
-        </div>
-    );
-  };
-
   const renderEventText = (event: TimelineEvent<EventMetadata>) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
@@ -677,13 +621,9 @@ export default function UserFeedPage() {
     }
     if (event_type === EventType.THANKS) {
       const {
-        original_event_id,
         original_event_type,
-        thanker_id,
         thanker_username,
-        thankee_id,
         thankee_username,
-        blurb_content,
       } = metadata as ThanksMetadata;
 
       if (thanker_username === currentUser.name) {
@@ -714,6 +654,27 @@ export default function UserFeedPage() {
       <span className="event-description-text">
         {userLinkOrYou} {getEventTypePhrase(event)}
       </span>
+    );
+  };
+
+  const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
+    if (!subEvent) return null;
+
+    return (
+      <div>
+        <details>
+            <summary className="event-description">
+              <span className={`event-icon ${subEvent.event_type}`} />
+              {renderEventText(subEvent)}
+              
+              <span className="event-time">
+                {preciseTimestamp(subEvent.created * 1000)}
+                {renderEventActionButton(subEvent, true)}
+              </span>
+            </summary>
+            {renderEventContent(subEvent)}
+          </details>
+        </div>
     );
   };
 
@@ -864,11 +825,13 @@ export default function UserFeedPage() {
                               <FontAwesomeIcon
                                 icon={faCircle as IconProp}
                                 transform="grow-8"
+                                fixedWidth
                               />
                               <FontAwesomeIcon
                                 icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
                                 transform="shrink-4"
+                                fixedWidth
                               />
                             </span>
                           </span>

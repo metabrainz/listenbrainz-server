@@ -113,7 +113,7 @@
           background-color: @gray;
           aspect-ratio: 1;
           border-radius: 50%;
-          width: 0.7em;
+          width: 0.65em;
           display: block;
           color: white;
           font-size: 2em;
@@ -122,10 +122,11 @@
           text-align: center;
           margin-top: 0.65em;
           margin-left: -0.5em;
+          cursor: pointer;
         }
 
         details[open] .event-icon:before {
-          background-color: @gray-light;
+          background-color: lighten(@gray, 25%);
           content: "-";
         }
       }
