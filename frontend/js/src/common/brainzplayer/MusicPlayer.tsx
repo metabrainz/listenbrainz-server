@@ -77,7 +77,7 @@ function AnimateTextOnOverflow(props: {
   return (
     <div ref={textRef} className="text-scroll-wrapper">
       <span
-        className={`${className} ${isOverflowing ? "animate" : ""}`}
+        className={`${className ?? ""} ${isOverflowing ? "animate" : ""}`}
         title={text}
         style={style}
       >
@@ -233,7 +233,7 @@ function MusicPlayer(props: MusicPlayerProps) {
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
   return (
-    <>
+    <div style={{ color: mostReadableTextColor }}>
       <div className="header">
         <FontAwesomeIcon
           className="btn hide-queue"
@@ -263,12 +263,11 @@ function MusicPlayer(props: MusicPlayerProps) {
       <div className="info">
         <div className="info-text-wrapper">
           <AnimateTextOnOverflow
-            className="text-muted"
             text={currentTrackName}
             style={{ fontSize: "1.5em" }}
           />
           <span
-            className="text-muted ellipsis"
+            className="ellipsis"
             title={currentTrackArtist}
             style={{ fontSize: "1em" }}
           >
@@ -288,7 +287,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           durationMs={durationMs}
           seekToPositionMs={seekToPositionMs}
         />
-        <div style={{ color: mostReadableTextColor }}>
+        <div>
           {millisecondsToStr(progressMs)}&#8239;/&#8239;
           {millisecondsToStr(durationMs)}
         </div>
@@ -329,7 +328,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           color={queueRepeatMode.color}
         />
       </div>
-    </>
+    </div>
   );
 }
 
