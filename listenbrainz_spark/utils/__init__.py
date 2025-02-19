@@ -126,6 +126,8 @@ def get_listen_files_list() -> List[str]:
         if file == "incremental.parquet":
             has_incremental = True
             continue
+        if file == "delete.parquet":
+            continue
         if file.endswith(".parquet"):
             file_names.append(file)
 
