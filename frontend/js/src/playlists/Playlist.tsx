@@ -44,6 +44,7 @@ import {
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
+import DuplicateTrackModal from "./components/DuplicateTrackModal";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -104,6 +105,7 @@ export default function PlaylistPage() {
     playlistProps?.playlist || {}
   );
   const { track: tracks } = playlist;
+  const [dontAskAgain, setDontAskAgain] = React.useState(false);
 
   React.useEffect(() => {
     setPlaylist(playlistProps?.playlist || {});
@@ -220,6 +222,28 @@ export default function PlaylistPage() {
     }
     try {
       const jspfTrack = makeJSPFTrack(selectedTrackMetadata);
+
+      // check if the track is already in the playlist
+      const trackMBID = getRecordingMBIDFromJSPFTrack(jspfTrack);
+      const isDuplicate = playlist.track.some((track) => {
+        const existingMBID = getRecordingMBIDFromJSPFTrack(track);
+        return existingMBID === trackMBID;
+      });
+      if (isDuplicate && !dontAskAgain) {
+        const [confirmed, dontAskAgainValue] = await NiceModal.show<
+          [boolean, boolean],
+          any
+        >(DuplicateTrackModal, {
+          message:
+            "This track is already in the playlist. Do you want to add it anyway?",
+          dontAskAgain,
+        });
+        setDontAskAgain(dontAskAgainValue);
+        if (!confirmed) {
+          return;
+        }
+      }
+
       await APIService.addPlaylistItems(
         currentUser.auth_token,
         getPlaylistId(playlist),
@@ -344,6 +368,9 @@ export default function PlaylistPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
 
+  const [showMore, setShowMore] = React.useState(false);
+  const isLongDescription =
+    playlist?.annotation && playlist.annotation.length > 400;
   return (
     <div role="main">
       <Helmet>
@@ -382,7 +409,10 @@ export default function PlaylistPage() {
           }}
           title={`Cover art for ${playlist.title}`}
         />
-        <div className="playlist-info">
+        <div
+          className="playlist-info"
+          style={showMore ? { maxHeight: "fit-content" } : {}}
+        >
           <h1>{playlist.title}</h1>
           <div className="details h4">
             <div>
@@ -443,14 +473,25 @@ export default function PlaylistPage() {
             )}
           </div>
           {playlist.annotation && (
-            <div className="wikipedia-extract">
+            <div>
               <div
-                className="content"
+                className={`${isLongDescription ? "text-summary long" : ""} ${
+                  showMore ? "expanded" : ""
+                }`}
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
                   __html: sanitize(playlist.annotation),
                 }}
               />
+              {isLongDescription && (
+                <button
+                  className="btn btn-link pull-right"
+                  type="button"
+                  onClick={() => setShowMore(!showMore)}
+                >
+                  {showMore ? "Show Less" : "Show More"}
+                </button>
+              )}
             </div>
           )}
         </div>

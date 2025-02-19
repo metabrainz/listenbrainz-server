@@ -1,0 +1,6 @@
+Hi {{ username }}!
+
+Your ListenBrainz account {{ username }} has been restored and is now accepting listens again.
+
+Best,
+The ListenBrainz Team

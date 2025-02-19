@@ -212,3 +212,7 @@ REJECT_NEW_USERS_WITHOUT_EMAIL = False
 
 # base directory for user data exports
 USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
+
+# Service monitoring -- only needed for MetaBrainz production
+SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
+SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""

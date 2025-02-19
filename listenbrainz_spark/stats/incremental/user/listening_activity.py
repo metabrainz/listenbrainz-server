@@ -24,10 +24,7 @@ class ListeningActivityUserStatsQueryEntity(UserStatsQueryProvider):
     def entity(self):
         return "listening_activity"
 
-    def get_cache_tables(self) -> List[str]:
-        return []
-
-    def get_aggregate_query(self, table, cache_tables):
+    def get_aggregate_query(self, table):
         return f"""
             SELECT user_id
                  , date_format(listened_at, '{self.spark_date_format}') AS time_range
@@ -58,7 +55,7 @@ class ListeningActivityUserStatsQueryEntity(UserStatsQueryProvider):
                      , time_range
         """
 
-    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
+    def get_stats_query(self, final_aggregate):
         # calculates the number of listens in each time range for each user, count(listen.listened_at) so that
         # group without listens are counted as 0, count(*) gives 1.
         # use cross join to create all time range rows for all users (otherwise ranges in which user was inactive

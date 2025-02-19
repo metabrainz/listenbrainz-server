@@ -1,5 +1,6 @@
 from typing import List
 
+from listenbrainz_spark.postgres.artist import get_artist_country_cache
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.artist import ArtistUserEntity
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsMessageCreator
@@ -11,8 +12,8 @@ class ArtistMapUserEntity(ArtistUserEntity):
     def __init__(self, selector: ListenRangeSelector, top_entity_limit: int):
         super().__init__(selector=selector, top_entity_limit=top_entity_limit)
 
-    def get_stats_query(self, final_aggregate, cache_tables: List[str]):
-        cache_table = cache_tables[0]
+    def get_stats_query(self, final_aggregate):
+        cache_table = get_artist_country_cache()
         return f"""
             WITH ranked_stats AS (
                 SELECT user_id
