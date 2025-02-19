@@ -19,7 +19,7 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            PathNotFoundException,
                                            ViewNotRegisteredException)
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH, \
-    LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, DELETED_LISTENS_SAVE_PATH
+    LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, DELETED_LISTENS_SAVE_PATH, DELETED_USER_LISTEN_HISTORY_SAVE_PATH
 from listenbrainz_spark.schema import listens_new_schema
 
 logger = logging.getLogger(__name__)
@@ -175,9 +175,19 @@ def get_listens_from_dump(start: datetime, end: datetime, include_incremental=Tr
     if end:
         df = df.where(f"listened_at <= to_timestamp('{end}')")
 
+    # todo: refactor, because incremental listens are loaded separately and deletion needs to be applied there too
     if remove_deleted and hdfs_connection.client.status(DELETED_LISTENS_SAVE_PATH, strict=False):
         delete_df = read_files_from_HDFS(DELETED_LISTENS_SAVE_PATH)
-        df = df.join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti").select(*df.columns)
+        df = df \
+            .join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti") \
+            .select(*df.columns)
+
+    if remove_deleted and hdfs_connection.client.status(DELETED_USER_LISTEN_HISTORY_SAVE_PATH, strict=False):
+        delete_df2 = read_files_from_HDFS(DELETED_USER_LISTEN_HISTORY_SAVE_PATH)
+        df = df \
+            .join(delete_df2, ["user_id"], "left_outer") \
+            .where((delete_df2.max_created.isNull()) | (df.created >= delete_df2.max_created)) \
+            .select(*df.columns)
 
     return df
 
