@@ -106,7 +106,7 @@ def delete_listens():
                AND l.user_id = ldm.user_id
                AND l.listened_at = ldm.listened_at
                AND l.recording_msid = ldm.recording_msid
-               AND NOT ldm.deleted
+               AND ldm.status = 'pending'
          RETURNING ldm.id, l.user_id, l.created
         ), update_counts AS (
             UPDATE listen_user_metadata lm
@@ -120,7 +120,7 @@ def delete_listens():
              WHERE lm.user_id = uc.user_id
         )
             UPDATE listen_delete_metadata ldm
-               SET deleted = 't'
+               SET status = 'complete'
                  , listen_created = dl.created
               FROM deleted_listens dl
              WHERE ldm.id = dl.id
@@ -193,6 +193,12 @@ def delete_listens():
               FROM calculate_new_ts mt
              WHERE lm.user_id = mt.user_id
     """
+    mark_invalid_rows_query = """
+        UPDATE listen_delete_metadata
+           SET status = 'invalid'
+         WHERE id <= :max_id
+           AND status = 'pending'
+    """
 
     with timescale.engine.begin() as connection:
         result = connection.execute(text(select_max_id))
@@ -213,6 +219,9 @@ def delete_listens():
 
         logger.info("Update maximum listen timestamp affected by deleted listens")
         connection.execute(text(update_listen_max_ts), {"max_id": max_id})
+
+        logger.info("Cleanup listen delete metadata table")
+        connection.execute(text(mark_invalid_rows_query), {"max_id": max_id})
 
         logger.info("Completed deleting listens and updating affected metadata")
 
