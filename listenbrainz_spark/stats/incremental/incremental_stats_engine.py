@@ -123,7 +123,12 @@ class IncrementalStatsEngine:
             DataFrame: The generated incremental aggregate DataFrame.
         """
         self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
-        get_incremental_listens_df().createOrReplaceTempView(self.incremental_table)
+
+        inc_listens_df = get_incremental_listens_df()
+        inc_listens_df = inc_listens_df.where(f"listened_at >= to_timestamp('{self.provider.from_date}')")
+        inc_listens_df = inc_listens_df.where(f"listened_at <= to_timestamp('{self.provider.to_date}')")
+        inc_listens_df.createOrReplaceTempView(self.incremental_table)
+
         inc_query = self.provider.get_aggregate_query(self.incremental_table)
         return run_query(inc_query)
 
