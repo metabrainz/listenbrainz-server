@@ -22,6 +22,19 @@ const MOUSE_THROTTLE_DELAY: number = 300;
 const TOOLTIP_INITIAL_CONTENT: string = "0:00";
 const TOOLTIP_TOP_OFFSET: number = 39;
 
+// Originally by ford04 - https://stackoverflow.com/a/62017005
+const useThrottle = (callback: any, delay: number | undefined) => {
+  const options = { leading: true, trailing: false };
+  const callbackRef = React.useRef(callback);
+  React.useEffect(() => {
+    callbackRef.current = callback;
+  });
+  return React.useCallback(
+    throttle((...args: any) => callbackRef.current(...args), delay, options),
+    [delay]
+  );
+};
+
 function ProgressBar(props: ProgressBarProps) {
   const { durationMs, progressMs, seekToPositionMs } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
@@ -30,19 +43,6 @@ function ProgressBar(props: ProgressBarProps) {
     ((progressMs * 100) / durationMs).toFixed(2)
   );
   const hideProgressBar = isNaN(progressPercentage) || progressPercentage <= 0;
-
-  // Originally by ford04 - https://stackoverflow.com/a/62017005
-  const useThrottle = (callback: any, delay: number | undefined) => {
-    const options = { leading: true, trailing: false };
-    const callbackRef = React.useRef(callback);
-    React.useEffect(() => {
-      callbackRef.current = callback;
-    });
-    return React.useCallback(
-      throttle((...args: any) => callbackRef.current(...args), delay, options),
-      [delay]
-    );
-  };
 
   const mouseEventHandler = useThrottle(
     (event: React.MouseEvent<HTMLInputElement>): void => {
