@@ -17,7 +17,7 @@ def main():
              , recording_msid
              , listen_created::timestamp(3) with time zone AS created
           FROM listen_delete_metadata
-         WHERE deleted
+         WHERE status = 'complete'::listen_delete_metadata_status_enum
     """
     new_listens_to_delete_df = load_from_db(config.TS_JDBC_URI, config.TS_USER, config.TS_PASSWORD, query)
     existing_listens_to_delete_df = read_files_from_HDFS(DELETED_LISTENS_SAVE_PATH)
