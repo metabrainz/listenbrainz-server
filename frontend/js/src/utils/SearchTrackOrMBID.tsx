@@ -1,6 +1,6 @@
 import { faSpinner, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { throttle } from "lodash";
+import { isFunction, throttle } from "lodash";
 import React, {
   forwardRef,
   useCallback,
@@ -15,8 +15,13 @@ import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
+import {
+  LB_ALBUM_MBID_REGEXP,
+  RELEASE_GROUP_MBID_REGEXP,
+  RELEASE_MBID_REGEXP,
+} from "./SearchAlbumOrMBID";
 
-const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+export const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1500;
 
 type PayloadType = "trackmetadata" | "recording";
@@ -35,12 +40,20 @@ type ConditionalReturnValue =
     };
 
 type SearchTrackOrMBIDProps = {
+  autofocus?: boolean;
   defaultValue?: string;
   expectedPayload: PayloadType;
+  switchMode?: (text: string) => void;
 } & ConditionalReturnValue;
 
 const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
-  { onSelectRecording, expectedPayload, defaultValue }: SearchTrackOrMBIDProps,
+  {
+    onSelectRecording,
+    expectedPayload,
+    defaultValue,
+    autofocus = true,
+    switchMode,
+  }: SearchTrackOrMBIDProps,
   inputRefForParent
 ) {
   const { APIService } = useContext(GlobalAppContext);
@@ -62,6 +75,9 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
         focus() {
           inputRefLocal?.current?.focus();
         },
+        triggerSearch(newText: string) {
+          setInputValue(newText);
+        },
       };
     },
     []
@@ -69,10 +85,12 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
 
   // Autofocus once on load
   useEffect(() => {
-    setTimeout(() => {
-      inputRefLocal?.current?.focus();
-    }, 500);
-  }, []);
+    if (autofocus) {
+      setTimeout(() => {
+        inputRefLocal?.current?.focus();
+      }, 500);
+    }
+  }, [autofocus]);
 
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
@@ -215,8 +233,16 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
       return;
     }
     setLoading(true);
-    const isValidUUID = RECORDING_MBID_REGEXP.test(inputValue);
-    if (isValidUUID) {
+    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    const isValidAlbumUUID =
+      RELEASE_MBID_REGEXP.test(inputValue) ||
+      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      LB_ALBUM_MBID_REGEXP.test(inputValue);
+    if (isValidAlbumUUID && isFunction(switchMode)) {
+      switchMode(inputValue);
+      return;
+    }
+    if (isValidRecordingUUID) {
       throttledHandleValidMBID(inputValue);
     } else {
       throttledSearchTrack(inputValue);

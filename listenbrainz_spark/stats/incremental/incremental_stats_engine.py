@@ -10,7 +10,8 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.config import HDFS_CLUSTER_URI
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
-from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA
+from listenbrainz_spark.persisted import get_incremental_listens_df
+from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA, INCREMENTAL_BOOKKEEPING_SCHEMA
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
@@ -48,8 +49,9 @@ class IncrementalStatsEngine:
     def __init__(self, provider: QueryProvider, message_creator: MessageCreator):
         self.provider = provider
         self.message_creator = message_creator
-        self._cache_tables = []
         self._only_inc = None
+        self._final_table = None
+        self.incremental_table = None
 
     @property
     def only_inc(self):
@@ -57,18 +59,9 @@ class IncrementalStatsEngine:
             raise Exception("only_inc is not initialized, call generate_stats first.")
         return self._only_inc
 
-    def _setup_cache_tables(self):
-        """ Set up metadata cache tables by reading data from HDFS and creating temporary views. """
-        cache_tables = []
-        for idx, df_path in enumerate(self.provider.get_cache_tables()):
-            df_name = f"entity_data_cache_{idx}"
-            cache_tables.append(df_name)
-            read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-        self._cache_tables = cache_tables
-
     def partial_aggregate_usable(self) -> bool:
         """ Checks whether a partial aggregate exists and is fresh to generate the required stats. """
-        metadata_path = self.provider.get_bookkeeping_path()
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/full"
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         try:
@@ -95,7 +88,7 @@ class IncrementalStatsEngine:
         Returns:
             DataFrame: The generated partial aggregate DataFrame.
         """
-        metadata_path = self.provider.get_bookkeeping_path()
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/full"
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         table = f"{self.provider.get_table_prefix()}_full_listens"
@@ -104,7 +97,7 @@ class IncrementalStatsEngine:
 
         logger.info("Creating partial aggregate from full dump listens")
         hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
-        full_query = self.provider.get_aggregate_query(table, self._cache_tables)
+        full_query = self.provider.get_aggregate_query(table)
         full_df = run_query(full_query)
         full_df.write.mode("overwrite").parquet(existing_aggregate_path)
 
@@ -129,14 +122,35 @@ class IncrementalStatsEngine:
         Returns:
             DataFrame: The generated incremental aggregate DataFrame.
         """
-        table = f"{self.provider.get_table_prefix()}_incremental_listens"
-        read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH) \
-            .createOrReplaceTempView(table)
-        inc_query = self.provider.get_aggregate_query(table, self._cache_tables)
+        self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
+        get_incremental_listens_df().createOrReplaceTempView(self.incremental_table)
+        inc_query = self.provider.get_aggregate_query(self.incremental_table)
         return run_query(inc_query)
 
-    def generate_stats(self) -> DataFrame:
-        self._setup_cache_tables()
+    def bookkeep_incremental_aggregate(self):
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental"
+        query = f"SELECT max(created) AS latest_created_at FROM {self.incremental_table}"
+        latest_created_at = run_query(query).collect()[0]["latest_created_at"]
+        metadata_df = listenbrainz_spark.session.createDataFrame(
+            [(latest_created_at, datetime.now())],
+            schema=INCREMENTAL_BOOKKEEPING_SCHEMA
+        )
+        metadata_df.write.mode("overwrite").json(metadata_path)
+
+    def get_incremental_dumps_existing_created(self):
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental"
+        try:
+            metadata = listenbrainz_spark \
+                .session \
+                .read \
+                .schema(INCREMENTAL_BOOKKEEPING_SCHEMA) \
+                .json(f"{HDFS_CLUSTER_URI}{metadata_path}") \
+                .collect()[0]
+            return metadata["created"]
+        except AnalysisException:
+            return None
+
+    def prepare_final_aggregate(self):
         prefix = self.provider.get_table_prefix()
 
         if self.provider.force_partial_aggregate() or not self.partial_aggregate_usable():
@@ -155,31 +169,54 @@ class IncrementalStatsEngine:
             inc_df.createOrReplaceTempView(inc_table)
 
             if self._only_inc:
-                filter_query = self.provider.get_filter_aggregate_query(partial_table, inc_table)
-                filtered_aggregate_df = run_query(filter_query)
-                filtered_table = f"{prefix}_filtered_aggregate"
-                filtered_aggregate_df.createOrReplaceTempView(filtered_table)
-            else:
-                filtered_table = partial_table
+                existing_created = self.get_incremental_dumps_existing_created()
 
-            final_query = self.provider.get_combine_aggregates_query(filtered_table, inc_table)
+                filter_existing_query = self.provider.get_filter_aggregate_query(
+                    partial_table,
+                    self.incremental_table,
+                    existing_created
+                )
+                filtered_existing_aggregate_df = run_query(filter_existing_query)
+                filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
+                filtered_existing_aggregate_df.createOrReplaceTempView(filtered_existing_table)
+
+                filter_incremental_query = self.provider.get_filter_aggregate_query(
+                    inc_table,
+                    self.incremental_table,
+                    existing_created
+                )
+                filtered_incremental_aggregate_df = run_query(filter_incremental_query)
+                filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"
+                filtered_incremental_aggregate_df.createOrReplaceTempView(filtered_incremental_table)
+            else:
+                filtered_existing_table = partial_table
+                filtered_incremental_table = inc_table
+
+            final_query = self.provider.get_combine_aggregates_query(filtered_existing_table, filtered_incremental_table)
             final_df = run_query(final_query)
         else:
             final_df = partial_df
             self._only_inc = False
 
-        final_table = f"{prefix}_final_aggregate"
-        final_df.createOrReplaceTempView(final_table)
+        self._final_table = f"{prefix}_final_aggregate"
+        final_df.createOrReplaceTempView(self._final_table)
 
-        results_query = self.provider.get_stats_query(final_table)
+    def generate_stats(self) -> DataFrame:
+        results_query = self.provider.get_stats_query(self._final_table)
         results_df = run_query(results_query)
         return results_df
 
-    def run(self) -> Iterator[Dict]:
-        results = self.generate_stats()
-        if not self.only_inc:
-            yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results, self.only_inc):
+    @staticmethod
+    def create_messages(results, only_inc, message_creator) -> Iterator[Dict]:
+        if not only_inc:
+            yield message_creator.create_start_message()
+        for message in message_creator.create_messages(results, only_inc):
             yield message
-        if not self.only_inc:
-            yield self.message_creator.create_end_message()
+        if not only_inc:
+            yield message_creator.create_end_message()
+
+    def run(self) -> Iterator[Dict]:
+        self.prepare_final_aggregate()
+        results = self.generate_stats()
+        yield from self.create_messages(results, self.only_inc, self.message_creator)
+        self.bookkeep_incremental_aggregate()

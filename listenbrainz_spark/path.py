@@ -9,6 +9,8 @@ LISTENBRAINZ_BASE_STATS_DIRECTORY = os.path.join('/', 'stats')
 LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'sitewide')
 LISTENBRAINZ_USER_STATS_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'user')
 LISTENBRAINZ_LISTENER_STATS_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'listener')
+LISTENBRAINZ_POPULARITY_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'popularity')
+LISTENBRAINZ_MLHD_POPULARITY_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'mlhd_popularity')
 
 # MLHD+ dump files
 MLHD_PLUS_RAW_DATA_DIRECTORY = os.path.join("/", "mlhd-raw")
@@ -16,6 +18,7 @@ MLHD_PLUS_DATA_DIRECTORY = os.path.join("/", "mlhd")  # processed MLHD+ dump dat
 
 # path to save incremental dumps
 INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental.parquet")
+INCREMENTAL_USERS_DF = os.path.join("/", "incremental-users")
 
 # Directory containing RDD checkpoints to break lineage while using iterative algorithms.
 CHECKPOINT_DIR = os.path.join('/', 'checkpoint')

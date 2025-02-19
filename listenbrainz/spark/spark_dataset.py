@@ -8,7 +8,7 @@ from urllib.error import HTTPError
 from flask import current_app
 from more_itertools import chunked
 from psycopg2.extras import execute_values
-from psycopg2.sql import Identifier, SQL, Literal
+from psycopg2.sql import Identifier, SQL, Literal, Composable
 from sentry_sdk import start_transaction
 
 from listenbrainz.db import couchdb, timescale
@@ -74,8 +74,6 @@ class _CouchDbDataset(SparkDataset):
             return
         try:
             couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
-            if match[1] == "artists":
-                couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -96,14 +94,6 @@ class _CouchDbDataset(SparkDataset):
             if retained:
                 current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
                                         f" _LOCK file existed")
-
-            # when new artist stats received, also invalidate old artist map stats
-            if match[1] == "artists":
-                _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
-                if retained:
-                    current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                            f" _LOCK file existed")
-
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -256,7 +246,9 @@ class DatabaseDataset(SparkDataset, ABC):
         query = SQL("DROP TABLE IF EXISTS {table}").format(table=tmp_table)
         cursor.execute(query)
 
-        query = SQL(self.get_table()).format(table=tmp_table)
+        query = self.get_table()
+        if not isinstance(query, Composable):
+            query = SQL(query).format(table=tmp_table)
         cursor.execute(query)
 
     def create_indices(self, cursor):
@@ -306,8 +298,10 @@ class DatabaseDataset(SparkDataset, ABC):
 
     def handle_insert(self, message):
         query, template, values = self.get_inserts(message)
-        tmp_table = self._get_table_name("tmp")
-        query = SQL(query).format(table=tmp_table)
+
+        if not isinstance(query, Composable):
+            tmp_table = self._get_table_name("tmp")
+            query = SQL(query).format(table=tmp_table)
 
         if isinstance(template, str):
             template = SQL(template)

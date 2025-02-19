@@ -207,16 +207,16 @@ def sync_release_color_table():
 
     log("cover art sync starting...")
     mb_query = """SELECT caa.id AS caa_id
-                       , release AS release_id
-                       , release.gid AS release_mbid
+                       , r.id AS release_id
+                       , r.gid AS release_mbid
                        , mime_type
                        , year
                     FROM cover_art_archive.cover_art caa
                     JOIN cover_art_archive.cover_art_type cat
                       ON cat.id = caa.id
                     JOIN musicbrainz.release r
-                      ON caa.release = release.id
-                    JOIN release_first_release_date rfrd
+                      ON caa.release = r.id
+                    JOIN musicbrainz.release_first_release_date rfrd
                       ON rfrd.release = r.id
                    WHERE type_id = 1
                      AND caa.id > %s
@@ -258,8 +258,8 @@ def incremental_update_release_color_table():
 
     log("cover art incremental update starting...")
     mb_query = """SELECT caa.id AS caa_id
-                       , release AS release_id
-                       , release.gid AS release_mbid
+                       , r.id AS release_id
+                       , r.gid AS release_mbid
                        , mime_type
                        , date_uploaded
                        , year
@@ -267,8 +267,8 @@ def incremental_update_release_color_table():
                     JOIN cover_art_archive.cover_art_type cat
                       ON cat.id = caa.id
                     JOIN musicbrainz.release r
-                      ON caa.release = release.id
-               LEFT JOIN release_first_release_date rfrd
+                      ON caa.release = r.id
+               LEFT JOIN musicbrainz.release_first_release_date rfrd
                       ON rfrd.release = r.id
                    WHERE type_id = 1
                      AND caa.date_uploaded > %s
@@ -294,6 +294,9 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
             psycopg2.connect(config.SQLALCHEMY_DATABASE_URI) as lb_conn, \
             lb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as lb_curs:
+
+        log("MB: ", config.MB_DATABASE_STANDBY_URI)
+        log("LB: ", config.SQLALCHEMY_DATABASE_URI)
 
         mb_count, lb_count = get_cover_art_counts(mb_curs, lb_curs)
         log("CAA count: %d" % (mb_count,))
@@ -378,4 +381,3 @@ def compare_coverart(mb_query, lb_query, mb_caa_index, lb_caa_index, mb_compare_
             caa_front_count=mb_count,
             lb_caa_count=lb_count
         )
-

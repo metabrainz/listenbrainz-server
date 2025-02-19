@@ -716,7 +716,8 @@ export type CAAThumbnailSizes = 250 | 500 | 1200 | "small" | "large";
 
 const getThumbnailFromCAAResponse = (
   body: CoverArtArchiveResponse,
-  size: CAAThumbnailSizes = 250
+  size: CAAThumbnailSizes = 250,
+  frontOnly = false
 ): string | undefined => {
   if (!body.images?.length) {
     return undefined;
@@ -734,6 +735,14 @@ const getThumbnailFromCAAResponse = (
     // Also see https://github.com/metabrainz/listenbrainz-server/commit/9e40ad440d0b280b6c53d13e804f911657469c8b
     const { id } = frontImage;
     return generateAlbumArtThumbnailLink(id, releaseMBID);
+  }
+  if (frontImage) {
+    const { thumbnails, image } = frontImage;
+    return thumbnails[size] ?? thumbnails.small ?? image;
+  }
+  if (frontOnly) {
+    // We don't have a front image in the response, and are expecting a front image only, so return
+    return undefined;
   }
 
   // No front image? Fallback to whatever the first image is
@@ -772,7 +781,7 @@ const getAlbumArtFromReleaseGroupMBID = async (
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      const coverArt = getThumbnailFromCAAResponse(body, optionalSize);
+      const coverArt = getThumbnailFromCAAResponse(body, optionalSize, true);
       if (coverArt) {
         // Cache the successful result
         await setCoverArtCache(cacheKey, coverArt);
@@ -793,7 +802,8 @@ const getAlbumArtFromReleaseMBID = async (
   userSubmittedReleaseMBID: string,
   useReleaseGroupFallback: boolean | string = false,
   APIService?: APIServiceClass,
-  optionalSize?: CAAThumbnailSizes
+  optionalSize?: CAAThumbnailSizes,
+  frontOnly?: boolean
 ): Promise<string | undefined> => {
   try {
     // Check cache first
@@ -809,7 +819,12 @@ const getAlbumArtFromReleaseMBID = async (
     );
     if (CAAResponse.ok) {
       const body: CoverArtArchiveResponse = await CAAResponse.json();
-      const coverArt = getThumbnailFromCAAResponse(body, optionalSize);
+      const coverArt = getThumbnailFromCAAResponse(
+        body,
+        optionalSize,
+        frontOnly
+      );
+      // Here, make sure there is a front image, otherwise discard the hit.
       if (coverArt) {
         // Cache the successful result
         await setCoverArtCache(cacheKey, coverArt);
@@ -817,7 +832,7 @@ const getAlbumArtFromReleaseMBID = async (
       return coverArt;
     }
 
-    if (CAAResponse.status === 404 && useReleaseGroupFallback) {
+    if (useReleaseGroupFallback) {
       let releaseGroupMBID = useReleaseGroupFallback;
       if (!_.isString(useReleaseGroupFallback) && APIService) {
         const releaseGroupResponse = (await APIService.lookupMBRelease(
@@ -933,7 +948,9 @@ const getAlbumArtFromListenMetadata = async (
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID,
       Boolean(caaReleaseMbid) && userSubmittedReleaseMBID !== caaReleaseMbid,
-      APIService
+      APIService,
+      undefined,
+      true // we only want front images, otherwise skip
     );
     if (userSubmittedReleaseAlbumArt) {
       return userSubmittedReleaseAlbumArt;

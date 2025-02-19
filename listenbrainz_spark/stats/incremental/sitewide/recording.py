@@ -1,6 +1,4 @@
-from typing import List
-
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
 
@@ -11,12 +9,9 @@ class RecordingSitewideEntity(SitewideEntityStatsQueryProvider):
     def entity(self):
         return "recordings"
 
-    def get_cache_tables(self) -> List[str]:
-        return [RELEASE_METADATA_CACHE_DATAFRAME]
-
-    def get_aggregate_query(self, table, cache_tables):
+    def get_aggregate_query(self, table):
         user_listen_count_limit = self.get_listen_count_limit()
-        cache_table = cache_tables[0]
+        rel_cache_table = get_release_metadata_cache()
         return f"""
         WITH user_counts as (
             SELECT user_id
@@ -30,7 +25,7 @@ class RecordingSitewideEntity(SitewideEntityStatsQueryProvider):
                  , rel.caa_release_mbid
                  , LEAST(count(*), {user_listen_count_limit}) as listen_count
               FROM {table} l
-         LEFT JOIN {cache_table} rel
+         LEFT JOIN {rel_cache_table} rel
                 ON rel.release_mbid = l.release_mbid
           GROUP BY l.user_id
                  , lower(l.recording_name)

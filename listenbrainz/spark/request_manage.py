@@ -447,11 +447,20 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
     )
 
 
-@cli.command(name='request_popularity')
+@cli.command(name="request_popularity")
 @click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
-def request_popularity(mlhd):
+@click.option("--entity", "entity", type=click.Choice(["artist", "recording", "release", "release_group"]))
+def request_popularity(mlhd, entity):
     """ Request mlhd popularity data using the specified dataset. """
-    send_request_to_spark_cluster("popularity.all", mlhd=mlhd)
+    send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity")
+
+
+@cli.command(name="request_per_artist_popularity")
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
+@click.option("--entity", "entity", type=click.Choice(["recording", "release", "release_group"]))
+def request_per_artist_popularity(mlhd, entity):
+    """ Request mlhd popularity data using the specified dataset. """
+    send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity_top")
 
 
 @cli.command(name="request_yim_similar_users")
@@ -480,15 +489,6 @@ def request_yim_top_discoveries(year: int):
     send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
 
 
-@cli.command(name="request_yim_artist_map")
-@click.option("--year", type=int, help="Year for which to generate the playlists",
-              default=date.today().year)
-def request_yim_artist_map(year: int):
-    """ Send the cluster a request to generate artist map data and then
-     once the data has been imported generate YIM artist map. """
-    send_request_to_spark_cluster("year_in_music.artist_map", year=year)
-
-
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -507,7 +507,6 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
-    ctx.invoke(request_yim_artist_map, year=year)
     ctx.invoke(request_yim_top_missed_recordings, year=year)
     ctx.invoke(request_yim_top_discoveries, year=year)
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})

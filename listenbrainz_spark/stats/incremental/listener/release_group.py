@@ -1,7 +1,8 @@
+from datetime import datetime
 from typing import List
 
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, \
-    RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
+from listenbrainz_spark.postgres.release_group import get_release_group_metadata_cache
 from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider
 
 
@@ -12,15 +13,12 @@ class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
     def entity(self):
         return "release_groups"
 
-    def get_cache_tables(self) -> List[str]:
-        return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
-
     def get_entity_id(self):
         return "release_group_mbid"
 
-    def get_aggregate_query(self, table, cache_tables):
-        rel_cache_table = cache_tables[0]
-        rg_cache_table = cache_tables[1]
+    def get_aggregate_query(self, table):
+        rel_cache_table = get_release_metadata_cache()
+        rg_cache_table = get_release_group_metadata_cache()
         return f"""
             WITH gather_release_data AS (
                 SELECT user_id
@@ -154,3 +152,19 @@ class ReleaseGroupEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
               JOIN entity_count
              USING (release_group_mbid)
         """
+
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime) -> str:
+        rel_cache_table = get_release_metadata_cache()
+        return f"""
+            WITH incremental_release_groups AS (
+                SELECT DISTINCT rel.release_group_mbid
+                  FROM {inc_listens_table} l
+             LEFT JOIN {rel_cache_table} rel
+                    ON rel.release_mbid = l.release_mbid
+                 WHERE created >= to_timestamp('{existing_created}')
+            )
+                SELECT *
+                  FROM {aggregate} ea
+                 WHERE EXISTS(SELECT 1 FROM incremental_release_groups irg WHERE irg.release_group_mbid = ea.release_group_mbid)
+        """
+

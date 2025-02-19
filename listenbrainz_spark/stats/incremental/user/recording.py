@@ -1,6 +1,7 @@
 from typing import List
 
-from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.recording import get_recording_artist_cache
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
 
@@ -11,12 +12,9 @@ class RecordingUserEntity(UserEntityStatsQueryProvider):
     def entity(self):
         return "recordings"
 
-    def get_cache_tables(self) -> List[str]:
-        return [RECORDING_ARTIST_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME]
-
-    def get_aggregate_query(self, table, cache_tables):
-        rec_cache_table = cache_tables[0]
-        rel_cache_table = cache_tables[1]
+    def get_aggregate_query(self, table):
+        rec_cache_table = get_recording_artist_cache()
+        rel_cache_table = get_release_metadata_cache()
         return f"""
             SELECT user_id
                  , first(l.recording_name) AS recording_name
