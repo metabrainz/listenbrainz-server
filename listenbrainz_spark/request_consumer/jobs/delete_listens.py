@@ -8,13 +8,13 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 
-def combine_if_exists(new_df, save_path, combine_query_template):
+def combine_if_exists(new_df, save_path, combine_query_template, table_suffix):
     """ If a dataframe already exists at the save path, load it and combine it with the new dataframe using the provided
     query. Otherwise, save the new dataframe at the save path directly.
     """
     if hdfs_connection.client.status(save_path, strict=False):
-        existing_table = f"existing_df_{uuid.uuid4()}"
-        new_table = f"new_df_{uuid.uuid4()}"
+        existing_table = f"existing_{table_suffix}"
+        new_table = f"new_{table_suffix}"
         existing_df = read_files_from_HDFS(save_path)
         existing_df.createOrReplaceTempView(existing_table)
         new_df.createOrReplaceTempView(new_table)
@@ -58,7 +58,7 @@ def import_deleted_listens():
         )
             SELECT {columns} FROM intermediate GROUP BY {columns}
     """
-    combine_if_exists(new_listens_to_delete_df, DELETED_LISTENS_SAVE_PATH, query)
+    combine_if_exists(new_listens_to_delete_df, DELETED_LISTENS_SAVE_PATH, query, "listens_to_delete")
 
 
 def import_deleted_user_listen_history():
@@ -72,7 +72,7 @@ def import_deleted_user_listen_history():
         )
            SELECT user_id, max(max_created) AS max_created FROM intermediate GROUP BY user_id
     """
-    combine_if_exists(new_deleted_history_df, DELETED_USER_LISTEN_HISTORY_SAVE_PATH, query)
+    combine_if_exists(new_deleted_history_df, DELETED_USER_LISTEN_HISTORY_SAVE_PATH, query, "listen_history_to_delete")
 
 
 def main():
