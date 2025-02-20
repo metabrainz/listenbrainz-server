@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple, Iterator, Dict
+from typing import Iterator, Dict
 
 from pandas import DataFrame
 from pyspark.errors import AnalysisException
