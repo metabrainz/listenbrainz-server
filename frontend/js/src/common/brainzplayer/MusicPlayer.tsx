@@ -64,6 +64,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
         size={size}
         fixedWidth
         color={color}
+        title={title}
       />
     </button>
   );
