@@ -170,26 +170,39 @@ def get_listens_from_dump(start: datetime, end: datetime, include_incremental=Tr
         inc_df = read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH)
         df = df.union(inc_df)
 
-    if start:
-        df = df.where(f"listened_at >= to_timestamp('{start}')")
-    if end:
-        df = df.where(f"listened_at <= to_timestamp('{end}')")
+    df = filter_listens_by_range(df, start, end)
 
-    # todo: refactor, because incremental listens are loaded separately and deletion needs to be applied there too
-    if remove_deleted and hdfs_connection.client.status(DELETED_LISTENS_SAVE_PATH, strict=False):
-        delete_df = read_files_from_HDFS(DELETED_LISTENS_SAVE_PATH)
-        df = df \
-            .join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti") \
-            .select(*df.columns)
-
-    if remove_deleted and hdfs_connection.client.status(DELETED_USER_LISTEN_HISTORY_SAVE_PATH, strict=False):
-        delete_df2 = read_files_from_HDFS(DELETED_USER_LISTEN_HISTORY_SAVE_PATH)
-        df = df \
-            .join(delete_df2, ["user_id"], "left_outer") \
-            .where((delete_df2.max_created.isNull()) | (df.created >= delete_df2.max_created)) \
-            .select(*df.columns)
+    if remove_deleted:
+        df = filter_deleted_listens(df)
 
     return df
+
+
+def filter_listens_by_range(listens_df: DataFrame, start: datetime, end: datetime) -> DataFrame:
+    """ Filter listens dataframe to only keep listens with listened_at between start and end. """
+    if start:
+        listens_df = listens_df.where(f"listened_at >= to_timestamp('{start}')")
+    if end:
+        listens_df = listens_df.where(f"listened_at <= to_timestamp('{end}')")
+    return listens_df
+
+
+def filter_deleted_listens(listens_df: DataFrame) -> DataFrame:
+    """ Filter listens dataframe to remove listens that have been deleted from LB db. """
+    if hdfs_connection.client.status(DELETED_LISTENS_SAVE_PATH, strict=False):
+        delete_df = read_files_from_HDFS(DELETED_LISTENS_SAVE_PATH)
+        listens_df = listens_df \
+            .join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti") \
+            .select(*listens_df.columns)
+
+    if hdfs_connection.client.status(DELETED_USER_LISTEN_HISTORY_SAVE_PATH, strict=False):
+        delete_df2 = read_files_from_HDFS(DELETED_USER_LISTEN_HISTORY_SAVE_PATH)
+        listens_df = listens_df \
+            .join(delete_df2, ["user_id"], "left_outer") \
+            .where((delete_df2.max_created.isNull()) | (listens_df.created >= delete_df2.max_created)) \
+            .select(*listens_df.columns)
+
+    return listens_df
 
 
 def get_intermediate_stats_df(start: datetime, end: datetime):

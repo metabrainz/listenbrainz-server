@@ -15,7 +15,8 @@ from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA, INCREMENTAL_BOOKKEEPIN
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
-from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
+from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump, filter_listens_by_range, \
+    filter_deleted_listens
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +93,12 @@ class IncrementalStatsEngine:
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         table = f"{self.provider.get_table_prefix()}_full_listens"
-        get_listens_from_dump(self.provider.from_date, self.provider.to_date, include_incremental=False) \
-            .createOrReplaceTempView(table)
+        get_listens_from_dump(
+            self.provider.from_date,
+            self.provider.to_date,
+            include_incremental=False,
+            remove_deleted=True
+        ).createOrReplaceTempView(table)
 
         logger.info("Creating partial aggregate from full dump listens")
         hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
@@ -125,8 +130,8 @@ class IncrementalStatsEngine:
         self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
 
         inc_listens_df = get_incremental_listens_df()
-        inc_listens_df = inc_listens_df.where(f"listened_at >= to_timestamp('{self.provider.from_date}')")
-        inc_listens_df = inc_listens_df.where(f"listened_at <= to_timestamp('{self.provider.to_date}')")
+        inc_listens_df = filter_listens_by_range(inc_listens_df, self.provider.from_date, self.provider.to_date)
+        inc_listens_df = filter_deleted_listens(inc_listens_df)
         inc_listens_df.createOrReplaceTempView(self.incremental_table)
 
         inc_query = self.provider.get_aggregate_query(self.incremental_table)
