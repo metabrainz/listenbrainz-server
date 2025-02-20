@@ -702,9 +702,24 @@ def get_dump_entry(dump_id):
         """), {
             'dump_id': dump_id,
         })
-        if result.rowcount > 0:
-            return result.mappings().first()
-        return None
+        return result.mappings().first()
+
+
+def get_previous_dump_entry(dump_id):
+    """ Get the id of the dump that is one before the given dump id.
+
+    Cannot just do dump_id - 1 because SERIAL/IDENTITY columns in postgres can skip values in some
+    cases (for instance master/standby switchover).
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, created
+              FROM data_dump
+             WHERE id < :dump_id
+          ORDER BY id DESC
+             LIMIT 1
+        """), {"dump_id": dump_id})
+        return result.mappings().first()
 
 
 def import_postgres_dump(private_dump_archive_path=None,
