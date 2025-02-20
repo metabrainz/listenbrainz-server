@@ -668,9 +668,11 @@ class TimescaleListenStore:
              WHERE user_id = :user_id
         """
         query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
+        query3 = """INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (:user_id, :created)"""
         try:
             ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
             ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
+            ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
             ts_conn.commit()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))

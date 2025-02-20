@@ -28,6 +28,12 @@ CREATE TABLE listen_user_metadata (
 
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
 
+CREATE TABLE deleted_user_listen_history (
+    id                          INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id                     INTEGER NOT NULL,
+    max_created                 TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 -- Playlists
 
 CREATE TABLE playlist.playlist (

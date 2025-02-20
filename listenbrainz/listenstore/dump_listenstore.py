@@ -556,5 +556,6 @@ class DumpListenStore:
         self.log.info("Cleaning up listen_delete_metadata")
         with timescale.engine.connect() as connection:
             connection.execute(text("DELETE FROM listen_delete_metadata WHERE status != 'pending'"))
+            connection.execute(text("DELETE FROM deleted_user_listen_history"))
             connection.commit()
         self.log.info("Cleaning up listen_delete_metadata done!")
