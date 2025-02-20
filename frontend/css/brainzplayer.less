@@ -370,6 +370,15 @@
   &.show {
     bottom: @brainzplayer-height;
   }
+  @media (max-width: @screen-sm) {
+    right: -6em;
+    bottom: 8.5em;
+    transition-property: right;
+    &.show {
+      bottom: 8.5em;
+      right: 1.5em;
+    }
+  }
 }
 
 .queue {
@@ -510,36 +519,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1em 0;
-
-    .love,
-    .hate {
-      stroke: currentColor;
-      stroke-width: 1em;
-      fill-opacity: 0;
-    }
-
-    .love {
-      &:hover {
-        stroke: @love-color;
-      }
-      &.loved {
-        stroke: transparent;
-        color: @love-color;
-        fill-opacity: 1;
-      }
-    }
-
-    .hate {
-      &:hover {
-        stroke: @hate-color;
-      }
-      &.hated {
-        stroke: transparent;
-        color: @hate-color;
-        fill-opacity: 1;
-      }
-    }
+    padding: 0.7em 0;
 
     .info-text-wrapper {
       flex: 1;
@@ -547,12 +527,34 @@
       flex-direction: column;
       overflow: auto;
     }
+  }
 
-    .feedback-buttons-wrapper {
-      display: flex;
-      font-size: 2em;
-      gap: 0.5em;
-      padding-left: 0.25em;
+  .love,
+  .hate {
+    stroke: currentColor;
+    stroke-width: 3em;
+    fill-opacity: 0;
+  }
+
+  .love {
+    &:hover {
+      stroke: @love-color;
+    }
+    &.loved {
+      stroke: transparent;
+      color: @love-color;
+      fill-opacity: 1;
+    }
+  }
+
+  .hate {
+    &:hover {
+      stroke: @hate-color;
+    }
+    &.hated {
+      stroke: transparent;
+      color: @hate-color;
+      fill-opacity: 1;
     }
   }
 
@@ -573,17 +575,18 @@
   .player-buttons {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-around;
     margin-bottom: auto;
 
     .play svg {
       font-size: 4.25em !important;
     }
+    &.secondary {
+      margin-top: 1.2em;
+    }
   }
 
   .progress-bar-wrapper {
-    margin: 10px 0;
-
     .progress {
       position: inherit;
       height: 10px;

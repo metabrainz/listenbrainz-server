@@ -220,6 +220,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const [showVolume, setShowVolume] = React.useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
 
+  const toggleShowVolume = () => {
+    setShowVolume((prevValue) => !prevValue);
+  };
+
   const defaultRGBForMusicPlayer = React.useMemo(() => {
     return {
       r: 208,
@@ -313,6 +317,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           playPreviousTrack={playPreviousTrack}
           playNextTrack={playNextTrack}
           togglePlay={togglePlay}
+          toggleShowVolume={toggleShowVolume}
           seekToPositionMs={seekToPositionMs}
           toggleRepeatMode={toggleRepeatMode}
           submitFeedback={submitFeedback}

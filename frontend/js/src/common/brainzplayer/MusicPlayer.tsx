@@ -8,11 +8,19 @@ import {
   faPause,
   faEllipsis,
   faBarsStaggered,
+  faVolumeUp,
 } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  FontAwesomeIcon,
+  FontAwesomeIconProps,
+} from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { noop, throttle } from "lodash";
-import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
+import {
+  IconDefinition,
+  IconProp,
+  SizeProp,
+} from "@fortawesome/fontawesome-svg-core";
 import ProgressBar from "./ProgressBar";
 import { millisecondsToStr } from "../../playlists/utils";
 import { useBrainzPlayerContext } from "./BrainzPlayerContext";
@@ -21,19 +29,30 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FeedbackValue } from "./utils";
 
 type PlaybackControlButtonProps = {
-  className: string;
+  className?: string;
   action: () => void;
   icon: IconDefinition;
   title: string;
   disabled?: boolean;
   color?: string;
+  size?: SizeProp;
 };
 
 function PlaybackControlButton(props: PlaybackControlButtonProps) {
-  const { className, action, icon, title, disabled, color } = props;
+  const {
+    className,
+    action,
+    icon,
+    title,
+    disabled,
+    color,
+    size = "2xl",
+  } = props;
   return (
     <button
-      className={`btn-transparent ${className} ${disabled ? "disabled" : ""}`}
+      className={`btn-transparent ${className ?? ""} ${
+        disabled ? "disabled" : ""
+      }`}
       title={title}
       onClick={disabled ? noop : action}
       type="button"
@@ -42,11 +61,8 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
     >
       <FontAwesomeIcon
         icon={icon as IconProp}
-        size="2xl"
+        size={size}
         fixedWidth
-        style={{
-          fontSize: "xx-large",
-        }}
         color={color}
       />
     </button>
@@ -93,6 +109,7 @@ type MusicPlayerProps = {
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
+  toggleShowVolume: () => void;
   seekToPositionMs: (msTimeCode: number) => void;
   toggleRepeatMode: () => void;
   submitFeedback: (score: ListenFeedBack) => Promise<void>;
@@ -116,24 +133,26 @@ const FeedbackButtons = React.memo(
     submitLikeFeedback,
     submitDislikeFeedback,
   }: FeedbackButtonsProps) => (
-    <div className="feedback-buttons-wrapper">
-      <FontAwesomeIcon
-        icon={faHeart}
-        title="Love"
+    <>
+      <PlaybackControlButton
         className={`love ${
           currentListenFeedback === FeedbackValue.LIKE ? " loved" : ""
         }${!isPlayingATrack ? " disabled" : ""}`}
-        onClick={submitLikeFeedback}
+        action={submitLikeFeedback}
+        title="Love"
+        icon={faHeart}
+        size="xl"
       />
-      <FontAwesomeIcon
-        icon={faHeartCrack}
-        title="Hate"
+      <PlaybackControlButton
         className={`hate ${
           currentListenFeedback === FeedbackValue.DISLIKE ? " hated" : ""
         }${!isPlayingATrack ? " disabled" : ""}`}
-        onClick={submitDislikeFeedback}
+        action={submitDislikeFeedback}
+        title="Hate"
+        icon={faHeartCrack}
+        size="xl"
       />
-    </div>
+    </>
   )
 );
 
@@ -144,6 +163,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     playPreviousTrack,
     playNextTrack,
     togglePlay,
+    toggleShowVolume,
     seekToPositionMs,
     toggleRepeatMode,
     submitFeedback,
@@ -274,12 +294,6 @@ function MusicPlayer(props: MusicPlayerProps) {
             {currentTrackArtist}
           </span>
         </div>
-        <FeedbackButtons
-          currentListenFeedback={currentListenFeedback}
-          isPlayingATrack={isPlayingATrack}
-          submitLikeFeedback={submitLikeFeedback}
-          submitDislikeFeedback={submitDislikeFeedback}
-        />
       </div>
       <div className="progress-bar-wrapper">
         <ProgressBar
@@ -294,12 +308,6 @@ function MusicPlayer(props: MusicPlayerProps) {
       </div>
       <div className="player-buttons">
         <PlaybackControlButton
-          className="toggle-queue-button"
-          action={toggleQueue}
-          title="Queue"
-          icon={faBarsStaggered}
-        />
-        <PlaybackControlButton
           className="previous"
           title="Previous"
           action={playPreviousTrack}
@@ -312,6 +320,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           title={`${playerPaused ? "Play" : "Pause"}`}
           icon={playerPaused ? faPlay : faPause}
           disabled={disabled}
+          size="3x"
         />
         <PlaybackControlButton
           className="next"
@@ -320,12 +329,34 @@ function MusicPlayer(props: MusicPlayerProps) {
           icon={faForward}
           disabled={disabled}
         />
+      </div>
+      <div className="player-buttons secondary">
+        <FeedbackButtons
+          currentListenFeedback={currentListenFeedback}
+          isPlayingATrack={isPlayingATrack}
+          submitLikeFeedback={submitLikeFeedback}
+          submitDislikeFeedback={submitDislikeFeedback}
+        />
+        <PlaybackControlButton
+          className="toggle-queue-button"
+          action={toggleQueue}
+          title="Queue"
+          icon={faBarsStaggered}
+          size="xl"
+        />
         <PlaybackControlButton
           className={queueRepeatMode.title}
           action={toggleRepeatMode}
           title={queueRepeatMode.title}
           icon={queueRepeatMode.icon}
           color={queueRepeatMode.color}
+          size="xl"
+        />
+        <PlaybackControlButton
+          action={toggleShowVolume}
+          title="volume"
+          icon={faVolumeUp}
+          size="xl"
         />
       </div>
     </div>
