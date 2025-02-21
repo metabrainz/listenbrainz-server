@@ -20,6 +20,10 @@ def unpersist_incremental_df():
 
 
 def get_incremental_listens_df() -> DataFrame:
+    """ Loads all listens imported from incremental dumps
+
+    Filter on listened_at after loading the dataframe to restrict on desired date range.
+    """
     global _incremental_listens_df
     if _incremental_listens_df is None:
         _incremental_listens_df = read_files_from_HDFS(INCREMENTAL_DUMPS_SAVE_PATH)

@@ -177,16 +177,15 @@ def get_listens_from_dump(start: datetime, end: datetime, include_incremental=Tr
 
 def get_intermediate_stats_df(start: datetime, end: datetime):
     if start is None and end is None:
-        return read_files_from_HDFS(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
-
-    filters = []
-
-    current = start
-    step = relativedelta(months=1)
-    while current <= end:
-        filters.append(f"(year = {current.year} AND month = {current.month})")
-        current += step
-    combined_filter = "(\n       " + "\n    OR ".join(filters) + "\n       )"
+        where_clause = ""
+    else:
+        filters = []
+        current = start
+        step = relativedelta(months=1)
+        while current <= end:
+            filters.append(f"(year = {current.year} AND month = {current.month})")
+            current += step
+        where_clause = "where (\n       " + "\n    OR ".join(filters) + "\n       )"
 
     query = dedent(f"""\
         select listened_at
@@ -201,7 +200,7 @@ def get_intermediate_stats_df(start: datetime, end: datetime):
              , recording_mbid
              , artist_credit_mbids
           from parquet.`{LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY}`
-         where """) + combined_filter
+    """) + where_clause
     return listenbrainz_spark.sql_context.sql(query)
 
 
