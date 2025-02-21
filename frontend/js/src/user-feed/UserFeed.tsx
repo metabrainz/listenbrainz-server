@@ -394,50 +394,31 @@ export default function UserFeedPage() {
   });
 
   const renderEventActionButton = (event: TimelineEvent<EventMetadata>, isSubEvent=false) => {
-    if (
-      ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_PIN) &&
-        event.user_name === currentUser.name) ||
-      event.event_type === EventType.NOTIFICATION
-    ) {
-      return (
-        <ListenControl
-          title="Delete Event"
-          text=""
-          icon={faTrash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            deleteEventMutation(event);
-          }}
-        />
-      );
-    }
-    if (
-      (event.event_type === EventType.RECORDING_PIN ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
-      event.user_name !== currentUser.name
-    ) {
-      if (event.hidden) {
-        return (
-          <ListenControl
-            title="Unhide Event"
-            text=""
-            icon={faEye}
-            buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
-            action={() => {
-              hideEventMutation(event);
-            }}
-          />
-        );
-      }
+    const {event_type, hidden} = event;
+    const isOwnEvent = event.user_name === currentUser.name;
+    const isDeletable = isOwnEvent && [
+      EventType.NOTIFICATION,
+      EventType.RECORDING_RECOMMENDATION,
+      EventType.PERSONAL_RECORDING_RECOMMENDATION,
+      EventType.RECORDING_PIN,
+      EventType.THANKS,
+     ].includes(event_type as EventType);
+    const isThankable = !isSubEvent && !isOwnEvent && [
+      EventType.RECORDING_RECOMMENDATION,
+      EventType.PERSONAL_RECORDING_RECOMMENDATION,
+      EventType.RECORDING_PIN,
+      EventType.REVIEW,
+    ].includes(event_type as EventType);
+    const isHidable = !isSubEvent && !isOwnEvent &&
+    ![
+      EventType.FOLLOW,
+      EventType.BLOCK_FOLLOW,
+      EventType.STOP_FOLLOW,
+    ].includes(event_type as EventType);
+      
       return (
         <>
-
-          {!isSubEvent && (
+          { isThankable && (
             <ListenControl
               title="Thanks"
               text=""
@@ -453,54 +434,39 @@ export default function UserFeedPage() {
               dataTarget="#ThanksModal"
             />
           )} 
-
-          <ListenControl
-            title="Hide Event"
-            text=""
-            icon={faEyeSlash}
-            buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
-            action={() => {
-              hideEventMutation(event);
-            }}
-          />
-        </>
-      );
-    }
-    if (
-      event.event_type === EventType.THANKS &&
-      event.user_name !== currentUser.name
-    ) {
-      if (event.hidden) {
-        return (
-          <ListenControl
+          { hidden && <ListenControl
             title="Unhide Event"
             text=""
             icon={faEye}
             buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
             action={() => {
               hideEventMutation(event);
             }}
           />
-        );
-      }
-
-      return (
-        <ListenControl
-          title="Hide Event"
-          text=""
-          icon={faEyeSlash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            hideEventMutation(event);
-          }}
-        />
+          }
+          { !hidden && isHidable && <ListenControl
+            title="Hide Event"
+            text=""
+            icon={faEyeSlash}
+            buttonClassName="btn btn-link btn-xs"
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+          }
+          { isDeletable &&<ListenControl
+            title="Delete Event"
+            text=""
+            icon={faTrash}
+            buttonClassName="btn btn-link btn-xs"
+            action={() => {
+              deleteEventMutation(event);
+            }}
+          />
+          }
+        </>
       );
-    }
-
-    return null;
+  
   };
 
   const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
