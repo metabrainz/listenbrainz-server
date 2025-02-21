@@ -52,8 +52,6 @@ type BrainzPlayerUIProps = {
   trackName?: string;
   artistName?: string;
   trackUrl?: string;
-  progressMs: number;
-  durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
   currentListen?: Listen | JSPFTrack;
   listenBrainzAPIBaseURI: string;
@@ -101,7 +99,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const { currentUser } = React.useContext(GlobalAppContext);
 
   // BrainzPlayerContext
-  const { queueRepeatMode, volume } = useBrainzPlayerContext();
+  const { queueRepeatMode, progressMs, durationMs } = useBrainzPlayerContext();
   const dispatch = useBrainzPlayerDispatch();
 
   React.useEffect(() => {
@@ -140,7 +138,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       }
     }
     getFeedback();
-  }, [currentListen]);
+  }, [currentListen, currentUser.name, listenBrainzAPIBaseURI]);
 
   React.useEffect(() => {
     // Also check the width on first render
@@ -198,8 +196,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     playerPaused,
     trackName,
     artistName,
-    progressMs,
-    durationMs,
     playPreviousTrack,
     togglePlay,
     playNextTrack,
@@ -328,11 +324,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         data-testid="brainzplayer-ui"
       >
         {!showMusicPlayer && (
-          <ProgressBar
-            progressMs={progressMs}
-            durationMs={durationMs}
-            seekToPositionMs={seekToPositionMs}
-          />
+          <ProgressBar seekToPositionMs={seekToPositionMs} />
         )}
         <div className="content">
           <div className="cover-art">

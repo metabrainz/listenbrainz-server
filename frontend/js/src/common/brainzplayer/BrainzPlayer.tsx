@@ -1008,8 +1008,6 @@ export default function BrainzPlayer() {
         playerPaused={playerPaused}
         trackName={currentTrackName}
         artistName={currentTrackArtist}
-        progressMs={progressMs}
-        durationMs={durationMs}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
         currentListen={currentListen}

@@ -2,11 +2,11 @@ import { isNaN, throttle } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
 import { millisecondsToStr } from "../../playlists/utils";
+import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 
 type ProgressBarProps = {
-  progressMs: number;
-  durationMs: number;
   seekToPositionMs: (msTimeCode: number) => void;
+  showNumbers?: boolean;
 };
 
 // How many milliseconds to navigate to with keyboard left/right arrows
@@ -36,7 +36,9 @@ const useThrottle = (callback: any, delay: number | undefined) => {
 };
 
 function ProgressBar(props: ProgressBarProps) {
-  const { durationMs, progressMs, seekToPositionMs } = props;
+  const { progressMs, durationMs } = useBrainzPlayerContext();
+
+  const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const progressPercentage = Number(
@@ -103,39 +105,47 @@ function ProgressBar(props: ProgressBarProps) {
   };
 
   return (
-    <div
-      className={`progress${hideProgressBar ? " hidden" : ""}`}
-      onClick={mouseEventHandler}
-      onMouseMove={mouseEventHandler}
-      onKeyDown={onKeyPressHandler}
-      aria-label="Audio progress control"
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={progressPercentage}
-      tabIndex={0}
-      data-tip={tipContent}
-      ref={progressBarRef}
-    >
+    <div className="progress-bar-wrapper">
       <div
-        className="progress-bar"
-        style={{
-          width: `${progressPercentage}%`,
-        }}
-      />
-      <ReactTooltip
-        className="progress-tooltip"
-        getContent={() => tipContent}
-        globalEventOff="click"
-        overridePosition={({ left, top }) => {
-          const progressBarBoundingRect = progressBarRef.current?.getBoundingClientRect();
-          if (progressBarBoundingRect) {
-            // eslint-disable-next-line no-param-reassign
-            top = progressBarBoundingRect.top - TOOLTIP_TOP_OFFSET;
-          }
-          return { left, top };
-        }}
-      />
+        className={`progress${hideProgressBar ? " hidden" : ""}`}
+        onClick={mouseEventHandler}
+        onMouseMove={mouseEventHandler}
+        onKeyDown={onKeyPressHandler}
+        aria-label="Audio progress control"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progressPercentage}
+        tabIndex={0}
+        data-tip={tipContent}
+        ref={progressBarRef}
+      >
+        <div
+          className="progress-bar"
+          style={{
+            width: `${progressPercentage}%`,
+          }}
+        />
+        <ReactTooltip
+          className="progress-tooltip"
+          getContent={() => tipContent}
+          globalEventOff="click"
+          overridePosition={({ left, top }) => {
+            const progressBarBoundingRect = progressBarRef.current?.getBoundingClientRect();
+            if (progressBarBoundingRect) {
+              // eslint-disable-next-line no-param-reassign
+              top = progressBarBoundingRect.top - TOOLTIP_TOP_OFFSET;
+            }
+            return { left, top };
+          }}
+        />
+      </div>
+      {showNumbers && (
+        <div>
+          {millisecondsToStr(progressMs)}&#8239;/&#8239;
+          {millisecondsToStr(durationMs)}
+        </div>
+      )}
     </div>
   );
 }

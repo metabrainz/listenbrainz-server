@@ -183,8 +183,6 @@ function MusicPlayer(props: MusicPlayerProps) {
     currentTrackAlbum,
     currentTrackCoverURL,
     playerPaused,
-    durationMs,
-    progressMs,
     queueRepeatMode,
     queue,
     ambientQueue,
@@ -296,17 +294,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           </span>
         </div>
       </div>
-      <div className="progress-bar-wrapper">
-        <ProgressBar
-          progressMs={progressMs}
-          durationMs={durationMs}
-          seekToPositionMs={seekToPositionMs}
-        />
-        <div>
-          {millisecondsToStr(progressMs)}&#8239;/&#8239;
-          {millisecondsToStr(durationMs)}
-        </div>
-      </div>
+      <ProgressBar seekToPositionMs={seekToPositionMs} showNumbers />
       <div className="player-buttons">
         <PlaybackControlButton
           className="previous"
