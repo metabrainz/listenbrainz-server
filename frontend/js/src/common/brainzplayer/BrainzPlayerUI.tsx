@@ -99,7 +99,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const { currentUser } = React.useContext(GlobalAppContext);
 
   // BrainzPlayerContext
-  const { queueRepeatMode, progressMs, durationMs } = useBrainzPlayerContext();
+  const brainzPlayerContext = useBrainzPlayerContext();
+  const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
+  brainzPlayerContextRef.current = brainzPlayerContext;
+
   const dispatch = useBrainzPlayerDispatch();
 
   React.useEffect(() => {
@@ -345,8 +348,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           </div>
           {isPlayingATrack && !isMobile && (
             <div className="elapsed small text-muted">
-              {millisecondsToStr(progressMs)}&#8239;/&#8239;
-              {millisecondsToStr(durationMs)}
+              {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
+              &#8239;/&#8239;
+              {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
             </div>
           )}
         </div>
@@ -414,9 +418,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           />
           {!isMobile && (
             <FontAwesomeIcon
-              icon={queueRepeatMode.icon}
-              title={queueRepeatMode.title}
-              style={{ color: queueRepeatMode.color }}
+              icon={brainzPlayerContextRef.current.queueRepeatMode.icon}
+              title={brainzPlayerContextRef.current.queueRepeatMode.title}
+              style={{
+                color: brainzPlayerContextRef.current.queueRepeatMode.color,
+              }}
               onClick={toggleRepeatMode}
             />
           )}

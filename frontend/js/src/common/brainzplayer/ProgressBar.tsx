@@ -36,13 +36,18 @@ const useThrottle = (callback: any, delay: number | undefined) => {
 };
 
 function ProgressBar(props: ProgressBarProps) {
-  const { progressMs, durationMs } = useBrainzPlayerContext();
+  const brainzPlayerContext = useBrainzPlayerContext();
+  const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
+  brainzPlayerContextRef.current = brainzPlayerContext;
 
   const { seekToPositionMs, showNumbers } = props;
   const [tipContent, setTipContent] = React.useState(TOOLTIP_INITIAL_CONTENT);
   const progressBarRef = React.useRef<HTMLDivElement>(null);
   const progressPercentage = Number(
-    ((progressMs * 100) / durationMs).toFixed(2)
+    (
+      (brainzPlayerContextRef.current.progressMs * 100) /
+      brainzPlayerContextRef.current.durationMs
+    ).toFixed(2)
   );
   const hideProgressBar = isNaN(progressPercentage) || progressPercentage <= 0;
 
@@ -54,7 +59,9 @@ function ProgressBar(props: ProgressBarProps) {
       const absoluteClickXPos = event.clientX;
       const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
       const percentPos = relativeClickXPos / progressBarWidth;
-      const positionMs = Math.round(durationMs * percentPos);
+      const positionMs = Math.round(
+        brainzPlayerContextRef.current.durationMs * percentPos
+      );
       const positionTime = millisecondsToStr(positionMs);
 
       const isMobile = /Mobi/.test(navigator.userAgent);
@@ -85,20 +92,24 @@ function ProgressBar(props: ProgressBarProps) {
     if (event.key === EVENT_KEY_ARROWLEFT) {
       let oneStepEarlier;
       if (event.shiftKey) {
-        oneStepEarlier = progressMs - KEYBOARD_STEP_MS;
+        oneStepEarlier =
+          brainzPlayerContextRef.current.progressMs - KEYBOARD_STEP_MS;
       } else {
-        oneStepEarlier = progressMs - KEYBOARD_BIG_STEP_MS;
+        oneStepEarlier =
+          brainzPlayerContextRef.current.progressMs - KEYBOARD_BIG_STEP_MS;
       }
       seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
     }
     if (event.key === EVENT_KEY_ARROWRIGHT) {
       let oneStepLater;
       if (event.shiftKey) {
-        oneStepLater = progressMs + KEYBOARD_BIG_STEP_MS;
+        oneStepLater =
+          brainzPlayerContextRef.current.progressMs + KEYBOARD_BIG_STEP_MS;
       } else {
-        oneStepLater = progressMs + KEYBOARD_STEP_MS;
+        oneStepLater =
+          brainzPlayerContextRef.current.progressMs + KEYBOARD_STEP_MS;
       }
-      if (oneStepLater <= durationMs - 500) {
+      if (oneStepLater <= brainzPlayerContextRef.current.durationMs - 500) {
         seekToPositionMs(oneStepLater);
       }
     }
@@ -142,8 +153,9 @@ function ProgressBar(props: ProgressBarProps) {
       </div>
       {showNumbers && (
         <div>
-          {millisecondsToStr(progressMs)}&#8239;/&#8239;
-          {millisecondsToStr(durationMs)}
+          {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
+          &#8239;/&#8239;
+          {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
         </div>
       )}
     </div>
