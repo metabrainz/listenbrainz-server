@@ -6,15 +6,11 @@ import {
   faForward,
   faPlay,
   faPause,
-  faEllipsis,
   faBarsStaggered,
   faVolumeUp,
   faEllipsisVertical,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  FontAwesomeIcon,
-  FontAwesomeIconProps,
-} from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { noop, throttle } from "lodash";
 import {
@@ -23,7 +19,6 @@ import {
   SizeProp,
 } from "@fortawesome/fontawesome-svg-core";
 import ProgressBar from "./ProgressBar";
-import { millisecondsToStr } from "../../playlists/utils";
 import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -119,7 +114,6 @@ type MusicPlayerProps = {
   currentListenFeedback: number;
   musicPlayerCoverArtRef: React.RefObject<HTMLImageElement>;
   disabled?: boolean;
-  mostReadableTextColor: string;
 };
 
 type FeedbackButtonsProps = {
@@ -173,7 +167,6 @@ function MusicPlayer(props: MusicPlayerProps) {
     currentListenFeedback,
     musicPlayerCoverArtRef,
     disabled,
-    mostReadableTextColor,
   } = props;
 
   // BrainzPlayer Context
@@ -254,7 +247,7 @@ function MusicPlayer(props: MusicPlayerProps) {
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
 
   return (
-    <div style={{ color: mostReadableTextColor }}>
+    <>
       <div className="header">
         <FontAwesomeIcon
           className="btn hide-queue"
@@ -361,7 +354,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           size="xl"
         />
       </div>
-    </div>
+    </>
   );
 }
 

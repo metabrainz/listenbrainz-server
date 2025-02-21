@@ -302,7 +302,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         className={`music-player ${
           isPlayingATrack && showMusicPlayer ? "open" : ""
         }`}
-        style={{ ["background" as string]: musicPlayerBackgroundColor }}
+        style={{
+          background: musicPlayerBackgroundColor.toRgbString(),
+          color: mostReadableTextColor,
+        }}
       >
         <MusicPlayer
           onHide={toggleMusicPlayer}
@@ -317,7 +320,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           currentListenFeedback={currentListenFeedback}
           musicPlayerCoverArtRef={musicPlayerCoverArtRef}
           disabled={disabled}
-          mostReadableTextColor={mostReadableTextColor}
         />
       </div>
       <div
