@@ -297,12 +297,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       </div>
 
       <div className={`queue ${showQueue ? "show" : ""}`}>
-        <FontAwesomeIcon
-          className="btn hide-queue"
-          icon={faXmark}
-          title="Close queue"
-          onClick={() => setShowQueue(false)}
-        />
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
@@ -329,6 +323,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       </div>
       <div
         id="brainz-player"
+        className={isPlayingATrack ? "playing" : ""}
         aria-label="Playback control"
         data-testid="brainzplayer-ui"
       >
@@ -356,7 +351,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               </span>
             )}
           </div>
-          {isPlayingATrack && (
+          {isPlayingATrack && !isMobile && (
             <div className="elapsed small text-muted">
               {millisecondsToStr(progressMs)}&#8239;/&#8239;
               {millisecondsToStr(durationMs)}
@@ -408,12 +403,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                   color={currentDataSourceIconColor}
                 />
               </a>
-              <FontAwesomeIcon
-                icon={faVolumeUp}
-                style={{ color: showVolume ? "green" : "" }}
-                onClick={() => setShowVolume(!showVolume)}
-                className="hidden-xs"
-              />
+              {!isMobile && (
+                <FontAwesomeIcon
+                  icon={faVolumeUp}
+                  style={{ color: showVolume ? "green" : "" }}
+                  onClick={() => setShowVolume(!showVolume)}
+                />
+              )}
             </>
           )}
 
@@ -478,7 +474,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               <FontAwesomeIcon icon={faSlash} />
             </span>
           ) : (
-            <MenuOptions currentListen={currentListen} />
+            !isMobile && <MenuOptions currentListen={currentListen} />
           )}
           {!isMobile && (
             <Link to="/settings/brainzplayer/">

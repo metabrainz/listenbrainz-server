@@ -355,7 +355,7 @@ function MusicPlayer(props: MusicPlayerProps) {
         />
         <PlaybackControlButton
           action={toggleShowVolume}
-          title="volume"
+          title="Volume"
           icon={faVolumeUp}
           size="xl"
         />
