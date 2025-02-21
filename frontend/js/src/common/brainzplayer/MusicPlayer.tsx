@@ -9,6 +9,7 @@ import {
   faEllipsis,
   faBarsStaggered,
   faVolumeUp,
+  faEllipsisVertical,
 } from "@fortawesome/free-solid-svg-icons";
 import {
   FontAwesomeIcon,
@@ -27,6 +28,7 @@ import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FeedbackValue } from "./utils";
+import MenuOptions from "./MenuOptions";
 
 type PlaybackControlButtonProps = {
   className?: string;
@@ -267,6 +269,17 @@ function MusicPlayer(props: MusicPlayerProps) {
         <div className="header-text">
           <AnimateTextOnOverflow text={currentTrackAlbum} />
         </div>
+        <MenuOptions
+          currentListen={currentListen}
+          iconElement={
+            <PlaybackControlButton
+              action={noop}
+              title="More actions"
+              icon={faEllipsisVertical}
+              size="xl"
+            />
+          }
+        />
       </div>
       <div className="cover-art-scroll-wrapper">
         <div className="cover-art cover-art-wrapper">
