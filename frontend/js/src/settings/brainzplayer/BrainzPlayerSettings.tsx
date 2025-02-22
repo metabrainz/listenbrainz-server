@@ -78,6 +78,9 @@ function BrainzPlayerSettings() {
     userPreferences?.brainzplayer?.appleMusicEnabled ??
       AppleMusicPlayer.hasPermissions(appleAuth)
   );
+  const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
+    userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
+  );
 
   const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
     DataSourceKey[]
@@ -120,6 +123,7 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        brainzplayerEnabled,
         dataSourcesPriority,
       });
       toast.success("Saved your preferences successfully");
@@ -132,6 +136,7 @@ function BrainzPlayerSettings() {
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          brainzplayerEnabled,
           dataSourcesPriority,
         };
       }
@@ -154,6 +159,7 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    brainzplayerEnabled,
     dataSourcesPriority,
     APIService,
     currentUser?.auth_token,
@@ -166,6 +172,19 @@ function BrainzPlayerSettings() {
         <title>BrainzPlayer Settings</title>
       </Helmet>
       <h2 className="page-title">BrainzPlayer settings</h2>
+      <Switch
+        id="enable-brainzplayer"
+        value="brainzplayer"
+        checked={brainzplayerEnabled}
+        onChange={(e) => setBrainzplayerEnabled(!brainzplayerEnabled)}
+        switchLabel={
+          <span
+            className={`text-brand ${!brainzplayerEnabled ? "text-muted" : ""}`}
+          >
+            <span>&nbsp;Brainzplayer</span>
+          </span>
+        }
+      />
       <p>Choose which music services to use for playback in ListenBrainz.</p>
 
       <p>
