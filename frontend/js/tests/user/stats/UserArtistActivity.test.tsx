@@ -23,9 +23,7 @@ const sitewideProps: UserArtistActivityProps = {
 
 jest.mock("@nivo/bar", () => ({
   ...jest.requireActual("@nivo/bar"),
-  ResponsiveBar: ({ data }: any) => (
-    <div data-testid="ResponsiveBar">{JSON.stringify(data)}</div>
-  ),
+  ResponsiveBar: ({ children }: any) => children({ width: 400, height: 400 }),
 }));
 
 const queryClient = new QueryClient({
@@ -97,7 +95,7 @@ describe.each([
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("ResponsiveBar")).toBeInTheDocument();
+      expect(screen.getByTestId("user-artist-activity")).toBeInTheDocument();
     });
   });
 

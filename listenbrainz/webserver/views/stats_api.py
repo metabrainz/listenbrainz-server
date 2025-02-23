@@ -408,6 +408,39 @@ def get_listening_activity(user_name: str):
         "last_updated": stats.last_updated
     }})
 
+def _get_artist_activity(release_groups_list):
+    result = {}
+    for release_group in release_groups_list:
+        artist_name = release_group["artist_name"].split(",")[0]
+        listen_count = release_group["listen_count"]
+        release_group_name = release_group["release_group_name"]
+        
+        if artist_name in result:
+            result[artist_name]["listen_count"] += listen_count
+            for album in result[artist_name]["albums"]:
+                if album["name"] == release_group_name:
+                    album["listen_count"] += listen_count
+                    break
+            else:
+                result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count, "release_group_mbid": release_group["release_group_mbid"]})
+        else:
+            if release_group["release_group_mbid"]:
+                result[artist_name] = {
+                    "name": artist_name,
+                    "listen_count": listen_count,
+                    "albums": [{"name": release_group_name, "listen_count": listen_count, "release_group_mbid": release_group["release_group_mbid"]}]
+                }
+            else:
+                result[artist_name] = {
+                  "name": artist_name,
+                  "listen_count": listen_count,
+                  "albums": [{"name": release_group_name, "listen_count": listen_count}]
+                }
+
+    sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
+    count = 15
+    N = min(count, len(sorted_data))
+    return sorted_data[:N]
 
 @stats_api_bp.get("/user/<user_name>/artist-activity")
 @crossdomain
@@ -460,29 +493,10 @@ def get_artist_activity(user_name: str):
     if stats is None:
         raise APINoContent('')
 
-    release_group_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    result = _get_artist_activity(release_groups_list)
+    return jsonify({"result": result})
     
-    result = {}
-    for release_group in release_group_list:
-        artist_name = release_group["artist_name"].split(",")[0]
-        listen_count = release_group["listen_count"]
-        release_group_name = release_group["release_group_name"]
-
-        if artist_name in result:
-            result[artist_name]["listen_count"] += listen_count
-            result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count})
-        else:
-            result[artist_name] = {
-                "name": artist_name,
-                "listen_count": listen_count,
-                "albums": [{"name": release_group_name, "listen_count": listen_count}]
-            }
-
-    sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
-    count = 15
-    N = min(count, len(sorted_data))
-
-    return jsonify({"result": sorted_data[:N]})
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1224,27 +1238,8 @@ def get_sitewide_artist_activity():
         raise APINoContent('')
     
     release_groups_list = stats["data"]
-
-    result = {}
-    for release_group in release_groups_list:
-        artist_name = release_group["artist_name"].split(",")[0]
-        listen_count = release_group["listen_count"]
-        release_group_name = release_group["release_group_name"]
-        
-        if artist_name in result:
-            result[artist_name]["listen_count"] += listen_count
-            result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count})
-        else:
-            result[artist_name] = {
-                "name": artist_name,
-                "listen_count": listen_count,
-                "albums": [{"name": release_group_name, "listen_count": listen_count}]
-            }
-
-    sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
-    count = 15
-    N = min(count, len(sorted_data))
-    return jsonify({"result": sorted_data[:N]})
+    result = _get_artist_activity(release_groups_list)
+    return jsonify({"result": result})
 
 
 @stats_api_bp.get("/sitewide/artist-map")

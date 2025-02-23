@@ -65,6 +65,20 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
 
   const [chartData, setChartData] = React.useState<ChartDataItem[]>([]);
 
+  const albumRedirectMapping = React.useMemo(() => {
+    const mapping: Record<string, string> = {};
+    if (rawData && rawData.result) {
+      rawData.result.forEach((artist) => {
+        artist.albums.forEach((album) => {
+          if (album.release_group_mbid) {
+            mapping[`${artist.name}-${album.name}`] = album.release_group_mbid;
+          }
+        });
+      });
+    }
+    return mapping;
+  }, [rawData]);
+
   React.useEffect(() => {
     if (rawData && rawData.result.length > 0) {
       const processedData = processData(rawData);
@@ -130,6 +144,15 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                   colors={{ scheme: "nivo" }}
                   borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
                   enableLabel={false}
+                  onClick={(barData, event) => {
+                    const albumName = barData.id;
+                    const artistName = barData.indexValue;
+                    const releaseMbid =
+                      albumRedirectMapping[`${artistName}-${albumName}`];
+                    if (releaseMbid) {
+                      window.location.href = `/album/${releaseMbid}`;
+                    }
+                  }}
                 />
               </div>
             </div>
