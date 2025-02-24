@@ -20,15 +20,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
 import { Link } from "react-router-dom";
-import * as tinycolor from "tinycolor2";
+import { Vibrant } from "node-vibrant/browser";
+import type { Palette } from "@vibrant/color";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import {
-  getAverageRGBOfImage,
-  getRecordingMBID,
-  getRecordingMSID,
-} from "../../utils/utils";
+import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
 import {
@@ -39,6 +36,7 @@ import Queue from "./Queue";
 import MusicPlayer from "./MusicPlayer";
 import { FeedbackValue } from "./utils";
 import VolumeControlButton from "./VolumeControlButton";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 
 type BrainzPlayerUIProps = {
   currentDataSourceName?: string;
@@ -222,38 +220,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     setShowVolume((prevValue) => !prevValue);
   };
 
-  const defaultRGBForMusicPlayer = React.useMemo(() => {
-    return {
-      r: 208,
-      g: 48,
-      b: 8,
-    };
-  }, []);
-
-  const [
-    musicPlayerBackgroundColor,
-    setMusicPlayerBackgroundColor,
-  ] = React.useState<tinycolor.Instance>(
-    tinycolor.fromRatio(defaultRGBForMusicPlayer)
-  );
-
-  const allColors = React.useMemo(() => {
-    return Object.keys(tinycolor.names).map((color) => tinycolor(color));
-  }, []);
-
-  const [mostReadableTextColor, setMostReadableTextColor] = React.useState<
-    string
-  >(
-    tinycolor.mostReadable(musicPlayerBackgroundColor, allColors).toHexString()
-  );
-
-  React.useEffect(() => {
-    setMostReadableTextColor(
-      tinycolor
-        .mostReadable(musicPlayerBackgroundColor, allColors)
-        .toHexString()
-    );
-  }, [musicPlayerBackgroundColor, allColors]);
+  const [musicPlayerColorPalette, setMusicPlayerColorPalette] = React.useState<
+    Palette
+  >();
 
   const toggleQueue = React.useCallback(() => {
     setShowQueue((prevShowQueue) => !prevShowQueue);
@@ -271,22 +240,21 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
 
   React.useEffect(() => {
-    getAverageRGBOfImage(
-      musicPlayerCoverArtRef?.current,
-      defaultRGBForMusicPlayer
-    ).then(
-      (averageColor) => {
-        const adjustedMusicPlayerBackgroundColor = tinycolor.fromRatio(
-          averageColor
-        );
-        adjustedMusicPlayerBackgroundColor.saturate(20);
-        setMusicPlayerBackgroundColor(adjustedMusicPlayerBackgroundColor);
-      },
-      (error) => {
-        console.error("Error getting average color", error);
-      }
-    );
-  }, [currentTrackCoverURL, defaultRGBForMusicPlayer]);
+    if (!currentTrackCoverURL) {
+      return;
+    }
+    Vibrant.from(currentTrackCoverURL)
+      .getPalette()
+      .then((palette) => {
+        setMusicPlayerColorPalette(palette);
+      });
+  }, [currentTrackCoverURL]);
+
+  const musicPlayerBackgroundColor = musicPlayerColorPalette
+    ? `linear-gradient(to bottom, ${musicPlayerColorPalette?.Vibrant?.hex}, ${musicPlayerColorPalette?.DarkVibrant?.hex})`
+    : `linear-gradient(to bottom, ${COLOR_LB_BLUE}, ${COLOR_LB_ORANGE}`;
+  const musicPlayerTextColor =
+    musicPlayerColorPalette?.Vibrant?.titleTextColor ?? "white";
 
   return (
     <>
@@ -302,8 +270,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           isPlayingATrack && showMusicPlayer ? "open" : ""
         }`}
         style={{
-          background: musicPlayerBackgroundColor.toRgbString(),
-          color: mostReadableTextColor,
+          background: musicPlayerBackgroundColor,
+          color: musicPlayerTextColor,
         }}
       >
         <MusicPlayer
