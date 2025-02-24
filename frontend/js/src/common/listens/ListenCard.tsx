@@ -76,7 +76,6 @@ export type ListenCardProps = {
   className?: string;
   showTimestamp: boolean;
   showUsername: boolean;
-  brainzplayerHidden?: boolean;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
   // Displays left of the cover art thumbnail. For special items like reorder/grab icon
@@ -260,7 +259,6 @@ export class ListenCard extends React.Component<
       feedbackComponent,
       additionalMenuItems,
       additionalActions,
-      brainzplayerHidden,
       listen: listenFromProps,
       dispatch: dispatchProp,
       thumbnailSrc,
