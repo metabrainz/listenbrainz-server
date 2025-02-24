@@ -413,12 +413,12 @@
 .queue {
   position: fixed;
   padding: 1em;
-  bottom: calc(-100% - @brainzplayer-height - @progress-bar-height);
+  bottom: -100%;
   transition: bottom 1s ease-in-out;
   width: 100%;
   max-width: 550px;
-  height: min(500px, 100vh ~"-" @brainzplayer-height);
-  max-height: calc(100vh - @brainzplayer-height);
+  height: min(500px, 100vh);
+  max-height: 100vh;
   background-color: #f8f8f8;
   border-top: 1px solid #ccc;
   box-shadow: -6px -1px 10px rgba(0, 0, 0, 0.2);
@@ -426,7 +426,7 @@
   z-index: 109;
   right: 0;
   &.show {
-    bottom: @brainzplayer-height;
+    bottom: 0;
   }
 
   .hide-queue {
@@ -506,6 +506,10 @@
 
   &.open {
     bottom: 0;
+    + .queue {
+      // When the music player is open, bring queu on top of it
+      z-index: 112;
+    }
   }
 
   > * {

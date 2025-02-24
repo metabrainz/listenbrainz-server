@@ -261,14 +261,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       <div className={`volume ${showVolume ? "show" : ""}`}>
         <VolumeControlButton />
       </div>
-
-      <div className={`queue ${showQueue ? "show" : ""}`}>
-        <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
-      </div>
       <div
-        className={`music-player ${
-          isPlayingATrack && showMusicPlayer ? "open" : ""
-        }`}
+        className={`music-player ${showMusicPlayer ? "open" : ""}`}
         style={{
           background: musicPlayerBackgroundColor,
           color: musicPlayerTextColor,
@@ -288,6 +282,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           musicPlayerCoverArtRef={musicPlayerCoverArtRef}
           disabled={disabled}
         />
+      </div>
+      <div className={`queue ${showQueue ? "show" : ""}`}>
+        <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
         id="brainz-player"
