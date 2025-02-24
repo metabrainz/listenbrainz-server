@@ -1,4 +1,4 @@
-import { isNaN, throttle } from "lodash";
+import { throttle } from "lodash";
 import * as React from "react";
 import ReactTooltip from "react-tooltip";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -49,7 +49,6 @@ function ProgressBar(props: ProgressBarProps) {
       brainzPlayerContextRef.current.durationMs
     ).toFixed(2)
   );
-  const hideProgressBar = isNaN(progressPercentage) || progressPercentage <= 0;
 
   const mouseEventHandler = useThrottle(
     (event: React.MouseEvent<HTMLInputElement>): void => {
@@ -118,7 +117,7 @@ function ProgressBar(props: ProgressBarProps) {
   return (
     <div className="progress-bar-wrapper">
       <div
-        className={`progress${hideProgressBar ? " hidden" : ""}`}
+        className="progress"
         onClick={mouseEventHandler}
         onMouseMove={mouseEventHandler}
         onKeyDown={onKeyPressHandler}

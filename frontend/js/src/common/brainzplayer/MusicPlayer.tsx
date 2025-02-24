@@ -260,7 +260,9 @@ function MusicPlayer(props: MusicPlayerProps) {
           onClick={onHide}
         />
         <div className="header-text">
-          <AnimateTextOnOverflow text={currentTrackAlbum} />
+          <AnimateTextOnOverflow
+            text={currentTrackAlbum ?? "No track playing"}
+          />
         </div>
         <MenuOptions
           currentListen={currentListen}

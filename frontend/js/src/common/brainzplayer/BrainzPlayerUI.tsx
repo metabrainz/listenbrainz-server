@@ -10,7 +10,7 @@ import {
   faPlayCircle,
   faSlash,
   faVolumeUp,
-  faExpand,
+  faMaximize,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 
@@ -296,7 +296,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           <ProgressBar seekToPositionMs={seekToPositionMs} />
         )}
         <div className="content">
-          <div className="cover-art">
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <div
+            className="cover-art"
+            onClick={isMobile ? toggleMusicPlayer : noop}
+          >
             <div className="no-album-art" />
             {dataSources}
           </div>
@@ -375,16 +379,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             </>
           )}
           {isMobile ? (
-            <button
-              type="button"
-              className="fa-layers fa-fw"
-              onClick={isPlayingATrack ? toggleMusicPlayer : noop}
-              style={{ color: showMusicPlayer ? "green" : "" }}
-              title="Open music player"
-            >
-              <FontAwesomeIcon icon={faExpand} />
-              <FontAwesomeIcon icon={faMusic} />
-            </button>
+            <FontAwesomeIcon icon={faMaximize} onClick={toggleMusicPlayer} />
           ) : (
             <FontAwesomeIcon icon={faBarsStaggered} onClick={toggleQueue} />
           )}
