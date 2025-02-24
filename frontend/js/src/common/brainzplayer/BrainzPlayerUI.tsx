@@ -10,8 +10,7 @@ import {
   faPlayCircle,
   faSlash,
   faVolumeUp,
-  faCompactDisc,
-  faXmark,
+  faExpand,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 
@@ -410,14 +409,21 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               )}
             </>
           )}
+          {isMobile ? (
+            <button
+              type="button"
+              className="fa-layers fa-fw"
+              onClick={isPlayingATrack ? toggleMusicPlayer : noop}
+              style={{ color: showMusicPlayer ? "green" : "" }}
+              title="Open music player"
+            >
+              <FontAwesomeIcon icon={faExpand} />
+              <FontAwesomeIcon icon={faMusic} />
+            </button>
+          ) : (
+            <FontAwesomeIcon icon={faBarsStaggered} onClick={toggleQueue} />
+          )}
 
-          <FontAwesomeIcon
-            icon={isMobile ? faCompactDisc : faBarsStaggered}
-            style={{ color: showMusicPlayer ? "green" : "" }}
-            onClick={
-              isMobile && isPlayingATrack ? toggleMusicPlayer : toggleQueue
-            }
-          />
           {!isMobile && (
             <FontAwesomeIcon
               icon={brainzPlayerContextRef.current.queueRepeatMode.icon}
