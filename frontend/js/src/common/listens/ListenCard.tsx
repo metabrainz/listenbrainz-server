@@ -76,6 +76,7 @@ export type ListenCardProps = {
   className?: string;
   showTimestamp: boolean;
   showUsername: boolean;
+  brainzplayerHidden?: boolean;
   // This show under the first line of listen details. It's meant for reviews, etc.
   additionalContent?: string | JSX.Element;
   // Displays left of the cover art thumbnail. For special items like reorder/grab icon
@@ -259,6 +260,7 @@ export class ListenCard extends React.Component<
       feedbackComponent,
       additionalMenuItems,
       additionalActions,
+      brainzplayerHidden,
       listen: listenFromProps,
       dispatch: dispatchProp,
       thumbnailSrc,
@@ -266,7 +268,8 @@ export class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying } = this.state;
-    const { currentUser } = this.context;
+    const { currentUser, userPreferences } = this.context;
+
     const isLoggedIn = !isEmpty(currentUser);
 
     const recordingMSID = getRecordingMSID(listen);
@@ -576,18 +579,23 @@ export class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    <ListenControl
-                      text="Play Next"
-                      icon={faPlay}
-                      title="Play Next"
-                      action={this.addToTopOfQueue}
-                    />
-                    <ListenControl
-                      text="Add to Queue"
-                      icon={faPlusCircle}
-                      title="Add to Queue"
-                      action={this.addToBottomOfQueue}
-                    />
+                    {userPreferences?.brainzplayer?.brainzplayerEnabled && (
+                      <>
+                        <ListenControl
+                          text="Play Next"
+                          icon={faPlay}
+                          title="Play Next"
+                          action={this.addToTopOfQueue}
+                        />
+                        <ListenControl
+                          text="Add to Queue"
+                          icon={faPlusCircle}
+                          title="Add to Queue"
+                          action={this.addToBottomOfQueue}
+                        />
+                      </>
+                    )}
+
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}
@@ -723,19 +731,21 @@ export class ListenCard extends React.Component<
                   </ul>
                 </>
               )}
-              <button
-                title="Play"
-                className={`btn btn-transparent play-button${
-                  isCurrentlyPlaying ? " playing" : ""
-                }`}
-                onClick={this.playListen}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  fixedWidth
-                  icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
-                />
-              </button>
+              {userPreferences?.brainzplayer?.brainzplayerEnabled && (
+                <button
+                  title="Play"
+                  className={`btn btn-transparent play-button${
+                    isCurrentlyPlaying ? " playing" : ""
+                  }`}
+                  onClick={this.playListen}
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    fixedWidth
+                    icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
+                  />
+                </button>
+              )}
               {additionalActions}
             </div>
           </div>
