@@ -179,6 +179,7 @@ export default function BrainzPlayer() {
     appleMusicEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
+    brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
 
@@ -985,7 +986,10 @@ export default function BrainzPlayer() {
   }
 
   return (
-    <div data-testid="brainzplayer">
+    <div
+      data-testid="brainzplayer"
+      id={!brainzplayerEnabled ? "brainzplayer-hidden" : ""}
+    >
       {!playerPaused && (
         <Helmet
           key={htmlTitle}
