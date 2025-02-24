@@ -491,6 +491,11 @@
 }
 
 .music-player {
+  --music-player-background: linear-gradient(to bottom, @blue, @orange);
+  --music-player-text-color-1: white;
+  --music-player-text-color-2: white;
+  background: var(--music-player-background);
+  color: var(--music-player-text-color-1);
   position: fixed;
   z-index: 111;
   height: 100vh;
@@ -602,12 +607,13 @@
       position: relative;
 
       &.animate {
-        animation: leftright 6s infinite alternate ease-in-out;
+        animation: leftright 6s infinite alternate linear;
       }
     }
   }
 
   .player-buttons {
+    color: var(--music-player-text-color-2);
     display: flex;
     align-items: center;
     justify-content: space-around;

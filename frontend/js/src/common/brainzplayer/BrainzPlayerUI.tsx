@@ -250,11 +250,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       });
   }, [currentTrackCoverURL]);
 
-  const musicPlayerBackgroundColor = musicPlayerColorPalette
+  const musicPlayerBackground = musicPlayerColorPalette
     ? `linear-gradient(to bottom, ${musicPlayerColorPalette?.Vibrant?.hex}, ${musicPlayerColorPalette?.DarkVibrant?.hex})`
     : `linear-gradient(to bottom, ${COLOR_LB_BLUE}, ${COLOR_LB_ORANGE}`;
-  const musicPlayerTextColor =
-    musicPlayerColorPalette?.Vibrant?.titleTextColor ?? "white";
+  const musicPlayerTextColor1 =
+    musicPlayerColorPalette?.Vibrant?.bodyTextColor ?? "white";
+  const musicPlayerTextColor2 =
+    musicPlayerColorPalette?.DarkVibrant?.bodyTextColor ?? "white";
 
   return (
     <>
@@ -263,10 +265,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       </div>
       <div
         className={`music-player ${showMusicPlayer ? "open" : ""}`}
-        style={{
-          background: musicPlayerBackgroundColor,
-          color: musicPlayerTextColor,
-        }}
+        style={
+          {
+            "--music-player-background": musicPlayerBackground,
+            "--music-player-text-color-1": musicPlayerTextColor1,
+            "--music-player-text-color-2": musicPlayerTextColor2,
+          } as React.CSSProperties
+        }
       >
         <MusicPlayer
           onHide={toggleMusicPlayer}

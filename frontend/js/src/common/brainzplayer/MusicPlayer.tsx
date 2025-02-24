@@ -75,13 +75,15 @@ function AnimateTextOnOverflow(props: {
   const { text, className, style } = props;
   const textRef = React.useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = React.useState(false);
+  const [animationDuration, setAnimationDuration] = React.useState(6);
 
   React.useEffect(() => {
     const checkOverflow = () => {
       if (textRef.current) {
-        setIsOverflowing(
-          textRef.current.scrollWidth > textRef.current.clientWidth
-        );
+        const overflowPixels =
+          textRef.current.scrollWidth - textRef.current.clientWidth;
+        setIsOverflowing(overflowPixels > 0);
+        setAnimationDuration(Math.round(overflowPixels / 20));
       }
     };
 
@@ -93,7 +95,7 @@ function AnimateTextOnOverflow(props: {
       <span
         className={`${className ?? ""} ${isOverflowing ? "animate" : ""}`}
         title={text}
-        style={style}
+        style={{ ...style, animationDuration: `${animationDuration}s` }}
       >
         {text}
       </span>
