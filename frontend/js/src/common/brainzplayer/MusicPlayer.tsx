@@ -299,8 +299,8 @@ function MusicPlayer(props: MusicPlayerProps) {
             {currentTrackArtist}
           </span>
         </div>
+        <ProgressBar seekToPositionMs={seekToPositionMs} showNumbers />
       </div>
-      <ProgressBar seekToPositionMs={seekToPositionMs} showNumbers />
       <div className="player-buttons">
         <PlaybackControlButton
           className="previous"

@@ -126,7 +126,7 @@ function ProgressBar(props: ProgressBarProps) {
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={progressPercentage}
+        aria-valuenow={progressPercentage || 0}
         tabIndex={0}
         data-tip={tipContent}
         ref={progressBarRef}
@@ -134,7 +134,7 @@ function ProgressBar(props: ProgressBarProps) {
         <div
           className="progress-bar"
           style={{
-            width: `${progressPercentage}%`,
+            width: `${progressPercentage || 0}%`,
           }}
         />
         <ReactTooltip
