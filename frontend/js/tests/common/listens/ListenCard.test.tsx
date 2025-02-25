@@ -165,7 +165,7 @@ describe("ListenCard", () => {
       .find(ListenCardClass)
       .instance() as ListenCardClass;
     const playButton = wrapper.find(".play-button");
-    expect(playButton).toHaveLength(0);
+    expect(playButton).toHaveLength(1);
     expect(playButton.props().onClick).toEqual(instance.playListen);
   });
 
@@ -175,8 +175,7 @@ describe("ListenCard", () => {
       .find(ListenCardClass)
       .instance() as ListenCardClass;
     const playButton = wrapper.find(".play-button");
-    expect(playButton).toHaveLength(1);
-    expect(playButton.props().onClick).toEqual(instance.playListen);
+    expect(playButton).toHaveLength(0);
   });
 
   it("should send an event to BrainzPlayer when playListen is called", async () => {
