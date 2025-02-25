@@ -289,7 +289,7 @@ function MusicPlayer(props: MusicPlayerProps) {
           />
         </div>
       </div>
-      <div className="info">
+      <div className="info text-center">
         <div className="info-text-wrapper">
           <AnimateTextOnOverflow
             text={currentTrackName}

@@ -20,8 +20,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
 import { Link } from "react-router-dom";
-import { Vibrant } from "node-vibrant/browser";
+import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
+import tinycolor from "tinycolor2";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -243,20 +244,55 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     if (!currentTrackCoverURL) {
       return;
     }
-    Vibrant.from(currentTrackCoverURL)
+    VibrantLibrary.from(currentTrackCoverURL)
       .getPalette()
       .then((palette) => {
         setMusicPlayerColorPalette(palette);
       });
   }, [currentTrackCoverURL]);
 
-  const musicPlayerBackground = musicPlayerColorPalette
-    ? `linear-gradient(to bottom, ${musicPlayerColorPalette?.Vibrant?.hex}, ${musicPlayerColorPalette?.DarkVibrant?.hex})`
-    : `linear-gradient(to bottom, ${COLOR_LB_BLUE}, ${COLOR_LB_ORANGE}`;
-  const musicPlayerTextColor1 =
-    musicPlayerColorPalette?.Vibrant?.bodyTextColor ?? "white";
-  const musicPlayerTextColor2 =
-    musicPlayerColorPalette?.DarkVibrant?.bodyTextColor ?? "white";
+  let musicPlayerBackground = `linear-gradient(to bottom, ${COLOR_LB_BLUE}, ${COLOR_LB_ORANGE}`;
+  let musicPlayerTextColor1 = "white";
+  let musicPlayerTextColor2 = "white";
+
+  if (musicPlayerColorPalette) {
+    const {
+      Vibrant,
+      DarkVibrant,
+      LightVibrant,
+      Muted,
+      DarkMuted,
+      LightMuted,
+    } = musicPlayerColorPalette;
+
+    musicPlayerBackground = `linear-gradient(to bottom, ${Vibrant?.hex} 60%, ${DarkVibrant?.hex})`;
+
+    musicPlayerTextColor1 = tinycolor
+      .mostReadable(Vibrant!.hex, [
+        Muted!.hex,
+        LightMuted!.hex,
+        LightVibrant!.hex,
+        DarkMuted!.hex,
+      ])
+      .toHex();
+
+    musicPlayerTextColor2 = tinycolor
+      .mostReadable(DarkVibrant!.hex, [
+        Muted!.hex,
+        LightMuted!.hex,
+        LightVibrant!.hex,
+        DarkMuted!.hex,
+      ])
+      .toHex();
+
+    // Ensure the choice of colours was reasonable, use black or white instead if not readable
+    if (!tinycolor.isReadable(musicPlayerTextColor1, Vibrant!.hex)) {
+      musicPlayerTextColor1 = Vibrant!.bodyTextColor;
+    }
+    if (!tinycolor.isReadable(musicPlayerTextColor2, DarkVibrant!.hex)) {
+      musicPlayerTextColor1 = DarkVibrant!.bodyTextColor;
+    }
+  }
 
   return (
     <>
