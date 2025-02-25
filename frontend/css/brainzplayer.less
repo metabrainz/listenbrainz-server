@@ -494,6 +494,7 @@
   --music-player-background: linear-gradient(to bottom, @blue, @orange);
   --music-player-text-color-1: white;
   --music-player-text-color-2: white;
+  --music-player-accent-color: white;
   background: var(--music-player-background);
   color: var(--music-player-text-color-1);
   position: fixed;
@@ -636,7 +637,7 @@
       background-color: rgba(255, 255, 255, 0.3);
 
       .progress-bar {
-        background-color: white;
+        background-color: var(--music-player-accent-color);
       }
     }
   }

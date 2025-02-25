@@ -254,6 +254,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   let musicPlayerBackground = `linear-gradient(to bottom, ${COLOR_LB_BLUE}, ${COLOR_LB_ORANGE}`;
   let musicPlayerTextColor1 = "white";
   let musicPlayerTextColor2 = "white";
+  let musicPlayerTextColor3 = "white";
 
   if (musicPlayerColorPalette) {
     const {
@@ -285,11 +286,17 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       ])
       .toHexString();
 
+    musicPlayerTextColor3 = DarkMuted!.hex;
+
     // Ensure the choice of colours was reasonable, use black or white instead if not readable
     if (!tinycolor.isReadable(musicPlayerTextColor1, Vibrant!.hex)) {
       musicPlayerTextColor1 = Vibrant!.bodyTextColor;
     }
-    if (!tinycolor.isReadable(musicPlayerTextColor2, DarkVibrant!.hex)) {
+    if (
+      !tinycolor.isReadable(musicPlayerTextColor2, DarkVibrant!.hex, {
+        size: "large",
+      })
+    ) {
       musicPlayerTextColor2 = DarkVibrant!.bodyTextColor;
     }
   }
@@ -306,6 +313,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             "--music-player-background": musicPlayerBackground,
             "--music-player-text-color-1": musicPlayerTextColor1,
             "--music-player-text-color-2": musicPlayerTextColor2,
+            "--music-player-accent-color": musicPlayerTextColor3,
           } as React.CSSProperties
         }
       >
