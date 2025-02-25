@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import { omit, set } from "lodash";
+import { omit, set, merge } from "lodash";
 import { act } from "react-dom/test-utils";
 import NiceModal from "@ebay/nice-modal-react";
 import { BrowserRouter, Link } from "react-router-dom";
@@ -156,6 +156,20 @@ describe("ListenCard", () => {
   });
 
   it("should render a play button", () => {
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider value={merge(globalProps, {userPreferences:{brainzplayer:{brainzplayerEnabled:false}}})}>
+        <ListenCardWithWrappers {...{ ...props }} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
+    const playButton = wrapper.find(".play-button");
+    expect(playButton).toHaveLength(0);
+    expect(playButton.props().onClick).toEqual(instance.playListen);
+  });
+
+  it("should not render play buttons when brainzplayer is hidden", () => {
     const wrapper = mount(<ListenCardWithWrappers {...props} />);
     const instance = wrapper
       .find(ListenCardClass)
