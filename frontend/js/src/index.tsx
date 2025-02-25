@@ -40,7 +40,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { currentUser } = globalAppContext;
 
-  const routes = getRoutes(currentUser?.name);
+  const routes = getRoutes(
+    currentUser?.name,
+    globalAppContext?.userPreferences?.brainzplayer?.brainzplayerEnabled
+  );
   const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
     createBrowserRouter
   );
@@ -52,9 +55,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
         <ReactQueryDevtool client={queryClient}>
-          <BrainzPlayerProvider>
+          {globalAppContext?.userPreferences?.brainzplayer
+            ?.brainzplayerEnabled ? (
+            <BrainzPlayerProvider>
+              <RouterProvider router={router} />
+            </BrainzPlayerProvider>
+          ) : (
             <RouterProvider router={router} />
-          </BrainzPlayerProvider>
+          )}
         </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
