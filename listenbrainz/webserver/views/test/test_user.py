@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import mock
 
 import orjson
@@ -155,7 +155,7 @@ class UserViewsTestCase(IntegrationTestCase):
         timescale.return_value = ([], EPOCH, EPOCH)
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, limit=25)
+        req_call = mock.call(user, limit=25, to_ts=datetime.utcfromtimestamp(1), from_ts= datetime.utcfromtimestamp(1) - timedelta(days=30))
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
