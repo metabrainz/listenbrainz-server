@@ -729,7 +729,7 @@ export class ListenCard extends React.Component<
                   </ul>
                 </>
               )}
-              {userPreferences?.brainzplayer?.brainzplayerEnabled && (
+              {(userPreferences?.brainzplayer?.brainzplayerEnabled ?? true) && (
                 <button
                   title="Play"
                   className={`btn btn-transparent play-button${
