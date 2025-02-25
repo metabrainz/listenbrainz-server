@@ -151,10 +151,14 @@ function ProgressBar(props: ProgressBarProps) {
         />
       </div>
       {showNumbers && (
-        <div>
-          {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
-          &#8239;/&#8239;
-          {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
+        <div className="progress-numbers">
+          <span>
+            {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
+          </span>
+          <span className="divider">&#8239;/&#8239;</span>
+          <span>
+            {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
+          </span>
         </div>
       )}
     </div>
