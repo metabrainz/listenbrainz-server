@@ -274,7 +274,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         LightVibrant!.hex,
         DarkMuted!.hex,
       ])
-      .toHex();
+      .toHexString();
 
     musicPlayerTextColor2 = tinycolor
       .mostReadable(DarkVibrant!.hex, [
@@ -283,14 +283,14 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         LightVibrant!.hex,
         DarkMuted!.hex,
       ])
-      .toHex();
+      .toHexString();
 
     // Ensure the choice of colours was reasonable, use black or white instead if not readable
     if (!tinycolor.isReadable(musicPlayerTextColor1, Vibrant!.hex)) {
       musicPlayerTextColor1 = Vibrant!.bodyTextColor;
     }
     if (!tinycolor.isReadable(musicPlayerTextColor2, DarkVibrant!.hex)) {
-      musicPlayerTextColor1 = DarkVibrant!.bodyTextColor;
+      musicPlayerTextColor2 = DarkVibrant!.bodyTextColor;
     }
   }
 
