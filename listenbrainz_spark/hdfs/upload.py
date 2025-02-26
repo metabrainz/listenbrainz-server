@@ -1,11 +1,13 @@
 import os
+import shutil
 from pathlib import Path
 import time
 import tarfile
 import tempfile
 import logging
 
-from listenbrainz_spark import path, utils, hdfs_connection
+from listenbrainz_spark import path, hdfs_connection
+from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs.utils import create_dir, move
 from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
@@ -59,34 +61,6 @@ class ListenbrainzDataUploader:
                     total_time += time_taken
                     logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
         logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")
-
-    def upload_release_json_dump(self, archive: str):
-        """ Decompress archive and upload artist relation to HDFS.
-
-            Args:
-                archive: artist relation tar file to upload.
-        """
-        hdfs_dir = path.MUSICBRAINZ_RELEASE_DUMP
-        hdfs_mbdump_dir = os.path.join(hdfs_dir, "mbdump")  # release.tar.xz file has actual dump file inside mbdump dir
-        with tarfile.open(name=archive, mode="r:xz") as tar, tempfile.TemporaryDirectory() as local_dir:
-            # Remove existing dumps
-            if path_exists(hdfs_dir):
-                delete_dir(hdfs_dir, recursive=True)
-
-            create_dir(hdfs_dir)
-
-            for member in tar:
-                t0 = time.monotonic()
-                logger.info(f"Extracting {member.name}")
-                tar.extract(member, path=local_dir)
-                logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
-
-                t0 = time.monotonic()
-                logger.info(f"Uploading {member.name}")
-                hdfs_path = os.path.join(hdfs_dir, member.name)
-                local_path = os.path.join(local_dir, member.name)
-                upload_to_HDFS(hdfs_path, local_path)
-                logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
 
     def upload_new_listens_incremental_dump(self, archive: str):
         """ Upload new format parquet listens of an incremental

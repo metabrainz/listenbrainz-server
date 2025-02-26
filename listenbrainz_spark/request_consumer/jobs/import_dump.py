@@ -8,7 +8,7 @@ import listenbrainz_spark.request_consumer.jobs.utils as utils
 from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
-from listenbrainz_spark.hdfs import path_exists, delete_dir
+from listenbrainz_spark.hdfs.utils import path_exists, delete_dir
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.path import DELETED_USER_LISTEN_HISTORY_SAVE_PATH
 from listenbrainz_spark.persisted import unpersist_incremental_df

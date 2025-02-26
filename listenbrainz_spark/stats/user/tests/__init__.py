@@ -1,4 +1,4 @@
-from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
+from listenbrainz_spark.hdfs.utils import delete_dir, upload_to_HDFS
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
     RELEASE_GROUP_METADATA_CACHE_DATAFRAME, ARTIST_CREDIT_MBID_DATAFRAME, RECORDING_ARTIST_DATAFRAME
 from listenbrainz_spark.tests import SparkNewTestCase

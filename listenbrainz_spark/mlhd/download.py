@@ -14,7 +14,7 @@ import pycurl
 import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
-from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
+from listenbrainz_spark.hdfs.utils import upload_to_HDFS, delete_dir
 from listenbrainz_spark.stats import run_query
 
 
