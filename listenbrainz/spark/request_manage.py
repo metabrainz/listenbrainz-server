@@ -338,20 +338,6 @@ def request_fresh_releases(database, days, threshold):
     send_request_to_spark_cluster('releases.fresh', database=database, days=days, threshold=threshold)
 
 
-@cli.command(name='request_import_artist_relation')
-def request_import_artist_relation():
-    """ Send the spark cluster a request to import artist relation.
-    """
-    send_request_to_spark_cluster('import.artist_relation')
-
-
-@cli.command(name='request_import_musicbrainz_release_dump')
-def request_import_musicbrainz_release_dump():
-    """ Send the spark cluster a request to import musicbrainz release dump.
-    """
-    send_request_to_spark_cluster('import.musicbrainz_release_dump')
-
-
 @cli.command(name='request_import_mlhd_dump')
 def request_import_mlhd_dump():
     """ Send the spark cluster a request to import musicbrainz release dump. """

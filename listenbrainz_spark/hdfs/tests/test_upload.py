@@ -23,14 +23,6 @@ class HDFSDataUploaderTestCase(SparkNewTestCase):
     def tearDown(self):
         self.delete_uploaded_listens()
 
-    @patch('listenbrainz_spark.utils.read_json')
-    @patch('listenbrainz_spark.utils.save_parquet')
-    def test_process_json(self, mock_save, mock_read):
-        fakeschema = StructType([StructField('xxxxx', StringType(), nullable=True)])
-        ListenbrainzDataUploader().process_json('_', '/fakedestpath', '/fakehdfspath', '__', fakeschema)
-        mock_read.assert_called_once_with('/fakehdfspath', schema=fakeschema)
-        mock_save.assert_called_once_with(mock_read.return_value, '/fakedestpath')
-
     def test_upload_listens(self):
         full_dump_tar = self.create_temp_listens_tar('full-dump')
         self.uploader.upload_new_listens_full_dump(full_dump_tar.name)

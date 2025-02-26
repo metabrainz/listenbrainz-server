@@ -162,11 +162,3 @@ def import_incremental_dump_by_id_handler(dump_id: int, local: bool = False):
         'errors': errors,
         'time': str(datetime.utcnow()),
     }]
-
-
-def import_release_json_dump_to_hdfs():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        downloader = ListenbrainzDataDownloader()
-        dest = downloader.download_release_json_dump(temp_dir)
-        downloader.connection.close()
-        ListenbrainzDataUploader().upload_release_json_dump(dest)

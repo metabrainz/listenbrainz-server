@@ -11,31 +11,54 @@ from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.hdfs.utils import upload_to_HDFS
 from listenbrainz_spark.hdfs.utils import rename
-from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader, TEMP_DIR_PATH as HDFS_TEMP_DIR
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
+HDFS_TEMP_DIR = "/temp"
 
-class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
-    def process_json(self, _, dest_path, tmp_hdfs_path, __, schema):
-        """ Read JSON from HDFS as a dataframe and upload to
-            HDFS as a parquet.
+class ListenbrainzDataUploader:
 
-            Args:
-                dest_path (str): HDFS path to upload JSON as parquet.
-                tmp_hdfs_path (str): HDFS path where JSON has been uploaded.
+    def extract_and_upload_archive(self, archive, local_dir, hdfs_dir, extension, cleanup_on_failure=True):
         """
-        start_time = time.monotonic()
-        df = utils.read_json(tmp_hdfs_path, schema=schema)
-        logger.info("Processing {} rows...".format(df.count()))
+        Extract the archive and upload it to the given hdfs directory.
+        Args:
+            archive: path to the tar archive to uploaded
+            local_dir: path to local dir to be used for extraction
+            hdfs_dir: path to hdfs dir where contents of tar should be uploaded
+            extension: the file extension members to upload
+            cleanup_on_failure: whether to delete local and hdfs directories
+                if error occurs during extraction
+        """
+        total_files = 0
+        total_time = 0.0
+        with tarfile.open(archive, mode='r') as tar:
+            for member in tar:
+                if member.isfile() and member.name.endswith(extension):
+                    logger.info(f"Uploading {member.name}...")
+                    t0 = time.monotonic()
 
-        logger.info("Uploading to {}...".format(dest_path))
-        utils.save_parquet(df, dest_path)
-        logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
+                    try:
+                        tar.extract(member, path=local_dir)
+                    except tarfile.TarError as err:
+                        if cleanup_on_failure:
+                            if path_exists(hdfs_dir):
+                                delete_dir(hdfs_dir, recursive=True)
+                            shutil.rmtree(local_dir, ignore_errors=True)
+                        raise DumpInvalidException(f"{type(err).__name__} while extracting {member.name}, aborting import")
+
+                    hdfs_path = os.path.join(hdfs_dir, member.name)
+                    local_path = os.path.join(local_dir, member.name)
+                    upload_to_HDFS(hdfs_path, local_path)
+
+                    time_taken = time.monotonic() - t0
+                    total_files += 1
+                    total_time += time_taken
+                    logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
+        logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")
 
     def upload_release_json_dump(self, archive: str):
         """ Decompress archive and upload artist relation to HDFS.
