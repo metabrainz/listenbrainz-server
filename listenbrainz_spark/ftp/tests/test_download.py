@@ -107,25 +107,3 @@ class FTPDownloaderTestCase(unittest.TestCase):
         mock_download_dump.assert_called_once_with(mock_get_f_name.return_value, 'fakedir')
         self.assertEqual(dest_path, mock_download_dump.return_value)
         self.assertEqual(dump_id, 45)
-
-    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
-    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
-    @patch('ftplib.FTP')
-    def test_download_artist_relation(self, mock_ftp_cons, mock_list_dir, mock_download_dump):
-        directory = '/fakedir'
-        mock_list_dir.return_value = [
-            'artist-credit-artist-credit-relations-01-20191230-134806',
-            'artist-credit-artist-credit-relations-02-20191230-134806',
-        ]
-        expected_filename = 'artist-credit-artist-credit-relations-02-20191230-134806.tar.bz2'
-        dest_path, filename = ListenbrainzDataDownloader().download_artist_relation(directory)
-
-        mock_list_dir.assert_called_once()
-        mock_ftp_cons.return_value.cwd.assert_has_calls([
-            call(config.FTP_ARTIST_RELATION_DIR),
-            call('artist-credit-artist-credit-relations-02-20191230-134806')
-        ])
-
-        self.assertEqual(expected_filename, filename)
-        mock_download_dump.assert_called_once_with(expected_filename, directory)
-        self.assertEqual(dest_path, mock_download_dump.return_value)

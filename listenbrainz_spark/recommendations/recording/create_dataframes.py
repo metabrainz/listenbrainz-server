@@ -291,17 +291,8 @@ def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold
         raise SparkException("Invalid job_type parameter received for creating dataframes: " + job_type)
 
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
-    metadata = {}
     # "updated" should always be set to False in this script.
-    metadata['updated'] = False
-    try:
-        listenbrainz_spark.init_spark_session('Create Dataframes')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
-    metadata['to_date'] = to_date
-    metadata['from_date'] = from_date
+    metadata = {'updated': False, 'to_date': to_date, 'from_date': from_date}
 
     complete_listens_df = get_listens_from_dump(from_date, to_date)
     logger.info(f'Listen count from {from_date} to {to_date}: {complete_listens_df.count()}')
