@@ -1,19 +1,7 @@
 import os
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-from unittest.mock import patch, Mock
-from datetime import datetime
 
-import tarfile
-
-from listenbrainz_spark import utils, path, schema
-from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
 from listenbrainz_spark.tests import SparkNewTestCase
-
-from pyspark.sql.types import StructField, StructType, StringType
-
-from listenbrainz_spark.utils import get_listen_files_list, get_listens_from_dump
+from listenbrainz_spark.utils import get_listen_files_list
 
 
 class HDFSDataUploaderTestCase(SparkNewTestCase):
