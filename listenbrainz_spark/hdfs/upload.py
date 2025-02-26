@@ -8,11 +8,10 @@ import logging
 
 from listenbrainz_spark import path, hdfs_connection
 from listenbrainz_spark.exceptions import DumpInvalidException
-from listenbrainz_spark.hdfs.utils import create_dir, move
+from listenbrainz_spark.hdfs.utils import move
 from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.hdfs.utils import upload_to_HDFS
-from listenbrainz_spark.hdfs.utils import rename
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
@@ -96,23 +95,6 @@ class ListenbrainzDataUploader:
         t0 = time.monotonic()
         move(src_path, dest_path)
         logger.info(f"Full dump uploaded! Time taken: {time.monotonic() - t0:.2f}")
-
-    def upload_mlhd_dump_chunk(self, archive: str):
-        """ Upload MLHD+ dump to HDFS """
-        dest_path = path.MLHD_PLUS_RAW_DATA_DIRECTORY
-
-        # Check if parent directory exists, if not create a directory
-        dest_path_parent = str(Path(dest_path).parent)
-        if not path_exists(dest_path_parent):
-            create_dir(dest_path_parent)
-
-        src_path = self.upload_archive_to_temp(archive, ".txt.zst")
-        archive_dest_path = os.path.join(dest_path, str(Path(archive).name))
-
-        logger.info(f"Moving the processed files from {src_path} to {archive_dest_path}")
-        t0 = time.monotonic()
-        rename(src_path, archive_dest_path)
-        logger.info(f"Done! Time taken: {time.monotonic() - t0:.2f}")
 
     def upload_archive_to_temp(self, archive: str, extension: str) -> str:
         """ Upload parquet files in archive to a temporary hdfs directory
