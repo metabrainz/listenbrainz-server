@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import psycopg2
 import orjson
@@ -167,8 +167,8 @@ def get_listens(user_name):
     listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
-        from_ts=datetime.utcfromtimestamp(min_ts) if min_ts else None,
-        to_ts=datetime.utcfromtimestamp(max_ts) if max_ts else None
+        from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
+        to_ts=datetime.fromtimestamp(max_ts, timezone.utc) if max_ts else None
     )
     listen_data = []
     for listen in listens:
