@@ -10,7 +10,7 @@ from listenbrainz_spark.exceptions import SQLException
 
 from pyspark.sql.utils import *
 
-from listenbrainz_spark.utils import get_latest_listen_ts
+from listenbrainz_spark.listens.data import get_latest_listen_ts
 
 SITEWIDE_STATS_ENTITY_LIMIT = 1000  # number of top artists to retain in sitewide stats
 

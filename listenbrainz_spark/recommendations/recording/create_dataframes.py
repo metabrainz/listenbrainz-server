@@ -46,7 +46,7 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
 from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
                                                                 save_dataframe,
                                                                 get_dates_to_train_data)
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 logger = logging.getLogger(__name__)
 

@@ -15,8 +15,8 @@ from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA, INCREMENTAL_BOOKKEEPIN
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
-from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump, filter_listens_by_range, \
-    filter_deleted_listens
+from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.listens.data import get_listens_from_dump, filter_listens_by_range, filter_deleted_listens
 
 logger = logging.getLogger(__name__)
 
