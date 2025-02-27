@@ -49,7 +49,6 @@ def import_full_dump_to_hdfs(loader: ListenbrainzDumpLoader, dump_id: int = None
         temp_path = upload_archive_to_hdfs_temp(src, ".parquet")
         process_full_listens_dump(temp_path)
     insert_dump_data(dump_id, DumpType.FULL, datetime.now(tz=timezone.utc))
-    unpersist_incremental_df()
     return dump_name
 
 
@@ -74,7 +73,6 @@ def import_incremental_dump_to_hdfs(loader: ListenbrainzDumpLoader, dump_id: int
         temp_path = upload_archive_to_hdfs_temp(src, ".parquet")
         process_incremental_listens_dump(temp_path)
     insert_dump_data(dump_id, DumpType.INCREMENTAL, datetime.now(tz=timezone.utc))
-    unpersist_incremental_df()
     return dump_name
 
 
