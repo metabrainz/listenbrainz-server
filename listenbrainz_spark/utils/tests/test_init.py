@@ -2,6 +2,7 @@ import os
 import tempfile
 from datetime import datetime
 
+import listenbrainz_spark.listens.data
 from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark import utils
 from listenbrainz_spark.hdfs.utils import create_dir
@@ -119,5 +120,5 @@ class UtilsTestCase(SparkNewTestCase):
 
     def test_get_latest_listen_ts(self):
         self.upload_test_listens()
-        self.assertEqual(utils.get_latest_listen_ts(), datetime(2021, 8, 9, 12, 22, 43))
+        self.assertEqual(listenbrainz_spark.listens.data.get_latest_listen_ts(), datetime(2021, 8, 9, 12, 22, 43))
         self.delete_uploaded_listens()

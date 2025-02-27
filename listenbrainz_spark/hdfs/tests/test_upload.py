@@ -1,7 +1,7 @@
 import os
 
 from listenbrainz_spark.tests import SparkNewTestCase
-from listenbrainz_spark.utils import get_listen_files_list
+from listenbrainz_spark.listens.data import get_listen_files_list
 
 
 class HDFSDataUploaderTestCase(SparkNewTestCase):

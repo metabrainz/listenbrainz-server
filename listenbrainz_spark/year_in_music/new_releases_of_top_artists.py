@@ -5,8 +5,7 @@ from more_itertools import chunked
 from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache, get_release_group_metadata_cache
 
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
-
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 USERS_PER_MESSAGE = 500
 

@@ -10,7 +10,7 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection, config
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump
 from listenbrainz_spark.hdfs.utils import delete_dir, path_exists, hdfs_walk
 
 TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'
