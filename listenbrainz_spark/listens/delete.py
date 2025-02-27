@@ -3,7 +3,7 @@ import uuid
 from listenbrainz_spark import config, hdfs_connection
 from listenbrainz_spark.hdfs.utils import move
 from listenbrainz_spark.path import DELETED_LISTENS_SAVE_PATH, DELETED_USER_LISTEN_HISTORY_SAVE_PATH
-from listenbrainz_spark.persisted import unpersist_deleted_df
+from listenbrainz_spark.listens.cache import unpersist_deleted_df
 from listenbrainz_spark.postgres.utils import load_from_db
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS

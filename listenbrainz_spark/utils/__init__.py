@@ -20,7 +20,7 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            ViewNotRegisteredException)
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH, \
     LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, DELETED_LISTENS_SAVE_PATH, DELETED_USER_LISTEN_HISTORY_SAVE_PATH
-from listenbrainz_spark.persisted import get_deleted_users_listen_history_df, get_deleted_listens_df
+from listenbrainz_spark.listens.cache import get_deleted_users_listen_history_df, get_deleted_listens_df
 from listenbrainz_spark.schema import listens_new_schema
 
 logger = logging.getLogger(__name__)
