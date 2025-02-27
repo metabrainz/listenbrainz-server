@@ -375,19 +375,19 @@ export default function UserFeedPage() {
   const { mutate: deleteEventMutation } = useMutation({
     mutationFn: deleteFeedEvent,
     onSuccess: (deletedEvent) => {
-      queryClient.setQueryData(
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData>>(
         queryKey,
-        (oldData: { pages: UserFeedPageProps[] }) => {
-          const newPagesArray =
-            oldData?.pages?.map((page) =>
-              _reject(page.events, (traversedEvent) => {
-                return (
-                  traversedEvent.event_type === deletedEvent?.event_type &&
-                  traversedEvent.id === deletedEvent?.id
-                );
-              })
-            ) ?? [];
-          return { pages: newPagesArray };
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newPagesArray = oldData?.pages.map((page) => ({
+            events: _reject(page.events, (traversedEvent) => {
+              return (
+                traversedEvent.event_type === deletedEvent?.event_type &&
+                traversedEvent.id === deletedEvent?.id
+              );
+            }),
+          }));
+          return { pages: newPagesArray, pageParams: queryKey };
         }
       );
     },

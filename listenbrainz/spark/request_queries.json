@@ -236,5 +236,10 @@
     "name": "popularity.popularity",
     "description": "Calculate all popularity data from mlhd or listenbrainz data.",
     "params": ["mlhd", "entity", "type"]
+  },
+  "import.deleted_listens": {
+    "name": "import.deleted_listens",
+    "description": "Import deleted listens from ListenBrainz into spark cluster.",
+    "params": []
   }
 }

@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from hdfs.util import HdfsError
 
@@ -111,3 +112,22 @@ def copy(hdfs_src_path: str, hdfs_dst_path: str, overwrite: bool = False):
             with hdfs_connection.client.read(src_file_path) as reader:
                 with hdfs_connection.client.write(dst_file_path, overwrite=overwrite) as writer:
                     writer.write(reader.read())
+
+
+def move(hdfs_src_path: str, hdfs_dest_path: str):
+    """ Move a file or folder in HDFS """
+    # Delete existing destination directory if any
+    if path_exists(hdfs_dest_path):
+        logger.info(f'Removing {hdfs_dest_path} from HDFS...')
+        delete_dir(hdfs_dest_path, recursive=True)
+        logger.info('Done!')
+
+    logger.info(f"Moving the processed files from {hdfs_src_path} to {hdfs_dest_path}")
+
+    # Check if parent directory exists, if not create a directory
+    dest_path_parent = str(Path(hdfs_dest_path).parent)
+    if not path_exists(dest_path_parent):
+        create_dir(dest_path_parent)
+
+    rename(hdfs_src_path, hdfs_dest_path)
+    logger.info(f"Done!")
