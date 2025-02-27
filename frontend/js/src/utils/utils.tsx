@@ -303,13 +303,13 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
 
   if (recordingMbid) {
     return (
-      <a
-        href={`https://musicbrainz.org/recording/${recordingMbid}`}
+      <Link
+        to={`/recording/${recordingMbid}`}
         target="_blank"
         rel="noopener noreferrer"
       >
         {trackName}
-      </a>
+      </Link>
     );
   }
   return trackName;
