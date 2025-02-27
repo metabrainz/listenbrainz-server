@@ -530,6 +530,12 @@ def request_troi_playlists():
     send_request_to_spark_cluster("tags.default")
 
 
+@cli.command(name="request_import_deleted_listens")
+def request_import_deleted_listens():
+    """ Send a request to spark cluster to import deleted listens from listenbrainz """
+    send_request_to_spark_cluster("import.deleted_listens")
+
+
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
 # rather combine multiple commands related to a task so that they are always invoked in the correct order.
 
