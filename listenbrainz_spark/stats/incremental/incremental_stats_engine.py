@@ -219,11 +219,15 @@ class IncrementalStatsEngine:
     @staticmethod
     def create_messages(results, only_inc, message_creator) -> Iterator[Dict]:
         if not only_inc:
-            yield message_creator.create_start_message()
+            message = message_creator.create_start_message()
+            if message is not None:
+                yield message
         for message in message_creator.create_messages(results, only_inc):
             yield message
         if not only_inc:
-            yield message_creator.create_end_message()
+            message = message_creator.create_end_message()
+            if message is not None:
+                yield message
 
     def run(self) -> Iterator[Dict]:
         self.prepare_final_aggregate()

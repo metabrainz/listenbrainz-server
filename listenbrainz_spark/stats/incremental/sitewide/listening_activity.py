@@ -1,9 +1,9 @@
-from typing import List, Iterator, Dict
+from typing import Iterator, Dict
 
 from pyspark.sql import DataFrame
 
 from listenbrainz_spark.stats.common.listening_activity import create_time_range_df
-from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
+from listenbrainz_spark.stats.incremental.message_creator import SitewideStatsMessageCreator
 from listenbrainz_spark.stats.incremental.range_selector import ListeningActivityListenRangeSelector
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideStatsQueryProvider
 
@@ -63,13 +63,10 @@ class ListeningActivitySitewideStatsQuery(SitewideStatsQueryProvider):
         """
 
 
-class ListeningActivitySitewideMessageCreator(StatsMessageCreator):
+class ListeningActivitySitewideMessageCreator(SitewideStatsMessageCreator):
 
     def __init__(self, selector, database=None):
         super().__init__("listening_activty", "sitewide_listening_activity", selector, database)
-
-    def default_database_prefix(self):
-        return ""
 
     def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         message = {
