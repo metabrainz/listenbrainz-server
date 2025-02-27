@@ -20,6 +20,7 @@ from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
                                            ViewNotRegisteredException)
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH, \
     LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, DELETED_LISTENS_SAVE_PATH, DELETED_USER_LISTEN_HISTORY_SAVE_PATH
+from listenbrainz_spark.persisted import get_deleted_users_listen_history_df, get_deleted_listens_df
 from listenbrainz_spark.schema import listens_new_schema
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ def get_listen_files_list() -> List[str]:
         if file == "incremental.parquet":
             has_incremental = True
             continue
-        if file == "delete.parquet":
+        if file in {"delete.parquet", "deleted-user-listen-history.parquet", "incremental-users.parquet"} :
             continue
         if file.endswith(".parquet"):
             file_names.append(file)
@@ -190,13 +191,13 @@ def filter_listens_by_range(listens_df: DataFrame, start: datetime, end: datetim
 def filter_deleted_listens(listens_df: DataFrame) -> DataFrame:
     """ Filter listens dataframe to remove listens that have been deleted from LB db. """
     if hdfs_connection.client.status(DELETED_LISTENS_SAVE_PATH, strict=False):
-        delete_df = read_files_from_HDFS(DELETED_LISTENS_SAVE_PATH)
+        delete_df = get_deleted_listens_df()
         listens_df = listens_df \
             .join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti") \
             .select(*listens_df.columns)
 
     if hdfs_connection.client.status(DELETED_USER_LISTEN_HISTORY_SAVE_PATH, strict=False):
-        delete_df2 = read_files_from_HDFS(DELETED_USER_LISTEN_HISTORY_SAVE_PATH)
+        delete_df2 = get_deleted_users_listen_history_df()
         listens_df = listens_df \
             .join(delete_df2, ["user_id"], "left_outer") \
             .where((delete_df2.max_created.isNull()) | (listens_df.created >= delete_df2.max_created)) \
