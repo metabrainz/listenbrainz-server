@@ -51,7 +51,8 @@ def get_listen_files_list() -> List[str]:
     return file_names
 
 
-def get_listens_from_dump(start: datetime, end: datetime, include_incremental=True, remove_deleted=False) -> DataFrame:
+def get_listens_from_dump(start: datetime = None, end: datetime = None,
+                          include_incremental=True, remove_deleted=False) -> DataFrame:
     """ Load listens with listened_at between from_ts and to_ts from HDFS in a spark dataframe.
 
         Args:
