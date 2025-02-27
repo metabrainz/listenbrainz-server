@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pyspark.sql import Row
 
+import listenbrainz_spark.listens.dump
 import listenbrainz_spark.request_consumer.jobs.utils as import_utils
 from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists, rename)
@@ -44,7 +45,7 @@ class ImporterUtilsTestCase(SparkNewTestCase):
 
     def test_get_latest_full_dump_present(self):
         """ Test to ensure correct dump is returned if full dump has been imported. """
-        self.assertDictEqual(import_utils.get_latest_full_dump(), {
+        self.assertDictEqual(listenbrainz_spark.listens.dump.get_latest_full_dump(), {
             "dump_id": 7,
             "dump_type": "full",
             "imported_at": datetime.fromtimestamp(7)
@@ -56,7 +57,7 @@ class ImporterUtilsTestCase(SparkNewTestCase):
         if path_found:
             delete_dir(self.path_, recursive=True)
 
-        self.assertIsNone(import_utils.get_latest_full_dump())
+        self.assertIsNone(listenbrainz_spark.listens.dump.get_latest_full_dump())
 
     def test_get_latest_full_dump_no_full(self):
         """ Test to ensure 'None' is returned if not full import has been made. """
@@ -69,16 +70,17 @@ class ImporterUtilsTestCase(SparkNewTestCase):
         delete_dir(self.path_, recursive=True)
         rename('/temp.parquet', self.path_)
 
-        self.assertIsNone(import_utils.get_latest_full_dump())
+        self.assertIsNone(listenbrainz_spark.listens.dump.get_latest_full_dump())
 
     def test_search_dump(self):
         """ Test to ensure 'True' is returned if appropriate dump is found and 'False' if it isn't found. """
-        self.assertTrue(import_utils.search_dump(4, DumpType.FULL, datetime.fromtimestamp(3)))
-        self.assertFalse(import_utils.search_dump(4, DumpType.FULL, datetime.fromtimestamp(5)))
-        self.assertFalse(import_utils.search_dump(5, DumpType.FULL, datetime.fromtimestamp(5)))
+        self.assertTrue(listenbrainz_spark.listens.dump.search_dump(4, DumpType.FULL, datetime.fromtimestamp(3)))
+        self.assertFalse(listenbrainz_spark.listens.dump.search_dump(4, DumpType.FULL, datetime.fromtimestamp(5)))
+        self.assertFalse(listenbrainz_spark.listens.dump.search_dump(5, DumpType.FULL, datetime.fromtimestamp(5)))
 
-        self.assertTrue(import_utils.search_dump(4, DumpType.INCREMENTAL, datetime.fromtimestamp(4)))
-        self.assertFalse(import_utils.search_dump(4, DumpType.INCREMENTAL, datetime.fromtimestamp(5)))
+        self.assertTrue(listenbrainz_spark.listens.dump.search_dump(4, DumpType.INCREMENTAL, datetime.fromtimestamp(4)))
+        self.assertFalse(
+            listenbrainz_spark.listens.dump.search_dump(4, DumpType.INCREMENTAL, datetime.fromtimestamp(5)))
 
     def test_search_dump_file_missing(self):
         """ Test to ensure 'False' is returned if metadata file is missing. """
@@ -86,19 +88,20 @@ class ImporterUtilsTestCase(SparkNewTestCase):
         if path_found:
             delete_dir(self.path_, recursive=True)
 
-        self.assertFalse(import_utils.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
+        self.assertFalse(listenbrainz_spark.listens.dump.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
 
     def test_insert_dump_data(self):
         """ Test to ensure that data is inserted correctly. """
-        import_utils.insert_dump_data(9, DumpType.FULL, datetime.fromtimestamp(9))
-        self.assertTrue(import_utils.search_dump(9, DumpType.FULL, datetime.fromtimestamp(9)))
+        listenbrainz_spark.listens.dump.insert_dump_data(9, DumpType.FULL, datetime.fromtimestamp(9))
+        self.assertTrue(listenbrainz_spark.listens.dump.search_dump(9, DumpType.FULL, datetime.fromtimestamp(9)))
 
     def test_insert_dump_data_update_date(self):
         """ Test to ensure date is updated if entry already exists. """
-        self.assertFalse(import_utils.search_dump(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9)))
-        import_utils.insert_dump_data(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9))
-        self.assertTrue(import_utils.search_dump(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9)))
-        self.assertTrue(import_utils.search_dump(2, DumpType.INCREMENTAL, datetime.fromtimestamp(2)))
+        self.assertFalse(
+            listenbrainz_spark.listens.dump.search_dump(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9)))
+        listenbrainz_spark.listens.dump.insert_dump_data(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9))
+        self.assertTrue(listenbrainz_spark.listens.dump.search_dump(7, DumpType.INCREMENTAL, datetime.fromtimestamp(9)))
+        self.assertTrue(listenbrainz_spark.listens.dump.search_dump(2, DumpType.INCREMENTAL, datetime.fromtimestamp(2)))
 
     def test_insert_dump_data_file_missing(self):
         """ Test to ensure a file is created if it is missing. """
@@ -106,6 +109,6 @@ class ImporterUtilsTestCase(SparkNewTestCase):
         if path_found:
             delete_dir(self.path_, recursive=True)
 
-        self.assertFalse(import_utils.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
-        import_utils.insert_dump_data(1, DumpType.FULL, datetime.fromtimestamp(1))
-        self.assertTrue(import_utils.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
+        self.assertFalse(listenbrainz_spark.listens.dump.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))
+        listenbrainz_spark.listens.dump.insert_dump_data(1, DumpType.FULL, datetime.fromtimestamp(1))
+        self.assertTrue(listenbrainz_spark.listens.dump.search_dump(1, DumpType.FULL, datetime.fromtimestamp(1)))

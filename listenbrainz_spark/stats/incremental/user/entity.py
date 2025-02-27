@@ -11,7 +11,7 @@ from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_USER_STATS_DIRECTORY
-from listenbrainz_spark.persisted import get_incremental_users_df
+from listenbrainz_spark.listens.cache import get_incremental_users_df
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider

@@ -10,7 +10,7 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.config import HDFS_CLUSTER_URI
 from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
-from listenbrainz_spark.persisted import get_incremental_listens_df
+from listenbrainz_spark.listens.cache import get_incremental_listens_df
 from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA, INCREMENTAL_BOOKKEEPING_SCHEMA
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
