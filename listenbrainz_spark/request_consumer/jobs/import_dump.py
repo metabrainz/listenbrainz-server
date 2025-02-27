@@ -15,24 +15,20 @@ from listenbrainz_spark.persisted import unpersist_incremental_df
 
 logger = logging.getLogger(__name__)
 
-# NOTE: the name of the arguments in these methods should match the name
-# of the params in request_queries.json.
 
-
-def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
+def import_full_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int = None) -> str:
     """ Import the full dump with the given dump_id if specified otherwise the
      latest full dump.
 
     Notes:
         Deletes all the existing listens and uploads listens from new dump.
     Args:
+        loader: class to download dumps and load listens from it
         dump_id: id of the full dump to be imported
-        local: if True, import the dump from local file system instead of FTP
     Returns:
         the name of the imported dump
     """
     with tempfile.TemporaryDirectory() as temp_dir:
-        loader = ListenbrainzLocalDumpLoader() if local else ListenbrainzDataDownloader()
         src, dump_name, dump_id = loader.load_listens(
             directory=temp_dir,
             dump_type=DumpType.FULL,
@@ -48,7 +44,7 @@ def import_full_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
     return dump_name
 
 
-def import_incremental_dump_to_hdfs(dump_id: int = None, local: bool = False) -> str:
+def import_incremental_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int = None) -> str:
     """ Import the incremental dump with the given dump_id if specified otherwise the
      latest incremental dump.
 
@@ -56,22 +52,17 @@ def import_incremental_dump_to_hdfs(dump_id: int = None, local: bool = False) ->
         All incremental dumps are stored together in incremental.parquet inside the
         listens directory.
     Args:
+        loader: class to download dumps and load listens from it
         dump_id: id of the incremental dump to be imported
-        local: if True, import the dump from local file system instead of FTP
     Returns:
         the name of the imported dump
     """
     with tempfile.TemporaryDirectory() as temp_dir:
-        loader = ListenbrainzLocalDumpLoader() if local else ListenbrainzDataDownloader()
         src, dump_name, dump_id = loader.load_listens(
             directory=temp_dir,
             dump_type=DumpType.INCREMENTAL,
             listens_dump_id=dump_id
         )
-
-        # instantiating ListenbrainzDataUploader creates a spark session which
-        # is a bit non-intuitive.
-        # FIXME in future to make initializing of spark session more explicit?
         uploader = ListenbrainzDataUploader()
         uploader.upload_new_listens_incremental_dump(src)
         uploader.process_incremental_listens_dump()
@@ -80,45 +71,41 @@ def import_incremental_dump_to_hdfs(dump_id: int = None, local: bool = False) ->
     return dump_name
 
 
-def import_newest_full_dump_handler(local: bool = False):
+def import_full_dump_handler(dump_id: int = None, local: bool = False):
+    loader = ListenbrainzLocalDumpLoader() if local else ListenbrainzDataDownloader()
     errors = []
     dumps = []
     try:
-        dumps.append(import_full_dump_to_hdfs(dump_id=None, local=local))
+        dumps.append(import_full_dump_to_hdfs(loader=loader, dump_id=dump_id))
     except Exception as e:
         logger.error("Error while importing full dump: ", exc_info=True)
         errors.append(str(e))
     return [{
-        'type': 'import_full_dump',
-        'imported_dump': dumps,
-        'errors': errors,
-        'time': str(datetime.utcnow()),
+        "type": "import_full_dump",
+        "imported_dump": dumps,
+        "errors": errors,
+        "time": datetime.now(timezone.utc).isoformat(),
     }]
 
 
-def import_full_dump_by_id_handler(dump_id: int, local: bool = False):
-    errors = []
-    dumps = []
-    try:
-        dumps.append(import_full_dump_to_hdfs(dump_id=dump_id, local=local))
-    except Exception as e:
-        logger.error("Error while importing full dump: ", exc_info=True)
-        errors.append(str(e))
-    return [{
-        'type': 'import_full_dump',
-        'imported_dump': dumps,
-        'errors': errors,
-        'time': str(datetime.utcnow()),
-    }]
-
-
-def import_newest_incremental_dump_handler(local: bool = False):
+def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
+    loader = ListenbrainzLocalDumpLoader() if local else ListenbrainzDataDownloader()
     errors = []
     imported_dumps = []
     latest_full_dump = utils.get_latest_full_dump()
-    if latest_full_dump is None:
+    if dump_id is not None:
+        try:
+            imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=dump_id))
+        except Exception as e:
+            logger.error("Error while importing incremental dump: ", exc_info=True)
+            errors.append(str(e))
+    elif latest_full_dump is None:
         # If no prior full dump is present, just import the latest incremental dump
-        imported_dumps.append(import_incremental_dump_to_hdfs(dump_id=None, local=local))
+        try:
+            imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=None))
+        except Exception as e:
+            logger.error("Error while importing incremental dump: ", exc_info=True)
+            errors.append(str(e))
 
         error_msg = "No previous full dump found, importing latest incremental dump"
         errors.append(error_msg)
@@ -132,7 +119,7 @@ def import_newest_incremental_dump_handler(local: bool = False):
         for dump_id in range(start_id, end_id, 1):
             if not utils.search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
                 try:
-                    imported_dumps.append(import_incremental_dump_to_hdfs(dump_id=dump_id, local=local))
+                    imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=dump_id))
                 except Exception as e:
                     # Skip current dump if any error occurs during import
                     error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
@@ -141,24 +128,8 @@ def import_newest_incremental_dump_handler(local: bool = False):
                     continue
             dump_id += 1
     return [{
-        'type': 'import_incremental_dump',
-        'imported_dump': imported_dumps,
-        'errors': errors,
-        'time': str(datetime.utcnow()),
-    }]
-
-
-def import_incremental_dump_by_id_handler(dump_id: int, local: bool = False):
-    errors = []
-    dumps = []
-    try:
-        dumps.append(import_incremental_dump_to_hdfs(dump_id=dump_id, local=local))
-    except Exception as e:
-        logger.error("Error while importing incremental dump: ", exc_info=True)
-        errors.append(str(e))
-    return [{
-        'type': 'import_incremental_dump',
-        'imported_dump': dumps,
-        'errors': errors,
-        'time': str(datetime.utcnow()),
+        "type": "import_incremental_dump",
+        "imported_dump": imported_dumps,
+        "errors": errors,
+        "time": datetime.now(timezone.utc).isoformat(),
     }]
