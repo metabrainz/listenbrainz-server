@@ -8,9 +8,7 @@ import listenbrainz_spark.request_consumer.jobs.utils as utils
 from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
-from listenbrainz_spark.hdfs.utils import path_exists, delete_dir
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.path import DELETED_USER_LISTEN_HISTORY_SAVE_PATH
 from listenbrainz_spark.persisted import unpersist_incremental_df
 
 logger = logging.getLogger(__name__)
@@ -39,8 +37,6 @@ def import_full_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int = 
         uploader.process_full_listens_dump()
     utils.insert_dump_data(dump_id, DumpType.FULL, datetime.now(tz=timezone.utc))
     unpersist_incremental_df()
-    if path_exists(DELETED_USER_LISTEN_HISTORY_SAVE_PATH):
-        delete_dir(DELETED_USER_LISTEN_HISTORY_SAVE_PATH, recursive=True)
     return dump_name
 
 
