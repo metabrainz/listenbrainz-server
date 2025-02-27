@@ -229,29 +229,23 @@ def request_yim_top_genres(year: int):
 
 
 @cli.command(name="request_import_full")
-@click.option("--id", "id_", type=int, required=False,
+@click.option("--id", "id_", type=int, required=False, default=None,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
 @click.option("--use-local", "local", is_flag=True, help="Use local dump instead of FTP")
-def request_import_new_full_dump(id_: int, local: bool):
+def request_import_full_dump(id_: int, local: bool):
     """ Send the cluster a request to import a new full data dump
     """
-    if id_:
-        send_request_to_spark_cluster('import.dump.full_id', dump_id=id_, local=local)
-    else:
-        send_request_to_spark_cluster('import.dump.full_newest', local=local)
+    send_request_to_spark_cluster("import.dump.full", dump_id=id_, local=local)
 
 
 @cli.command(name="request_import_incremental")
-@click.option("--id", "id_", type=int, required=False,
+@click.option("--id", "id_", type=int, required=False, default=None,
               help="Optional. ID of the incremental dump to import, defaults to latest dump available on FTP server")
 @click.option("--use-local", "local", is_flag=True, help="Use local dump instead of FTP")
-def request_import_new_incremental_dump(id_: int, local: bool):
+def request_import_incremental_dump(id_: int, local: bool):
     """ Send the cluster a request to import a new incremental data dump
     """
-    if id_:
-        send_request_to_spark_cluster('import.dump.incremental_id', dump_id=id_, local=local)
-    else:
-        send_request_to_spark_cluster('import.dump.incremental_newest', local=local)
+    send_request_to_spark_cluster("import.dump.incremental", dump_id=id_, local=local)
 
 
 @cli.command(name="request_dataframes")

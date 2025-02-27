@@ -43,13 +43,10 @@ functions = {
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.sitewide.listening_activity': listenbrainz_spark.stats.sitewide.listening_activity.get_listening_activity,
-    'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
-    'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
-    'import.dump.incremental_newest':
-        listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
+    'import.dump.full': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_handler,
     'import.dump.mlhd': listenbrainz_spark.mlhd.download.import_mlhd_dump_to_hdfs,
-    'import.dump.incremental_id':
-        listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
+    'import.dump.incremental':
+        listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_handler,
     'cf.missing_mb_data': listenbrainz_spark.missing_mb_data.missing_mb_data.main,
     'cf.recommendations.recording.create_dataframes':
         listenbrainz_spark.recommendations.recording.create_dataframes.main,

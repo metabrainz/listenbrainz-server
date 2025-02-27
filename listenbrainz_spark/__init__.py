@@ -28,7 +28,7 @@ def init_spark_session(app_name):
         Args:
             app_name (str): Name of the Spark application. This will also occur in the Spark UI.
     """
-    if hasattr(config, 'LOG_SENTRY'):  # attempt to initialize sentry_sdk only if configuration available
+    if hasattr(config, "LOG_SENTRY"):  # attempt to initialize sentry_sdk only if configuration available
         sentry_sdk.init(**config.LOG_SENTRY)
     global session, context, sql_context
     try:
@@ -53,7 +53,7 @@ def init_test_session(app_name):
     try:
         session = SparkSession \
                 .builder \
-                .master('local') \
+                .master("local") \
                 .appName(app_name) \
                 .config("spark.sql.shuffle.partitions", "1") \
                 .config("spark.default.parallelism", "1") \
