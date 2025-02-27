@@ -82,10 +82,7 @@ def create_release_group_metadata_cache():
 
     save_pg_table_to_hdfs(query, RELEASE_GROUP_METADATA_CACHE_DATAFRAME, process_artists_column=True)
 
-    global _release_group_metadata_df
-    if _release_group_metadata_df is not None:
-        _release_group_metadata_df.unpersist()
-        _release_group_metadata_df = None
+    unpersist_release_group_metadata_cache()
 
 
 def get_release_group_metadata_cache():
@@ -97,3 +94,10 @@ def get_release_group_metadata_cache():
         _release_group_metadata_df.persist(StorageLevel.DISK_ONLY)
         _release_group_metadata_df.createOrReplaceTempView(_RELEASE_GROUP_METADATA_CACHE)
     return _RELEASE_GROUP_METADATA_CACHE
+
+
+def unpersist_release_group_metadata_cache():
+    global _release_group_metadata_df
+    if _release_group_metadata_df is not None:
+        _release_group_metadata_df.unpersist()
+        _release_group_metadata_df = None

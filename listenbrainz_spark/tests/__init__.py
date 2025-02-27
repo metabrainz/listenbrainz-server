@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection, config
 from listenbrainz_spark.dump import ListenbrainzDumpLoader, DumpType
+from listenbrainz_spark.listens.cache import unpersist_incremental_df, unpersist_deleted_df
 from listenbrainz_spark.listens.dump import import_full_dump_to_hdfs, import_incremental_dump_to_hdfs
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
 from listenbrainz_spark.hdfs.utils import delete_dir, path_exists, hdfs_walk
@@ -64,6 +65,12 @@ class SparkNewTestCase(unittest.TestCase):
 
     @staticmethod
     def delete_uploaded_listens():
+        # unpersist dataframes in same spark context in which they were created
+        # to avoid unhelpful py4j errors. spark context is started and stopped
+        # for each class but cached dataframes being global variables are not
+        # cleared automatically between tests.
+        unpersist_incremental_df()
+        unpersist_deleted_df()
         if path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
             delete_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY, recursive=True)
         if path_exists(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY):
