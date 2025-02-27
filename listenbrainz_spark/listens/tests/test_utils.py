@@ -4,7 +4,6 @@ from datetime import datetime
 from pyspark.sql import Row
 
 import listenbrainz_spark.listens.dump
-import listenbrainz_spark.request_consumer.jobs.utils as import_utils
 from listenbrainz_spark.dump import DumpType
 from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists, rename)
 from listenbrainz_spark.path import IMPORT_METADATA

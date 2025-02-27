@@ -1,28 +1,34 @@
 """ Spark job that downloads the latest listenbrainz dumps and imports into HDFS
 """
 import logging
+import os
 import tempfile
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
 from pyspark import Row
 from pyspark.sql.functions import col
 
-from listenbrainz_spark.dump import DumpType
+from listenbrainz_spark import hdfs_connection
+from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.exceptions import PathNotFoundException
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
-from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.hdfs.utils import path_exists, delete_dir, rename
+from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp
+from listenbrainz_spark.hdfs.utils import path_exists, delete_dir, rename, move
 from listenbrainz_spark.listens.cache import unpersist_incremental_df
-from listenbrainz_spark.path import IMPORT_METADATA
+from listenbrainz_spark.path import IMPORT_METADATA, LISTENBRAINZ_NEW_DATA_DIRECTORY, \
+    LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, LISTENBRAINZ_BASE_STATS_DIRECTORY, INCREMENTAL_DUMPS_SAVE_PATH, \
+    INCREMENTAL_USERS_DF
 from listenbrainz_spark.schema import import_metadata_schema
+from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS, create_dataframe, save_parquet
 
 logger = logging.getLogger(__name__)
 
 
-def import_full_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int = None) -> str:
+def import_full_dump_to_hdfs(loader: ListenbrainzDumpLoader, dump_id: int = None) -> str:
     """ Import the full dump with the given dump_id if specified otherwise the
      latest full dump.
 
@@ -40,15 +46,14 @@ def import_full_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int = 
             dump_type=DumpType.FULL,
             listens_dump_id=dump_id
         )
-        uploader = ListenbrainzDataUploader()
-        uploader.upload_new_listens_full_dump(src)
-        uploader.process_full_listens_dump()
+        temp_path = upload_archive_to_hdfs_temp(src, ".parquet")
+        process_full_listens_dump(temp_path)
     insert_dump_data(dump_id, DumpType.FULL, datetime.now(tz=timezone.utc))
     unpersist_incremental_df()
     return dump_name
 
 
-def import_incremental_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int = None) -> str:
+def import_incremental_dump_to_hdfs(loader: ListenbrainzDumpLoader, dump_id: int = None) -> str:
     """ Import the incremental dump with the given dump_id if specified otherwise the
      latest incremental dump.
 
@@ -66,9 +71,8 @@ def import_incremental_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id:
             dump_type=DumpType.INCREMENTAL,
             listens_dump_id=dump_id
         )
-        uploader = ListenbrainzDataUploader()
-        uploader.upload_new_listens_incremental_dump(src)
-        uploader.process_incremental_listens_dump()
+        temp_path = upload_archive_to_hdfs_temp(src, ".parquet")
+        process_incremental_listens_dump(temp_path)
     insert_dump_data(dump_id, DumpType.INCREMENTAL, datetime.now(tz=timezone.utc))
     unpersist_incremental_df()
     return dump_name
@@ -198,3 +202,62 @@ def insert_dump_data(dump_id: int, dump_type: DumpType, imported_at: datetime):
     if path_exists(IMPORT_METADATA):
         delete_dir(IMPORT_METADATA, recursive=True)
     rename("/temp.parquet", IMPORT_METADATA)
+
+
+def process_full_listens_dump(temp_path):
+    """ Partition the imported full listens parquet dump by year and month """
+    dest_path = LISTENBRAINZ_NEW_DATA_DIRECTORY
+    t0 = time.monotonic()
+    move(temp_path, dest_path)
+    logger.info(f"Full dump uploaded! Time taken: {time.monotonic() - t0:.2f}")
+
+    unpersist_incremental_df()
+
+    query = f"""
+        select extract(year from listened_at) as year
+             , extract(month from listened_at) as month
+             , listened_at
+             , created
+             , user_id
+             , recording_msid
+             , artist_name
+             , artist_credit_id
+             , release_name
+             , release_mbid
+             , recording_name
+             , recording_mbid
+             , artist_credit_mbids
+          from parquet.`{dest_path}`
+    """
+    run_query(query) \
+        .write \
+        .partitionBy("year", "month") \
+        .mode("overwrite") \
+        .parquet(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY)
+
+    if path_exists(LISTENBRAINZ_BASE_STATS_DIRECTORY):
+        hdfs_connection.client.delete(LISTENBRAINZ_BASE_STATS_DIRECTORY, recursive=True, skip_trash=True)
+
+
+def process_incremental_listens_dump(temp_path):
+    read_files_from_HDFS(temp_path) \
+        .repartition(1) \
+        .write \
+        .mode("append") \
+        .parquet(INCREMENTAL_DUMPS_SAVE_PATH)
+
+    # delete parquet from hdfs temporary path
+    delete_dir(temp_path, recursive=True)
+
+    unpersist_incremental_df()
+
+    query = f"""
+        SELECT user_id
+             , max(created) AS created
+          FROM parquet.`{INCREMENTAL_DUMPS_SAVE_PATH}`
+      GROUP BY user_id
+    """
+    run_query(query) \
+        .write \
+        .mode("overwrite") \
+        .parquet(INCREMENTAL_USERS_DF)
