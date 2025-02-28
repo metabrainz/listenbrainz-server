@@ -984,6 +984,10 @@ export default function BrainzPlayer() {
     return null;
   }
 
+  const shuffleQueue = (): void => {
+    dispatch({ type: "SHUFFLE_QUEUE" });
+  };
+
   return (
     <div data-testid="brainzplayer">
       {!playerPaused && (
@@ -1022,6 +1026,7 @@ export default function BrainzPlayer() {
           dataSourceRefs[currentDataSourceIndex]?.current?.iconColor
         }
         clearQueue={clearQueue}
+        shuffleQueue={shuffleQueue}
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer

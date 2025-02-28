@@ -84,9 +84,19 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
-    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
+    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
+    | "SHUFFLE_QUEUE"; // Pebc2
   data?: any;
 };
+
+function shuffleArray(array: any[]): any[] { // Pd95e
+  const shuffledArray = [...array];
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+  }
+  return shuffledArray;
+}
 
 function valueReducer(
   state: BrainzPlayerContextT,
@@ -321,6 +331,17 @@ function valueReducer(
       return {
         ...state,
         ambientQueue: [...ambientQueue, ...tracksToAdd],
+      };
+    }
+    case "SHUFFLE_QUEUE": { // P6923
+      const { queue, currentListenIndex } = state;
+      const currentTrack = queue[currentListenIndex];
+      const remainingQueue = queue.slice(currentListenIndex + 1);
+      const shuffledQueue = shuffleArray(remainingQueue);
+      const newQueue = [currentTrack, ...shuffledQueue];
+      return {
+        ...state,
+        queue: newQueue,
       };
     }
     default: {

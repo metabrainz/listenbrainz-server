@@ -10,6 +10,7 @@ import {
   faPlayCircle,
   faSlash,
   faVolumeUp,
+  faShuffle,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 
@@ -50,6 +51,7 @@ type BrainzPlayerUIProps = {
   listenBrainzAPIBaseURI: string;
   disabled?: boolean;
   clearQueue: () => void;
+  shuffleQueue: () => void;
 };
 
 type PlaybackControlButtonProps = {
@@ -183,6 +185,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     seekToPositionMs,
     disabled,
     clearQueue,
+    shuffleQueue,
   } = props;
 
   const isPlayingATrack = Boolean(currentListen);
@@ -304,6 +307,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             title={queueRepeatMode.title}
             style={{ color: queueRepeatMode.color }}
             onClick={toggleRepeatMode}
+          />
+          <FontAwesomeIcon
+            icon={faShuffle}
+            title="Shuffle"
+            onClick={shuffleQueue}
+            className="shuffle"
           />
           {showFeedback && (
             <>
