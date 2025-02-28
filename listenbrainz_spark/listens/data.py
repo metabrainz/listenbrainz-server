@@ -10,7 +10,7 @@ from pyspark.sql import functions, DataFrame
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.listens.cache import get_incremental_listens_df, \
-    get_deleted_listens_df
+    get_deleted_listens_df, get_deleted_users_listen_history_df
 from listenbrainz_spark.listens.metadata import get_listens_metadata
 from listenbrainz_spark.schema import listens_new_schema
 
@@ -76,7 +76,7 @@ def filter_deleted_listens(listens_df: DataFrame, location: str) -> DataFrame:
 
     deleted_user_listen_history_save_path = os.path.join(location, "deleted-user-listen-history")
     if hdfs_connection.client.status(deleted_user_listen_history_save_path, strict=False):
-        delete_df2 = get_deleted_listens_df()
+        delete_df2 = get_deleted_users_listen_history_df()
         if not delete_df2.isEmpty():
             listens_df = listens_df \
                 .join(delete_df2, ["user_id"], "left_outer") \
