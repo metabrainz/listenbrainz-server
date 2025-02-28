@@ -69,17 +69,19 @@ def filter_deleted_listens(listens_df: DataFrame, location: str) -> DataFrame:
     deleted_listens_save_path = os.path.join(location, "deleted-listens")
     if hdfs_connection.client.status(deleted_listens_save_path, strict=False):
         delete_df = get_deleted_listens_df()
-        listens_df = listens_df \
-            .join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti") \
-            .select(*listens_df.columns)
+        if not delete_df.isEmpty():
+            listens_df = listens_df \
+                .join(delete_df, ["user_id", "listened_at", "recording_msid", "created"], "anti") \
+                .select(*listens_df.columns)
 
     deleted_user_listen_history_save_path = os.path.join(location, "deleted-user-listen-history")
     if hdfs_connection.client.status(deleted_user_listen_history_save_path, strict=False):
         delete_df2 = get_deleted_listens_df()
-        listens_df = listens_df \
-            .join(delete_df2, ["user_id"], "left_outer") \
-            .where((delete_df2.max_created.isNull()) | (listens_df.created >= delete_df2.max_created)) \
-            .select(*listens_df.columns)
+        if not delete_df2.isEmpty():
+            listens_df = listens_df \
+                .join(delete_df2, ["user_id"], "left_outer") \
+                .where((delete_df2.max_created.isNull()) | (listens_df.created >= delete_df2.max_created)) \
+                .select(*listens_df.columns)
 
     return listens_df
 
