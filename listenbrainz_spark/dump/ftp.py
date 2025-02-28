@@ -84,7 +84,6 @@ class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader, ABC):
         sha_filename = filename + '.sha256'
         dir_content = self.list_dir()
         sha_dest_path = os.path.join(directory, sha_filename)
-        print(sha_filename, dir_content)
         if sha_filename in dir_content:
             self.download_file_binary(sha_filename, sha_dest_path)
         else:
