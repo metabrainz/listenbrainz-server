@@ -1,16 +1,14 @@
 import json
-import os
 
 import requests_mock
 
-from listenbrainz_spark import utils
 from listenbrainz_spark.hdfs.utils import create_dir
 from listenbrainz_spark.hdfs.utils import path_exists
-from listenbrainz_spark.hdfs.utils import upload_to_HDFS
 from listenbrainz_spark.fresh_releases import fresh_releases
 from listenbrainz_spark.fresh_releases.fresh_releases import FRESH_RELEASES_ENDPOINT
+from listenbrainz_spark.listens.dump import import_incremental_dump_to_hdfs
 from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY
-from listenbrainz_spark.tests import SparkNewTestCase, TEST_DATA_PATH
+from listenbrainz_spark.tests import SparkNewTestCase
 
 
 class FreshReleasesTestCase(SparkNewTestCase):
@@ -20,12 +18,8 @@ class FreshReleasesTestCase(SparkNewTestCase):
         if not path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
             create_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY)
 
-        upload_to_HDFS(
-            os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "0.parquet"),
-            os.path.join(TEST_DATA_PATH, "fresh_releases_listens.parquet")
-        )
-        self.uploader.process_full_listens_dump()
-        
+        import_incremental_dump_to_hdfs(self.dump_loader, 4)
+
     def tearDown(self):
         super(FreshReleasesTestCase, self).tearDown()
         self.delete_uploaded_listens()
@@ -57,5 +51,3 @@ class FreshReleasesTestCase(SparkNewTestCase):
             "type": "couchdb_data_end",
             "database": database
         })
-
-

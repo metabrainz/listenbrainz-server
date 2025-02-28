@@ -2,7 +2,7 @@ import os.path
 import shutil
 import tempfile
 import zipfile
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 from pathlib import Path
 
 import orjson
@@ -48,8 +48,8 @@ def get_time_ranges_for_listens(min_dt: datetime, max_dt: datetime):
             end_date = start_date + relativedelta(months=1, days=-1)
             months.append({
                 "month": month,
-                "start": datetime.combine(start_date, time.min),
-                "end": datetime.combine(end_date, time.max)
+                "start": datetime.combine(start_date, time.min, tzinfo=timezone.utc),
+                "end": datetime.combine(end_date, time.max, tzinfo=timezone.utc),
             })
         years.append({
             "year": year,

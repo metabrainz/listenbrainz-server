@@ -9,7 +9,7 @@ import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import fresh_releases_schema
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump, get_latest_listen_ts
 
 USERS_PER_MESSAGE = 5
 

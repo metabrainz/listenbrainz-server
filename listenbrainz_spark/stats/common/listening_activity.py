@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta, MO
 
 import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.utils import get_latest_listen_ts
+from listenbrainz_spark.listens.data import get_latest_listen_ts
 from pyspark.sql.types import (StringType, StructField, StructType, TimestampType)
 
 time_range_schema = StructType([
