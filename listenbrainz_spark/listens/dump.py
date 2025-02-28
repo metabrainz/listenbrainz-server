@@ -12,9 +12,9 @@ from pyspark.sql.functions import col
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
+from listenbrainz_spark.dump.ftp import ListenBrainzFtpDumpLoader
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.exceptions import PathNotFoundException
-from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp
 from listenbrainz_spark.hdfs.utils import path_exists, delete_dir, rename
 from listenbrainz_spark.listens.cache import unpersist_incremental_df
@@ -76,7 +76,7 @@ def import_incremental_dump_to_hdfs(loader: ListenbrainzDumpLoader, dump_id: int
 
 
 def import_full_dump_handler(dump_id: int = None, local: bool = False):
-    loader = ListenbrainzLocalDumpLoader() if local else ListenbrainzDataDownloader()
+    loader = ListenbrainzLocalDumpLoader() if local else ListenBrainzFtpDumpLoader()
     errors = []
     dumps = []
     try:
@@ -93,7 +93,7 @@ def import_full_dump_handler(dump_id: int = None, local: bool = False):
 
 
 def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
-    loader = ListenbrainzLocalDumpLoader() if local else ListenbrainzDataDownloader()
+    loader = ListenbrainzLocalDumpLoader() if local else ListenBrainzFtpDumpLoader()
     errors = []
     imported_dumps = []
     latest_full_dump = get_latest_full_dump()
@@ -118,7 +118,7 @@ def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
         # Import all missing dumps from last full dump import
         start_id = latest_full_dump["dump_id"] + 1
         imported_at = latest_full_dump["imported_at"]
-        end_id = ListenbrainzDataDownloader().get_latest_dump_id(DumpType.INCREMENTAL) + 1
+        end_id = loader.get_latest_dump_id(DumpType.INCREMENTAL) + 1
 
         for dump_id in range(start_id, end_id, 1):
             if not search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
@@ -131,6 +131,7 @@ def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
                     logger.error(error_msg, exc_info=True)
                     continue
             dump_id += 1
+    loader.close()
     return [{
         "type": "import_incremental_dump",
         "imported_dump": imported_dumps,
