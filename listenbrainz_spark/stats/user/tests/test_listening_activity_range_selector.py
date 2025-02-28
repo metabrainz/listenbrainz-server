@@ -20,8 +20,8 @@ class ListeningActivityListenRangeSelectorTestCase(SparkNewTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        super().tearDownClass()
         cls.delete_uploaded_listens()
+        super().tearDownClass()
 
     def test_get_listening_activity_week(self):
         selector = ListeningActivityListenRangeSelector("week")

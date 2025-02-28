@@ -3,6 +3,13 @@ from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
 
+listens_metadata_schema = StructType([
+    StructField('location', StringType(), False),
+    StructField('max_listened_at', TimestampType(), False),
+    StructField('max_created', TimestampType(), False),
+    StructField('updated_at', TimestampType(), False),
+])
+
 # Keeping track of the from_date and the to_date used to create the partial aggressive from full dump listens.
 # Assuming dumps are imported twice a month, the aggregates for weekly stats need to be refreshed (generated from
 # different range of listens in the full dump) sooner. The existing_aggrrgate_usable method reads this from/to date

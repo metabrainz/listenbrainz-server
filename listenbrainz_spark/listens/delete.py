@@ -1,9 +1,10 @@
+import os
 import uuid
 
 from listenbrainz_spark import config, hdfs_connection
 from listenbrainz_spark.hdfs.utils import move
-from listenbrainz_spark.path import DELETED_LISTENS_SAVE_PATH, DELETED_USER_LISTEN_HISTORY_SAVE_PATH
 from listenbrainz_spark.listens.cache import unpersist_deleted_df
+from listenbrainz_spark.listens.metadata import get_listens_metadata
 from listenbrainz_spark.postgres.utils import load_from_db
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
@@ -39,7 +40,7 @@ def combine_if_exists(new_df, save_path, combine_query_template, table_suffix):
             .parquet(save_path)
 
 
-def import_deleted_listens():
+def import_deleted_listens(location):
     query = """
         SELECT id
              , user_id
@@ -59,10 +60,11 @@ def import_deleted_listens():
         )
             SELECT {columns} FROM intermediate GROUP BY {columns}
     """
-    combine_if_exists(new_listens_to_delete_df, DELETED_LISTENS_SAVE_PATH, query, "listens_to_delete")
+    deleted_listens_save_path = os.path.join(location, "deleted-listens")
+    combine_if_exists(new_listens_to_delete_df, deleted_listens_save_path, query, "listens_to_delete")
 
 
-def import_deleted_user_listen_history():
+def import_deleted_user_listen_history(location):
     query = """SELECT id, user_id, max_created FROM deleted_user_listen_history"""
     new_deleted_history_df = load_from_db(config.TS_JDBC_URI, config.TS_USER, config.TS_PASSWORD, query)
     query = """\
@@ -73,11 +75,13 @@ def import_deleted_user_listen_history():
         )
            SELECT user_id, max(max_created) AS max_created FROM intermediate GROUP BY user_id
     """
-    combine_if_exists(new_deleted_history_df, DELETED_USER_LISTEN_HISTORY_SAVE_PATH, query, "listen_history_to_delete")
+    deleted_user_listen_history_save_path = os.path.join(location, "deleted-user-listen-history")
+    combine_if_exists(new_deleted_history_df, deleted_user_listen_history_save_path, query, "listen_history_to_delete")
 
 
 def main():
     """ Import deleted listens from timescale """
-    import_deleted_listens()
-    import_deleted_user_listen_history()
+    location = get_listens_metadata().location
+    import_deleted_listens(location)
+    import_deleted_user_listen_history(location)
     unpersist_deleted_df()

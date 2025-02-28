@@ -113,11 +113,6 @@
     "description": "Import artist relation into the spark cluster.",
     "params": []
   },
-  "import.musicbrainz_release_dump": {
-    "name": "import.musicbrainz_release_dump",
-    "description": "Import musicbrainz release json dump into the spark cluster.",
-    "params": []
-  },
   "similarity.similar_users": {
     "name": "similarity.similar_users",
     "description": "Generate similar user correlation",
