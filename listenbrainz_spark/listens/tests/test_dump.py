@@ -2,10 +2,10 @@ from datetime import datetime, timezone
 from unittest import mock
 from unittest.mock import MagicMock, call, patch
 
-from listenbrainz_spark.dump import DumpType
+from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
+from listenbrainz_spark.dump.ftp import ListenBrainzFtpDumpLoader
 from listenbrainz_spark.exceptions import (DumpInvalidException,
                                            DumpNotFoundException)
-from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.utils import (delete_dir, path_exists)
 from listenbrainz_spark.listens.data import get_listens_from_dump
 from listenbrainz_spark.listens.dump import import_full_dump_to_hdfs, import_incremental_dump_to_hdfs, \
@@ -15,7 +15,7 @@ from listenbrainz_spark.tests import SparkNewTestCase
 from listenbrainz_spark.utils import (read_files_from_HDFS)
 
 
-def mock_import_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int):
+def mock_import_dump_to_hdfs(loader: ListenbrainzDumpLoader, dump_id: int):
     """ Mock function returning dump name all dump ids less than 210, else raising DumpNotFoundException """
     if dump_id < 210:
         return f"listenbrainz-spark-dump-{dump_id}-incremental.tar"
@@ -23,7 +23,7 @@ def mock_import_dump_to_hdfs(loader: ListenbrainzDataDownloader, dump_id: int):
         raise DumpNotFoundException("Dump Not Found")
 
 
-def mock_import_dump_to_hdfs_error(loader: ListenbrainzDataDownloader, dump_id: int):
+def mock_import_dump_to_hdfs_error(loader: ListenbrainzDumpLoader, dump_id: int):
     """ Mock function returning dump name all dump ids less than 210, else raise DumpInvalidException"""
     if (dump_id < 210) or (210 < dump_id < 213):
         return f"listenbrainz-spark-dump-{dump_id}-incremental.tar"
@@ -75,7 +75,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         self.assertEqual(85, get_listens_from_dump().count())
 
     @patch("ftplib.FTP")
-    @patch.object(ListenbrainzDataDownloader, "load_listens")
+    @patch.object(ListenBrainzFtpDumpLoader, "load_listens")
     @patch("listenbrainz_spark.listens.dump.upload_archive_to_hdfs_temp")
     @patch("listenbrainz_spark.listens.dump.process_full_listens_dump")
     @patch("listenbrainz_spark.listens.dump.datetime")
@@ -102,7 +102,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         )
 
     @patch("ftplib.FTP")
-    @patch.object(ListenbrainzDataDownloader, "load_listens")
+    @patch.object(ListenBrainzFtpDumpLoader, "load_listens")
     @patch("listenbrainz_spark.listens.dump.upload_archive_to_hdfs_temp")
     @patch("listenbrainz_spark.listens.dump.process_full_listens_dump")
     @patch("listenbrainz_spark.listens.dump.datetime")
@@ -127,7 +127,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         self.assertListEqual(["listenbrainz-spark-dump-202-20200915-180002-full.tar"], messages[0]["imported_dump"])
 
     @patch("ftplib.FTP")
-    @patch.object(ListenbrainzDataDownloader, "get_latest_dump_id", return_value=210)
+    @patch.object(ListenBrainzFtpDumpLoader, "get_latest_dump_id", return_value=210)
     @patch("listenbrainz_spark.listens.dump.import_incremental_dump_to_hdfs", side_effect=mock_import_dump_to_hdfs)
     @patch("listenbrainz_spark.listens.dump.search_dump", side_effect=mock_search_dump)
     @patch("listenbrainz_spark.listens.dump.get_latest_full_dump")
@@ -150,7 +150,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
         self.assertListEqual(expected_import_list, messages[0]["imported_dump"])
 
     @patch("ftplib.FTP")
-    @patch.object(ListenbrainzDataDownloader, "get_latest_dump_id", return_value=210)
+    @patch.object(ListenBrainzFtpDumpLoader, "get_latest_dump_id", return_value=210)
     @patch("listenbrainz_spark.listens.dump.import_incremental_dump_to_hdfs", side_effect=mock_import_dump_to_hdfs_error)
     @patch("listenbrainz_spark.listens.dump.search_dump", side_effect=mock_search_dump)
     @patch("listenbrainz_spark.listens.dump.get_latest_full_dump")
@@ -188,7 +188,7 @@ class DumpImporterJobTestCase(SparkNewTestCase):
                              messages[0]["imported_dump"])
 
     @patch("ftplib.FTP")
-    @patch.object(ListenbrainzDataDownloader, "load_listens")
+    @patch.object(ListenBrainzFtpDumpLoader, "load_listens")
     @patch("listenbrainz_spark.listens.dump.upload_archive_to_hdfs_temp")
     @patch("listenbrainz_spark.listens.dump.process_incremental_listens_dump")
     @patch("listenbrainz_spark.listens.dump.datetime")

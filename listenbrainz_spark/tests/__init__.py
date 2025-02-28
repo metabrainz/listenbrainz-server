@@ -21,6 +21,9 @@ PLAYCOUNTS_COUNT = 100
 
 class ListenBrainzTestDumpLoader(ListenbrainzDumpLoader):
 
+    def close(self):
+        pass
+
     def list_dump_directories(self, dump_type: DumpType):
         return []
 

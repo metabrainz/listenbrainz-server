@@ -19,3 +19,6 @@ class ListenbrainzLocalDumpLoader(ListenbrainzDumpLoader):
         dump_id = int(req_listens_dump.split('-')[2])
 
         return dest_path, listens_file_name, dump_id
+
+    def close(self):
+        pass
