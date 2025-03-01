@@ -505,7 +505,7 @@ def request_troi_playlists(slug, create_all):
 
 
 @cli.command(name="request_tags")
-def request_troi_playlists():
+def request_tags():
     """ Generate the tags dataset with percent rank """
     send_request_to_spark_cluster("tags.default")
 
@@ -514,6 +514,12 @@ def request_troi_playlists():
 def request_import_deleted_listens():
     """ Send a request to spark cluster to import deleted listens from listenbrainz """
     send_request_to_spark_cluster("import.deleted_listens")
+
+
+@cli.command(name="request_compact_listens")
+def request_compact_listens():
+    """ Send a request to spark cluster to compact listens imported from listenbrainz """
+    send_request_to_spark_cluster("import.compact_listens")
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality

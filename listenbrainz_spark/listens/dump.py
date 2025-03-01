@@ -18,6 +18,7 @@ from listenbrainz_spark.exceptions import PathNotFoundException
 from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp
 from listenbrainz_spark.hdfs.utils import path_exists, delete_dir, rename
 from listenbrainz_spark.listens.cache import unpersist_incremental_df
+from listenbrainz_spark.listens.compact import write_partitioned_listens
 from listenbrainz_spark.listens.metadata import get_listens_metadata, generate_new_listens_location, \
     update_listens_metadata
 from listenbrainz_spark.path import IMPORT_METADATA
@@ -203,54 +204,10 @@ def insert_dump_data(dump_id: int, dump_type: DumpType, imported_at: datetime):
 
 
 def process_full_listens_dump(temp_path):
-    """ Partition the imported full listens parquet dump by year and month """
-    metadata = get_listens_metadata()
-    if metadata is None:
-        existing_location = None
-    else:
-        existing_location = metadata.location
-
-    query = f"""
-        select extract(year from listened_at) as year
-             , extract(month from listened_at) as month
-             , listened_at
-             , created
-             , user_id
-             , recording_msid
-             , artist_name
-             , artist_credit_id
-             , release_name
-             , release_mbid
-             , recording_name
-             , recording_mbid
-             , artist_credit_mbids
-          from parquet.`{temp_path}`
-    """
-    new_location = generate_new_listens_location()
-    base_listens_location = os.path.join(new_location, "base")
-
-    listenbrainz_spark \
-        .sql_context \
-        .sql(query) \
-        .write \
-        .partitionBy("year", "month") \
-        .mode("overwrite") \
-        .parquet(base_listens_location)
-
-    query = f"""
-        select max(listened_at) as max_listened_at, max(created) as max_created
-          from parquet.`{base_listens_location}`
-    """
-    result = listenbrainz_spark \
-        .sql_context \
-        .sql(query) \
-        .collect()[0]
-    update_listens_metadata(new_location, result.max_listened_at, result.max_created)
-
-    unpersist_incremental_df()
-
-    if existing_location and path_exists(existing_location):
-        hdfs_connection.client.delete(existing_location, recursive=True, skip_trash=True)
+    """ Partition the imported full listens parquet dump by year and month and store in a new HDFS location. """
+    table = "unprocessed_full_dump_listens"
+    read_files_from_HDFS(temp_path).createOrReplaceTempView(table)
+    write_partitioned_listens(table)
     hdfs_connection.client.delete(temp_path, recursive=True, skip_trash=True)
 
 
