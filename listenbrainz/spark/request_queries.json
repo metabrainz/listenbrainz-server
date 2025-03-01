@@ -226,5 +226,10 @@
     "name": "import.deleted_listens",
     "description": "Import deleted listens from ListenBrainz into spark cluster.",
     "params": []
+  },
+  "import.compact_listens": {
+    "name": "import.compact_listens",
+    "description": "'Compact' listens imported from ListenBrainz in spark cluster.",
+    "params": []
   }
 }
