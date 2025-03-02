@@ -230,4 +230,5 @@ class IncrementalStatsEngine:
         self.prepare_final_aggregate()
         results = self.generate_stats()
         yield from self.create_messages(results, self.only_inc, self.message_creator)
-        self.bookkeep_incremental_aggregate()
+        if incremental_listens_exist():
+            self.bookkeep_incremental_aggregate()
