@@ -45,10 +45,7 @@ def create_recording_artist_cache():
 
     save_pg_table_to_hdfs(query, RECORDING_ARTIST_DATAFRAME, process_artists_column=True)
 
-    global _recording_artist_df
-    if _recording_artist_df is not None:
-        _recording_artist_df.unpersist()
-        _recording_artist_df = None
+    unpersist_recording_artist_cache()
 
 
 def get_recording_artist_cache():
@@ -61,3 +58,9 @@ def get_recording_artist_cache():
         _recording_artist_df.createOrReplaceTempView(_RECORDING_ARTIST_CACHE)
     return _RECORDING_ARTIST_CACHE
 
+
+def unpersist_recording_artist_cache():
+    global _recording_artist_df
+    if _recording_artist_df is not None:
+        _recording_artist_df.unpersist()
+        _recording_artist_df = None

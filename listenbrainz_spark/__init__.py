@@ -28,7 +28,7 @@ def init_spark_session(app_name):
         Args:
             app_name (str): Name of the Spark application. This will also occur in the Spark UI.
     """
-    if hasattr(config, 'LOG_SENTRY'):  # attempt to initialize sentry_sdk only if configuration available
+    if hasattr(config, "LOG_SENTRY"):  # attempt to initialize sentry_sdk only if configuration available
         sentry_sdk.init(**config.LOG_SENTRY)
     global session, context, sql_context
     try:
@@ -48,12 +48,14 @@ def init_test_session(app_name):
     This sets some config items in order to make tests faster,
     the list of settings is taken from
     https://github.com/malexer/pytest-spark#overriding-default-parameters-of-the-spark_session-fixture
+    Set spark.driver.host to avoid tests from hanging (get_listens_from_dump hangs when taking union
+    of full dump and incremental dump listens), see https://issues.apache.org/jira/browse/SPARK-16087
     """
     global session, context, sql_context
     try:
         session = SparkSession \
                 .builder \
-                .master('local') \
+                .master("local") \
                 .appName(app_name) \
                 .config("spark.sql.shuffle.partitions", "1") \
                 .config("spark.default.parallelism", "1") \
@@ -63,6 +65,7 @@ def init_test_session(app_name):
                 .config("spark.rdd.compress", "false") \
                 .config("spark.dynamicAllocation.enabled", "false") \
                 .config("spark.io.compression.codec", "lz4") \
+                .config("spark.driver.host", "localhost") \
                 .getOrCreate()
         context = session.sparkContext
         context.setLogLevel("ERROR")

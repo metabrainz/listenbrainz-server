@@ -102,12 +102,12 @@ class DumpTestCase(DatabaseTestCase):
 
     def test_add_dump_entry(self):
         prev_dumps = db_dump.get_dump_entries()
-        db_dump.add_dump_entry(datetime.today().strftime('%s'))
+        db_dump.add_dump_entry(datetime.today(), "incremental")
         now_dumps = db_dump.get_dump_entries()
         self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
 
     def test_copy_table(self):
-        db_dump.add_dump_entry(datetime.today().strftime('%s'))
+        db_dump.add_dump_entry(datetime.today(), "incremental")
         with db.engine.connect() as connection:
             db_dump.copy_table(
                 cursor=connection.connection.cursor(),

@@ -18,11 +18,11 @@ MLHD_PLUS_DATA_DIRECTORY = os.path.join("/", "mlhd")  # processed MLHD+ dump dat
 
 # path to save incremental dumps
 INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental.parquet")
-INCREMENTAL_USERS_DF = os.path.join("/", "incremental-users")
+INCREMENTAL_USERS_DF = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental-users.parquet")
 
 # path to save deleted listens
 DELETED_LISTENS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "delete.parquet")
-DELETED_USER_LISTEN_HISTORY_SAVE_PATH = os.path.join("/", "deleted-user-listen-history.parquet")
+DELETED_USER_LISTEN_HISTORY_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "deleted-user-listen-history.parquet")
 
 # Directory containing RDD checkpoints to break lineage while using iterative algorithms.
 CHECKPOINT_DIR = os.path.join('/', 'checkpoint')

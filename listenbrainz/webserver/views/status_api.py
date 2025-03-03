@@ -68,6 +68,7 @@ def get_dump_info():
     return jsonify({
         "id": dump["id"],
         "timestamp": _convert_timestamp_to_string_dump_format(dump["created"]),
+        "dump_type": dump["dump_type"],
     })
 
 

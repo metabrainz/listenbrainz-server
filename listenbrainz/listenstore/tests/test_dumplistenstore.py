@@ -2,14 +2,14 @@ import os
 import shutil
 import tarfile
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from psycopg2.extras import execute_values
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.listenstore.timescale_utils import recalculate_all_user_data
@@ -58,7 +58,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         dump = self.dumpstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            end_time=datetime.now(),
+            start_time=LISTEN_MINIMUM_DATE,
+            end_time=datetime.now(timezone.utc),
+            dump_type="full"
         )
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
@@ -75,24 +77,18 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            start_time=datetime.utcfromtimestamp(base + 6),
-            end_time=datetime.utcfromtimestamp(base + 10)
+            start_time=datetime.fromtimestamp(base + 6, timezone.utc),
+            end_time=datetime.fromtimestamp(base + 10, timezone.utc),
+            dump_type="incremental"
         )
         self.assertTrue(os.path.isfile(dump_location))
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
-        print(listens)
 
         self.reset_timescale_db()
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
-        print(listens)
-
         self.ls.import_listens_dump(dump_location)
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
-        print(listens)
-
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
+        to_ts = datetime.fromtimestamp(base + 11, timezone.utc)
+        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -103,15 +99,17 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
 
     def test_time_range_full_dumps(self):
         base = 1500000000
-        listens = generate_data(self.testuser_id, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
-        self.ls.insert(listens)
-        listens = generate_data(self.testuser_id, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
-        self.ls.insert(listens)
+        listens = generate_data(self.testuser_id, self.testuser_name, base + 1, 5, base + 1)  # generate 5 listens with ts 1-5
+        self._insert_with_created(listens)
+        listens = generate_data(self.testuser_id, self.testuser_name, base + 6, 5, base + 6)  # generate 5 listens with ts 6-10
+        self._insert_with_created(listens)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            end_time=datetime.utcfromtimestamp(base + 5)
+            start_time=LISTEN_MINIMUM_DATE,
+            end_time=datetime.fromtimestamp(base + 5, timezone.utc),
+            dump_type="full"
         )
         self.assertTrue(os.path.isfile(dump_location))
 
@@ -119,7 +117,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(base + 11))
+        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(base + 11, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -139,7 +137,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            end_time=datetime.now(),
+            start_time=LISTEN_MINIMUM_DATE,
+            end_time=datetime.now(timezone.utc) + timedelta(seconds=60),
+            dump_type="full"
         )
         self.assertTrue(os.path.isfile(dump_location))
 
@@ -147,7 +147,8 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(1400000300))
+        to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
+        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -166,7 +167,9 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         dump_location = self.dumpstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            end_time=datetime.now(),
+            start_time=LISTEN_MINIMUM_DATE,
+            end_time=datetime.now(tz=timezone.utc) + timedelta(seconds=60),
+            dump_type="full"
         )
         self.assertTrue(os.path.isfile(dump_location))
 
@@ -174,7 +177,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=user, to_ts=datetime.utcfromtimestamp(1400000300))
+        listens, min_ts, max_ts = self.ls.fetch_listens(user=user, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -182,7 +185,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.utcfromtimestamp(1400000300))
+        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
