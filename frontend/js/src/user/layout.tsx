@@ -15,9 +15,13 @@ function NavItem({
 }) {
   return (
     <li
-      className={`${isActive ? "active" : ""} ${isDisabled ? "disabled" : ""}`}
+      className={`nav-item ${isActive ? "active" : ""} ${
+        isDisabled ? "disabled" : ""
+      }`}
     >
-      <NavLink to={url}>{label}</NavLink>
+      <NavLink className="nav-link" to={url}>
+        {label}
+      </NavLink>
     </li>
   );
 }
@@ -43,12 +47,19 @@ function DashboardLayout() {
     <>
       <div className="secondary-nav dragscroll nochilddrag">
         <ul className="nav nav-tabs" role="tablist">
-          <li className="username">
+          <li className="nav-item username">
             {userName ? (
-              <Link to={userName ? `/user/${userName}/` : "#"}>{userName}</Link>
+              <Link
+                className="nav-link"
+                to={userName ? `/user/${userName}/` : "#"}
+              >
+                {userName}
+              </Link>
             ) : (
               <div>
-                <Link to="/login/">Sign in</Link>
+                <Link className="nav-link" to="/login/">
+                  Sign in
+                </Link>
               </div>
             )}
           </li>
