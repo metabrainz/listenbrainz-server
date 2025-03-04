@@ -50,7 +50,7 @@ export default class RecentListens extends React.Component<
           <h3 className="header-with-line">Global listens</h3>
         </div>
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
+          <div className="col-md-4 order-md-2">
             <Card id="listen-count-card">
               <div>
                 {globalListenCount?.toLocaleString() ?? "-"}
@@ -70,7 +70,7 @@ export default class RecentListens extends React.Component<
             </Card>
             <FlairsExplanationButton className="hidden-xs" />
           </div>
-          <div className="col-md-8 col-md-pull-4">
+          <div className="col-md-8 order-md-1">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}
