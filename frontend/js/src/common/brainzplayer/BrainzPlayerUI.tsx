@@ -251,7 +251,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       });
   }, [currentTrackCoverURL]);
 
-  let musicPlayerBackground = `linear-gradient(to bottom, ${COLOR_LB_BLUE}, ${COLOR_LB_ORANGE}`;
+  let musicPlayerBackground = `linear-gradient(to bottom, ${COLOR_LB_BLUE} 30%, ${COLOR_LB_ORANGE})`;
   let musicPlayerTextColor1 = "white";
   let musicPlayerTextColor2 = "white";
   let musicPlayerTextColor3 = "white";

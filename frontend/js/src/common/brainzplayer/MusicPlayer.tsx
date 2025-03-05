@@ -289,7 +289,12 @@ function MusicPlayer(props: MusicPlayerProps) {
             />
           )}
           {!currentTrackCoverURL && (
-            <FontAwesomeIcon icon={faCompactDisc} size="10x" opacity="25%" />
+            <FontAwesomeIcon
+              style={{ fontSize: "16em" }}
+              icon={faCompactDisc}
+              opacity="15%"
+              spin
+            />
           )}
         </div>
       </div>

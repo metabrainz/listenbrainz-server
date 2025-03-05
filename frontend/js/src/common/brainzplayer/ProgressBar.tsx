@@ -114,6 +114,14 @@ function ProgressBar(props: ProgressBarProps) {
     }
   };
 
+  const progressBarStyle: React.CSSProperties = {
+    width: `${progressPercentage || 0}%`,
+  };
+  if (!progressPercentage || progressPercentage === 0) {
+    // Hide little nubbin' appearing when at 0, for those with mild OCD.
+    progressBarStyle.borderRight = "none";
+  }
+
   return (
     <div className="progress-bar-wrapper">
       <div
@@ -130,12 +138,7 @@ function ProgressBar(props: ProgressBarProps) {
         data-tip={tipContent}
         ref={progressBarRef}
       >
-        <div
-          className="progress-bar"
-          style={{
-            width: `${progressPercentage || 0}%`,
-          }}
-        />
+        <div className="progress-bar" style={progressBarStyle} />
         <ReactTooltip
           className="progress-tooltip"
           getContent={() => tipContent}
