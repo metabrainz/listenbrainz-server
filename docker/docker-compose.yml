@@ -35,7 +35,7 @@ services:
       - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
       - couchdb:/var/lib/couchdb
     ports:
-      - "5984:5984"
+      - "127.0.0.1:5984:5984"
 
   rabbitmq:
     image: rabbitmq:3.8.16-management
