@@ -27,7 +27,7 @@ body {
 
     #side-nav {
       width: @sidenav-width;
-      // using important here to override Botostrap 3 collapse plugin setting height
+      // using important here to override Bootstrap 4 collapse plugin setting height
       height: 100vh !important;
       display: flex;
       position: sticky;
@@ -51,7 +51,7 @@ body {
         &:visited,
         &:hover,
         &:visited:hover {
-          /* Annoyingly we need this not-button because of Bootstrap 3*/
+          /* Annoyingly we need this not-button because of Bootstrap 4*/
           &,
           &:not(.button) {
             color: @blue;
@@ -121,7 +121,7 @@ body {
           margin-top: 3px;
         }
       }
-      .navbar-toggle {
+      .navbar-toggler {
         z-index: 101; // just above so it can be clicked to close the side-nav
         margin-left: @navbar-padding-horizontal;
         border-color: @blue;
@@ -157,10 +157,10 @@ body {
       #side-nav {
         transition: transform 0.3s ease-in-out;
         position: fixed;
-        // using important here to override Botostrap 3 collapse plugin setting height
+        // using important here to override Bootstrap 4 collapse plugin setting height
         height: auto !important;
         transform: translateX(-100%);
-        &.collapse.in {
+        &.show {
           transform: none;
         }
         .mobile-nav-fix {
@@ -188,7 +188,7 @@ body {
         right: 0;
         background: white;
         z-index: 114;
-        &.collapse.in {
+        &.show {
           opacity: 0.8;
           pointer-events: unset;
         }
@@ -375,7 +375,7 @@ body {
   width: 100vw;
   max-width: initial;
   margin: 0;
-  &:not(.in) {
+  &:not(.show) {
     pointer-events: none;
   }
 }

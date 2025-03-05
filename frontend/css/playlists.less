@@ -48,7 +48,6 @@
     width: 15em;
     height: 15em !important;
     position: relative;
-    overflow: hidden;
 
     .playlist-card-action-dropdown {
       position: absolute;
@@ -61,8 +60,10 @@
       bottom: 0;
       border: none;
       padding: 5px;
-      &:extend(.btn-block);
-      &:extend(.btn-info);
+      width: 100%;
+      display: block;
+      color: white;
+      background: @blue;
     }
 
     .info {
