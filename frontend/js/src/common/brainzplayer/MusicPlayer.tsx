@@ -9,6 +9,7 @@ import {
   faBarsStaggered,
   faVolumeUp,
   faEllipsisVertical,
+  faCompactDisc,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
@@ -246,8 +247,6 @@ function MusicPlayer(props: MusicPlayerProps) {
     }
   }, [APIService, ambientQueue, currentListenIndex, queue, spotifyAuth]);
 
-  const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
-
   return (
     <>
       <div className="header">
@@ -280,13 +279,18 @@ function MusicPlayer(props: MusicPlayerProps) {
       </div>
       <div className="cover-art-scroll-wrapper">
         <div className="cover-art cover-art-wrapper">
-          <img
-            alt="coverart"
-            className="img-responsive"
-            src={currentTrackCoverURL || COVERART_PLACEHOLDER}
-            crossOrigin="anonymous"
-            ref={musicPlayerCoverArtRef}
-          />
+          {currentTrackCoverURL && (
+            <img
+              alt="coverart"
+              className="img-responsive"
+              src={currentTrackCoverURL}
+              crossOrigin="anonymous"
+              ref={musicPlayerCoverArtRef}
+            />
+          )}
+          {!currentTrackCoverURL && (
+            <FontAwesomeIcon icon={faCompactDisc} size="10x" opacity="25%" />
+          )}
         </div>
       </div>
       <div className="info text-center">
