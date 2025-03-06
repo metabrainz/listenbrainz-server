@@ -1,6 +1,6 @@
 click==7.1.2
 hdfs == 2.5.8
-Jinja2 == 3.1.5
+Jinja2 == 3.1.6
 MarkupSafe==2.0.1
 itsdangerous==2.0.1
 kombu==5.1.0
