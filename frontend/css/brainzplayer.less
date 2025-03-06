@@ -425,15 +425,18 @@
   overflow-y: auto;
   z-index: 109;
   right: 0;
+  overscroll-behavior: contain;
+
   &.show {
     bottom: 0;
   }
 
   .hide-queue {
-    position: absolute;
-    right: 0;
-    top: 0;
+    position: sticky;
+    left: 100%;
+    top: -15px;
     padding: 1em;
+    margin: -15px 0 0;
     font-size: 1.5em;
     cursor: pointer;
     z-index: 1;
@@ -441,7 +444,6 @@
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     background: #dadada;
-    margin-top: 0;
 
     @media (max-width: @grid-float-breakpoint) {
       // Bigger touch target on mobile
