@@ -82,9 +82,9 @@ class DumpTestCase(DatabaseTestCase):
 
         found = set()
         found_stats = None
-        xz_command = ['xz', '--decompress', '--stdout', dump_location, '-T4']
-        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
-        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+        zstd_command = ['zstd', '--decompress', '--stdout', dump_location, '-T4']
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
+        with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
                 if file_name.endswith(".jsonl"):

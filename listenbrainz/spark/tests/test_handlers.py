@@ -397,7 +397,7 @@ class HandlersTestCase(DatabaseTestCase):
     def test_handle_dump_imported(self, mock_send_mail):
         with self.app.app_context():
             time = datetime.now()
-            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.xz'
+            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.zst'
             errors = ["Could not download dump!"]
 
             # testing, should not send a mail

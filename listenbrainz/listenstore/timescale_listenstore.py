@@ -579,10 +579,10 @@ class TimescaleListenStore:
         return listens
 
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
-        """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
+        """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.zst archive.
 
         Args:
-            archive_path: the path to the listens dump .tar.xz archive to be imported
+            archive_path: the path to the listens dump .tar.zst archive to be imported
             threads: the number of threads to be used for decompression
                         (defaults to DUMP_DEFAULT_THREAD_COUNT)
 
@@ -593,14 +593,13 @@ class TimescaleListenStore:
         self.log.info(
             'Beginning import of listens from dump %s...', archive_path)
 
-        # construct the xz command to decompress the archive
-        xz_command = ['xz', '--decompress', '--stdout',
-                       archive_path, '-T{threads}'.format(threads=threads)]
-        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
+        # construct the zstd command to decompress the archive
+        zstd_command = ['zstd', '--decompress', '--stdout', archive_path, f'-T{threads}']
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
 
         schema_checked = False
         total_imported = 0
-        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             listens = []
             for member in tar:
                 if member.name.endswith('SCHEMA_SEQUENCE'):
@@ -642,7 +641,7 @@ class TimescaleListenStore:
             raise SchemaMismatchException("SCHEMA_SEQUENCE file missing FROM listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
-        xz.stdout.close()
+        zstd.stdout.close()
 
         return total_imported
 
@@ -705,7 +704,7 @@ class TimescaleListenStore:
             ts_conn.commit()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
-            raise TimescaleListenStoreException
+            raise TimescaleListenStoreException()
 
 
 class TimescaleListenStoreException(Exception):
