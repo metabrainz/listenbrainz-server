@@ -46,7 +46,7 @@ export default function Footer() {
             </ul>
           </div>
           <br />
-          <div className="col-xs-12 col-sm-6 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <h3 className="w-title-a text-brand">Useful Links</h3>
             <ul className="list-unstyled">
               <li>
@@ -125,7 +125,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="col-xs-12 col-sm-6 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <h3 className="w-title-a text-brand">Fellow Projects</h3>
             <ul className="list-unstyled">
               <li>

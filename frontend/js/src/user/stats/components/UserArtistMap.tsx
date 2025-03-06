@@ -89,13 +89,13 @@ export default function UserArtistMap(props: UserArtistMapProps) {
   return (
     <Card className="user-stats-card" data-testid="user-stats-map">
       <div className="row">
-        <div className="col-md-9 col-xs-6">
+        <div className="col-md-9 col-6">
           <h3 style={{ marginLeft: 20 }}>
             <span className="capitalize-bold">Artist Origins</span>
             <small>&nbsp;Click on a country to see more details</small>
           </h3>
         </div>
-        <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
+        <div className="col-md-2 col-4 text-right" style={{ marginTop: 20 }}>
           <span>Rank by</span>
           <span className="dropdown">
             <button
@@ -104,11 +104,12 @@ export default function UserArtistMap(props: UserArtistMapProps) {
               type="button"
             >
               {selectedMetric}s
-              <span className="caret" />
             </button>
             <ul className="dropdown-menu" role="menu">
               <li
-                className={selectedMetric === "listen" ? "active" : undefined}
+                className={`dropdown-item ${
+                  selectedMetric === "listen" ? "active" : undefined
+                }`}
               >
                 <button
                   type="button"
@@ -118,7 +119,9 @@ export default function UserArtistMap(props: UserArtistMapProps) {
                 </button>
               </li>
               <li
-                className={selectedMetric === "artist" ? "active" : undefined}
+                className={`dropdown-item ${
+                  selectedMetric === "artist" ? "active" : undefined
+                }`}
               >
                 <button
                   type="button"
@@ -130,7 +133,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
             </ul>
           </span>
         </div>
-        <div className="col-md-1 col-xs-2 text-right">
+        <div className="col-md-1 col-2 text-right">
           <h4 style={{ marginTop: 20 }}>
             <a href="#artist-origin">
               <FontAwesomeIcon

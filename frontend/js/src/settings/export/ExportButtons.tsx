@@ -46,14 +46,14 @@ function renderExport(
           <FontAwesomeIcon icon={faChevronCircleRight} size="sm" /> Details
         </summary>
         <dl className="row">
-          <dt className="col-xs-4">Progress</dt>
-          <dd className="col-xs-8">{ex.progress}</dd>
-          <dt className="col-xs-4">Type</dt>
-          <dd className="col-xs-8">{startCase(ex.type)}</dd>
-          <dt className="col-xs-4">Requested on</dt>
-          <dd className="col-xs-8">{format(ex.created, "PPp")}</dd>
-          <dt className="col-xs-4">Export #</dt>
-          <dd className="col-xs-8">{ex.export_id}</dd>
+          <dt className="col-4">Progress</dt>
+          <dd className="col-8">{ex.progress}</dd>
+          <dt className="col-4">Type</dt>
+          <dd className="col-8">{startCase(ex.type)}</dd>
+          <dt className="col-4">Requested on</dt>
+          <dd className="col-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-4">Export #</dt>
+          <dd className="col-8">{ex.export_id}</dd>
         </dl>
       </details>
     </p>
