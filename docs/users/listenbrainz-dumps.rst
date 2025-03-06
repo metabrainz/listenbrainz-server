@@ -22,28 +22,28 @@ File Descriptions
 
 A ListenBrainz data dump consists of three archives:
 
-#. ``listenbrainz-public-dump.tar.xz``
+#. ``listenbrainz-public-dump.tar.zst``
 
-#. ``listenbrainz-listens-dump.tar.xz``
+#. ``listenbrainz-listens-dump.tar.zst``
 
-#. ``listenbrainz-listens-dump-spark.tar.xz``
+#. ``listenbrainz-listens-dump-spark.tar.zst``
 
 
-listenbrainz-public-dump.tar.xz
+listenbrainz-public-dump.tar.zst
 -------------------------------
 
 This file contains information about ListenBrainz users and statistics derived
 from listens submitted to ListenBrainz calculated from users, artists, recordings etc.
 
 
-listenbrainz-listens-dump.tar.xz
+listenbrainz-listens-dump.tar.zst
 --------------------------------
 
 This is the core ListenBrainz data dump. This file contains all the listens
 submitted to ListenBrainz by its users.
 
 
-listenbrainz-listens-dump-spark.tar.xz
+listenbrainz-listens-dump-spark.tar.zst
 --------------------------------------
 
 This is also a dump of the core ListenBrainz listen data. These dumps are
