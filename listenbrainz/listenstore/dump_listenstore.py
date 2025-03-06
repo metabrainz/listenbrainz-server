@@ -229,7 +229,7 @@ class DumpListenStore:
 
     def dump_listens(self, location, dump_id, start_time, end_time, dump_type,
                      threads=DUMP_DEFAULT_THREAD_COUNT):
-        """ Dumps all listens in the ListenStore into a .tar.xz archive.
+        """ Dumps all listens in the ListenStore into a .tar.zst archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
         An index.json file is used to save which file contains the listens of which users.
@@ -254,12 +254,12 @@ class DumpListenStore:
             archive_name = '{}-full'.format(archive_name)
         else:
             archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(location, f'{archive_name}.tar.xz')
+        archive_path = os.path.join(location, f'{archive_name}.tar.zst')
         with open(archive_path, 'w') as archive:
-            xz_command = ['xz', '--compress', f'-T{threads}']
-            xz = subprocess.Popen(xz_command, stdin=subprocess.PIPE, stdout=archive)
+            zstd_command = ['zstd', '--compress', f'-T{threads}', '-10']
+            zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
 
-            with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
+            with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
                 temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
                 create_path(temp_dir)
                 self.write_dump_metadata(
@@ -276,9 +276,9 @@ class DumpListenStore:
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
 
-            xz.stdin.close()
+            zstd.stdin.close()
 
-        xz.wait()
+        zstd.wait()
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path

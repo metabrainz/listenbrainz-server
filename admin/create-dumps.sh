@@ -236,22 +236,22 @@ touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
+    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-spark-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "musicbrainz-canonical-dump-$DUMP_TIMESTAMP.tar.zst"
