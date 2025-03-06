@@ -38,10 +38,10 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
+import CBReview from "../cb-review/CBReview";
 
 function SortingButtons({
   sort,
@@ -583,28 +583,14 @@ export default function ArtistPage(): JSX.Element {
               More on CritiqueBrainz…
             </a>
           </>
-        ) : (
-          <p>Be the first to review this artist on CritiqueBrainz</p>
-        )}
-        <button
-          type="button"
-          className="btn btn-info"
-          data-toggle="modal"
-          data-target="#CBReviewModal"
-          onClick={() => {
-            NiceModal.show(CBReviewModal, {
-              entityToReview: [
-                {
-                  type: "artist",
-                  mbid: artistMBID,
-                  name: artist?.name,
-                },
-              ],
-            });
+        ) : null}
+        <CBReview
+          artistEntity={{
+            type: "artist",
+            mbid: artistMBID,
+            name: artist?.name,
           }}
-        >
-          Add my review
-        </button>
+        />
       </div>
     </div>
   );
