@@ -483,13 +483,24 @@ type EventTypeT =
   | "block_follow"
   | "notification"
   | "personal_recording_recommendation"
-  | "critiquebrainz_review";
+  | "critiquebrainz_review"
+  | "thanks";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
   user_name_1: string;
   relationship_type: "follow";
   created: number;
+};
+
+type ThanksMetadata = {
+  original_event_id: number;
+  original_event_type: EventTypeT;
+  blurb_content: string;
+  thanker_id: number;
+  thanker_username: string;
+  thankee_id: number;
+  thankee_username: string;
 };
 
 type NotificationEventMetadata = {
@@ -502,7 +513,8 @@ type EventMetadata =
   | PinEventMetadata
   | NotificationEventMetadata
   | UserTrackPersonalRecommendationMetadata
-  | CritiqueBrainzReview;
+  | CritiqueBrainzReview
+  | ThanksMetadata;
 
 type TimelineEvent<T extends EventMetadata> = {
   event_type: EventTypeT;

@@ -8,16 +8,21 @@ from tempfile import NamedTemporaryFile
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection, config
 from listenbrainz_spark.dump import ListenbrainzDumpLoader, DumpType
+from listenbrainz_spark.listens.cache import unpersist_incremental_df, unpersist_deleted_df
 from listenbrainz_spark.listens.dump import import_full_dump_to_hdfs, import_incremental_dump_to_hdfs
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY
+from listenbrainz_spark.listens.metadata import unpersist_listens_metadata
+from listenbrainz_spark.path import LISTENBRAINZ_LISTENS_DIRECTORY_PREFIX
 from listenbrainz_spark.hdfs.utils import delete_dir, path_exists, hdfs_walk
 
-TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
+TEST_PLAYCOUNTS_PATH = "/tests/playcounts.parquet"
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "testdata")
 PLAYCOUNTS_COUNT = 100
 
 
 class ListenBrainzTestDumpLoader(ListenbrainzDumpLoader):
+
+    def close(self):
+        pass
 
     def list_dump_directories(self, dump_type: DumpType):
         return []
@@ -45,16 +50,17 @@ class SparkNewTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        listenbrainz_spark.context.stop()
+        unpersist_listens_metadata()
         cls.delete_dir()
+        listenbrainz_spark.context.stop()
 
     @classmethod
     def delete_dir(cls):
-        walk = hdfs_walk('/', depth=1)
-        # dirs in '/'
+        walk = hdfs_walk("/", depth=1)
+        # dirs in "/"
         dirs = next(walk)[1]
         for directory in dirs:
-            delete_dir(os.path.join('/', directory), recursive=True)
+            delete_dir(os.path.join("/", directory), recursive=True)
 
     @classmethod
     def upload_test_listens(cls):
@@ -64,10 +70,15 @@ class SparkNewTestCase(unittest.TestCase):
 
     @staticmethod
     def delete_uploaded_listens():
-        if path_exists(LISTENBRAINZ_NEW_DATA_DIRECTORY):
-            delete_dir(LISTENBRAINZ_NEW_DATA_DIRECTORY, recursive=True)
-        if path_exists(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY):
-            delete_dir(LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY, recursive=True)
+        # unpersist dataframes in same spark context in which they were created
+        # to avoid unhelpful py4j errors. spark context is started and stopped
+        # for each class but cached dataframes being global variables are not
+        # cleared automatically between tests.
+        unpersist_listens_metadata()
+        unpersist_incremental_df()
+        unpersist_deleted_df()
+        if path_exists(LISTENBRAINZ_LISTENS_DIRECTORY_PREFIX):
+            delete_dir(LISTENBRAINZ_LISTENS_DIRECTORY_PREFIX, recursive=True)
 
     @staticmethod
     def path_to_data_file(file_name):

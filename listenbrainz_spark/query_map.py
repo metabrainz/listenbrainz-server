@@ -34,6 +34,7 @@ import listenbrainz_spark.popularity.main
 import listenbrainz_spark.echo.echo
 import listenbrainz_spark.listens.dump
 import listenbrainz_spark.listens.delete
+import listenbrainz_spark.listens.compact
 
 functions = {
     'echo.echo': listenbrainz_spark.echo.echo.handler,
@@ -78,6 +79,7 @@ functions = {
     'troi.playlists': listenbrainz_spark.troi.periodic_jams.main,
     'tags.default': listenbrainz_spark.tags.tags.main,
     'import.deleted_listens': listenbrainz_spark.listens.delete.main,
+    'import.compact_listens': listenbrainz_spark.listens.compact.main
 }
 
 

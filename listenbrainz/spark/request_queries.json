@@ -113,11 +113,6 @@
     "description": "Import artist relation into the spark cluster.",
     "params": []
   },
-  "import.musicbrainz_release_dump": {
-    "name": "import.musicbrainz_release_dump",
-    "description": "Import musicbrainz release json dump into the spark cluster.",
-    "params": []
-  },
   "similarity.similar_users": {
     "name": "similarity.similar_users",
     "description": "Generate similar user correlation",
@@ -230,6 +225,11 @@
   "import.deleted_listens": {
     "name": "import.deleted_listens",
     "description": "Import deleted listens from ListenBrainz into spark cluster.",
+    "params": []
+  },
+  "import.compact_listens": {
+    "name": "import.compact_listens",
+    "description": "'Compact' listens imported from ListenBrainz in spark cluster.",
     "params": []
   }
 }

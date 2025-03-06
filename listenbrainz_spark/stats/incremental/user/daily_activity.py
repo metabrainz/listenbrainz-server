@@ -85,6 +85,7 @@ class DailyActivityUserStatsQueryEntity(UserStatsQueryProvider):
                FROM time_range
           LEFT JOIN {final_aggregate}
               USING (day, hour)
+              WHERE user_id IS NOT NULL
            GROUP BY user_id
         """
 
