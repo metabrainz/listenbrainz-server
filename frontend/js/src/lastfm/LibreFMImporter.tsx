@@ -593,7 +593,7 @@ export default class LibreFmImporter extends React.Component<
             <img
               src="/static/img/listenbrainz-logo.svg"
               height="75"
-              className="img-responsive"
+              className="img-fluid"
               alt=""
             />
             <br />

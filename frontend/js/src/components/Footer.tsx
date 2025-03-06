@@ -228,7 +228,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="row center-p">
-          <div className="col-md-3 d-none d-md-block hidden-xs">
+          <div className="col-md-3 d-none d-md-block d-none d-sm-block">
             <p className="color-gray section-line">
               OSS Geek?{" "}
               <a
@@ -253,7 +253,7 @@ export default function Footer() {
               <span className="color-a"> MetaBrainz Foundation </span>
             </p>
           </div>
-          <div className="col-md-3 d-none d-md-block hidden-xs">
+          <div className="col-md-3 d-none d-md-block d-none d-sm-block">
             <p className="color-gray section-line">
               Found an Issue?{" "}
               <a

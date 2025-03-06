@@ -20,7 +20,7 @@ function NavItem({
         isDisabled ? "disabled" : ""
       }`}
     >
-      <NavLink className="nav-link" to={url}>
+      <NavLink end className="nav-link" to={url}>
         {label}
       </NavLink>
     </li>
