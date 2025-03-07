@@ -46,7 +46,8 @@ ALTER TABLE api_compat.token ADD CONSTRAINT token_token_uniq UNIQUE (token);
 
 CREATE TABLE data_dump (
   id          SERIAL,
-  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  dump_type   data_dump_type_type
 );
 
 CREATE TABLE missing_musicbrainz_data (

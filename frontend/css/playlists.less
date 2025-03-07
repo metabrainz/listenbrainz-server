@@ -1,5 +1,6 @@
 @playlistBackgroundColor: #fafafa;
 @descriptionLines: 3;
+@longDescriptionLines: 8;
 
 #playlists-page .playlist-view-options {
   display: flex;
@@ -20,27 +21,6 @@
 
   &.list-view {
     flex-direction: column;
-  }
-
-  /* Pure CSS multiline ellipsis by Sagi Shrieber:
-			   http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
-			*/
-  .description {
-    overflow: hidden;
-    position: relative;
-    line-height: 1.2em;
-    max-height: @descriptionLines * 1.2em;
-    text-align: justify;
-    padding-right: 2em;
-    display: -webkit-box;
-    line-clamp: @descriptionLines;
-    margin-top: 0.5rem;
-    -webkit-line-clamp: @descriptionLines;
-    -webkit-box-orient: vertical;
-
-    p {
-      margin-bottom: 0;
-    }
   }
 
   .playlist {
@@ -275,5 +255,41 @@
 
   .cover-art-radio:focus + .cover-art-image {
     box-shadow: 0 0 0 2px rgba(53, 48, 112, 0.5);
+  }
+}
+
+/* Pure CSS multiline ellipsis by Sagi Shrieber:
+    http://hackingui.com/a-pure-css-solution-for-multiline-text-truncation/
+*/
+.text-summary {
+  overflow: hidden;
+  position: relative;
+  line-height: 1.2em;
+  max-height: @descriptionLines * 1.2em;
+  line-clamp: @descriptionLines;
+  -webkit-line-clamp: @descriptionLines;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  padding-right: 2em;
+  margin-top: 0.5rem;
+  mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
+
+  &.long {
+    max-height: @longDescriptionLines * 1.2em;
+    line-clamp: @longDescriptionLines;
+    -webkit-line-clamp: @longDescriptionLines;
+  }
+
+  &.expanded {
+    line-clamp: none;
+    -webkit-line-clamp: none;
+    max-height: unset;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  p {
+    margin-bottom: 0;
   }
 }

@@ -1,9 +1,9 @@
-from typing import List, Iterator, Dict
+from typing import Iterator, Dict
 
 from pyspark.sql import DataFrame
 
 from listenbrainz_spark.postgres.artist import get_artist_country_cache
-from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
+from listenbrainz_spark.stats.incremental.message_creator import SitewideStatsMessageCreator
 from listenbrainz_spark.stats.incremental.sitewide.artist import AritstSitewideEntity
 
 
@@ -55,14 +55,10 @@ class ArtistMapSitewideEntity(AritstSitewideEntity):
         """
 
 
-class ArtistMapSitewideStatsMessageCreator(StatsMessageCreator):
+class ArtistMapSitewideStatsMessageCreator(SitewideStatsMessageCreator):
 
     def __init__(self, selector):
         super().__init__("artist_map", "sitewide_artist_map", selector)
-
-    @property
-    def default_database_prefix(self):
-        return ""
 
     def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         entry = results.collect()[0].asDict(recursive=True)

@@ -128,7 +128,7 @@ class RequestConsumer(ConsumerProducerMixin):
     def start(self, app_name):
         while True:
             try:
-                logger.info('Request consumer started!')
+                logger.info("Request consumer started!")
                 listenbrainz_spark.init_spark_session(app_name)
                 self.init_rabbitmq_connection()
                 self.run()

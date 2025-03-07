@@ -72,10 +72,7 @@ def create_artist_country_cache():
         .format("parquet") \
         .save(config.HDFS_CLUSTER_URI + ARTIST_COUNTRY_CODE_DATAFRAME, mode="overwrite")
 
-    global _artist_country_df
-    if _artist_country_df is not None:
-        _artist_country_df.unpersist()
-        _artist_country_df = None
+    unpersist_artist_country_cache()
 
 
 def get_artist_country_cache():
@@ -87,3 +84,10 @@ def get_artist_country_cache():
         _artist_country_df.persist(StorageLevel.DISK_ONLY)
         _artist_country_df.createOrReplaceTempView(_ARTIST_COUNTRY_CACHE)
     return _ARTIST_COUNTRY_CACHE
+
+
+def unpersist_artist_country_cache():
+    global _artist_country_df
+    if _artist_country_df is not None:
+        _artist_country_df.unpersist()
+        _artist_country_df = None

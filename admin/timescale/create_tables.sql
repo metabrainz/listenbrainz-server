@@ -13,9 +13,9 @@ CREATE TABLE listen_delete_metadata (
     user_id             INTEGER                     NOT NULL,
     listened_at         TIMESTAMP WITH TIME ZONE    NOT NULL,
     recording_msid      UUID                        NOT NULL,
-    deleted             BOOLEAN                     NOT NULL DEFAULT FALSE,
+    status              listen_delete_metadata_status_enum NOT NULL DEFAULT 'pending',
     listen_created      TIMESTAMP WITH TIME ZONE
-    CHECK ( deleted IS FALSE OR (deleted IS TRUE AND listen_created IS NOT NULL) )
+    CHECK ( status = 'invalid' OR status = 'pending' OR (status = 'complete' AND listen_created IS NOT NULL) )
 );
 
 CREATE TABLE listen_user_metadata (
@@ -27,6 +27,12 @@ CREATE TABLE listen_user_metadata (
 );
 
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
+
+CREATE TABLE deleted_user_listen_history (
+    id                          INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id                     INTEGER NOT NULL,
+    max_created                 TIMESTAMP WITH TIME ZONE NOT NULL
+);
 
 -- Playlists
 
