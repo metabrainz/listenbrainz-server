@@ -11,9 +11,11 @@ import ProtectedRoutes from "../utils/ProtectedRoutes";
 export default function Layout({
   children,
   withProtectedRoutes,
+  withBrainzPlayer,
 }: {
   children?: React.ReactNode;
   withProtectedRoutes?: boolean;
+  withBrainzPlayer?: boolean;
 }) {
   return (
     <NiceModalProvider>
@@ -34,7 +36,7 @@ export default function Layout({
           {!withProtectedRoutes && <Outlet />}
           {children}
           {withProtectedRoutes && <ProtectedRoutes />}
-          <BrainzPlayer />
+          {withBrainzPlayer && <BrainzPlayer />}
         </div>
         <Footer />
       </div>
