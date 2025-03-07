@@ -35,18 +35,15 @@ function Navbar() {
 
   return (
     <nav role="navigation">
-      <div className="navbar-header">
+      <div className="navbar-light navbar-header">
         <button
           type="button"
-          className="navbar-toggle collapsed"
+          className="navbar-toggler"
           data-toggle="collapse"
           data-target="#side-nav,#side-nav-overlay"
           ref={toggleSidebarButton}
         >
-          <span className="sr-only">Toggle navigation</span>
-          <span className="icon-bar" />
-          <span className="icon-bar" />
-          <span className="icon-bar" />
+          <span className="navbar-toggler-icon" />
         </button>
         <Link
           className="navbar-logo"

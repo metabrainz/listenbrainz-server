@@ -46,7 +46,7 @@ export default function Footer() {
             </ul>
           </div>
           <br />
-          <div className="col-xs-12 col-sm-6 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <h3 className="w-title-a text-brand">Useful Links</h3>
             <ul className="list-unstyled">
               <li>
@@ -125,7 +125,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="col-xs-12 col-sm-6 col-md-3">
+          <div className="col-12 col-sm-6 col-md-3">
             <h3 className="w-title-a text-brand">Fellow Projects</h3>
             <ul className="list-unstyled">
               <li>
@@ -228,7 +228,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="row center-p">
-          <div className="col-md-3 d-none d-md-block hidden-xs">
+          <div className="col-md-3 d-none d-md-block d-none d-sm-block">
             <p className="color-gray section-line">
               OSS Geek?{" "}
               <a
@@ -253,7 +253,7 @@ export default function Footer() {
               <span className="color-a"> MetaBrainz Foundation </span>
             </p>
           </div>
-          <div className="col-md-3 d-none d-md-block hidden-xs">
+          <div className="col-md-3 d-none d-md-block d-none d-sm-block">
             <p className="color-gray section-line">
               Found an Issue?{" "}
               <a
