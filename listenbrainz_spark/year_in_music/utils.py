@@ -1,6 +1,6 @@
 from datetime import datetime, date, time
 
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 
 def setup_listens_for_year(year):

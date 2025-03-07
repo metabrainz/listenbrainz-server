@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from listenbrainz_spark.stats import (replace_days,
                                       offset_days)
-from listenbrainz_spark.utils import get_latest_listen_ts
+from listenbrainz_spark.listens.data import get_latest_listen_ts
 from listenbrainz_spark.utils import save_parquet
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            FileNotFetchedException)

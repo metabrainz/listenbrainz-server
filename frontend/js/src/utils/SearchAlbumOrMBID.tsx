@@ -15,11 +15,14 @@ import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
-import { RECORDING_MBID_REGEXP } from "./SearchTrackOrMBID";
+import {
+  LB_ALBUM_MBID_REGEXP,
+  RELEASE_GROUP_MBID_REGEXP,
+  RELEASE_MBID_REGEXP,
+  RECORDING_MBID_REGEXP,
+  UUID_REGEXP,
+} from "./constants";
 
-export const RELEASE_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
-export const RELEASE_GROUP_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release-group\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
-export const LB_ALBUM_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?listenbrainz\.org\/album\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1500;
 
 type SearchTrackOrMBIDProps = {
@@ -97,12 +100,12 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     () =>
       throttle(
         async (input: string) => {
-          const newReleaseMBID = RELEASE_MBID_REGEXP.exec(
-            input
-          )?.[2].toLowerCase();
+          const newReleaseMBID =
+            RELEASE_MBID_REGEXP.exec(input)?.[1] ??
+            UUID_REGEXP.exec(input)?.[0];
           const newReleaseGroupMBID =
-            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[2].toLowerCase() ||
-            LB_ALBUM_MBID_REGEXP.exec(input)?.[2].toLowerCase();
+            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[1].toLowerCase() ??
+            LB_ALBUM_MBID_REGEXP.exec(input)?.[1].toLowerCase();
           try {
             if (newReleaseMBID) {
               onSelectAlbum(newReleaseMBID);
@@ -157,6 +160,7 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
       return;
     }
     setLoading(true);
+    const isValidUUID = UUID_REGEXP.test(inputValue);
     const isValidAlbumUUID =
       RELEASE_MBID_REGEXP.test(inputValue) ||
       RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
@@ -166,7 +170,7 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
       switchMode(inputValue);
       return;
     }
-    if (isValidAlbumUUID) {
+    if (isValidUUID || isValidAlbumUUID) {
       throttledHandleValidMBID(inputValue);
     } else {
       throttledSearchRelease(inputValue);

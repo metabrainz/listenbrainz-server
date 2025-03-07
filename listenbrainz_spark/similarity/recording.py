@@ -6,8 +6,7 @@ import listenbrainz_spark
 from listenbrainz_spark import config
 from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
-
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 RECORDINGS_PER_MESSAGE = 10000
 # the duration value in seconds to use for track whose duration data in not available in MB

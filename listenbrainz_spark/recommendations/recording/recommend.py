@@ -313,13 +313,6 @@ def get_user_count(df):
 
 
 def main(recommendation_raw_limit=None, users=None):
-
-    try:
-        listenbrainz_spark.init_spark_session('Recommendations')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
     try:
         recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
         all_users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)

@@ -38,8 +38,8 @@ WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
-MAX_FUTURE_SECONDS = timedelta(seconds=1)  # 10 mins in future - max fwd clock skew
-EPOCH = datetime.utcfromtimestamp(0)
+MAX_FUTURE_SECONDS = timedelta(minutes=10)  # max fwd clock skew
+EPOCH = datetime.fromtimestamp(0, timezone.utc)
 
 
 class TimescaleListenStore:
@@ -126,7 +126,7 @@ class TimescaleListenStore:
         else:
             min_ts = row.min_ts
             max_ts = row.max_ts
-        return min_ts.replace(tzinfo=None), max_ts.replace(tzinfo=None)
+        return min_ts, max_ts
 
     def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
@@ -325,7 +325,7 @@ class TimescaleListenStore:
                         done = True
                         break
 
-                    if to_ts > datetime.now() + MAX_FUTURE_SECONDS:
+                    if to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS:
                         done = True
                         break
 
@@ -668,9 +668,11 @@ class TimescaleListenStore:
              WHERE user_id = :user_id
         """
         query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
+        query3 = """INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (:user_id, :created)"""
         try:
             ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
             ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
+            ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
             ts_conn.commit()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))

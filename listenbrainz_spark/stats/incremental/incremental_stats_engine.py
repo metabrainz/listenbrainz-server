@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple, Iterator, Dict
+from typing import Iterator, Dict
 
 from pandas import DataFrame
 from pyspark.errors import AnalysisException
@@ -9,13 +9,15 @@ from pyspark.errors import AnalysisException
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.config import HDFS_CLUSTER_URI
-from listenbrainz_spark.path import INCREMENTAL_DUMPS_SAVE_PATH
-from listenbrainz_spark.persisted import get_incremental_listens_df
+from listenbrainz_spark.listens.cache import get_incremental_listens_df
+from listenbrainz_spark.listens.metadata import get_listens_metadata
 from listenbrainz_spark.schema import BOOKKEEPING_SCHEMA, INCREMENTAL_BOOKKEEPING_SCHEMA
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.incremental.message_creator import MessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
-from listenbrainz_spark.utils import read_files_from_HDFS, get_listens_from_dump
+from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.listens.data import get_listens_from_dump, filter_listens_by_range, filter_deleted_listens, \
+    incremental_listens_exist
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +94,12 @@ class IncrementalStatsEngine:
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         table = f"{self.provider.get_table_prefix()}_full_listens"
-        get_listens_from_dump(self.provider.from_date, self.provider.to_date, include_incremental=False) \
-            .createOrReplaceTempView(table)
+        get_listens_from_dump(
+            self.provider.from_date,
+            self.provider.to_date,
+            include_incremental=False,
+            remove_deleted=True
+        ).createOrReplaceTempView(table)
 
         logger.info("Creating partial aggregate from full dump listens")
         hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
@@ -111,10 +117,6 @@ class IncrementalStatsEngine:
 
         return full_df
 
-    def incremental_dump_exists(self) -> bool:
-        """ Check if incremental listen dumps exist """
-        return hdfs_connection.client.status(INCREMENTAL_DUMPS_SAVE_PATH, strict=False)
-
     def create_incremental_aggregate(self) -> DataFrame:
         """
         Create an incremental aggregate from incremental listens.
@@ -123,7 +125,12 @@ class IncrementalStatsEngine:
             DataFrame: The generated incremental aggregate DataFrame.
         """
         self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
-        get_incremental_listens_df().createOrReplaceTempView(self.incremental_table)
+
+        inc_listens_df = get_incremental_listens_df()
+        inc_listens_df = filter_listens_by_range(inc_listens_df, self.provider.from_date, self.provider.to_date)
+        inc_listens_df = filter_deleted_listens(inc_listens_df, get_listens_metadata().location)
+        inc_listens_df.createOrReplaceTempView(self.incremental_table)
+
         inc_query = self.provider.get_aggregate_query(self.incremental_table)
         return run_query(inc_query)
 
@@ -163,7 +170,7 @@ class IncrementalStatsEngine:
         partial_table = f"{prefix}_existing_aggregate"
         partial_df.createOrReplaceTempView(partial_table)
 
-        if self.incremental_dump_exists():
+        if incremental_listens_exist():
             inc_df = self.create_incremental_aggregate()
             inc_table = f"{prefix}_incremental_aggregate"
             inc_df.createOrReplaceTempView(inc_table)
@@ -209,14 +216,19 @@ class IncrementalStatsEngine:
     @staticmethod
     def create_messages(results, only_inc, message_creator) -> Iterator[Dict]:
         if not only_inc:
-            yield message_creator.create_start_message()
+            message = message_creator.create_start_message()
+            if message is not None:
+                yield message
         for message in message_creator.create_messages(results, only_inc):
             yield message
         if not only_inc:
-            yield message_creator.create_end_message()
+            message = message_creator.create_end_message()
+            if message is not None:
+                yield message
 
     def run(self) -> Iterator[Dict]:
         self.prepare_final_aggregate()
         results = self.generate_stats()
         yield from self.create_messages(results, self.only_inc, self.message_creator)
-        self.bookkeep_incremental_aggregate()
+        if incremental_listens_exist():
+            self.bookkeep_incremental_aggregate()
