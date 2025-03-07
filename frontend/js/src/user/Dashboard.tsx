@@ -473,7 +473,7 @@ export default function Listen() {
         } Listens`}</title>
       </Helmet>
       <div className="row">
-        <div className="col-md-4 order-md-2 side-column">
+        <div className="col-lg-4 order-lg-2 side-column">
           <div className="listen-header">
             {isUserLoggedIn && !isCurrentUsersPage && user && (
               <FollowButton
@@ -511,7 +511,7 @@ export default function Listen() {
           {user && <ListenCountCard user={user} listenCount={listenCount} />}
           {user && <UserSocialNetwork user={user} />}
         </div>
-        <div className="col-md-8 order-md-1">
+        <div className="col-lg-8 order-lg-1">
           {!listens.length && (
             <div className="empty-listens">
               <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />

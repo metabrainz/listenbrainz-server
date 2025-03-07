@@ -388,6 +388,7 @@ export default function UserFeedPage() {
     ) {
       return (
         <ListenControl
+          isDropdown={false}
           title="Delete Event"
           text=""
           icon={faTrash}
@@ -408,6 +409,7 @@ export default function UserFeedPage() {
       if (event.hidden) {
         return (
           <ListenControl
+            isDropdown={false}
             title="Unhide Event"
             text=""
             icon={faEye}
@@ -421,6 +423,7 @@ export default function UserFeedPage() {
       }
       return (
         <ListenControl
+          isDropdown={false}
           title="Hide Event"
           text=""
           icon={faEyeSlash}
@@ -465,6 +468,7 @@ export default function UserFeedPage() {
       ) {
         additionalMenuItems = [
           <ListenControl
+            isDropdown={false}
             icon={faTrash}
             title="Delete Event"
             text="Delete Event"
@@ -560,7 +564,7 @@ export default function UserFeedPage() {
         <title>Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-lg-9">
           <div className="listen-header">
             <h3 className="header-with-line">Latest activity</h3>
             {/* Commented out as new OAuth is not merged yet. */}
@@ -624,7 +628,7 @@ export default function UserFeedPage() {
             </button> */}
             <button
               type="button"
-              className="btn btn-info btn-rounded play-tracks-button"
+              className="btn btn-info btn-rounded play-tracks-button text-nowrap"
               title="Play album"
               onClick={() => {
                 window.postMessage(
