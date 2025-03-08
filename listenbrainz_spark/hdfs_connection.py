@@ -1,7 +1,11 @@
+import logging
 import os
 
 import hdfs
 
+logger = logging.getLogger(__name__)
+
+logger.info("hdfs contents: %s", dir(hdfs))
 client = None
 
 
