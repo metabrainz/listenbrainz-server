@@ -9,7 +9,7 @@ rm -rf pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip 
 
 python3 -m venv pyspark_venv
 source pyspark_venv/bin/activate
-pip install distutils venv-pack -r requirements_spark.txt
+pip install setuptools venv-pack -r requirements_spark.txt
 venv-pack -o pyspark_venv.tar.gz
 
 export PYSPARK_DRIVER_PYTHON=python
@@ -26,6 +26,7 @@ source spark_config.sh
         --master spark://leader:7077 \
         --archives "pyspark_venv.tar.gz#environment" \
         --conf "spark.cores.max=$MAX_CORES" \
+        --conf "spark.driver.maxResultSize=4g" \
         --executor-cores "$EXECUTOR_CORES" \
         --executor-memory "$EXECUTOR_MEMORY" \
         --driver-memory "$DRIVER_MEMORY" \
