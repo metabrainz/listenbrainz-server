@@ -1,14 +1,10 @@
 import logging
 import os
-import sys
 
 import hdfs
 
 logger = logging.getLogger(__name__)
 
-logger.info("sys path: %s", sys.path)
-logger.info("environment: %s", os.environ)
-logger.info("hdfs contents: %s", dir(hdfs))
 client = None
 
 
