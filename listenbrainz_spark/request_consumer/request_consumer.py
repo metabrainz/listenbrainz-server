@@ -143,4 +143,4 @@ def main(app_name):
 
 
 if __name__ == '__main__':
-    main('spark-writer')
+    main('request-consumer-%s' % str(int(time.time())))
