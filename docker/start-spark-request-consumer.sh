@@ -29,4 +29,4 @@ source spark_config.sh
         --executor-memory "$EXECUTOR_MEMORY" \
         --driver-memory "$DRIVER_MEMORY" \
         --py-files listenbrainz_spark_request_consumer.zip,models.zip \
-    listenbrainz_spark/request_consumer/request_consumer.py
+    listenbrainz_spark/__main__.py

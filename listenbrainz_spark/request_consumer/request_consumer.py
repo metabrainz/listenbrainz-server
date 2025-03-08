@@ -135,12 +135,3 @@ class RequestConsumer(ConsumerProducerMixin):
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
-
-
-def main(app_name):
-    rc = RequestConsumer()
-    rc.start(app_name)
-
-
-if __name__ == '__main__':
-    main('request-consumer-%s' % str(int(time.time())))
