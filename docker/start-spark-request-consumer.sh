@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+source ~/.profile
+
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
 rm -rf pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip models.zip
