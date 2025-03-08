@@ -25,7 +25,7 @@ source spark_config.sh
         --master spark://leader:7077 \
         --archives "pyspark_venv.tar.gz#environment" \
         --conf "spark.cores.max=$MAX_CORES" \
-        --conf "spark.driver.maxResultSize=4g" \
+        --conf "spark.driver.maxResultSize=$DRIVER_MAX_RESULT_SIZE" \
         --executor-cores "$EXECUTOR_CORES" \
         --executor-memory "$EXECUTOR_MEMORY" \
         --driver-memory "$DRIVER_MEMORY" \

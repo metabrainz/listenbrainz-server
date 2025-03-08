@@ -102,12 +102,15 @@ class RequestConsumer(ConsumerProducerMixin):
             logger.info("No messages calculated")
 
     def callback(self, message: Message):
-        request = json.loads(message.body)
-        logger.info('Received a request!')
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
-        logger.info('Request done!')
+        try:
+            request = json.loads(message.body)
+            logger.info('Received a request!')
+            messages = self.get_result(request)
+            if messages:
+                self.push_to_result_queue(messages)
+            logger.info('Request done!')
+        except Exception as e:
+            logger.error("Error while processing request: %s", str(e), exc_info=True)
 
     def get_consumers(self, _, channel):
         return [
