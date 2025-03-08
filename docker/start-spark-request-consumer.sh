@@ -9,7 +9,7 @@ rm -rf pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip 
 
 python3 -m venv pyspark_venv
 source pyspark_venv/bin/activate
-pip install setuptools venv-pack -r requirements_spark.txt
+pip install setuptools wheel venv-pack -r requirements_spark.txt
 venv-pack -o pyspark_venv.tar.gz
 
 export PYSPARK_DRIVER_PYTHON=python
