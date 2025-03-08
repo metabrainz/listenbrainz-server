@@ -10,7 +10,8 @@ source pyspark_venv/bin/activate
 pip install setuptools wheel venv-pack -r requirements_spark.txt
 venv-pack -o pyspark_venv.tar.gz
 
-export PYSPARK_DRIVER_PYTHON=./environment/bin/python3.13
+VENV_PATH="$(realpath pyspark_venv)"
+export PYSPARK_DRIVER_PYTHON="${VENV_PATH}/bin/python3.13"
 export PYSPARK_PYTHON=./environment/bin/python3.13
 
 GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
