@@ -1,4 +1,4 @@
-hdfs==2.7.3
+hdfs==2.5.8
 Jinja2==3.1.6
 MarkupSafe==3.0.2
 itsdangerous==2.2.0
