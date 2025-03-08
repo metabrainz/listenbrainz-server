@@ -12,9 +12,6 @@ source pyspark_venv/bin/activate
 pip install setuptools wheel venv-pack -r requirements_spark.txt
 venv-pack -o pyspark_venv.tar.gz
 
-export PYSPARK_DRIVER_PYTHON=python
-export PYSPARK_PYTHON=./environment/bin/python
-
 GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
 echo "$GIT_COMMIT_SHA" > .git-version
 
