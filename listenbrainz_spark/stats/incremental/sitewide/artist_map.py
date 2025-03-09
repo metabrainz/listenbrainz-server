@@ -38,6 +38,7 @@ class ArtistMapSitewideEntity(AritstSitewideEntity):
                   FROM ranked_stats rs
                   JOIN {cache_table}
                  USING (artist_mbid)
+                 WHERE country_code IS NOT NULL
               GROUP BY country_code
             )
                 SELECT sort_array(
