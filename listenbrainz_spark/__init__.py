@@ -37,7 +37,7 @@ def init_spark_session(app_name):
                 .appName(app_name) \
                 .getOrCreate()
         context = session.sparkContext
-        context.setLogLevel("ERROR")
+        context.setLogLevel("INFO")
         sql_context = SQLContext(context)
     except Py4JJavaError as err:
         raise SparkSessionNotInitializedException(app_name, err.java_exception)
