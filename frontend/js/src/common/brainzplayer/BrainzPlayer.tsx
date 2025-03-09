@@ -138,10 +138,11 @@ export default function BrainzPlayer() {
   const SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
 
   const brainzPlayerDisabled =
-    userPreferences?.brainzplayer?.spotifyEnabled === false &&
-    userPreferences?.brainzplayer?.youtubeEnabled === false &&
-    userPreferences?.brainzplayer?.soundcloudEnabled === false &&
-    userPreferences?.brainzplayer?.appleMusicEnabled === false;
+    userPreferences?.brainzplayer?.brainzplayerEnabled === false ||
+    (userPreferences?.brainzplayer?.spotifyEnabled === false &&
+      userPreferences?.brainzplayer?.youtubeEnabled === false &&
+      userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
   // BrainzPlayerContext
   const {
@@ -179,6 +180,7 @@ export default function BrainzPlayer() {
     appleMusicEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
+    brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
 
@@ -985,7 +987,10 @@ export default function BrainzPlayer() {
   }
 
   return (
-    <div data-testid="brainzplayer">
+    <div
+      data-testid="brainzplayer"
+      className={!brainzplayerEnabled ? "hidden" : ""}
+    >
       {!playerPaused && (
         <Helmet
           key={htmlTitle}
