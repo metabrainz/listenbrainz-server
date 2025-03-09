@@ -40,10 +40,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { currentUser } = globalAppContext;
 
-  const routes = getRoutes(
-    currentUser?.name,
-    globalAppContext?.userPreferences?.brainzplayer?.brainzplayerEnabled
-  );
+  const brainzPlayerDisabled =
+    globalAppContext?.userPreferences?.brainzplayer?.brainzplayerEnabled ===
+    false;
+
+  const routes = getRoutes(currentUser?.name, !brainzPlayerDisabled);
   const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
     createBrowserRouter
   );
@@ -55,13 +56,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
         <ReactQueryDevtool client={queryClient}>
-          {globalAppContext?.userPreferences?.brainzplayer
-            ?.brainzplayerEnabled ? (
+          {brainzPlayerDisabled ? (
+            <RouterProvider router={router} />
+          ) : (
             <BrainzPlayerProvider>
               <RouterProvider router={router} />
             </BrainzPlayerProvider>
-          ) : (
-            <RouterProvider router={router} />
           )}
         </ReactQueryDevtool>
       </GlobalAppContext.Provider>

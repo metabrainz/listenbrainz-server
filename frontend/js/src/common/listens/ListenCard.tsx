@@ -304,6 +304,9 @@ export class ListenCard extends React.Component<
       soundcloudURL;
     const hideActionsMenu = compact || !hasActionOptions;
 
+    const renderBrainzplayer =
+      userPreferences?.brainzplayer?.brainzplayerEnabled ?? true;
+
     let timeStampForDisplay;
     if (customTimestamp) {
       timeStampForDisplay = customTimestamp;
@@ -577,7 +580,7 @@ export class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    {userPreferences?.brainzplayer?.brainzplayerEnabled && (
+                    {renderBrainzplayer && (
                       <>
                         <ListenControl
                           text="Play Next"
@@ -729,7 +732,7 @@ export class ListenCard extends React.Component<
                   </ul>
                 </>
               )}
-              {(userPreferences?.brainzplayer?.brainzplayerEnabled ?? true) && (
+              {renderBrainzplayer && (
                 <button
                   title="Play"
                   className={`btn btn-transparent play-button${

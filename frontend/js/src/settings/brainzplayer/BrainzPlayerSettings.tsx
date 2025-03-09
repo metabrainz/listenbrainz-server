@@ -181,10 +181,17 @@ function BrainzPlayerSettings() {
           <span
             className={`text-brand ${!brainzplayerEnabled ? "text-muted" : ""}`}
           >
-            <span>&nbsp;Brainzplayer</span>
+            <span>&nbsp;Activate the player</span>
           </span>
         }
       />
+      {brainzplayerEnabled ? (
+        ""
+      ) : (
+        <p className="text-primary">
+          <b>You will not be able to play any music on Listenbrainz</b>
+        </p>
+      )}
       <p>Choose which music services to use for playback in ListenBrainz.</p>
 
       <p>

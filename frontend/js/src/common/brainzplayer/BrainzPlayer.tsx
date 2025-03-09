@@ -989,7 +989,7 @@ export default function BrainzPlayer() {
   return (
     <div
       data-testid="brainzplayer"
-      id={!brainzplayerEnabled ? "brainzplayer-hidden" : ""}
+      className={!brainzplayerEnabled ? "hidden" : ""}
     >
       {!playerPaused && (
         <Helmet

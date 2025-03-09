@@ -169,7 +169,11 @@ describe("ListenCard", () => {
   });
 
   it("should render a play button", () => {
-    const wrapper = mount(<ListenCardWithWrappers {...props} />);
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCardWithWrappers {...{ ...props }} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper
       .find(ListenCardClass)
       .instance() as ListenCardClass;

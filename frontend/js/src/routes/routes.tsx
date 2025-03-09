@@ -40,7 +40,7 @@ const getRoutes = (
       path: "/",
       element: <Layout />,
       errorElement: (
-        <Layout>
+        <Layout withBrainzPlayer={withBrainzPlayer}>
           <ErrorBoundary />
         </Layout>
       ),
@@ -57,7 +57,9 @@ const getRoutes = (
       ],
     },
     {
-      element: <Layout withProtectedRoutes withBrainzPlayer />,
+      element: (
+        <Layout withProtectedRoutes withBrainzPlayer={withBrainzPlayer} />
+      ),
       errorElement: (
         <Layout>
           <ErrorBoundary />
