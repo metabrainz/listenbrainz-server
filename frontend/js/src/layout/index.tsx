@@ -36,7 +36,7 @@ export default function Layout({
           {!withProtectedRoutes && <Outlet />}
           {children}
           {withProtectedRoutes && <ProtectedRoutes />}
-          {withBrainzPlayer && <BrainzPlayer />}
+          {(withBrainzPlayer ?? true) && <BrainzPlayer />}
         </div>
         <Footer />
       </div>
