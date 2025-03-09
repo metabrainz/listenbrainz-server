@@ -169,7 +169,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
                               .agg(func.count('recording_id').alias('playcount'))
     playcounts_df.createOrReplaceTempView("playcounts")
 
-    transformed_listencounts = listenbrainz_spark.sql_context.sql(f"""
+    transformed_listencounts = listenbrainz_spark.session.sql(f"""
             SELECT spark_user_id
                  , recording_id
                  , playcount

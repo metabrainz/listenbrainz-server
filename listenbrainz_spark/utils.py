@@ -56,7 +56,7 @@ def read_files_from_HDFS(path):
     # parquet file and return the dataframe. so if a non-parquet file in also present
     # in the same directory, we will get the not a parquet file error
     try:
-        return listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
+        return listenbrainz_spark.session.read.parquet(config.HDFS_CLUSTER_URI + path)
     except AnalysisException as err:
         raise PathNotFoundException(str(err), path)
     except Py4JJavaError as err:

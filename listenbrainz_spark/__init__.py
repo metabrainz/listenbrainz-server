@@ -19,7 +19,6 @@ from listenbrainz_spark import config
 
 session = None
 context = None
-sql_context = None
 
 
 def init_spark_session(app_name):
@@ -30,7 +29,7 @@ def init_spark_session(app_name):
     """
     if hasattr(config, "LOG_SENTRY"):  # attempt to initialize sentry_sdk only if configuration available
         sentry_sdk.init(**config.LOG_SENTRY)
-    global session, context, sql_context
+    global session, context
     try:
         session = SparkSession \
                 .builder \
@@ -38,8 +37,7 @@ def init_spark_session(app_name):
                 .config("spark.sql.readSideCharPadding", "false") \
                 .getOrCreate()
         context = session.sparkContext
-        context.setLogLevel("INFO")
-        sql_context = SQLContext(context)
+        context.setLogLevel("ERROR")
     except Py4JJavaError as err:
         raise SparkSessionNotInitializedException(app_name, err.java_exception)
 
@@ -52,7 +50,7 @@ def init_test_session(app_name):
     Set spark.driver.host to avoid tests from hanging (get_listens_from_dump hangs when taking union
     of full dump and incremental dump listens), see https://issues.apache.org/jira/browse/SPARK-16087
     """
-    global session, context, sql_context
+    global session, context
     try:
         session = SparkSession \
                 .builder \
@@ -70,6 +68,5 @@ def init_test_session(app_name):
                 .getOrCreate()
         context = session.sparkContext
         context.setLogLevel("ERROR")
-        sql_context = SQLContext(context)
     except Py4JJavaError as err:
         raise SparkSessionNotInitializedException(app_name, err.java_exception)

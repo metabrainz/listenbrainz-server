@@ -128,10 +128,10 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
 
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    metadata_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
+    metadata_df = listenbrainz_spark.session.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    artist_credit_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + ARTIST_CREDIT_MBID_DATAFRAME)
+    artist_credit_df = listenbrainz_spark.session.read.parquet(config.HDFS_CLUSTER_URI + ARTIST_CREDIT_MBID_DATAFRAME)
     artist_credit_df.createOrReplaceTempView(artist_credit_table)
 
     skip_threshold = -skip
