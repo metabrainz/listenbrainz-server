@@ -7,6 +7,7 @@ from listenbrainz_spark import config
 from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.listens.data import get_listens_from_dump
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 RECORDINGS_PER_MESSAGE = 10000
 # the duration value in seconds to use for track whose duration data in not available in MB
@@ -115,7 +116,7 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
 
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    metadata_df = listenbrainz_spark.session.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
+    metadata_df = read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
     skip_threshold = -skip
