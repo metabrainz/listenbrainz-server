@@ -72,11 +72,12 @@ export default function Listen() {
     location.pathname
   );
 
-  const { data, refetch } = useQuery<ListenLoaderData>({
+  const { data, refetch, isLoading, isFetching } = useQuery<ListenLoaderData>({
     queryKey,
     queryFn,
     staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
   });
+
   const dispatch = useBrainzPlayerDispatch();
 
   const {
@@ -465,6 +466,17 @@ export default function Listen() {
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
 
+  if (isLoading || isFetching) {
+    return (
+      <div role="main" id="dashboard">
+        <div>
+          <h2>Fetching listens...</h2>
+          <h4>This might take some time</h4>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div role="main" id="dashboard">
       <Helmet>
@@ -681,9 +693,25 @@ export default function Listen() {
               >
                 {listens.map(getListenCard)}
               </div>
-              {listens.length < expectedListensPerPage && (
-                <h5 className="text-center">No more listens to show</h5>
-              )}
+              {listens.length < expectedListensPerPage &&
+                nextListenTs === oldestListenTs && (
+                  <h5 className="text-center">No more listens to show</h5>
+                )}
+              {listens.length < expectedListensPerPage &&
+                nextListenTs > oldestListenTs && (
+                  <div className="text-center">
+                    <Link
+                      role="button"
+                      className="btn btn-primary"
+                      aria-label="Load more listens"
+                      tabIndex={0}
+                      to={`?max_ts=${latestListenTs + 1}`}
+                    >
+                      Load More Listens
+                    </Link>
+                  </div>
+                )}
+
               <ul className="pager" id="navigation">
                 <li
                   className={`previous ${

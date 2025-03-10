@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import ceil
 from collections import defaultdict
 
@@ -82,6 +82,15 @@ def profile(user_name):
         args['to_ts'] = datetime.utcfromtimestamp(max_ts)
     elif min_ts:
         args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+    
+    # if no max_ts and no min_ts given, default to a month window to max_ts_per_user
+    if not max_ts and not min_ts:
+        _,max_ts = ts_conn.get_timestamps_for_user(user.id)
+        max_ts = (max_ts + timedelta(seconds=1))
+        min_ts = (max_ts - timedelta(days=30))
+        args['to_ts'] = max_ts
+        args['from_ts'] = min_ts
+
     data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
@@ -481,3 +490,77 @@ def index(user_name, path):
             "url": f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/',
         }
     return render_template("index.html", og_meta_tags=og_meta_tags, user=user)
+
+
+def depricated_profile(user_name):
+    # Which database to use to showing user listens.
+    ts_conn = webserver.timescale_connection._ts
+    # Which database to use to show playing_now stream.
+    playing_now_conn = webserver.redis_connection._redis
+
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
+    # Getting data for current page
+    max_ts = request.args.get("max_ts")
+    if max_ts is not None:
+        try:
+            max_ts = int(max_ts)
+        except ValueError:
+            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" %
+                            request.args.get("max_ts")}), 400
+
+    min_ts = request.args.get("min_ts")
+    if min_ts is not None:
+        try:
+            min_ts = int(min_ts)
+        except ValueError:
+            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" %
+                            request.args.get("min_ts")}), 400
+
+    args = {}
+    if max_ts:
+        args['to_ts'] = datetime.utcfromtimestamp(max_ts)
+    elif min_ts:
+        args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
+        user.to_dict(), limit=LISTENS_PER_PAGE, **args)
+    min_ts_per_user = int(min_ts_per_user.timestamp())
+    max_ts_per_user = int(max_ts_per_user.timestamp())
+
+    listens = []
+    for listen in data:
+        listens.append(listen.to_api())
+
+    playing_now = playing_now_conn.get_playing_now(user.id)
+    if playing_now:
+        playing_now = playing_now.to_api()
+
+    already_reported_user = False
+    if current_user.is_authenticated:
+        already_reported_user = db_user.is_user_reported(db_conn, current_user.id, user.id)
+
+    pin = get_current_pin_for_user(db_conn, user_id=user.id)
+    if pin:
+        pin = fetch_track_metadata_for_items(webserver.ts_conn, [pin])[0].to_api()
+
+    data = {
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+        "listens": listens,
+        "latestListenTs": max_ts_per_user,
+        "oldestListenTs": min_ts_per_user,
+        "profile_url": url_for('user.index', path="", user_name=user_name),
+        "userPinnedRecording": pin,
+        "playingNow": playing_now,
+        "logged_in_user_follows_user": logged_in_user_follows_user(user),
+        "already_reported_user": already_reported_user,
+    }
+
+    return jsonify(data)
