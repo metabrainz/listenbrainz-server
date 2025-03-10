@@ -5,7 +5,7 @@ _handler.setLevel(logging.INFO)
 _formatter = logging.Formatter("%(asctime)s %(name)-20s %(levelname)-8s %(message)s")
 _handler.setFormatter(_formatter)
 
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger()
 _logger.setLevel(logging.INFO)
 _logger.addHandler(_handler)
 
