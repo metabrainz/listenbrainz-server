@@ -155,23 +155,10 @@ describe("ListenCard", () => {
     expect(foundMatchingLink).toEqual(1);
   });
 
-  it("should not render play buttons when brainzplayer is hidden", () => {
-    const wrapper = mount<ListenCardClass>(
-      <GlobalAppContext.Provider value={merge(globalProps, {userPreferences:{brainzplayer:{brainzplayerEnabled:false}}})}>
-        <ListenCardWithWrappers {...{ ...props }} />
-      </GlobalAppContext.Provider>
-    );
-    const instance = wrapper
-      .find(ListenCardClass)
-      .instance() as ListenCardClass;
-    const playButton = wrapper.find(".play-button");
-    expect(playButton).toHaveLength(0);
-  });
-
-  it("should render a play button", () => {
+  it("should render a play button by default", () => {
     const wrapper = mount<ListenCardClass>(
       <GlobalAppContext.Provider value={globalProps}>
-        <ListenCardWithWrappers {...{ ...props }} />
+        <ListenCardWithWrappers {...props} />
       </GlobalAppContext.Provider>
     );
     const instance = wrapper
@@ -180,6 +167,38 @@ describe("ListenCard", () => {
     const playButton = wrapper.find(".play-button");
     expect(playButton).toHaveLength(1);
     expect(playButton.props().onClick).toEqual(instance.playListen);
+  });
+
+  it("should render a play button if BrainzPlayer is explicitly enabled", () => {
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider
+        value={merge(globalProps, {
+          userPreferences: { brainzplayer: { brainzplayerEnabled: true } },
+        })}
+      >
+        <ListenCardWithWrappers {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
+    const playButton = wrapper.find(".play-button");
+    expect(playButton).toHaveLength(1);
+    expect(playButton.props().onClick).toEqual(instance.playListen);
+  });
+
+  it("should not render play buttons when brainzplayer is hidden", () => {
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider
+        value={merge(globalProps, {
+          userPreferences: { brainzplayer: { brainzplayerEnabled: false } },
+        })}
+      >
+        <ListenCardWithWrappers {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const playButton = wrapper.find(".play-button");
+    expect(playButton).toHaveLength(0);
   });
 
   it("should send an event to BrainzPlayer when playListen is called", async () => {
