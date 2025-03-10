@@ -179,9 +179,11 @@ def send_mail(subject, to_name, to_email, content, html, logo, logo_cid):
 
 
 def sanitize_username(username):
-    weird_chars = '@,;><:"()'
-    table = str.maketrans('','',weird_chars)
-    return username.translate(table)
+    weird_chars = {',',':',';','@','<','>','"','(',')'}
+    for i in username:
+        if i in weird_chars:
+            return f'"{username}"'
+    return username
 
 
 def notify_yim_users(db_conn, ts_conn, year):
