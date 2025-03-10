@@ -84,7 +84,7 @@ function AnimateTextOnOverflow(props: {
         const overflowPixels =
           textRef.current.scrollWidth - textRef.current.clientWidth;
         setIsOverflowing(overflowPixels > 0);
-        setAnimationDuration(Math.min(Math.round(overflowPixels / 20), 6));
+        setAnimationDuration(Math.max(Math.round(overflowPixels / 20), 6));
       }
     };
 
