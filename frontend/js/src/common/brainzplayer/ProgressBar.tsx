@@ -47,7 +47,7 @@ function ProgressBar(props: ProgressBarProps) {
     (
       (brainzPlayerContextRef.current.progressMs * 100) /
       brainzPlayerContextRef.current.durationMs
-    ).toFixed(2)
+    ).toFixed()
   );
 
   const mouseEventHandler = useThrottle(
