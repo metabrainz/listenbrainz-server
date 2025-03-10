@@ -31,6 +31,7 @@ def init_spark_session(app_name):
         sentry_sdk.init(**config.LOG_SENTRY)
     global session, context
     try:
+        # readSideCharPadding enabled causes OOM when importing artist_country_code cache data
         session = SparkSession \
                 .builder \
                 .appName(app_name) \

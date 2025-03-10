@@ -1,9 +1,6 @@
-import logging
 import os
 
 import hdfs
-
-logger = logging.getLogger(__name__)
 
 client = None
 
