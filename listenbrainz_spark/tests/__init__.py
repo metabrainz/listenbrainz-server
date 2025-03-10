@@ -12,7 +12,7 @@ from listenbrainz_spark.listens.cache import unpersist_incremental_df, unpersist
 from listenbrainz_spark.listens.dump import import_full_dump_to_hdfs, import_incremental_dump_to_hdfs
 from listenbrainz_spark.listens.metadata import unpersist_listens_metadata
 from listenbrainz_spark.path import LISTENBRAINZ_LISTENS_DIRECTORY_PREFIX
-from listenbrainz_spark.hdfs.utils import delete_dir, path_exists, hdfs_walk
+from listenbrainz_spark.hdfs.utils import delete_dir, path_exists
 
 TEST_PLAYCOUNTS_PATH = "/tests/playcounts.parquet"
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "testdata")
@@ -56,7 +56,7 @@ class SparkNewTestCase(unittest.TestCase):
 
     @classmethod
     def delete_dir(cls):
-        walk = hdfs_walk("/", depth=1)
+        walk = hdfs_connection.client.walk(hdfs_path="/", depth=1)
         # dirs in "/"
         dirs = next(walk)[1]
         for directory in dirs:
