@@ -36,7 +36,7 @@ def write_partitioned_listens(table):
     new_base_listens_location = os.path.join(new_location, "base")
 
     listenbrainz_spark \
-        .sql_context \
+        .session \
         .sql(query) \
         .write \
         .partitionBy("year", "month") \
@@ -48,7 +48,7 @@ def write_partitioned_listens(table):
           from parquet.`{new_base_listens_location}`
     """
     result = listenbrainz_spark \
-        .sql_context \
+        .session \
         .sql(query) \
         .collect()[0]
 

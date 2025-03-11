@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 
-from pandas import DataFrame
+from pyspark.sql import DataFrame
 
 from listenbrainz_spark.listens.metadata import get_listens_metadata
 from listenbrainz_spark.utils import read_files_from_HDFS

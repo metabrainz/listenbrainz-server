@@ -7,7 +7,7 @@ from listenbrainz_spark.schema import artists_column_schema
 
 def load_from_db(url, user, password, query):
     return listenbrainz_spark\
-        .sql_context\
+        .session\
         .read\
         .format("jdbc")\
         .option("url", url)\
