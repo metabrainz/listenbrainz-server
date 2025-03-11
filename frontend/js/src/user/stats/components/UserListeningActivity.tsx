@@ -436,12 +436,12 @@ export default function UserListeningActivity(
       data-testid="listening-activity"
     >
       <div className="row">
-        <div className="col-xs-10">
+        <div className="col-10">
           <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
             Listening Activity
           </h3>
         </div>
-        <div className="col-xs-2 text-right">
+        <div className="col-2 text-right">
           <h4 style={{ marginTop: 20 }}>
             <a href="#listening-activity">
               <FontAwesomeIcon
@@ -511,7 +511,7 @@ export default function UserListeningActivity(
               </MediaQuery>
               <MediaQuery maxWidth={767}>
                 <div
-                  className="col-xs-12"
+                  className="col-12"
                   style={{ display: "flex", justifyContent: "center" }}
                 >
                   <table style={{ width: "90%" }}>

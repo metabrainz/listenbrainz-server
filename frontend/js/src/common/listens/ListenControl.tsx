@@ -27,6 +27,7 @@ export type ListenControlProps = {
   ariaLabel?: string;
   // If no title is passed, text element would serve as default title
   title?: string;
+  isDropdown?: boolean;
 };
 
 function ListenControl(props: ListenControlProps) {
@@ -45,6 +46,7 @@ function ListenControl(props: ListenControlProps) {
     anchorTagAttributes,
     ariaLabel,
     title,
+    isDropdown = true,
   } = props;
 
   if (link) {
@@ -78,7 +80,7 @@ function ListenControl(props: ListenControlProps) {
   return (
     <button
       disabled={disabled ?? false}
-      className={buttonClassName}
+      className={`${isDropdown ? "dropdown-item" : ""} ${buttonClassName}`}
       title={title ?? text}
       onClick={disabled ? undefined : action}
       type="button"
