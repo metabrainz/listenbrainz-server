@@ -402,7 +402,7 @@ export default class SoundcloudPlayer
     return (
       <img
         alt="coverart"
-        className="img-responsive"
+        className="img-fluid"
         src={currentSound.artwork_url}
       />
     );

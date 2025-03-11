@@ -141,7 +141,7 @@ function Navbar() {
             <input
               type="text"
               name="search_term"
-              className="form-control input-sm"
+              className="form-control form-control-sm"
               placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

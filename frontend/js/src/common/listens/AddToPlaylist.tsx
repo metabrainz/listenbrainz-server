@@ -209,7 +209,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
           <div className="modal-footer">
             <button
               type="button"
-              className="btn btn-default"
+              className="btn btn-secondary"
               data-dismiss="modal"
               onClick={closeModal}
             >

@@ -279,7 +279,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 <div style={{ textAlign: "right" }}>
                   <button
                     type="button"
-                    className="btn btn-default"
+                    className="btn btn-secondary"
                     onClick={closeModal}
                   >
                     Cancel
