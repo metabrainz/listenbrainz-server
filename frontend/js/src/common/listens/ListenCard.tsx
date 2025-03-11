@@ -495,7 +495,7 @@ export class ListenCard extends React.Component<
     return (
       <Card
         {...otherProps}
-        onDoubleClick={this.playListen}
+        onDoubleClick={renderBrainzplayer ? this.playListen : undefined}
         className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${
           compact ? " compact" : ""
         }${additionalContent ? " has-additional-content" : " "} ${

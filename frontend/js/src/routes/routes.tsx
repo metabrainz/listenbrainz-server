@@ -38,9 +38,9 @@ const getRoutes = (
   const routes = [
     {
       path: "/",
-      element: <Layout />,
+      element: <Layout withBrainzPlayer={withBrainzPlayer} />,
       errorElement: (
-        <Layout withBrainzPlayer={withBrainzPlayer}>
+        <Layout>
           <ErrorBoundary />
         </Layout>
       ),
