@@ -8,7 +8,7 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
-import DOMPurify from "dompurify";
+import * as DOMPurify from "dompurify";
 import {
   Link,
   useLoaderData,

@@ -12,7 +12,7 @@ import {
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import DOMPurify from "dompurify";
+import * as DOMPurify from "dompurify";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import Card from "../../../components/Card";

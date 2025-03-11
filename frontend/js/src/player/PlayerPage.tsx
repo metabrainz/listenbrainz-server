@@ -6,7 +6,7 @@ import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import DOMPurify from "dompurify";
+import * as DOMPurify from "dompurify";
 import {
   Link,
   Navigate,
