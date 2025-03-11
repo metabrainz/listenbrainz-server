@@ -355,7 +355,7 @@ export default function MusicServices() {
               premium user -{" "}
               <b>ListenBrainz will never read these pieces of data</b>. Please
               feel free to{" "}
-              <a href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/spotify_updater/spotify_read_listens.py">
+              <a target="_blank" rel="noreferrer" href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py">
                 inspect our source code
               </a>{" "}
               any time!
