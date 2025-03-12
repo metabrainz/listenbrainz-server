@@ -970,7 +970,8 @@ export default function BrainzPlayer() {
       window.removeEventListener("beforeunload", alertBeforeClosingPage);
       stopPlayerStateTimer();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotifyAuth, soundcloudAuth]);
 
   const { pathname } = useLocation();
 
