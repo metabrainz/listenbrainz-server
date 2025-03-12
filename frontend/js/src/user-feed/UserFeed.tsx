@@ -23,7 +23,7 @@ import {
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import * as DOMPurify from "dompurify";
 import { reject as _reject } from "lodash";
 import * as React from "react";
 import { Helmet } from "react-helmet";
@@ -580,7 +580,7 @@ export default function UserFeedPage() {
           // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(message),
+            __html: DOMPurify.sanitize(message),
           }}
         />
       );

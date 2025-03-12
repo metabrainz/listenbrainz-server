@@ -8,7 +8,7 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
-import { sanitize } from "dompurify";
+import * as DOMPurify from "dompurify";
 import {
   Link,
   useLoaderData,
@@ -301,7 +301,7 @@ export default function ArtistPage(): JSX.Element {
           className="cover-art"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(
+            __html: DOMPurify.sanitize(
               coverArtSVG ??
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
@@ -324,7 +324,7 @@ export default function ArtistPage(): JSX.Element {
                 className="content"
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: sanitize(wikipediaExtract.content),
+                  __html: DOMPurify.sanitize(wikipediaExtract.content),
                 }}
               />
               <a
