@@ -667,6 +667,20 @@ declare type FeedbackForUserForRecordingsRequestBody = {
   recording_msids?: string[];
 };
 
+declare type MatchedTrack = {
+  spotify?: string;
+  youtube?: string;
+  appleMusic?: string;
+};
+
+type AlbumMapping = Record<
+  string, // releaseName
+  Record<
+    string, // trackName
+    MatchedTrack
+  >
+>;
+
 declare type BrainzPlayerQueueItem = Listen & {
   id: string;
 };

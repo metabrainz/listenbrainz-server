@@ -16,6 +16,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
+import Fuse from "fuse.js";
 import {
   ToastMsg,
   createNotification,
@@ -39,11 +40,16 @@ import {
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
+import {
+  getReleaseMBID,
+  getReleaseName,
+  getTrackName,
+} from "../../utils/utils";
 
 export type DataSourceType = {
   name: string;
   icon: IconProp;
-  playListen: (listen: Listen | JSPFTrack) => void;
+  playListen: (listen: BrainzPlayerQueueItem) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
   canSearchAndPlayTracks: () => boolean;
@@ -160,6 +166,7 @@ export default function BrainzPlayer() {
     queue,
     ambientQueue,
     queueRepeatMode,
+    albumMapping,
   } = useBrainzPlayerContext();
 
   const dispatch = useBrainzPlayerDispatch();
@@ -246,6 +253,8 @@ export default function BrainzPlayer() {
   playerPausedRef.current = playerPaused;
   const continuousPlaybackTimeRef = React.useRef(continuousPlaybackTime);
   continuousPlaybackTimeRef.current = continuousPlaybackTime;
+  const albumMappingRef = React.useRef(albumMapping);
+  albumMappingRef.current = albumMapping;
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -945,6 +954,114 @@ export default function BrainzPlayer() {
     }
   };
 
+  /**
+   * Stores mappings between tracks from different music services for the same album.
+   * This allows the player to find equivalent tracks across different services.
+   *
+   * @param dataSource - The music service ('spotify', 'appleMusic', 'youtube')
+   * @param releaseName - The name of the album/release
+   * @param album - Array of tracks in the album, each with a name and service-specific URI
+   */
+  const handleAlbumMapping = React.useCallback(
+    (
+      dataSource: keyof MatchedTrack,
+      releaseName: string,
+      album: {
+        trackName: string;
+        uri: string;
+      }[]
+    ): void => {
+      dispatch({
+        type: "ADD_ALBUM_MAPPING",
+        data: {
+          dataSource,
+          releaseName,
+          album,
+        },
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  /**
+   * Retrieves the URI for a specific track from a given music service.
+   * This function uses fuzzy matching to find the closest match for the release and track names.
+   *
+   * @param listen - The listen object containing the release name and track name
+   * @param dataSource - The music service (e.g., 'spotify', 'appleMusic')
+   * @returns The URI for the track, or undefined if no match is found
+   */
+  const getAlbumMapping = React.useCallback(
+    (
+      listen: BrainzPlayerQueueItem,
+      dataSource: keyof MatchedTrack
+    ): string | undefined => {
+      const releaseName = getReleaseName(listen);
+      const trackName = getTrackName(listen);
+      const existingReleases = Object.keys(albumMappingRef.current);
+      if (!existingReleases.length) {
+        return undefined;
+      }
+
+      // First, find matching release
+      const releaseOptions = {
+        includeScore: true,
+        threshold: 0.3,
+        keys: ["releaseName"],
+      };
+
+      const releaseFuse = new Fuse(
+        existingReleases.map((name) => ({ releaseName: name })),
+        releaseOptions
+      );
+
+      const releaseMatches = releaseFuse.search(releaseName);
+
+      // If we find a matching release
+      if (
+        releaseMatches.length > 0 &&
+        releaseMatches[0].score &&
+        releaseMatches[0].score < 0.3
+      ) {
+        const matchedReleaseName = releaseMatches[0].item.releaseName;
+        const tracksInRelease = Object.keys(
+          albumMappingRef.current[matchedReleaseName]
+        );
+
+        // Then, find matching track within that release
+        const trackOptions = {
+          threshold: 0.3,
+          keys: ["trackName"],
+        };
+
+        const trackFuse = new Fuse(
+          tracksInRelease.map((name) => ({ trackName: name })),
+          trackOptions
+        );
+
+        const trackMatches = trackFuse.search(trackName);
+
+        // If we find a matching track, return its URI for the requested data source
+        if (
+          trackMatches.length > 0 &&
+          trackMatches[0].score &&
+          trackMatches[0].score < 0.3
+        ) {
+          const matchedTrackName = trackMatches[0].item.trackName;
+
+          return albumMappingRef.current[matchedReleaseName][matchedTrackName][
+            dataSource
+          ];
+        }
+      }
+
+      return undefined;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   React.useEffect(() => {
     window.addEventListener("storage", onLocalStorageEvent);
     window.addEventListener("message", receiveBrainzPlayerMessage);
@@ -1029,6 +1146,8 @@ export default function BrainzPlayer() {
             handleError={handleError}
             handleWarning={handleWarning}
             handleSuccess={handleSuccess}
+            handleAlbumMapping={handleAlbumMapping}
+            getAlbumMapping={getAlbumMapping}
           />
         )}
         {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
@@ -1095,6 +1214,8 @@ export default function BrainzPlayer() {
             handleError={handleError}
             handleWarning={handleWarning}
             handleSuccess={handleSuccess}
+            handleAlbumMapping={handleAlbumMapping}
+            getAlbumMapping={getAlbumMapping}
           />
         )}
       </BrainzPlayerUI>

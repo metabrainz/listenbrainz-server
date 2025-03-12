@@ -10,6 +10,9 @@ import {
   getReleaseName,
   getTrackName,
 } from "../../utils/utils";
+import SpotifyPlayer from "./SpotifyPlayer";
+import YoutubePlayer from "./YoutubePlayer";
+import AppleMusicPlayer from "./AppleMusicPlayer";
 
 const getBrainzPlayerQueueItemKey = (listen: Listen): string =>
   `${getRecordingMSID(listen)}-${getTrackName(listen)}-${getArtistName(
@@ -24,6 +27,17 @@ const getBrainzPlayerQueueItemKey = (listen: Listen): string =>
     listen.listened_at
   }-${listen.inserted_at}`;
 
+const getMatchedTrack = (listen: Listen): MatchedTrack => {
+  const spotifyURI = SpotifyPlayer.getSpotifyUriFromListen(listen);
+  const youtubeURI = YoutubePlayer.getVideoIDFromListen(listen);
+  const appleMusicURI = AppleMusicPlayer.getURLFromListen(listen);
+  return {
+    spotify: spotifyURI ?? undefined,
+    youtube: youtubeURI ?? undefined,
+    appleMusic: appleMusicURI ?? undefined,
+  };
+};
+
 // eslint-disable-next-line import/prefer-default-export
 export function listenOrJSPFTrackToQueueItem(
   track: Listen | JSPFTrack
@@ -34,9 +48,11 @@ export function listenOrJSPFTrackToQueueItem(
   } else {
     listenTrack = cloneDeep(track as BrainzPlayerQueueItem);
   }
+  const matchedTrack = getMatchedTrack(listenTrack);
   const queueItem = {
     ...listenTrack,
     id: `queue-item-${getBrainzPlayerQueueItemKey(listenTrack)}`,
+    matchedTrack,
   };
   return queueItem;
 }

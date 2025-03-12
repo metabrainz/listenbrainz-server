@@ -8,6 +8,7 @@ import APIService from "../../../src/utils/APIService";
 import { DataSourceTypes } from "../../../src/common/brainzplayer/BrainzPlayer";
 import GlobalAppContext from "../../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
 
 // Create a new instance of GlobalAppContext
 const defaultContext = {
@@ -48,6 +49,16 @@ const props = {
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ) => {},
+  websocketsUrl: "",
+  handleAlbumMapping: (
+    dataSource: keyof MatchedTrack,
+    releaseMBID: string,
+    trackMappings: Array<{ uri: string; trackName: string }>
+  ) => {},
+  getAlbumMapping: (
+    listen: BrainzPlayerQueueItem,
+    dataSource: keyof MatchedTrack
+  ) => "",
 };
 
 describe("SpotifyPlayer", () => {
@@ -82,6 +93,8 @@ describe("SpotifyPlayer", () => {
         },
       },
     };
+
+    const bpQueueItem = listenOrJSPFTrackToQueueItem(spotifyListen);
     const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
     const instance = wrapper.instance();
 
@@ -89,7 +102,7 @@ describe("SpotifyPlayer", () => {
     instance.searchAndPlayTrack = jest.fn();
     // play listen should extract the spotify track ID
     await act(() => {
-      instance.playListen(spotifyListen);
+      instance.playListen(bpQueueItem);
     });
     expect(instance.playSpotifyURI).toHaveBeenCalledTimes(1);
     expect(instance.playSpotifyURI).toHaveBeenCalledWith(
