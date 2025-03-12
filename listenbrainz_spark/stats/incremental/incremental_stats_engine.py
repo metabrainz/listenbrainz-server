@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Dict
 
-from pandas import DataFrame
+from pyspark.sql import DataFrame
 from pyspark.errors import AnalysisException
 
 import listenbrainz_spark

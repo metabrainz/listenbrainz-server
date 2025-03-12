@@ -393,16 +393,13 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
         dump_type=dump_type,
         time=dump_time.strftime('%Y%m%d-%H%M%S')
     )
-    archive_path = os.path.join(location, '{archive_name}.tar.xz'.format(
-        archive_name=archive_name,
-    ))
+    archive_path = os.path.join(location, f'{archive_name}.tar.zst')
 
     with open(archive_path, 'w') as archive:
+        zstd_command = ['zstd', '--compress', f'-T{threads}', '-10']
+        zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
 
-        xz_command = ['xz', '--compress', '-T{threads}'.format(threads=threads)]
-        xz = subprocess.Popen(xz_command, stdin=subprocess.PIPE, stdout=archive)
-
-        with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
+        with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
 
             temp_dir = tempfile.mkdtemp()
 
@@ -462,9 +459,9 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
 
             shutil.rmtree(temp_dir)
 
-        xz.stdin.close()
+        zstd.stdin.close()
 
-    xz.wait()
+    zstd.wait()
     return archive_path
 
 
@@ -831,7 +828,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
-            archive_path: path to the .tar.xz archive to be imported
+            archive_path: path to the .tar.zst archive to be imported
             db_engine: an sqlalchemy Engine instance for making a connection
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
@@ -840,13 +837,13 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
 
-    xz_command = ['xz', '--decompress', '--stdout', archive_path, '-T{threads}'.format(threads=threads)]
-    xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
+    zstd_command = ['zstd', '--decompress', '--stdout', archive_path, f'-T{threads}']
+    zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
 
     connection = db_engine.raw_connection()
     try:
         cursor = connection.cursor()
-        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
 
@@ -875,7 +872,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info('Imported table %s', file_name)
     finally:
         connection.close()
-        xz.stdout.close()
+        zstd.stdout.close()
 
 
 def _update_sequence(db_engine: sqlalchemy.engine.Engine, seq_name, table_name):

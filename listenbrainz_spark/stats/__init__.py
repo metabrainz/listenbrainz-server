@@ -29,7 +29,7 @@ def run_query(query):
         >> It is the responsibility of the caller to register tables etc.
     """
     try:
-        processed_query = listenbrainz_spark.sql_context.sql(query)
+        processed_query = listenbrainz_spark.session.sql(query)
     except AnalysisException as err:
         raise SQLException('{}. Failed to analyze SQL query plan for\n{}\n{}'.format(type(err).__name__, query, str(err)))
     except ParseException as err:

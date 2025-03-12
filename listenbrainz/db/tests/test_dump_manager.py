@@ -21,6 +21,7 @@
 
 import os
 import shutil
+import subprocess
 import tarfile
 import tempfile
 import time
@@ -148,13 +149,13 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         # dumps should contain the 7 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 5)
 
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
         self.assertEqual(private_archive_count, 2)
 
@@ -197,13 +198,13 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         # dumps should contain the 7 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 5)
 
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
         self.assertEqual(private_archive_count, 2)
 
@@ -276,7 +277,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         # make sure that the dump contains a full listens and spark dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -315,14 +316,16 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         # make sure that the dump contains a full listens and spark dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith(".tar.xz") or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
-        dump_file_name = dump_name.replace("dump", "listens-dump") + ".tar.xz"
+        dump_file_name = dump_name.replace("dump", "listens-dump") + ".tar.zst"
         listens_dump_file = os.path.join(self.tempdir, dump_name, dump_file_name)
-        with tarfile.open(listens_dump_file, "r:xz") as f:
-            for member in f.getmembers():
+        zstd_command = ["zstd", "--decompress", "--stdout", listens_dump_file, "-T4"]
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
+        with tarfile.open(fileobj=zstd.stdout, mode="r|") as f:
+            for member in f:
                 if member.name.endswith(".listens"):
                     lines = f.extractfile(member).readlines()
                     # five listens were dumped as expected as only five listens were created until the
@@ -353,7 +356,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         # dump should contain the listen and spark archive
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -419,6 +422,6 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         # make sure that the dump contains a feedback dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 1)

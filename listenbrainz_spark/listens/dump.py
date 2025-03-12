@@ -236,7 +236,7 @@ def process_incremental_listens_dump(temp_path):
       GROUP BY user_id
     """
     listenbrainz_spark \
-        .sql_context \
+        .session \
         .sql(query) \
         .repartition(1) \
         .write \
@@ -251,7 +251,7 @@ def process_incremental_listens_dump(temp_path):
               from parquet.`{inc_listens_location}`
         """
         result = listenbrainz_spark \
-            .sql_context \
+            .session \
             .sql(query) \
             .collect()[0]
         update_listens_metadata(location, result.max_listened_at, result.max_created)

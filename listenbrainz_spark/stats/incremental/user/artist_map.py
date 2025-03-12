@@ -41,6 +41,7 @@ class ArtistMapUserEntity(ArtistUserEntity):
                   JOIN {cache_table}
                  USING (artist_mbid)
                  WHERE rank <= {self.top_entity_limit}
+                   AND country_code IS NOT NULL
               GROUP BY user_id
                      , country_code
             )
