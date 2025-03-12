@@ -65,7 +65,7 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
             <div className="pull-right">
               <button
                 type="button"
-                className="btn btn-default"
+                className="btn btn-secondary"
                 onClick={cancel}
               >
                 Cancel

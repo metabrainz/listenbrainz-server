@@ -335,46 +335,39 @@ export default function AlbumPage(): JSX.Element {
               data-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
-            >
-              <span className="caret" />
-              <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-              <li>
-                <Link
-                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
-                >
-                  Artist{artist.artists?.length > 1 && "s"} radio
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
-                >
-                  {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
-                  only
-                </Link>
-              </li>
+              aria-label="Toggle dropdown"
+            />
+            <div className="dropdown-menu">
+              <Link
+                to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
+                className="dropdown-item"
+              >
+                Artist{artist.artists?.length > 1 && "s"} radio
+              </Link>
+              <Link
+                to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
+                className="dropdown-item"
+              >
+                {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
+                only
+              </Link>
               {Boolean(filteredTags?.length) && (
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")
-                    )})::or&mode=easy`}
-                  >
-                    Tags (
-                    <span className="tags-list">
-                      {filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")}
-                    </span>
-                    )
-                  </Link>
-                </li>
+                <Link
+                  to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                    filteredTags.map((filteredTag) => filteredTag.tag).join(",")
+                  )})::or&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Tags (
+                  <span className="tags-list">
+                    {filteredTags
+                      .map((filteredTag) => filteredTag.tag)
+                      .join(",")}
+                  </span>
+                  )
+                </Link>
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
