@@ -791,6 +791,7 @@ export default function BrainzPlayer() {
         currentTrackArtist: artist!,
         currentTrackAlbum: album,
         currentTrackURL: trackURL,
+        currentTrackCoverURL: artwork?.[0]?.src,
       },
       () => {
         updateWindowTitleWithTrackName();
@@ -1011,8 +1012,6 @@ export default function BrainzPlayer() {
         playerPaused={brainzPlayerContextRef.current.playerPaused}
         trackName={brainzPlayerContextRef.current.currentTrackName}
         artistName={brainzPlayerContextRef.current.currentTrackArtist}
-        progressMs={brainzPlayerContextRef.current.progressMs}
-        durationMs={brainzPlayerContextRef.current.durationMs}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
         currentListen={brainzPlayerContextRef.current.currentListen}
@@ -1030,6 +1029,9 @@ export default function BrainzPlayer() {
             ?.current?.iconColor
         }
         clearQueue={clearQueue}
+        currentTrackCoverURL={
+          brainzPlayerContextRef.current.currentTrackCoverURL
+        }
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
