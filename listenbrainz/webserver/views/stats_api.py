@@ -411,31 +411,32 @@ def get_listening_activity(user_name: str):
 def _get_artist_activity(release_groups_list):
     result = {}
     for release_group in release_groups_list:
-        artist_name = release_group["artist_name"].split(",")[0]
-        listen_count = release_group["listen_count"]
-        release_group_name = release_group["release_group_name"]
-        
-        if artist_name in result:
-            result[artist_name]["listen_count"] += listen_count
-            for album in result[artist_name]["albums"]:
-                if album["name"] == release_group_name:
-                    album["listen_count"] += listen_count
-                    break
+        artist_names = release_group["artist_name"].split(",")
+        for artist_name in artist_names:
+            listen_count = release_group["listen_count"]
+            release_group_name = release_group["release_group_name"]
+            
+            if artist_name in result:
+                result[artist_name]["listen_count"] += listen_count
+                for album in result[artist_name]["albums"]:
+                    if album["name"] == release_group_name:
+                        album["listen_count"] += listen_count
+                        break
+                else:
+                    result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count, "release_group_mbid": release_group["release_group_mbid"]})
             else:
-                result[artist_name]["albums"].append({"name": release_group_name, "listen_count": listen_count, "release_group_mbid": release_group["release_group_mbid"]})
-        else:
-            if release_group["release_group_mbid"]:
-                result[artist_name] = {
-                    "name": artist_name,
-                    "listen_count": listen_count,
-                    "albums": [{"name": release_group_name, "listen_count": listen_count, "release_group_mbid": release_group["release_group_mbid"]}]
-                }
-            else:
-                result[artist_name] = {
-                  "name": artist_name,
-                  "listen_count": listen_count,
-                  "albums": [{"name": release_group_name, "listen_count": listen_count}]
-                }
+                if release_group["release_group_mbid"]:
+                    result[artist_name] = {
+                        "name": artist_name,
+                        "listen_count": listen_count,
+                        "albums": [{"name": release_group_name, "listen_count": listen_count, "release_group_mbid": release_group["release_group_mbid"]}]
+                    }
+                else:
+                    result[artist_name] = {
+                        "name": artist_name,
+                        "listen_count": listen_count,
+                        "albums": [{"name": release_group_name, "listen_count": listen_count}]
+                    }
 
     sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
     count = 15
