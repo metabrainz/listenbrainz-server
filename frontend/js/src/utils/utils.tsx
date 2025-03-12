@@ -947,7 +947,9 @@ const getAlbumArtFromListenMetadata = async (
     // release group cover art of the user submitted release mbid next
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID,
-      Boolean(caaReleaseMbid) && userSubmittedReleaseMBID !== caaReleaseMbid,
+      (Boolean(caaReleaseMbid) &&
+        userSubmittedReleaseMBID !== caaReleaseMbid) ||
+        true,
       APIService,
       undefined,
       true // we only want front images, otherwise skip
