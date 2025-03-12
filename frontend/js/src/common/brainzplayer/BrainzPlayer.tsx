@@ -43,6 +43,7 @@ import {
 export type DataSourceType = {
   name: string;
   icon: IconProp;
+  iconColor: string;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
@@ -1009,29 +1010,13 @@ export default function BrainzPlayer() {
             ? togglePlay
             : activatePlayerAndPlay
         }
-        playerPaused={brainzPlayerContextRef.current.playerPaused}
-        trackName={brainzPlayerContextRef.current.currentTrackName}
-        artistName={brainzPlayerContextRef.current.currentTrackArtist}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
-        currentListen={brainzPlayerContextRef.current.currentListen}
-        trackUrl={brainzPlayerContextRef.current.currentTrackURL}
-        currentDataSourceIcon={
+        currentDataSource={
           dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-            ?.current?.icon
-        }
-        currentDataSourceName={
-          dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-            ?.current?.name
-        }
-        currentDataSourceIconColor={
-          dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-            ?.current?.iconColor
+            ?.current
         }
         clearQueue={clearQueue}
-        currentTrackCoverURL={
-          brainzPlayerContextRef.current.currentTrackCoverURL
-        }
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
