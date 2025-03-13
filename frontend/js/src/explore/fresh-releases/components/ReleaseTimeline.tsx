@@ -5,61 +5,115 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { startOfDay, format, closestTo, parseISO } from "date-fns";
 import { formatReleaseDate, useMediaQuery } from "../utils";
-import { SortDirection } from "../FreshReleases";
+import { SortDirection, SortOption } from "../FreshReleases";
 import { COLOR_LB_BLUE } from "../../../utils/constants";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
-  order: string;
+  order: SortOption;
   direction: SortDirection;
 };
 
 function createMarks(
   releases: Array<FreshReleaseItem>,
-  sortDirection: string,
-  order: string
+  sortDirection: SortDirection,
+  order: SortOption
 ) {
   let dataArr: Array<string | JSX.Element> = [];
   let percentArr: Array<number> = [];
-  // We want to filter out the keys that have less than 1.5% of the total releases
+
+  // We want to filter out the keys that have less than 1.5% of the total releases count if order type is not release_date
   const minReleasesThreshold = Math.floor(releases.length * 0.015);
+
   if (order === "release_date") {
-    const releasesPerDate = countBy(
+    let releasesPerDate = countBy(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
 
-    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
+    if (sortDirection === "descend") {
+      const reversedReleasesPerDate = Object.keys(releasesPerDate).reverse();
+      releasesPerDate = zipObject(
+        reversedReleasesPerDate,
+        Object.values(releasesPerDate).reverse()
+      );
+    }
+
+    const firstDate = Object.keys(releasesPerDate)[0];
+    const lastDate = Object.keys(releasesPerDate)[
+      Object.keys(releasesPerDate).length - 1
+    ];
+
+    const totalReleases = Object.values(releasesPerDate).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+
+    const cummulativeMap = new Map();
+    let cummulativeSum = 0;
+
+    Object.keys(releasesPerDate).forEach((date) => {
+      cummulativeMap.set(date, (100 * cummulativeSum) / totalReleases);
+      cummulativeSum += releasesPerDate[date];
+    });
+
+    const firstDateStr = format(parseISO(firstDate), "yyyy-MM-dd");
+    dataArr.push(formatReleaseDate(firstDateStr));
+    percentArr.push(0);
+
+    for (let i = 10; i < 100; i += 10) {
+      let date = "";
+      let miniDiff = 10;
+      cummulativeMap.forEach((value, key) => {
+        const currentDiff = Math.abs(value - i);
+        if (currentDiff < miniDiff) {
+          miniDiff = currentDiff;
+          date = key;
+        }
+      });
+
+      if (date && dataArr[dataArr.length - 1] !== date) {
+        const dateStr = format(parseISO(date), "yyyy-MM-dd");
+        dataArr.push(formatReleaseDate(dateStr));
+        percentArr.push(cummulativeMap.get(date)!);
+      }
+    }
+
+    const lastDateStr = format(parseISO(lastDate), "yyyy-MM-dd");
+    if (dataArr[dataArr.length - 1] !== formatReleaseDate(lastDateStr)) {
+      dataArr.push(formatReleaseDate(lastDateStr));
+      percentArr.push(cummulativeMap.get(lastDate)!);
+    }
+
     const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
+    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
     const closestDateStr = dates.length
       ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
       : recentDateStr;
 
-    const filteredDates = Object.keys(releasesPerDate).filter((date) =>
-      date === closestDateStr
-        ? releasesPerDate[date] >= 0
-        : releasesPerDate[date] > minReleasesThreshold
-    );
+    if (dataArr.includes(formatReleaseDate(closestDateStr))) {
+      const index = dataArr.indexOf(formatReleaseDate(closestDateStr));
+      dataArr.splice(index, 1);
+      percentArr.splice(index, 1);
+    }
 
     const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
-
-    dataArr = filteredDates.map((date) =>
-      date === closestDateStr ? (
-        <FontAwesomeIcon
-          icon={faCalendarCheck}
-          size="2xl"
-          color={COLOR_LB_BLUE}
-          title={title}
-        />
-      ) : (
-        formatReleaseDate(date)
-      )
+    dataArr.push(
+      <FontAwesomeIcon
+        icon={faCalendarCheck}
+        size="2xl"
+        color={COLOR_LB_BLUE}
+        title={title}
+      />
     );
-    percentArr = filteredDates
-      .map((item) => (releasesPerDate[item] / releases.length) * 100)
-      .map((_, index, arr) =>
-        arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
-      );
+    percentArr.push(cummulativeMap.get(closestDateStr)!);
+
+    const sortedData = percentArr
+      .map((percent, index) => ({ percent, data: dataArr[index] }))
+      .sort((a, b) => a.percent - b.percent);
+
+    dataArr = sortedData.map((item) => item.data);
+    percentArr = sortedData.map((item) => item.percent);
   } else if (order === "artist_credit_name") {
     const artistInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
       item.artist_credit_name.charAt(0).toUpperCase()
@@ -102,12 +156,11 @@ function createMarks(
       );
   }
 
-  if (sortDirection === "descend") {
+  if (sortDirection === "descend" && order !== "release_date") {
     dataArr.reverse();
     percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
   }
-
-  /**
+  /*
    * We want the timeline dates or marks to start where the grid starts.
    * So the 0% should always have the first date. Therefore we use unshift(0) here.
    * With the same logic, we don't want the last date to be at 100% because
@@ -117,7 +170,8 @@ function createMarks(
    * the percentArr starts with 0 and ends with a non-100% value, which is desired.
    * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
    */
-  if (percentArr[0] !== 0) {
+
+  if (percentArr[0] !== 0 && order !== "release_date") {
     percentArr.unshift(0);
     percentArr.pop();
   }
