@@ -43,17 +43,18 @@ function createMarks(
       Object.keys(releasesPerDate).length - 1
     ];
 
-    let totalReleases = 0;
-    for (const date of Object.keys(releasesPerDate)) {
-      totalReleases += releasesPerDate[date];
-    }
+    const totalReleases = Object.values(releasesPerDate).reduce(
+      (sum, value) => sum + value,
+      0
+    );
 
-    const cummulativeMap = new Map<string, number>();
+    const cummulativeMap = new Map();
     let cummulativeSum = 0;
-    for (const date of Object.keys(releasesPerDate)) {
+
+    Object.keys(releasesPerDate).forEach((date) => {
       cummulativeMap.set(date, (100 * cummulativeSum) / totalReleases);
       cummulativeSum += releasesPerDate[date];
-    }
+    });
 
     const firstDateStr = format(parseISO(firstDate), "yyyy-MM-dd");
     dataArr.push(formatReleaseDate(firstDateStr));
