@@ -159,7 +159,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                           .split("\n")
                           .map((line: string, i: number) => (
                             <text
-                              key={i}
+                              key={line}
                               x={0}
                               y={10 + i * 15}
                               textAnchor="middle"
