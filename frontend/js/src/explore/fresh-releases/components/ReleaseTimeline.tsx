@@ -44,13 +44,13 @@ function createMarks(
     ];
 
     let totalReleases = 0;
-    for (const date in releasesPerDate) {
+    for (const date of Object.keys(releasesPerDate)) {
       totalReleases += releasesPerDate[date];
     }
 
     const cummulativeMap = new Map<string, number>();
     let cummulativeSum = 0;
-    for (const date in releasesPerDate) {
+    for (const date of Object.keys(releasesPerDate)) {
       cummulativeMap.set(date, (100 * cummulativeSum) / totalReleases);
       cummulativeSum += releasesPerDate[date];
     }
