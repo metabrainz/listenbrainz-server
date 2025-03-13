@@ -143,7 +143,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     )
                   )}
                   indexBy="label"
-                  margin={{ top: 20, right: 80, bottom: 60, left: 80 }}
+                  margin={{ top: 20, right: 80, bottom: 80, left: 80 }}
                   padding={0.2}
                   layout="vertical"
                   colors={{ scheme: "nivo" }}
@@ -152,7 +152,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                   axisBottom={{
                     tickSize: 5,
                     tickPadding: 5,
-                    tickRotation: 0,
+                    tickRotation: -45,
                     renderTick: (tick) => (
                       <g transform={`translate(${tick.x},${tick.y})`}>
                         {tick.value
@@ -162,11 +162,12 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                               key={line}
                               x={0}
                               y={10 + i * 15}
-                              textAnchor="middle"
-                              dominantBaseline="hanging"
+                              textAnchor="end"
+                              dominantBaseline="middle"
                               style={{
                                 fontSize: 10,
                                 fill: "#000",
+                                transform: `rotate(-45deg)`,
                               }}
                             >
                               {line}

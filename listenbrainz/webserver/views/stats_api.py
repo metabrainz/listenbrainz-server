@@ -483,14 +483,377 @@ def get_artist_activity(user_name: str):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-    user, stats_range = _validate_stats_user_params(user_name)
-    offset = get_non_negative_param("offset", default=0)
-    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-    stats = db_stats.get(user["id"], "release_groups", stats_range, EntityRecord)
-    if stats is None:
-        raise APINoContent('')
+    # user, stats_range = _validate_stats_user_params(user_name)
+    # offset = get_non_negative_param("offset", default=0)
+    # count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    # stats = db_stats.get(user["id"], "release_groups", stats_range, EntityRecord)
+    # if stats is None:
+    #     raise APINoContent('')
 
-    release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    # release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    temp_data = {
+    "payload": {
+        "count": 25,
+        "from_ts": 1740960000,
+        "last_updated": 1741695262,
+        "offset": 0,
+        "range": "week",
+        "release_groups": [
+            {
+                "artist_mbids": [
+                    "ed29f721-0d40-4a90-9f25-a91c2ccccd5e"
+                ],
+                "artist_name": "AP Dhillon",
+                "artists": [
+                    {
+                        "artist_credit_name": "AP Dhillon",
+                        "artist_mbid": "ed29f721-0d40-4a90-9f25-a91c2ccccd5e",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 33759408581,
+                "caa_release_mbid": "87a65c84-4d04-4b61-9687-3df76ba83bb2",
+                "listen_count": 4,
+                "release_group_mbid": "a659496c-1093-48af-88d5-773f96179e39",
+                "release_group_name": "Two Hearts Never Break The Same"
+            },
+            {
+                "artist_mbids": [
+                    "c86a5d1b-8b93-4844-8003-5dedce42e1cb",
+                    "4c73b58a-fb2f-49e3-aaa6-3fcb4a2797f3",
+                    "eb71df54-9a3b-4c46-9ace-be6b61cc49b8"
+                ],
+                "artist_name": "Niladri Kumar, Joi Barua & Alif",
+                "artists": [
+                    {
+                        "artist_credit_name": "Niladri Kumar",
+                        "artist_mbid": "c86a5d1b-8b93-4844-8003-5dedce42e1cb",
+                        "join_phrase": ", "
+                    },
+                    {
+                        "artist_credit_name": "Joi Barua",
+                        "artist_mbid": "4c73b58a-fb2f-49e3-aaa6-3fcb4a2797f3",
+                        "join_phrase": " & "
+                    },
+                    {
+                        "artist_credit_name": "Alif",
+                        "artist_mbid": "eb71df54-9a3b-4c46-9ace-be6b61cc49b8",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 37441982305,
+                "caa_release_mbid": "57c39828-cccd-455f-a96e-f783a8f7835c",
+                "listen_count": 3,
+                "release_group_mbid": "d6698782-35fc-46b4-b744-c346e83ca7ee",
+                "release_group_name": "Laila Majnu"
+            },
+            {
+                "artist_mbids": [
+                    "6113dac8-14b5-435a-b628-10cf8193a0b1"
+                ],
+                "artist_name": "Harnoor",
+                "artists": [
+                    {
+                        "artist_credit_name": "Harnoor",
+                        "artist_mbid": "6113dac8-14b5-435a-b628-10cf8193a0b1",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 31997791614,
+                "caa_release_mbid": "1969cf4e-e6bc-464b-9dd1-ae99e5e14bf6",
+                "listen_count": 2,
+                "release_group_mbid": "37d2a507-dd56-41d4-925a-0c2c160be711",
+                "release_group_name": "Waalian"
+            },
+            {
+                "artist_mbids": [
+                    "bda9891c-f6a4-442b-8f1c-65429c3347d8"
+                ],
+                "artist_name": "King",
+                "artists": [
+                    {
+                        "artist_credit_name": "King",
+                        "artist_mbid": "bda9891c-f6a4-442b-8f1c-65429c3347d8",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 34624858128,
+                "caa_release_mbid": "18f3b5a6-6097-49a5-87ee-173532dbe1a1",
+                "listen_count": 2,
+                "release_group_mbid": "3c0546ed-b263-4f1b-931b-8d75c1bc5b2a",
+                "release_group_name": "The Carnival"
+            },
+            {
+                "artist_mbids": [
+                    "ffabe84e-ec03-4e28-8671-1847224ab074"
+                ],
+                "artist_name": "Josh Brar",
+                "artists": [
+                    {
+                        "artist_credit_name": "Josh Brar",
+                        "artist_mbid": "ffabe84e-ec03-4e28-8671-1847224ab074",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 40714612761,
+                "caa_release_mbid": "12acbd24-b33f-4c46-8798-6b32a740be3b",
+                "listen_count": 2,
+                "release_group_mbid": "b3b91eca-7890-4644-858d-4392060978e4",
+                "release_group_name": "Tere Bina Na Guzara E"
+            },
+            {
+                "artist_mbids": [
+                    "5d77d4cf-febf-4e5c-b8e7-16ea5ffb0439"
+                ],
+                "artist_name": "Aditya Rikhari",
+                "artists": [
+                    {
+                        "artist_credit_name": "Aditya Rikhari",
+                        "artist_mbid": "5d77d4cf-febf-4e5c-b8e7-16ea5ffb0439",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 35225071094,
+                "caa_release_mbid": "dd67ee08-49ef-4508-bf86-8c3eaf69791b",
+                "listen_count": 2,
+                "release_group_mbid": "447d85e7-2b6a-4974-9ecb-21f18678dc8c",
+                "release_group_name": "Samjho Na"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Majid Unpeek, Lola",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 2,
+                "release_group_mbid": None,
+                "release_group_name": "Nion Nihon Nights"
+            },
+            {
+                "artist_mbids": [
+                    "addca31a-40ae-4152-afb8-a477da5191f0"
+                ],
+                "artist_name": "Anuv Jain",
+                "artists": [
+                    {
+                        "artist_credit_name": "Anuv Jain",
+                        "artist_mbid": "addca31a-40ae-4152-afb8-a477da5191f0",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 33591219607,
+                "caa_release_mbid": "1e3e4f14-4139-44b5-a08c-c5beee6e8409",
+                "listen_count": 2,
+                "release_group_mbid": "6d04c3a2-0080-4aae-8069-95f0738958fb",
+                "release_group_name": "Meri Baaton Mein Tu"
+            },
+            {
+                "artist_mbids": [
+                    "985a6779-0e8a-4e52-9aca-597e2e65ab13",
+                    "32560f6d-f87f-4475-a6fb-7c302036aaf1",
+                    "50fd3c55-9c32-490c-bfd5-679208483901",
+                    "27a58074-387a-4f9d-ab4f-1655158cb10f",
+                    "93622908-0806-4173-94c1-9e42597af011"
+                ],
+                "artist_name": "Darshan Raval, Jonita Gandhi, Rochak Kohli, Gurpreet Saini & Sonu Nigam",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 2,
+                "release_group_mbid": None,
+                "release_group_name": "Ishq Vishk Rebound (Original Motion Picture Soundtrack)"
+            },
+            {
+                "artist_mbids": [
+                    "f931c961-b647-4861-be8c-f47d84a4de51"
+                ],
+                "artist_name": "Diljit Dosanjh",
+                "artists": [
+                    {
+                        "artist_credit_name": "Diljit Dosanjh",
+                        "artist_mbid": "f931c961-b647-4861-be8c-f47d84a4de51",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 37129944334,
+                "caa_release_mbid": "962f6b5a-d6ca-4c02-b47c-b3752b1f90c5",
+                "listen_count": 2,
+                "release_group_mbid": "3920b520-1404-495b-8557-5b2091233a14",
+                "release_group_name": "Ghost"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Darshan Raval",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 2,
+                "release_group_mbid": None,
+                "release_group_name": "Ek Tarfa"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Pritam, Arijit Singh, Irshad Kamil",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 2,
+                "release_group_mbid": None,
+                "release_group_name": "Dunki"
+            },
+            {
+                "artist_mbids": [
+                    "f931c961-b647-4861-be8c-f47d84a4de51"
+                ],
+                "artist_name": "Diljit Dosanjh",
+                "artists": [
+                    {
+                        "artist_credit_name": "Diljit Dosanjh",
+                        "artist_mbid": "f931c961-b647-4861-be8c-f47d84a4de51",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 33030341692,
+                "caa_release_mbid": "f9fc0be7-8b5f-4382-bc2a-182938c8a765",
+                "listen_count": 2,
+                "release_group_mbid": "23279dea-32b0-47a5-bc4a-68924262c5ec",
+                "release_group_name": "Drive Thru"
+            },
+            {
+                "artist_mbids": [
+                    "ed3f4831-e3e0-4dc0-9381-f5649e9df221"
+                ],
+                "artist_name": "Arijit Singh",
+                "artists": [
+                    {
+                        "artist_credit_name": "Arijit Singh",
+                        "artist_mbid": "ed3f4831-e3e0-4dc0-9381-f5649e9df221",
+                        "join_phrase": ""
+                    }
+                ],
+                "caa_id": 40653893324,
+                "caa_release_mbid": "3e063d04-3ce6-42f3-af59-2725af2d4c9d",
+                "listen_count": 2,
+                "release_group_mbid": "a4bd61ea-eadb-4f68-b552-482490462b2a",
+                "release_group_name": "Arijit\u2019s Aura"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "LVTA",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "wicked"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "yellofish",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "what\u00b4s my name"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "LVTA",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "until we meet again"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Lunar Lullaby & yorukaze",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "traffic"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "chanchito estafa",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "the house cat"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Kaptain Kola",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "take it back"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Lunar Lullaby & yorukaze",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "sweet"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "slowburn",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "still images"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "LVTA",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "silver sky"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "J0pie",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "signs of winter"
+            },
+            {
+                "artist_mbids": [],
+                "artist_name": "Bcalm, Dryden",
+                "artists": None,
+                "caa_id": None,
+                "caa_release_mbid": None,
+                "listen_count": 1,
+                "release_group_mbid": None,
+                "release_group_name": "seasons"
+            }
+        ],
+        "to_ts": 1741564800,
+        "total_release_group_count": 194,
+        "user_id": "holycow23"
+    }
+}
+    release_groups_list = temp_data["payload"]["release_groups"]
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
     
