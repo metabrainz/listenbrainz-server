@@ -101,6 +101,8 @@ export default NiceModal.create(() => {
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invertOrder, setInvertOrder] = useState(false);
+  // Used for the automatic switching and search trigger if pasting URL for another entity type
+  const [textToSearch, setTextToSearch] = useState<string>();
 
   const closeModal = useCallback(() => {
     modal.hide();
@@ -211,6 +213,26 @@ export default NiceModal.create(() => {
     handleError,
   ]);
 
+  const switchMode = React.useCallback(
+    (pastedURL: string) => {
+      if (listenOption === SubmitListenType.track) {
+        setListenOption(SubmitListenType.album);
+      } else if (listenOption === SubmitListenType.album) {
+        setListenOption(SubmitListenType.track);
+      }
+      setTimeout(() => {
+        // Trigger search in the inner (grandchild) search input component by modifying the textToSearch prop in child component
+        // Give it some time to allow re-render and trigger search in the correct child component
+        setTextToSearch(pastedURL);
+      }, 200);
+      setTimeout(() => {
+        // Reset text trigger
+        setTextToSearch("");
+      }, 500);
+    },
+    [listenOption]
+  );
+
   const userLocale = navigator.languages?.length
     ? navigator.languages[0]
     : navigator.language;
@@ -262,10 +284,18 @@ export default NiceModal.create(() => {
               </Pill>
             </div>
             {listenOption === SubmitListenType.track && (
-              <AddSingleListen onPayloadChange={setSelectedListens} />
+              <AddSingleListen
+                onPayloadChange={setSelectedListens}
+                switchMode={switchMode}
+                initialText={textToSearch}
+              />
             )}
             {listenOption === SubmitListenType.album && (
-              <AddAlbumListens onPayloadChange={setSelectedListens} />
+              <AddAlbumListens
+                onPayloadChange={setSelectedListens}
+                switchMode={switchMode}
+                initialText={textToSearch}
+              />
             )}
             <hr />
             <div className="timestamp">

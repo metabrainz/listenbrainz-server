@@ -81,13 +81,107 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getListensFromFollowedUsers = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent<Listen>>> => {
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events/listens/following`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
+  getListensFromSimilarUsers = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent<Listen>>> => {
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events/listens/similar`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
   getFeedForUser = async (
     userName: string,
     userToken: string,
     minTs?: number,
     maxTs?: number,
     count?: number
-  ): Promise<Array<TimelineEvent>> => {
+  ): Promise<Array<TimelineEvent<EventMetadata>>> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
@@ -1328,6 +1422,35 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
       body: JSON.stringify({ event_type: eventType, event_id }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  thankFeedEvent = async (
+    event_id: number | undefined,
+    eventType: EventTypeT,
+    userToken: string,
+    username: string,
+    blurb_content: string
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/timeline-event/create/thanks`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        metadata: {
+          original_event_type: eventType,
+          original_event_id: event_id,
+          blurb_content,
+        },
+      }),
     });
     await this.checkStatus(response);
     return response.status;

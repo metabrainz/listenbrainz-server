@@ -2,7 +2,7 @@ from datetime import datetime, date, time
 
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 
 def get_new_artists_discovered_count(year):

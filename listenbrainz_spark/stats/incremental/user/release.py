@@ -1,6 +1,6 @@
 from typing import List
 
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
 
@@ -11,11 +11,8 @@ class ReleaseUserEntity(UserEntityStatsQueryProvider):
     def entity(self):
         return "releases"
 
-    def get_cache_tables(self) -> List[str]:
-        return [RELEASE_METADATA_CACHE_DATAFRAME]
-
-    def get_aggregate_query(self, table, cache_tables):
-        cache_table = cache_tables[0]
+    def get_aggregate_query(self, table):
+        cache_table = get_release_metadata_cache()
         return f"""
             WITH gather_release_data AS (
                 SELECT user_id

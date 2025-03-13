@@ -6,10 +6,14 @@ import {
   faComments,
   faEye,
   faEyeSlash,
+  faHandshake,
   faHeadphones,
   faHeart,
   faPaperPlane,
+  faPlayCircle,
+  faPlus,
   faQuestion,
+  faRefresh,
   faRss,
   faThumbsUp,
   faThumbtack,
@@ -19,7 +23,7 @@ import {
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import * as DOMPurify from "dompurify";
 import { reject as _reject } from "lodash";
 import * as React from "react";
 import { Helmet } from "react-helmet";
@@ -32,50 +36,38 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";
 import Username from "../common/Username";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { ToastMsg } from "../notifications/Notifications";
-import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {
   feedReviewEventToListen,
   getAdditionalContent,
-  getBaseUrl,
   getPersonalRecommendationEventContent,
   getReviewEventContent,
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
+import ThanksModal from "./ThanksModal";
+import { EventType, type FeedFetchParams } from "./types";
+import Card from "../components/Card";
 
-export enum EventType {
-  RECORDING_RECOMMENDATION = "recording_recommendation",
-  PERSONAL_RECORDING_RECOMMENDATION = "personal_recording_recommendation",
-  RECORDING_PIN = "recording_pin",
-  LIKE = "like",
-  LISTEN = "listen",
-  FOLLOW = "follow",
-  STOP_FOLLOW = "stop_follow",
-  BLOCK_FOLLOW = "block_follow",
-  NOTIFICATION = "notification",
-  REVIEW = "critiquebrainz_review",
+enum EventTypeinMessage {
+  personal_recording_recommendation = "personally recommending a track",
+  recording_recommendation = "recommending a track",
+  recording_pin = "pinning a track",
 }
 
-export type UserFeedPageProps = {
-  events: TimelineEvent[];
+type UserFeedPageProps = {
+  events: TimelineEvent<EventMetadata>[];
 };
 
-export type UserFeedPageState = {
-  nextEventTs?: number;
-  previousEventTs?: number;
-  earliestEventTs?: number;
-  events: TimelineEvent[];
-};
-
-function isEventListenable(event?: TimelineEvent): boolean {
+function isEventListenable(event?: TimelineEvent<EventMetadata>): boolean {
   if (!event) {
     return false;
   }
@@ -112,6 +104,8 @@ function getEventTypeIcon(eventType: EventTypeT) {
       return faComments;
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return faPaperPlane;
+    case EventType.THANKS:
+      return faHandshake;
     default:
       return faQuestion;
   }
@@ -130,7 +124,7 @@ function getReviewEntityName(entity_type: ReviewableEntityType): string {
   }
 }
 
-function getEventTypePhrase(event: TimelineEvent): string {
+function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
   const { event_type } = event;
   let review: CritiqueBrainzReview;
   switch (event_type) {
@@ -148,6 +142,8 @@ function getEventTypePhrase(event: TimelineEvent): string {
     }
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return "personally recommended a track";
+    case EventType.THANKS:
+      return `thanked a ${event.event_type}`;
     default:
       return "";
   }
@@ -166,11 +162,12 @@ export default function UserFeedPage() {
 
   const fetchEvents = React.useCallback(
     async ({ pageParam }: any) => {
+      const { minTs, maxTs } = pageParam;
       const newEvents = await APIService.getFeedForUser(
         currentUser.name,
         currentUser.auth_token!,
-        undefined,
-        pageParam
+        minTs,
+        maxTs
       );
       return { events: newEvents };
     },
@@ -183,17 +180,30 @@ export default function UserFeedPage() {
     isLoading,
     isError,
     fetchNextPage,
+    fetchPreviousPage,
     hasNextPage,
     isFetching,
     isFetchingNextPage,
-  } = useInfiniteQuery<UserFeedLoaderData>({
+  } = useInfiniteQuery<
+    UserFeedLoaderData,
+    unknown,
+    InfiniteData<UserFeedLoaderData>,
+    unknown[],
+    FeedFetchParams
+  >({
     queryKey,
-    initialPageParam: Math.ceil(Date.now() / 1000),
+    initialPageParam: { maxTs: Math.ceil(Date.now() / 1000) },
     queryFn: fetchEvents,
-    getNextPageParam: (lastPage, pages) =>
-      lastPage?.events?.length
-        ? lastPage.events[lastPage.events.length - 1].created
-        : undefined,
+    getNextPageParam: (lastPage, allPages, lastPageParam) => ({
+      maxTs:
+        lastPage.events[lastPage.events.length - 1]?.created ??
+        lastPageParam.maxTs,
+    }),
+    getPreviousPageParam: (lastPage, allPages, lastPageParam) => ({
+      minTs: lastPage?.events?.length
+        ? lastPage.events[0].created + 1
+        : lastPageParam.minTs ?? Math.ceil(Date.now() / 1000),
+    }),
   });
 
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
@@ -229,7 +239,7 @@ export default function UserFeedPage() {
   }, [listens]);
 
   const changeEventVisibility = React.useCallback(
-    async (event: TimelineEvent) => {
+    async (event: TimelineEvent<EventMetadata>) => {
       const { hideFeedEvent, unhideFeedEvent } = APIService;
       // if the event was previously hidden, unhide it. Otherwise, hide the event
       const action = event.hidden ? unhideFeedEvent : hideFeedEvent;
@@ -257,6 +267,7 @@ export default function UserFeedPage() {
     },
     [APIService, currentUser]
   );
+
   // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
@@ -282,7 +293,7 @@ export default function UserFeedPage() {
   });
 
   const deleteFeedEvent = React.useCallback(
-    async (event: TimelineEvent) => {
+    async (event: TimelineEvent<EventMetadata>) => {
       if (
         event.event_type === EventType.RECORDING_RECOMMENDATION ||
         event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
@@ -364,82 +375,101 @@ export default function UserFeedPage() {
   const { mutate: deleteEventMutation } = useMutation({
     mutationFn: deleteFeedEvent,
     onSuccess: (deletedEvent) => {
-      queryClient.setQueryData(
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData>>(
         queryKey,
-        (oldData: { pages: UserFeedPageProps[] }) => {
-          const newPagesArray =
-            oldData?.pages?.map((page) =>
-              _reject(page.events, (traversedEvent) => {
-                return (
-                  traversedEvent.event_type === deletedEvent?.event_type &&
-                  traversedEvent.id === deletedEvent?.id
-                );
-              })
-            ) ?? [];
-          return { pages: newPagesArray };
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newPagesArray = oldData?.pages.map((page) => ({
+            events: _reject(page.events, (traversedEvent) => {
+              return (
+                traversedEvent.event_type === deletedEvent?.event_type &&
+                traversedEvent.id === deletedEvent?.id
+              );
+            }),
+          }));
+          return { pages: newPagesArray, pageParams: queryKey };
         }
       );
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent) => {
-    if (
-      ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_PIN) &&
-        event.user_name === currentUser.name) ||
-      event.event_type === EventType.NOTIFICATION
-    ) {
+  const renderEventActionButton = (event: TimelineEvent<EventMetadata>, isSubEvent=false) => {
+    const {event_type, hidden} = event;
+    const isOwnEvent = event.user_name === currentUser.name;
+    const isDeletable = isOwnEvent && [
+      EventType.NOTIFICATION,
+      EventType.RECORDING_RECOMMENDATION,
+      EventType.PERSONAL_RECORDING_RECOMMENDATION,
+      EventType.RECORDING_PIN,
+      EventType.THANKS,
+     ].includes(event_type as EventType);
+    const isThankable = !isSubEvent && !isOwnEvent && [
+      EventType.RECORDING_RECOMMENDATION,
+      EventType.PERSONAL_RECORDING_RECOMMENDATION,
+      EventType.RECORDING_PIN,
+      EventType.REVIEW,
+    ].includes(event_type as EventType);
+    const isHidable = !isSubEvent && !isOwnEvent &&
+    ![
+      EventType.FOLLOW,
+      EventType.BLOCK_FOLLOW,
+      EventType.STOP_FOLLOW,
+    ].includes(event_type as EventType);
+      
       return (
-        <ListenControl
-          title="Delete Event"
-          text=""
-          icon={faTrash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            deleteEventMutation(event);
-          }}
-        />
-      );
-    }
-    if (
-      (event.event_type === EventType.RECORDING_PIN ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
-      event.user_name !== currentUser.name
-    ) {
-      if (event.hidden) {
-        return (
-          <ListenControl
+        <>
+          { isThankable && (
+            <ListenControl
+              title="Thanks"
+              text=""
+              icon={faHandshake}
+              buttonClassName="btn btn-link btn-xs"
+              action={() => {
+                NiceModal.show(ThanksModal, {
+                  original_event_id: event.id!,
+                  original_event_type: event.event_type,
+                });
+              }}
+              dataToggle="modal"
+              dataTarget="#ThanksModal"
+            />
+          )} 
+          { hidden && <ListenControl
             title="Unhide Event"
             text=""
             icon={faEye}
             buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
             action={() => {
               hideEventMutation(event);
             }}
           />
-        );
-      }
-      return (
-        <ListenControl
-          title="Hide Event"
-          text=""
-          icon={faEyeSlash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            hideEventMutation(event);
-          }}
-        />
+          }
+          { !hidden && isHidable && <ListenControl
+            title="Hide Event"
+            text=""
+            icon={faEyeSlash}
+            buttonClassName="btn btn-link btn-xs"
+            action={() => {
+              hideEventMutation(event);
+            }}
+          />
+          }
+          { isDeletable &&<ListenControl
+            title="Delete Event"
+            text=""
+            icon={faTrash}
+            buttonClassName="btn btn-link btn-xs"
+            action={() => {
+              deleteEventMutation(event);
+            }}
+          />
+          }
+        </>
       );
-    }
-    return null;
+  
   };
 
-  const renderEventContent = (event: TimelineEvent) => {
+  const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
     if (isEventListenable(event) && !event.hidden) {
       const { metadata, event_type } = event;
       let listen: Listen;
@@ -464,7 +494,8 @@ export default function UserFeedPage() {
       if (
         (event.event_type === EventType.RECORDING_RECOMMENDATION ||
           event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-          event.event_type === EventType.RECORDING_PIN) &&
+          event.event_type === EventType.RECORDING_PIN ||
+          event.event_type === EventType.THANKS) &&
         event.user_name === currentUser.name
       ) {
         additionalMenuItems = [
@@ -491,10 +522,20 @@ export default function UserFeedPage() {
         </div>
       );
     }
+    if (event.event_type === EventType.THANKS && !event.hidden) {
+      const { metadata } = event as TimelineEvent<ThanksMetadata>;
+      return (
+        <div className="event-content">
+          <Card className="listen-card">
+            <div className="main-content">{metadata?.blurb_content}</div>
+          </Card>
+        </div>
+      );
+    }
     return null;
   };
 
-  const renderEventText = (event: TimelineEvent) => {
+  const renderEventText = (event: TimelineEvent<EventMetadata>) => {
     const { event_type, user_name, metadata } = event;
     if (event.hidden) {
       return (
@@ -539,10 +580,34 @@ export default function UserFeedPage() {
           // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(message),
+            __html: DOMPurify.sanitize(message),
           }}
         />
       );
+    }
+    if (event_type === EventType.THANKS) {
+      const {
+        original_event_type,
+        thanker_username,
+        thankee_username,
+      } = metadata as ThanksMetadata;
+
+      if (thanker_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            You thanked <Username username={thankee_username} /> for{" "}
+            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
+          </span>
+        );
+      }
+      if (thankee_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            <Username username={thanker_username} /> thanked you for{" "}
+            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
+          </span>
+        );
+      }
     }
 
     const userLinkOrYou =
@@ -558,75 +623,112 @@ export default function UserFeedPage() {
     );
   };
 
+  const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
+    if (!subEvent) return null;
+
+    return (
+      <div>
+        <details>
+            <summary className="event-description">
+              <span className={`event-icon ${subEvent.event_type}`} />
+              {renderEventText(subEvent)}
+              
+              <span className="event-time">
+                {preciseTimestamp(subEvent.created * 1000)}
+                {renderEventActionButton(subEvent, true)}
+              </span>
+            </summary>
+            {renderEventContent(subEvent)}
+          </details>
+        </div>
+    );
+  };
+
   return (
     <>
       <Helmet>
         <title>Feed</title>
       </Helmet>
-      <div className="listen-header">
-        <h3 className="header-with-line">Latest activity</h3>
-        {/* Commented out as new OAuth is not merged yet. */}
-        {/* <button
-          type="button"
-          className="btn btn-icon btn-info atom-button"
-          data-toggle="modal"
-          data-target="#SyndicationFeedModal"
-          title="Subscribe to syndication feed (Atom)"
-          onClick={() => {
-            NiceModal.show(SyndicationFeedModal, {
-              feedTitle: `Latest activity`,
-              options: [
-                {
-                  label: "Time range",
-                  key: "minutes",
-                  type: "dropdown",
-                  tooltip:
-                    "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
-                  values: [
+      <div className="row">
+        <div className="col-md-9">
+          <div className="listen-header">
+            <h3 className="header-with-line">Latest activity</h3>
+            {/* Commented out as new OAuth is not merged yet. */}
+            {/* <button
+              type="button"
+              className="btn btn-icon btn-info atom-button"
+              data-toggle="modal"
+              data-target="#SyndicationFeedModal"
+              title="Subscribe to syndication feed (Atom)"
+              onClick={() => {
+                NiceModal.show(SyndicationFeedModal, {
+                  feedTitle: `Latest activity`,
+                  options: [
                     {
-                      id: "10minutes",
-                      value: "10",
-                      displayValue: "10 minutes",
-                    },
-                    {
-                      id: "30minutes",
-                      value: "30",
-                      displayValue: "30 minutes",
-                    },
-                    {
-                      id: "1hour",
-                      value: "60",
-                      displayValue: "1 hour",
-                    },
-                    {
-                      id: "2hours",
-                      value: "120",
-                      displayValue: "2 hours",
-                    },
-                    {
-                      id: "4hours",
-                      value: "240",
-                      displayValue: "4 hours",
-                    },
-                    {
-                      id: "8hours",
-                      value: "480",
-                      displayValue: "8 hours",
+                      label: "Time range",
+                      key: "minutes",
+                      type: "dropdown",
+                      tooltip:
+                        "Select the time range for the feed. For instance, choosing '30 minutes' will include events from the last 30 minutes. It's recommended to set your feed reader's refresh interval to match this time range for optimal updates.",
+                      values: [
+                        {
+                          id: "10minutes",
+                          value: "10",
+                          displayValue: "10 minutes",
+                        },
+                        {
+                          id: "30minutes",
+                          value: "30",
+                          displayValue: "30 minutes",
+                        },
+                        {
+                          id: "1hour",
+                          value: "60",
+                          displayValue: "1 hour",
+                        },
+                        {
+                          id: "2hours",
+                          value: "120",
+                          displayValue: "2 hours",
+                        },
+                        {
+                          id: "4hours",
+                          value: "240",
+                          displayValue: "4 hours",
+                        },
+                        {
+                          id: "8hours",
+                          value: "480",
+                          displayValue: "8 hours",
+                        },
+                      ],
                     },
                   ],
-                },
-              ],
-              baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                currentUser?.name
-              }/events`,
-            });
-          }}
-        >
-          <FontAwesomeIcon icon={faRss} size="sm" />
-        </button> */}
-      </div>
-      <div className="row">
-        <div className="col-md-7 col-xs-12">
+                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    currentUser?.name
+                  }/events`,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faRss} size="sm" />
+            </button> */}
+            <button
+              type="button"
+              className="btn btn-info btn-rounded play-tracks-button"
+              title="Play album"
+              onClick={() => {
+                window.postMessage(
+                  {
+                    brainzplayer_event: "play-ambient-queue",
+                    payload: listens,
+                  },
+                  window.location.origin
+                );
+              }}
+            >
+              <FontAwesomeIcon icon={faPlayCircle} fixedWidth /> Play all
+            </button>
+          </div>
           {isError ? (
             <>
               <div className="alert alert-warning text-center">
@@ -647,6 +749,20 @@ export default function UserFeedPage() {
             </>
           ) : (
             <>
+              <div className="text-center mb-15">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    fetchPreviousPage();
+                  }}
+                  disabled={isFetching}
+                >
+                  <FontAwesomeIcon icon={faRefresh} />
+                  &nbsp;
+                  {isLoading || isFetching ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
               <div
                 id="timeline"
                 data-testid="timeline"
@@ -654,7 +770,16 @@ export default function UserFeedPage() {
               >
                 <ul>
                   {events?.map((event) => {
-                    const { created, event_type, user_name } = event;
+                    const { created, event_type, user_name, metadata } = event;
+                    let subEventElement;
+                    if(event_type === EventType.THANKS && !event.hidden){
+                      const {original_event_id, original_event_type} = metadata as ThanksMetadata;
+                      const subEvent = events?.find(
+                        (evt) => evt.id === original_event_id && evt.event_type === original_event_type
+                      );
+                      subEventElement = renderSubEvent(subEvent);
+                    }
+
                     return (
                       <li
                         className="timeline-event"
@@ -666,11 +791,13 @@ export default function UserFeedPage() {
                               <FontAwesomeIcon
                                 icon={faCircle as IconProp}
                                 transform="grow-8"
+                                fixedWidth
                               />
                               <FontAwesomeIcon
                                 icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
                                 transform="shrink-4"
+                                fixedWidth
                               />
                             </span>
                           </span>
@@ -683,35 +810,45 @@ export default function UserFeedPage() {
                         </div>
 
                         {renderEventContent(event)}
+
+                          {subEventElement &&
+                            <ul>
+                              <li className="timeline-event timeline-sub-event">
+                                {subEventElement}
+                              </li>
+                            </ul>
+                          }
+                        
                       </li>
                     );
                   })}
                 </ul>
               </div>
-              <div
-                className="text-center"
-                style={{
-                  width: "50%",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn btn-primary btn-block"
-                  onClick={() => fetchNextPage()}
-                  disabled={!hasNextPage || isFetchingNextPage}
+              {Boolean(events?.length) && (
+                <div
+                  className="text-center mb-15"
+                  style={{
+                    width: "50%",
+                    marginLeft: "auto",
+                    marginRight: "auto",
+                  }}
                 >
-                  {(isLoading || isFetchingNextPage) && "Loading more..."}
-                  {!(isLoading || isFetchingNextPage) &&
-                    (hasNextPage ? "Load More" : "Nothing more to load")}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-block"
+                    onClick={() => fetchNextPage()}
+                    disabled={!hasNextPage || isFetchingNextPage}
+                  >
+                    <FontAwesomeIcon icon={faCalendarPlus} />
+                    &nbsp;
+                    {(isLoading || isFetchingNextPage) && "Loading more..."}
+                    {!(isLoading || isFetchingNextPage) &&
+                      (hasNextPage ? "Load More" : "Nothing more to load")}
+                  </button>
+                </div>
+              )}
             </>
           )}
-        </div>
-        <div className="col-md-offset-1 col-md-4">
-          <UserSocialNetwork user={currentUser} />
         </div>
       </div>
     </>

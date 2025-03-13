@@ -23,6 +23,7 @@ import RecommendationFeedbackComponent from "../../common/listens/Recommendation
 import { ToastMsg } from "../../notifications/Notifications";
 import { RouteQuery } from "../../utils/Loader";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import Pagination from "../../common/Pagination";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -293,61 +294,12 @@ export default function Recommendations() {
                     );
                   })}
                 </div>
-                <nav
-                  role="navigation"
-                  aria-label="Pagination"
-                  style={{ maxWidth: "none" }}
-                >
-                  <ul className="pager" style={{ display: "flex" }}>
-                    <li
-                      className={`previous ${
-                        currRecPage && currRecPage <= 1 ? "hidden" : ""
-                      }`}
-                    >
-                      <a
-                        role="button"
-                        onClick={handleClickPrevious}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleClickPrevious();
-                        }}
-                        tabIndex={0}
-                        aria-disabled={Boolean(currRecPage && currRecPage <= 1)}
-                        aria-label={`Go to page ${Math.max(
-                          currRecPage - 1,
-                          0
-                        )}`}
-                      >
-                        &larr; Previous
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        currRecPage && currRecPage >= totalRecPages
-                          ? "hidden"
-                          : ""
-                      }`}
-                      style={{ marginLeft: "auto" }}
-                    >
-                      <a
-                        role="button"
-                        onClick={handleClickNext}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleClickNext();
-                        }}
-                        tabIndex={0}
-                        aria-disabled={Boolean(
-                          currRecPage && currRecPage >= totalRecPages
-                        )}
-                        aria-label={`Go to page ${Math.min(
-                          currRecPage + 1,
-                          totalRecPages
-                        )}`}
-                      >
-                        Next &rarr;
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
+                <Pagination
+                  currentPageNo={currRecPage}
+                  totalPageCount={totalRecPages}
+                  handleClickPrevious={handleClickPrevious}
+                  handleClickNext={handleClickNext}
+                />
               </div>
 
               <br />

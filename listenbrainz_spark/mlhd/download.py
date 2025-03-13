@@ -14,7 +14,7 @@ import pycurl
 import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
-from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
+from listenbrainz_spark.hdfs.utils import upload_to_HDFS, delete_dir
 from listenbrainz_spark.stats import run_query
 
 
@@ -43,7 +43,7 @@ def post_process_mlhd_plus():
     """
     for chunk in MLHD_PLUS_CHUNKS:
         listenbrainz_spark\
-            .sql_context\
+            .session\
             .read\
             .format("parquet")\
             .option("pathGlobFilter", f"{chunk}*.parquet")\

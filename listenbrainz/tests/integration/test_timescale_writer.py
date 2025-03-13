@@ -1,6 +1,6 @@
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from random import randint
 
 import listenbrainz.db.user as db_user
@@ -39,11 +39,12 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
-        to_ts = datetime.utcnow()
+        to_ts = datetime.now(timezone.utc)
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
+        print(recent)
         self.assertEqual(len(recent), 1)
         self.assertIsInstance(recent[0], Listen)
 
@@ -56,11 +57,11 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
-        self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
+        self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.now(timezone.utc)))
 
         (min_ts, max_ts) = self.ls.get_timestamps_for_user(user["id"])
-        self.assertEqual(min_ts, datetime.utcfromtimestamp(1486449409))
-        self.assertEqual(max_ts, datetime.utcfromtimestamp(1486449409))
+        self.assertEqual(min_ts, datetime.fromtimestamp(1486449409, timezone.utc))
+        self.assertEqual(max_ts, datetime.fromtimestamp(1486449409, timezone.utc))
 
     def test_dedup_user_special_characters(self):
 
@@ -71,7 +72,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         self.assert200(r)
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        to_ts = datetime.utcnow()
+        to_ts = datetime.now(timezone.utc)
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -81,7 +82,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'same_batch_duplicates.json')
         self.assert200(r)
 
-        to_ts = datetime.utcnow()
+        to_ts = datetime.now(timezone.utc)
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -99,7 +100,7 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
 
-        to_ts = datetime.utcnow()
+        to_ts = datetime.now(timezone.utc)
         listens, _, _ = self.ls.fetch_listens(user1, to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
@@ -126,6 +127,6 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
         r = self.send_listen(user, 'same_timestamp_diff_track_valid_single_3.json')
         self.assert200(r)
 
-        to_ts = datetime.utcnow()
+        to_ts = datetime.now(timezone.utc)
         listens, _, _ = self.ls.fetch_listens(user, to_ts=to_ts)
         self.assertEqual(len(listens), 4)

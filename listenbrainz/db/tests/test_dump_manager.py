@@ -21,8 +21,11 @@
 
 import os
 import shutil
+import subprocess
+import tarfile
 import tempfile
 import time
+from datetime import datetime, timezone, timedelta
 
 import pytest
 from click.testing import CliRunner
@@ -34,16 +37,17 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db import dump_manager
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
-from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
 
 
-class DumpManagerTestCase(DatabaseTestCase):
+class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
 
     def setUp(self):
-        super().setUp()
+        DatabaseTestCase.setUp(self)
+        TimescaleTestCase.setUp(self)
         self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
         self.tempdir_private = tempfile.mkdtemp()
@@ -53,7 +57,8 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.user_name = db_user.get(self.db_conn, self.user_id)['musicbrainz_id']
 
     def tearDown(self):
-        super().tearDown()
+        DatabaseTestCase.tearDown(self)
+        TimescaleTestCase.tearDown(self)
         shutil.rmtree(self.tempdir)
 
     @pytest.fixture(autouse=True)
@@ -144,13 +149,13 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dumps should contain the 7 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 5)
 
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
         self.assertEqual(private_archive_count, 2)
 
@@ -172,7 +177,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
         # now, add a dump entry to the database and create a dump with that specific dump id
-        dump_id = db_dump.add_dump_entry(int(time.time()))
+        dump_id = db_dump.add_dump_entry(datetime.now(tz=timezone.utc), "full")
         result = self.runner.invoke(dump_manager.create_full, [
             '--location',
             self.tempdir,
@@ -193,13 +198,13 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dumps should contain the 7 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 5)
 
         private_archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir_private, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 private_archive_count += 1
         self.assertEqual(private_archive_count, 2)
 
@@ -238,7 +243,7 @@ class DumpManagerTestCase(DatabaseTestCase):
             self.tempdir,
             '--no-db',
             '--no-timescale'
-        ])
+        ], catch_exceptions=False)
         self.assertEqual(result.exit_code, 0)
 
     def test_create_incremental(self):
@@ -249,41 +254,97 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.assertEqual(result.exit_code, -1)
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
-        base = int(time.time())
-        dump_id = db_dump.add_dump_entry(base - 60)
-        print("%d dump id" % dump_id)
-        self.listenstore.insert(generate_data(1, self.user_name, base - 30, 5))
-        result = self.runner.invoke(dump_manager.create_incremental, [
-                                    '--location', self.tempdir])
+        base = datetime.now()
+        dump_id = db_dump.add_dump_entry(base  - timedelta(seconds=60), "incremental")
+        self.listenstore.insert(generate_data(
+            1,
+            self.user_name,
+            int((base - timedelta(seconds=30)).timestamp()),
+            5
+        ))
+        result = self.runner.invoke(
+            dump_manager.create_incremental,
+            ['--location', self.tempdir],
+            catch_exceptions=False
+        )
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
 
         # created dump ID should be one greater than previous dump's ID
         created_dump_id = int(dump_name.split('-')[2])
-        print("%d created dump id" % created_dump_id)
         self.assertEqual(created_dump_id, dump_id + 1)
 
         # make sure that the dump contains a full listens and spark dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
-    def test_create_incremental_dump_with_id(self):
+    def test_create_full_when_incremental_exists(self):
+        """ Test that creating a full dump uses the latest incremental dump's created timestamp for
+        end time if an incremental dump exists.
+        """
+        listened_at = int((datetime.now() - timedelta(hours=3)).timestamp())
+        self.listenstore.insert(generate_data(self.user_id, self.user_name, listened_at,5))
+        self.assertEqual(db_dump.get_dump_entries(), [])
+        inc_dump_created = datetime.now(tz=timezone.utc)
+        db_dump.add_dump_entry(inc_dump_created, "incremental")
 
+        # dumps filter on created timestamp and not listened_at which is auto-generated on insert
+        # hence actual sleep is needed for the timestamp value to elapse
+        time.sleep(1)
+        self.listenstore.insert(generate_data(self.user_id, self.user_name, listened_at, 3))
+
+        # the dump filters use exclusive ranges on datetime, hence let a second elapse before requesting a
+        # dump else the dump will be empty
+        time.sleep(1)
+
+        # passing a created value for start timestamp makes it work fine
+        self.runner.invoke(dump_manager.create_full, [
+            "--location", self.tempdir,
+            "--no-db", "--no-timescale", "--no-stats"
+        ], catch_exceptions=False)
+
+        self.assertEqual(len(os.listdir(self.tempdir)), 1)
+        dump_name = os.listdir(self.tempdir)[0]
+        dump_id = int(dump_name.split('-')[2])
+
+        full_dump = db_dump.get_dump_entry(dump_id, "full")
+        self.assertEqual(full_dump["created"], inc_dump_created)
+
+        # make sure that the dump contains a full listens and spark dump
+        archive_count = 0
+        for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
+                archive_count += 1
+        self.assertEqual(archive_count, 2)
+
+        dump_file_name = dump_name.replace("dump", "listens-dump") + ".tar.zst"
+        listens_dump_file = os.path.join(self.tempdir, dump_name, dump_file_name)
+        zstd_command = ["zstd", "--decompress", "--stdout", listens_dump_file, "-T4"]
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
+        with tarfile.open(fileobj=zstd.stdout, mode="r|") as f:
+            for member in f:
+                if member.name.endswith(".listens"):
+                    lines = f.extractfile(member).readlines()
+                    # five listens were dumped as expected as only five listens were created until the
+                    # the incremental dump's timestamp and the full dump dumped listens until the same
+                    # the three created after were excluded.
+                    self.assertEqual(len(lines), 5)
+
+    def test_create_incremental_dump_with_id(self):
         # if the dump ID does not exist, it should exit with a -1
         result = self.runner.invoke(dump_manager.create_incremental, [
                                     '--location', self.tempdir, '--dump-id', 1000])
         self.assertEqual(result.exit_code, -1)
 
         # create a base dump entry
-        t = int(time.time())
-        db_dump.add_dump_entry(t)
+        db_dump.add_dump_entry(datetime.now(tz=timezone.utc), "incremental")
         self.listenstore.insert(generate_data(1, self.user_name, 1500000000, 5))
 
         # create a new dump ID to recreate later
-        dump_id = db_dump.add_dump_entry(int(time.time()))
+        dump_id = db_dump.add_dump_entry(datetime.now(tz=timezone.utc), "incremental")
         # now, create a dump with that specific dump id
         result = self.runner.invoke(dump_manager.create_incremental, [
                                     '--location', self.tempdir, '--dump-id', dump_id])
@@ -295,7 +356,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dump should contain the listen and spark archive
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 2)
 
@@ -361,6 +422,6 @@ class DumpManagerTestCase(DatabaseTestCase):
         # make sure that the dump contains a feedback dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
-            if file_name.endswith('.tar.xz') or file_name.endswith(".tar"):
+            if file_name.endswith(".tar.zst") or file_name.endswith(".tar"):
                 archive_count += 1
         self.assertEqual(archive_count, 1)

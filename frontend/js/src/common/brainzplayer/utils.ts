@@ -40,3 +40,9 @@ export function listenOrJSPFTrackToQueueItem(
   };
   return queueItem;
 }
+
+export enum FeedbackValue {
+  LIKE = 1,
+  DISLIKE = -1,
+  NEUTRAL = 0,
+}

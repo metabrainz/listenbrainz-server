@@ -7,8 +7,8 @@ from listenbrainz_spark.exceptions import DumpNotFoundException
 
 
 class DumpType(Enum):
-    INCREMENTAL = 'incremental'
-    FULL = 'full'
+    INCREMENTAL = "incremental"
+    FULL = "full"
 
 
 class ListensDump(NamedTuple):
@@ -35,6 +35,10 @@ class ListenbrainzDumpLoader(ABC):
 
     @abstractmethod
     def list_dump_directories(self, dump_type: DumpType):
+        pass
+
+    @abstractmethod
+    def close(self):
         pass
 
     def get_latest_dump_id(self, dump_type: DumpType):

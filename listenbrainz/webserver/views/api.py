@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import psycopg2
 import orjson
@@ -21,7 +21,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -75,6 +75,9 @@ def submit_listen():
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+
+    if user['is_paused']:
+        raise APIUnauthorized(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
 
     raw_data = request.get_data()
 
@@ -164,8 +167,8 @@ def get_listens(user_name):
     listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
-        from_ts=datetime.utcfromtimestamp(min_ts) if min_ts else None,
-        to_ts=datetime.utcfromtimestamp(max_ts) if max_ts else None
+        from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
+        to_ts=datetime.fromtimestamp(max_ts, timezone.utc) if max_ts else None
     )
     listen_data = []
     for listen in listens:

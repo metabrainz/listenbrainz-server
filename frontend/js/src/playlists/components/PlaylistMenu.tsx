@@ -23,6 +23,8 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
+  coverArtGridOptions?: CoverArtGridOptions[];
+  currentCoverArt?: CoverArtGridOptions;
   onPlaylistSaved?: (playlist: JSPFPlaylist) => void;
   onPlaylistDeleted?: (playlist: JSPFPlaylist) => void;
   onPlaylistCopied?: (playlist: JSPFPlaylist) => void;
@@ -31,6 +33,8 @@ export type PlaylistMenuProps = {
 
 function PlaylistMenu({
   playlist,
+  coverArtGridOptions,
+  currentCoverArt,
   onPlaylistSaved,
   onPlaylistDeleted,
   onPlaylistCopied,
@@ -240,7 +244,11 @@ function PlaylistMenu({
               role="button"
               href="#"
               onClick={() => {
-                NiceModal.show(CreateOrEditPlaylistModal, { playlist })
+                NiceModal.show(CreateOrEditPlaylistModal, {
+                  playlist,
+                  coverArtGridOptions,
+                  currentCoverArt,
+                })
                   // @ts-ignore
                   .then((editedPlaylist: JSPFPlaylist) => {
                     if (onPlaylistSaved) {

@@ -527,16 +527,10 @@ def get_artist_map(user_name: str):
             }
         }
 
-    .. note::
-
-        - We cache the results for this query for a week to improve page load times, if you want to request fresh data
-          you can use the ``force_recalculate`` flag.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
-    :param force_recalculate: Optional, recalculate the data instead of returning the cached result.
-    :type force_recalculate: ``bool``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -545,15 +539,17 @@ def get_artist_map(user_name: str):
 
     """
     user, stats_range = _validate_stats_user_params(user_name)
-    result = _get_artist_map_stats(user["id"], stats_range)
+    stats = db_stats.get(user["id"], "artist_map", stats_range, UserArtistMapRecord)
+    if stats is None:
+        raise APINoContent('')
     return jsonify({
         "payload": {
             "user_id": user_name,
             "range": stats_range,
-            "from_ts": result.from_ts,
-            "to_ts": result.to_ts,
-            "last_updated": result.last_updated,
-            "artist_map": [x.dict() for x in result.data.__root__]
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
+            "last_updated": stats.last_updated,
+            "artist_map": [x.dict() for x in stats.data.__root__]
         }
     })
 
@@ -1119,15 +1115,9 @@ def get_sitewide_artist_map():
             }
         }
 
-    .. note::
-        We cache the results for this query for a week to improve page load times, if you want to request fresh data
-        you can use the ``force_recalculate`` flag.
-
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
-    :param force_recalculate: Optional, recalculate the data instead of returning the cached result.
-    :type force_recalculate: ``bool``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -1139,90 +1129,19 @@ def get_sitewide_artist_map():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
 
-    stats = db_stats.get_sitewide_stats("artistmap", stats_range)
-    if stats is not None:
-        return jsonify({
-            "payload": {
-                "artist_map": stats["data"],
-                "from_ts": stats["from_ts"],
-                "to_ts": stats["to_ts"],
-                "last_updated": stats["last_updated"],
-                "stats_range": stats_range
-            }
-        })
-
-    artist_stats = db_stats.get_sitewide_stats("artists", stats_range)
-    if artist_stats is None:
-        raise APINoContent('')
-
-    # Calculate the data
-    artist_mbid_counts = defaultdict(int)
-    for artist in artist_stats["data"]:
-        if artist["artist_mbid"]:
-            artist_mbid_counts[artist["artist_mbid"]] += artist["listen_count"]
-
-    country_code_data = _get_country_wise_counts(artist_mbid_counts)
-    artist_map_stats = [x.dict() for x in country_code_data]
-    try:
-        db_stats.insert_sitewide_stats(
-            "artistmap",
-            stats_range,
-            artist_stats["from_ts"],
-            artist_stats["to_ts"],
-            {"data": artist_map_stats}
-        )
-    except HTTPError as e:
-        current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
+    stats = db_stats.get_sitewide_stats("artist_map", stats_range)
+    if stats is None:
+        raise APINoContent("")
 
     return jsonify({
         "payload": {
-            "artist_map": artist_map_stats,
-            "from_ts": artist_stats["from_ts"],
-            "to_ts": artist_stats["to_ts"],
-            "last_updated": artist_stats["last_updated"],
+            "artist_map": stats["data"],
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "last_updated": stats["last_updated"],
             "stats_range": stats_range
         }
     })
-
-
-def _get_artist_map_stats(user_id, stats_range):
-    recalculate_param = request.args.get('force_recalculate', default='false')
-    if recalculate_param.lower() not in ['true', 'false']:
-        raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
-    force_recalculate = recalculate_param.lower() == 'true'
-
-    stats = None
-    if not force_recalculate:
-        stats = db_stats.get(user_id, "artistmap", stats_range, UserArtistMapRecord)
-
-    if stats is None:
-        artist_stats = db_stats.get(user_id, "artists", stats_range, EntityRecord)
-        if artist_stats is None:
-            raise APINoContent('')
-
-        # Calculate the data
-        artist_mbid_counts = defaultdict(int)
-        for artist in artist_stats.data.__root__:
-            if artist.artist_mbid:
-                artist_mbid_counts[artist.artist_mbid] += artist.listen_count
-
-        country_code_data = _get_country_wise_counts(artist_mbid_counts)
-
-        try:
-            db_stats.insert_artist_map(user_id, stats_range, artist_stats.from_ts, artist_stats.to_ts, country_code_data)
-        except HTTPError as e:
-            current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
-
-        stats = StatApi[UserArtistMapRecord](
-            user_id=user_id,
-            from_ts=artist_stats.from_ts,
-            to_ts=artist_stats.to_ts,
-            stats_range=stats_range,
-            data=StatRecordList[UserArtistMapRecord](__root__=country_code_data),
-            last_updated=int(datetime.now().timestamp())
-        )
-
-    return stats
 
 
 @stats_api_bp.get("/user/<user_name>/year-in-music")
@@ -1289,67 +1208,3 @@ def _is_valid_range(stats_range: str) -> bool:
         result: True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
-
-
-def _get_country_wise_counts(artist_mbids: Dict[str, int]) -> List[UserArtistMapRecord]:
-    """ Get country wise listen counts and artist lists from dict of given artist_mbids and listen counts
-    """
-    # Get artist_origin_countries from artist_credit_ids
-    artist_country_codes = _get_country_code_from_mbids(artist_mbids.keys())
-
-    # Map country codes to appropriate MBIDs and listen counts
-    result = defaultdict(lambda: {
-        "artist_count": 0,
-        "listen_count": 0,
-        "artists": []
-    })
-    for artist_mbid, listen_count in artist_mbids.items():
-        if artist_mbid in artist_country_codes:
-            # TODO: add a test to handle the case where pycountry doesn't recognize the country
-            country_alpha_3 = pycountry.countries.get(alpha_2=artist_country_codes[artist_mbid]["country_code"])
-            if country_alpha_3 is None:
-                continue
-            result[country_alpha_3.alpha_3]["artist_count"] += 1
-            result[country_alpha_3.alpha_3]["listen_count"] += listen_count
-            result[country_alpha_3.alpha_3]["artists"].append(
-                UserArtistMapArtist(
-                    artist_mbid=artist_mbid,
-                    # we use the artist name from the country code endpoint because the
-                    # other artist name we have in stats is actually artist credit name where
-                    # this artist name is the actual artist name associated with the mbid
-                    artist_name=artist_country_codes[artist_mbid]["artist_name"],
-                    listen_count=listen_count
-                )
-            )
-
-    artist_map_data = []
-    for country, data in result.items():
-        # sort artists within each country based on descending order of listen counts
-        data["artists"].sort(key=lambda x: x.listen_count, reverse=True)
-        artist_map_data.append(UserArtistMapRecord(country=country, **data))
-    return artist_map_data
-
-
-def _get_country_code_from_mbids(artist_mbids: Iterable[str]) -> Dict[str, Dict]:
-    """ Get a list of artist_country_code corresponding to the input artist_mbids
-    """
-    request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
-    artist_country_code = {}
-    if len(request_data) > 0:
-        try:
-            result = requests.post(
-                f"{current_app.config['LISTENBRAINZ_LABS_API_URL']}/artist-country-code-from-artist-mbid/json",
-                json=request_data,
-                params={"count": len(request_data)}
-            )
-            # Raise error if non 200 response is received
-            result.raise_for_status()
-            data = result.json()
-            artist_country_code = {entry["artist_mbid"]: entry for entry in data}
-        except requests.RequestException as err:
-            current_app.logger.error("Error while getting artist_artist_country_code, {}".format(err), exc_info=True)
-            error_msg = ("An error occurred while calculating artist_map data, "
-                         "try setting 'force_recalculate' to 'false' to get a cached copy if available"
-                         "Payload: {}. Response: {}".format(request_data, result.text))
-            raise APIInternalServerError(error_msg)
-    return artist_country_code

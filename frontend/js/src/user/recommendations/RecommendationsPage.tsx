@@ -42,7 +42,7 @@ function getPlaylistInfo(
 ): { shortTitle: string; cssClasses: string } {
   const extension = getPlaylistExtension(playlist);
   const sourcePatch =
-    extension?.additional_metadata?.algorithm_metadata.source_patch;
+    extension?.additional_metadata?.algorithm_metadata?.source_patch;
   let year;
   switch (sourcePatch) {
     case "weekly-jams":
@@ -306,7 +306,7 @@ export default function RecommendationsPage() {
         playlistsMapped.find((pl) => {
           const extension = getPlaylistExtension(pl);
           const sourcePatch =
-            extension?.additional_metadata?.algorithm_metadata.source_patch;
+            extension?.additional_metadata?.algorithm_metadata?.source_patch;
           return sourcePatch === "weekly-jams";
         }) ?? playlistsMapped[0];
       if (selectPlaylistFromProps) {
@@ -370,13 +370,13 @@ export default function RecommendationsPage() {
           {playlists.map((playlist, index) => {
             const extension = getPlaylistExtension(playlist);
             const sourcePatch =
-              extension?.additional_metadata?.algorithm_metadata.source_patch;
+              extension?.additional_metadata?.algorithm_metadata?.source_patch;
             const isFirstOfType =
               playlists.findIndex((pl) => {
                 const extension2 = getPlaylistExtension(pl);
                 const sourcePatch2 =
                   extension2?.additional_metadata?.algorithm_metadata
-                    .source_patch;
+                    ?.source_patch;
                 return sourcePatch === sourcePatch2;
               }) === index;
 

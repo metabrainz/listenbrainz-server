@@ -68,6 +68,7 @@ def get_dump_info():
     return jsonify({
         "id": dump["id"],
         "timestamp": _convert_timestamp_to_string_dump_format(dump["created"]),
+        "dump_type": dump["dump_type"],
     })
 
 
@@ -115,7 +116,7 @@ def get_global_stats_timestamp(entity):
                 return None
 
             last_updated = stats["last_updated"]
-            current_app.logger.warn("%s-%s: %d" % (entity, range, last_updated))
+            current_app.logger.warning("%s-%s: %d" % (entity, range, last_updated))
 
             if last_updated is None:
                 return None
