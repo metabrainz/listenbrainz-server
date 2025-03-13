@@ -86,7 +86,7 @@ function MenuOptions(props: MenuOptionsProps) {
             <ListenControl
               icon={faExternalLinkAlt}
               text="Open in MusicBrainz"
-              link={`https://musicbrainz.org/recording/${recordingMBID}`}
+              link={`/recording/${recordingMBID}`}
               anchorTagAttributes={{
                 target: "_blank",
                 rel: "noopener noreferrer",
