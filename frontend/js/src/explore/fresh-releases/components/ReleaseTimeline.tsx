@@ -21,49 +21,97 @@ function createMarks(
 ) {
   let dataArr: Array<string | JSX.Element> = [];
   let percentArr: Array<number> = [];
-  // We want to filter out the keys that have less than 1.5% of the total releases
+
   const minReleasesThreshold = Math.floor(releases.length * 0.015);
+
   if (order === "release_date") {
-    const releasesPerDate = countBy(
+    let releasesPerDate = countBy(
       releases,
       (item: FreshReleaseItem) => item.release_date
     );
 
-    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
+    if (sortDirection === "descend") {
+      const reversedReleasesPerDate = Object.keys(releasesPerDate).reverse();
+      releasesPerDate = zipObject(
+        reversedReleasesPerDate,
+        Object.values(releasesPerDate).reverse()
+      );
+    }
+
+    const firstDate = Object.keys(releasesPerDate)[0];
+    const lastDate = Object.keys(releasesPerDate)[
+      Object.keys(releasesPerDate).length - 1
+    ];
+
+    let totalReleases = 0;
+    for (const date in releasesPerDate) {
+      totalReleases += releasesPerDate[date];
+    }
+
+    const cummulativeMap = new Map<string, number>();
+    let cummulativeSum = 0;
+    for (const date in releasesPerDate) {
+      cummulativeMap.set(date, (100 * cummulativeSum) / totalReleases);
+      cummulativeSum += releasesPerDate[date];
+    }
+
+    const firstDateStr = format(parseISO(firstDate), "yyyy-MM-dd");
+    dataArr.push(formatReleaseDate(firstDateStr));
+    percentArr.push(0);
+
+    for (let i = 10; i < 100; i += 10) {
+      let date = "";
+      let miniDiff = 10;
+      cummulativeMap.forEach((value, key) => {
+        const currentDiff = Math.abs(value - i);
+        if (currentDiff < miniDiff) {
+          miniDiff = currentDiff;
+          date = key;
+        }
+      });
+
+      if (date && dataArr[dataArr.length - 1] !== date) {
+        const dateStr = format(parseISO(date), "yyyy-MM-dd");
+        dataArr.push(formatReleaseDate(dateStr));
+        percentArr.push(cummulativeMap.get(date)!);
+      }
+    }
+
+    const lastDateStr = format(parseISO(lastDate), "yyyy-MM-dd");
+    if (dataArr[dataArr.length - 1] !== formatReleaseDate(lastDateStr)) {
+      dataArr.push(formatReleaseDate(lastDateStr));
+      percentArr.push(cummulativeMap.get(lastDate)!);
+    }
+
     const dates = Object.keys(releasesPerDate).map((date) => parseISO(date));
+    const recentDateStr = format(startOfDay(new Date()), "yyyy-MM-dd");
     const closestDateStr = dates.length
       ? format(closestTo(new Date(recentDateStr), dates)!, "yyyy-MM-dd")
       : recentDateStr;
 
-    const filteredDates = Object.keys(releasesPerDate).filter((date) =>
-      date === closestDateStr
-        ? releasesPerDate[date] >= 0
-        : releasesPerDate[date] > minReleasesThreshold
-    );
+    if (dataArr.includes(formatReleaseDate(closestDateStr))) {
+      const index = dataArr.indexOf(formatReleaseDate(closestDateStr));
+      dataArr.splice(index, 1);
+      percentArr.splice(index, 1);
+    }
 
     const title = closestDateStr === recentDateStr ? "Today" : "Nearest Date";
+    dataArr.push(
+      <FontAwesomeIcon
+        icon={faCalendarCheck}
+        size="2xl"
+        color={COLOR_LB_BLUE}
+        title={title}
+      />
+    );
+    percentArr.push(cummulativeMap.get(closestDateStr)!);
 
-    dataArr = filteredDates.map((date) =>
-      date === closestDateStr ? (
-        <FontAwesomeIcon
-          icon={faCalendarCheck}
-          size="2xl"
-          color={COLOR_LB_BLUE}
-          title={title}
-        />
-      ) : (
-        formatReleaseDate(date)
-      )
-    );
-    const totalSum = Object.values(releasesPerDate).reduce(
-      (acc, value) => acc + value,
-      0
-    );
-    let cumulativeSum = 0;
-    percentArr = filteredDates.map((item) => {
-      cumulativeSum += releasesPerDate[item] || 0;
-      return ((cumulativeSum - releasesPerDate[item]) * 100) / totalSum;
-    });
+    const sortedData = percentArr
+      .map((percent, index) => ({ percent, data: dataArr[index] }))
+      .sort((a, b) => a.percent - b.percent);
+
+    dataArr = sortedData.map((item) => item.data);
+    percentArr = sortedData.map((item) => item.percent);
   } else if (order === "artist_credit_name") {
     const artistInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
       item.artist_credit_name.charAt(0).toUpperCase()
@@ -78,6 +126,16 @@ function createMarks(
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
+
+    if (sortDirection === "descend") {
+      dataArr.reverse();
+      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
+    }
+
+    if (percentArr[0] !== 0) {
+      percentArr.unshift(0);
+      percentArr.pop();
+    }
   } else if (order === "release_name") {
     const releaseInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
       item.release_name.charAt(0).toUpperCase()
@@ -92,6 +150,16 @@ function createMarks(
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
+
+    if (sortDirection === "descend") {
+      dataArr.reverse();
+      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
+    }
+
+    if (percentArr[0] !== 0) {
+      percentArr.unshift(0);
+      percentArr.pop();
+    }
   } else {
     // conutBy gives us an asc-sorted Dict by confidence
     const confidenceInitialsCount = countBy(
@@ -104,26 +172,16 @@ function createMarks(
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
-  }
 
-  if (sortDirection === "descend") {
-    dataArr.reverse();
-    percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
-  }
+    if (sortDirection === "descend") {
+      dataArr.reverse();
+      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
+    }
 
-  /**
-   * We want the timeline dates or marks to start where the grid starts.
-   * So the 0% should always have the first date. Therefore we use unshift(0) here.
-   * With the same logic, we don't want the last date to be at 100% because
-   * that will mean we're at the bottom of the grid.
-   * The last date should start before 100%. That explains the pop().
-   * For descending sort, the reverse computation above possibly already ensures that
-   * the percentArr starts with 0 and ends with a non-100% value, which is desired.
-   * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
-   */
-  if (percentArr[0] !== 0) {
-    percentArr.unshift(0);
-    percentArr.pop();
+    if (percentArr[0] !== 0) {
+      percentArr.unshift(0);
+      percentArr.pop();
+    }
   }
 
   return zipObject(percentArr, dataArr);
