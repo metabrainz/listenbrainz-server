@@ -203,6 +203,18 @@
     // with the badges at the end of the listencard we need to align it to the right;
     justify-content: flex-end;
   }
+
+  @media (min-width: @screen-md) {
+    .reviews .review-cards {
+      .review:first-of-type {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .CBReviewForm {
+    width: auto;
+  }
 }
 
 .header-with-line {

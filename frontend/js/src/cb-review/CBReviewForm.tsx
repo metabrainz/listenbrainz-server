@@ -176,7 +176,7 @@ function CBReviewForm({
 
       {!onPage && (
         <div className="checkbox">
-          <label htmlFor="#acceptLicense">
+          <label>
             <input
               id="acceptLicense"
               type="checkbox"
@@ -205,9 +205,8 @@ function CBReviewForm({
       {showAlert && (
         <div
           id="text-too-short-alert"
-          className="alert alert-danger"
+          className="alert alert-danger mt-10"
           role="alert"
-          style={{ marginTop: "10px" }}
         >
           Your review needs to be longer than {minTextLength} characters.
         </div>

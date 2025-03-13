@@ -507,31 +507,35 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="reviews">
           <h3 className="header-with-line">Reviews</h3>
-          {reviews?.length ? (
-            <>
-              <div className="review-cards">
-                {reviews.slice(0, 3).map(getReviewEventContent)}
+          <div className="row">
+            <div className="col-md-6">
+              <CBReview
+                artistEntity={{
+                  type: "artist",
+                  mbid: artist.artists[0].artist_mbid,
+                  name: artist.artists[0].name,
+                }}
+                releaseGroupEntity={{
+                  type: "release_group",
+                  mbid: albumMBID,
+                  name: album.name,
+                }}
+              />
+            </div>
+            {reviews?.length ? (
+              <div className="col-md-6">
+                <div className="review-cards">
+                  {reviews.slice(0, 3).map(getReviewEventContent)}
+                </div>
+                <a
+                  href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
+                  className="critiquebrainz-button btn btn-link"
+                >
+                  More on CritiqueBrainz…
+                </a>
               </div>
-              <a
-                href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
-                className="critiquebrainz-button btn btn-link"
-              >
-                More on CritiqueBrainz…
-              </a>
-            </>
-          ) : null}
-          <CBReview
-            artistEntity={{
-              type: "artist",
-              mbid: artist.artists[0].artist_mbid,
-              name: artist.artists[0].name,
-            }}
-            releaseGroupEntity={{
-              type: "release_group",
-              mbid: albumMBID,
-              name: album.name,
-            }}
-          />
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

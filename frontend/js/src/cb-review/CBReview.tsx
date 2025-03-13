@@ -62,7 +62,6 @@ export default function CBReview(props: {
 
   return (
     <div className="CBReviewForm">
-      <h4>Submit a review</h4>
       <CBReviewForm
         blurbContent={blurbContent}
         setBlurbContent={setBlurbContent}
