@@ -54,15 +54,20 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     if (!data || !data.result || data.result.length === 0) {
       return [];
     }
-    return data.result.map((artist) => ({
-      label: artist.name,
-      ...artist.albums.reduce(
-        (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
-        {} as Record<string, number>
-      ),
-    })) as ChartDataItem[];
+    return data.result.map((artist) => {
+      let wrappedLabel = artist.name.replace(/(.{14})/g, "$1-\n");
+      if (wrappedLabel.endsWith("-\n")) {
+        wrappedLabel = wrappedLabel.slice(0, -2); // Remove the last hyphen and keep the newline
+      }
+      return {
+        label: wrappedLabel,
+        ...artist.albums.reduce(
+          (acc, album) => ({ ...acc, [album.name]: album.listen_count }),
+          {} as Record<string, number>
+        ),
+      };
+    }) as ChartDataItem[];
   };
-
   const [chartData, setChartData] = React.useState<ChartDataItem[]>([]);
 
   const albumRedirectMapping = React.useMemo(() => {
@@ -144,6 +149,32 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                   colors={{ scheme: "nivo" }}
                   borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
                   enableLabel={false}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    renderTick: (tick) => (
+                      <g transform={`translate(${tick.x},${tick.y})`}>
+                        {tick.value
+                          .split("\n")
+                          .map((line: string, i: number) => (
+                            <text
+                              key={i}
+                              x={0}
+                              y={10 + i * 15}
+                              textAnchor="middle"
+                              dominantBaseline="hanging"
+                              style={{
+                                fontSize: 10,
+                                fill: "#000",
+                              }}
+                            >
+                              {line}
+                            </text>
+                          ))}
+                      </g>
+                    ),
+                  }}
                   onClick={(barData, event) => {
                     const albumName = barData.id;
                     const artistName = barData.indexValue;
