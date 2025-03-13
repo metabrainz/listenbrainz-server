@@ -5,23 +5,24 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarCheck } from "@fortawesome/free-solid-svg-icons";
 import { startOfDay, format, closestTo, parseISO } from "date-fns";
 import { formatReleaseDate, useMediaQuery } from "../utils";
-import { SortDirection } from "../FreshReleases";
+import { SortDirection, SortOption } from "../FreshReleases";
 import { COLOR_LB_BLUE } from "../../../utils/constants";
 
 type ReleaseTimelineProps = {
   releases: Array<FreshReleaseItem>;
-  order: string;
+  order: SortOption;
   direction: SortDirection;
 };
 
 function createMarks(
   releases: Array<FreshReleaseItem>,
-  sortDirection: string,
-  order: string
+  sortDirection: SortDirection,
+  order: SortOption
 ) {
   let dataArr: Array<string | JSX.Element> = [];
   let percentArr: Array<number> = [];
 
+  // We want to filter out the keys that have less than 1.5% of the total releases count if order type is not release_date
   const minReleasesThreshold = Math.floor(releases.length * 0.015);
 
   if (order === "release_date") {
@@ -127,16 +128,6 @@ function createMarks(
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
-
-    if (sortDirection === "descend") {
-      dataArr.reverse();
-      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
-    }
-
-    if (percentArr[0] !== 0) {
-      percentArr.unshift(0);
-      percentArr.pop();
-    }
   } else if (order === "release_name") {
     const releaseInitialsCount = countBy(releases, (item: FreshReleaseItem) =>
       item.release_name.charAt(0).toUpperCase()
@@ -151,16 +142,6 @@ function createMarks(
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
-
-    if (sortDirection === "descend") {
-      dataArr.reverse();
-      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
-    }
-
-    if (percentArr[0] !== 0) {
-      percentArr.unshift(0);
-      percentArr.pop();
-    }
   } else {
     // conutBy gives us an asc-sorted Dict by confidence
     const confidenceInitialsCount = countBy(
@@ -173,16 +154,26 @@ function createMarks(
       .map((_, index, arr) =>
         arr.slice(0, index + 1).reduce((prev, curr) => prev + curr)
       );
+  }
 
-    if (sortDirection === "descend") {
-      dataArr.reverse();
-      percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
-    }
+  if (sortDirection === "descend" && order !== "release_date") {
+    dataArr.reverse();
+    percentArr = percentArr.reverse().map((v) => (v <= 100 ? 100 - v : 0));
+  }
+  /*
+   * We want the timeline dates or marks to start where the grid starts.
+   * So the 0% should always have the first date. Therefore we use unshift(0) here.
+   * With the same logic, we don't want the last date to be at 100% because
+   * that will mean we're at the bottom of the grid.
+   * The last date should start before 100%. That explains the pop().
+   * For descending sort, the reverse computation above possibly already ensures that
+   * the percentArr starts with 0 and ends with a non-100% value, which is desired.
+   * Hence, we add a check to skip the unshift(0) and pop() operations in that case.
+   */
 
-    if (percentArr[0] !== 0) {
-      percentArr.unshift(0);
-      percentArr.pop();
-    }
+  if (percentArr[0] !== 0 && order !== "release_date") {
+    percentArr.unshift(0);
+    percentArr.pop();
   }
 
   return zipObject(percentArr, dataArr);
