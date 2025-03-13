@@ -799,7 +799,7 @@ const getAlbumArtFromReleaseGroupMBID = async (
 };
 
 const getAlbumArtFromReleaseMBID = async (
-  userSubmittedReleaseMBID: string,
+  userSubmittedReleaseMBID: string | undefined | null,
   useReleaseGroupFallback: boolean | string = false,
   APIService?: APIServiceClass,
   optionalSize?: CAAThumbnailSizes,
@@ -812,29 +812,34 @@ const getAlbumArtFromReleaseMBID = async (
     if (cachedCoverArt) {
       return cachedCoverArt;
     }
-
-    const CAAResponse = await fetchWithRetry(
-      `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
-      retryParams
-    );
-    if (CAAResponse.ok) {
-      const body: CoverArtArchiveResponse = await CAAResponse.json();
-      const coverArt = getThumbnailFromCAAResponse(
-        body,
-        optionalSize,
-        frontOnly
+    if (userSubmittedReleaseMBID) {
+      const CAAResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
+        retryParams
       );
-      // Here, make sure there is a front image, otherwise discard the hit.
-      if (coverArt) {
-        // Cache the successful result
-        await setCoverArtCache(cacheKey, coverArt);
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        const coverArt = getThumbnailFromCAAResponse(
+          body,
+          optionalSize,
+          frontOnly
+        );
+        // Here, make sure there is a front image, otherwise discard the hit.
+        if (coverArt) {
+          // Cache the successful result
+          await setCoverArtCache(cacheKey, coverArt);
+        }
+        return coverArt;
       }
-      return coverArt;
     }
 
     if (useReleaseGroupFallback) {
       let releaseGroupMBID = useReleaseGroupFallback;
-      if (!_.isString(useReleaseGroupFallback) && APIService) {
+      if (
+        _.isString(userSubmittedReleaseMBID) &&
+        !_.isString(useReleaseGroupFallback) &&
+        APIService
+      ) {
         const releaseGroupResponse = (await APIService.lookupMBRelease(
           userSubmittedReleaseMBID
         )) as MusicBrainzRelease & WithReleaseGroup;
@@ -939,17 +944,17 @@ const getAlbumArtFromListenMetadata = async (
   const userSubmittedReleaseMBID =
     listen.track_metadata?.release_mbid ??
     listen.track_metadata?.additional_info?.release_mbid;
+  const userSubmittedReleaseGroupMBID =
+    listen.track_metadata?.additional_info?.release_group_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
-  if (userSubmittedReleaseMBID) {
+  if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
     // try getting the cover art using user submitted release mbid. if user submitted release mbid
     // does not have a cover art and the mapper matched to a different release, try to fallback to
     // release group cover art of the user submitted release mbid next
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID,
-      (Boolean(caaReleaseMbid) &&
-        userSubmittedReleaseMBID !== caaReleaseMbid) ||
-        true,
+      userSubmittedReleaseGroupMBID ?? true,
       APIService,
       undefined,
       true // we only want front images, otherwise skip
