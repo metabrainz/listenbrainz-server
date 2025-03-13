@@ -266,7 +266,8 @@ export class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying } = this.state;
-    const { currentUser } = this.context;
+    const { currentUser, userPreferences } = this.context;
+
     const isLoggedIn = !isEmpty(currentUser);
 
     const recordingMSID = getRecordingMSID(listen);
@@ -302,6 +303,9 @@ export class ListenCard extends React.Component<
       youtubeURL ||
       soundcloudURL;
     const hideActionsMenu = compact || !hasActionOptions;
+
+    const renderBrainzplayer =
+      userPreferences?.brainzplayer?.brainzplayerEnabled ?? true;
 
     let timeStampForDisplay;
     if (customTimestamp) {
@@ -491,7 +495,7 @@ export class ListenCard extends React.Component<
     return (
       <Card
         {...otherProps}
-        onDoubleClick={this.playListen}
+        onDoubleClick={renderBrainzplayer ? this.playListen : undefined}
         className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${
           compact ? " compact" : ""
         }${additionalContent ? " has-additional-content" : " "} ${
@@ -576,18 +580,23 @@ export class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    <ListenControl
-                      text="Play Next"
-                      icon={faPlay}
-                      title="Play Next"
-                      action={this.addToTopOfQueue}
-                    />
-                    <ListenControl
-                      text="Add to Queue"
-                      icon={faPlusCircle}
-                      title="Add to Queue"
-                      action={this.addToBottomOfQueue}
-                    />
+                    {renderBrainzplayer && (
+                      <>
+                        <ListenControl
+                          text="Play Next"
+                          icon={faPlay}
+                          title="Play Next"
+                          action={this.addToTopOfQueue}
+                        />
+                        <ListenControl
+                          text="Add to Queue"
+                          icon={faPlusCircle}
+                          title="Add to Queue"
+                          action={this.addToBottomOfQueue}
+                        />
+                      </>
+                    )}
+
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}
@@ -723,19 +732,21 @@ export class ListenCard extends React.Component<
                   </ul>
                 </>
               )}
-              <button
-                title="Play"
-                className={`btn btn-transparent play-button${
-                  isCurrentlyPlaying ? " playing" : ""
-                }`}
-                onClick={this.playListen}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  fixedWidth
-                  icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
-                />
-              </button>
+              {renderBrainzplayer && (
+                <button
+                  title="Play"
+                  className={`btn btn-transparent play-button${
+                    isCurrentlyPlaying ? " playing" : ""
+                  }`}
+                  onClick={this.playListen}
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    fixedWidth
+                    icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
+                  />
+                </button>
+              )}
               {additionalActions}
             </div>
           </div>

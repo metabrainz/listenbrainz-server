@@ -13,7 +13,6 @@ import tinycolor from "tinycolor2";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useParams } from "react-router-dom";
-import NiceModal from "@ebay/nice-modal-react";
 import {
   getRelIconLink,
   ListeningStats,
@@ -31,8 +30,8 @@ import ListenCard from "../common/listens/ListenCard";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import Username from "../common/Username";
+import CBReview from "../cb-review/CBReview";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -509,45 +508,35 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="reviews">
           <h3 className="header-with-line">Reviews</h3>
-          {reviews?.length ? (
-            <>
-              <div className="review-cards">
-                {reviews.slice(0, 3).map(getReviewEventContent)}
+          <div className="row">
+            <div className="col-md-6">
+              <CBReview
+                artistEntity={{
+                  type: "artist",
+                  mbid: artist.artists[0].artist_mbid,
+                  name: artist.artists[0].name,
+                }}
+                releaseGroupEntity={{
+                  type: "release_group",
+                  mbid: albumMBID,
+                  name: album.name,
+                }}
+              />
+            </div>
+            {reviews?.length ? (
+              <div className="col-md-6">
+                <div className="review-cards">
+                  {reviews.slice(0, 3).map(getReviewEventContent)}
+                </div>
+                <a
+                  href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
+                  className="critiquebrainz-button btn btn-link"
+                >
+                  More on CritiqueBrainz…
+                </a>
               </div>
-              <a
-                href={`https://critiquebrainz.org/release-group/${release_group_mbid}`}
-                className="critiquebrainz-button btn btn-link"
-              >
-                More on CritiqueBrainz…
-              </a>
-            </>
-          ) : (
-            <p>Be the first to review this album on CritiqueBrainz</p>
-          )}
-          <button
-            type="button"
-            className="btn btn-info"
-            data-toggle="modal"
-            data-target="#CBReviewModal"
-            onClick={() => {
-              NiceModal.show(CBReviewModal, {
-                entityToReview: [
-                  {
-                    type: "release_group",
-                    mbid: albumMBID,
-                    name: album.name,
-                  },
-                  {
-                    type: "artist",
-                    mbid: artist.artists[0].artist_mbid,
-                    name: artist.artists[0].name,
-                  },
-                ],
-              });
-            }}
-          >
-            Add my review
-          </button>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
