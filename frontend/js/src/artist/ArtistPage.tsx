@@ -38,10 +38,10 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
+import CBReview from "../cb-review/CBReview";
 
 function SortingButtons({
   sort,
@@ -569,42 +569,32 @@ export default function ArtistPage(): JSX.Element {
       ) : null}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
-        {reviews?.length ? (
-          <>
-            <div className="review-cards">
-              {reviews.slice(0, 3).map(getReviewEventContent)}
+        <div className="row">
+          <div className="col-md-6">
+            <CBReview
+              artistEntity={{
+                type: "artist",
+                mbid: artistMBID,
+                name: artist?.name,
+              }}
+            />
+          </div>
+          {reviews?.length ? (
+            <div className="col-md-6">
+              <div className="review-cards">
+                {reviews.slice(0, 3).map(getReviewEventContent)}
+              </div>
+              <a
+                href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
+                className="critiquebrainz-button btn btn-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                More on CritiqueBrainz…
+              </a>
             </div>
-            <a
-              href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
-              className="critiquebrainz-button btn btn-link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              More on CritiqueBrainz…
-            </a>
-          </>
-        ) : (
-          <p>Be the first to review this artist on CritiqueBrainz</p>
-        )}
-        <button
-          type="button"
-          className="btn btn-info"
-          data-toggle="modal"
-          data-target="#CBReviewModal"
-          onClick={() => {
-            NiceModal.show(CBReviewModal, {
-              entityToReview: [
-                {
-                  type: "artist",
-                  mbid: artistMBID,
-                  name: artist?.name,
-                },
-              ],
-            });
-          }}
-        >
-          Add my review
-        </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
