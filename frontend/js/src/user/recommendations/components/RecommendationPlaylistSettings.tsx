@@ -8,7 +8,7 @@ import {
   faRss,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { sanitize } from "dompurify";
+import * as DOMPurify from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link, useLoaderData } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
@@ -178,7 +178,7 @@ export default function RecommendationPlaylistSettings({
               // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
               // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
-                __html: sanitize(playlist.annotation),
+                __html: DOMPurify.sanitize(playlist.annotation),
               }}
             />
             {/* <hr /> */}

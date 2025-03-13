@@ -1,8 +1,10 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
-from listenbrainz_spark.path import LISTENBRAINZ_POPULARITY_DIRECTORY, RELEASE_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.path import LISTENBRAINZ_POPULARITY_DIRECTORY
 from listenbrainz_spark.popularity.common import get_popularity_per_artist_query, \
     get_release_group_popularity_per_artist_query, get_popularity_query
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
@@ -23,30 +25,28 @@ class PopularityProvider(QueryProvider):
     def get_base_path(self) -> str:
         return LISTENBRAINZ_POPULARITY_DIRECTORY
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
+                                          existing_created: Optional[datetime]) -> str:
+        inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""
             WITH incremental_users AS (
-                SELECT DISTINCT {entity_id} FROM {incremental_aggregate}
+                SELECT DISTINCT {entity_id} FROM {incremental_aggregate} {inc_where_clause}
             )
             SELECT *
               FROM {existing_aggregate} ea
              WHERE EXISTS(SELECT 1 FROM incremental_users iu WHERE iu.{entity_id} = ea.{entity_id})
         """
 
-    def get_cache_tables(self) -> List[str]:
-        if self.entity == "release_group":
-            return [RELEASE_METADATA_CACHE_DATAFRAME]
-        return []
-
     def get_entity_id(self):
         return self.entity + "_mbid"
 
-    def get_aggregate_query(self, table: str, cache_tables: List[str]) -> str:
+    def get_aggregate_query(self, table: str) -> str:
         if self.entity == "artist":
             return get_popularity_per_artist_query("artist", table)
         elif self.entity == "release_group":
-            return get_release_group_popularity_per_artist_query(table, cache_tables[0])
+            rel_cache_table = get_release_metadata_cache()
+            return get_release_group_popularity_per_artist_query(table, rel_cache_table)
         else:
             return get_popularity_query(self.entity, table)
 
@@ -91,11 +91,13 @@ class TopPerArtistPopularityProvider(QueryProvider):
     def get_base_path(self) -> str:
         return LISTENBRAINZ_POPULARITY_DIRECTORY
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
+                                          existing_created: Optional[datetime]) -> str:
+        inc_where_clause = f"WHERE created >= to_timestamp('{existing_created}')" if existing_created else ""
         entity_id = self.get_entity_id()
         return f"""
             WITH incremental_artists AS (
-                SELECT DISTINCT artist_mbid, {entity_id} FROM {incremental_aggregate}
+                SELECT DISTINCT artist_mbid, {entity_id} FROM {incremental_aggregate} {inc_where_clause}
             )
             SELECT *
               FROM {existing_aggregate} ea
@@ -106,17 +108,13 @@ class TopPerArtistPopularityProvider(QueryProvider):
              )
         """
 
-    def get_cache_tables(self) -> List[str]:
-        if self.entity == "release_group":
-            return [RELEASE_METADATA_CACHE_DATAFRAME]
-        return []
-
     def get_entity_id(self):
         return self.entity + "_mbid"
 
-    def get_aggregate_query(self, table: str, cache_tables: List[str]) -> str:
+    def get_aggregate_query(self, table: str) -> str:
         if self.entity == "release_group":
-            return get_release_group_popularity_per_artist_query(table, cache_tables[0])
+            rel_cache_table = get_release_metadata_cache()
+            return get_release_group_popularity_per_artist_query(table, rel_cache_table)
         return get_popularity_per_artist_query(self.entity, table)
 
     def get_stats_query(self, final_aggregate: str) -> str:

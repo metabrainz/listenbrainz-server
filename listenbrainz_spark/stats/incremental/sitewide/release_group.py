@@ -1,6 +1,7 @@
 from typing import List
 
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
+from listenbrainz_spark.postgres.release_group import get_release_group_metadata_cache
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideEntityStatsQueryProvider
 
 
@@ -11,13 +12,10 @@ class ReleaseGroupSitewideEntity(SitewideEntityStatsQueryProvider):
     def entity(self):
         return "release_groups"
 
-    def get_cache_tables(self) -> List[str]:
-        return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
-
-    def get_aggregate_query(self, table, cache_tables):
+    def get_aggregate_query(self, table):
         user_listen_count_limit = self.get_listen_count_limit()
-        rel_cache_table = cache_tables[0]
-        rg_cache_table = cache_tables[1]
+        rel_cache_table = get_release_metadata_cache()
+        rg_cache_table = get_release_group_metadata_cache()
         return f"""
         WITH gather_release_group_data AS (
             SELECT l.user_id

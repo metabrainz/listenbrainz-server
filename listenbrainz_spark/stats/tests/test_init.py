@@ -35,7 +35,7 @@ class InitTestCase(SparkNewTestCase):
 
     def test_run_query(self):
         df = utils.create_dataframe([Row(column1=1, column2=2)], schema=None)
-        utils.register_dataframe(df, "table")
+        df.createOrReplaceTempView("table")
         new_df = stats.run_query("SELECT * FROM table")
         self.assertEqual(new_df.count(), df.count())
 
@@ -83,7 +83,7 @@ class InitTestCase(SparkNewTestCase):
         self.assertEqual((periods[1], periods[2]), stats.get_dates_for_stats_range("half_yearly"))
 
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 24, 2, 3, 0)
-        self.assertEqual((datetime(2021, 11, 22), datetime(2021, 11, 24)), stats.get_dates_for_stats_range("this_week"))
+        self.assertEqual((datetime(2021, 11, 22), datetime(2021, 11, 29)), stats.get_dates_for_stats_range("this_week"))
 
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 22, 3, 0, 0)
         self.assertEqual((datetime(2021, 11, 15), datetime(2021, 11, 22)), stats.get_dates_for_stats_range("this_week"))
@@ -95,7 +95,7 @@ class InitTestCase(SparkNewTestCase):
         self.assertEqual((datetime(2021, 11, 15), datetime(2021, 11, 22)), stats.get_dates_for_stats_range("week"))
 
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 21, 2, 3, 0)
-        self.assertEqual((datetime(2021, 11, 1), datetime(2021, 11, 21)), stats.get_dates_for_stats_range("this_month"))
+        self.assertEqual((datetime(2021, 11, 1), datetime(2021, 12, 1)), stats.get_dates_for_stats_range("this_month"))
 
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
         self.assertEqual((datetime(2021, 10, 1), datetime(2021, 11, 1)), stats.get_dates_for_stats_range("this_month"))
@@ -116,4 +116,4 @@ class InitTestCase(SparkNewTestCase):
         self.assertEqual((datetime(2020, 1, 1), datetime(2021, 1, 1)), stats.get_dates_for_stats_range("this_year"))
 
         mock_get_latest_listen_ts.return_value = datetime(2021, 11, 1, 3, 0, 0)
-        self.assertEqual((datetime(2021, 1, 1), datetime(2021, 11, 1)), stats.get_dates_for_stats_range("this_year"))
+        self.assertEqual((datetime(2021, 1, 1), datetime(2022, 1, 1)), stats.get_dates_for_stats_range("this_year"))

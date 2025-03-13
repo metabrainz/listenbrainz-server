@@ -38,8 +38,8 @@ WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
-MAX_FUTURE_SECONDS = timedelta(seconds=1)  # 10 mins in future - max fwd clock skew
-EPOCH = datetime.utcfromtimestamp(0)
+MAX_FUTURE_SECONDS = timedelta(minutes=10)  # max fwd clock skew
+EPOCH = datetime.fromtimestamp(0, timezone.utc)
 
 
 class TimescaleListenStore:
@@ -126,7 +126,7 @@ class TimescaleListenStore:
         else:
             min_ts = row.min_ts
             max_ts = row.max_ts
-        return min_ts.replace(tzinfo=None), max_ts.replace(tzinfo=None)
+        return min_ts, max_ts
 
     def get_total_listen_count(self):
         """ Returns the total number of listens stored in the ListenStore.
@@ -325,7 +325,7 @@ class TimescaleListenStore:
                         done = True
                         break
 
-                    if to_ts > datetime.now() + MAX_FUTURE_SECONDS:
+                    if to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS:
                         done = True
                         break
 
@@ -579,10 +579,10 @@ class TimescaleListenStore:
         return listens
 
     def import_listens_dump(self, archive_path: str, threads: int = DUMP_DEFAULT_THREAD_COUNT):
-        """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
+        """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.zst archive.
 
         Args:
-            archive_path: the path to the listens dump .tar.xz archive to be imported
+            archive_path: the path to the listens dump .tar.zst archive to be imported
             threads: the number of threads to be used for decompression
                         (defaults to DUMP_DEFAULT_THREAD_COUNT)
 
@@ -593,14 +593,13 @@ class TimescaleListenStore:
         self.log.info(
             'Beginning import of listens from dump %s...', archive_path)
 
-        # construct the xz command to decompress the archive
-        xz_command = ['xz', '--decompress', '--stdout',
-                       archive_path, '-T{threads}'.format(threads=threads)]
-        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
+        # construct the zstd command to decompress the archive
+        zstd_command = ['zstd', '--decompress', '--stdout', archive_path, f'-T{threads}']
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
 
         schema_checked = False
         total_imported = 0
-        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             listens = []
             for member in tar:
                 if member.name.endswith('SCHEMA_SEQUENCE'):
@@ -642,7 +641,7 @@ class TimescaleListenStore:
             raise SchemaMismatchException("SCHEMA_SEQUENCE file missing FROM listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
-        xz.stdout.close()
+        zstd.stdout.close()
 
         return total_imported
 
@@ -668,9 +667,11 @@ class TimescaleListenStore:
              WHERE user_id = :user_id
         """
         query2 = """DELETE FROM listen WHERE user_id = :user_id AND created <= :created"""
+        query3 = """INSERT INTO deleted_user_listen_history (user_id, max_created) VALUES (:user_id, :created)"""
         try:
             ts_conn.execute(sqlalchemy.text(query1), {"user_id": user_id})
             ts_conn.execute(sqlalchemy.text(query2), {"user_id": user_id, "created": created})
+            ts_conn.execute(sqlalchemy.text(query3), {"user_id": user_id, "created": created})
             ts_conn.commit()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
@@ -703,7 +704,7 @@ class TimescaleListenStore:
             ts_conn.commit()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listen for user: %s" % str(e))
-            raise TimescaleListenStoreException
+            raise TimescaleListenStoreException()
 
 
 class TimescaleListenStoreException(Exception):

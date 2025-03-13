@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import List
 
-from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
+from listenbrainz_spark.postgres.artist import get_artist_country_cache
 from listenbrainz_spark.stats.incremental.listener.entity import EntityListenerStatsQueryProvider
 
 
@@ -11,14 +12,8 @@ class ArtistEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
     def entity(self):
         return "artists"
 
-    def get_cache_tables(self) -> List[str]:
-        return [ARTIST_COUNTRY_CODE_DATAFRAME]
-
-    def get_entity_id(self):
-        return "artist_mbid"
-
-    def get_aggregate_query(self, table, cache_tables):
-        cache_table = cache_tables[0]
+    def get_aggregate_query(self, table):
+        cache_table = get_artist_country_cache()
         return f"""
             WITH exploded_listens AS (
                 SELECT user_id
@@ -107,4 +102,19 @@ class ArtistEntityListenerStatsQuery(EntityListenerStatsQueryProvider):
                   FROM grouped_stats
                   JOIN entity_count
                  USING (artist_mbid)
+        """
+
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime) -> str:
+        return f"""
+            WITH exploded_listens AS (
+                SELECT explode_outer(artist_credit_mbids) AS artist_mbid
+                  FROM {inc_listens_table}
+                 WHERE created >= to_timestamp('{existing_created}')
+            ), incremental_artists AS (
+                SELECT DISTINCT artist_mbid
+                  FROM exploded_listens
+            )
+                SELECT *
+                  FROM {aggregate} ea
+                 WHERE EXISTS(SELECT 1 FROM incremental_artists ia WHERE ia.artist_mbid = ea.artist_mbid)
         """

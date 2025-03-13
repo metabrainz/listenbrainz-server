@@ -4,7 +4,7 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy } from "@fortawesome/free-solid-svg-icons";
 import hljs from "highlight.js/lib/core";
-import { sanitize } from "dompurify";
+import * as DOMPurify from "dompurify";
 
 const json = require("highlight.js/lib/languages/json");
 
@@ -70,7 +70,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
                 className="hljs"
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: sanitize(highlightedBody),
+                  __html: DOMPurify.sanitize(highlightedBody),
                 }}
               />
             </pre>

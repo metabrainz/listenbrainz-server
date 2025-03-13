@@ -35,6 +35,7 @@ class UserTimelineEventType(Enum):
     RECORDING_PIN = 'recording_pin'
     CRITIQUEBRAINZ_REVIEW = 'critiquebrainz_review'
     PERSONAL_RECORDING_RECOMMENDATION = 'personal_recording_recommendation'
+    THANKS = 'thanks'
 
 
 class RecordingRecommendationMetadata(MsidMbidModel):
@@ -59,8 +60,23 @@ class NotificationMetadata(BaseModel):
     message: constr(min_length=1)
 
 
+class ThanksMetadata(BaseModel):
+    original_event_type: UserTimelineEventType
+    original_event_id: NonNegativeInt
+    blurb_content: Optional[str]
+
+class ThanksEventMetadata(BaseModel):
+    original_event_type: UserTimelineEventType
+    original_event_id: NonNegativeInt
+    blurb_content: Optional[str]
+    thanker_id: NonNegativeInt
+    thanker_username: constr(min_length=1)
+    thankee_id: NonNegativeInt
+    thankee_username: constr(min_length=1)
+
+
 UserTimelineEventMetadata = Union[CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata,
-                                  RecordingRecommendationMetadata, NotificationMetadata]
+                                  RecordingRecommendationMetadata, NotificationMetadata, ThanksEventMetadata]
 
 
 class UserTimelineEvent(BaseModel):
@@ -102,8 +118,18 @@ class APIPersonalRecommendationEvent(BaseModel):
     blurb_content: Optional[str]
     track_metadata: TrackMetadata
 
+class APIThanksEvent(BaseModel):
+    created: NonNegativeInt
+    blurb_content: Optional[str]
+    original_event_id: NonNegativeInt
+    original_event_type: str
+    thanker_id: NonNegativeInt
+    thanker_username: constr(min_length=1)
+    thankee_id: NonNegativeInt
+    thankee_username: constr(min_length=1)
 
-APIEventMetadata = Union[APIPersonalRecommendationEvent, APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent]
+
+APIEventMetadata = Union[APIPersonalRecommendationEvent, APIListen, APIFollowEvent, APINotificationEvent, APIPinEvent, APICBReviewEvent, APIThanksEvent]
 
 
 class APITimelineEvent(BaseModel):

@@ -94,6 +94,10 @@ def handle_sitewide_entity(message):
     _handle_sitewide_stats(message, message["entity"], has_count=True)
 
 
+def handle_sitewide_artist_map(message):
+    _handle_sitewide_stats(message, "artist_map")
+
+
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
 
@@ -253,27 +257,6 @@ def notify_mapping_import(data):
     send_mail(
         subject='MSID MBID mapping has been imported into the Spark cluster',
         text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, import_time=import_time,
-                             time_taken_to_import=time_taken_to_import),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
-
-
-def notify_artist_relation_import(data):
-    """ Send an email after artist relation has been sucessfully imported into the cluster.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    artist_relation_name = data['imported_artist_relation']
-    import_time = data['import_time']
-    time_taken_to_import = data['time_taken_to_import']
-
-    send_mail(
-        subject='Artist relation has been imported into the Spark cluster',
-        text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, import_time=import_time,
                              time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',

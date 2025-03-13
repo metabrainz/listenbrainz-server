@@ -1,9 +1,7 @@
 import os
 
-# Location new parquet dump listen files
-LISTENBRAINZ_NEW_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz-new')
-
-LISTENBRAINZ_INTERMEDIATE_STATS_DIRECTORY = os.path.join('/', 'data', 'stats-new')
+LISTENBRAINZ_LISTENS_METADATA = os.path.join("/", "data", "listens-metadata")
+LISTENBRAINZ_LISTENS_DIRECTORY_PREFIX = os.path.join("/", "data", "listens")
 
 LISTENBRAINZ_BASE_STATS_DIRECTORY = os.path.join('/', 'stats')
 LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DIRECTORY, 'sitewide')
@@ -15,9 +13,6 @@ LISTENBRAINZ_MLHD_POPULARITY_DIRECTORY = os.path.join(LISTENBRAINZ_BASE_STATS_DI
 # MLHD+ dump files
 MLHD_PLUS_RAW_DATA_DIRECTORY = os.path.join("/", "mlhd-raw")
 MLHD_PLUS_DATA_DIRECTORY = os.path.join("/", "mlhd")  # processed MLHD+ dump data
-
-# path to save incremental dumps
-INCREMENTAL_DUMPS_SAVE_PATH = os.path.join(LISTENBRAINZ_NEW_DATA_DIRECTORY, "incremental.parquet")
 
 # Directory containing RDD checkpoints to break lineage while using iterative algorithms.
 CHECKPOINT_DIR = os.path.join('/', 'checkpoint')
@@ -88,13 +83,6 @@ USER_SIMILARITY_METADATA_DATAFRAME = os.path.join(
     USER_SIMILARITY_DATAFRAME_DIR, 'dataframe_metadata.parquet')
 USER_SIMILARITY_MAPPED_LISTENS = os.path.join(
     USER_SIMILARITY_DATAFRAME_DIR, 'mapped_listens_df.parquet')
-
-# MusicBrainz Release JSON dump
-MUSICBRAINZ_RELEASE_DUMP = "/musicbrainz/release"
-MUSICBRAINZ_RELEASE_DUMP_JSON_FILE = "/musicbrainz/release/mbdump/release"
-
-# Release colors
-RELEASE_COLOR_DUMP = "/release_color.json"
 
 RELEASE_METADATA_CACHE_DATAFRAME = "/release_metadata_cache"
 RELEASE_GROUP_METADATA_CACHE_DATAFRAME = "/release_group_metadata_cache"

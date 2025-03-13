@@ -102,12 +102,15 @@ class RequestConsumer(ConsumerProducerMixin):
             logger.info("No messages calculated")
 
     def callback(self, message: Message):
-        request = json.loads(message.body)
-        logger.info('Received a request!')
-        messages = self.get_result(request)
-        if messages:
-            self.push_to_result_queue(messages)
-        logger.info('Request done!')
+        try:
+            request = json.loads(message.body)
+            logger.info('Received a request!')
+            messages = self.get_result(request)
+            if messages:
+                self.push_to_result_queue(messages)
+            logger.info('Request done!')
+        except Exception as e:
+            logger.error("Error while processing request: %s", str(e), exc_info=True)
 
     def get_consumers(self, _, channel):
         return [
@@ -128,19 +131,10 @@ class RequestConsumer(ConsumerProducerMixin):
     def start(self, app_name):
         while True:
             try:
-                logger.info('Request consumer started!')
+                logger.info("Request consumer started!")
                 listenbrainz_spark.init_spark_session(app_name)
                 self.init_rabbitmq_connection()
                 self.run()
             except Exception as e:
                 logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
-
-
-def main(app_name):
-    rc = RequestConsumer()
-    rc.start(app_name)
-
-
-if __name__ == '__main__':
-    main('spark-writer')

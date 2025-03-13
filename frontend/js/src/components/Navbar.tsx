@@ -50,7 +50,11 @@ function Navbar() {
         </button>
         <Link
           className="navbar-logo"
-          to="/?redirect=false"
+          to={
+            currentUser?.name
+              ? `/user/${currentUser.name}/`
+              : "/?redirect=false"
+          }
           onClick={toggleSidebar}
         >
           <img
@@ -64,7 +68,11 @@ function Navbar() {
       <div id="side-nav" className="collapse">
         <Link
           className="navbar-logo"
-          to="/?redirect=false"
+          to={
+            currentUser?.name
+              ? `/user/${currentUser.name}/`
+              : "/?redirect=false"
+          }
           onClick={toggleSidebar}
         >
           <img
