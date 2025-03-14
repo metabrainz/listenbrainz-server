@@ -148,10 +148,13 @@ def download_chunk(filename, dest) -> str:
 
 
 def process_chunk(filename):
-    with tempfile.TemporaryDirectory() as local_temp_dir:
-        downloaded_chunk = download_chunk(filename, local_temp_dir)
-        extract_chunk(filename, downloaded_chunk, local_temp_dir)
-        transform_chunk(local_temp_dir)
+    try:
+        with tempfile.TemporaryDirectory() as local_temp_dir:
+            downloaded_chunk = download_chunk(filename, local_temp_dir)
+            extract_chunk(filename, downloaded_chunk, local_temp_dir)
+            transform_chunk(local_temp_dir)
+    except Exception:
+        logger.error(f"Error while processing chunk {filename}: ", exc_info=True)
 
 
 def import_mlhd_dump_to_hdfs():
