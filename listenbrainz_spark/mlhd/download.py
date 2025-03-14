@@ -158,8 +158,8 @@ def import_mlhd_dump_to_hdfs():
     """ Import the MLHD+ dump. """
     MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
 
-    for filename in MLHD_PLUS_FILES:
-        with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for filename in MLHD_PLUS_FILES:
             executor.submit(process_chunk, filename)
 
     post_process_mlhd_plus()
