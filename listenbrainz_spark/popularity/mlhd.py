@@ -57,9 +57,9 @@ class MlhdStatsEngine:
         results_df = run_query(results_query)
         return results_df
 
-    def main(self):
+    def run(self):
         results = self.generate_stats()
         yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results):
+        for message in self.message_creator.create_messages(results, False):
             yield message
         yield self.message_creator.create_end_message()
