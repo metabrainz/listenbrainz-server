@@ -203,7 +203,6 @@ class IncrementalStatsEngine:
             final_df = run_query(final_query)
         else:
             final_df = partial_df
-            self._only_inc = False
 
         self._final_table = f"{prefix}_final_aggregate"
         final_df.createOrReplaceTempView(self._final_table)
