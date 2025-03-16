@@ -252,7 +252,7 @@ def music_services_connect(service_name: str):
         raise APIBadRequest("Missing 'external_user_id' in request.")
     
     
-    lastfm_response = requests.get(f"https://www.last.fm/user/{data['external_user_id']}", timeout=5)
+    lastfm_response = requests.get(f"{current_app.config['LASTFM_API_URL']}?method=user.getinfo&user={data['external_user_id']}&api_key={current_app.config['LASTFM_API_KEY']}&format=json", timeout=5)
     if lastfm_response.status_code == 404:
         raise APINotFound("last.fm user not found.")
 
