@@ -357,7 +357,7 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings(session, contribution, threshold, limit, skip):
+def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording.mlhd",
@@ -569,3 +569,12 @@ def cron_request_similarity_datasets(ctx):
                threshold=10, limit=100, skip=30, production=True)
     ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
                threshold=10, limit=100, skip=30, production=True)
+
+
+@cli.command(name='cron_request_popularity')
+@click.pass_context
+def cron_request_popularity(ctx):
+    for entity in ["artist", "recording", "release", "release_group"]:
+        ctx.invoke(request_popularity, mlhd=False, entity=entity)
+    for entity in ["recording", "release", "release_group"]:
+        ctx.invoke(request_per_artist_popularity, mlhd=False, entity=entity)
