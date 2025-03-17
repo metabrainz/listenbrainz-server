@@ -122,13 +122,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   React.useEffect(() => {
     async function getCoverArt() {
       let coverartURL;
-      if (releaseMBID) {
+      if (releaseMBID || releaseGroupMBID) {
         coverartURL = await getAlbumArtFromReleaseMBID(
           releaseMBID,
-          releaseGroupMBID ?? true
+          releaseGroupMBID
         );
-      } else if (releaseGroupMBID) {
-        coverartURL = await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
       }
       if (coverartURL) {
         setCoverartSrc(coverartURL);
