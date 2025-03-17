@@ -774,8 +774,7 @@ export default function ListenCardWrapper(props: ListenCardProps) {
       try {
         const albumArtURL = await getAlbumArtFromListenMetadata(
           listen,
-          spotifyAuth,
-          APIService
+          spotifyAuth
         );
         return albumArtURL ?? "";
       } catch (error) {
