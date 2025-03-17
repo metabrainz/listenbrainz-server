@@ -8,7 +8,7 @@ import {
   faRss,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import * as DOMPurify from "dompurify";
+import DOMPurify from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link, useLoaderData } from "react-router-dom";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";

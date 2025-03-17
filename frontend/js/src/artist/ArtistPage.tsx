@@ -8,7 +8,7 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
-import * as DOMPurify from "dompurify";
+import DOMPurify from "dompurify";
 import {
   Link,
   useLoaderData,
@@ -18,7 +18,6 @@ import {
 } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import NiceModal from "@ebay/nice-modal-react";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
