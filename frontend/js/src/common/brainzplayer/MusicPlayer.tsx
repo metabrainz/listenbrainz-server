@@ -221,11 +221,7 @@ function MusicPlayer(props: MusicPlayerProps) {
       track: BrainzPlayerQueueItem,
       setCoverArt: React.Dispatch<React.SetStateAction<string>>
     ) => {
-      const coverArt = await getAlbumArtFromListenMetadata(
-        track,
-        spotifyAuth,
-        APIService
-      );
+      const coverArt = await getAlbumArtFromListenMetadata(track, spotifyAuth);
       setCoverArt(coverArt ?? "");
     };
 
