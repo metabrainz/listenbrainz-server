@@ -19,6 +19,8 @@ import { getCoverArtCache, setCoverArtCache } from "./coverArtCache";
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
 
+let APIServiceInstance = new APIServiceClass(`${window.location.origin}/1`);
+
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
   trackName?: string,
@@ -611,6 +613,7 @@ const getPageProps = async (): Promise<{
     const apiService = new APIServiceClass(
       api_url || `${window.location.origin}/1`
     );
+    APIServiceInstance = apiService;
     globalAppContext = {
       APIService: apiService,
       websocketsUrl: websockets_url,
@@ -799,44 +802,53 @@ const getAlbumArtFromReleaseGroupMBID = async (
 };
 
 const getAlbumArtFromReleaseMBID = async (
-  userSubmittedReleaseMBID: string,
-  useReleaseGroupFallback: boolean | string = false,
-  APIService?: APIServiceClass,
+  userSubmittedReleaseMBID: string | undefined | null,
+  userSubmittedReleaseGroupMBID: string | undefined | null,
   optionalSize?: CAAThumbnailSizes,
   frontOnly?: boolean
 ): Promise<string | undefined> => {
   try {
     // Check cache first
-    const cacheKey = `ca:${userSubmittedReleaseMBID}-${optionalSize}-${useReleaseGroupFallback}`;
+    const cacheKey = `ca:${userSubmittedReleaseMBID}-${optionalSize}-${userSubmittedReleaseGroupMBID}`;
     const cachedCoverArt = await getCoverArtCache(cacheKey);
     if (cachedCoverArt) {
       return cachedCoverArt;
     }
-
-    const CAAResponse = await fetchWithRetry(
-      `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
-      retryParams
-    );
-    if (CAAResponse.ok) {
-      const body: CoverArtArchiveResponse = await CAAResponse.json();
-      const coverArt = getThumbnailFromCAAResponse(
-        body,
-        optionalSize,
-        frontOnly
+    if (userSubmittedReleaseMBID) {
+      const CAAResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
+        retryParams
       );
-      // Here, make sure there is a front image, otherwise discard the hit.
-      if (coverArt) {
-        // Cache the successful result
-        await setCoverArtCache(cacheKey, coverArt);
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        const coverArt = getThumbnailFromCAAResponse(
+          body,
+          optionalSize,
+          frontOnly
+        );
+        // Here, make sure there is a front image, otherwise discard the hit.
+        if (coverArt) {
+          // Cache the successful result
+          await setCoverArtCache(cacheKey, coverArt);
+        }
+        return coverArt;
       }
-      return coverArt;
     }
 
-    if (useReleaseGroupFallback) {
-      let releaseGroupMBID = useReleaseGroupFallback;
-      if (!_.isString(useReleaseGroupFallback) && APIService) {
-        const releaseGroupResponse = (await APIService.lookupMBRelease(
-          userSubmittedReleaseMBID
+    /*
+      Fallback to fetching cover art for the Release Group.
+      If no RG MBID is available, first hit the MusicBrainz API
+      with the release MBID to get the RG MBID
+    */
+    if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
+      let releaseGroupMBID = userSubmittedReleaseGroupMBID;
+      if (
+        !_.isString(userSubmittedReleaseGroupMBID) &&
+        _.isString(userSubmittedReleaseMBID)
+      ) {
+        const releaseGroupResponse = (await APIServiceInstance.lookupMBRelease(
+          userSubmittedReleaseMBID,
+          "release-groups"
         )) as MusicBrainzRelease & WithReleaseGroup;
         releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
@@ -914,8 +926,7 @@ const getAlbumArtFromListenMetadataKey = (
 
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
-  spotifyUser?: SpotifyUser,
-  APIService?: APIServiceClass
+  spotifyUser?: SpotifyUser
 ): Promise<string | undefined> => {
   if (!listen) {
     return undefined;
@@ -939,16 +950,17 @@ const getAlbumArtFromListenMetadata = async (
   const userSubmittedReleaseMBID =
     listen.track_metadata?.release_mbid ??
     listen.track_metadata?.additional_info?.release_mbid;
+  const userSubmittedReleaseGroupMBID =
+    listen.track_metadata?.additional_info?.release_group_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
-  if (userSubmittedReleaseMBID) {
+  if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
     // try getting the cover art using user submitted release mbid. if user submitted release mbid
     // does not have a cover art and the mapper matched to a different release, try to fallback to
     // release group cover art of the user submitted release mbid next
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID,
-      Boolean(caaReleaseMbid) && userSubmittedReleaseMBID !== caaReleaseMbid,
-      APIService,
+      userSubmittedReleaseGroupMBID,
       undefined,
       true // we only want front images, otherwise skip
     );
