@@ -88,21 +88,10 @@ def main(session, contribution, threshold, limit, skip):
 
     read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
     mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
+    mlhd_df.createOrReplaceTempView(table)
 
-    first_batch = True
-
-    for chunks in chunked(MLHD_PLUS_CHUNKS, 2):
-        filter_clause = " OR ".join([f"user_id LIKE '{chunk}%'" for chunk in chunks])
-        mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
-        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
-
-        if first_batch:
-            mode = "overwrite"
-            first_batch = False
-        else:
-            mode = "append"
-
-        run_query(query).write.mode(mode).parquet("/mlhd-session-output")
+    query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
+    run_query(query).write.mode("overwrite").parquet("/mlhd-session-output")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
