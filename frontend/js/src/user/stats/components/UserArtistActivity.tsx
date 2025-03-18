@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import { COLOR_BLACK } from "../../../utils/constants";
+import useNavigate from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistActivityProps = {
@@ -21,6 +22,7 @@ export declare type ChartDataItem = {
 
 export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
 
   // Props
   const { user, range } = props;
