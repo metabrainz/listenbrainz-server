@@ -4,10 +4,10 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import { COLOR_BLACK } from "../../../utils/constants";
-import { useNavigate } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistActivityProps = {
