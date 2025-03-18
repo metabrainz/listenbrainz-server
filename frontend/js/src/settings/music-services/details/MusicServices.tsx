@@ -57,9 +57,7 @@ export default function MusicServices() {
       : undefined
   );
 
-  const [lastFMSubmit, setlastFMSubmit] = React.useState(
-    permissions.lastfm === "import" ? "LastFMConnect" : "disable"
-  );
+  const [lastFMEdit, setLastFMEdit] = React.useState(false);
 
   const handlePermissionChange = async (
     serviceName: string,
@@ -103,9 +101,6 @@ export default function MusicServices() {
             break;
           case "critiquebrainz":
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
-            break;
-          case "lastfm":
-            setlastFMSubmit("disable");
             break;
           default:
             break;
@@ -194,6 +189,20 @@ export default function MusicServices() {
   ) => {
     evt.preventDefault();
     try {
+      if (!lastfmUserId) {
+        setLastfmUserId(loaderData.current_lastfm_settings?.external_user_id);
+        setLastfmLatestListenedAt(
+          loaderData.current_lastfm_settings?.latest_listened_at
+            ? format(
+                new Date(
+                  loaderData.current_lastfm_settings?.latest_listened_at
+                ),
+                "yyyy-MM-dd'T'HH:mm:ss"
+              )
+            : undefined
+        );
+        throw Error("LastFM username empty");
+      }
       const response = await fetch(`/settings/music-services/lastfm/connect/`, {
         method: "POST",
         body: JSON.stringify({
@@ -458,12 +467,7 @@ export default function MusicServices() {
                     onChange={(e) => {
                       setLastfmUserId(e.target.value);
                     }}
-                    disabled={
-                      !(
-                        lastFMSubmit === "LastFMConnect" ||
-                        lastFMSubmit === "LastFMLovedTrack"
-                      )
-                    }
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
                 </div>
                 <div>
@@ -480,41 +484,30 @@ export default function MusicServices() {
                     }}
                     name="lastFMStartDatetime"
                     title="Date and time to start import at"
-                    disabled={
-                      !(
-                        lastFMSubmit === "LastFMConnect" ||
-                        lastFMSubmit === "LastFMLovedTrack"
-                      )
-                    }
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
                 </div>
                 <div style={{ flex: 0, alignSelf: "end" }}>
                   <button
-                    disabled={
-                      !(
-                        lastFMSubmit === "LastFMConnect" ||
-                        lastFMSubmit === "LastFMLovedTrack"
-                      )
+                    disabled={permissions.lastfm !== "import"}
+                    type={lastFMEdit ? "button" : "submit"}
+                    className={
+                      permissions.lastfm !== "import"
+                        ? "btn-default"
+                        : (lastFMEdit && "btn-success") || "btn-warning"
                     }
-                    type="submit"
-                    className="btn btn-success"
-                    onClick={(e) => {
-                      if (lastFMSubmit === "LastFMLovedTrack") {
-                        handleImportFeedback(e, "lastfm");
-                      }
-                    }}
+                    onClick={() => setLastFMEdit((prev) => !prev)}
                   >
-                    Submit
+                    {lastFMEdit ? "Save" : "Edit"}
                   </button>
                 </div>
               </div>
               <br />
               <div className="music-service-selection">
                 <button
-                  type="button"
+                  type="submit"
                   className="music-service-option"
                   style={{ width: "100%" }}
-                  onClick={() => setlastFMSubmit("LastFMConnect")}
                 >
                   <input
                     readOnly
@@ -522,7 +515,7 @@ export default function MusicServices() {
                     id="lastfm_import"
                     name="lastfm"
                     value="import"
-                    checked={lastFMSubmit === "LastFMConnect"}
+                    checked={permissions.lastfm === "import"}
                   />
                   <label htmlFor="lastfm_import">
                     <div className="title">
@@ -538,7 +531,7 @@ export default function MusicServices() {
                 <button
                   type="button"
                   className="music-service-option"
-                  onClick={() => setlastFMSubmit("LastFMLovedTrack")}
+                  onClick={(e) => handleImportFeedback(e, "lastfm")}
                 >
                   <input
                     readOnly
@@ -546,7 +539,7 @@ export default function MusicServices() {
                     id="lastfm_import_loved_tracks"
                     name="lastfm"
                     value="loved_tracks"
-                    checked={lastFMSubmit === "LastFMLovedTrack"}
+                    checked={false}
                   />
                   <label htmlFor="lastfm_import_loved_tracks">
                     <div className="title">Import loved tracks</div>
@@ -558,11 +551,7 @@ export default function MusicServices() {
                 </button>
                 <ServicePermissionButton
                   service="lastfm"
-                  // !(
-                  //   lastFMSubmit === "LastFMConnect" ||
-                  //   lastFMSubmit === "LastFMLovedTrack"
-                  // )
-                  current={lastFMSubmit === "disable" ? "disable" : ""}
+                  current={permissions.lastfm ?? "disable"}
                   value="disable"
                   title="Disable"
                   details="New scrobbles won't be imported from Last.FM"
