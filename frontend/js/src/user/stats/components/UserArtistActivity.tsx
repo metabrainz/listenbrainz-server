@@ -183,7 +183,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     const artistName = barData.indexValue;
                     const releaseGroupMbid =
                       albumRedirectMapping[`${artistName}-${albumName}`];
-                    if (releaseMbid) {
+                    if (releaseGroupMbid) {
                       navigate(`/album/${releaseGroupMbid}`);
                     }
                   }}
