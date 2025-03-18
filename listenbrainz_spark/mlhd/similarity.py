@@ -1,3 +1,5 @@
+import logging
+
 from more_itertools import chunked
 
 from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
@@ -6,6 +8,7 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 
+logger = logging.getLogger(__name__)
 DEFAULT_TRACK_LENGTH = 180
 
 
@@ -88,10 +91,12 @@ def main(session, contribution, threshold, limit, skip):
 
     read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
     mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
-    mlhd_df.createOrReplaceTempView(table)
 
-    query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
-    run_query(query).write.mode("overwrite").parquet("/mlhd-session-output")
+    for chunk in MLHD_PLUS_CHUNKS:
+        logger.info("Processing chunk: %s", chunk)
+        mlhd_df.filter(f"user_id LIKE '{chunk}%").createOrReplaceTempView(table)
+        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
+        run_query(query).write.mode("overwrite").parquet(f"/mlhd-session-output/{chunk}")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
