@@ -11,7 +11,6 @@ import {
   faHeart,
   faPaperPlane,
   faPlayCircle,
-  faPlus,
   faQuestion,
   faRefresh,
   faRss,
@@ -23,7 +22,7 @@ import {
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import * as DOMPurify from "dompurify";
+import DOMPurify from "dompurify";
 import { reject as _reject } from "lodash";
 import * as React from "react";
 import { Helmet } from "react-helmet";
