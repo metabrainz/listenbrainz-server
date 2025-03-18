@@ -94,7 +94,7 @@ def main(session, contribution, threshold, limit, skip):
 
     for chunk in MLHD_PLUS_CHUNKS:
         logger.info("Processing chunk: %s", chunk)
-        mlhd_df.filter(f"user_id LIKE '{chunk}%").createOrReplaceTempView(table)
+        mlhd_df.filter(f"user_id LIKE '{chunk}'%").createOrReplaceTempView(table)
         query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
         run_query(query).write.mode("overwrite").parquet(f"/mlhd-session-output/{chunk}")
 
