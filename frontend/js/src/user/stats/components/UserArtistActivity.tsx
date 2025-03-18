@@ -179,7 +179,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                   onClick={(barData, event) => {
                     const albumName = barData.id;
                     const artistName = barData.indexValue;
-                    const releaseMbid =
+                    const releaseGroupMbid =
                       albumRedirectMapping[`${artistName}-${albumName}`];
                     if (releaseMbid) {
                       window.location.href = `/album/${releaseMbid}`;
