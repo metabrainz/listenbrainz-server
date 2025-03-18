@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_TRACK_LENGTH = 180
 
 
-def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold):
+def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold, threshold):
     return f"""
             WITH listens AS (
                  SELECT user_id
@@ -58,7 +58,7 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                  USING (user_id, session_id)
                  WHERE s1.recording_mbid != s2.recording_mbid
                    AND NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
-            )
+            ), user_contribtion_mbids AS (
                 SELECT user_id
                      , lexical_mbid0 AS mbid0
                      , lexical_mbid1 AS mbid1
@@ -67,6 +67,14 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
               GROUP BY user_id
                      , lexical_mbid0
                      , lexical_mbid1
+            )
+                SELECT mbid0
+                     , mbid1
+                     , SUM(part_score) AS score
+                  FROM user_contribtion_mbids
+              GROUP BY mbid0
+                     , mbid1  
+                HAVING score > {threshold}
     """
 
 
@@ -95,7 +103,7 @@ def main(session, contribution, threshold, limit, skip):
     for chunk in MLHD_PLUS_CHUNKS:
         logger.info("Processing chunk: %s", chunk)
         mlhd_df.filter(f"user_id LIKE '{chunk}%'").createOrReplaceTempView(table)
-        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
+        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold, threshold)
         run_query(query).write.mode("overwrite").parquet(f"/mlhd-session-output/{chunk}")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
