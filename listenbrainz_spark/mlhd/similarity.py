@@ -74,7 +74,6 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                   FROM user_contribtion_mbids
               GROUP BY mbid0
                      , mbid1  
-                HAVING score > {threshold}
     """
 
 
@@ -95,7 +94,7 @@ def main(session, contribution, threshold, limit, skip):
     metadata_table = "recording_length"
     skip_threshold = -skip
 
-    run_query("SET spark.sql.shuffle.partitions = 2000").collect()
+    run_query("SET spark.sql.shuffle.partitions = 4000").collect()
 
     read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
     mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
