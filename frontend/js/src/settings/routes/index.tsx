@@ -107,6 +107,13 @@ const getSettingsRoutes = (): RouteObject[] => {
             return { Component: DeleteAccount.default };
           },
         },
+        {
+          path: "add-data/",
+          lazy: async () => {
+            const AddData = await import("../add-data/AddData");
+            return { Component: AddData.default };
+          },
+        },
       ],
     },
   ];
