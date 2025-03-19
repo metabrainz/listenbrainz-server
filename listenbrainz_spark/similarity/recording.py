@@ -52,7 +52,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      , explode(artist_credit_mbids) AS artist_mbid
                   FROM sessions
                  WHERE NOT skipped    
-            ), user_session_grouped_mbids AS (
+            ), user_grouped_mbids AS (
                 SELECT user_id
                      , session_id
                      , IF(s1.recording_mbid < s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid0
