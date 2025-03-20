@@ -27,7 +27,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
   return (
     <div
       id="ConfirmationModal"
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       tabIndex={-1}
       role="dialog"
       aria-labelledby="confirmationModalLabel"

@@ -142,7 +142,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
   const trackName = getTrackName(listen);
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="AddToPlaylistModal"
       tabIndex={-1}
       role="dialog"

@@ -669,7 +669,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "show" : ""}`}
+      className="modal fade"
       id="CBReviewModal"
       tabIndex={-1}
       role="dialog"

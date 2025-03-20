@@ -73,7 +73,7 @@ export default NiceModal.create(
     return (
       <div
         id="ConfirmPlaylistDeletionModal"
-        className={`modal fade ${modal.visible ? "in" : ""}`}
+        className="modal fade"
         tabIndex={-1}
         role="dialog"
         aria-labelledby="confirmDeleteModalLabel"

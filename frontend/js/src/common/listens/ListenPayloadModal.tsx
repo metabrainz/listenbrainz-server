@@ -41,7 +41,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="ListenPayloadModal"
       tabIndex={-1}
       role="dialog"

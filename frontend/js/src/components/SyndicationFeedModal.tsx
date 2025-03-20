@@ -91,7 +91,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
   return (
     <div
       id="SyndicationFeedModal"
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       tabIndex={-1}
       role="dialog"
       aria-labelledby="syndicationFeedModalLabel"

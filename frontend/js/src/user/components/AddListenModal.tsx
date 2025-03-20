@@ -239,7 +239,7 @@ export default NiceModal.create(() => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="AddListenModal"
       tabIndex={-1}
       role="dialog"
