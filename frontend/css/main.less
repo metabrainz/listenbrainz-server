@@ -49,13 +49,14 @@
 @pager-border-radius: @border-radius-base;
 
 @import (inline) "react-toastify/dist/ReactToastify.css";
+
+@import (inline, css) "highlight.js/styles/github.css";
+
 // Show the toasts above the player
 .Toastify__toast-container--bottom-left,
 .Toastify__toast-container--bottom-right {
   bottom: calc(1em + @brainzplayer-height);
 }
-
-@import (inline, css) "highlight.js/styles/github.css";
 
 pre code.hljs {
   max-height: 50vh;
