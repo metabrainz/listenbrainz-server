@@ -9,7 +9,7 @@ export default function Footer() {
     <section className="footer">
       <div className="container-fluid">
         <div className="row">
-          <div className="col-sm-12 col-md-6">
+          <div className="col-12 col-sm-12 col-lg-6">
             <h3>
               <img
                 src="/static/img/listenbrainz-logo.svg"
@@ -45,8 +45,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <br />
-          <div className="col-12 col-sm-6 col-md-3">
+          <div className="col-12 col-sm-6 col-lg-3">
             <h3 className="w-title-a text-brand">Useful Links</h3>
             <ul className="list-unstyled">
               <li>
@@ -125,7 +124,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="col-12 col-sm-6 col-md-3">
+          <div className="col-12 col-sm-6 col-lg-3">
             <h3 className="w-title-a text-brand">Fellow Projects</h3>
             <ul className="list-unstyled">
               <li>
@@ -228,7 +227,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="row center-p">
-          <div className="col-md-3 d-none d-md-block d-none d-sm-block">
+          <div className="col-lg-3 d-none d-md-block">
             <p className="color-gray section-line">
               OSS Geek?{" "}
               <a
@@ -241,7 +240,7 @@ export default function Footer() {
               </a>
             </p>
           </div>
-          <div className="col-md-6">
+          <div className="col-lg-6">
             <p className="section-line">
               Brought to you by{" "}
               <img
@@ -253,7 +252,7 @@ export default function Footer() {
               <span className="color-a"> MetaBrainz Foundation </span>
             </p>
           </div>
-          <div className="col-md-3 d-none d-md-block d-none d-sm-block">
+          <div className="col-lg-3 d-none d-md-block">
             <p className="color-gray section-line">
               Found an Issue?{" "}
               <a

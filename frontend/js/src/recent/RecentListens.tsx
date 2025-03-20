@@ -65,10 +65,10 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">users</small>
               </div>
             </Card>
-            <Card className="d-none d-sm-block">
+            <Card className="d-none d-md-block">
               <RecentDonorsCard donors={recentDonors} />
             </Card>
-            <FlairsExplanationButton className="d-none d-sm-block" />
+            <FlairsExplanationButton className="d-none d-md-block" />
           </div>
           <div className="col-lg-8 order-lg-1">
             {!listens.length && (
