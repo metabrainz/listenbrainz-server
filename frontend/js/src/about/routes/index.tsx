@@ -18,6 +18,13 @@ const getAboutRoutes = (): RouteObject[] => {
           },
         },
         {
+          path: "add-data/",
+          lazy: async () => {
+            const AddData = await import("../add-data/AddData");
+            return { Component: AddData.default };
+          },
+        },
+        {
           path: "current-status/",
           loader: RouteQueryLoader("current-status"),
           lazy: async () => {

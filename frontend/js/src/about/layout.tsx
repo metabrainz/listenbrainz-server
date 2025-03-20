@@ -14,6 +14,7 @@ const sections: Section[] = [
   { to: "current-status/", label: "Site status" },
   { to: "data/", label: "Using our data" },
   { to: "terms-of-service/", label: "Terms of service" },
+  { to: "add-data/", label: "Submitting data" },
 ];
 
 function AboutLayout() {
