@@ -383,7 +383,7 @@
 
 .volume {
   position: fixed;
-  z-index: 112;
+  z-index: 110;
   background-color: #f8f8f8;
   right: 17em;
   bottom: -12em;
@@ -401,10 +401,11 @@
   }
   @media (max-width: @screen-sm) {
     right: -6em;
-    bottom: 8.5em;
+    bottom: 6.5em;
+    z-index: 112;
     transition-property: right;
     &.show {
-      bottom: 8.5em;
+      bottom: 6.5em;
       right: 1.5em;
     }
   }
