@@ -5,6 +5,8 @@ from flask import Blueprint, render_template, request, url_for, \
     redirect, current_app, jsonify
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
+import requests
+from requests.adapters import HTTPAdapter, Retry
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
@@ -246,8 +248,22 @@ def music_services_connect(service_name: str):
         raise APINotFound("Service %s is invalid." % (service_name,))
 
     data = request.json
+
     if "external_user_id" not in data:
         raise APIBadRequest("Missing 'external_user_id' in request.")
+    
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
+
+    params = {
+        "method": "user.getinfo",
+        "user": data['external_user_id'],
+        "format": "json",
+        "api_key": current_app.config["LASTFM_API_KEY"],
+    }
+    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
+    if response.status_code == 404:
+        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
 
     latest_listened_at = None
     if data.get("latest_listened_at") is not None:
