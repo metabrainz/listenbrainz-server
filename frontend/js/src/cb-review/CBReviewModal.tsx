@@ -480,7 +480,6 @@ export default NiceModal.create((props: CBReviewModalProps) => {
               type="button"
             >
               {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
-              <span className="caret" />
             </button>
 
             <div className="dropdown-menu" role="menu">
