@@ -52,6 +52,12 @@
 
 @import (inline, css) "highlight.js/styles/github.css";
 
+// Show the toasts above the player
+.Toastify__toast-container--bottom-left,
+.Toastify__toast-container--bottom-right {
+  bottom: calc(1em + @brainzplayer-height);
+}
+
 pre code.hljs {
   max-height: 50vh;
   overflow-y: auto;
