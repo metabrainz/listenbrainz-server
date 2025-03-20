@@ -64,9 +64,9 @@ class PopularityDataset(DatabaseDataset):
         else:
             prefix = "popularity"
         return [
-            f"CREATE INDEX {prefix}_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX {prefix}_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_{self.entity}_mbid_idx_{{suffix}} ON {{table}} ({self.entity}_mbid)"
+            f"CREATE INDEX {prefix}_{self.entity}_lc_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_uc_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_mbid_idx_{{suffix}} ON {{table}} ({self.entity}_mbid)"
         ]
 
 
@@ -120,9 +120,9 @@ class PopularityTopDataset(DatabaseDataset):
         else:
             prefix = "popularity_top"
         return [
-            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_artist_mbid_idx_{{suffix}} ON {{table}} (artist_mbid, {self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_am_lc_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_am_uc_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_am_idx_{{suffix}} ON {{table}} (artist_mbid, {self.entity_mbid})"
         ]
 
 

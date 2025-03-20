@@ -113,4 +113,5 @@ class PopularityMessageCreator(MessageCreator):
                 "is_mlhd": self.is_mlhd,
                 "entity": self.entity,
                 "data": multiple_stats,
+                "only_inc": only_inc
             }
