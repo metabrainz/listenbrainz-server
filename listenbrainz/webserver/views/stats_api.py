@@ -9,6 +9,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
 import requests
+import heapq
 
 from data.model.common_stat import StatApi, StatisticsRange, StatRecordList
 from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
@@ -434,10 +435,7 @@ def _get_artist_activity(release_groups_list):
         artist_data["name"] = artist_name
         artist_data["albums"] = list(artist_data["albums"].values())
 
-    sorted_data = sorted(result.values(), key=lambda x: x["listen_count"], reverse=True)
-    count = 15
-    N = min(count, len(sorted_data))
-    return sorted_data[:N]
+    return heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
 
 @stats_api_bp.get("/user/<user_name>/artist-activity")
 @crossdomain
