@@ -33,13 +33,13 @@
 
 .card {
   background: white;
-  border: 1px solid rgb(238, 238, 238);
+  border: 1px solid rgb(238, 238, 238) !important;
   box-sizing: border-box;
   box-shadow: fade(@card-shadow-color, 10%) 0px 1px 1px,
     fade(@card-shadow-color, 15%) 0px 2px 2px,
     fade(@card-shadow-color, 20%) 0px 4px 4px;
   border-radius: 8px;
-  height: 100%;
+  margin-bottom: 0;
 }
 .listen-card {
   &.card {
@@ -63,6 +63,12 @@
     padding: 10px;
     @media (min-width: @screen-phone) {
       padding: 15px;
+    }
+  }
+
+  .dropdown-toggle {
+    &::after {
+      display: none !important;
     }
   }
 
@@ -311,6 +317,7 @@
       .badge {
         flex-shrink: 0;
         align-self: center;
+        border-radius: 10px;
       }
     }
     .recommendation-controls {
@@ -487,7 +494,7 @@
   }
 }
 
-#navigation.pager {
+#navigation.pagination {
   display: flex;
   flex-wrap: wrap;
   & > .feed-button-and-date-time-picker {

@@ -130,12 +130,12 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
   return (
     <Card className="user-stats-card" data-testid="user-daily-activity">
       <div className="row">
-        <div className="col-xs-10">
+        <div className="col-10">
           <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
             Daily Activity
           </h3>
         </div>
-        <div className="col-xs-2 text-right">
+        <div className="col-2 text-right">
           <h4 style={{ marginTop: 20 }}>
             <a href="#daily-activity">
               <FontAwesomeIcon
@@ -164,10 +164,8 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
             </span>
           </div>
         ) : (
-          <div className="row">
-            <div className="col-xs-12">
-              <HeatMap data={data} />
-            </div>
+          <div className="col-12">
+            <HeatMap data={data} />
           </div>
         )}
       </Loader>

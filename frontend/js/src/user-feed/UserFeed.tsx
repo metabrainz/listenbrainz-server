@@ -432,6 +432,7 @@ export default function UserFeedPage() {
               }}
               dataToggle="modal"
               dataTarget="#ThanksModal"
+              isDropdown={false}
             />
           )} 
           { hidden && <ListenControl
@@ -442,6 +443,7 @@ export default function UserFeedPage() {
             action={() => {
               hideEventMutation(event);
             }}
+            isDropdown={false}
           />
           }
           { !hidden && isHidable && <ListenControl
@@ -452,6 +454,7 @@ export default function UserFeedPage() {
             action={() => {
               hideEventMutation(event);
             }}
+            isDropdown={false}
           />
           }
           { isDeletable &&<ListenControl
@@ -462,6 +465,7 @@ export default function UserFeedPage() {
             action={() => {
               deleteEventMutation(event);
             }}
+            isDropdown={false}
           />
           }
         </>
@@ -650,7 +654,7 @@ export default function UserFeedPage() {
         <title>Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-lg-9">
           <div className="listen-header">
             <h3 className="header-with-line">Latest activity</h3>
             {/* Commented out as new OAuth is not merged yet. */}
@@ -714,7 +718,7 @@ export default function UserFeedPage() {
             </button> */}
             <button
               type="button"
-              className="btn btn-info btn-rounded play-tracks-button"
+              className="btn btn-info btn-rounded play-tracks-button text-nowrap"
               title="Play album"
               onClick={() => {
                 window.postMessage(

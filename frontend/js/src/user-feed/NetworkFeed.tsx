@@ -138,7 +138,7 @@ export default function NetworkFeedPage() {
         <title>My Network Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-sm-8 col-xs-12">
+        <div className="col-sm-8 col-12">
           <div className="listen-header pills">
             <h3 className="header-with-line">
               What are{" "}

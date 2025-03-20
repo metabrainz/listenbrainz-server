@@ -1,3 +1,4 @@
+@import "scaffolding.less";
 @import "theme/theme.less";
 @import "colors.less";
 @import "homepage.less";
@@ -229,6 +230,10 @@ pre code.hljs {
   flex-wrap: wrap;
 }
 
+.dropdown-menu {
+  font-size: unset;
+}
+
 // Allows styling of elements other than <a> in Bootstrap dropdowns
 .dropdown-menu > li {
   max-width: 300px;
@@ -241,6 +246,10 @@ pre code.hljs {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+.form-control {
+  font-size: unset;
 }
 
 .full-page-loader {
@@ -263,7 +272,8 @@ pre code.hljs {
 
   &.compact {
     > * {
-      display: inline-block;
+      display: -webkit-inline-box;
+      display: inline-box;
       margin-bottom: 0px;
     }
 
@@ -364,6 +374,10 @@ pre code.hljs {
   }
 }
 
+.badge {
+  font-size: 12px;
+}
+
 .badge-info {
   color: @white;
   background-color: @blue;
@@ -404,6 +418,10 @@ input[type="range"] {
   border-radius: 3em;
 }
 
+.btn-link {
+  border-color: transparent;
+}
+
 .Importer {
   border: 2px solid #a0a0a0;
   padding: 1rem;
@@ -424,4 +442,8 @@ input[type="range"] {
   padding: 0.25em;
   margin: 0;
   margin-left: 5px;
+}
+
+.dropdown-divider {
+  border-color: #e5e5e5;
 }
