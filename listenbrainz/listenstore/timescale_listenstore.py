@@ -215,9 +215,9 @@ class TimescaleListenStore:
         """
         if from_ts and to_ts and from_ts >= to_ts:
             raise ValueError("from_ts should be less than to_ts")
-        if from_ts:
+        if from_ts and not to_ts: # ascending order only when from_ts given.
             order = ORDER_ASC
-        else:
+        else: # every other case, descedning order.
             order = ORDER_DESC
 
         min_user_ts, max_user_ts = self.get_timestamps_for_user(user["id"])
