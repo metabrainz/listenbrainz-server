@@ -213,11 +213,9 @@ export default function MusicServices() {
           lastfm: "import",
         }));
       } else {
-        if (response.bodyUsed) {
-          const body = await response.json();
-          if (body.error) {
-            throw body.error;
-          }
+        const body = await response.json();
+        if (body?.error) {
+          throw body.error;
         }
         throw response.statusText;
       }
