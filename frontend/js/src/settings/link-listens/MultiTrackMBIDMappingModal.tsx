@@ -46,7 +46,7 @@ export default NiceModal.create(
     const { lookupMBRelease, submitMBIDMapping } = APIService;
     const { auth_token } = currentUser;
 
-    const { resolve, visible } = modal;
+    const { resolve } = modal;
 
     const [matchingTracks, setMatchingTracks] = React.useState<
       MatchingTracksResults
@@ -330,7 +330,7 @@ export default NiceModal.create(
 
     return (
       <div
-        className={`modal fade ${visible ? "in" : ""}`}
+        className="modal fade"
         id="MultiTrackMBIDMappingModal"
         role="dialog"
         aria-labelledby="MultiTrackMBIDMappingModalLabel"
@@ -585,7 +585,7 @@ export default NiceModal.create(
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn-default"
+                className="btn btn-secondary"
                 onClick={closeModal}
               >
                 Cancel

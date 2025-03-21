@@ -101,7 +101,7 @@ function IconTray(props: IconTrayProps) {
         {browserHasClipboardAPI && (
           <button
             type="button"
-            className="btn btn-icon btn-link"
+            className="btn btn-icon btn-link text-nowrap"
             onClick={onClickCopyAlt}
           >
             <span className="text-muted">alt text</span>

@@ -438,9 +438,11 @@ export default function ArtCreator() {
             <div className="sidenav-content-grid">
               <h4>Settings</h4>
               <div className="input-group">
-                <label className="input-group-addon" htmlFor="user-name">
-                  Username
-                </label>
+                <div className="input-group-prepend">
+                  <label className="input-group-text" htmlFor="user-name">
+                    Username
+                  </label>
+                </div>
                 <UserSearch
                   initialValue={userName}
                   onSelectUser={setUserName}
@@ -448,9 +450,11 @@ export default function ArtCreator() {
                 />
               </div>
               <div className="input-group">
-                <label className="input-group-addon" htmlFor="style">
-                  Template
-                </label>
+                <div className="input-group-prepend">
+                  <label className="input-group-text" htmlFor="style">
+                    Template
+                  </label>
+                </div>
                 <select
                   id="style"
                   className="form-control"
@@ -465,9 +469,11 @@ export default function ArtCreator() {
                 </select>
               </div>
               <div className="input-group">
-                <label className="input-group-addon" htmlFor="time-range">
-                  Time range
-                </label>
+                <div className="input-group-prepend">
+                  <label className="input-group-text" htmlFor="time-range">
+                    Time range
+                  </label>
+                </div>
                 <select
                   id="time-range"
                   className="form-control"
@@ -493,12 +499,14 @@ export default function ArtCreator() {
                     advanced layouts
                   </small>
                   <div className="input-group">
-                    <label
-                      className="input-group-addon"
-                      htmlFor="albums-per-row"
-                    >
-                      Albums per row
-                    </label>
+                    <div className="input-group-prepend">
+                      <label
+                        className="input-group-text"
+                        htmlFor="albums-per-row"
+                      >
+                        Albums per row
+                      </label>
+                    </div>
                     <input
                       id="albums-per-row"
                       className="form-control"
@@ -513,9 +521,11 @@ export default function ArtCreator() {
                     />
                   </div>
                   <div className="input-group">
-                    <label className="input-group-addon" htmlFor="grid-layout">
-                      Grid layout
-                    </label>
+                    <div className="input-group-prepend">
+                      <label className="input-group-text" htmlFor="grid-layout">
+                        Grid layout
+                      </label>
+                    </div>
                     <select
                       id="grid-layout"
                       className="form-control"
@@ -663,7 +673,7 @@ export default function ArtCreator() {
                 <div className="input-group">
                   <input className="form-control" type="text" disabled />
                   <div className="input-group-btn">
-                    <button type="button" className="btn btn-default btn-sm">
+                    <button type="button" className="btn btn-secondary btn-sm">
                       <FontAwesomeIcon icon={faCloudArrowUp} />
                     </button>
                     <input id="bg-upload" type="file" className="hidden" />

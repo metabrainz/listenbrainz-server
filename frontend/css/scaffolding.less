@@ -1,3 +1,5 @@
+@blue: #353070;
+
 html {
   font-size: 10px;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -190,4 +192,37 @@ ol {
 .row {
   margin-right: -1.5rem;
   margin-left: -1.5rem;
+}
+
+.input-group-lg > .form-control,
+.input-group-lg > .input-group-addon,
+.input-group-lg > .input-group-btn > .btn {
+  font-size: 1.8rem;
+  height: 4.5rem !important;
+}
+
+.btn-link {
+  color: @blue;
+}
+
+.btn-info {
+  background-color: @blue;
+  border-color: @blue;
+  &:hover {
+    background-color: #413b89;
+  }
+}
+
+.panel {
+  margin-bottom: 2rem;
+  .panel-heading {
+    background-color: #fafafa;
+  }
+}
+
+.btn-info.disabled,
+.btn-info:disabled {
+  background-color: #3f3c64;
+  border-color: #353070;
+  cursor: not-allowed;
 }

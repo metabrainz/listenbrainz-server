@@ -29,8 +29,8 @@ export default function Accordion({
   const [isActive, setIsActive] = React.useState(Boolean(defaultOpen));
   const contentID = uniqueId();
   return (
-    <div className={`panel panel-${bootstrapType} accordion`} key={uniqueId()}>
-      <div className="panel-heading" role="heading" aria-level={3}>
+    <div className={`card border-${bootstrapType} accordion`} key={uniqueId()}>
+      <div className="card-header" role="heading" aria-level={3}>
         <div
           role="button"
           onClick={() => setIsActive(!isActive)}
@@ -45,13 +45,13 @@ export default function Accordion({
             rotation={isActive ? 90 : undefined}
             color={COLOR_LB_LIGHT_GRAY}
           />
-          <span className="panel-title">{title}</span>
+          <span className="card-title">{title}</span>
         </div>
-        {actions && <span className="panel-actions">{actions}</span>}
+        {actions && <span className="card-actions">{actions}</span>}
       </div>
       {isActive && (
         <div
-          className="panel-body"
+          className="card-body"
           id={contentID}
           role="region"
           aria-labelledby=""
