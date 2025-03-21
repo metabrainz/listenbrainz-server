@@ -33,14 +33,12 @@ def artist_similarity():
           LIMIT 1
      """))
     
-    # artist_mbid = result.fetchone()[0]   #getting error if its return None
-    
     result_row = result.fetchone()
     if result_row is None:
-        flash("Artist not found")
-        return redirect(url_for('explore.index'))
-    else:
-        artist_mbid = result_row[0]
+        # Return a JSON error response 
+        return jsonify({"error": f"Artist not found in the database"}), 404
+    
+    artist_mbid = result_row[0]
     data = {
         "algorithm": "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30",
         "artist_mbid": artist_mbid
