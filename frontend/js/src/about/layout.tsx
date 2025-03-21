@@ -12,9 +12,9 @@ const sections: Section[] = [
   { to: "about/", label: "About" },
   { to: "donate/", label: "Donate" },
   { to: "current-status/", label: "Site status" },
+  { to: "add-data/", label: "Submitting data" },
   { to: "data/", label: "Using our data" },
   { to: "terms-of-service/", label: "Terms of service" },
-  { to: "add-data/", label: "Submitting data" },
 ];
 
 function AboutLayout() {
