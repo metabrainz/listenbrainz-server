@@ -118,6 +118,26 @@ ALTER TABLE mapping.mb_metadata_cache
     ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
     CHECK ( array_ndims(artist_mbids) = 1 );
 
+CREATE TABLE mapping.mb_release_group_cache (
+    dirty                   BOOLEAN DEFAULT FALSE,
+    last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    release_group_mbid      UUID NOT NULL,
+    artist_mbids            UUID[] NOT NULL,
+    artist_data             JSONB NOT NULL,
+    tag_data                JSONB NOT NULL,
+    release_group_data      JSONB NOT NULL,
+    recording_data          JSONB NOT NULL
+);
+
+CREATE TABLE mapping.mb_artist_metadata_cache (
+    dirty                   BOOLEAN DEFAULT FALSE,
+    last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    artist_mbid             UUID NOT NULL,
+    artist_data             JSONB NOT NULL,
+    tag_data                JSONB NOT NULL,
+    release_group_data      JSONB NOT NULL
+);
+
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
 -- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
 -- it is not possible to mark the column as NOT NULL. however, we can use this constraint to enforce the NOT NULL
