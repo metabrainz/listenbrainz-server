@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Iterable
 
 import sqlalchemy
@@ -158,8 +158,8 @@ def get_follow_events(db_conn, user_ids: Iterable[int], min_ts: float, max_ts: f
          LIMIT :count
     """), {
         "user_ids": tuple(user_ids),
-        "min_ts": datetime.utcfromtimestamp(min_ts),
-        "max_ts": datetime.utcfromtimestamp(max_ts),
+        "min_ts": datetime.fromtimestamp(min_ts, timezone.utc),
+        "max_ts": datetime.fromtimestamp(max_ts, timezone.utc),
         "count": count
     })
 
