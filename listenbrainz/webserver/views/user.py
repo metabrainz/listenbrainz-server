@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from math import ceil
 from collections import defaultdict
 
@@ -79,9 +79,9 @@ def profile(user_name):
 
     args = {}
     if max_ts:
-        args['to_ts'] = datetime.utcfromtimestamp(max_ts)
+        args['to_ts'] = datetime.fromtimestamp(max_ts, timezone.utc)
     elif min_ts:
-        args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+        args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
     data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
