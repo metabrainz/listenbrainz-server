@@ -1,10 +1,9 @@
-import datetime
+from datetime import datetime, timezone
 from typing import Optional, Union
 
 from sqlalchemy import text
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz import utils
 import sqlalchemy
 
 
@@ -51,12 +50,12 @@ def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceTyp
         """), {
             'user_id': user_id,
             'service': service.value,
-            'timestamp': utils.unix_timestamp_to_datetime(timestamp),
+            'timestamp': datetime.fromtimestamp(timestamp, timezone.utc),
         })
     db_conn.commit()
 
 
-def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) -> Optional[datetime.datetime]:
+def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) -> Optional[datetime]:
     """ Returns the timestamp of the last listen imported for the user with
     specified LB user ID from the given service.
 

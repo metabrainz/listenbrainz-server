@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Iterable
 
 import pydantic
@@ -838,14 +838,14 @@ def get_listen_events(
     # if neither is set, use current time as max_ts and subtract window
     # length to get min_ts.
     if min_ts and max_ts:
-        min_ts = datetime.utcfromtimestamp(min_ts)
-        max_ts = datetime.utcfromtimestamp(max_ts)
+        min_ts = datetime.fromtimestamp(min_ts, timezone.utc)
+        max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
     else:
         if min_ts:
-            min_ts = datetime.utcfromtimestamp(min_ts)
+            min_ts = datetime.fromtimestamp(min_ts, timezone.utc)
             max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW
         elif max_ts:
-            max_ts = datetime.utcfromtimestamp(max_ts)
+            max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
         else:
             max_ts = datetime.utcnow()
@@ -892,8 +892,8 @@ def get_all_listen_events(
     # if neither is set, use current time as max_ts and subtract window
     # length to get min_ts.
     if min_ts and max_ts:
-        temp = datetime.utcfromtimestamp(min_ts)
-        max_ts = datetime.utcfromtimestamp(max_ts)
+        temp = datetime.fromtimestamp(min_ts, timezone.utc)
+        max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
         if max_ts - temp < DEFAULT_LISTEN_EVENT_WINDOW_NEW:
             min_ts = temp
         else:
@@ -901,10 +901,10 @@ def get_all_listen_events(
             # then we must limit the search interval to :DEFAULT_LISTEN_EVENT_WINDOW_NEW:.
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     elif min_ts:
-        min_ts = datetime.utcfromtimestamp(min_ts)
+        min_ts = datetime.fromtimestamp(min_ts, timezone.utc)
         max_ts = min_ts + DEFAULT_LISTEN_EVENT_WINDOW_NEW
     elif max_ts:
-        max_ts = datetime.utcfromtimestamp(max_ts)
+        max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     else:
         max_ts = datetime.utcnow()
