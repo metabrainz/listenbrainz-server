@@ -331,9 +331,8 @@ def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
     stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
     if stats is None:
         return None
-
-    entity_list, total_entity_count = _process_user_entity(stats, 0, 1)
     return stats.last_updated
+
 
 @stats_api_bp.get("/user/<user_name>/listening-activity")
 @crossdomain
