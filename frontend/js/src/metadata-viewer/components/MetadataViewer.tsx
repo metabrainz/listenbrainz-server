@@ -2,7 +2,8 @@ import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import tinycolor from "tinycolor2";
+import type { Palette } from "@vibrant/color";
+import { Vibrant } from "node-vibrant/browser";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
 import { Link } from "react-router-dom";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -10,11 +11,11 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import TagsComponent from "../../tags/TagsComponent";
 import {
   getArtistName,
-  getAverageRGBOfImage,
   getRecordingMBID,
   getTrackName,
 } from "../../utils/utils";
 import OpenInMusicBrainzButton from "../../components/OpenInMusicBrainz";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -62,28 +63,20 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const [expandedAccordion, setExpandedAccordion] = React.useState(1);
   const albumArtRef = React.useRef<HTMLImageElement>(null);
-  const [albumArtColor, setAlbumArtColor] = React.useState({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
-
+  const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
   React.useEffect(() => {
-    const setAverageColor = () => {
-      getAverageRGBOfImage(albumArtRef?.current).then((averageColor) => {
-        setAlbumArtColor(averageColor);
-      });
-    };
-    const currentAlbumArtRef = albumArtRef.current;
-    if (currentAlbumArtRef) {
-      currentAlbumArtRef.addEventListener("load", setAverageColor);
+    if (!albumArtRef.current) {
+      return;
     }
-    return () => {
-      if (currentAlbumArtRef) {
-        currentAlbumArtRef.removeEventListener("load", setAverageColor);
-      }
-    };
-  }, [setAlbumArtColor]);
+    Vibrant.from(albumArtRef.current)
+      .getPalette()
+      .then((palette) => {
+        setAlbumArtPalette(palette);
+      });
+  }, []);
+  const backgroundGradient = albumArtPalette
+    ? `linear-gradient(to bottom, ${albumArtPalette?.Vibrant?.hex} 60%, ${albumArtPalette?.DarkVibrant?.hex})`
+    : `linear-gradient(to bottom, ${COLOR_LB_BLUE} 30%, ${COLOR_LB_ORANGE})`;
 
   React.useEffect(() => {
     const getFeedbackPromise = async () => {
@@ -142,18 +135,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       submitFeedback,
       auth_token,
     ]
-  );
-
-  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
-  adjustedAlbumColor.saturate(20);
-  adjustedAlbumColor.setAlpha(0.6);
-
-  const textColor = tinycolor.mostReadable(
-    adjustedAlbumColor,
-    adjustedAlbumColor.monochromatic().map((color) => color.toHexString()),
-    {
-      includeFallbackColors: true,
-    }
   );
 
   // Default to empty object
@@ -470,8 +451,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       <div
         className="left-side"
         style={{
-          backgroundColor: adjustedAlbumColor.toRgbString(),
-          color: textColor.toString(),
+          background: backgroundGradient,
+          color: albumArtPalette?.Vibrant?.titleTextColor,
         }}
       >
         <div className="track-info">
