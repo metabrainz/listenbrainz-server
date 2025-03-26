@@ -2,7 +2,7 @@ import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import * as tinycolor from "tinycolor2";
+import tinycolor from "tinycolor2";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
 import { Link } from "react-router-dom";
 import { millisecondsToStr } from "../../playlists/utils";
