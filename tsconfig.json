@@ -9,6 +9,7 @@
     "strict": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "resolveJsonModule": true,
     // Having some errors from SortableJS types, fixed by disabling .d.ts files checking
     // See https://github.com/SortableJS/react-sortablejs/issues/186
