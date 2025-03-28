@@ -219,10 +219,10 @@ function PlaylistMenu({
       handleError(error.error ?? error);
     }
   };
-  const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-    "playlist-modify-public"
-  );
-  const showAppleMusicExportButton = appleAuth;
+  const isLoggedIn = Boolean(currentUser?.name);
+  const showSpotifyExportButton =
+    isLoggedIn && spotifyAuth?.permission?.includes("playlist-modify-public");
+  const showAppleMusicExportButton = isLoggedIn && appleAuth?.music_user_token;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"
@@ -281,7 +281,9 @@ function PlaylistMenu({
           </li>
         </>
       )}
-      <li role="separator" className="divider" />
+      {(showSpotifyExportButton || showAppleMusicExportButton) && (
+        <li role="separator" className="divider" />
+      )}
       {showSpotifyExportButton && (
         <li>
           <a
