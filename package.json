@@ -133,6 +133,7 @@
     "@types/jest": "^29.5.3",
     "@types/less": "^3.0.3",
     "@types/lodash": "^4.14.149",
+    "@types/offscreencanvas": "^2019.7.3",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.8",
     "@types/react-helmet": "^6.1.11",

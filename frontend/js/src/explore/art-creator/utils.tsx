@@ -35,13 +35,15 @@ export async function svgToBlob(
 
   let blob;
   if ("OffscreenCanvas" in window) {
-    blob = await (canvas as OffscreenCanvas).convertToBlob({
+    canvas = canvas as OffscreenCanvas;
+    blob = await canvas.convertToBlob({
       type: encodeType,
     });
   } else {
     blob = await new Promise<Blob | null>((done, err) => {
       try {
-        (canvas as HTMLCanvasElement).toBlob(done, encodeType);
+        canvas = canvas as HTMLCanvasElement;
+        canvas.toBlob(done, encodeType);
       } catch (error) {
         err(error);
       }
