@@ -57,6 +57,8 @@ export default function MusicServices() {
       : undefined
   );
 
+  const [lastFMEdit, setLastFMEdit] = React.useState(false);
+
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -187,6 +189,20 @@ export default function MusicServices() {
   ) => {
     evt.preventDefault();
     try {
+      if (!lastfmUserId) {
+        setLastfmUserId(loaderData.current_lastfm_settings?.external_user_id);
+        setLastfmLatestListenedAt(
+          loaderData.current_lastfm_settings?.latest_listened_at
+            ? format(
+                new Date(
+                  loaderData.current_lastfm_settings?.latest_listened_at
+                ),
+                "yyyy-MM-dd'T'HH:mm:ss"
+              )
+            : undefined
+        );
+        throw Error("LastFM username empty");
+      }
       const response = await fetch(`/settings/music-services/lastfm/connect/`, {
         method: "POST",
         body: JSON.stringify({
@@ -451,6 +467,7 @@ export default function MusicServices() {
                     onChange={(e) => {
                       setLastfmUserId(e.target.value);
                     }}
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
                 </div>
                 <div>
@@ -467,7 +484,22 @@ export default function MusicServices() {
                     }}
                     name="lastFMStartDatetime"
                     title="Date and time to start import at"
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
+                </div>
+                <div style={{ flex: 0, alignSelf: "end" }}>
+                  <button
+                    disabled={permissions.lastfm !== "import"}
+                    type={lastFMEdit ? "button" : "submit"}
+                    className={
+                      permissions.lastfm !== "import"
+                        ? "btn-default"
+                        : (lastFMEdit && "btn-success") || "btn-warning"
+                    }
+                    onClick={() => setLastFMEdit((prev) => !prev)}
+                  >
+                    {lastFMEdit ? "Save" : "Edit"}
+                  </button>
                 </div>
               </div>
               <br />
