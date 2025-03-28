@@ -1,37 +1,37 @@
 import * as React from "react";
 
-import { toast } from "react-toastify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeadphones,
   faInfoCircle,
   faPlayCircle,
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
-import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
-import tinycolor from "tinycolor2";
-import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
+import type { Palette } from "@vibrant/color";
+import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
+import { Vibrant } from "node-vibrant/browser";
+import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import CBReview from "../cb-review/CBReview";
+import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import ListenCard from "../common/listens/ListenCard";
+import Username from "../common/Username";
+import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
+import TagsComponent from "../tags/TagsComponent";
+import GlobalAppContext from "../utils/GlobalAppContext";
+import { RouteQuery } from "../utils/Loader";
+import {
+  generateAlbumArtThumbnailLink,
+  getAlbumArtFromReleaseGroupMBID,
+  getReviewEventContent,
+} from "../utils/utils";
 import {
   getRelIconLink,
   ListeningStats,
   popularRecordingToListen,
 } from "./utils";
-import GlobalAppContext from "../utils/GlobalAppContext";
-import {
-  generateAlbumArtThumbnailLink,
-  getAlbumArtFromReleaseGroupMBID,
-  getAverageRGBOfImage,
-  getReviewEventContent,
-} from "../utils/utils";
-import TagsComponent from "../tags/TagsComponent";
-import ListenCard from "../common/listens/ListenCard";
-import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
-import { RouteQuery } from "../utils/Loader";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
-import Username from "../common/Username";
-import CBReview from "../cb-review/CBReview";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -103,31 +103,17 @@ export default function AlbumPage(): JSX.Element {
       : "/static/img/cover-art-placeholder.jpg"
   );
   const albumArtRef = React.useRef<HTMLImageElement>(null);
-  const [albumArtColor, setAlbumArtColor] = React.useState({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
+  const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
   React.useEffect(() => {
-    const setAverageColor = () => {
-      getAverageRGBOfImage(albumArtRef?.current).then((averageColor) => {
-        setAlbumArtColor(averageColor);
-      });
-    };
-    const currentAlbumArtRef = albumArtRef.current;
-    if (currentAlbumArtRef) {
-      currentAlbumArtRef.addEventListener("load", setAverageColor);
+    if (!albumArtRef.current) {
+      return;
     }
-    return () => {
-      if (currentAlbumArtRef) {
-        currentAlbumArtRef.removeEventListener("load", setAverageColor);
-      }
-    };
-  }, [setAlbumArtColor]);
-
-  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
-  adjustedAlbumColor.saturate(20);
-  adjustedAlbumColor.setAlpha(0.6);
+    Vibrant.from(albumArtRef.current)
+      .getPalette()
+      .then((palette) => {
+        setAlbumArtPalette(palette);
+      });
+  }, []);
 
   React.useEffect(() => {
     async function fetchCoverArt() {
@@ -275,7 +261,9 @@ export default function AlbumPage(): JSX.Element {
       id="entity-page"
       role="main"
       className="album-page"
-      style={{ ["--bg-color" as string]: adjustedAlbumColor }}
+      style={{
+        ["--bg-color" as string]: albumArtPalette?.Vibrant?.hex,
+      }}
     >
       <Helmet>
         <title>{album?.name}</title>
