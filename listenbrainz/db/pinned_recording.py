@@ -1,7 +1,6 @@
 import sqlalchemy
-from datetime import datetime
+from datetime import datetime, timezone
 
-from listenbrainz import db
 from listenbrainz.db.model.pinned_recording import PinnedRecording, WritablePinnedRecording
 from typing import List, Iterable
 
@@ -223,8 +222,8 @@ def get_pins_for_feed(db_conn, user_ids: Iterable[int], min_ts: int, max_ts: int
          LIMIT :count
     """.format(columns=','.join(PINNED_REC_GET_COLUMNS))), {
         "user_ids": tuple(user_ids),
-        "min_ts": datetime.utcfromtimestamp(min_ts),
-        "max_ts": datetime.utcfromtimestamp(max_ts),
+        "min_ts": datetime.fromtimestamp(min_ts, timezone.utc),
+        "max_ts": datetime.fromtimestamp(max_ts, timezone.utc),
         "count": count,
     })
     return [PinnedRecording(**row) for row in result.mappings()]

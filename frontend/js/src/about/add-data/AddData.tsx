@@ -330,14 +330,6 @@ export default function AddData() {
           </em>
           , a scrobbling application for Android Devices
         </li>
-        <li>
-          <em>
-            <a href="https://github.com/tgwizard/sls">
-              Simple Last.fm Scrobbler
-            </a>
-          </em>
-          , for Android devices
-        </li>
       </ul>
 
       <h4>Scripts</h4>

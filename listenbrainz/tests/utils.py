@@ -1,9 +1,7 @@
 # coding=utf-8
 
-from datetime import datetime, date
+from datetime import datetime, timezone
 import time
-import sys
-import os
 
 from listenbrainz.listen import Listen
 import uuid
@@ -21,7 +19,7 @@ def generate_data(db_conn, from_date, num_records, user_name):
         item = Listen(
             user_id=user['id'],
             user_name=user_name,
-            timestamp=datetime.utcfromtimestamp(current_date),
+            timestamp=datetime.fromtimestamp(current_date, timezone.utc),
             recording_msid=str(uuid.uuid4()),
             data={
                 'artist_name': 'Test Artist Pls ignore',

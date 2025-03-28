@@ -245,7 +245,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
         received = orjson.loads(response.data)['payload']
 
-        self.assertEqual(sent['count'], received['count'])
+        singular_entity = entity[:-1] if entity.endswith('s') else entity
+        self.assertEqual(sent[f'total_{singular_entity}_count'], received[f'total_{singular_entity}_count'])
+        self.assertEqual(count, received['count'])
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(stats_range, received['range'])

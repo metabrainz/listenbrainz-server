@@ -331,9 +331,8 @@ def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
     stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
     if stats is None:
         return None
-
-    entity_list, total_entity_count = _process_user_entity(stats, 0, 1)
     return stats.last_updated
+
 
 @stats_api_bp.get("/user/<user_name>/listening-activity")
 @crossdomain
@@ -833,6 +832,7 @@ def get_sitewide_artist():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_artist_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -859,7 +859,7 @@ def get_sitewide_artist():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("artists")
+    return _get_sitewide_stats("artists", "total_artist_count")
 
 
 @stats_api_bp.get("/sitewide/releases")
@@ -900,6 +900,7 @@ def get_sitewide_release():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_release_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -926,7 +927,7 @@ def get_sitewide_release():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("releases")
+    return _get_sitewide_stats("releases", "total_release_count")
 
 
 @stats_api_bp.get("/sitewide/release-groups")
@@ -970,6 +971,7 @@ def get_sitewide_release_group():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_release_group_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -995,7 +997,7 @@ def get_sitewide_release_group():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("release_groups")
+    return _get_sitewide_stats("release_groups", "total_release_group_count")
 
 
 @stats_api_bp.get("/sitewide/recordings")
@@ -1033,6 +1035,7 @@ def get_sitewide_recording():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_recording_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -1060,10 +1063,10 @@ def get_sitewide_recording():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("recordings")
+    return _get_sitewide_stats("recordings", "total_recording_count")
 
 
-def _get_sitewide_stats(entity: str, entire_range: bool = False):
+def _get_sitewide_stats(entity: str, count_key: str, entire_range: bool = False):
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
@@ -1077,7 +1080,7 @@ def _get_sitewide_stats(entity: str, entire_range: bool = False):
 
     count = min(count, MAX_ITEMS_PER_GET)
     total_entity_count = stats["count"]
-    
+
     if entire_range:
         entity_list = stats["data"]
     else:
@@ -1088,7 +1091,8 @@ def _get_sitewide_stats(entity: str, entire_range: bool = False):
             entity: entity_list,
             "range": stats_range,
             "offset": offset,
-            "count": total_entity_count,
+            "count": count,
+            count_key: total_entity_count,
             "from_ts": stats["from_ts"],
             "to_ts": stats["to_ts"],
             "last_updated": stats["last_updated"]

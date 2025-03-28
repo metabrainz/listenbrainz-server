@@ -499,7 +499,7 @@ def delete_listen():
     if "listened_at" not in data:
         log_raise_400("Listen timestamp missing.")
     try:
-        listened_at = datetime.utcfromtimestamp(int(data["listened_at"]))
+        listened_at = datetime.fromtimestamp(int(data["listened_at"]), timezone.utc)
     except ValueError:
         log_raise_400("%s: Listen timestamp invalid." % data["listened_at"])
 

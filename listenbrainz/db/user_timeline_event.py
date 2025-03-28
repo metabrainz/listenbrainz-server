@@ -19,7 +19,7 @@
 import sqlalchemy
 import orjson
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import text
 
@@ -34,9 +34,8 @@ from listenbrainz.db.model.user_timeline_event import (
     HiddenUserTimelineEvent,
     PersonalRecordingRecommendationMetadata, WritePersonalRecordingRecommendationMetadata
 )
-from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from typing import List, Tuple, Iterable
+from typing import List, Iterable
 
 from listenbrainz.db.model.review import CBReviewTimelineMetadata
 
@@ -196,8 +195,8 @@ def get_user_timeline_events(
          LIMIT :count
     """), {
         "user_ids": tuple(user_ids),
-        "min_ts": datetime.utcfromtimestamp(min_ts),
-        "max_ts": datetime.utcfromtimestamp(max_ts),
+        "min_ts": datetime.fromtimestamp(min_ts, timezone.utc),
+        "max_ts": datetime.fromtimestamp(max_ts, timezone.utc),
         "event_type": event_type.value,
         "count": count,
     })
@@ -255,8 +254,8 @@ def get_personal_recommendation_events_for_feed(db_conn, user_id: int, min_ts: i
          LIMIT :count
     """), {
         "user_id": user_id,
-        "min_ts": datetime.utcfromtimestamp(min_ts),
-        "max_ts": datetime.utcfromtimestamp(max_ts),
+        "min_ts": datetime.fromtimestamp(min_ts, timezone.utc),
+        "max_ts": datetime.fromtimestamp(max_ts, timezone.utc),
         "count": count,
         "event_type": UserTimelineEventType.PERSONAL_RECORDING_RECOMMENDATION.value,
     })
@@ -297,8 +296,8 @@ def get_thanks_events_for_feed(db_conn, user_id: int, min_ts: int, max_ts: int, 
          LIMIT :count
     """), {
         "user_id": user_id,
-        "min_ts": datetime.utcfromtimestamp(min_ts),
-        "max_ts": datetime.utcfromtimestamp(max_ts),
+        "min_ts": datetime.fromtimestamp(min_ts, timezone.utc),
+        "max_ts": datetime.fromtimestamp(max_ts, timezone.utc),
         "count": count,
         "event_type": UserTimelineEventType.THANKS.value,
     })
