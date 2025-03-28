@@ -1,5 +1,6 @@
 import { Canvg, RenderingContext2D, presets } from "canvg";
 
+const offscreenPreset = presets.offscreen();
 export async function svgToBlob(
   width: number,
   height: number,
@@ -20,24 +21,29 @@ export async function svgToBlob(
   if (!ctx) {
     throw new Error("No canvas context");
   }
-  const v = await Canvg.fromString(
-    ctx as RenderingContext2D,
-    svgString,
-    presets.offscreen()
-  );
+  const v = Canvg.fromString(ctx as RenderingContext2D, svgString, {
+    ...offscreenPreset,
+    // Overwrite the Canvg typescript types here, replace once this Canvg ticket is resolved:
+    // https://github.com/canvg/canvg/issues/1754
+    createCanvas: offscreenPreset.createCanvas as () => OffscreenCanvas & {
+      getContext(contextId: "2d"): OffscreenCanvasRenderingContext2D;
+    },
+  });
 
   // Render only first frame, ignoring animations and mouse.
   await v.render();
 
   let blob;
   if ("OffscreenCanvas" in window) {
-    blob = await (canvas as OffscreenCanvas).convertToBlob({
+    canvas = canvas as OffscreenCanvas;
+    blob = await canvas.convertToBlob({
       type: encodeType,
     });
   } else {
     blob = await new Promise<Blob | null>((done, err) => {
       try {
-        (canvas as HTMLCanvasElement).toBlob(done, encodeType);
+        canvas = canvas as HTMLCanvasElement;
+        canvas.toBlob(done, encodeType);
       } catch (error) {
         err(error);
       }
