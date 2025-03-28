@@ -4,7 +4,7 @@
     "outDir": "./dist/",
     "noImplicitAny": true,
     "module": "es2022",
-    "target": "es5",
+    "target": "ES2018",
     "jsx": "react",
     "strict": true,
     "moduleResolution": "node",
