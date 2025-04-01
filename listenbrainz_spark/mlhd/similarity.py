@@ -1,7 +1,4 @@
-from more_itertools import chunked
-
-from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
-from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, MLHD_PLUS_DATA_DIRECTORY
+from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY, RECORDING_LENGTH_WITH_ID_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
@@ -9,16 +6,16 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 DEFAULT_TRACK_LENGTH = 180
 
 
-def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold):
+def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold, threshold, limit):
     return f"""
             WITH listens AS (
                  SELECT user_id
                       , BIGINT(listened_at)
                       , CAST(COALESCE(r.length / 1000, {DEFAULT_TRACK_LENGTH}) AS BIGINT) AS duration
-                      , recording_mbid
+                      , recording_id
                       , artist_credit_mbids
                    FROM {listen_table} l
-              LEFT JOIN {metadata_table} r
+                   JOIN {metadata_table} r
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
                     AND l.recording_mbid != ''
@@ -26,7 +23,7 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                 SELECT user_id
                      , listened_at
                      , listened_at - LAG(listened_at, 1) OVER w - LAG(duration, 1) OVER w AS difference
-                     , recording_mbid
+                     , recording_id
                      , artist_credit_mbids
                   FROM listens
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
@@ -35,35 +32,48 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                      -- spark doesn't support window aggregate functions with FILTER clause
                      , COUNT_IF(difference > {session}) OVER w AS session_id
                      , LEAD(difference, 1) OVER w < {skip_threshold} AS skipped
-                     , recording_mbid
+                     , recording_id
                      , artist_credit_mbids
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions_filtered AS (
                 SELECT user_id
                      , session_id
-                     , recording_mbid
+                     , recording_id
                      , artist_credit_mbids
                   FROM sessions
-                 WHERE NOT skipped    
+                 WHERE NOT skipped
             ), user_grouped_mbids AS (
-                SELECT user_id
-                     , IF(s1.recording_mbid < s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid0
-                     , IF(s1.recording_mbid > s2.recording_mbid, s1.recording_mbid, s2.recording_mbid) AS lexical_mbid1
+                SELECT s1.user_id
+                     , s1.recording_id AS id0
+                     , s2.recording_id AS id1
+                     , COUNT(*) AS part_score
                   FROM sessions_filtered s1
                   JOIN sessions_filtered s2
-                 USING (user_id, session_id)
-                 WHERE s1.recording_mbid != s2.recording_mbid
-                   AND NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
-            )
-                SELECT user_id
-                     , lexical_mbid0 AS mbid0
-                     , lexical_mbid1 AS mbid1
-                     , LEAST(COUNT(*), {max_contribution}) AS part_score
+                    ON s1.user_id = s2.user_id
+                   AND s1.session_id = s2.session_id
+                   AND s1.recording_id < s2.recording_id
+                 WHERE NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
+            ), threshold_mbids AS (
+                SELECT id0
+                     , id1
+                     , SUM(LEAST(part_score, {max_contribution})) AS score
                   FROM user_grouped_mbids
-              GROUP BY user_id
-                     , lexical_mbid0
-                     , lexical_mbid1
+              GROUP BY id0
+                     , id1
+                HAVING score > {threshold}
+            ), ranked_mbids AS (
+                SELECT id0
+                     , id1
+                     , score
+                     , rank() OVER w AS rank
+                  FROM thresholded_mbids
+                WINDOW w AS (PARTITION BY id0 ORDER BY score DESC)
+            )   SELECT id0
+                     , id1
+                     , score
+                  FROM ranked_mbids
+                 WHERE rank <= {limit}
     """
 
 
@@ -86,23 +96,12 @@ def main(session, contribution, threshold, limit, skip):
 
     run_query("SET spark.sql.shuffle.partitions = 2000").collect()
 
-    read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
+    read_files_from_HDFS(RECORDING_LENGTH_WITH_ID_DATAFRAME).createOrReplaceTempView(metadata_table)
     mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
+    mlhd_df.createOrReplaceTempView(table)
 
-    first_batch = True
-
-    for chunks in chunked(MLHD_PLUS_CHUNKS, 2):
-        filter_clause = " OR ".join([f"user_id LIKE '{chunk}%'" for chunk in chunks])
-        mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
-        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
-
-        if first_batch:
-            mode = "overwrite"
-            first_batch = False
-        else:
-            mode = "append"
-
-        run_query(query).write.mode(mode).parquet("/mlhd-session-output")
+    query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold, threshold, limit)
+    run_query(query).write.mode("overwrite").parquet("/mlhd-session-output")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 

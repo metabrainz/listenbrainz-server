@@ -89,7 +89,7 @@ def build_sessioned_index(listen_table, metadata_table, session, max_contributio
                      , mbid1
                      , score
                   FROM ranked_mbids
-                 WHERE rank <= {limit}   
+                 WHERE rank <= {limit}
     """
 
 
