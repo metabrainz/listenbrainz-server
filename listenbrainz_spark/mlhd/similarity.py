@@ -54,6 +54,9 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                    AND s1.session_id = s2.session_id
                    AND s1.recording_id < s2.recording_id
                  WHERE NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
+              GROUP BY s1.user_id
+                     , s1.recording_id
+                     , s2.recording_id   
             ), threshold_mbids AS (
                 SELECT id0
                      , id1
@@ -67,7 +70,7 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                      , id1
                      , score
                      , rank() OVER w AS rank
-                  FROM thresholded_mbids
+                  FROM threshold_mbids
                 WINDOW w AS (PARTITION BY id0 ORDER BY score DESC)
             )   SELECT id0
                      , id1
