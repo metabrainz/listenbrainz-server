@@ -48,7 +48,7 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                      , artist_credit_mbids
                   FROM sessions
                  WHERE NOT skipped
-            )
+            ), user_grouped_mbids AS (
                 SELECT s1.user_id
                      , s1.recording_id AS id0
                      , s2.recording_id AS id1
@@ -61,7 +61,14 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                  WHERE NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
               GROUP BY s1.user_id
                      , s1.recording_id
-                     , s2.recording_id
+                     , s2.recording_id   
+            )
+                SELECT id0
+                     , id1
+                     , SUM(LEAST(part_score, {max_contribution})) AS score
+                  FROM user_grouped_mbids
+              GROUP BY id0
+                     , id1
     """
 
 
