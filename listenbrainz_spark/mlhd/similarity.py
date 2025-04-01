@@ -1,3 +1,6 @@
+import logging
+
+from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
 from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY, RECORDING_LENGTH_WITH_ID_DATAFRAME
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
@@ -5,8 +8,10 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 
 DEFAULT_TRACK_LENGTH = 180
 
+logger = logging.getLogger(__name__)
 
-def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold, threshold, limit):
+
+def build_partial_sessioned_index(listen_table, metadata_table, session, max_contribution, skip_threshold):
     return f"""
             WITH listens AS (
                  SELECT user_id
@@ -43,7 +48,7 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                      , artist_credit_mbids
                   FROM sessions
                  WHERE NOT skipped
-            ), user_grouped_mbids AS (
+            )
                 SELECT s1.user_id
                      , s1.recording_id AS id0
                      , s2.recording_id AS id1
@@ -56,27 +61,7 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
                  WHERE NOT arrays_overlap(s1.artist_credit_mbids, s2.artist_credit_mbids)
               GROUP BY s1.user_id
                      , s1.recording_id
-                     , s2.recording_id   
-            ), threshold_mbids AS (
-                SELECT id0
-                     , id1
-                     , SUM(LEAST(part_score, {max_contribution})) AS score
-                  FROM user_grouped_mbids
-              GROUP BY id0
-                     , id1
-                HAVING score > {threshold}
-            ), ranked_mbids AS (
-                SELECT id0
-                     , id1
-                     , score
-                     , rank() OVER w AS rank
-                  FROM threshold_mbids
-                WINDOW w AS (PARTITION BY id0 ORDER BY score DESC)
-            )   SELECT id0
-                     , id1
-                     , score
-                  FROM ranked_mbids
-                 WHERE rank <= {limit}
+                     , s2.recording_id
     """
 
 
@@ -103,8 +88,12 @@ def main(session, contribution, threshold, limit, skip):
     mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
     mlhd_df.createOrReplaceTempView(table)
 
-    query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold, threshold, limit)
-    run_query(query).write.mode("overwrite").parquet("/mlhd-session-output")
+    for chunk in MLHD_PLUS_CHUNKS:
+        logger.info("Processsing chunk: %s", chunk)
+        filter_clause = f"user_id LIKE '{chunk}%'"
+        mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
+        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
+        run_query(query).write.mode("overwrite").parquet(f"/mlhd-session-output/{chunk}")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
