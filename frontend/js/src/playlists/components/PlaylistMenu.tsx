@@ -15,6 +15,7 @@ import { useContext } from "react";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link } from "react-router-dom";
+import { noop } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "../utils";
@@ -220,16 +221,16 @@ function PlaylistMenu({
     }
   };
   const isLoggedIn = Boolean(currentUser?.name);
-  const showSpotifyExportButton =
+  const enableSpotifyExport =
     isLoggedIn && spotifyAuth?.permission?.includes("playlist-modify-public");
-  const showAppleMusicExportButton = isLoggedIn && appleAuth?.music_user_token;
+  const enableAppleMusicExport = isLoggedIn && appleAuth?.music_user_token;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"
       aria-labelledby="playlistOptionsDropdown"
     >
-      <li>
-        <a onClick={copyPlaylist} role="button" href="#">
+      <li className={!isLoggedIn ? "disabled" : ""}>
+        <a onClick={isLoggedIn ? copyPlaylist : noop} role="button" href="#">
           <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
           {playlistID ? "Duplicate" : "Save to my playlists"}
         </a>
@@ -281,34 +282,32 @@ function PlaylistMenu({
           </li>
         </>
       )}
-      {(showSpotifyExportButton || showAppleMusicExportButton) && (
-        <li role="separator" className="divider" />
-      )}
-      {showSpotifyExportButton && (
-        <li>
-          <a
-            id="exportPlaylistToSpotify"
-            role="button"
-            href="#"
-            onClick={() => handlePlaylistExport(exportToSpotify)}
-          >
-            <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
-          </a>
-        </li>
-      )}
-      {showAppleMusicExportButton && (
-        <li>
-          <a
-            id="exportPlaylistToAppleMusic"
-            role="button"
-            href="#"
-            onClick={() => handlePlaylistExport(exportToAppleMusic)}
-          >
-            <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
-            Music
-          </a>
-        </li>
-      )}
+      <li role="separator" className="divider" />
+      <li className={enableSpotifyExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToSpotify"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableSpotifyExport && handlePlaylistExport(exportToSpotify)
+          }
+        >
+          <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
+        </a>
+      </li>
+      <li className={enableAppleMusicExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToAppleMusic"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableAppleMusicExport && handlePlaylistExport(exportToAppleMusic)
+          }
+        >
+          <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
+          Music
+        </a>
+      </li>
       <li role="separator" className="divider" />
       <li>
         <a
