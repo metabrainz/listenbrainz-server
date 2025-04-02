@@ -90,7 +90,7 @@ def build_full_sessioned_index(chunks_table, threshold, limit):
                  , total_score
                  , rank() OVER w AS rank
               FROM thresholded_mbids
-            WINDOW w AS (PARTITION BY id0 ORDER BY score DESC)
+            WINDOW w AS (PARTITION BY id0 ORDER BY total_score DESC)
         )   SELECT id0
                  , id1
                  , total_score AS score
