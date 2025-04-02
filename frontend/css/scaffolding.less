@@ -1,5 +1,3 @@
-@blue: #353070;
-
 html {
   font-size: 10px;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -223,6 +221,17 @@ ol {
 .btn-info.disabled,
 .btn-info:disabled {
   background-color: #3f3c64;
-  border-color: #353070;
+  border-color: @blue;
   cursor: not-allowed;
+}
+
+.form-text {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  color: #8c8674;
+}
+
+a:hover,
+a:focus {
+  text-decoration: none;
 }

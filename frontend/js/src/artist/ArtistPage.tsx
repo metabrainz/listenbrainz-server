@@ -311,7 +311,7 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="help-block">
+            <small className="form-text">
               {artist?.begin_year}
               {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />

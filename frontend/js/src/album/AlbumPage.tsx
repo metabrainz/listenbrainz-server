@@ -224,7 +224,7 @@ export default function AlbumPage(): JSX.Element {
           width={200}
         />
         <br />
-        <div className="help-block small mb-15">
+        <div className="form-text small mb-15">
           Broken CD by{" "}
           <a href="https://www.vecteezy.com/members/amandalamsyah/uploads">
             amandalamsyah on Vecteezy
@@ -302,7 +302,7 @@ export default function AlbumPage(): JSX.Element {
                 );
               })}
             </div>
-            <small className="help-block">
+            <small className="form-text">
               {type}
               {type && album?.date ? " - " : ""}
               {album?.date}

@@ -448,11 +448,11 @@ export default function PlaylistPage() {
                 <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
               )}
             </div>
-            <small className="help-block">
+            <small className="form-text">
               <div>Created: {new Date(playlist.date).toLocaleString()}</div>
             </small>
             {customFields?.last_modified_at && (
-              <small className="help-block">
+              <small className="form-text">
                 <div>
                   Last modified:{" "}
                   {new Date(customFields.last_modified_at).toLocaleString()}
@@ -460,7 +460,7 @@ export default function PlaylistPage() {
               </small>
             )}
             {customFields?.copied_from && (
-              <small className="help-block">
+              <small className="form-text">
                 <div>
                   Copied from:
                   <a href={sanitizeUrl(customFields.copied_from)}>
@@ -544,7 +544,7 @@ export default function PlaylistPage() {
       <div
         id="playlist"
         data-testid="playlist"
-        className="col-md-8 col-md-offset-2"
+        className="col-md-8 offset-md-2"
       >
         <div className="header">
           <h3 className="header-with-line">

@@ -695,7 +695,6 @@ export default NiceModal.create((props: CBReviewModalProps) => {
               <img
                 src="/static/img/critiquebrainz-logo.svg"
                 height="30"
-                className="cb-img-fluid"
                 alt="CritiqueBrainz Logo"
                 style={{ margin: "8px" }}
               />

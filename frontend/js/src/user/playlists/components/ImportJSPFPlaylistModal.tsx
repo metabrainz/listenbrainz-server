@@ -177,7 +177,7 @@ export default NiceModal.create(() => {
                 onChange={handleFileChange}
               />
               {fileError && <div className="has-error">{fileError}</div>}
-              <p className="help-block">
+              <p className="form-text">
                 For information on the JSPF playlist format, please visit{" "}
                 <a href="https://musicbrainz.org/doc/jspf">
                   musicbrainz.org/doc/jspf
