@@ -1,5 +1,7 @@
 import logging
 
+import listenbrainz_spark
+from listenbrainz_spark import hdfs_connection, config
 from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
 from listenbrainz_spark.path import MLHD_PLUS_DATA_DIRECTORY, RECORDING_LENGTH_WITH_ID_DATAFRAME
 from listenbrainz_spark.stats import run_query
@@ -72,6 +74,31 @@ def build_partial_sessioned_index(listen_table, metadata_table, session, max_con
     """
 
 
+def build_full_sessioned_index(chunks_table, threshold, limit):
+    return f"""
+        WITH thresholded_mbids AS (
+            SELECT id0
+                 , id1
+                 , SUM(score) AS total_score
+              FROM {chunks_table}
+          GROUP BY id0
+                 , id1
+            HAVING total_score > {threshold}
+        ), ranked_mbids AS (
+            SELECT id0
+                 , id1
+                 , total_score AS score
+                 , rank() OVER w AS rank
+              FROM thresholded_mbids
+            WINDOW w AS (PARTITION BY id0 ORDER BY score DESC)
+        )   SELECT id0
+                 , id1
+                 , score
+              FROM ranked_mbids
+             WHERE rank <= {limit}
+    """
+
+
 def main(session, contribution, threshold, limit, skip):
     """ Generate similar recordings based on MLHD listening sessions.
 
@@ -92,19 +119,30 @@ def main(session, contribution, threshold, limit, skip):
     run_query("SET spark.sql.shuffle.partitions = 2000").collect()
 
     read_files_from_HDFS(RECORDING_LENGTH_WITH_ID_DATAFRAME).createOrReplaceTempView(metadata_table)
-    mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
-    mlhd_df.createOrReplaceTempView(table)
+    # mlhd_df = read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
+    # mlhd_df.createOrReplaceTempView(table)
+    #
+    # for chunk in MLHD_PLUS_CHUNKS:
+    #     logger.info("Processsing chunk: %s", chunk)
+    #     filter_clause = f"user_id LIKE '{chunk}%'"
+    #     mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
+    #     query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
+    #     run_query(query) \
+    #         .repartition(128, "id0") \
+    #         .write \
+    #         .mode("overwrite") \
+    #         .parquet(f"/mlhd-session-output/{chunk}", compression="zstd")
 
-    for chunk in MLHD_PLUS_CHUNKS:
-        logger.info("Processsing chunk: %s", chunk)
-        filter_clause = f"user_id LIKE '{chunk}%'"
-        mlhd_df.filter(filter_clause).createOrReplaceTempView(table)
-        query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
-        run_query(query) \
-            .repartition(128, "id0") \
-            .write \
-            .mode("overwrite") \
-            .parquet(f"/mlhd-session-output/{chunk}", compression="zstd")
+    chunks = hdfs_connection.client.list("/mlhd-session-output")
+    chunks_path = [config.HDFS_CLUSTER_URI + chunk for chunk in chunks]
+    chunks_table = "mlhd_partial_agg_chunks"
+    listenbrainz_spark.session.read.parquet(*chunks_path).createOrReplaceTempView(chunks_table)
+    query = build_full_sessioned_index(chunks_table, threshold, limit)
+    run_query(query) \
+        .repartition(256, "id0") \
+        .write \
+        .mode("overwrite") \
+        .parquet("/mlhd-similarity-recordings", compression="zstd")
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
