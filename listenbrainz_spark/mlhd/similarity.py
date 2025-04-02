@@ -133,8 +133,9 @@ def main(session, contribution, threshold, limit, skip):
     #         .mode("overwrite") \
     #         .parquet(f"/mlhd-session-output/{chunk}", compression="zstd")
 
-    chunks = hdfs_connection.client.list("/mlhd-session-output")
-    chunks_path = [config.HDFS_CLUSTER_URI + chunk for chunk in chunks]
+    chunk_parent_dir = "/mlhd-session-output"
+    chunks = hdfs_connection.client.list(chunk_parent_dir)
+    chunks_path = [f"{config.HDFS_CLUSTER_URI}{chunk_parent_dir}/{chunk}" for chunk in chunks]
     chunks_table = "mlhd_partial_agg_chunks"
     listenbrainz_spark.session.read.parquet(*chunks_path).createOrReplaceTempView(chunks_table)
     query = build_full_sessioned_index(chunks_table, threshold, limit)
