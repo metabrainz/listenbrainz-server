@@ -242,7 +242,10 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 </div>
               )}
             </div>
-            <div className="modal-footer" style={{ textAlign: "left" }}>
+            <div
+              className="modal-footer"
+              style={{ textAlign: "left", width: "100%" }}
+            >
               <div
                 className="mb-10"
                 style={{
