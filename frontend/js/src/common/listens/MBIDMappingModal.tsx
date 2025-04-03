@@ -163,6 +163,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
         style={visible ? { display: "block" } : {}}
         id="MBIDMappingModal"
         role="dialog"
+        data-backdrop="true"
         aria-labelledby="MBIDMappingModalLabel"
       >
         <div className="modal-dialog" role="document">
@@ -244,13 +245,18 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
             </div>
             <div
               className="modal-footer"
-              style={{ textAlign: "left", width: "100%" }}
+              style={{
+                textAlign: "left",
+                width: "100%",
+                display: "inline-block",
+              }}
             >
               <div
                 className="mb-10"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
+                  width: "100%",
                 }}
               >
                 <div>

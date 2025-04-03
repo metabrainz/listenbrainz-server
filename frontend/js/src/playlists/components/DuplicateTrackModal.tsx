@@ -26,10 +26,12 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
 
   return (
     <div
-      className="modal fade in"
+      className={`modal fade ${modal.visible ? "show" : ""}`}
+      style={{ display: modal.visible ? "block" : "none" }}
       tabIndex={-1}
       role="dialog"
-      style={{ display: "block" }}
+      data-backdrop="true"
+      aria-hidden={!modal.visible}
     >
       <div
         className="modal-dialog"
@@ -51,7 +53,7 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
           <div className="modal-body">
             <p>{message}</p>
           </div>
-          <div className="modal-footer">
+          <div className="modal-footer" style={{ display: "inline-block" }}>
             <div className="checkbox pull-left">
               <label>
                 <input

@@ -425,6 +425,8 @@ export class ListenCard extends React.Component<
           onKeyDown={openModal}
           role="button"
           tabIndex={0}
+          data-toggle="modal"
+          data-target="#MBIDMappingModal"
         >
           <div className="not-mapped">
             <FontAwesomeIcon icon={faLink} />
@@ -677,6 +679,8 @@ export class ListenCard extends React.Component<
                             listenToMap: listen,
                           });
                         }}
+                        dataToggle="modal"
+                        dataTarget="#MBIDMappingModal"
                       />
                     )}
                     {isLoggedIn && isListenReviewable && (
