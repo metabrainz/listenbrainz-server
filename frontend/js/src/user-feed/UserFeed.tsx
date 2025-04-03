@@ -523,6 +523,9 @@ export default function UserFeedPage() {
     }
     if (event.event_type === EventType.THANKS && !event.hidden) {
       const { metadata } = event as TimelineEvent<ThanksMetadata>;
+      if(!metadata?.blurb_content?.length){
+        return null;
+      }
       return (
         <div className="event-content">
           <Card className="listen-card">
@@ -776,6 +779,10 @@ export default function UserFeedPage() {
                       const subEvent = events?.find(
                         (evt) => evt.id === original_event_id && evt.event_type === original_event_type
                       );
+                      if(!subEvent){
+                        // Search for the event?
+                        subEventElement = <div className="muted">Load more evens to preview this older event</div>
+                      }
                       subEventElement = renderSubEvent(subEvent);
                     }
 
