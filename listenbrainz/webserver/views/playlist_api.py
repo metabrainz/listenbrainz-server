@@ -34,6 +34,11 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 MAX_RECORDINGS_PER_ADD = 100
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
+supported_services = {
+    "spotify": SpotifyService,
+    "apple_music": AppleService,
+    "soundcloud": SoundCloudService
+}
 
 def validate_create_playlist_required_items(jspf):
     """Given a JSPF dict, ensure that the title and public fields are present.
@@ -870,18 +875,18 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service != "spotify" and service != "apple_music" and service != "soundcloud":
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify', 'apple_music' and 'soundcloud'.")
+    if service not in supported_services:
+        raise APIBadRequest(f"Service {service} is not supported. "
+                            f"Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
+
+    service_class = supported_services[service]()
 
     if service == "spotify":
-        spotify_service = SpotifyService()
-        token = spotify_service.get_user(user["id"], refresh=True)
+        token = service_class.get_user(user["id"], refresh=True)
     elif service == "apple_music":
-        apple_service = AppleService()
-        token = apple_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
     elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
@@ -923,11 +928,6 @@ def import_playlist_from_music_service(service):
     :resheader Content-Type: *application/json*
     """
     user = validate_auth_header()
-    supported_services = {
-        "spotify": SpotifyService,
-        "apple_music": AppleService,
-        "soundcloud": SoundCloudService
-    }
 
     if service not in supported_services:
         raise APIBadRequest(f"Service {service} is not supported. "
@@ -939,11 +939,9 @@ def import_playlist_from_music_service(service):
         token = service_class.get_user(user["id"], refresh=True)
     elif service == "apple_music":
         # TODO: implement refresh token for AppleMusic
-        apple_service = AppleService()
-        token = apple_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
     elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
@@ -1093,23 +1091,23 @@ def export_playlist_jspf(service):
     """
     user = validate_auth_header()
 
-    if service != "spotify" and service != "apple_music" and service != "soundcloud":
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify', 'apple_music' and 'soundcloud'.")
-
+    if service not in supported_services:
+        raise APIBadRequest(f"Service {service} is not supported. "
+                            f"Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
+    
+    service_class = supported_services[service]()
+    
     if service == "spotify":
-        spotify_service = SpotifyService()
-        token = spotify_service.get_user(user["id"], refresh=True)
+        token = service_class.get_user(user["id"], refresh=True)
     elif service == "apple_music":
-        apple_service = AppleService()
-        token = apple_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
     elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
 
-    if service=='spotify' and not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
+    if service == 'spotify' and not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
         raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
                             f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
                             f" to use this feature.")
