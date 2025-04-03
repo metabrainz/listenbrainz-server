@@ -1044,7 +1044,7 @@ def import_tracks_from_apple_playlist(playlist_id):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.route("/soundcloud/<playlist_id>/tracks")
+@playlist_api_bp.get("/soundcloud/<playlist_id>/tracks")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
