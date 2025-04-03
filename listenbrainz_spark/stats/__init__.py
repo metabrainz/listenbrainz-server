@@ -10,7 +10,7 @@ from listenbrainz_spark.exceptions import SQLException
 
 from pyspark.sql.utils import *
 
-from listenbrainz_spark.utils import get_latest_listen_ts
+from listenbrainz_spark.listens.data import get_latest_listen_ts
 
 SITEWIDE_STATS_ENTITY_LIMIT = 1000  # number of top artists to retain in sitewide stats
 
@@ -29,7 +29,7 @@ def run_query(query):
         >> It is the responsibility of the caller to register tables etc.
     """
     try:
-        processed_query = listenbrainz_spark.sql_context.sql(query)
+        processed_query = listenbrainz_spark.session.sql(query)
     except AnalysisException as err:
         raise SQLException('{}. Failed to analyze SQL query plan for\n{}\n{}'.format(type(err).__name__, query, str(err)))
     except ParseException as err:
@@ -168,35 +168,31 @@ def get_dates_for_stats_range(stats_range: str) -> Tuple[datetime, datetime]:
     # in spark and so that instead of no stats, outdated stats are calculated.
     latest_listen_date = latest_listen_ts.date()
 
+    # from_offset: this is applied to the latest_listen_date to get from_date
+    # to_offset: this is applied to from_date to get to_date
+
     # "this" time ranges, these count stats for the ongoing time period till date
-    if stats_range.startswith("this"):
-        if stats_range == "this_week":
-            # if today is a monday then from_offset is monday of last week
-            # otherwise from_offset is monday of this week
-            from_offset = relativedelta(days=-1, weekday=MO(-1))
-        elif stats_range == "this_month":
-            # if today is 1st then 1st of last month otherwise the 1st of this month
-            from_offset = relativedelta(months=-1) if latest_listen_date.day == 1 else relativedelta(day=1)
+    if stats_range == "this_week":
+        # if today is a monday then from_offset is monday of last week
+        # otherwise from_offset is monday of this week
+        from_offset = relativedelta(days=-1, weekday=MO(-1))
+        to_offset = relativedelta(weeks=+1)
+    elif stats_range == "this_month":
+        # if today is 1st then 1st of last month otherwise the 1st of this month
+        from_offset = relativedelta(months=-1) if latest_listen_date.day == 1 else relativedelta(day=1)
+        to_offset = relativedelta(months=+1)
+    elif stats_range == "this_year":
+        # if today is the 1st of the year, then still show last year stats
+        if latest_listen_date.day == 1 and latest_listen_date.month == 1:
+            from_offset = relativedelta(years=-1)
         else:
-            # if today is the 1st of the year, then still show last year stats
-            if latest_listen_date.day == 1 and latest_listen_date.month == 1:
-                from_offset = relativedelta(years=-1)
-            else:
-                from_offset = relativedelta(month=1, day=1)
-
-        from_date = latest_listen_date + from_offset
-
-        # set time to 00:00
-        from_date = datetime.combine(from_date, time.min)
-        to_date = datetime.combine(latest_listen_date, time.min)
-        return from_date, to_date
+            from_offset = relativedelta(month=1, day=1)
+        to_offset = relativedelta(years=+1)
 
     # following are "last" week/month/year stats, here we want the stats of the
     # previous week/month/year and *not* from 7 days ago to today so on.
 
-    # from_offset: this is applied to the latest_listen_date to get from_date
-    # to_offset: this is applied to from_date to get to_date
-    if stats_range == "week":
+    elif stats_range == "week":
         from_offset = relativedelta(weeks=-1, weekday=MO(-1))  # monday of previous week
         to_offset = relativedelta(weeks=+1)
     elif stats_range == "month":

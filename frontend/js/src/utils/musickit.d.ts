@@ -228,6 +228,7 @@ declare namespace MusicKit {
     setQueue(options: SetQueueOptions): Promise<any>;
 
     stop(): void;
+    volume: number;
   }
 
   declare type NowPlayingItem = {

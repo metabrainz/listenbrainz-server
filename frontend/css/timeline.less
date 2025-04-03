@@ -67,6 +67,9 @@
           &.recording_pin {
             color: @yellow;
           }
+          &.thanks {
+            color: @purple;
+          }
         }
 
         .event-description-text {
@@ -78,6 +81,54 @@
       .event-content {
         padding-top: 1em;
         padding-left: 2.5em;
+      }
+
+      &.timeline-sub-event {
+        opacity: 0.8;
+        // Horizontal line
+        &::before {
+          content: "";
+          height: 1.25px;
+          width: 2em;
+          background-color: @gray-light;
+          position: absolute;
+          top: 2em;
+          left: -2.3em;
+          z-index: -1;
+        }
+
+        list-style: none;
+        padding-top: 1.3em;
+
+        .event-description-text {
+          margin-left: 2em;
+        }
+        .event-content {
+          padding-left: 3em;
+        }
+
+        details .event-icon:before {
+          content: "+";
+          font-weight: bold;
+          background-color: @gray;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          width: 0.65em;
+          display: block;
+          color: white;
+          font-size: 2em;
+          border: none;
+          line-height: 0.65em;
+          text-align: center;
+          margin-top: 0.65em;
+          margin-left: -0.5em;
+          cursor: pointer;
+        }
+
+        details[open] .event-icon:before {
+          background-color: lighten(@gray, 25%);
+          content: "-";
+        }
       }
     }
   }

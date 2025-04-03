@@ -53,7 +53,7 @@ export default function GDPR() {
           <p>
             By signing into ListenBrainz, you grant the MetaBrainz Foundation
             permission to include your listening history in data dumps we make
-            publicly available under the
+            publicly available under the{" "}
             <a href="https://creativecommons.org/publicdomain/zero/1.0/">
               CC0 license
             </a>

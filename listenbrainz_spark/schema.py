@@ -3,6 +3,27 @@ from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
 
+listens_metadata_schema = StructType([
+    StructField('location', StringType(), False),
+    StructField('max_listened_at', TimestampType(), False),
+    StructField('max_created', TimestampType(), False),
+    StructField('updated_at', TimestampType(), False),
+])
+
+# Keeping track of the from_date and the to_date used to create the partial aggressive from full dump listens.
+# Assuming dumps are imported twice a month, the aggregates for weekly stats need to be refreshed (generated from
+# different range of listens in the full dump) sooner. The existing_aggrrgate_usable method reads this from/to date
+# from bookkeeping path and compares it with current day's request to determine if the aggregate needs to be recreated.
+BOOKKEEPING_SCHEMA = StructType([
+    StructField('from_date', TimestampType(), nullable=False),
+    StructField('to_date', TimestampType(), nullable=False),
+    StructField('updated_at', TimestampType(), nullable=False),
+])
+
+INCREMENTAL_BOOKKEEPING_SCHEMA = StructType([
+    StructField('created', TimestampType(), nullable=False),
+    StructField('updated_at', TimestampType(), nullable=False),
+])
 
 mlhd_schema = StructType([
     StructField('user_id', StringType(), nullable=False),
@@ -83,15 +104,6 @@ model_metadata_schema = [
 ]
 
 
-artist_relation_schema = [
-    StructField('id_0', IntegerType(), nullable=False), # artist credit
-    StructField('name_1', StringType(), nullable=False), # artist name
-    StructField('name_0', StringType(), nullable=False),
-    StructField('id_1', IntegerType(), nullable=False),
-    StructField('score', FloatType(), nullable=False),
-]
-
-
 dataframe_metadata_schema = [
     StructField('dataframe_created', TimestampType(), nullable=False),  # Timestamp when dataframes are created and saved in HDFS.
     StructField('dataframe_id', StringType(), nullable=False),  # dataframe id or identification string of dataframe.
@@ -118,7 +130,6 @@ import_metadata_schema = [
 # Although, we try to keep it sorted in the actual definition itself, we
 # also sort it programmatically just in case
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
-artist_relation_schema = StructType(sorted(artist_relation_schema, key=lambda field: field.name))
 dataframe_metadata_schema = StructType(sorted(dataframe_metadata_schema, key=lambda field: field.name))
 import_metadata_schema = StructType(sorted(import_metadata_schema, key=lambda field: field.name))
 

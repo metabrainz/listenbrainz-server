@@ -31,7 +31,6 @@ from requests import HTTPError
 from sentry_sdk import start_span
 
 from data.model.common_stat import StatApi
-from data.model.user_artist_map import UserArtistMapRecord
 from listenbrainz.db import couchdb
 from listenbrainz.db.couchdb import try_insert_data
 from listenbrainz.db.user import get_users_by_id
@@ -53,7 +52,7 @@ def insert(database: str, from_ts: int, to_ts: int, values: list[dict], key="use
             values: list with each item as stat for 1 user
             key: the key of the value to user as _id of the document
     """
-    with start_span(op="processing", description="add _id, from_ts, to_ts and last_updated to docs"):
+    with start_span(op="processing", name="add _id, from_ts, to_ts and last_updated to docs"):
         for doc in values:
             doc["_id"] = str(doc[key])
             doc["key"] = doc[key]
@@ -138,15 +137,6 @@ def get_entity_listener(db_conn, entity, entity_id, stats_range) -> Optional[dic
     except Exception as e:
         current_app.logger.error(f"Error connecting to CouchDB: {e}")
     return None
-
-
-def insert_artist_map(user_id: int, stats_range: str, from_ts: int, to_ts: int, data: list[UserArtistMapRecord]):
-    """ Insert artist map stats in database.
-
-        We do not know the database name in advance here so first find the latest artist map database.
-    """
-    databases = couchdb.list_databases(f"artistmap_{stats_range}")
-    insert(databases[0], from_ts, to_ts, [{"user_id": user_id, "data": [x.dict() for x in data]}])
 
 
 def insert_sitewide_stats(stats_type: str, stats_range: str, from_ts: int, to_ts: int, data: dict):

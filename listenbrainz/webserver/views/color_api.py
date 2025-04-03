@@ -16,7 +16,7 @@ HUESOUND_PAGE_CACHE_KEY = "huesound.%s.%d"
 color_api_bp = Blueprint('color_api_v1', __name__)
 
 
-@color_api_bp.route("/<color>", methods=["GET", "OPTIONS"])
+@color_api_bp.get("/<color>")
 @crossdomain
 @ratelimit()
 def huesound(color):

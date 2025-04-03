@@ -14,7 +14,7 @@ from listenbrainz.webserver.login import api_login_required
 export_bp = Blueprint("export", __name__)
 
 
-@export_bp.route("/", methods=["POST"])
+@export_bp.post("/")
 @api_login_required
 @web_listenstore_needed
 def create_export_task():
@@ -64,7 +64,7 @@ def create_export_task():
         raise APIInternalServerError(f'Error while exporting user data {current_user.musicbrainz_id}, please try again later.')
 
 
-@export_bp.route("/<export_id>/", methods=["GET"])
+@export_bp.get("/<export_id>/")
 @api_login_required
 @web_listenstore_needed
 def get_export_task(export_id):
@@ -87,7 +87,7 @@ def get_export_task(export_id):
     })
 
 
-@export_bp.route("/list/", methods=["GET"])
+@export_bp.get("/list/")
 @api_login_required
 @web_listenstore_needed
 def list_export_tasks():
@@ -108,7 +108,7 @@ def list_export_tasks():
     } for row in rows])
 
 
-@export_bp.route("/download/<export_id>/", methods=["POST"])
+@export_bp.post("/download/<export_id>/")
 @api_login_required
 @web_listenstore_needed
 def download_export_archive(export_id):
@@ -126,7 +126,7 @@ def download_export_archive(export_id):
 
 
 
-@export_bp.route("/delete/<export_id>/", methods=["POST"])
+@export_bp.post("/delete/<export_id>/")
 @api_login_required
 @web_listenstore_needed
 def delete_export_archive(export_id):

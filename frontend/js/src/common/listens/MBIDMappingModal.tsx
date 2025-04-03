@@ -6,11 +6,13 @@ import {
   faExchangeAlt,
   faInfoCircle,
   faQuestionCircle,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
+import { Link } from "react-router-dom";
 import ListenCard from "./ListenCard";
 import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -164,15 +166,6 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
         aria-labelledby="MBIDMappingModalLabel"
       >
         <div className="modal-dialog" role="document">
-          <Tooltip id="musicbrainz-helptext" type="light" multiline>
-            Use the MusicBrainz search (musicbrainz.org/search) to search for
-            recordings (songs). When you have found the one that matches your
-            listen, copy its URL (link) into the field on this page.
-            <br />
-            You can also search for the album you listened to. When you have
-            found the album, click on the matching recording (song) in the track
-            listing, and copy its URL into the field on this page.
-          </Tooltip>
           <form className="modal-content" onSubmit={submitMBIDMapping}>
             <div className="modal-header">
               <button
@@ -184,42 +177,19 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 <span aria-hidden="true">&times;</span>
               </button>
               <h4 className="modal-title" id="MBIDMappingModalLabel">
-                Link this Listen with MusicBrainz
+                Link this listen with{" "}
+                <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>
               </h4>
             </div>
             <div className="modal-body">
-              <p>
-                Sometimes ListenBrainz is unable to automatically link your
-                Listen with a MusicBrainz recording. Search by track and artist
-                name or paste a{" "}
-                <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>{" "}
-                recording URL or MBID{" "}
-                <FontAwesomeIcon
-                  icon={faQuestionCircle}
-                  data-tip
-                  data-for="musicbrainz-helptext"
-                  size="sm"
-                />{" "}
-                below to link this Listen, as well as your other Listens with
-                the same metadata.
-              </p>
-              <small className="help-block">
-                <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;
-                <a
-                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  How long until my stats reflect the change?
-                </a>
-              </small>
               <ListenCard
                 listen={listenToMap}
                 showTimestamp={false}
                 showUsername={false}
                 // eslint-disable-next-line react/jsx-no-useless-fragment
                 feedbackComponent={<></>}
+                // eslint-disable-next-line react/jsx-no-useless-fragment
+                customThumbnail={<></>}
                 compact
               />
 
@@ -242,35 +212,22 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               </div>
 
               {listenFromSelectedRecording ? (
-                <>
-                  <ListenCard
-                    listen={listenFromSelectedRecording}
-                    showTimestamp={false}
-                    showUsername={false}
-                    compact
-                    additionalActions={
-                      <ListenControl
-                        buttonClassName="btn-transparent"
-                        text=""
-                        title="Reset"
-                        icon={faTimesCircle}
-                        iconSize="lg"
-                        action={() => setSelectedRecording(undefined)}
-                      />
-                    }
-                  />
-                  <small className="help-block">
-                    Recordings added to MusicBrainz within the last 4 hours may
-                    temporarily look incomplete.
-                    <a
-                      href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Click here to learn why.
-                    </a>
-                  </small>
-                </>
+                <ListenCard
+                  listen={listenFromSelectedRecording}
+                  showTimestamp={false}
+                  showUsername={false}
+                  compact
+                  additionalActions={
+                    <ListenControl
+                      buttonClassName="btn-transparent"
+                      text=""
+                      title="Reset"
+                      icon={faTimesCircle}
+                      iconSize="lg"
+                      action={() => setSelectedRecording(undefined)}
+                    />
+                  }
+                />
               ) : (
                 <div className="card listen-card">
                   <SearchTrackOrMBID
@@ -285,21 +242,85 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 </div>
               )}
             </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-default"
-                onClick={closeModal}
+            <div className="modal-footer" style={{ textAlign: "left" }}>
+              <div
+                className="mb-10"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success"
-                disabled={!selectedRecording}
-              >
-                Add mapping
-              </button>
+                <div>
+                  <Link
+                    type="button"
+                    className="btn btn-info"
+                    to="/settings/link-listens"
+                    onClick={closeModal}
+                  >
+                    <span
+                      className="fa-layers fa-fw"
+                      style={{ marginRight: "0.5em" }}
+                    >
+                      <FontAwesomeIcon icon={faLink} />
+                      <FontAwesomeIcon
+                        icon={faLink}
+                        color="#FFFFFFA1"
+                        transform="right-5"
+                      />
+                      <FontAwesomeIcon
+                        icon={faLink}
+                        color="#ffffff42"
+                        transform="right-10"
+                      />
+                    </span>
+                    &nbsp; Mass-link listens tool
+                  </Link>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <button
+                    type="button"
+                    className="btn btn-default"
+                    onClick={closeModal}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-success"
+                    disabled={!selectedRecording}
+                  >
+                    Add mapping
+                  </button>
+                </div>
+              </div>
+              <div className="small">
+                <FontAwesomeIcon icon={faInfoCircle} />
+                &nbsp;This will also link your other listens with the same
+                metadata.
+              </div>
+              <div className="small">
+                <FontAwesomeIcon icon={faInfoCircle} />
+                &nbsp;
+                <a
+                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  How long until my stats reflect the change?
+                </a>
+              </div>
+              <div className="small">
+                <FontAwesomeIcon icon={faInfoCircle} />
+                &nbsp;
+                <a
+                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Recordings added within the last 4 hours may temporarily look
+                  incomplete.
+                </a>
+              </div>
             </div>
           </form>
         </div>

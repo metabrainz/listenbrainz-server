@@ -23,7 +23,7 @@ def load_artists_from_mbids_with_redirects(mb_curs, mbids: Iterable[str]) -> lis
              JOIN mbids m
                ON a.gid = m.gid::UUID
      """
-    results = execute_values(mb_curs, query, [(mbid,) for mbid in mbids], fetch=True)
+    results = execute_values(mb_curs, query, [(mbid,) for mbid in redirected_mbids], fetch=True)
     metadata_idx = {row["artist_mbid"]: row for row in results}
 
     # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each input
@@ -32,15 +32,17 @@ def load_artists_from_mbids_with_redirects(mb_curs, mbids: Iterable[str]) -> lis
         redirected_mbid = index.get(mbid, mbid)
         if redirected_mbid not in metadata_idx:
             item = {
-                "artist_mbid": mbid,
+                "artist_mbid": redirected_mbid,
                 "name": None,
                 "comment": None,
                 "type": None,
-                "gender": None
+                "gender": None,
+                "original_artist_mbid": mbid
             }
         else:
             data = metadata_idx[redirected_mbid]
             item = dict(data)
+            item["original_artist_mbid"] = mbid
 
         output.append(item)
 

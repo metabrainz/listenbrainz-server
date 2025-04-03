@@ -1,0 +1,430 @@
+[
+    {
+        "type": "sitewide_entity",
+        "stats_range": "all_time",
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
+        "entity": "artists",
+        "count": 41,
+        "data": [
+            {
+                "listen_count": 6,
+                "artist_name": "Portishead",
+                "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+            },
+            {
+                "listen_count": 6,
+                "artist_name": "Massive Attack",
+                "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+            },
+            {
+                "listen_count": 5,
+                "artist_name": "Lucifer Cast, Tom Ellis",
+                "artist_mbid": null
+            },
+            {
+                "listen_count": 5,
+                "artist_name": "Klergy",
+                "artist_mbid": "5586fc31-7c41-4a2d-97a2-d358b58b250d"
+            },
+            {
+                "listen_count": 5,
+                "artist_name": "Katy Perry",
+                "artist_mbid": "122d63fc-8671-43e4-9752-34e846d62a9c"
+            },
+            {
+                "listen_count": 4,
+                "artist_name": "Romare",
+                "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+            },
+            {
+                "listen_count": 4,
+                "artist_name": "Future, Marshmello",
+                "artist_mbid": null
+            },
+            {
+                "listen_count": 4,
+                "artist_name": "Aether",
+                "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Vangelis",
+                "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Lupe Fiasco",
+                "artist_mbid": "cf15719f-51f9-4db8-a15d-5eed9664ce69"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Little People",
+                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Jon Bellion",
+                "artist_mbid": "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Guy Sebastian",
+                "artist_mbid": "f116b984-45ae-49d0-9445-efc5a61458a1"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Brazilian Girls",
+                "artist_mbid": "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+            },
+            {
+                "listen_count": 3,
+                "artist_name": "Beyonc\u00e9",
+                "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "X Ambassadors",
+                "artist_mbid": "298f4089-1948-44b5-b5e8-d5381f42362f"
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "Ursine Vulpine, Annaca",
+                "artist_mbid": "43736f76-419a-42a0-816a-830876647ba5"
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "The Polish Ambassador",
+                "artist_mbid": "e9787dd2-5857-4b51-8e59-a190a54820fc"
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "Olivia Rodrigo",
+                "artist_mbid": "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "Kalabi",
+                "artist_mbid": null
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "Dua Lipa",
+                "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "Bo Burnham",
+                "artist_mbid": null
+            },
+            {
+                "listen_count": 2,
+                "artist_name": "Annaca Espach",
+                "artist_mbid": "93cfee41-b1a6-4604-a01c-91243e6926e6"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Wyclef Jean",
+                "artist_mbid": "4f29ecd7-21a5-4c03-b9ba-d0cfe9488f8c"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Tracey Thorn",
+                "artist_mbid": "6dbd7f8b-20ac-4287-8dd3-b4cae5c5f82f"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "The Egg",
+                "artist_mbid": "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Sounds From the Ground",
+                "artist_mbid": "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Shakira",
+                "artist_mbid": "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Ott",
+                "artist_mbid": "1a40f886-0877-4bab-9ab1-761147dadb89"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "New Order",
+                "artist_mbid": "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Marconi Union",
+                "artist_mbid": "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Little People, Rachael Roberts",
+                "artist_mbid": "bd43cb68-3a68-429e-9aad-6fc512f7df71"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Little People, Rachael Roberts",
+                "artist_mbid": "78c94cba-761f-4212-8508-a24bda2e57dc"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Kiasmos",
+                "artist_mbid": "3252542b-98a7-48ba-9861-7a612b16c227"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Jah Wobble",
+                "artist_mbid": "904cc1c8-021e-45ac-bbe9-95c01a1f8099"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Harry Styles",
+                "artist_mbid": "7eb1ce54-a355-41f9-8d68-e018b096d427"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Daft Punk",
+                "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Brazilian Girls",
+                "artist_mbid": null
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "All India Radio",
+                "artist_mbid": "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "Abakus",
+                "artist_mbid": "a8b39181-6939-451e-9641-2db231b73706"
+            },
+            {
+                "listen_count": 1,
+                "artist_name": "*NSYNC",
+                "artist_mbid": "603ba565-3967-4be1-931e-9cb945394e86"
+            }
+        ]
+    },
+    {
+        "type": "sitewide_artist_map",
+        "stats_range": "all_time",
+        "from_ts": 1009843200,
+        "to_ts": 1628511763,
+        "entity": "artist_map",
+        "data": [
+            {
+                "artist_count": 15,
+                "listen_count": 33,
+                "country": "GB",
+                "artists": [
+                    {
+                        "listen_count": 6,
+                        "artist_name": "Portishead",
+                        "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+                    },
+                    {
+                        "listen_count": 6,
+                        "artist_name": "Massive Attack",
+                        "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8"
+                    },
+                    {
+                        "listen_count": 4,
+                        "artist_name": "Romare",
+                        "artist_mbid": "b014d579-b549-4b21-b90d-5264e0433988"
+                    },
+                    {
+                        "listen_count": 4,
+                        "artist_name": "Aether",
+                        "artist_mbid": "c44ff36b-651f-4c20-98ee-519cf4ed07e7"
+                    },
+                    {
+                        "listen_count": 2,
+                        "artist_name": "Dua Lipa",
+                        "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f"
+                    },
+                    {
+                        "listen_count": 2,
+                        "artist_name": "Annaca Espach",
+                        "artist_mbid": "93cfee41-b1a6-4604-a01c-91243e6926e6"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Tracey Thorn",
+                        "artist_mbid": "6dbd7f8b-20ac-4287-8dd3-b4cae5c5f82f"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "The Egg",
+                        "artist_mbid": "6fe91ae9-8ddb-47b0-a2d7-252833ce5500"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Sounds From the Ground",
+                        "artist_mbid": "9806e551-9a63-4a9d-be1b-5297b2ac0e76"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Ott",
+                        "artist_mbid": "1a40f886-0877-4bab-9ab1-761147dadb89"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "New Order",
+                        "artist_mbid": "f1106b17-dcbb-45f6-b938-199ccfab50cc"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Marconi Union",
+                        "artist_mbid": "3f9b5837-ed1c-413e-bfef-ca4f892dcc59"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Jah Wobble",
+                        "artist_mbid": "904cc1c8-021e-45ac-bbe9-95c01a1f8099"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Harry Styles",
+                        "artist_mbid": "7eb1ce54-a355-41f9-8d68-e018b096d427"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Abakus",
+                        "artist_mbid": "a8b39181-6939-451e-9641-2db231b73706"
+                    }
+                ]
+            },
+            {
+                "artist_count": 10,
+                "listen_count": 25,
+                "country": "US",
+                "artists": [
+                    {
+                        "listen_count": 5,
+                        "artist_name": "Katy Perry",
+                        "artist_mbid": "122d63fc-8671-43e4-9752-34e846d62a9c"
+                    },
+                    {
+                        "listen_count": 3,
+                        "artist_name": "Lupe Fiasco",
+                        "artist_mbid": "cf15719f-51f9-4db8-a15d-5eed9664ce69"
+                    },
+                    {
+                        "listen_count": 3,
+                        "artist_name": "Jon Bellion",
+                        "artist_mbid": "2bd8101a-11c3-42d5-a9bd-6a3b26445f7e"
+                    },
+                    {
+                        "listen_count": 3,
+                        "artist_name": "Brazilian Girls",
+                        "artist_mbid": "8b2350de-b682-4fe7-ad8f-4508d7b6c697"
+                    },
+                    {
+                        "listen_count": 3,
+                        "artist_name": "Beyonc\u00e9",
+                        "artist_mbid": "859d0860-d480-4efd-970c-c05d5f1776b8"
+                    },
+                    {
+                        "listen_count": 2,
+                        "artist_name": "X Ambassadors",
+                        "artist_mbid": "298f4089-1948-44b5-b5e8-d5381f42362f"
+                    },
+                    {
+                        "listen_count": 2,
+                        "artist_name": "The Polish Ambassador",
+                        "artist_mbid": "e9787dd2-5857-4b51-8e59-a190a54820fc"
+                    },
+                    {
+                        "listen_count": 2,
+                        "artist_name": "Olivia Rodrigo",
+                        "artist_mbid": "6925db17-f35e-42f3-a4eb-84ee6bf5d4b0"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Wyclef Jean",
+                        "artist_mbid": "4f29ecd7-21a5-4c03-b9ba-d0cfe9488f8c"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "*NSYNC",
+                        "artist_mbid": "603ba565-3967-4be1-931e-9cb945394e86"
+                    }
+                ]
+            },
+            {
+                "artist_count": 2,
+                "listen_count": 4,
+                "country": "AU",
+                "artists": [
+                    {
+                        "listen_count": 3,
+                        "artist_name": "Guy Sebastian",
+                        "artist_mbid": "f116b984-45ae-49d0-9445-efc5a61458a1"
+                    },
+                    {
+                        "listen_count": 1,
+                        "artist_name": "All India Radio",
+                        "artist_mbid": "53d2a4d1-556e-4701-a8ac-5fcb74a8e393"
+                    }
+                ]
+            },
+            {
+                "artist_count": 1,
+                "listen_count": 3,
+                "country": "GR",
+                "artists": [
+                    {
+                        "listen_count": 3,
+                        "artist_name": "Vangelis",
+                        "artist_mbid": "57fca0e2-f9ad-4ae6-af9d-6a6f50cbcd5f"
+                    }
+                ]
+            },
+            {
+                "artist_count": 1,
+                "listen_count": 1,
+                "country": "IS",
+                "artists": [
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Kiasmos",
+                        "artist_mbid": "3252542b-98a7-48ba-9861-7a612b16c227"
+                    }
+                ]
+            },
+            {
+                "artist_count": 1,
+                "listen_count": 1,
+                "country": "FR",
+                "artists": [
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Daft Punk",
+                        "artist_mbid": "056e4f3e-d505-4dad-8ec1-d04f521cbb56"
+                    }
+                ]
+            },
+            {
+                "artist_count": 1,
+                "listen_count": 1,
+                "country": "CO",
+                "artists": [
+                    {
+                        "listen_count": 1,
+                        "artist_name": "Shakira",
+                        "artist_mbid": "bf24ca37-25f4-4e34-9aec-460b94364cfc"
+                    }
+                ]
+            }
+        ]
+    }
+]

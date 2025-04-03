@@ -17,6 +17,11 @@ REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'Read the blog post at https://blog.metabrainz.org/?p=8915 to understand why ' \
     'we need your email.'
 
+REJECT_LISTENS_FROM_PAUSED_USER_ERROR = \
+    'User account is paused and is currently not accepting listens. ' \
+    'Feel free to contact us if you have any questions about this. ' \
+    'https://metabrainz.org/contact'
+
 
 def generate_string(length):
     """Generates random string with a specified length."""
@@ -33,6 +38,18 @@ def sizeof_readable(num, suffix='B'):
             return "%3.1f %s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yb', suffix)
+
+
+def number_readable(num: int):
+    # Solution by rtaft from https://stackoverflow.com/a/45846841/4904467
+    """ Converts a number to a short human-readable format (1.2K, 6.6M, etc.)"""
+    suffixes = ['', 'K', 'M', 'B', 'T']
+    num = float('{:.2g}'.format(num))
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), suffixes[magnitude])
 
 
 def reformat_date(value, fmt="%b %d, %Y"):

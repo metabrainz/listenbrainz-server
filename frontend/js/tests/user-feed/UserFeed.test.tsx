@@ -19,14 +19,14 @@
  */
 
 import * as React from "react";
-import { BrowserRouter } from "react-router-dom";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import userEvent from "@testing-library/user-event";
-import UserFeedPage, { EventType } from "../../src/user-feed/UserFeed";
+import UserFeedPage from "../../src/user-feed/UserFeed";
+import { EventType } from "../../src/user-feed/types";
 import * as timelineProps from "../__mocks__/timelineProps.json";
 
 import {
@@ -110,11 +110,6 @@ describe("UserFeed", () => {
     );
 
     expect(screen.getByText("Latest activity")).toBeInTheDocument();
-    // contains a UserSocialNetwork component
-    expect(screen.getByText("Similar Users")).toBeInTheDocument();
-    expect(
-      screen.getByText("You aren't following anyone.")
-    ).toBeInTheDocument();
   });
 
   it("has infinite pagination", async () => {

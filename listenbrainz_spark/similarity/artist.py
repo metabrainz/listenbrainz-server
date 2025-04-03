@@ -2,12 +2,10 @@ from datetime import datetime, date, time, timedelta
 
 from more_itertools import chunked
 
-import listenbrainz_spark
-from listenbrainz_spark import config
 from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, ARTIST_CREDIT_MBID_DATAFRAME
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump
-
+from listenbrainz_spark.listens.data import get_listens_from_dump
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 RECORDINGS_PER_MESSAGE = 10000
 # the duration value in seconds to use for track whose duration data in not available in MB
@@ -129,10 +127,10 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
 
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView(table)
 
-    metadata_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + RECORDING_LENGTH_DATAFRAME)
+    metadata_df = read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME)
     metadata_df.createOrReplaceTempView(metadata_table)
 
-    artist_credit_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + ARTIST_CREDIT_MBID_DATAFRAME)
+    artist_credit_df = read_files_from_HDFS(ARTIST_CREDIT_MBID_DATAFRAME)
     artist_credit_df.createOrReplaceTempView(artist_credit_table)
 
     skip_threshold = -skip

@@ -12,6 +12,10 @@ from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from typing import Tuple, List
 
+from flask import current_app, render_template
+from brainzutils.mail import send_mail
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +68,7 @@ def update_token(db_conn, id):
 
 
 USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token',
-                    'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
+                    'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id', 'is_paused']
 
 
 def get(db_conn, id: int, *, fetch_email: bool = False):
@@ -87,6 +91,7 @@ def get(db_conn, id: int, *, fetch_email: bool = False):
             "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
             "musicbrainz_row_id": <musicbrainz row id associated with this user>,
             "login_id": <token used for login sessions>
+            "is_paused": <boolean, if the user is paused>
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
@@ -117,6 +122,7 @@ def get_by_login_id(db_conn, login_id):
             "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
             "musicbrainz_row_id": <musicbrainz row id associated with this user>,
             "login_id": <token used for login sessions>
+            "is_paused": <boolean, if the user is paused>
         }
     """
     result = db_conn.execute(sqlalchemy.text("""
@@ -168,6 +174,7 @@ def get_by_mb_id(db_conn, musicbrainz_id, *, fetch_email: bool = False):
             "gdpr_agreed": <boolean, if the user has agreed to terms and conditions>,
             "musicbrainz_row_id": <musicbrainz row id associated with this user>,
             "login_id": <token used for login sessions>
+            "is_paused": <boolean, if the user is paused>
         }
     """
     columns = USER_GET_COLUMNS + ['email'] if fetch_email else USER_GET_COLUMNS
@@ -560,3 +567,70 @@ def get_all_usernames():
         for row in result:
             user_id_map[row.id] = row.musicbrainz_id
     return user_id_map
+
+
+def pause(db_conn,id):
+    """ Sets the user's is_paused flag to true
+    with specified row ID from the database.
+    
+    Args:
+        db_conn: database connection
+        id (int): the row ID of the listenbrainz user
+    """
+    try:
+        db_conn.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET is_paused = true
+             WHERE id = :id
+            """), {
+            'id': id,
+        })
+        db_conn.commit()
+        _notify_user_paused(db_conn,id,True)
+
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException("Couldn't pause user: %s" % str(err))
+
+
+def unpause(db_conn,id):
+    """ Sets the user's is_paused flag to false
+    with specified row ID from the database.
+    
+    Args:
+        db_conn: database connection
+        id (int): the row ID of the listenbrainz user
+    """
+    try:
+        db_conn.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET is_paused = false
+             WHERE id = :id
+            """), {
+            'id': id,
+        })
+        db_conn.commit()
+        _notify_user_paused(db_conn,id,False)
+
+    except sqlalchemy.exc.ProgrammingError as err:
+        logger.error(err)
+        raise DatabaseException("Couldn't unpause user: %s" % str(err))
+
+
+def _notify_user_paused(db_conn, user_id,paused):
+    user = get(db_conn, user_id, fetch_email=True)
+    if user["email"] is None:
+        logger.error("%s's email not found" % user["musicbrainz_id"])
+        return
+    url = 'https://metabrainz.org/contact'
+    template = 'emails/id_paused.txt' if paused else 'emails/id_unpaused.txt'
+    subject = ("Your ListenBrainz account %s has been paused and is not accepting incoming listens" % user["musicbrainz_id"] if paused
+                 else "Your ListenBrainz account %s has been unpaused and is accepting incoming listens" % user["musicbrainz_id"])
+    content = render_template(template, username=user["musicbrainz_id"], url=url)
+    send_mail(
+        subject=subject,
+        text=content,
+        recipients=[user["email"]],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )

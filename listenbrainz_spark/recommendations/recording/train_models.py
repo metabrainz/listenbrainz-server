@@ -281,8 +281,6 @@ def main(ranks=None, lambdas=None, iterations=None, alphas=None, use_transformed
         "use_transformed_listencounts": use_transformed_listencounts
     }
 
-    listenbrainz_spark.init_spark_session("Train Models")
-
     # Add checkpoint dir to break and save RDD lineage.
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
 

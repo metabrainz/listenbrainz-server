@@ -5,6 +5,8 @@ from flask import Blueprint, render_template, request, url_for, \
     redirect, current_app, jsonify
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
+import requests
+from requests.adapters import HTTPAdapter, Retry
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
@@ -28,7 +30,7 @@ from listenbrainz.webserver.login import api_login_required
 settings_bp = Blueprint("settings", __name__)
 
 
-@settings_bp.route("/resettoken/", methods=["POST"])
+@settings_bp.post("/resettoken/")
 @api_login_required
 def reset_token():
     try:
@@ -38,7 +40,7 @@ def reset_token():
         raise APIInternalServerError("Something went wrong! Unable to reset token right now.")
 
 
-@settings_bp.route("/select_timezone/", methods=["POST"])
+@settings_bp.post("/select_timezone/")
 @api_login_required
 def select_timezone():
     pg_timezones = db_usersetting.get_pg_timezone(db_conn)
@@ -51,7 +53,7 @@ def select_timezone():
     return jsonify(data)
 
 
-@settings_bp.route("/troi/", methods=["POST"])
+@settings_bp.post("/troi/")
 @login_required
 def set_troi_prefs():
     current_troi_prefs = db_usersetting.get_troi_prefs(db_conn, current_user.id)
@@ -61,7 +63,7 @@ def set_troi_prefs():
     return jsonify(data)
 
 
-@settings_bp.route("/import/", methods=["POST"])
+@settings_bp.post("/import/")
 @api_login_required
 def import_data():
     """ Displays the import page to user, giving various options """
@@ -86,7 +88,7 @@ def import_data():
     return jsonify(data)
 
 
-@settings_bp.route('/delete/', methods=['POST'])
+@settings_bp.post('/delete/')
 @api_login_required
 @web_listenstore_needed
 def delete():
@@ -107,7 +109,7 @@ def delete():
         raise APIInternalServerError(f'Error while deleting user {current_user.musicbrainz_id}, please try again later.')
 
 
-@settings_bp.route('/delete-listens/', methods=['POST'])
+@settings_bp.post('/delete-listens/')
 @api_login_required
 @web_listenstore_needed
 def delete_listens():
@@ -153,7 +155,7 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
         raise NotFound("Service %s is invalid." % (name,))
 
 
-@settings_bp.route('/music-services/details/', methods=['POST'])
+@settings_bp.post('/music-services/details/')
 @api_login_required
 def music_services_details():
     spotify_service = SpotifyService()
@@ -203,7 +205,7 @@ def music_services_details():
     return jsonify(data)
 
 
-@settings_bp.route('/music-services/<service_name>/callback/')
+@settings_bp.get('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name, exclude_apple=True)
@@ -217,7 +219,7 @@ def music_services_callback(service_name: str):
     return redirect(url_for('settings.index', path='music-services/details'))
 
 
-@settings_bp.route('/music-services/<service_name>/refresh/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/refresh/')
 @api_login_required
 def refresh_service_token(service_name: str):
     service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
@@ -237,7 +239,7 @@ def refresh_service_token(service_name: str):
     return jsonify({"access_token": user["access_token"]})
 
 
-@settings_bp.route('/music-services/<service_name>/connect/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/connect/')
 @api_login_required
 def music_services_connect(service_name: str):
     """ Connect last.fm/libre.fm account to ListenBrainz user. """
@@ -246,8 +248,22 @@ def music_services_connect(service_name: str):
         raise APINotFound("Service %s is invalid." % (service_name,))
 
     data = request.json
+
     if "external_user_id" not in data:
         raise APIBadRequest("Missing 'external_user_id' in request.")
+    
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
+
+    params = {
+        "method": "user.getinfo",
+        "user": data['external_user_id'],
+        "format": "json",
+        "api_key": current_app.config["LASTFM_API_KEY"],
+    }
+    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
+    if response.status_code == 404:
+        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
 
     latest_listened_at = None
     if data.get("latest_listened_at") is not None:
@@ -265,7 +281,7 @@ def music_services_connect(service_name: str):
     return jsonify({"success": True})
 
 
-@settings_bp.route('/music-services/<service_name>/disconnect/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/disconnect/')
 @api_login_required
 def music_services_disconnect(service_name: str):
     service = _get_service_or_raise_404(service_name)
@@ -306,7 +322,7 @@ def music_services_disconnect(service_name: str):
     raise BadRequest('Invalid action')
 
 
-@settings_bp.route('/music-services/<service_name>/set-token/', methods=['POST'])
+@settings_bp.post('/music-services/<service_name>/set-token/')
 @api_login_required
 def music_services_set_token(service_name: str):
     if service_name != 'apple':
@@ -323,7 +339,7 @@ def music_services_set_token(service_name: str):
     return jsonify({"success": True})
 
 
-@settings_bp.route('/link-listens/', methods=['POST'])
+@settings_bp.post('/link-listens/')
 @api_login_required
 def link_listens():
     """ Returns a list of unlinked listens for the user """
@@ -335,8 +351,8 @@ def link_listens():
     return jsonify(data)
 
 
-@settings_bp.route('/', defaults={'path': ''})
-@settings_bp.route('/<path:path>/')
+@settings_bp.get('/', defaults={'path': ''})
+@settings_bp.get('/<path:path>/')
 @login_required
 def index(path):
     return render_template("index.html")

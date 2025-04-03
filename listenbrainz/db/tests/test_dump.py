@@ -82,9 +82,9 @@ class DumpTestCase(DatabaseTestCase):
 
         found = set()
         found_stats = None
-        xz_command = ['xz', '--decompress', '--stdout', dump_location, '-T4']
-        xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
-        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+        zstd_command = ['zstd', '--decompress', '--stdout', dump_location, '-T4']
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
+        with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
                 if file_name.endswith(".jsonl"):
@@ -102,12 +102,12 @@ class DumpTestCase(DatabaseTestCase):
 
     def test_add_dump_entry(self):
         prev_dumps = db_dump.get_dump_entries()
-        db_dump.add_dump_entry(datetime.today().strftime('%s'))
+        db_dump.add_dump_entry(datetime.today(), "incremental")
         now_dumps = db_dump.get_dump_entries()
         self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
 
     def test_copy_table(self):
-        db_dump.add_dump_entry(datetime.today().strftime('%s'))
+        db_dump.add_dump_entry(datetime.today(), "incremental")
         with db.engine.connect() as connection:
             db_dump.copy_table(
                 cursor=connection.connection.cursor(),

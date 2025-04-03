@@ -6,7 +6,7 @@ const getEntityPages = (): RouteObject[] => {
     {
       path: "/",
       lazy: async () => {
-        const EntityPageLayout = await import("../layout/EntityPages");
+        const EntityPageLayout = await import("../layout/LayoutWithBackButton");
         return { Component: EntityPageLayout.default };
       },
       children: [

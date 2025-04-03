@@ -1,6 +1,6 @@
 ARG PYTHON_BASE_IMAGE_VERSION=3.11-20231006
 ARG NODE_VERSION=20-alpine
-FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION as listenbrainz-base
+FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
 ARG PYTHON_BASE_IMAGE_VERSION
 
@@ -11,15 +11,15 @@ LABEL org.label-schema.vcs-url="https://github.com/metabrainz/listenbrainz-serve
       org.label-schema.name="ListenBrainz" \
       org.metabrainz.based-on-image="metabrainz/python:$PYTHON_BASE_IMAGE_VERSION"
 
-ENV DOCKERIZE_VERSION v0.6.1
+ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-ENV SENTRY_CLI_VERSION 1.63.1
+ENV SENTRY_CLI_VERSION=1.63.1
 RUN wget -O /usr/local/bin/sentry-cli https://downloads.sentry-cdn.com/sentry-cli/$SENTRY_CLI_VERSION/sentry-cli-Linux-x86_64 \
     && chmod +x /usr/local/bin/sentry-cli
 
-ENV SENTRY_SERVICE_ERROR_ENVIRONMENT listenbrainz
+ENV SENTRY_SERVICE_ERROR_ENVIRONMENT=listenbrainz
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -37,7 +37,7 @@ RUN apt-get update \
 
 # PostgreSQL client
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-ENV PG_MAJOR 12
+ENV PG_MAJOR=12
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
@@ -55,7 +55,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 ############################################
 # NOTE: The development image starts here. #
 ############################################
-FROM listenbrainz-base as listenbrainz-dev
+FROM listenbrainz-base AS listenbrainz-dev
 COPY requirements_development.txt /code/listenbrainz
 RUN pip3 install --no-cache-dir -r requirements_development.txt
 RUN mkdir /code/listenbrainz/docs
@@ -67,7 +67,7 @@ COPY . /code/listenbrainz
 #####################################################################################################
 # NOTE: The javascript files are continously watched and compiled using this image in developement. #
 #####################################################################################################
-FROM node:$NODE_VERSION as listenbrainz-frontend-dev
+FROM node:$NODE_VERSION AS listenbrainz-frontend-dev
 
 ARG NODE_VERSION
 
@@ -89,7 +89,7 @@ COPY webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.
 #########################################################################
 # NOTE: The javascript files for production are compiled in this image. #
 #########################################################################
-FROM listenbrainz-frontend-dev as listenbrainz-frontend-prod
+FROM listenbrainz-frontend-dev AS listenbrainz-frontend-prod
 
 # Compile front-end (static) files
 COPY ./frontend /code/frontend
@@ -99,7 +99,7 @@ RUN npm run build:prod
 ###########################################
 # NOTE: The production image starts here. #
 ###########################################
-FROM listenbrainz-base as listenbrainz-prod
+FROM listenbrainz-base AS listenbrainz-prod
 
 # Create directories for cron logs and dumps
 # /mnt/dumps: Temporary working space for dumps

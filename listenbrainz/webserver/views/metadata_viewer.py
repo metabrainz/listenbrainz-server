@@ -7,14 +7,14 @@ import orjson
 metadata_viewer_bp = Blueprint("metadata_viewer", __name__)
 
 
-@metadata_viewer_bp.route("/",  defaults={'path': ''})
-@metadata_viewer_bp.route('/<path:path>/')
+@metadata_viewer_bp.get("/",  defaults={'path': ''})
+@metadata_viewer_bp.get('/<path:path>/')
 @login_required
 def playing_now_metadata_page(path):
     return render_template("index.html")
 
 
-@metadata_viewer_bp.route("/", methods=["POST"])
+@metadata_viewer_bp.post("/")
 @web_listenstore_needed
 @login_required
 def playing_now_metadata_viewer():

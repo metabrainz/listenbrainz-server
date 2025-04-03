@@ -165,10 +165,6 @@ class RequestManageTestCase(unittest.TestCase):
                                                                  **message['params'])
         self.assertEqual(expected_message, received_message)
 
-        expected_message = orjson.dumps({'query': 'import.artist_relation'})
-        received_message = request_manage._prepare_query_message('import.artist_relation')
-        self.assertEqual(expected_message, received_message)
-
         message = {
             'query': 'similarity.similar_users',
             'params': {

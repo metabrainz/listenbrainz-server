@@ -71,8 +71,8 @@ class IndexViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, user_id)
-            self.assertEquals(task.task, "delete_user")
+            self.assertEqual(task.user_id, user_id)
+            self.assertEqual(task.task, "delete_user")
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.background.background_tasks.add_task')
@@ -96,8 +96,8 @@ class IndexViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, user_id)
-            self.assertEquals(task.task, "delete_user")
+            self.assertEqual(task.user_id, user_id)
+            self.assertEqual(task.task, "delete_user")
 
     @mock.patch.object(MusicBrainzService, "get_user_info")
     @mock.patch('listenbrainz.background.background_tasks.add_task')

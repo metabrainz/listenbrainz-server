@@ -17,7 +17,7 @@ import {
   uniqBy,
   without,
 } from "lodash";
-import { formatDuration } from "date-fns";
+import { formatDuration, isValid } from "date-fns";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock } from "@fortawesome/free-regular-svg-icons";
 import SearchAlbumOrMBID from "../../utils/SearchAlbumOrMBID";
@@ -31,6 +31,8 @@ import {
 
 interface AddAlbumListensProps {
   onPayloadChange: (listens: Listen[]) => void;
+  switchMode: (text: string) => void;
+  initialText?: string;
 }
 
 export type MBReleaseWithMetadata = MusicBrainzRelease &
@@ -95,6 +97,8 @@ export function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
 
 export default function AddAlbumListens({
   onPayloadChange,
+  switchMode,
+  initialText,
 }: AddAlbumListensProps) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRelease } = APIService;
@@ -103,6 +107,22 @@ export default function AddAlbumListens({
   const [selectedTracks, setSelectedTracks] = useState<Array<MBTrackWithAC>>(
     []
   );
+  const searchInputRef = useRef<{
+    focus(): void;
+    triggerSearch(newText: string): void;
+  }>(null);
+
+  const initialTextRef = useRef(initialText);
+  React.useEffect(() => {
+    // Trigger search manually if auto-switching from album to recording search
+    if (initialText && initialTextRef.current !== initialText) {
+      searchInputRef.current?.triggerSearch(initialText);
+      initialTextRef.current = initialText;
+    }
+    return () => {
+      initialTextRef.current = undefined;
+    };
+  }, [initialText]);
 
   // No need to store that one in the state
   const lastChecked = useRef<MBTrackWithAC>();
@@ -230,6 +250,8 @@ export default function AddAlbumListens({
         onSelectAlbum={(newSelectedAlbumId?: string) => {
           setSelectedAlbumMBID(newSelectedAlbumId);
         }}
+        switchMode={switchMode}
+        ref={searchInputRef}
       />
       <div className="track-info">
         {selectedAlbum && (
@@ -242,7 +264,7 @@ export default function AddAlbumListens({
               >
                 <strong>{selectedAlbum.title}</strong>
               </a>
-              {selectedAlbum.date && (
+              {selectedAlbum.date && isValid(new Date(selectedAlbum.date)) && (
                 <span>
                   &nbsp;({new Date(selectedAlbum.date).getFullYear()})
                 </span>

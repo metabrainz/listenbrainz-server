@@ -4,6 +4,7 @@ import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isArray, isString, isUndefined } from "lodash";
 import { Link } from "react-router-dom";
+import { isValid } from "date-fns";
 import { formatListenCount, formatReleaseDate } from "../utils";
 import {
   generateAlbumArtThumbnailLink,
@@ -68,7 +69,8 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   const hasReleaseDate =
     !isUndefined(releaseDate) &&
     isString(releaseDate) &&
-    Boolean(releaseDate.length);
+    Boolean(releaseDate.length) &&
+    isValid(new Date(releaseDate));
   const futureRelease = hasReleaseDate && new Date(releaseDate) > new Date();
   const COVERART_PLACEHOLDER = "/static/img/cover-art-placeholder.jpg";
   const RELEASE_TYPE_UNKNOWN = "Unknown";
@@ -120,13 +122,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   React.useEffect(() => {
     async function getCoverArt() {
       let coverartURL;
-      if (releaseMBID) {
+      if (releaseMBID || releaseGroupMBID) {
         coverartURL = await getAlbumArtFromReleaseMBID(
           releaseMBID,
-          releaseGroupMBID ?? true
+          releaseGroupMBID
         );
-      } else if (releaseGroupMBID) {
-        coverartURL = await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
       }
       if (coverartURL) {
         setCoverartSrc(coverartURL);

@@ -75,7 +75,7 @@ function on_exit {
     fi
 
     # Remove the cron lock
-    /usr/local/bin/python admin/cron_lock.py unlock-cron create-dumps
+    /usr/local/bin/python admin/cron_lock.py unlock-cron "create-$DUMP_TYPE-dumps"
 }
 
 START_TIME=$(date +%s)
@@ -111,7 +111,7 @@ else
 fi
 
 # Lock cron, so it cannot be accidentally terminated.
-/usr/local/bin/python admin/cron_lock.py lock-cron create-dumps "Creating $DUMP_TYPE dump."
+/usr/local/bin/python admin/cron_lock.py lock-cron "create-$DUMP_TYPE-dumps" "Creating $DUMP_TYPE dump."
 
 # Trap should not be called before we lock cron to avoid wiping out an existing lock file
 trap on_exit EXIT
@@ -236,22 +236,22 @@ touch "$FTP_CURRENT_DUMP_DIR/.rsync-filter"
 
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-public-timescale-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
+    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "listenbrainz-spark-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-feedback-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
-    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.xz"
+    "listenbrainz-statistics-dump-$DUMP_TIMESTAMP.tar.zst"
 add_rsync_include_rule \
     "$FTP_CURRENT_DUMP_DIR" \
     "musicbrainz-canonical-dump-$DUMP_TIMESTAMP.tar.zst"

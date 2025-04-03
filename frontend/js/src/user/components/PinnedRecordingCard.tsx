@@ -123,7 +123,7 @@ export default class PinnedRecordingCard extends React.Component<
   };
 
   render() {
-    const { pinnedRecording } = this.props;
+    const { pinnedRecording, isCurrentUser } = this.props;
     const { currentlyPinned, isDeleted, updatedBlurb } = this.state;
 
     const thumbnail = currentlyPinned ? (
@@ -143,46 +143,48 @@ export default class PinnedRecordingCard extends React.Component<
 
     const additionalMenuItems = [];
     const listen = pinnedRecordingToListen(pinnedRecording);
-    if (currentlyPinned) {
+    if (isCurrentUser) {
+      if (currentlyPinned) {
+        additionalMenuItems.push(
+          <ListenControl
+            key="Unpin"
+            title="Unpin"
+            text="Unpin"
+            action={() => this.unpinRecording()}
+          />
+        );
+        additionalMenuItems.push(
+          <ListenControl
+            text="Edit Comment"
+            key="Edit Comment"
+            icon={faPencilAlt}
+            action={() => {
+              NiceModal.show<string, any>(PinRecordingModal, {
+                recordingToPin: listen,
+                rowId: pinnedRecording.row_id,
+                initialBlurbContent:
+                  updatedBlurb ?? pinnedRecording.blurb_content,
+              }).then((newBlurb: string) => {
+                if (!newBlurb) {
+                  return;
+                }
+                this.setState({ updatedBlurb: newBlurb });
+              });
+            }}
+            dataToggle="modal"
+            dataTarget="#PinRecordingModal"
+          />
+        );
+      }
       additionalMenuItems.push(
         <ListenControl
-          key="Unpin"
-          title="Unpin"
-          text="Unpin"
-          action={() => this.unpinRecording()}
-        />
-      );
-      additionalMenuItems.push(
-        <ListenControl
-          text="Edit Comment"
-          key="Edit Comment"
-          icon={faPencilAlt}
-          action={() => {
-            NiceModal.show<string, any>(PinRecordingModal, {
-              recordingToPin: listen,
-              rowId: pinnedRecording.row_id,
-              initialBlurbContent:
-                updatedBlurb ?? pinnedRecording.blurb_content,
-            }).then((newBlurb: string) => {
-              if (!newBlurb) {
-                return;
-              }
-              this.setState({ updatedBlurb: newBlurb });
-            });
-          }}
-          dataToggle="modal"
-          dataTarget="#PinRecordingModal"
+          key="Delete Pin"
+          title="Delete Pin"
+          text="Delete Pin"
+          action={() => this.deletePin(pinnedRecording)}
         />
       );
     }
-    additionalMenuItems.push(
-      <ListenControl
-        key="Delete Pin"
-        title="Delete Pin"
-        text="Delete Pin"
-        action={() => this.deletePin(pinnedRecording)}
-      />
-    );
 
     const cssClasses = ["pinned-recording-card"];
     if (currentlyPinned) {

@@ -393,16 +393,13 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
         dump_type=dump_type,
         time=dump_time.strftime('%Y%m%d-%H%M%S')
     )
-    archive_path = os.path.join(location, '{archive_name}.tar.xz'.format(
-        archive_name=archive_name,
-    ))
+    archive_path = os.path.join(location, f'{archive_name}.tar.zst')
 
     with open(archive_path, 'w') as archive:
+        zstd_command = ['zstd', '--compress', f'-T{threads}', '-10']
+        zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
 
-        xz_command = ['xz', '--compress', '-T{threads}'.format(threads=threads)]
-        xz = subprocess.Popen(xz_command, stdin=subprocess.PIPE, stdout=archive)
-
-        with tarfile.open(fileobj=xz.stdin, mode='w|') as tar:
+        with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
 
             temp_dir = tempfile.mkdtemp()
 
@@ -462,9 +459,9 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
 
             shutil.rmtree(temp_dir)
 
-        xz.stdin.close()
+        zstd.stdin.close()
 
-    xz.wait()
+    zstd.wait()
     return archive_path
 
 
@@ -658,23 +655,23 @@ def copy_table(cursor, location, columns, table_name):
         cursor.copy_expert(query, f)
 
 
-def add_dump_entry(timestamp):
+def add_dump_entry(timestamp, dump_type):
     """ Adds an entry to the data_dump table with specified time.
 
         Args:
-            timestamp: the unix timestamp to be added
+            timestamp: the datetime to be added
 
         Returns:
             id (int): the id of the new entry added
     """
-
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
-                INSERT INTO data_dump (created)
-                     VALUES (TO_TIMESTAMP(:ts))
+                INSERT INTO data_dump (created, dump_type)
+                     VALUES (:ts, :dump_type)
                   RETURNING id
             """), {
             'ts': timestamp,
+            'dump_type': dump_type
         })
         return result.fetchone().id
 
@@ -685,7 +682,7 @@ def get_dump_entries():
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-                SELECT id, created
+                SELECT id, created, dump_type
                   FROM data_dump
               ORDER BY created DESC
             """))
@@ -693,18 +690,52 @@ def get_dump_entries():
         return result.mappings().all()
 
 
-def get_dump_entry(dump_id):
+def get_dump_entry(dump_id, dump_type=None):
+    filters = ["id = :dump_id"]
+    args = {"dump_id": dump_id}
+
+    if dump_type is not None:
+        filters.append("dump_type = :dump_type")
+        args["dump_type"] = dump_type
+
+    where_clause = " AND ".join(filters)
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created
+            SELECT id, created, dump_type
               FROM data_dump
-             WHERE id = :dump_id
-        """), {
-            'dump_id': dump_id,
-        })
-        if result.rowcount > 0:
-            return result.mappings().first()
-        return None
+             WHERE """ + where_clause), args)
+        return result.mappings().first()
+
+
+def get_latest_incremental_dump():
+    """ Get the latest incremental dump"""
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, created, dump_type
+              FROM data_dump
+             WHERE dump_type = 'incremental'
+          ORDER BY id DESC
+             LIMIT 1
+        """))
+        return result.mappings().first()
+
+
+def get_previous_incremental_dump(dump_id):
+    """ Get the id of the incremental dump that is one before the given dump id.
+
+    Cannot just do dump_id - 1 because SERIAL/IDENTITY columns in postgres can skip values in some
+    cases (for instance master/standby switchover).
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, created, dump_type
+              FROM data_dump
+             WHERE id < :dump_id
+               AND dump_type = 'incremental'
+          ORDER BY id DESC
+             LIMIT 1
+        """), {"dump_id": dump_id})
+        return result.mappings().first()
 
 
 def import_postgres_dump(private_dump_archive_path=None,
@@ -797,7 +828,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
-            archive_path: path to the .tar.xz archive to be imported
+            archive_path: path to the .tar.zst archive to be imported
             db_engine: an sqlalchemy Engine instance for making a connection
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
@@ -806,13 +837,13 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
 
-    xz_command = ['xz', '--decompress', '--stdout', archive_path, '-T{threads}'.format(threads=threads)]
-    xz = subprocess.Popen(xz_command, stdout=subprocess.PIPE)
+    zstd_command = ['zstd', '--decompress', '--stdout', archive_path, f'-T{threads}']
+    zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
 
     connection = db_engine.raw_connection()
     try:
         cursor = connection.cursor()
-        with tarfile.open(fileobj=xz.stdout, mode='r|') as tar:
+        with tarfile.open(fileobj=zstd.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
 
@@ -841,7 +872,7 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info('Imported table %s', file_name)
     finally:
         connection.close()
-        xz.stdout.close()
+        zstd.stdout.close()
 
 
 def _update_sequence(db_engine: sqlalchemy.engine.Engine, seq_name, table_name):

@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
 import Fuse from "fuse.js";
 import { omit, size, uniq } from "lodash";
+import { isValid } from "date-fns";
 import ListenCard from "../../common/listens/ListenCard";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -300,7 +301,8 @@ export default NiceModal.create(
       matchingTracks && Object.entries(matchingTracks);
     const hasMatches = Boolean(matchingTracksEntries?.length);
     const unmatchedItems =
-      unlinkedListens.filter((md) => !matchingTracks?.[md.recording_msid]) ?? [];
+      unlinkedListens.filter((md) => !matchingTracks?.[md.recording_msid]) ??
+      [];
 
     // We may need to escape or replace the Lucene search special characters
     // + - && || ! ( ) { } [ ] ^ " ~ * ? : \ /     as described in
@@ -460,11 +462,12 @@ export default NiceModal.create(
                   >
                     <strong>{selectedAlbum.title}</strong>
                   </a>
-                  {selectedAlbum.date && (
-                    <span>
-                      &nbsp;({new Date(selectedAlbum.date).getFullYear()})
-                    </span>
-                  )}
+                  {selectedAlbum.date &&
+                    isValid(new Date(selectedAlbum.date)) && (
+                      <span>
+                        &nbsp;({new Date(selectedAlbum.date).getFullYear()})
+                      </span>
+                    )}
                   &nbsp;–&nbsp;
                   {selectedAlbum["artist-credit"]
                     ?.map((artist) => `${artist.name}${artist.joinphrase}`)

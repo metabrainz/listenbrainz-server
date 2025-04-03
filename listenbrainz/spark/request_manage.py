@@ -4,6 +4,7 @@ from datetime import date
 
 import click
 import orjson
+from dateutil.relativedelta import relativedelta, MO
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
 
@@ -87,7 +88,7 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'listeners']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -95,26 +96,13 @@ def send_request_to_spark_cluster(query, **params):
               help="Entity for which statistics should be calculated")
 @click.option("--database", type=str, help="Name of the couchdb database to store data in")
 def request_user_stats(type_, range_, entity, database):
-    """ Send a user stats request to the spark cluster
-    """
+    """ Send a user stats request to the spark cluster """
     params = {
-        "stats_range": range_
+        "stats_range": range_,
+        "database": database
     }
-    if type_ in ["entity", "listener"] and entity:
+    if type_ == "entity" and entity:
         params["entity"] = entity
-
-    if not database:
-        today = date.today().strftime("%Y%m%d")
-        if type_ == "entity":
-            prefix = entity
-        elif type_ == "listeners":
-            prefix = f"{entity}_listeners"
-        else:
-            prefix = type_
-        database = f"{prefix}_{range_}_{today}"
-
-    params["database"] = database
-
     send_request_to_spark_cluster(f"stats.user.{type_}", **params)
 
 
@@ -148,19 +136,9 @@ def request_entity_stats(type_, range_, entity, database):
     """ Send an entity stats request to the spark cluster """
     params = {
         "stats_range": range_,
-        "entity": entity
+        "entity": entity,
+        "database": database
     }
-
-    if not database:
-        today = date.today().strftime("%Y%m%d")
-        if type_ == "listeners":
-            prefix = f"{entity}_listeners"
-        else:
-            prefix = type_
-        database = f"{prefix}_{range_}_{today}"
-
-    params["database"] = database
-
     send_request_to_spark_cluster(f"stats.entity.{type_}", **params)
 
 
@@ -251,29 +229,23 @@ def request_yim_top_genres(year: int):
 
 
 @cli.command(name="request_import_full")
-@click.option("--id", "id_", type=int, required=False,
+@click.option("--id", "id_", type=int, required=False, default=None,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
 @click.option("--use-local", "local", is_flag=True, help="Use local dump instead of FTP")
-def request_import_new_full_dump(id_: int, local: bool):
+def request_import_full_dump(id_: int, local: bool):
     """ Send the cluster a request to import a new full data dump
     """
-    if id_:
-        send_request_to_spark_cluster('import.dump.full_id', dump_id=id_, local=local)
-    else:
-        send_request_to_spark_cluster('import.dump.full_newest', local=local)
+    send_request_to_spark_cluster("import.dump.full", dump_id=id_, local=local)
 
 
 @cli.command(name="request_import_incremental")
-@click.option("--id", "id_", type=int, required=False,
+@click.option("--id", "id_", type=int, required=False, default=None,
               help="Optional. ID of the incremental dump to import, defaults to latest dump available on FTP server")
 @click.option("--use-local", "local", is_flag=True, help="Use local dump instead of FTP")
-def request_import_new_incremental_dump(id_: int, local: bool):
+def request_import_incremental_dump(id_: int, local: bool):
     """ Send the cluster a request to import a new incremental data dump
     """
-    if id_:
-        send_request_to_spark_cluster('import.dump.incremental_id', dump_id=id_, local=local)
-    else:
-        send_request_to_spark_cluster('import.dump.incremental_newest', local=local)
+    send_request_to_spark_cluster("import.dump.incremental", dump_id=id_, local=local)
 
 
 @cli.command(name="request_dataframes")
@@ -360,20 +332,6 @@ def request_fresh_releases(database, days, threshold):
     send_request_to_spark_cluster('releases.fresh', database=database, days=days, threshold=threshold)
 
 
-@cli.command(name='request_import_artist_relation')
-def request_import_artist_relation():
-    """ Send the spark cluster a request to import artist relation.
-    """
-    send_request_to_spark_cluster('import.artist_relation')
-
-
-@cli.command(name='request_import_musicbrainz_release_dump')
-def request_import_musicbrainz_release_dump():
-    """ Send the spark cluster a request to import musicbrainz release dump.
-    """
-    send_request_to_spark_cluster('import.musicbrainz_release_dump')
-
-
 @cli.command(name='request_import_mlhd_dump')
 def request_import_mlhd_dump():
     """ Send the spark cluster a request to import musicbrainz release dump. """
@@ -399,7 +357,7 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings(session, contribution, threshold, limit, skip):
+def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording.mlhd",
@@ -469,11 +427,20 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
     )
 
 
-@cli.command(name='request_popularity')
+@cli.command(name="request_popularity")
 @click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
-def request_popularity(mlhd):
+@click.option("--entity", "entity", type=click.Choice(["artist", "recording", "release", "release_group"]), required=True)
+def request_popularity(mlhd, entity):
     """ Request mlhd popularity data using the specified dataset. """
-    send_request_to_spark_cluster("popularity.all", mlhd=mlhd)
+    send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity")
+
+
+@cli.command(name="request_per_artist_popularity")
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
+@click.option("--entity", "entity", type=click.Choice(["recording", "release", "release_group"]), required=True)
+def request_per_artist_popularity(mlhd, entity):
+    """ Request mlhd popularity data using the specified dataset. """
+    send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity_top")
 
 
 @cli.command(name="request_yim_similar_users")
@@ -502,15 +469,6 @@ def request_yim_top_discoveries(year: int):
     send_request_to_spark_cluster("year_in_music.top_discoveries", year=year)
 
 
-@cli.command(name="request_yim_artist_map")
-@click.option("--year", type=int, help="Year for which to generate the playlists",
-              default=date.today().year)
-def request_yim_artist_map(year: int):
-    """ Send the cluster a request to generate artist map data and then
-     once the data has been imported generate YIM artist map. """
-    send_request_to_spark_cluster("year_in_music.artist_map", year=year)
-
-
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -529,7 +487,6 @@ def request_year_in_music(ctx, year: int):
     ctx.invoke(request_yim_similar_users, year=year)
     ctx.invoke(request_yim_new_artists_discovered, year=year)
     ctx.invoke(request_yim_listening_time, year=year)
-    ctx.invoke(request_yim_artist_map, year=year)
     ctx.invoke(request_yim_top_missed_recordings, year=year)
     ctx.invoke(request_yim_top_discoveries, year=year)
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_end"})
@@ -548,9 +505,21 @@ def request_troi_playlists(slug, create_all):
 
 
 @cli.command(name="request_tags")
-def request_troi_playlists():
+def request_tags():
     """ Generate the tags dataset with percent rank """
     send_request_to_spark_cluster("tags.default")
+
+
+@cli.command(name="request_import_deleted_listens")
+def request_import_deleted_listens():
+    """ Send a request to spark cluster to import deleted listens from listenbrainz """
+    send_request_to_spark_cluster("import.deleted_listens")
+
+
+@cli.command(name="request_compact_listens")
+def request_compact_listens():
+    """ Send a request to spark cluster to compact listens imported from listenbrainz """
+    send_request_to_spark_cluster("import.compact_listens")
 
 
 # Some useful commands to keep our crontabs manageable. These commands do not add new functionality
@@ -600,3 +569,12 @@ def cron_request_similarity_datasets(ctx):
                threshold=10, limit=100, skip=30, production=True)
     ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
                threshold=10, limit=100, skip=30, production=True)
+
+
+@cli.command(name='cron_request_popularity')
+@click.pass_context
+def cron_request_popularity(ctx):
+    for entity in ["artist", "recording", "release", "release_group"]:
+        ctx.invoke(request_popularity, mlhd=False, entity=entity)
+    for entity in ["recording", "release", "release_group"]:
+        ctx.invoke(request_per_artist_popularity, mlhd=False, entity=entity)

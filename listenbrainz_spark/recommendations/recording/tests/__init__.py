@@ -1,11 +1,13 @@
 import os
+from datetime import datetime
 
 from pyspark import Row
 from pyspark.sql.types import StructType, StructField, IntegerType
 
 import listenbrainz_spark
 from listenbrainz_spark import utils
-from listenbrainz_spark.path import LISTENBRAINZ_NEW_DATA_DIRECTORY, RECOMMENDATION_RECORDING_MAPPED_LISTENS
+from listenbrainz_spark.listens.dump import import_incremental_dump_to_hdfs
+from listenbrainz_spark.path import RECOMMENDATION_RECORDING_MAPPED_LISTENS
 from listenbrainz_spark.tests import SparkNewTestCase, TEST_DATA_PATH, PLAYCOUNTS_COUNT, TEST_PLAYCOUNTS_PATH
 from listenbrainz_spark.hdfs.utils import upload_to_HDFS
 
@@ -14,8 +16,8 @@ class RecommendationsTestCase(SparkNewTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super(RecommendationsTestCase, cls).setUpClass()
-        upload_to_HDFS(LISTENBRAINZ_NEW_DATA_DIRECTORY, os.path.join(TEST_DATA_PATH, 'rec_listens.parquet'))
-        upload_to_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS, os.path.join(TEST_DATA_PATH, 'mapped_listens.parquet'))
+        import_incremental_dump_to_hdfs(cls.dump_loader, 5)
+        upload_to_HDFS(RECOMMENDATION_RECORDING_MAPPED_LISTENS, os.path.join(TEST_DATA_PATH, "mapped_listens.parquet"))
 
     @classmethod
     def get_candidate_set(cls):
@@ -28,11 +30,11 @@ class RecommendationsTestCase(SparkNewTestCase):
     def get_dataframe_metadata(cls, df_id):
         return {
             'dataframe_id': df_id,
-            'from_date': cls.begin_date,
+            'from_date': datetime(2005, 1, 1),
             'listens_count': 30,
             'playcounts_count': 20,
             'recordings_count': 24,
-            'to_date': cls.end_date,
+            'to_date': datetime(2025, 1, 1),
             'users_count': 2,
         }
 

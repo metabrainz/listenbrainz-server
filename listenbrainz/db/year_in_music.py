@@ -178,9 +178,15 @@ def send_mail(subject, to_name, to_email, content, html, logo, logo_cid):
     current_app.logger.info("Email sent to %s", to_name)
 
 
+def sanitize_username(username):
+    username.replace('\\','\\\\')
+    username.replace('"','\\"')
+    return f'"{username}"'
+
+
 def notify_yim_users(db_conn, ts_conn, year):
     logo_cid = make_msgid()
-    with open("/static/img/year-in-music-23/yim-23-logo-small-compressed.png", "rb") as img:
+    with open("/static/img/year-in-music-24/yim24-header-all-email.png", "rb") as img:
         logo = img.read()
 
     if year not in [2021, 2022, 2023, 2024]:
@@ -198,12 +204,12 @@ def notify_yim_users(db_conn, ts_conn, year):
     rows = result.fetchall()
 
     for row in rows:
-        user_name = row.musicbrainz_id
+        user_name = sanitize_username(row.musicbrainz_id)
 
         # cannot use url_for because we do not set SERVER_NAME and
         # a request_context will not be available in this script.
         base_url = "https://listenbrainz.org"
-        year_in_music = f"{base_url}/user/{user_name}/year-in-music/"
+        year_in_music = f"{base_url}/user/{user_name}/year-in-music/{year}/"
         params = {
             "user_name": user_name,
             "logo_cid": logo_cid[1:-1]

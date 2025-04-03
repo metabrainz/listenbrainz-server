@@ -12,7 +12,7 @@ from listenbrainz.webserver.views.api_tools import (
     get_non_negative_param,
     is_valid_uuid,
 )
-from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver import db_conn, ts_conn, API_PREFIX
 from listenbrainz.db.fresh_releases import get_sitewide_fresh_releases
 from listenbrainz.db.fresh_releases import get_fresh_releases as db_get_fresh_releases
 from data.model.common_stat import StatisticsRange
@@ -164,7 +164,7 @@ def _init_feed(id, title, alternate_url, self_url):
     return fg
 
 
-@atom_bp.route("/user/<user_name>/listens", methods=["GET"])
+@atom_bp.get("/user/<user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -252,7 +252,7 @@ def get_listens(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/fresh-releases", methods=["GET"])
+@atom_bp.get("/fresh-releases")
 @crossdomain
 @ratelimit()
 def get_fresh_releases():
@@ -333,8 +333,9 @@ def get_fresh_releases():
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/fresh-releases", methods=["GET"])
+@atom_bp.get("/user/<user_name>/fresh-releases")
 @crossdomain
+@ratelimit()
 def get_user_fresh_releases(user_name):
     """
     Get fresh releases for a user, sorted by release date.
@@ -426,7 +427,7 @@ def _get_entity_stats(user_id: str, entity: str, range: str, count: int):
     return entity_list, stats.to_ts, stats.last_updated
 
 
-@atom_bp.route("/user/<user_name>/stats/top-artists")
+@atom_bp.get("/user/<user_name>/stats/top-artists")
 @crossdomain
 @ratelimit()
 def get_artist_stats(user_name):
@@ -507,7 +508,7 @@ def get_artist_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/stats/top-albums")
+@atom_bp.get("/user/<user_name>/stats/top-albums")
 @crossdomain
 @ratelimit()
 def get_release_group_stats(user_name):
@@ -589,7 +590,7 @@ def get_release_group_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/stats/top-tracks")
+@atom_bp.get("/user/<user_name>/stats/top-tracks")
 @crossdomain
 @ratelimit()
 def get_recording_stats(user_name):
@@ -670,7 +671,7 @@ def get_recording_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/playlist/<playlist_mbid>")
+@atom_bp.get("/playlist/<playlist_mbid>")
 @crossdomain
 @api_listenstore_needed
 @ratelimit()
@@ -743,7 +744,7 @@ def get_playlist_recordings(playlist_mbid):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/recommendations")
+@atom_bp.get("/user/<user_name>/recommendations")
 @crossdomain
 @api_listenstore_needed
 @ratelimit()
@@ -833,7 +834,7 @@ def get_recommendation(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/stats/art/grid")
+@atom_bp.get("/user/<user_name>/stats/art/grid")
 @crossdomain
 @ratelimit()
 def get_cover_art_grid_stats(user_name):
@@ -880,14 +881,9 @@ def get_cover_art_grid_stats(user_name):
         )
 
     # Generate the data URL for the art
-    data_url = _external_url_for(
-        "art_api_v1.cover_art_grid_stats",
-        user_name=user_name,
-        time_range=range,
-        dimension=dimension,
-        layout=layout,
-        image_size=image_size,
-    )
+    # Using API_URL + API_PREFIX otherwise we link to lb.org/1/art/...
+    # which returns an error message to use api.lb.org/1/art/...
+    data_url = f'{current_app.config["API_URL"]}{API_PREFIX}/art/grid-stats/{user_name}/{range}/{dimension}/{layout}/{image_size}'
 
     this_feed_url = _external_url_for(".get_cover_art_grid_stats", user_name=user_name, range=range)
     user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name, range=range)
@@ -941,7 +937,7 @@ def get_cover_art_grid_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.route("/user/<user_name>/stats/art/custom")
+@atom_bp.get("/user/<user_name>/stats/art/custom")
 @crossdomain
 @ratelimit()
 def get_cover_art_custom_stats(user_name):
@@ -982,13 +978,11 @@ def get_cover_art_custom_stats(user_name):
             f"Image size must be between {MIN_IMAGE_SIZE} and {MAX_IMAGE_SIZE}."
         )
 
-    data_url = _external_url_for(
-        "art_api_v1.cover_art_custom_stats",
-        custom_name=custom_name,
-        user_name=user_name,
-        time_range=range,
-        image_size=image_size,
-    )
+    # Generate the data URL for the art
+    # Using API_URL + API_PREFIX otherwise we link to lb.org/1/art/...
+    # which returns an error message to use api.lb.org/1/art/...
+    data_url = f'{current_app.config["API_URL"]}{API_PREFIX}/art/{custom_name}/{user_name}/{range}/{image_size}'
+
     this_feed_url = _external_url_for(".get_cover_art_custom_stats", user_name=user_name, range=range)
     user_stats_url = _external_url_for("user.index", path="stats", user_name=user_name, range=range)
     
@@ -1088,7 +1082,7 @@ def _generate_event_title(event):
 
 # Commented out as new OAuth is not merged yet. Once merged, update this function to use the new OAuth API to 
 # authenticate the user and then fetch the user's events feed.
-# @atom_bp.route("/user/<user_name>/events", methods=["GET"])
+# @atom_bp.get("/user/<user_name>/events")
 # @crossdomain
 # @ratelimit()
 # @api_listenstore_needed

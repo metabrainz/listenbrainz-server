@@ -29,3 +29,4 @@ Constants that are relevant to using the API:
 .. autodata:: listenbrainz.art.cover_art_generator.MIN_DIMENSION
 .. autodata:: listenbrainz.art.cover_art_generator.MAX_DIMENSION
 .. autodata:: data.model.common_stat.ALLOWED_STATISTICS_RANGE
+   :no-index:

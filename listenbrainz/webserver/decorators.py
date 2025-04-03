@@ -1,13 +1,16 @@
 from functools import wraps
 
-from brainzutils import musicbrainz_db
 from flask import request, current_app, make_response, redirect, url_for
 
 from listenbrainz.webserver import timescale_connection
 
 
 def crossdomain(f):
-    """ Decorator to add CORS headers to flask endpoints """
+    """ Decorator to add CORS headers to flask endpoints.
+
+    This decorator should be applied just after the route to ensure the provide_automatic_options
+    is set correctly.
+    """
     @wraps(f)
     def decorator(*args, **kwargs):
         options_resp = current_app.make_default_options_response()
@@ -24,7 +27,8 @@ def crossdomain(f):
         h["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         return resp
 
-    f.provide_automatic_options = False
+    decorator.provide_automatic_options = False
+    decorator.required_methods = ["OPTIONS"]
     return decorator
 
 

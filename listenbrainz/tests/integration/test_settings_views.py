@@ -86,8 +86,8 @@ class SettingsViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, self.user["id"])
-            self.assertEquals(task.task, "delete_listens")
+            self.assertEqual(task.user_id, self.user["id"])
+            self.assertEqual(task.task, "delete_listens")
 
         # wait for background tasks to be processed -- max 30s allowed for the test to pass
 

@@ -127,13 +127,17 @@ const getUserRoutes = (): RouteObject[] => {
       children: [
         {
           index: true,
+          element: <Navigate to="./2024" replace />,
+        },
+        {
+          path: "2024/",
           lazy: async () => {
-            const YearInMusic2023 = await import(
-              "../year-in-music/2023/YearInMusic2023"
+            const YearInMusic2024 = await import(
+              "../year-in-music/2024/YearInMusic2024"
             );
-            return { Component: YearInMusic2023.YearInMusicWrapper };
+            return { Component: YearInMusic2024.YearInMusicWrapper };
           },
-          loader: RouteQueryLoader("year-in-music-2023"),
+          loader: RouteQueryLoader("year-in-music-2024"),
         },
         {
           path: "2023/",

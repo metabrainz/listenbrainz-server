@@ -6,7 +6,7 @@ import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import {
   Link,
   Navigate,
@@ -19,7 +19,6 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
-  PLAYLIST_TRACK_URI_PREFIX,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
@@ -208,7 +207,7 @@ export default class PlayerPage extends React.Component<
             // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{
-              __html: sanitize(playlist.annotation),
+              __html: DOMPurify.sanitize(playlist.annotation),
             }}
           />
         )}

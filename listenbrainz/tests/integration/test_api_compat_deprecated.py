@@ -21,7 +21,7 @@
 
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from werkzeug.exceptions import BadRequest
 
@@ -140,7 +140,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         time.sleep(1)
         recalculate_all_user_data()
-        to_ts = datetime.utcnow()
+        to_ts = datetime.now(timezone.utc)
         with self.app.app_context():
             listens, _, _ = self.ls.fetch_listens(self.user, to_ts=to_ts)
         self.assertEqual(len(listens), 1)

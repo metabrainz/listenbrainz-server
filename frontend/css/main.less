@@ -42,6 +42,7 @@
 @import "donations.less";
 @import "scroll-container.less";
 @import "flairs.less";
+@import "utilities.less";
 
 @icon-font-path: "/static/fonts/";
 
@@ -50,6 +51,12 @@
 @import (inline) "react-toastify/dist/ReactToastify.css";
 
 @import (inline, css) "highlight.js/styles/github.css";
+
+// Show the toasts above the player
+.Toastify__toast-container--bottom-left,
+.Toastify__toast-container--bottom-right {
+  bottom: calc(1em + @brainzplayer-height);
+}
 
 pre code.hljs {
   max-height: 50vh;
@@ -366,6 +373,10 @@ pre code.hljs {
 .badge-info {
   color: @white;
   background-color: @blue;
+}
+
+input[type="range"] {
+  accent-color: @blue;
 }
 
 // Fix button height inside an input group

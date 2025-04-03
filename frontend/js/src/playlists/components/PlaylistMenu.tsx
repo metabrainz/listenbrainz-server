@@ -1,7 +1,11 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faSpotify, faSoundcloud } from "@fortawesome/free-brands-svg-icons";
+import {
+  faSpotify,
+  faItunesNote,
+  faSoundcloud,
+} from "@fortawesome/free-brands-svg-icons";
 import {
   faCopy,
   faFileExport,
@@ -15,6 +19,7 @@ import { useContext } from "react";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
 import { Link } from "react-router-dom";
+import { noop } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getPlaylistId, isPlaylistOwner } from "../utils";
@@ -23,6 +28,8 @@ import DeletePlaylistConfirmationModal from "./DeletePlaylistConfirmationModal";
 
 export type PlaylistMenuProps = {
   playlist: JSPFPlaylist;
+  coverArtGridOptions?: CoverArtGridOptions[];
+  currentCoverArt?: CoverArtGridOptions;
   onPlaylistSaved?: (playlist: JSPFPlaylist) => void;
   onPlaylistDeleted?: (playlist: JSPFPlaylist) => void;
   onPlaylistCopied?: (playlist: JSPFPlaylist) => void;
@@ -31,14 +38,20 @@ export type PlaylistMenuProps = {
 
 function PlaylistMenu({
   playlist,
+  coverArtGridOptions,
+  currentCoverArt,
   onPlaylistSaved,
   onPlaylistDeleted,
   onPlaylistCopied,
   disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
-  const { APIService, currentUser, spotifyAuth, soundcloudAuth } = useContext(
-    GlobalAppContext
-  );
+  const {
+    APIService,
+    currentUser,
+    spotifyAuth,
+    appleAuth,
+    soundcloudAuth,
+  } = useContext(GlobalAppContext);
   const { auth_token } = currentUser;
   const playlistID = getPlaylistId(playlist);
   const playlistTitle = playlist.title;
@@ -194,6 +207,44 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
+
+  const exportToAppleMusic = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    let result;
+    if (playlistID) {
+      result = await APIService.exportPlaylistToAppleMusic(
+        auth_token,
+        playlistID
+      );
+    } else {
+      result = await APIService.exportJSPFPlaylistToAppleMusic(
+        auth_token,
+        playlist
+      );
+    }
+    const { external_url } = result;
+    const url = external_url?.replace(
+      "/v1/me/library/playlists/",
+      "https://music.apple.com/us/library/playlist/"
+    );
+    toast.success(
+      <ToastMsg
+        title="Playlist exported to Apple Music"
+        message={
+          <>
+            Successfully exported playlist:{" "}
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              {playlistTitle}
+            </a>
+          </>
+        }
+      />,
+      { toastId: "export-playlist" }
+    );
+  };
   const handlePlaylistExport = async (handler: () => Promise<void>) => {
     if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
@@ -211,17 +262,18 @@ function PlaylistMenu({
       handleError(error.error ?? error);
     }
   };
-  const showSpotifyExportButton = spotifyAuth?.permission?.includes(
-    "playlist-modify-public"
-  );
-  const showSoundCloudExportButton = soundcloudAuth;
+  const isLoggedIn = Boolean(currentUser?.name);
+  const enableSpotifyExport =
+    isLoggedIn && spotifyAuth?.permission?.includes("playlist-modify-public");
+  const enableAppleMusicExport = isLoggedIn && appleAuth?.music_user_token;
+  const enableSoundCloudExport = isLoggedIn && soundcloudAuth?.access_token;
   return (
     <ul
       className="dropdown-menu dropdown-menu-right"
       aria-labelledby="playlistOptionsDropdown"
     >
-      <li>
-        <a onClick={copyPlaylist} role="button" href="#">
+      <li className={!isLoggedIn ? "disabled" : ""}>
+        <a onClick={isLoggedIn ? copyPlaylist : noop} role="button" href="#">
           <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
           {playlistID ? "Duplicate" : "Save to my playlists"}
         </a>
@@ -236,7 +288,11 @@ function PlaylistMenu({
               role="button"
               href="#"
               onClick={() => {
-                NiceModal.show(CreateOrEditPlaylistModal, { playlist })
+                NiceModal.show(CreateOrEditPlaylistModal, {
+                  playlist,
+                  coverArtGridOptions,
+                  currentCoverArt,
+                })
                   // @ts-ignore
                   .then((editedPlaylist: JSPFPlaylist) => {
                     if (onPlaylistSaved) {
@@ -270,47 +326,44 @@ function PlaylistMenu({
         </>
       )}
       <li role="separator" className="divider" />
-      {showSpotifyExportButton && (
-        <li>
-          <a
-            id="exportPlaylistToSpotify"
-            role="button"
-            href="#"
-            onClick={() => handlePlaylistExport(exportToSpotify)}
-          >
-            <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
-          </a>
-        </li>
-      )}
-      {showSoundCloudExportButton && (
-        <li>
-          <a
-            id="exportPlaylistToSoundCloud"
-            role="button"
-            href="#"
-            onClick={() => handlePlaylistExport(exportToSoundcloud)}
-          >
-            <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
-            SoundCloud
-          </a>
-        </li>
-      )}
-      {/* {showSoundCloudExportButton && (
-        <>
-          <li role="separator" className="divider" />
-          <li>
-            <a
-              id="exportPlaylistToSoundCloud"
-              role="button"
-              href="#"
-              onClick={() => handlePlaylistExport(exportToSoundcloud)}
-            >
-              <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
-              SoundCloud
-            </a>
-          </li>
-        </>
-      )} */}
+      <li className={enableSpotifyExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToSpotify"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableSpotifyExport && handlePlaylistExport(exportToSpotify)
+          }
+        >
+          <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
+        </a>
+      </li>
+      <li className={enableAppleMusicExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToAppleMusic"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableAppleMusicExport && handlePlaylistExport(exportToAppleMusic)
+          }
+        >
+          <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
+          Music
+        </a>
+      </li>
+      <li className={enableSoundCloudExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToSoundCloud"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableSoundCloudExport && handlePlaylistExport(exportToSoundcloud)
+          }
+        >
+          <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
+          SoundCloud
+        </a>
+      </li>
       <li role="separator" className="divider" />
       <li>
         <a

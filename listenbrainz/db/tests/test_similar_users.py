@@ -3,7 +3,6 @@ import json
 import listenbrainz.db.user as db_user
 import sqlalchemy
 
-from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.similar_users import get_top_similar_users
 

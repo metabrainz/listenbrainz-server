@@ -46,7 +46,7 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
 from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
                                                                 save_dataframe,
                                                                 get_dates_to_train_data)
-from listenbrainz_spark.utils import get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata, save_path)
                               .agg(func.count('recording_id').alias('playcount'))
     playcounts_df.createOrReplaceTempView("playcounts")
 
-    transformed_listencounts = listenbrainz_spark.sql_context.sql(f"""
+    transformed_listencounts = listenbrainz_spark.session.sql(f"""
             SELECT spark_user_id
                  , recording_id
                  , playcount
@@ -291,17 +291,8 @@ def calculate_dataframes(from_date, to_date, job_type, minimum_listens_threshold
         raise SparkException("Invalid job_type parameter received for creating dataframes: " + job_type)
 
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
-    metadata = {}
     # "updated" should always be set to False in this script.
-    metadata['updated'] = False
-    try:
-        listenbrainz_spark.init_spark_session('Create Dataframes')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
-    metadata['to_date'] = to_date
-    metadata['from_date'] = from_date
+    metadata = {'updated': False, 'to_date': to_date, 'from_date': from_date}
 
     complete_listens_df = get_listens_from_dump(from_date, to_date)
     logger.info(f'Listen count from {from_date} to {to_date}: {complete_listens_df.count()}')

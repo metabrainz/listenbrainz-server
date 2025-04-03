@@ -1,7 +1,5 @@
-# coding=utf-8
-import calendar
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timezone
 
 import orjson
 
@@ -76,7 +74,7 @@ class Listen(object):
         # determine the type of timestamp and do the right thing
         if isinstance(timestamp, int) or isinstance(timestamp, float):
             self.ts_since_epoch = int(timestamp)
-            self.timestamp = datetime.utcfromtimestamp(self.ts_since_epoch)
+            self.timestamp = datetime.fromtimestamp(self.ts_since_epoch, timezone.utc)
         else:
             if timestamp:
                 self.timestamp = timestamp
@@ -105,12 +103,12 @@ class Listen(object):
         """Factory to make Listen() objects from a dict"""
         # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
         try:
-            j['listened_at'] = datetime.utcfromtimestamp(float(j['listened_at']))
+            j['listened_at'] = datetime.fromtimestamp(float(j['listened_at']), timezone.utc)
         except KeyError:
             try:
-                j['listened_at'] = datetime.utcfromtimestamp(float(j['timestamp']))
+                j['listened_at'] = datetime.fromtimestamp(float(j['timestamp']), timezone.utc)
             except KeyError:
-                j['listened_at'] = datetime.utcfromtimestamp(float(j['ts_since_epoch']))
+                j['listened_at'] = datetime.fromtimestamp(float(j['ts_since_epoch']), timezone.utc)
 
         return cls(
             user_id=j.get('user_id'),

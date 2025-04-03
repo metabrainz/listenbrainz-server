@@ -13,7 +13,7 @@ from listenbrainz.webserver.login.provider import MusicBrainzAuthSessionError, M
 login_bp = Blueprint('login', __name__)
 
 
-@login_bp.route('/')
+@login_bp.get('/')
 @web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
@@ -21,7 +21,7 @@ def index():
     return render_template('index.html')
 
 
-@login_bp.route('/musicbrainz/')
+@login_bp.get('/musicbrainz/')
 @web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
@@ -30,7 +30,7 @@ def musicbrainz():
     return redirect(provider.get_authentication_uri())
 
 
-@login_bp.route('/musicbrainz/post/')
+@login_bp.get('/musicbrainz/post/')
 @web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
@@ -68,7 +68,7 @@ def musicbrainz_post():
     return redirect(url_for('index.index_pages', path=''))
 
 
-@login_bp.route('/logout/')
+@login_bp.get('/logout/')
 @login_required
 def logout():
     session.clear()

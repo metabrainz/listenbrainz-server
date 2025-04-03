@@ -102,8 +102,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
           title="Successfully imported playlist from Apple Music"
           message={
             <>
-              Imported
-              <a href={newPlaylist.identifier}> {playlistName}</a>
+              Imported{" "}
+              <Link to={`/playlist/${newPlaylist.identifier}`}>
+                {playlistName}
+              </Link>
             </>
           }
         />,

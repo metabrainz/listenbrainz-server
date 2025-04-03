@@ -603,6 +603,11 @@ export default function Listen() {
                   <li>
                     <Link to="/add-data/">Submit from music players</Link>
                   </li>
+                  <li>
+                    <Link to="/settings/link-listens/">
+                      Link unmatched listens
+                    </Link>
+                  </li>
                 </ul>
               </div>
             )}

@@ -91,11 +91,6 @@ def get_vectors_df(playcounts_df):
 
 def get_similar_users_df(max_num_users: int):
     logger.info('Start generating similar user matrix')
-    try:
-        listenbrainz_spark.init_spark_session('User Similarity')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
 
     try:
         playcounts_df = utils.read_files_from_HDFS(path.USER_SIMILARITY_PLAYCOUNTS_DATAFRAME)

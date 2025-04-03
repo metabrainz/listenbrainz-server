@@ -4,7 +4,8 @@ import shutil
 import tarfile
 import tempfile
 import time
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from glob import glob
 from pathlib import Path
 
@@ -14,7 +15,7 @@ import pycurl
 import listenbrainz_spark
 from listenbrainz_spark import config, path
 from listenbrainz_spark.exceptions import DumpInvalidException
-from listenbrainz_spark.hdfs import upload_to_HDFS, delete_dir
+from listenbrainz_spark.hdfs.utils import upload_to_HDFS, delete_dir
 from listenbrainz_spark.stats import run_query
 
 
@@ -43,7 +44,7 @@ def post_process_mlhd_plus():
     """
     for chunk in MLHD_PLUS_CHUNKS:
         listenbrainz_spark\
-            .sql_context\
+            .session\
             .read\
             .format("parquet")\
             .option("pathGlobFilter", f"{chunk}*.parquet")\
@@ -146,20 +147,28 @@ def download_chunk(filename, dest) -> str:
     return download_path
 
 
-def import_mlhd_dump_to_hdfs():
-    """ Import the MLHD+ dump. """
-    MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
-
-    for filename in MLHD_PLUS_FILES:
+def process_chunk(filename):
+    try:
         with tempfile.TemporaryDirectory() as local_temp_dir:
             downloaded_chunk = download_chunk(filename, local_temp_dir)
             extract_chunk(filename, downloaded_chunk, local_temp_dir)
             transform_chunk(local_temp_dir)
+    except Exception:
+        logger.error(f"Error while processing chunk {filename}: ", exc_info=True)
+
+
+def import_mlhd_dump_to_hdfs():
+    """ Import the MLHD+ dump. """
+    MLHD_PLUS_FILES = [f"mlhdplus-complete-{chunk}.tar" for chunk in MLHD_PLUS_CHUNKS]
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for filename in MLHD_PLUS_FILES:
+            executor.submit(process_chunk, filename)
 
     post_process_mlhd_plus()
     delete_dir(path.MLHD_PLUS_RAW_DATA_DIRECTORY, recursive=True)
 
     return [{
         'type': 'import_mlhd_dump',
-        'time': str(datetime.utcnow()),
+        'time': str(datetime.now(tz=timezone.utc).isoformat()),
     }]
