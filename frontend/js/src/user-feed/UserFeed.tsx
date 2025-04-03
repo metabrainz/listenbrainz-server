@@ -523,6 +523,9 @@ export default function UserFeedPage() {
     }
     if (event.event_type === EventType.THANKS && !event.hidden) {
       const { metadata } = event as TimelineEvent<ThanksMetadata>;
+      if(!metadata?.blurb_content?.length){
+        return null;
+      }
       return (
         <div className="event-content">
           <Card className="listen-card">
