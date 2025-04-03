@@ -779,6 +779,10 @@ export default function UserFeedPage() {
                       const subEvent = events?.find(
                         (evt) => evt.id === original_event_id && evt.event_type === original_event_type
                       );
+                      if(!subEvent){
+                        // Search for the event?
+                        subEventElement = <div className="muted">Load more evens to preview this older event</div>
+                      }
                       subEventElement = renderSubEvent(subEvent);
                     }
 
