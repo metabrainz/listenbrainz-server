@@ -897,7 +897,7 @@ def export_playlist(playlist_mbid, service):
             url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
         elif service == "apple_music":
             url = export_to_apple_music(user["auth_token"], token["access_token"], token["refresh_token"], is_public, playlist_mbid=playlist_mbid)
-        else:
+        elif service == "soundcloud":
             url = export_to_soundcloud(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
         return jsonify({"external_url": url})
     except requests.exceptions.HTTPError as exc:
@@ -935,8 +935,13 @@ def import_playlist_from_music_service(service):
     service_class = supported_services[service]()
     if service == "spotify":
         token = service_class.get_user(user["id"], refresh=True)
-    else:
-        token = service_class.get_user(user["id"])
+    elif service == "apple_music":
+        # TODO: implement refresh token for AppleMusic
+        apple_service = AppleService()
+        token = apple_service.get_user(user["id"])
+    elif service == "soundcloud":
+        soundcloud_service = SoundCloudService()
+        token = soundcloud_service.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
@@ -954,17 +959,14 @@ def import_playlist_from_music_service(service):
             spotify = spotipy.Spotify(auth=token["access_token"])
             playlists = spotify.current_user_playlists()
             return jsonify(playlists["items"])
-
         elif service == "apple_music":
             apple = Apple()
             playlists = apple.get_user_data("https://api.music.apple.com/v1/me/library/playlists/", token["refresh_token"])
             return jsonify(playlists.get("data", []))
-
         elif service == "soundcloud":
             soundcloud = SoundCloud(token["access_token"])
             playlists = soundcloud.get("https://api.soundcloud.com/me/playlists/")
             return jsonify(playlists)
-
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
@@ -977,7 +979,7 @@ def import_playlist_from_music_service(service):
 def import_tracks_from_spotify_playlist(playlist_id):
     """
 
-    Import a playlist tracks from a Spotify and convert them to JSPF.
+    Import a playlist's tracks from Spotify and convert them to JSPF.
 
     :reqheader Authorization: Token <user token>
     :param playlist_id: The Spotify playlist id to get the tracks from
@@ -1013,7 +1015,7 @@ def import_tracks_from_spotify_playlist(playlist_id):
 def import_tracks_from_apple_playlist(playlist_id):
     """
 
-    Import a playlist tracks from a Apple Music and convert them to JSPF.
+    Import a playlist's tracks from Apple Music and convert them to JSPF.
 
     :reqheader Authorization: Token <user token>
     :param playlist_id: The Apple Music playlist id to get the tracks from
@@ -1168,7 +1170,7 @@ def export_playlist_jspf(service):
             url = export_to_spotify(user["auth_token"], token["access_token"], is_public, jspf=jspf)
         elif service == "apple_music":
             url = export_to_apple_music(user["auth_token"], token["access_token"], token["refresh_token"], is_public, jspf=jspf)
-        else:
+        elif service == "soundcloud":
             url = export_to_soundcloud(user["auth_token"], token["access_token"], is_public, jspf=jspf)
         return jsonify({"external_url": url})
     except requests.exceptions.HTTPError as exc:
