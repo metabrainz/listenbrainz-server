@@ -34,6 +34,11 @@ playlist_api_bp = Blueprint('playlist_api_v1', __name__)
 MAX_RECORDINGS_PER_ADD = 100
 DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 
+supported_services = {
+    "spotify": SpotifyService,
+    "apple_music": AppleService,
+    "soundcloud": SoundCloudService
+}
 
 def validate_create_playlist_required_items(jspf):
     """Given a JSPF dict, ensure that the title and public fields are present.
@@ -870,18 +875,18 @@ def export_playlist(playlist_mbid, service):
     if not is_valid_uuid(playlist_mbid):
         log_raise_400("Provided playlist ID is invalid.")
 
-    if service not in {"spotify", "apple_music", "soundcloud"}:
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify' and 'apple_music'.")
+    if service not in supported_services:
+        raise APIBadRequest(f"Service {service} is not supported. "
+                            f"Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
+
+    service_class = supported_services[service]()
 
     if service == "spotify":
-        spotify_service = SpotifyService()
-        token = spotify_service.get_user(user["id"], refresh=True)
+        token = service_class.get_user(user["id"], refresh=True)
     elif service == "apple_music":
-        apple_service = AppleService()
-        token = apple_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
     elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
@@ -922,12 +927,6 @@ def import_playlist_from_music_service(service):
     """
     user = validate_auth_header()
 
-    supported_services = {
-        "spotify": SpotifyService,
-        "apple_music": AppleService,
-        "soundcloud": SoundCloudService
-    }
-
     if service not in supported_services:
         raise APIBadRequest(f"Service {service} is not supported. "
                             f"Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
@@ -937,11 +936,9 @@ def import_playlist_from_music_service(service):
         token = service_class.get_user(user["id"], refresh=True)
     elif service == "apple_music":
         # TODO: implement refresh token for AppleMusic
-        apple_service = AppleService()
-        token = apple_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
     elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
@@ -1142,18 +1139,18 @@ def export_playlist_jspf(service):
     """
     user = validate_auth_header()
 
-    if service not in {"spotify", "apple_music", "soundcloud"}:
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify', 'apple_music' and 'soundcloud'.")
+    if service not in supported_services:
+        raise APIBadRequest(f"Service {service} is not supported. "
+                            f"Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
+
+    service_class = supported_services[service]()
 
     if service == "spotify":
-        spotify_service = SpotifyService()
-        token = spotify_service.get_user(user["id"], refresh=True)
+        token = service_class.get_user(user["id"], refresh=True)
     elif service == "apple_music":
-        apple_service = AppleService()
-        token = apple_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
     elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
+        token = service_class.get_user(user["id"])
 
     if not token:
         raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
