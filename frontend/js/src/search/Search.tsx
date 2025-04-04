@@ -88,7 +88,7 @@ export default function Search() {
             >
               <input
                 type="text"
-                className="form-control input-lg"
+                className="form-control form-control-lg"
                 name="search_term"
                 placeholder="Search"
                 value={searchTermInput}

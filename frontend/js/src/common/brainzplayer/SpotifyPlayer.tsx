@@ -607,11 +607,7 @@ export default class SpotifyPlayer
     );
     return (
       sortedImages[0] && (
-        <img
-          alt="coverart"
-          className="img-responsive"
-          src={sortedImages[0].url}
-        />
+        <img alt="coverart" className="img-fluid" src={sortedImages[0].url} />
       )
     );
   };

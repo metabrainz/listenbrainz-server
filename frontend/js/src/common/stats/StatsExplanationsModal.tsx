@@ -22,7 +22,7 @@ export default NiceModal.create(() => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="StatsExplanationsModal"
       tabIndex={-1}
       role="dialog"
@@ -90,7 +90,7 @@ export default NiceModal.create(() => {
           <div className="modal-footer">
             <button
               type="button"
-              className="btn btn-default"
+              className="btn btn-secondary"
               data-dismiss="modal"
               onClick={closeModal}
             >

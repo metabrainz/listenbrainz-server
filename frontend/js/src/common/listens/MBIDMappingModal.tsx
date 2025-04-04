@@ -159,10 +159,10 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   return (
     <>
       <div
-        className={`modal fade ${visible ? "in" : ""}`}
-        style={visible ? { display: "block" } : {}}
+        className="modal fade"
         id="MBIDMappingModal"
         role="dialog"
+        data-backdrop="true"
         aria-labelledby="MBIDMappingModalLabel"
       >
         <div className="modal-dialog" role="document">
@@ -242,12 +242,20 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 </div>
               )}
             </div>
-            <div className="modal-footer" style={{ textAlign: "left" }}>
+            <div
+              className="modal-footer"
+              style={{
+                textAlign: "left",
+                width: "100%",
+                display: "inline-block",
+              }}
+            >
               <div
                 className="mb-10"
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
+                  width: "100%",
                 }}
               >
                 <div>
@@ -279,7 +287,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 <div style={{ textAlign: "right" }}>
                   <button
                     type="button"
-                    className="btn btn-default"
+                    className="btn btn-secondary"
                     onClick={closeModal}
                   >
                     Cancel

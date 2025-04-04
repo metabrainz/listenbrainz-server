@@ -480,15 +480,15 @@ export default NiceModal.create((props: CBReviewModalProps) => {
               type="button"
             >
               {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
-              <span className="caret" />
             </button>
 
-            <ul className="dropdown-menu" role="menu">
+            <div className="dropdown-menu" role="menu">
               {/* Map entity to dropdown option button */}
               {allEntities.map((entity) => {
                 if (entity) {
                   return (
                     <button
+                      className="dropdown-item"
                       key={entity.mbid}
                       name={`select-${kebabCase(entityToReview.type)}`}
                       onClick={() => setEntityToReview(entity)}
@@ -500,7 +500,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
                 }
                 return null;
               })}
-            </ul>
+            </div>
           </span>
           for <a href={CBBaseUrl}>CritiqueBrainz</a>. {CBInfoButton}
         </div>
@@ -556,16 +556,17 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           </select>
         </div>
 
-        <div className="checkbox">
-          <label htmlFor="#acceptLicense">
-            <input
-              id="acceptLicense"
-              type="checkbox"
-              checked={acceptLicense}
-              name="acceptLicense"
-              onChange={handleLicenseChange}
-              required
-            />
+        <div className="form-check">
+          <input
+            id="acceptLicense"
+            type="checkbox"
+            checked={acceptLicense}
+            name="acceptLicense"
+            onChange={handleLicenseChange}
+            className="form-check-input"
+            required
+          />
+          <label className="form-check-label" htmlFor="acceptLicense">
             <small>
               &nbsp;You acknowledge and agree that your contributed reviews to
               CritiqueBrainz are licensed under a Creative Commons
@@ -649,7 +650,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
     return (
       <button
         type="button"
-        className="btn btn-default"
+        className="btn btn-secondary"
         data-dismiss="modal"
         onClick={closeModal}
       >
@@ -667,7 +668,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="CBReviewModal"
       tabIndex={-1}
       role="dialog"
@@ -694,7 +695,6 @@ export default NiceModal.create((props: CBReviewModalProps) => {
               <img
                 src="/static/img/critiquebrainz-logo.svg"
                 height="30"
-                className="cb-img-responsive"
                 alt="CritiqueBrainz Logo"
                 style={{ margin: "8px" }}
               />

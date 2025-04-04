@@ -46,7 +46,7 @@ export default NiceModal.create(
     const { lookupMBRelease, submitMBIDMapping } = APIService;
     const { auth_token } = currentUser;
 
-    const { resolve, visible } = modal;
+    const { resolve } = modal;
 
     const [matchingTracks, setMatchingTracks] = React.useState<
       MatchingTracksResults
@@ -330,7 +330,7 @@ export default NiceModal.create(
 
     return (
       <div
-        className={`modal fade ${visible ? "in" : ""}`}
+        className="modal fade"
         id="MultiTrackMBIDMappingModal"
         role="dialog"
         aria-labelledby="MultiTrackMBIDMappingModalLabel"
@@ -363,7 +363,7 @@ export default NiceModal.create(
             </div>
             <div className="modal-body">
               <div>
-                <p className="small help-block text-left">
+                <p className="small form-text text-left">
                   Search by album/artist name or paste a{" "}
                   <a href="https://musicbrainz.org/doc/About">
                     MusicBrainz URL or MBID
@@ -585,7 +585,7 @@ export default NiceModal.create(
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn-default"
+                className="btn btn-secondary"
                 onClick={closeModal}
               >
                 Cancel
@@ -598,7 +598,7 @@ export default NiceModal.create(
               >
                 Link listens
               </button>
-              <div className="small help-block text-left">
+              <div className="small form-text text-left">
                 <div>
                   <FontAwesomeIcon icon={faInfoCircle} />
                   &nbsp;

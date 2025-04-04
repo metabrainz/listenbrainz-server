@@ -152,7 +152,7 @@ export default function AddSingleListen({
                       className="collapse"
                       id={`collapsible-${recording.id}`}
                     >
-                      <div className="help-block">
+                      <div className="form-text">
                         Too many choices? See more details{" "}
                         <a
                           href={`https://musicbrainz.org/recording/${recording.id}`}

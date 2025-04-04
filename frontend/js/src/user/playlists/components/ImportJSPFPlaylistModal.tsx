@@ -142,7 +142,7 @@ export default NiceModal.create(() => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="ImportPlaylistModal"
       tabIndex={-1}
       role="dialog"
@@ -177,7 +177,7 @@ export default NiceModal.create(() => {
                 onChange={handleFileChange}
               />
               {fileError && <div className="has-error">{fileError}</div>}
-              <p className="help-block">
+              <p className="form-text">
                 For information on the JSPF playlist format, please visit{" "}
                 <a href="https://musicbrainz.org/doc/jspf">
                   musicbrainz.org/doc/jspf
@@ -188,7 +188,7 @@ export default NiceModal.create(() => {
           <div className="modal-footer">
             <button
               type="button"
-              className="btn btn-default"
+              className="btn btn-secondary"
               data-dismiss="modal"
               onClick={closeModal}
             >
