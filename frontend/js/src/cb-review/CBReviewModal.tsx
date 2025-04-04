@@ -566,7 +566,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
             className="form-check-input"
             required
           />
-          <label className="form-check-label" htmlFor="#acceptLicense">
+          <label className="form-check-label" htmlFor="acceptLicense">
             <small>
               &nbsp;You acknowledge and agree that your contributed reviews to
               CritiqueBrainz are licensed under a Creative Commons

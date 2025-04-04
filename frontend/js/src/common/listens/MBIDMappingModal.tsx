@@ -159,8 +159,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   return (
     <>
       <div
-        className={`modal fade ${visible ? "in" : ""}`}
-        style={visible ? { display: "block" } : {}}
+        className="modal fade"
         id="MBIDMappingModal"
         role="dialog"
         data-backdrop="true"
