@@ -106,8 +106,10 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
           title="Successfully imported playlist from Soundcloud"
           message={
             <>
-              Imported
-              <Link to={newPlaylist.identifier}> {playlistName}</Link>
+              Check out{" "}
+              <Link to={`/playlist/${newPlaylist.identifier}`}>
+                {playlistName}
+              </Link>
             </>
           }
         />,
