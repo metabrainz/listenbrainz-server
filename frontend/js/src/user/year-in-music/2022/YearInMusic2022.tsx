@@ -499,30 +499,35 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="red-section">
           <div className="link-section flex-center">
-            <div>
+            <div style={{ fontSize: "2.24rem" }}>
               Share <b>{yourOrUsersName}</b> year
               <div className="input-group">
                 <input
                   type="text"
                   className="form-control"
+                  style={{ fontSize: "1.4rem" }}
                   disabled
                   size={linkToThisPage.length - 5}
                   value={linkToThisPage}
                 />
-                <span className="input-group-addon">
-                  <FontAwesomeIcon
-                    icon={faCopy}
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(linkToThisPage);
-                    }}
-                  />
+                <span className="input-group-prepend">
+                  <span className="input-group-text">
+                    <FontAwesomeIcon
+                      icon={faCopy}
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(linkToThisPage);
+                      }}
+                    />
+                  </span>
                 </span>
                 {!isUndefined(navigator.canShare) ? (
-                  <span className="input-group-addon">
-                    <FontAwesomeIcon
-                      icon={faShareAlt}
-                      onClick={this.sharePage}
-                    />
+                  <span className="input-group-prepend">
+                    <span className="input-group-text">
+                      <FontAwesomeIcon
+                        icon={faShareAlt}
+                        onClick={this.sharePage}
+                      />
+                    </span>
                   </span>
                 ) : null}
               </div>
@@ -920,40 +925,34 @@ export default class YearInMusic extends React.Component<
                           {selectedMetric}s
                           <span className="caret" />
                         </button>
-                        <ul className="dropdown-menu" role="menu">
-                          <li
-                            className={
+                        <div className="dropdown-menu" role="menu">
+                          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                          <a
+                            href=""
+                            className={`dropdown-item ${
                               selectedMetric === "listen" ? "active" : undefined
+                            }`}
+                            role="button"
+                            onClick={(event) =>
+                              this.changeSelectedMetric("listen", event)
                             }
                           >
-                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                            <a
-                              href=""
-                              role="button"
-                              onClick={(event) =>
-                                this.changeSelectedMetric("listen", event)
-                              }
-                            >
-                              Listens
-                            </a>
-                          </li>
-                          <li
-                            className={
+                            Listens
+                          </a>
+                          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                          <a
+                            href=""
+                            className={`dropdown-item ${
                               selectedMetric === "artist" ? "active" : undefined
+                            }`}
+                            role="button"
+                            onClick={(event) =>
+                              this.changeSelectedMetric("artist", event)
                             }
                           >
-                            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                            <a
-                              href=""
-                              role="button"
-                              onClick={(event) =>
-                                this.changeSelectedMetric("artist", event)
-                              }
-                            >
-                              Artists
-                            </a>
-                          </li>
-                        </ul>
+                            Artists
+                          </a>
+                        </div>
                       </span>
                     </div>
                     <CustomChoropleth

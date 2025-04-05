@@ -102,26 +102,6 @@ export default function Footer() {
                   MetaBrainz
                 </a>
               </li>
-              <li className="visible-xs">
-                <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
-                <a
-                  href="https://github.com/metabrainz/listenbrainz-server"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contribute Here
-                </a>
-              </li>
-              <li className="visible-xs">
-                <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
-                <a
-                  href="https://tickets.metabrainz.org/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Bug Tracker
-                </a>
-              </li>
             </ul>
           </div>
           <div className="col-12 col-sm-6 col-lg-3">

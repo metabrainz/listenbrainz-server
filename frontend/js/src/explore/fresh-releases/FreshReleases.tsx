@@ -335,7 +335,7 @@ export default function FreshReleases() {
               </Pill>
             </div>
             <div className="fresh-releases-row">
-              <span>Sort By:</span>{" "}
+              <span className="text-nowrap">Sort By:</span>{" "}
               <div className="input-group">
                 <select
                   id="fresh-releases-sort-select"
