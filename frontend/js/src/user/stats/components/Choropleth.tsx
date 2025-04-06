@@ -249,15 +249,82 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             type="button"
             className="btn btn-info btn-rounded btn-sm"
             title={`Play tracks from ${selectedCountry.label}`}
-            onClick={() => {
-              console.log(selectedCountry.label);
-              window.postMessage(
-                {
-                  brainzplayer_event: "play-ambient-queue",
-                  payload: selectedCountry.data.artists,
-                },
-                window.location.origin
-              );
+            onClick={async () => {
+              const prompt = `country:(${selectedCountry.label})`;
+              const mode = "easy";
+              try {
+                const request = await fetch(
+                  `${
+                    APIService.APIBaseURI
+                  }/explore/lb-radio?prompt=${encodeURIComponent(
+                    prompt
+                  )}&mode=${mode}`
+                );
+                if (request.ok) {
+                  const body: {
+                    payload: { jspf: JSPFObject; feedback: string[] };
+                  } = await request.json();
+                  const { payload } = body;
+                  const { playlist } = payload?.jspf as JSPFObject;
+                  if (playlist?.track?.length) {
+                    // Augment track with metadata fetched from LB server, mainly so we can have cover art
+                    try {
+                      const recordingMetadataMap = await APIService.getRecordingMetadata(
+                        playlist.track.map(getRecordingMBIDFromJSPFTrack)
+                      );
+                      if (recordingMetadataMap) {
+                        playlist?.track.forEach((track) => {
+                          const mbid = getRecordingMBIDFromJSPFTrack(track);
+                          if (recordingMetadataMap[mbid]) {
+                            // This object MUST follow the JSPFTrack type.
+                            // We don't set the correct ype here because we have an incomplete object
+                            const newTrackObject = {
+                              duration:
+                                recordingMetadataMap[mbid].recording?.length,
+                              extension: {
+                                [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
+                                  additional_metadata: {
+                                    caa_id:
+                                      recordingMetadataMap[mbid].release
+                                        ?.caa_id,
+                                    caa_release_mbid:
+                                      recordingMetadataMap[mbid].release
+                                        ?.caa_release_mbid,
+                                    artists: recordingMetadataMap[
+                                      mbid
+                                    ].artist?.artists?.map((a) => {
+                                      return {
+                                        artist_credit_name: a.name,
+                                        artist_mbid: a.artist_mbid,
+                                        join_phrase: a.join_phrase || "",
+                                      };
+                                    }),
+                                  },
+                                },
+                              },
+                            };
+                          }
+                        });
+                        // play the entire playlist
+                        window.postMessage(
+                          {
+                            brainzplayer_event: "play-ambient-queue",
+                            payload: playlist.track,
+                          },
+                          window.location.origin
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Error fetching metadata", error);
+                    }
+                  }
+                } else {
+                  const msg = await request.json();
+                  console.error("Error fetching data", msg);
+                }
+              } catch (error) {
+                console.error("Error fetching data", error);
+              }
             }}
           >
             <FontAwesomeIcon icon={faPlayCircle as IconProp} fixedWidth /> Play
@@ -277,7 +344,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       ) {
         return; // Don't hide if clicking inside tooltip
       }
-      console.log("Clicked outside");
       setSelectedCountry(undefined);
     },
     [setSelectedCountry]
@@ -288,7 +354,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     return () => {
       document.removeEventListener("click", handleClickOutside, true);
     };
-  }, [handleClickOutside]);
+  });
 
   const showTooltipFromEvent: ChoroplethEventHandler = useCallback(
     async (feature, event: React.MouseEvent<HTMLElement>) => {
@@ -307,70 +373,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       }
       setTooltipPosition([x, y]);
       setSelectedCountry(feature);
-
-      const prompt = `country:(${feature.label})`;
-      const mode = "easy";
-      try {
-        const request = await fetch(
-          `${
-            APIService.APIBaseURI
-          }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`
-        );
-        if (request.ok) {
-          const body: {
-            payload: { jspf: JSPFObject; feedback: string[] };
-          } = await request.json();
-          const { payload } = body;
-          const { playlist } = payload?.jspf as JSPFObject;
-          if (playlist?.track?.length) {
-            // Augment track with metadata fetched from LB server, mainly so we can have cover art
-            try {
-              const recordingMetadataMap = await APIService.getRecordingMetadata(
-                playlist.track.map(getRecordingMBIDFromJSPFTrack)
-              );
-              if (recordingMetadataMap) {
-                playlist?.track.forEach((track) => {
-                  const mbid = getRecordingMBIDFromJSPFTrack(track);
-                  if (recordingMetadataMap[mbid]) {
-                    // This object MUST follow the JSPFTrack type.
-                    // We don't set the correct ype here because we have an incomplete object
-                    const newTrackObject = {
-                      duration: recordingMetadataMap[mbid].recording?.length,
-                      extension: {
-                        [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
-                          additional_metadata: {
-                            caa_id: recordingMetadataMap[mbid].release?.caa_id,
-                            caa_release_mbid:
-                              recordingMetadataMap[mbid].release
-                                ?.caa_release_mbid,
-                            artists: recordingMetadataMap[
-                              mbid
-                            ].artist?.artists?.map((a) => {
-                              return {
-                                artist_credit_name: a.name,
-                                artist_mbid: a.artist_mbid,
-                                join_phrase: a.join_phrase || "",
-                              };
-                            }),
-                          },
-                        },
-                      },
-                    };
-                  }
-                });
-              }
-            } catch (error) {
-              console.error("Error fetching metadata", error);
-            }
-          }
-          console.log("Playlist", payload.jspf);
-        } else {
-          const msg = await request.json();
-          console.error("Error fetching data", msg);
-        }
-      } catch (error) {
-        console.error("Error fetching data", error);
-      }
     },
     [setSelectedCountry, setTooltipPosition]
   );
