@@ -184,15 +184,19 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   );
 
   const customTooltip = useMemo(() => {
-    if (!selectedCountry?.data) {
+    if (!selectedCountry) {
       return null;
     }
+
+    const countryName =
+      selectedCountry.label || (selectedCountry as any).properties?.name;
+    const countryData = selectedCountry.data ?? { value: 0, artists: [] };
+    const { value, artists } = countryData;
 
     let suffix = `${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}`;
     if (Number(selectedCountry.formattedValue) !== 1) {
       suffix = `${suffix}s`;
     }
-    const { artists } = selectedCountry.data;
 
     return (
       <div
@@ -216,28 +220,35 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         >
           <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
           <span>
-            {selectedCountry.label}:{" "}
+            {countryName}:{" "}
             <strong>
-              {selectedCountry.formattedValue} {suffix}
+              {value} {suffix}
             </strong>
           </span>
         </div>
-        <hr style={{ margin: "0.5em 0" }} />
-        {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
-          <div key={artist.artist_mbid}>
-            <span className="badge color-purple" style={{ marginRight: "4px" }}>
-              <FontAwesomeIcon
-                style={{ marginRight: "4px" }}
-                icon={faHeadphones as IconProp}
-              />
-              {artist.listen_count}
-            </span>
-            <Link to={`/artist/${artist.artist_mbid}/`}>
-              {artist.artist_name}
-            </Link>
-            <br />
-          </div>
-        ))}
+        {artists?.length > 0 && (
+          <>
+            <hr style={{ margin: "0.5em 0" }} />
+            {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
+              <div key={artist.artist_mbid}>
+                <span
+                  className="badge color-purple"
+                  style={{ marginRight: "4px" }}
+                >
+                  <FontAwesomeIcon
+                    style={{ marginRight: "4px" }}
+                    icon={faHeadphones as IconProp}
+                  />
+                  {artist.listen_count}
+                </span>
+                <Link to={`/artist/${artist.artist_mbid}/`}>
+                  {artist.artist_name}
+                </Link>
+                <br />
+              </div>
+            ))}
+          </>
+        )}
         <hr style={{ margin: "0.5em 0" }} />
         <div
           style={{
@@ -248,9 +259,9 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           <button
             type="button"
             className="btn btn-info btn-rounded btn-sm"
-            title={`Play tracks from ${selectedCountry.label}`}
+            title={`Play tracks from ${countryName}`}
             onClick={async () => {
-              const prompt = `country:(${selectedCountry.label})`;
+              const prompt = `country:(${countryName})`;
               const mode = "easy";
               try {
                 const request = await fetch(
