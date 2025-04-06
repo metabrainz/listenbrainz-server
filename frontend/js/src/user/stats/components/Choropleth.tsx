@@ -14,10 +14,15 @@ import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
+import { faHeadphones, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import * as worldCountries from "../data/world_countries.json";
 import { COLOR_BLACK } from "../../../utils/constants";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import {
+  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
+  getRecordingMBIDFromJSPFTrack,
+} from "../../../playlists/utils";
 
 const {
   useState,
@@ -96,6 +101,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     ChoroplethBoundFeature
   >();
   const refContainer = useRef<HTMLDivElement>(null);
+  const { APIService } = React.useContext(GlobalAppContext);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
   const [containerWidth, setContainerWidth] = useState<number>(1000);
@@ -189,6 +196,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
     return (
       <div
+        ref={tooltipRef}
         style={{
           background: "white",
           color: "inherit",
@@ -198,6 +206,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           padding: "5px 9px",
           maxWidth: `${tooltipWidth}px`,
         }}
+        onClick={(e) => e.stopPropagation()} // Prevent clicks inside tooltip from closing it
       >
         <div
           style={{
@@ -229,6 +238,32 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             <br />
           </div>
         ))}
+        <hr style={{ margin: "0.5em 0" }} />
+        <div
+          style={{
+            textAlign: "center",
+            backgroundColor: "white",
+          }}
+        >
+          <button
+            type="button"
+            className="btn btn-info btn-rounded btn-sm"
+            title={`Play tracks from ${selectedCountry.label}`}
+            onClick={() => {
+              console.log(selectedCountry.label);
+              window.postMessage(
+                {
+                  brainzplayer_event: "play-ambient-queue",
+                  payload: selectedCountry.data.artists,
+                },
+                window.location.origin
+              );
+            }}
+          >
+            <FontAwesomeIcon icon={faPlayCircle as IconProp} fixedWidth /> Play
+            all
+          </button>
+        </div>
       </div>
     );
   }, [selectedCountry, selectedMetric]);
@@ -236,6 +271,13 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Hide our custom tooltip when user clicks somewhere that isn't a country
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
+      if (
+        tooltipRef.current &&
+        tooltipRef.current.contains(event.target as Node)
+      ) {
+        return; // Don't hide if clicking inside tooltip
+      }
+      console.log("Clicked outside");
       setSelectedCountry(undefined);
     },
     [setSelectedCountry]
@@ -246,10 +288,10 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     return () => {
       document.removeEventListener("click", handleClickOutside, true);
     };
-  });
+  }, [handleClickOutside]);
 
   const showTooltipFromEvent: ChoroplethEventHandler = useCallback(
-    (feature, event: React.MouseEvent<HTMLElement>) => {
+    async (feature, event: React.MouseEvent<HTMLElement>) => {
       // Cancel other events, such as our handleClickOutside defined above
       event.preventDefault();
       // relative mouse position
@@ -265,6 +307,70 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       }
       setTooltipPosition([x, y]);
       setSelectedCountry(feature);
+
+      const prompt = `country:(${feature.label})`;
+      const mode = "easy";
+      try {
+        const request = await fetch(
+          `${
+            APIService.APIBaseURI
+          }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`
+        );
+        if (request.ok) {
+          const body: {
+            payload: { jspf: JSPFObject; feedback: string[] };
+          } = await request.json();
+          const { payload } = body;
+          const { playlist } = payload?.jspf as JSPFObject;
+          if (playlist?.track?.length) {
+            // Augment track with metadata fetched from LB server, mainly so we can have cover art
+            try {
+              const recordingMetadataMap = await APIService.getRecordingMetadata(
+                playlist.track.map(getRecordingMBIDFromJSPFTrack)
+              );
+              if (recordingMetadataMap) {
+                playlist?.track.forEach((track) => {
+                  const mbid = getRecordingMBIDFromJSPFTrack(track);
+                  if (recordingMetadataMap[mbid]) {
+                    // This object MUST follow the JSPFTrack type.
+                    // We don't set the correct ype here because we have an incomplete object
+                    const newTrackObject = {
+                      duration: recordingMetadataMap[mbid].recording?.length,
+                      extension: {
+                        [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
+                          additional_metadata: {
+                            caa_id: recordingMetadataMap[mbid].release?.caa_id,
+                            caa_release_mbid:
+                              recordingMetadataMap[mbid].release
+                                ?.caa_release_mbid,
+                            artists: recordingMetadataMap[
+                              mbid
+                            ].artist?.artists?.map((a) => {
+                              return {
+                                artist_credit_name: a.name,
+                                artist_mbid: a.artist_mbid,
+                                join_phrase: a.join_phrase || "",
+                              };
+                            }),
+                          },
+                        },
+                      },
+                    };
+                  }
+                });
+              }
+            } catch (error) {
+              console.error("Error fetching metadata", error);
+            }
+          }
+          console.log("Playlist", payload.jspf);
+        } else {
+          const msg = await request.json();
+          console.error("Error fetching data", msg);
+        }
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
     },
     [setSelectedCountry, setTooltipPosition]
   );
