@@ -351,7 +351,7 @@ export default class YearInMusic extends React.Component<
           <hr />
           <a
             href={topLevelPlaylist.identifier}
-            className="btn btn-info btn-block"
+            className="btn btn-info w-100"
             target="_blank"
             rel="noopener noreferrer"
           >

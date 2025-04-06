@@ -97,7 +97,7 @@ export default function GDPR() {
         </div>
         <br />
         <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <button type="submit" className="btn btn-primary btn-lg btn-block">
+          <button type="submit" className="btn btn-primary btn-lg w-100">
             Submit choice!
           </button>
         </div>

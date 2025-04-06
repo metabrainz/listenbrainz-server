@@ -16,10 +16,7 @@ export default function ImportData() {
         Last.fm. To proceed, you will need a MusicBrainz account.
       </p>
       <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <Link
-          to="/settings/import/"
-          className="btn btn-primary btn-lg btn-block"
-        >
+        <Link to="/settings/import/" className="btn btn-primary btn-lg w-100">
           Import my listen history
         </Link>
       </div>
