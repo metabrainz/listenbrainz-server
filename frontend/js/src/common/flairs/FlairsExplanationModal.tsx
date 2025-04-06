@@ -46,13 +46,11 @@ export default NiceModal.create(() => {
           <div className="modal-header">
             <button
               type="button"
-              className="close"
+              className="btn-close"
               data-dismiss="modal"
               aria-label="Close"
               onClick={closeModal}
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
+            />
             <h4 className="modal-title" id="FlairsExplanationsModalLabel">
               Why are some names{" "}
               <span className="flair wave">{htmlContent}</span>?

@@ -170,12 +170,10 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
             <div className="modal-header">
               <button
                 type="button"
-                className="close"
+                className="btn-close"
                 onClick={closeModal}
                 aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
+              />
               <h4 className="modal-title" id="MBIDMappingModalLabel">
                 Link this listen with{" "}
                 <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>

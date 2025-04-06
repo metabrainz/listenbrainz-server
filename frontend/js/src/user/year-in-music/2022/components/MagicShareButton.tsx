@@ -152,12 +152,10 @@ export default function MagicShareButton({
             <div className="modal-header">
               <button
                 type="button"
-                className="close"
+                className="btn-close"
                 aria-label="Close"
                 data-dismiss="modal"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
+              />
               <h4 className="modal-title" id="ShareModalLabel">
                 Share your stats
               </h4>

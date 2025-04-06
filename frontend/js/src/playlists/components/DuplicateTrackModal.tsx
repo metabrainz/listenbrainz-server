@@ -42,12 +42,10 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
           <div className="modal-header">
             <button
               type="button"
-              className="close"
+              className="btn-close"
               onClick={cancel}
               aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
+            />
             <h4 className="modal-title">Duplicate Track</h4>
           </div>
           <div className="modal-body">
