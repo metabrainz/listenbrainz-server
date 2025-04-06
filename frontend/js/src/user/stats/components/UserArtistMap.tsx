@@ -92,7 +92,15 @@ export default function UserArtistMap(props: UserArtistMapProps) {
         <div className="col-md-9 col-xs-6">
           <h3 style={{ marginLeft: 20 }}>
             <span className="capitalize-bold">Artist Origins</span>
-            <small>&nbsp;Click on a country to see more details</small>
+            <small>&nbsp;(top 1,000 artists)</small>
+            <p
+              style={{
+                fontSize: 12,
+                color: "#666",
+              }}
+            >
+              Click on a country to see more details
+            </p>
           </h3>
         </div>
         <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
