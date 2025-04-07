@@ -58,6 +58,9 @@ export default function MusicServices() {
   );
 
   const [lastFMEdit, setLastFMEdit] = React.useState(false);
+  const [lastFMEditButtonClass, setlastFMEditButtonClass] = React.useState(
+    permissions.lastfm !== "import" ? "btn-default" : "btn-warning"
+  );
 
   const handlePermissionChange = async (
     serviceName: string,
@@ -101,6 +104,10 @@ export default function MusicServices() {
             break;
           case "critiquebrainz":
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
+            break;
+          case "lastfm":
+            setLastFMEdit(false);
+            setlastFMEditButtonClass("btn-default");
             break;
           default:
             break;
@@ -228,6 +235,8 @@ export default function MusicServices() {
           ...prevState,
           lastfm: "import",
         }));
+        setlastFMEditButtonClass("btn-warning");
+        setLastFMEdit(false);
       } else {
         const body = await response.json();
         if (body?.error) {
@@ -491,12 +500,15 @@ export default function MusicServices() {
                   <button
                     disabled={permissions.lastfm !== "import"}
                     type={lastFMEdit ? "button" : "submit"}
-                    className={
-                      permissions.lastfm !== "import"
-                        ? "btn-default"
-                        : (lastFMEdit && "btn-success") || "btn-warning"
-                    }
-                    onClick={() => setLastFMEdit((prev) => !prev)}
+                    className={`btn ${lastFMEditButtonClass}`}
+                    onClick={() => {
+                      setLastFMEdit((prev) => !prev);
+                      setlastFMEditButtonClass((prevClass) =>
+                        prevClass === "btn-warning"
+                          ? "btn-success"
+                          : "btn-warning"
+                      );
+                    }}
                   >
                     {lastFMEdit ? "Save" : "Edit"}
                   </button>
