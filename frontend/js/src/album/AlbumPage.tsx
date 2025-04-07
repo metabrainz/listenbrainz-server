@@ -112,7 +112,9 @@ export default function AlbumPage(): JSX.Element {
       .getPalette()
       .then((palette) => {
         setAlbumArtPalette(palette);
-      });
+      })
+      // eslint-disable-next-line no-console
+      .catch(console.error);
   }, []);
 
   React.useEffect(() => {
