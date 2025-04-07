@@ -121,9 +121,7 @@ describe("BrainzPlayer", () => {
     });
   });
   beforeAll(() => {
-    window.location = {
-      href: "http://nevergonnagiveyouup.com",
-    } as Window["location"];
+    window.location.href = "http://nevergonnagiveyouup.com";
 
     global.IntersectionObserver = IntersectionObserver;
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
