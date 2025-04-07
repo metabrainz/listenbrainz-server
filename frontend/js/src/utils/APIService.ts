@@ -1385,6 +1385,25 @@ export default class APIService {
     return response.json();
   };
 
+  getFeedEvent = async (
+    eventId: number,
+    username: string,
+    userToken: string
+  ): Promise<any> => {
+    if (!eventId) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/feed/events/${eventId}`;
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   deleteFeedEvent = async (
     eventType: string,
     username: string,

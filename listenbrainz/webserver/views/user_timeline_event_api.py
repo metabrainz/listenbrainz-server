@@ -294,6 +294,48 @@ def user_feed(user_name: str):
         'events': [event.dict() for event in user_events],
     }})
 
+@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/<event_id>')
+@crossdomain
+@ratelimit()
+@api_listenstore_needed
+def user_feed_event(user_name: str, event_id:int):
+    """ Get a single feed event using the event's ID.
+
+    :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
+    :type user_name: ``str``
+    :param event_id: ID of the event you want to fetch
+    :type event_id: ``int``
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successful query, you have feed events!
+    :statuscode 400: Bad request, check ``response['error']`` for more details.
+    :statuscode 401: Unauthorized, you do not have permission to view this user's feed.
+    :statuscode 403: Forbidden, you do not have permission to view this user's feed.
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+
+    user = validate_auth_header()
+    if user_name != user['musicbrainz_id']:
+        raise APIForbidden(
+            "You don't have permissions to view this user's timeline.")
+
+    
+    user_event = db_user_timeline_event.get_user_timeline_event_by_id(
+                db_conn, event_id)
+
+    if not user_event:
+        raise APIBadRequest(f"Event with id {event_id} not found");
+
+    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
+    user_event.event_type = user_event.event_type.value
+
+    return jsonify({'payload': {
+        'count': 1,
+        'user_id': user_name,
+        'events': [user_event.dict()],
+    }})
+
 
 @user_timeline_event_api_bp.get('/user/<user_name>/feed/events/listens/following')
 @crossdomain
