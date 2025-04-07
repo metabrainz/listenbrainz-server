@@ -544,7 +544,10 @@ export default class YearInMusic extends React.Component<
           >
             ListenBrainz Profile
           </Link>
-          <div className="input-group">
+          <div
+            className="input-group"
+            style={{ width: "auto", alignItems: "center" }}
+          >
             <input
               type="text"
               className="form-control"
@@ -608,7 +611,7 @@ export default class YearInMusic extends React.Component<
           </div>
           {hasSomeData ? (
             <img
-              className="img-responsive header-image"
+              className="img-fluid header-image"
               src="/static/img/year-in-music-24/yim24-header.png"
               alt="Your year in music 2024"
             />
@@ -658,7 +661,7 @@ export default class YearInMusic extends React.Component<
             <div className="section">
               <div className="card content-card" id="overview">
                 <h3 className="flex-center">Overview</h3>
-                <div className="center-p">
+                <div className="d-flex justify-content-center">
                   <object
                     className="card"
                     data={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=overview&season=${selectedSeasonName}`}
@@ -1093,42 +1096,36 @@ export default class YearInMusic extends React.Component<
                               <span className="caret" />
                             </button>
                             <ul className="dropdown-menu" role="menu">
-                              <li
-                                className={
+                              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                              <a
+                                href=""
+                                className={`dropdown-item ${
                                   selectedMetric === "listen"
                                     ? "active"
                                     : undefined
+                                }`}
+                                role="button"
+                                onClick={(event) =>
+                                  this.changeSelectedMetric("listen", event)
                                 }
                               >
-                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                                <a
-                                  href=""
-                                  role="button"
-                                  onClick={(event) =>
-                                    this.changeSelectedMetric("listen", event)
-                                  }
-                                >
-                                  Listens
-                                </a>
-                              </li>
-                              <li
-                                className={
+                                Listens
+                              </a>
+                              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                              <a
+                                href=""
+                                className={`dropdown-item ${
                                   selectedMetric === "artist"
                                     ? "active"
                                     : undefined
+                                }`}
+                                role="button"
+                                onClick={(event) =>
+                                  this.changeSelectedMetric("artist", event)
                                 }
                               >
-                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                                <a
-                                  href=""
-                                  role="button"
-                                  onClick={(event) =>
-                                    this.changeSelectedMetric("artist", event)
-                                  }
-                                >
-                                  Artists
-                                </a>
-                              </li>
+                                Artists
+                              </a>
                             </ul>
                           </span>
                         </div>

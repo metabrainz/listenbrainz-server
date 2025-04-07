@@ -71,7 +71,6 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
       >
         <Loader isLoading={isLoading} loaderText="Generating image…">
           <FontAwesomeIcon
-            className="col-6"
             size="1x"
             style={{ marginRight: "4px" }}
             icon={faCamera as IconProp}

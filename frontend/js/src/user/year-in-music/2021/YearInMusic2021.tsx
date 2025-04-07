@@ -355,7 +355,7 @@ export default class YearInMusic extends React.Component<
         <div className="flex flex-wrap" id="header">
           <div className="content-card flex-center flex-wrap">
             <img
-              className="img-responsive header-image"
+              className="img-fluid header-image"
               src="/static/img/year-in-music-2021.svg"
               alt="Your year in music 2021"
             />
@@ -464,7 +464,7 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-releases">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
               {yearInMusicData.top_releases && (
                 <ComponentToImage
@@ -560,7 +560,7 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>
                 {capitalize(yourOrUsersName)} 50 most played songs of 2021
               </h3>
@@ -607,7 +607,7 @@ export default class YearInMusic extends React.Component<
             )}
           </div>
           <div className="card content-card" id="top-artists">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
               {yearInMusicData.top_artists && (
                 <ComponentToImage
@@ -660,7 +660,11 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div className="card content-card" id="calendar">
+          <div
+            className="card content-card"
+            id="calendar"
+            style={{ width: "100%" }}
+          >
             <h3 className="text-center">
               {capitalize(yourOrUsersName)} listening activity in 2021
               <div className="small mt-15">
