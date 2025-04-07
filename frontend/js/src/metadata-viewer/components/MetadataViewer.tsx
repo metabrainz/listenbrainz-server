@@ -72,7 +72,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       .getPalette()
       .then((palette) => {
         setAlbumArtPalette(palette);
-      });
+      })
+      // eslint-disable-next-line no-console
+      .catch(console.error);
   }, []);
   const backgroundGradient = albumArtPalette
     ? `linear-gradient(to bottom, ${albumArtPalette?.Vibrant?.hex} 60%, ${albumArtPalette?.DarkVibrant?.hex})`
