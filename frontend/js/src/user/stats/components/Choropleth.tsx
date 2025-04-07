@@ -338,8 +338,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               }
             }}
           >
-            <FontAwesomeIcon icon={faPlayCircle as IconProp} fixedWidth /> Play
-            all
+            <FontAwesomeIcon icon={faPlayCircle as IconProp} fixedWidth /> Play{" "}
+            {countryName}
           </button>
         </div>
       </div>
