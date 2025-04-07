@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import { useQuery } from "@tanstack/react-query";
+import { useMediaQuery } from "react-responsive";
 import _ from "lodash";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
@@ -27,6 +28,7 @@ export type UserArtistMapState = {
 
 export default function UserArtistMap(props: UserArtistMapProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const isMobile = useMediaQuery({ maxWidth: 767 });
 
   // Props
   const { user, range } = props;
@@ -92,7 +94,8 @@ export default function UserArtistMap(props: UserArtistMapProps) {
         <div className="col-md-9 col-xs-6">
           <h3 style={{ marginLeft: 20 }}>
             <span className="capitalize-bold">Artist Origins</span>
-            <small>&nbsp;(top 1,000 artists)</small>
+            {!isMobile ? <small>&nbsp;(top 1,000 artists)</small> : null}
+            <br />
             <p
               style={{
                 fontSize: 12,
