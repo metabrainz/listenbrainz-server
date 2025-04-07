@@ -177,12 +177,10 @@ export default NiceModal.create(
             <div className="modal-header">
               <button
                 type="button"
-                className="close"
+                className="btn-close"
                 data-dismiss="modal"
                 aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
+              />
               <h4 className="modal-title" id="PinRecordingModalLabel">
                 Pin This Track to Your Profile
               </h4>

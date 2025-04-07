@@ -53,12 +53,10 @@ function ReportUserModal(props: ReportUserModalProps) {
           <div className="modal-header">
             <button
               type="button"
-              className="close"
+              className="btn-close"
               data-dismiss="modal"
               aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
+            />
             <h4 className="modal-title" id="reportUserModalLabel">
               Report user {reportedUserName}
             </h4>

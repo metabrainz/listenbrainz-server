@@ -919,7 +919,7 @@ export default class YearInMusic extends React.Component<
                           <hr />
                           <Link
                             to={`/playlist/${topLevelPlaylist.mbid}/`}
-                            className="btn btn-info btn-block"
+                            className="btn btn-info w-100"
                           >
                             See the full playlist…
                           </Link>

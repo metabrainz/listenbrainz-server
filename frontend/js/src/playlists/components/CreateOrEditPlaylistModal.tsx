@@ -280,12 +280,10 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
           <div className="modal-header">
             <button
               type="button"
-              className="close"
+              className="btn-close"
               data-dismiss="modal"
               aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
+            />
             <h4 className="modal-title" id="playlistModalLabel">
               {isEdit ? "Edit" : "Create"} playlist
             </h4>

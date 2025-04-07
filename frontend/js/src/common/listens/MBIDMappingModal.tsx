@@ -170,12 +170,10 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
             <div className="modal-header">
               <button
                 type="button"
-                className="close"
+                className="btn-close"
                 onClick={closeModal}
                 aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
+              />
               <h4 className="modal-title" id="MBIDMappingModalLabel">
                 Link this listen with{" "}
                 <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>
@@ -273,12 +271,12 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                       <FontAwesomeIcon
                         icon={faLink}
                         color="#FFFFFFA1"
-                        transform="right-5"
+                        transform="end-5"
                       />
                       <FontAwesomeIcon
                         icon={faLink}
                         color="#ffffff42"
-                        transform="right-10"
+                        transform="end-10"
                       />
                     </span>
                     &nbsp; Mass-link listens tool

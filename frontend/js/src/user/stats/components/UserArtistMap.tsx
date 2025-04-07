@@ -95,7 +95,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
             <small>&nbsp;Click on a country to see more details</small>
           </h3>
         </div>
-        <div className="col-md-2 col-4 text-right" style={{ marginTop: 20 }}>
+        <div className="col-md-2 col-4 text-end" style={{ marginTop: 20 }}>
           <span>Rank by</span>
           <span className="dropdown">
             <button
@@ -133,7 +133,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
             </ul>
           </span>
         </div>
-        <div className="col-md-1 col-2 text-right">
+        <div className="col-md-1 col-2 text-end">
           <h4 style={{ marginTop: 20 }}>
             <a href="#artist-origin">
               <FontAwesomeIcon

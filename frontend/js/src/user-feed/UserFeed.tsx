@@ -839,7 +839,7 @@ export default function UserFeedPage() {
                 >
                   <button
                     type="button"
-                    className="btn btn-outline btn-block"
+                    className="btn btn-outline w-100"
                     onClick={() => fetchNextPage()}
                     disabled={!hasNextPage || isFetchingNextPage}
                   >

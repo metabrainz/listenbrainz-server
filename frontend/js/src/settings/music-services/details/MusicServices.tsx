@@ -428,12 +428,10 @@ export default function MusicServices() {
               .
               <button
                 type="button"
-                className="close"
+                className="btn-close"
                 data-dismiss="alert"
                 aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
+              />
             </div>
             <form onSubmit={handleConnectToLaftFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
