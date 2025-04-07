@@ -95,7 +95,11 @@ function SearchBox({
 
   return (
     <>
-      <div className="input-group dropdown-search" ref={dropdownRef}>
+      <div
+        className="input-group dropdown-search"
+        ref={dropdownRef}
+        id="artist-search-box"
+      >
         <input
           ref={searchInputRef}
           id="searchbox-artist-name"
@@ -110,7 +114,7 @@ function SearchBox({
         />
         <span className="input-group-btn">
           <button
-            className="btn btn-default"
+            className="btn btn-secondary"
             type="button"
             onClick={reset}
             id="artist-search-button"

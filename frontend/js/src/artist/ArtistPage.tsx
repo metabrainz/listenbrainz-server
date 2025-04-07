@@ -311,7 +311,7 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="help-block">
+            <small className="form-text">
               {artist?.begin_year}
               {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
@@ -365,38 +365,33 @@ export default function ArtistPage(): JSX.Element {
                 data-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
-              >
-                <span className="caret" />
-                <span className="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul className="dropdown-menu">
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
-                  >
-                    Artist radio
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
-                  >
-                    This artist only
-                  </Link>
-                </li>
+                aria-label="Toggle dropdown"
+              />
+              <div className="dropdown-menu">
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Artist radio
+                </Link>
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
+                  className="dropdown-item"
+                >
+                  This artist only
+                </Link>
                 {Boolean(filteredTags?.length) && (
-                  <li>
-                    <Link
-                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                        filteredTagsAsString
-                      )})::or&mode=easy`}
-                    >
-                      Tags (
-                      <span className="tags-list">{filteredTagsAsString}</span>)
-                    </Link>
-                  </li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                      filteredTagsAsString
+                    )})::or&mode=easy`}
+                    className="dropdown-item"
+                  >
+                    Tags (
+                    <span className="tags-list">{filteredTagsAsString}</span>)
+                  </Link>
                 )}
-              </ul>
+              </div>
             </div>
           )}
         </div>

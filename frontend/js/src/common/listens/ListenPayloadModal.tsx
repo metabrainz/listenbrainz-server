@@ -41,7 +41,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
 
   return (
     <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       id="ListenPayloadModal"
       tabIndex={-1}
       role="dialog"
@@ -85,7 +85,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
             </button>
             <button
               type="button"
-              className="btn btn-default"
+              className="btn btn-secondary"
               data-dismiss="modal"
               onClick={closeModal}
             >

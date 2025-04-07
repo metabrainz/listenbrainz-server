@@ -27,7 +27,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
   return (
     <div
       id="ConfirmationModal"
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+      className="modal fade"
       tabIndex={-1}
       role="dialog"
       aria-labelledby="confirmationModalLabel"
@@ -56,7 +56,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
           <div className="modal-footer">
             <button
               type="button"
-              className="btn btn-default"
+              className="btn btn-secondary"
               data-dismiss="modal"
               onClick={onCancel}
             >
