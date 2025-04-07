@@ -271,12 +271,12 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                       <FontAwesomeIcon
                         icon={faLink}
                         color="#FFFFFFA1"
-                        transform="right-5"
+                        transform="end-5"
                       />
                       <FontAwesomeIcon
                         icon={faLink}
                         color="#ffffff42"
-                        transform="right-10"
+                        transform="end-10"
                       />
                     </span>
                     &nbsp; Mass-link listens tool

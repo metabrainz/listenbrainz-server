@@ -441,7 +441,7 @@ export default function UserListeningActivity(
             Listening Activity
           </h3>
         </div>
-        <div className="col-2 text-right">
+        <div className="col-2 text-end">
           <h4 style={{ marginTop: 20 }}>
             <a href="#listening-activity">
               <FontAwesomeIcon

@@ -361,7 +361,7 @@ export default NiceModal.create(
             </div>
             <div className="modal-body">
               <div>
-                <p className="small form-text text-left">
+                <p className="small form-text text-start">
                   Search by album/artist name or paste a{" "}
                   <a href="https://musicbrainz.org/doc/About">
                     MusicBrainz URL or MBID
@@ -596,7 +596,7 @@ export default NiceModal.create(
               >
                 Link listens
               </button>
-              <div className="small form-text text-left">
+              <div className="small form-text text-start">
                 <div>
                   <FontAwesomeIcon icon={faInfoCircle} />
                   &nbsp;

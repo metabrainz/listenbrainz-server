@@ -94,7 +94,7 @@ export default function Settings() {
           ListenBrainz, you will need the following user token:
         </p>
 
-        <form className="form-inline">
+        <form className="form-text d-flex align-items-center flex-wrap">
           <input
             type={showToken ? "text" : "password"}
             className="form-control"

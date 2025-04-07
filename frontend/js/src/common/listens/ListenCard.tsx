@@ -391,12 +391,12 @@ export class ListenCard extends React.Component<
               <FontAwesomeIcon icon={faImage} />
               <FontAwesomeIcon
                 icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
+                transform="shrink-10 start-5 up-2.5"
               />
               <FontAwesomeIcon
                 icon={faPlus}
                 inverse
-                transform="shrink-11 left-2.5 up-2.5"
+                transform="shrink-11 start-2.5 up-2.5"
                 style={{ stroke: "white", strokeWidth: "60" }}
               />
             </span>
@@ -448,7 +448,7 @@ export class ListenCard extends React.Component<
                 <FontAwesomeIcon icon={faImage} />
                 <FontAwesomeIcon
                   icon={faSquare}
-                  transform="shrink-10 left-5 up-2.5"
+                  transform="shrink-10 start-5 up-2.5"
                 />
               </span>
             </div>
@@ -466,7 +466,7 @@ export class ListenCard extends React.Component<
                 <FontAwesomeIcon icon={faImage} />
                 <FontAwesomeIcon
                   icon={faSquare}
-                  transform="shrink-10 left-5 up-2.5"
+                  transform="shrink-10 start-5 up-2.5"
                 />
               </span>
             </div>
@@ -482,7 +482,7 @@ export class ListenCard extends React.Component<
               <FontAwesomeIcon icon={faImage} />
               <FontAwesomeIcon
                 icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
+                transform="shrink-10 start-5 up-2.5"
               />
             </span>
           </div>
