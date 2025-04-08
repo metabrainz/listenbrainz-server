@@ -324,11 +324,21 @@ def user_feed_event(user_name: str, event_id: int):
     user_event = db_user_timeline_event.get_user_timeline_event_by_id(
         db_conn, event_id)
 
-    _ = fetch_track_metadata_for_items(
-        ts_conn, [user_event.metadata])
-
     if not user_event:
         raise APIBadRequest(f"Event with id {event_id} not found")
+
+    # Get metadata for event
+    _ = fetch_track_metadata_for_items(ts_conn, [user_event.metadata])
+
+    # Format the event
+    user_event = APITimelineEvent(
+        id=user_event.id,
+        event_type=user_event.event_type.value,
+        user_name=user_name,
+        created=user_event.created.timestamp(),
+        metadata=user_event.metadata,
+        hidden=False,
+    )
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     user_event.event_type = user_event.event_type.value
