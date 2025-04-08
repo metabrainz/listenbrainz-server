@@ -294,11 +294,12 @@ def user_feed(user_name: str):
         'events': [event.dict() for event in user_events],
     }})
 
+
 @user_timeline_event_api_bp.get('/user/<user_name>/feed/events/<event_id>')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
-def user_feed_event(user_name: str, event_id:int):
+def user_feed_event(user_name: str, event_id: int):
     """ Get a single feed event using the event's ID.
 
     :param user_name: The MusicBrainz ID of the user whose timeline is being requested.
@@ -320,12 +321,14 @@ def user_feed_event(user_name: str, event_id:int):
         raise APIForbidden(
             "You don't have permissions to view this user's timeline.")
 
-    
     user_event = db_user_timeline_event.get_user_timeline_event_by_id(
-                db_conn, event_id)
+        db_conn, event_id)
+
+    _ = fetch_track_metadata_for_items(
+        ts_conn, [user_event.metadata])
 
     if not user_event:
-        raise APIBadRequest(f"Event with id {event_id} not found");
+        raise APIBadRequest(f"Event with id {event_id} not found")
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     user_event.event_type = user_event.event_type.value
@@ -434,7 +437,8 @@ def user_feed_listens_similar(user_name: str):
             similar_users, min_ts, max_ts, count)
 
     # Constructing an id-similarity map
-    id_similarity_map = {user["musicbrainz_id"]: user["similarity"] for user in similar_users}
+    id_similarity_map = {user["musicbrainz_id"]
+        : user["similarity"] for user in similar_users}
 
     # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
@@ -576,7 +580,8 @@ def hide_user_timeline_event(user_name):
         raise APIBadRequest("This event type is not supported for hiding")
 
     if not result:
-        raise APIBadRequest(f"{data['event_type']} event with id {row_id} not found")
+        raise APIBadRequest(
+            f"{data['event_type']} event with id {row_id} not found")
 
     if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
         db_user_timeline_event.hide_user_timeline_event(
@@ -756,10 +761,13 @@ def create_thanks_event(user_name):
                 "This event type is not supported for thanking")
 
         if not result:
-            raise APIBadRequest(f"{event_type} event with id {row_id} not found")
-        thankee_username = db_user.get_users_by_id(db_conn, [result.user_id])[result.user_id]
+            raise APIBadRequest(
+                f"{event_type} event with id {row_id} not found")
+        thankee_username = db_user.get_users_by_id(
+            db_conn, [result.user_id])[result.user_id]
         if db_user_relationship.is_following_user(db_conn, user['id'], result.user_id):
-            db_user_timeline_event.create_thanks_event(db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
+            db_user_timeline_event.create_thanks_event(
+                db_conn, user['id'], user_name, result.user_id, thankee_username, metadata)
             return jsonify({"status": "ok"})
         else:
             raise APIUnauthorized("You cannot thank events of this user")
