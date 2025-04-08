@@ -1389,7 +1389,7 @@ export default class APIService {
     eventId: number,
     username: string,
     userToken: string
-  ): Promise<any> => {
+  ): Promise<TimelineEvent<EventMetadata>> => {
     if (!eventId) {
       throw new SyntaxError("Event ID not present");
     }
@@ -1401,7 +1401,8 @@ export default class APIService {
       },
     });
     await this.checkStatus(response);
-    return response.json();
+    const result = await response.json();
+    return result.payload.events?.[0];
   };
 
   deleteFeedEvent = async (
