@@ -222,7 +222,17 @@ export default function UserFeedPage() {
           queryFn: () => APIService.getFeedEvent(eventId, currentUser.name, currentUser.auth_token as string),
         });
       });
-      const resultsArray:TimelineEvent<EventMetadata>[] = await Promise.all(promises);
+      const resultsArray:TimelineEvent<EventMetadata>[] = [];
+      const promiseResults = await Promise.allSettled(promises);
+      promiseResults.forEach((res,idx) => {
+        if(res.status === "fulfilled"){
+          resultsArray.push(res.value);
+        }
+        else{
+          // eslint-disable-next-line no-console
+          console.error(res.reason);
+        }
+      })
       setSeparatelyLoadedEvents(resultsArray);
     }
     const feedEvents = data?.pages.map((page) => page.events).flat();
@@ -654,7 +664,7 @@ export default function UserFeedPage() {
   };
 
   const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
-    if (!subEvent) return <div className="muted">Load more evens to preview this older event</div>;
+    if (!subEvent) return <div className="muted">This event was deleted or cannot be loaded</div>;
 
     return (
       <div>
