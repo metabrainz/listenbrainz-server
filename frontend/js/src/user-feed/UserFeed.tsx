@@ -6,7 +6,7 @@ import {
   faComments,
   faEye,
   faEyeSlash,
-  faHandshake,
+  faHandHoldingHeart,
   faHeadphones,
   faHeart,
   faPaperPlane,
@@ -104,7 +104,7 @@ function getEventTypeIcon(eventType: EventTypeT) {
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return faPaperPlane;
     case EventType.THANKS:
-      return faHandshake;
+      return faHandHoldingHeart;
     default:
       return faQuestion;
   }
@@ -457,9 +457,10 @@ export default function UserFeedPage() {
         <>
           { isThankable && (
             <ListenControl
-              title="Thanks"
+              title="Say thanks"
               text=""
-              icon={faHandshake}
+              icon={faHandHoldingHeart}
+              iconSize="lg"
               buttonClassName="btn btn-link btn-xs"
               action={() => {
                 NiceModal.show(ThanksModal, {
@@ -475,6 +476,7 @@ export default function UserFeedPage() {
             title="Unhide Event"
             text=""
             icon={faEye}
+            iconSize="lg"
             buttonClassName="btn btn-link btn-xs"
             action={() => {
               hideEventMutation(event);
@@ -485,6 +487,7 @@ export default function UserFeedPage() {
             title="Hide Event"
             text=""
             icon={faEyeSlash}
+            iconSize="lg"
             buttonClassName="btn btn-link btn-xs"
             action={() => {
               hideEventMutation(event);
@@ -495,6 +498,7 @@ export default function UserFeedPage() {
             title="Delete Event"
             text=""
             icon={faTrash}
+            iconSize="lg"
             buttonClassName="btn btn-link btn-xs"
             action={() => {
               deleteEventMutation(event);
@@ -835,7 +839,7 @@ export default function UserFeedPage() {
                               <FontAwesomeIcon
                                 icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
-                                transform="shrink-4"
+                                transform="shrink-3"
                                 fixedWidth
                               />
                             </span>
