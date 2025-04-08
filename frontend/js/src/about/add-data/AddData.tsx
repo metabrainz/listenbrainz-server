@@ -378,9 +378,9 @@ export default function AddData() {
     <ul>
         <li>
           <em>
-            <a href="/settings/music-services/details/">
+            <Link to="/settings/music-services/details/">
               Connect your Spotify or Last.fm account to ListenBrainz
-            </a>
+            </Link>
           </em>
         </li>
       </ul>
