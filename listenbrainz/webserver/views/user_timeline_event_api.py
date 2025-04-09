@@ -340,9 +340,6 @@ def user_feed_event(user_name: str, event_id: int):
         hidden=False,
     )
 
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    user_event.event_type = user_event.event_type.value
-
     return jsonify({'payload': {
         'count': 1,
         'user_id': user_name,
