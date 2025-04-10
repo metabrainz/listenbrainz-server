@@ -58,9 +58,10 @@ export default function MusicServices() {
   );
 
   const [lastFMEdit, setLastFMEdit] = React.useState(false);
-  const [lastFMEditButtonClass, setlastFMEditButtonClass] = React.useState(
-    permissions.lastfm !== "import" ? "btn-default" : "btn-warning"
-  );
+  const lastFMEditButtonClass =
+    permissions.lastfm !== "import"
+      ? "btn-default"
+      : (lastFMEdit && "btn-success") || "btn-warning";
 
   const handlePermissionChange = async (
     serviceName: string,
@@ -107,7 +108,6 @@ export default function MusicServices() {
             break;
           case "lastfm":
             setLastFMEdit(false);
-            setlastFMEditButtonClass("btn-default");
             break;
           default:
             break;
@@ -235,7 +235,6 @@ export default function MusicServices() {
           ...prevState,
           lastfm: "import",
         }));
-        setlastFMEditButtonClass("btn-warning");
         setLastFMEdit(false);
       } else {
         const body = await response.json();
@@ -503,11 +502,6 @@ export default function MusicServices() {
                     className={`btn ${lastFMEditButtonClass}`}
                     onClick={() => {
                       setLastFMEdit((prev) => !prev);
-                      setlastFMEditButtonClass((prevClass) =>
-                        prevClass === "btn-warning"
-                          ? "btn-success"
-                          : "btn-warning"
-                      );
                     }}
                   >
                     {lastFMEdit ? "Save" : "Edit"}
