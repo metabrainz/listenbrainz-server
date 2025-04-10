@@ -288,6 +288,18 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistActivityResponse = {
+  result: Array<{
+    name: string;
+    listen_count: number;
+    albums: Array<{
+      name: string;
+      listen_count: number;
+      release_group_mbid: string;
+    }>;
+  }>;
+};
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
@@ -362,6 +374,11 @@ declare type ACRMSearchResult = {
   release_name: string;
 };
 
+type CoverArtGridOptions = {
+  dimension: number;
+  layout: number;
+};
+
 // XSPF/JSPF format: https://www.xspf.org/jspf/
 declare type JSPFObject = {
   playlist: JSPFPlaylist;
@@ -369,10 +386,11 @@ declare type JSPFObject = {
 
 declare type JSPFPlaylistMetadata = {
   external_urls?: { [key: string]: any };
-  algorithm_metadata: {
+  algorithm_metadata?: {
     source_patch: string;
   };
   expires_at?: string; // ISO date string
+  cover_art?: CoverArtGridOptions;
 };
 
 declare type JSPFPlaylistExtension = {
@@ -477,13 +495,24 @@ type EventTypeT =
   | "block_follow"
   | "notification"
   | "personal_recording_recommendation"
-  | "critiquebrainz_review";
+  | "critiquebrainz_review"
+  | "thanks";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
   user_name_1: string;
   relationship_type: "follow";
   created: number;
+};
+
+type ThanksMetadata = {
+  original_event_id: number;
+  original_event_type: EventTypeT;
+  blurb_content: string;
+  thanker_id: number;
+  thanker_username: string;
+  thankee_id: number;
+  thankee_username: string;
 };
 
 type NotificationEventMetadata = {
@@ -496,14 +525,15 @@ type EventMetadata =
   | PinEventMetadata
   | NotificationEventMetadata
   | UserTrackPersonalRecommendationMetadata
-  | CritiqueBrainzReview;
+  | CritiqueBrainzReview
+  | ThanksMetadata;
 
-type TimelineEvent = {
+type TimelineEvent<T extends EventMetadata> = {
   event_type: EventTypeT;
   id?: number;
   user_name: string;
   created: number;
-  metadata: EventMetadata;
+  metadata: T;
   hidden: boolean;
 };
 
@@ -612,7 +642,7 @@ type ColorReleasesResponse = {
   };
 };
 
-type MissingMBData = {
+type UnlinkedListens = {
   artist_name: string;
   listened_at: string;
   recording_name: string;
@@ -652,10 +682,12 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
     "spotify" | "youtube" | "soundcloud" | "appleMusic"
   >;
 };
+
 
 declare type UserPreferences = {
   saveData?: boolean;

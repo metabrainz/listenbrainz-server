@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
+import Username from "../common/Username";
 
 type SearchResultsLoaderData = {
   users: [string, number, number?][];
@@ -91,7 +91,7 @@ export default function UserSearch(props: UserSearchProps) {
               <tr key={`similar-user-${row[0]}`}>
                 <td>{index + 1}</td>
                 <td>
-                  <Link to={`/user/${row[0]}/`}>{row[0]}</Link>
+                  <Username username={row[0]} />
                 </td>
                 {username && (
                   <td>

@@ -46,7 +46,6 @@ class BackgroundTasks:
         current_app.logger.info("Background tasks processor started.")
         while True:
             try:
-                db_conn.rollback()
                 task = get_task()
                 if task is None:
                     time.sleep(5)
@@ -59,7 +58,19 @@ class BackgroundTasks:
                 break
             except Exception:
                 current_app.logger.error("Error in background tasks processor:", exc_info=True)
-                time.sleep(5)
+                time.sleep(2)
+                # Exit the container, restart
+                current_app.logger.info("Exiting process, letting container restart.")
+                break
+            finally:
+                # I suspect the following line is related to this failure:
+                # https://gist.github.com/mayhem/fbd21a146fd34f291cced7dee7e7fca7
+                # But, sadly it doesn't stop the failure -- there is some other connection
+                # that has a transaction open, making everything cranky. Until we find
+                # the root cause of this problem (tricky!) we can mitigate this better
+                # by simply exiting the container when this happens and start fresh.
+                db_conn.rollback()
+                ts_conn.rollback()
 
 if __name__ == "__main__":
     bt = BackgroundTasks()

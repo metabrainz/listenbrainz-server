@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import psycopg2
 import orjson
@@ -21,7 +21,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -34,7 +34,7 @@ DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL = 25
 SEARCH_USER_LIMIT = 10
 
 
-@api_bp.route('/search/users/', methods=['GET', 'OPTIONS'])
+@api_bp.get("/search/users/")
 @crossdomain
 @ratelimit()
 def search_user():
@@ -50,7 +50,7 @@ def search_user():
     return jsonify({'users': users})
 
 
-@api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
+@api_bp.post("/submit-listens")
 @crossdomain
 @ratelimit()
 def submit_listen():
@@ -72,9 +72,12 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user = validate_auth_header(fetch_email=True)
+    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+
+    if user['is_paused']:
+        raise APIUnauthorized(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
 
     raw_data = request.get_data()
 
@@ -134,7 +137,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.route("/user/<user_name>/listens", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -164,8 +167,8 @@ def get_listens(user_name):
     listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
-        from_ts=datetime.utcfromtimestamp(min_ts) if min_ts else None,
-        to_ts=datetime.utcfromtimestamp(max_ts) if max_ts else None
+        from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
+        to_ts=datetime.fromtimestamp(max_ts, timezone.utc) if max_ts else None
     )
     listen_data = []
     for listen in listens:
@@ -180,7 +183,7 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/listen-count", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/listen-count")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -210,7 +213,7 @@ def get_listen_count(user_name):
     }})
 
 
-@api_bp.route("/user/<user_name>/playing-now", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/playing-now")
 @crossdomain
 @ratelimit()
 def get_playing_now(user_name):
@@ -248,7 +251,7 @@ def get_playing_now(user_name):
     })
 
 
-@api_bp.route("/user/<user_name>/similar-users", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/similar-users")
 @crossdomain
 @ratelimit()
 def get_similar_users(user_name):
@@ -284,7 +287,7 @@ def get_similar_users(user_name):
     })
 
 
-@api_bp.route("/user/<user_name>/similar-to/<other_user_name>", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/similar-to/<other_user_name>")
 @crossdomain
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
@@ -320,7 +323,7 @@ def get_similar_to_user(user_name, other_user_name):
         raise APINotFound("Similar-to user not found")
 
 
-@api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
+@api_bp.route("/latest-import", methods=["GET", "POST"])
 @crossdomain
 @ratelimit()
 def latest_import():
@@ -392,7 +395,7 @@ def latest_import():
         return jsonify({'status': 'ok'})
 
 
-@api_bp.route('/validate-token', methods=['GET', 'OPTIONS'])
+@api_bp.get("/validate-token")
 @crossdomain
 @ratelimit()
 def validate_token():
@@ -459,7 +462,7 @@ def validate_token():
         })
 
 
-@api_bp.route('/delete-listen', methods=['POST', 'OPTIONS'])
+@api_bp.post("/delete-listen")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -496,7 +499,7 @@ def delete_listen():
     if "listened_at" not in data:
         log_raise_400("Listen timestamp missing.")
     try:
-        listened_at = datetime.utcfromtimestamp(int(data["listened_at"]))
+        listened_at = datetime.fromtimestamp(int(data["listened_at"]), timezone.utc)
     except ValueError:
         log_raise_400("%s: Listen timestamp invalid." % data["listened_at"])
 
@@ -537,7 +540,7 @@ def serialize_playlists(playlists, playlist_count, count, offset):
             "count": count}
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists")
 @crossdomain
 @ratelimit()
 def get_playlists_for_user(playlist_user_name):
@@ -572,7 +575,7 @@ def get_playlists_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/createdfor", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/createdfor")
 @crossdomain
 @ratelimit()
 def get_playlists_created_for_user(playlist_user_name):
@@ -604,7 +607,7 @@ def get_playlists_created_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/collaborator", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/collaborator")
 @crossdomain
 @ratelimit()
 def get_playlists_collaborated_on_for_user(playlist_user_name):
@@ -643,7 +646,7 @@ def get_playlists_collaborated_on_for_user(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/recommendations", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/recommendations")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -666,7 +669,7 @@ def user_recommendations(playlist_user_name):
     return jsonify(serialize_playlists(playlists, len(playlists), 0, 0))
 
 
-@api_bp.route("/user/<playlist_user_name>/playlists/search", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<playlist_user_name>/playlists/search")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -696,7 +699,7 @@ def search_user_playlist(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.route("/user/<user_name>/services", methods=['GET', 'OPTIONS'])
+@api_bp.get("/user/<user_name>/services")
 @crossdomain
 @ratelimit()
 def get_service_details(user_name):
@@ -725,15 +728,11 @@ def get_service_details(user_name):
     return jsonify({'user_name': user_name, 'services': services})
 
 
-@api_bp.route("/lb-radio/tags", methods=['GET', 'OPTIONS'])
+@api_bp.get("/lb-radio/tags")
 @crossdomain
 @ratelimit()
 def get_tags_dataset():
     """ Get recordings for use in LB radio with the specified tags that match the requested criteria.
-
-    .. code-block:: json
-
-
 
     :param tag: the MusicBrainz tag to fetch recordings for, this parameter can be specified multiple times. if more
         than one tag is specified, the operator param should also be specified.
@@ -809,7 +808,7 @@ def _get_listen_type(listen_type):
     }.get(listen_type)
 
 
-@api_bp.route("/lb-radio/artist/<seed_artist_mbid>", methods=['GET', 'OPTIONS'])
+@api_bp.get("/lb-radio/artist/<seed_artist_mbid>")
 @crossdomain
 @ratelimit()
 def get_artist_radio_recordings(seed_artist_mbid):

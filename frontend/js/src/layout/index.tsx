@@ -5,9 +5,21 @@ import { ToastContainer } from "react-toastify";
 import { Provider as NiceModalProvider } from "@ebay/nice-modal-react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
+import ProtectedRoutes from "../utils/ProtectedRoutes";
 
-export default function Layout({ children }: { children?: React.ReactNode }) {
+const BrainzPlayer = React.lazy(() =>
+  import("../common/brainzplayer/BrainzPlayer")
+);
+
+export default function Layout({
+  children,
+  withProtectedRoutes,
+  withBrainzPlayer = true,
+}: {
+  children?: React.ReactNode;
+  withProtectedRoutes?: boolean;
+  withBrainzPlayer?: boolean;
+}) {
   return (
     <NiceModalProvider>
       <ToastContainer
@@ -24,9 +36,14 @@ export default function Layout({ children }: { children?: React.ReactNode }) {
       <Navbar />
       <div className="container-react">
         <div className="container-react-main">
-          <Outlet />
+          {!withProtectedRoutes && <Outlet />}
           {children}
-          <BrainzPlayer />
+          {withProtectedRoutes && <ProtectedRoutes />}
+          {withBrainzPlayer ? (
+            <React.Suspense>
+              <BrainzPlayer />
+            </React.Suspense>
+          ) : null}
         </div>
         <Footer />
       </div>

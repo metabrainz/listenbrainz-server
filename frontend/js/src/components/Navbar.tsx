@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
+import Username from "../common/Username";
 
 function Navbar() {
   const { currentUser } = React.useContext(GlobalAppContext);
@@ -49,7 +50,11 @@ function Navbar() {
         </button>
         <Link
           className="navbar-logo"
-          to="/?redirect=false"
+          to={
+            currentUser?.name
+              ? `/user/${currentUser.name}/`
+              : "/?redirect=false"
+          }
           onClick={toggleSidebar}
         >
           <img
@@ -63,7 +68,11 @@ function Navbar() {
       <div id="side-nav" className="collapse">
         <Link
           className="navbar-logo"
-          to="/?redirect=false"
+          to={
+            currentUser?.name
+              ? `/user/${currentUser.name}/`
+              : "/?redirect=false"
+          }
           onClick={toggleSidebar}
         >
           <img
@@ -102,7 +111,12 @@ function Navbar() {
         <div className="navbar-bottom">
           {currentUser?.name ? (
             <>
-              <div className="username">{currentUser.name}</div>
+              <Username
+                username={currentUser.name}
+                hideLink
+                elementType="div"
+                className="username"
+              />
               <a href="/login/logout/">Logout</a>
               <NavLink to="/settings/" onClick={toggleSidebar}>
                 Settings

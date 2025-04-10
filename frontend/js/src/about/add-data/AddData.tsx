@@ -5,7 +5,7 @@ export default function AddData() {
   return (
     <>
       <h2 className="page-title">Adding your data to Listenbrainz</h2>
-      <h3>Submitting Listens</h3>
+      <h3>Submit Listens</h3>
       <p>Submit your listening history to ListenBrainz.</p>
       <h4>Music players</h4>
       <ul>
@@ -134,6 +134,19 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://tidal.com/">TIDAL</a>
+          </em>
+          , a cross-platform music player and streaming service:{" "}
+          <a href="https://github.com/uwu/neptune">
+            <code>neptune client mod</code>
+          </a>
+          +{" "}
+          <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
+            <code>ListenBrainz plugin</code>
+          </a>
+        </li>
+        <li>
+          <em>
             <a href="https://www.videolan.org/vlc/">VLC</a>
           </em>
           , cross-platform multimedia player:{" "}
@@ -189,15 +202,23 @@ export default function AddData() {
               Funkwhale
             </a>
           </em>
-          , a decentralized music sharing and listening platform with built-in
-          support for ListenBrainz
+          , a decentralized music sharing and listening platform
         </li>
         <li>
           <em>
             <a href="https://github.com/sentriz/gonic">gonic</a>
           </em>
-          , a free software Subsonic-compatible music server, has built-in
-          support for ListenBrainz
+          , a free software Subsonic-compatible music server
+        </li>
+        <li>
+          <em>
+            <a href="https://www.home-assistant.io/">Home Assistant</a>
+          </em>
+          , open source home automation, ListenBrainz support via Music
+          Assistant:{" "}
+          <a href="https://www.music-assistant.io/plugins/listenbrainz_scrobble/">
+            <code>Listenbrainz Scrobbler</code>
+          </a>
         </li>
         <li>
           <em>
@@ -214,7 +235,7 @@ export default function AddData() {
           </em>
           , a free and open source media center:{" "}
           <a href="https://kodi.tv/addons/matrix/service.listenbrainz">
-            ListenBrainz add-on
+            <code>ListenBrainz add-on</code>
           </a>
         </li>
         <li>
@@ -317,14 +338,6 @@ export default function AddData() {
           </em>
           , a scrobbling application for Android Devices
         </li>
-        <li>
-          <em>
-            <a href="https://github.com/tgwizard/sls">
-              Simple Last.fm Scrobbler
-            </a>
-          </em>
-          , for Android devices
-        </li>
       </ul>
 
       <h4>Scripts</h4>
@@ -354,19 +367,23 @@ export default function AddData() {
         </li>
       </ul>
 
-      <h3>Submitting via Spotify</h3>
-      <p>Automatically submit your Spotify listens.</p>
+      <h3>Submit from Spotify and Last.fm</h3>
+      <p>Automatically submit your Spotify or Last.fm listens.</p>
       <p>
-        Importing the same listens from two different sources, such as Last.FM
+        Submitting the same listens from two different sources, such as Last.FM
         and Spotify, may cause duplicates in your listen history. When you opt
         into automatic Spotify submissions you may notice duplicates for your
-        last 50 listens on Spotify.
+        last 50 Spotify listens.
       </p>
-      <p>
-        <Link to="/settings/music-services/details/">
-          Connect your Spotify account to ListenBrainz
-        </Link>
-      </p>
+    <ul>
+        <li>
+          <em>
+            <Link to="/settings/music-services/details/">
+              Connect your Spotify or Last.fm account to ListenBrainz
+            </Link>
+          </em>
+        </li>
+      </ul>
 
       <h3>Playlist management</h3>
       <p>
@@ -389,13 +406,9 @@ export default function AddData() {
               ListenBrainz-SMP
             </a>
           </em>
-          , a{" "}
-          <em>
-            <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for submitting and retrieving playlists from ListenBrainz (+
-          Spotify), as well as retrieving recommendations or submitting feedback
-          on tracks.
+          , a Foobar2000 plugin for submitting and retrieving playlists from
+          ListenBrainz (+ Spotify). Can retrieve recommendations and submit
+          track feedback.
         </li>
         <li>
           <em>
@@ -407,9 +420,9 @@ export default function AddData() {
           <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
-          plugin for syncing local playlists (in multiple formats) with
-          ListenBrainz (+ Spotify). Tracks playlists changes and also allows to
-          resolve tracks with local content and YouTube links.
+          plugin for syncing local playlists with ListenBrainz (+ Spotify).
+          Tracks playlists changes and resolves tracks with local content and
+          YouTube links.
         </li>
         <li>
           <em>
@@ -445,15 +458,19 @@ export default function AddData() {
       <ul>
         <li>
           <em>
+            <a href="https://github.com/coopw1/BrainzBot">BrainzBot</a>
+          </em>
+          , a Discord bot that can be user-run or added to your server. Showcase
+          what you&apos;re listening to, share charts, album grids, tag clouds,
+          and more.
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
           </em>
-          , a{" "}
-          <em>
-            <a href="https://www.foobar2000.org/">Foobar2000</a>
-          </em>{" "}
-          plugin for creating reports based on user listens similar to the one
-          found at Spotify. Suggested playlists use ListenBrainz recommendations
-          (without requiring listens upload to the server).
+          , a Foobar2000 plugin that creates listening reports, similar to
+          Spotify&apos;s annual report. Can utilize ListenBrainz
+          recommendations.
         </li>
       </ul>
 

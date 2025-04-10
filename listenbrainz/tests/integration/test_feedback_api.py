@@ -1023,7 +1023,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         non_existing_rec_msid = "b83fd3c3-449c-49be-a874-31d7cf26d946"
         recordings = recordings + "," + non_existing_rec_msid
 
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
                                    query_string={param: recordings})
         self.assert200(response)
@@ -1067,7 +1067,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         non_existing_rec_mbid = "6a221fda-2200-11ec-ac7d-dfa16a57158f"
         recording_mbids = recording_mbids + "," + non_existing_rec_mbid
 
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
                                    query_string={"recording_msids": recordings, "recording_mbids": recording_mbids})
         self.assert200(response)
@@ -1136,25 +1136,24 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_recordings_for_user_no_recordings(self):
         """ Test to make sure that the API sends 400 if param recordings is not passed or is empty. """
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
-                                                       user_name=self.user[
-                                                           "musicbrainz_id"]))  # missing recordings param
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
+                                                       user_name=self.user["musicbrainz_id"]))  # missing recordings param
         self.assert400(response)
         self.assertEqual(response.json["error"], "No valid recording msid or recording mbid found.")
 
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
                                    query_string={"recordings": ""})  # empty string
         self.assert400(response)
         self.assertEqual(response.json["error"], "No valid recording msid or recording mbid found.")
 
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
                                    query_string={"recording_msids": ""})  # empty string
         self.assert400(response)
         self.assertEqual(response.json["error"], "No valid recording msid or recording mbid found.")
 
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
                                    query_string={"recording_mbidss": ""})  # empty string
         self.assert400(response)
@@ -1173,14 +1172,13 @@ class FeedbackAPITestCase(IntegrationTestCase):
         invalid_rec_msid = "invalid_recording_msid"
 
         recordings += invalid_rec_msid
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
-                                   query_string={
-                                       "recording_msids": recordings})  # recording_msids has invalid recording_msid
+                                   query_string={"recording_msids": recordings})  # recording_msids has invalid recording_msid
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
 
-        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.get(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_get",
                                                        user_name=self.user["musicbrainz_id"]),
                                    query_string={
                                        "recording_mbids": recordings})  # recording_mbids has invalid recording_msid
@@ -1204,10 +1202,9 @@ class FeedbackAPITestCase(IntegrationTestCase):
         non_existing_rec_mbid = "6a221fda-2200-11ec-ac7d-dfa16a57158f"
         recording_mbids.append(non_existing_rec_mbid)
 
-        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_post",
                                                         user_name=self.user["musicbrainz_id"]),
-                                    data=json.dumps(
-                                        {"recording_msids": recordings, "recording_mbids": recording_mbids}),
+                                    data=json.dumps({"recording_msids": recordings, "recording_mbids": recording_mbids}),
                                     content_type="application/json")
 
         self.assert200(response)
@@ -1270,14 +1267,14 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_recordings_for_user_for_post_method_no_recordings(self):
         """ Test to make sure that the API sends 400 if body data recording_msids or recording_mbids is not passed or is empty. """
-        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_post",
                                                         user_name=self.user["musicbrainz_id"]),
                                     data=json.dumps({"recording_msids": []}),  # empty list
                                     content_type="application/json")
         self.assert400(response)
         self.assertEqual(response.json["error"], "No valid recording msid or recording mbid found.")
 
-        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_post",
                                                         user_name=self.user["musicbrainz_id"]),
                                     data=json.dumps({"recording_mbids": []}),  # empty list
                                     content_type="application/json")
@@ -1297,7 +1294,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         invalid_rec_msid = "invalid_recording_msid"
 
         recordings.append(invalid_rec_msid)
-        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
+        response = self.client.post(self.custom_url_for("feedback_api_v1.get_feedback_for_recordings_for_user_post",
                                                         user_name=self.user["musicbrainz_id"]),
                                     data=json.dumps({"recording_msids": recordings}),
                                     content_type="application/json")
@@ -1392,6 +1389,8 @@ class FeedbackAPITestCase(IntegrationTestCase):
             "018dfa9b-7a80-3997-b64e-8520488656a1": "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
             "2446a9ae-6e63-3273-bfc9-58eed8571d7a": "f53937b3-f6dc-450c-8d57-bbc667d8af23"
         }
+        expected_msid = messybrainz.submit_recording(self.ts_conn, "Let Me Love You", "ariana grande")
+        self.ts_conn.commit()
 
         r = self.client.post(
             self.custom_url_for("feedback_api_v1.import_feedback"),
@@ -1402,21 +1401,23 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assert200(r)
         self.assertDictEqual(r.json, {
             "total": 8,
-            "inserted": 3,
-            "missing_mbid": 2,
-            "invalid_mbid": 1,
-            "mbid_not_found": 2
+            "imported": 6,
         })
         r = self.client.get(
             self.custom_url_for("feedback_api_v1.get_feedback_for_user", user_name=self.user["musicbrainz_id"]))
+        print(r.json)
+
         data = r.json
-        self.assertEqual(data["count"], 3)
-        self.assertEqual(data["total_count"], 3)
+        self.assertEqual(data["count"], 6)
+        self.assertEqual(data["total_count"], 6)
         self.assertEqual(data["offset"], 0)
         expected_mbids = [
             "7ac86b1a-d183-40ca-9d41-df2d90681ffd",
             "9d0c31ef-257a-41af-9a8c-f28a5cd87467",
             "f53937b3-f6dc-450c-8d57-bbc667d8af23"
         ]
-        received_mbids = [f["recording_mbid"] for f in data["feedback"]]
-        self.assertCountEqual(expected_mbids, received_mbids)
+        received_mbids = {f["recording_mbid"] for f in data["feedback"]}
+        received_msids = {f["recording_msid"] for f in data["feedback"]}
+        for mbid in expected_mbids:
+            self.assertIn(mbid, received_mbids)
+        self.assertIn(expected_msid, received_msids)

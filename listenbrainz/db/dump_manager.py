@@ -22,7 +22,7 @@ from pathlib import PurePath
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import click
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import re
 import shutil
@@ -35,11 +35,11 @@ from brainzutils.mail import send_mail
 import listenbrainz.db.dump as db_dump
 from listenbrainz.db import mapping_dump
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.db.dump import check_ftp_dump_ages
-
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
@@ -69,15 +69,19 @@ def send_dump_creation_notification(dump_name, dump_type):
               help="path to the directory where the dump should be made")
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="Dump the metadata table from the listenbrainz database")
 def create_mbcanonical(location, use_lb_conn):
-    """Create a dump of the canonical mapping tables. This includes the following items:
+    """
+    Create a dump of the canonical mapping tables. This includes the following items:
+
         - metadata for canonical recordings
         - canonical recording redirect
         - canonical release redirect
+
     These tables are created by the mapping `canonical-data` management command.
-    If canonical-data is called with --use-lb-conn then the canonical metadata and recording redirect tables will 
-       be in the listenbrainz timescale database connection
-    If called with --use-mb-conn then all tables will be in the musicbrainz database connection.
-    The canonical release redirect table will always be in the musicbrainz database connection.
+
+    - If canonical-data is called with --use-lb-conn then the canonical metadata and recording redirect tables will
+      be in the listenbrainz timescale database connection
+    - If called with --use-mb-conn then all tables will be in the musicbrainz database connection.
+    - The canonical release redirect table will always be in the musicbrainz database connection.
     """
     app = create_app()
     with app.app_context():
@@ -149,15 +153,20 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
             sys.exit(-1)
         ls = DumpListenStore(app)
         if dump_id is None:
-            end_time = datetime.now()
-            dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
+            latest_inc_dump = db_dump.get_latest_incremental_dump()
+            if latest_inc_dump is not None:
+                end_time = latest_inc_dump['created']
+            else:
+                end_time = datetime.now(tz=timezone.utc)
+            dump_id = db_dump.add_dump_entry(end_time, "full")
         else:
-            dump_entry = db_dump.get_dump_entry(dump_id)
+            dump_entry = db_dump.get_dump_entry(dump_id, "full")
             if dump_entry is None:
-                current_app.logger.error("No dump with ID %d found", dump_id)
+                current_app.logger.error("No full dump with ID %d found", dump_id)
                 sys.exit(-1)
             end_time = dump_entry['created']
 
+        start_time = LISTEN_MINIMUM_DATE
         dump_name = f'listenbrainz-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}-full'
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
@@ -178,10 +187,14 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
             expected_num_dumps += 1
             expected_num_private_dumps += 1
         if do_listen_dump:
-            ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
+            ls.dump_listens(
+                dump_path, dump_id=dump_id, start_time=start_time,
+                end_time=end_time, dump_type="full", threads=threads
+            )
             expected_num_dumps += 1
         if do_spark_dump:
-            ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="full", end_time=end_time)
+            ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="full",
+                                      start_time=start_time, end_time=end_time)
             expected_num_dumps += 1
         if do_stats_dump:
             db_dump.create_statistics_dump(dump_path, end_time, threads)
@@ -218,6 +231,9 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
             with open(os.path.join(private_dump_path, "DUMP_ID.txt"), "w") as f:
                 f.write("%s %s full\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
+        if do_spark_dump:
+            ls.cleanup_listen_delete_metadata()
+
         sys.exit(0)
 
 
@@ -230,27 +246,28 @@ def create_incremental(location, threads, dump_id):
     with app.app_context():
         ls = DumpListenStore(app)
         if dump_id is None:
-            end_time = datetime.now()
-            dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
+            end_time = datetime.now(tz=timezone.utc)
+            dump_id = db_dump.add_dump_entry(end_time, "incremental")
         else:
-            dump_entry = db_dump.get_dump_entry(dump_id)
+            dump_entry = db_dump.get_dump_entry(dump_id, "incremental")
             if dump_entry is None:
-                current_app.logger.error("No dump with ID %d found, exiting!", dump_id)
+                current_app.logger.error("No incremental dump with ID %d found, exiting!", dump_id)
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        prev_dump_entry = db_dump.get_dump_entry(dump_id - 1)
+        prev_dump_entry = db_dump.get_previous_incremental_dump(dump_id)
         if prev_dump_entry is None:  # incremental dumps must have a previous dump in the series
-            current_app.logger.error("Invalid dump ID %d, could not find previous dump", dump_id)
+            current_app.logger.error("Invalid dump ID %d, could not find previous incrmental dump", dump_id)
             sys.exit(-1)
-        start_time = prev_dump_entry['created']
+        start_time = prev_dump_entry["created"]
         current_app.logger.info("Dumping data from %s to %s", start_time, end_time)
 
         dump_name = f'listenbrainz-dump-{dump_id}-{end_time.strftime("%Y%m%d-%H%M%S")}-incremental'
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
+        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time,
+                        dump_type="incremental", threads=threads)
         ls.dump_listens_for_spark(dump_path, dump_id=dump_id, dump_type="incremental",
                                   start_time=start_time, end_time=end_time)
 

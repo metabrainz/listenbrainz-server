@@ -16,6 +16,7 @@ import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
+import UserArtistActivity from "./components/UserArtistActivity";
 import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
@@ -74,8 +75,8 @@ export default function UserReports() {
         NiceModal.show(StatsExplanationsModal);
       }}
     >
-      <FontAwesomeIcon icon={faInfoCircle} />
-      &nbsp; How and when are statistics calculated?
+      <FontAwesomeIcon icon={faInfoCircle} style={{ marginRight: "0.5rem" }} />
+      How and when are statistics calculated?
     </button>
   );
 
@@ -167,6 +168,10 @@ export default function UserReports() {
           <UserDailyActivity range={range} user={user} />
         </section>
       )}
+      <section id="artist-activity">
+        {statsExplanationModalButton}
+        <UserArtistActivity range={range} user={user} />
+      </section>
       <section id="artist-origin">
         {statsExplanationModalButton}
         <UserArtistMap range={range} user={user} />

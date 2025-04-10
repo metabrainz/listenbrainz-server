@@ -1,10 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Union
 
 from sqlalchemy import text
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz import db, utils
 import sqlalchemy
 
 
@@ -32,7 +31,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     # to use the new values. any column which does not have a new value to be set should
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
-    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts) if token_expires_ts else None
+    token_expires = datetime.fromtimestamp(token_expires_ts, timezone.utc) if token_expires_ts else None
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO external_service_oauth AS eso
         (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
@@ -121,7 +120,7 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
         refresh_token: the new token used to refresh access tokens, if omitted the old token in the database remains unchanged
         expires_at: the unix timestamp at which the access token expires
     """
-    token_expires = utils.unix_timestamp_to_datetime(expires_at)
+    token_expires = datetime.fromtimestamp(expires_at, timezone.utc)
     params = {
         "access_token": access_token,
         "token_expires": token_expires,
@@ -161,20 +160,24 @@ def get_token(db_conn, user_id: int, service: ExternalServiceType) -> Union[dict
         service: the service for which the token should be fetched
     """
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT user_id
+        SELECT "user".id AS user_id
              , "user".musicbrainz_id
              , "user".musicbrainz_row_id
-             , service
+             , eso.service
              , access_token
              , refresh_token
-             , last_updated
+             , eso.last_updated
              , token_expires
              , scopes
              , external_user_id
-          FROM external_service_oauth
+             , li.latest_listened_at
+          FROM external_service_oauth eso
           JOIN "user"
-            ON "user".id = external_service_oauth.user_id
-         WHERE user_id = :user_id AND service = :service
+            ON "user".id = eso.user_id
+     LEFT JOIN listens_importer li
+            ON li.external_service_oauth_id = eso.id
+         WHERE "user".id = :user_id
+           AND eso.service = :service
         """), {
             'user_id': user_id,
             'service': service.value

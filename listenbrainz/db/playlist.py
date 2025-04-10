@@ -591,6 +591,24 @@ def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
             playlist_recordings_map[playlist_id] = []
     return dict(playlist_recordings_map)
 
+def get_recordings_count_for_playlist(ts_conn, playlist_id: int):
+    """ Get a count of recordings for a given playlist.
+
+    Arguments:
+        ts_conn: timsecale database connection
+        playlist_id: Numerical sequential id of a playlist (NOT its UUID)
+
+    Returns:
+        an integer of the number of recordings in the playlist """
+
+    query = text("""
+        SELECT COUNT(*)
+          FROM playlist.playlist_recording
+         WHERE playlist_id = :playlist_id
+    """)
+    result = ts_conn.execute(query, {"playlist_id": playlist_id})
+    return result.scalar()
+
 
 def _remove_old_collaborative_playlists(ts_conn, creator_id: int, created_for_id: int, source_patch: str):
     """
@@ -732,9 +750,16 @@ def update_playlist(db_conn, ts_conn, playlist: model_playlist.Playlist):
            SET name = :name
              , description = :description
              , public = :public
+             , additional_metadata = :additional_metadata
          WHERE id = :id
     """)
-    params = playlist.dict(include={'id', 'name', 'description', 'public'})
+    params = {
+        'id': playlist.id,
+        'name': playlist.name,
+        'description': playlist.description,
+        'public': playlist.public,
+        'additional_metadata': orjson.dumps(playlist.additional_metadata or {}).decode('utf-8')
+    }
     ts_conn.execute(query, params)
     # Unconditionally add collaborators, this allows us to delete all collaborators
     # if [] is passed in.

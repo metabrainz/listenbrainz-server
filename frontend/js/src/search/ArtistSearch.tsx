@@ -105,7 +105,17 @@ export default function ArtistSearch(props: ArtistSearchProps) {
               <tr key={artist?.id}>
                 <td>{(currPageNo - 1) * ARTIST_COUNT_PER_PAGE + index + 1}</td>
                 <td>
-                  <Link to={`/artist/${artist?.id}/`}>{artist?.name}</Link>
+                  <Link
+                    to={`/artist/${artist?.id}/`}
+                    title={`(${artist["sort-name"]}${
+                      artist?.disambiguation ? `, ${artist.disambiguation}` : ""
+                    })`}
+                  >
+                    {artist?.name}
+                  </Link>
+                  {artist?.disambiguation && (
+                    <small>&nbsp;({artist.disambiguation})</small>
+                  )}
                 </td>
                 <td>{artist?.type}</td>
                 <td>{_.capitalize(artist?.gender)}</td>

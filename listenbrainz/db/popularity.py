@@ -1,3 +1,5 @@
+import logging
+
 import psycopg2
 from flask import current_app
 from psycopg2.extras import DictCursor, execute_values
@@ -8,6 +10,8 @@ from listenbrainz.db import color
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.spark.spark_dataset import DatabaseDataset
 from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
+
+logger = logging.getLogger(__name__)
 
 
 class PopularityDataset(DatabaseDataset):
@@ -36,7 +40,21 @@ class PopularityDataset(DatabaseDataset):
         """
 
     def get_inserts(self, message):
-        query = f"INSERT INTO {{table}} ({self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
+        if message["only_inc"]:
+            suffix = None
+            query_suffix = """
+                ON CONFLICT ({entity_mbid})
+                  DO UPDATE
+                        SET total_listen_count = EXCLUDED.total_listen_count
+                          , total_user_count = EXCLUDED.total_user_count
+            """
+        else:
+            suffix = "tmp"
+            query_suffix = ""
+
+        table_name = self._get_table_name(suffix=suffix)
+        query = "INSERT INTO {table} ({entity_mbid}, total_listen_count, total_user_count) VALUES %s " + query_suffix
+        query = SQL(query).format(table=table_name, entity_mbid=Identifier(self.entity_mbid))
         values = [(r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
@@ -46,8 +64,9 @@ class PopularityDataset(DatabaseDataset):
         else:
             prefix = "popularity"
         return [
-            f"CREATE INDEX {prefix}_{self.entity}_listen_count_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX {prefix}_{self.entity}_user_count_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_lc_idx_{{suffix}} ON {{table}} (total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_uc_idx_{{suffix}} ON {{table}} (total_user_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_mbid_idx_{{suffix}} ON {{table}} ({self.entity}_mbid)"
         ]
 
 
@@ -78,7 +97,20 @@ class PopularityTopDataset(DatabaseDataset):
         """
 
     def get_inserts(self, message):
-        query = f"INSERT INTO {{table}} (artist_mbid, {self.entity_mbid}, total_listen_count, total_user_count) VALUES %s"
+        if message["only_inc"]:
+            suffix = None
+            query_suffix = """
+                ON CONFLICT (artist_mbid, {entity_mbid})
+                  DO UPDATE
+                        SET total_listen_count = EXCLUDED.total_listen_count
+                          , total_user_count = EXCLUDED.total_user_count
+            """
+        else:
+            suffix = "tmp"
+            query_suffix = ""
+        table_name = self._get_table_name(suffix=suffix)
+        query = "INSERT INTO {table} (artist_mbid, {entity_mbid}, total_listen_count, total_user_count) VALUES %s " + query_suffix
+        query = SQL(query).format(table=table_name, entity_mbid=Identifier(self.entity_mbid))
         values = [(r["artist_mbid"], r[self.entity_mbid], r["total_listen_count"], r["total_user_count"]) for r in message["data"]]
         return query, None, values
 
@@ -88,8 +120,9 @@ class PopularityTopDataset(DatabaseDataset):
         else:
             prefix = "popularity_top"
         return [
-            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_listen_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
-            f"CREATE INDEX {prefix}_{self.entity}_artist_mbid_user_count_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})"
+            f"CREATE INDEX {prefix}_{self.entity}_am_lc_idx_{{suffix}} ON {{table}} (artist_mbid, total_listen_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE INDEX {prefix}_{self.entity}_am_uc_idx_{{suffix}} ON {{table}} (artist_mbid, total_user_count) INCLUDE ({self.entity_mbid})",
+            f"CREATE UNIQUE INDEX {prefix}_{self.entity}_am_idx_{{suffix}} ON {{table}} (artist_mbid, {self.entity_mbid})"
         ]
 
 

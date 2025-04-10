@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta, MO
 
 import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.utils import get_latest_listen_ts
+from listenbrainz_spark.listens.data import get_latest_listen_ts
 from pyspark.sql.types import (StringType, StructField, StructType, TimestampType)
 
 time_range_schema = StructType([
@@ -55,7 +55,7 @@ def get_two_quarters_ago_offset(_date: date) -> relativedelta:
         return relativedelta(month=4, day=1)
 
 
-def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
+def get_time_range_bounds(stats_range: str, year: int = None) -> Tuple[datetime, datetime, relativedelta, str, str]:
     """ Returns the start time, end time, segment step size, python date format and spark
      date format to use for calculating the listening activity stats
 
@@ -65,12 +65,24 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
      Python date format reference: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
      Spark date format reference: https://spark.apache.org/docs/latest/sql-ref-datetime-pattern.html
 
+     If stats_range is set to year_in_music then the year must also be provided.
+
     .. note::
 
         other stats uses a different function (get_dates_for_stats_range) to calculate
         time ranges. if making modifications here, remember to check and update that as well
     """
     latest_listen_ts = get_latest_listen_ts()
+
+    if stats_range == "year_in_music":
+        if year is None:
+            raise ValueError("year is required when stats_range is set to year_in_music")
+        from_date = datetime(year, 1, 1)
+        to_date = datetime.combine(date(year, 12, 31), time.max)
+        step = relativedelta(days=+1)
+        date_format = "%d %B %Y"
+        spark_date_format = "dd MMMM y"
+        return from_date, to_date, step, date_format, spark_date_format
 
     if stats_range == "all_time":
         # all_time stats range is easy, just return time from LASTFM founding
@@ -173,7 +185,7 @@ def _get_time_range_bounds(stats_range: str) -> Tuple[datetime, datetime, relati
     return from_date, to_date, step, date_format, spark_date_format
 
 
-def _create_time_range_df(from_date, to_date, step, date_format, spark_date_format):
+def create_time_range_df(from_date, to_date, step, date_format, spark_date_format):
     """ Sets up time range buckets dataframe needed to calculate listening activity stats. """
     time_range = []
 
@@ -190,7 +202,7 @@ def _create_time_range_df(from_date, to_date, step, date_format, spark_date_form
     time_range_df.createOrReplaceTempView("time_range")
 
 
-def setup_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelta, str, str]:
+def setup_time_range(stats_range: str, year: int = None) -> Tuple[datetime, datetime, relativedelta, str, str]:
     """
     Sets up time range buckets needed to calculate listening activity stats and
     returns the start and end time of the time range.
@@ -203,6 +215,6 @@ def setup_time_range(stats_range: str) -> Tuple[datetime, datetime, relativedelt
     will return 1st of last year as the start time and the current date as the
     end time in this example.
     """
-    from_date, to_date, step, date_format, spark_date_format = _get_time_range_bounds(stats_range)
-    _create_time_range_df(from_date, to_date, step, date_format, spark_date_format)
+    from_date, to_date, step, date_format, spark_date_format = get_time_range_bounds(stats_range, year)
+    create_time_range_df(from_date, to_date, step, date_format, spark_date_format)
     return from_date, to_date, step, date_format, spark_date_format

@@ -34,7 +34,6 @@ class ImporterService(ExternalService, ABC):
             user_id: the ListenBrainz row ID of the user
             timestamp: the unix timestamp of the latest listen imported for the user
         """
-        current_app.logger.info(f"Updating latest_listen_ts for user {user_id}, service {self.service}, timestamp {timestamp}")
         listens_importer.update_latest_listened_at(db_conn, user_id, self.service, timestamp)
 
 

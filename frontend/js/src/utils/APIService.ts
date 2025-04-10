@@ -2,7 +2,7 @@ import { isNil, isUndefined, kebabCase, lowerCase, omit } from "lodash";
 import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
-import { PopularRecording } from "../album/utils";
+import type { Flair } from "./constants";
 
 export default class APIService {
   APIBaseURI: string;
@@ -81,13 +81,107 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getListensFromFollowedUsers = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent<Listen>>> => {
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events/listens/following`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
+  getListensFromSimilarUsers = async (
+    userName: string,
+    userToken: string,
+    minTs?: number,
+    maxTs?: number,
+    count?: number
+  ): Promise<Array<TimelineEvent<Listen>>> => {
+    if (maxTs && minTs) {
+      throw new SyntaxError(
+        "Cannot have both minTs and maxTs defined at the same time"
+      );
+    }
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+    if (!userToken) {
+      throw new SyntaxError("User token missing");
+    }
+
+    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events/listens/similar`;
+
+    const queryParams: Array<string> = [];
+    if (maxTs) {
+      queryParams.push(`max_ts=${maxTs}`);
+    }
+    if (minTs) {
+      queryParams.push(`min_ts=${minTs}`);
+    }
+    if (count) {
+      queryParams.push(`count=${count}`);
+    }
+    if (queryParams.length) {
+      query += `?${queryParams.join("&")}`;
+    }
+
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+
+    return result.payload.events;
+  };
+
   getFeedForUser = async (
     userName: string,
     userToken: string,
     minTs?: number,
     maxTs?: number,
     count?: number
-  ): Promise<Array<TimelineEvent>> => {
+  ): Promise<Array<TimelineEvent<EventMetadata>>> => {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
@@ -467,6 +561,30 @@ export default class APIService {
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserDailyActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserArtistActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-activity`;
+    }
+    url += `?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
@@ -1333,6 +1451,35 @@ export default class APIService {
     return response.status;
   };
 
+  thankFeedEvent = async (
+    event_id: number | undefined,
+    eventType: EventTypeT,
+    userToken: string,
+    username: string,
+    blurb_content: string
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/timeline-event/create/thanks`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        metadata: {
+          original_event_type: eventType,
+          original_event_id: event_id,
+          blurb_content,
+        },
+      }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   lookupRecordingMetadata = async (
     trackName: string,
     artistName: string,
@@ -1455,6 +1602,23 @@ export default class APIService {
     return response.status;
   };
 
+  submitFlairPreferences = async (
+    userToken: string,
+    flair: Flair
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/settings/flair`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ flair }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
   exportPlaylistToSpotify = async (
     userToken: string,
     playlist_mbid: string
@@ -1466,6 +1630,39 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportPlaylistToAppleMusic = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/apple_music`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToAppleMusic = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/export-jspf/apple_music`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
     });
     await this.checkStatus(response);
     return response.json();
@@ -1761,6 +1958,13 @@ export default class APIService {
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
     const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  getUserFlairs = async (): Promise<Record<string, Flair>> => {
+    const url = `${this.APIBaseURI}/donors/all-flairs`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

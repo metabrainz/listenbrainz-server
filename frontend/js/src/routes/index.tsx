@@ -78,12 +78,23 @@ const getIndexRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "playlist/:playlistID/",
+          path: "playlist/",
           lazy: async () => {
-            const PlaylistPage = await import("../playlists/Playlist");
-            return { Component: PlaylistPage.default };
+            const LayoutWithBackButton = await import(
+              "../layout/LayoutWithBackButton"
+            );
+            return { Component: LayoutWithBackButton.default };
           },
-          loader: RouteLoader,
+          children: [
+            {
+              path: ":playlistID/",
+              lazy: async () => {
+                const PlaylistPage = await import("../playlists/Playlist");
+                return { Component: PlaylistPage.default };
+              },
+              loader: RouteLoader,
+            },
+          ],
         },
         {
           path: "/statistics/",
@@ -138,21 +149,14 @@ const getIndexRoutes = (): RouteObject[] => {
           ],
         },
         {
-          path: "/",
+          path: "recent/",
           lazy: async () => {
             const UserFeedLayout = await import("../user-feed/UserFeedLayout");
             return { Component: UserFeedLayout.default };
           },
           children: [
             {
-              path: "/feed/",
-              lazy: async () => {
-                const UserFeed = await import("../user-feed/UserFeed");
-                return { Component: UserFeed.default };
-              },
-            },
-            {
-              path: "/recent/",
+              index: true,
               lazy: async () => {
                 const RecentListens = await import("../recent/RecentListens");
                 return {

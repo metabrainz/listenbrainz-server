@@ -12,13 +12,13 @@ DEFAULT_DONOR_COUNT = 25
 donors_bp = Blueprint("donors", __name__)
 
 
-@donors_bp.route("/",  defaults={'path': ''})
-@donors_bp.route('/<path:path>/')
+@donors_bp.get("/",  defaults={'path': ''})
+@donors_bp.get('/<path:path>/')
 def donors(path):
     return render_template("index.html")
 
 
-@donors_bp.route("/", methods=["POST"])
+@donors_bp.post("/")
 def donors_post():
     page = _parse_int_arg("page", 1)
     sort = request.args.get("sort", "date")
@@ -39,7 +39,7 @@ def donors_post():
     user_playlist_count = db_playlist.get_playlist_count(ts_conn, donor_ids) if donor_ids else {}
 
     for donor in donors:
-        donor_info = donors_info.get(donor["musicbrainz_id"])
+        donor_info = donors_info.get(donor["musicbrainz_id"].lower())
         if not donor_info:
             donor['listenCount'] = None
             donor['playlistCount'] = None

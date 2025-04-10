@@ -10,6 +10,7 @@ import Card from "../components/Card";
 import { getTrackName } from "../utils/utils";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import RecentDonorsCard from "./components/RecentDonors";
+import FlairsExplanationButton from "../common/flairs/FlairsExplanationButton";
 
 export type RecentListensProps = {
   listens: Array<Listen>;
@@ -64,9 +65,10 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">users</small>
               </div>
             </Card>
-            <Card className="hidden-xs card-user-sn">
+            <Card className="hidden-xs">
               <RecentDonorsCard donors={recentDonors} />
             </Card>
+            <FlairsExplanationButton className="hidden-xs" />
           </div>
           <div className="col-md-8 col-md-pull-4">
             {!listens.length && (

@@ -19,6 +19,8 @@ type TrackTypeSearchResult = {
   recordings: {
     id: string;
     title: string;
+    length: number;
+    disambiguation: string;
     "artist-credit": {
       name: string;
       joinphrase?: string;
@@ -42,6 +44,17 @@ type TrackTypeSearchResult = {
   }[];
 };
 
+type Alias = {
+  "sort-name": string;
+  "type-id": string;
+  name: string;
+  locale: string | null;
+  type: string;
+  primary: boolean | null;
+  "begin-date": number | null;
+  "end-date": number | null;
+};
+
 type ArtistTypeSearchResult = {
   count: number;
   offset: number;
@@ -51,9 +64,12 @@ type ArtistTypeSearchResult = {
     type?: string;
     country?: string;
     gender?: string;
+    "sort-name"?: string;
+    disambiguation?: string;
     area?: {
       name: string;
     };
+    aliases?: Alias[];
   }[];
 };
 

@@ -1,26 +1,38 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from math import ceil
+from collections import defaultdict
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
 from flask import Blueprint, render_template, request, url_for, jsonify, current_app
 from flask_login import current_user, login_required
+import psycopg2
+from psycopg2.extras import DictCursor
 
 from listenbrainz import webserver
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
-from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user
+from listenbrainz.db.playlist import get_playlists_for_user, get_recommendation_playlists_for_user, get_playlists_collaborated_on
 from listenbrainz.db.pinned_recording import get_current_pin_for_user, get_pin_count_for_user, get_pin_history_for_user
 from listenbrainz.db.feedback import get_feedback_count_for_user, get_feedback_for_user
 from listenbrainz.db import year_in_music as db_year_in_music
+from listenbrainz.db.genre import load_genre_with_subgenres
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+from listenbrainz.webserver.utils import number_readable
+from listenbrainz.webserver.views.api_tools import get_non_negative_param
 from werkzeug.exceptions import NotFound
+
+from brainzutils import cache
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
+
+TAG_HEIRARCHY_CACHE_KEY = "tag_hierarchy"
+TAG_HEIRARCHY_CACHE_EXPIRY = 60 * 60 * 24 * 7  # 7 days
 
 user_bp = Blueprint("user", __name__)
 redirect_bp = Blueprint("redirect", __name__)
@@ -33,7 +45,7 @@ def index(path):
     return render_template("index.html", user=current_user)
 
 
-@user_bp.route("/<user_name>/", methods=['POST'])
+@user_bp.post("/<user_name>/")
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -67,9 +79,9 @@ def profile(user_name):
 
     args = {}
     if max_ts:
-        args['to_ts'] = datetime.utcfromtimestamp(max_ts)
+        args['to_ts'] = datetime.fromtimestamp(max_ts, timezone.utc)
     elif min_ts:
-        args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+        args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
     data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
@@ -109,9 +121,9 @@ def profile(user_name):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/stats/top-artists/", methods=['POST'])
-@user_bp.route("/<user_name>/stats/top-albums/", methods=['POST'])
-@user_bp.route("/<user_name>/stats/top-tracks/", methods=['POST'])
+@user_bp.post("/<user_name>/stats/top-artists/")
+@user_bp.post("/<user_name>/stats/top-albums/")
+@user_bp.post("/<user_name>/stats/top-tracks/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -131,7 +143,7 @@ def charts(user_name):
     return jsonify(props)
 
 
-@user_bp.route("/<user_name>/stats/", methods=['POST'])
+@user_bp.post("/<user_name>/stats/")
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -151,10 +163,13 @@ def stats(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/playlists/", methods=['POST'])
+@user_bp.post("/<user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
+
+    page = get_non_negative_param("page", default=1)
+    type = request.args.get("type", "")
 
     user = _get_user(user_name)
     if not user:
@@ -168,10 +183,18 @@ def playlists(user_name: str):
     include_private = current_user.is_authenticated and current_user.id == user.id
 
     playlists = []
-    user_playlists, playlist_count = get_playlists_for_user(
-        db_conn, ts_conn, user.id, include_private=include_private,
-        load_recordings=False, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=0
-    )
+    offset = (page - 1) * DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
+
+    if type == "collaborative":
+        user_playlists, playlist_count = get_playlists_collaborated_on(
+            db_conn, ts_conn, user.id, include_private=include_private,
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+        )
+    else:
+        user_playlists, playlist_count = get_playlists_for_user(
+            db_conn, ts_conn, user.id, include_private=include_private,
+            load_recordings=True, count=DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL, offset=offset
+        )
     for playlist in user_playlists:
         playlists.append(playlist.serialize_jspf())
 
@@ -179,13 +202,14 @@ def playlists(user_name: str):
         "playlists": playlists,
         "user": user_data,
         "playlistCount": playlist_count,
+        "pageCount": ceil(playlist_count / DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL),
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
     }
 
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/recommendations/", methods=['POST'])
+@user_bp.post("/<user_name>/recommendations/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -226,7 +250,7 @@ def recommendation_playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/report-user/", methods=['POST'])
+@user_bp.post("/<user_name>/report-user/")
 @api_login_required
 def report_abuse(user_name):
     data = request.json
@@ -270,7 +294,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.route("/<user_name>/taste/", methods=['POST'])
+@user_bp.post("/<user_name>/taste/")
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -322,11 +346,81 @@ def taste(user_name: str):
     return jsonify(data)
 
 
-@user_bp.route("/<user_name>/year-in-music/", methods=['POST'])
-@user_bp.route("/<user_name>/year-in-music/<int:year>/", methods=['POST'])
-def year_in_music(user_name, year: int = 2023):
+def process_genre_data(yim_top_genre: list, data: list, user_name: str):
+    if not yim_top_genre or not data:
+        return {}
+
+    yimDataDict = {genre["genre"]: genre["genre_count"] for genre in yim_top_genre}
+
+    adj_matrix = defaultdict(list)
+    is_head = defaultdict(lambda: True)
+    id_name_map = {}
+    parent_map = defaultdict(lambda: None)
+
+    for row in data:
+        genre_id = row["genre_gid"]
+        is_head[genre_id]
+        id_name_map[genre_id] = row.get("genre")
+
+        subgenre_id = row["subgenre_gid"]
+        if subgenre_id:
+            is_head[subgenre_id] = False
+            id_name_map[subgenre_id] = row.get("subgenre")
+            parent_map[subgenre_id] = genre_id
+            adj_matrix[genre_id].append(subgenre_id)
+        else:
+            adj_matrix[genre_id] = []
+
+    visited = set()
+    rootNodes = [node for node in is_head if is_head[node]]
+
+    def create_node(id):
+        if id in visited:
+            return None
+        visited.add(id)
+
+        genreCount = yimDataDict.get(id_name_map[id], 0)
+        children = []
+
+        for subGenre in sorted(adj_matrix[id]):
+            childNode = create_node(subGenre)
+            if isinstance(childNode, list):
+                children.extend(childNode)
+            elif childNode is not None:
+                children.append(childNode)
+
+        if genreCount == 0:
+            if len(children) == 0:
+                return None
+            return children
+
+        data = {"id": id, "name": id_name_map[id], "children": children, "loc": genreCount}
+
+        if len(children) == 0:
+            del data["children"]
+
+        return data
+
+    outputArr = []
+    for rootNode in rootNodes:
+        node = create_node(rootNode)
+        if isinstance(node, list):
+            outputArr.extend(node)
+        elif node is not None:
+            outputArr.append(node)
+
+    return {
+        "name": user_name,
+        "color": "transparent",
+        "children": outputArr
+    }
+
+
+@user_bp.post("/<user_name>/year-in-music/")
+@user_bp.post("/<user_name>/year-in-music/<int:year>/")
+def year_in_music(user_name, year: int = 2024):
     """ Year in Music """
-    if year != 2021 and year != 2022 and year != 2023:
+    if year not in (2021, 2022, 2023, 2024):
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
@@ -339,8 +433,26 @@ def year_in_music(user_name, year: int = 2023):
         yearInMusicData = {}
         current_app.logger.error(f"Error getting Year in Music data for user {user_name}: {e}")
 
+    genreGraphData = {}
+    if yearInMusicData and year == 2024:
+        try:
+            data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
+            if not data:
+                with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,\
+                        mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+                    data = load_genre_with_subgenres(mb_curs)
+                    data = [dict(row) for row in data] if data else []
+                cache.set(TAG_HEIRARCHY_CACHE_KEY, data, expirein=TAG_HEIRARCHY_CACHE_EXPIRY)
+        except Exception as e:
+            current_app.logger.error("Error loading genre hierarchy: %s", e)
+            return jsonify({"error": "Failed to load genre hierarchy"}), 500
+
+        yimTopGenre = yearInMusicData.get("top_genres", [])
+        genreGraphData = process_genre_data(yimTopGenre, data, user_name)
+
     return jsonify({
         "data": yearInMusicData,
+        **({"genreGraphData": genreGraphData} if year == 2024 else {}),
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
@@ -390,9 +502,24 @@ def embed_pin(user_name):
     return render_template("widgets/pin.html", user_name=user_name, pinned_recording=pin)
 
 
-@user_bp.route("/<user_name>/",  defaults={'path': ''})
-@user_bp.route('/<user_name>/<path:path>/')
+@user_bp.get("/<user_name>/",  defaults={'path': ''})
+@user_bp.get('/<user_name>/<path:path>/')
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)
-    return render_template("index.html", user=user)
+    if not user:
+        og_meta_tags = None
+    else:
+        listen_count = None
+        try:
+            listen_count = timescale_connection._ts.get_listen_count_for_user(user.id)
+        except psycopg2.OperationalError as err:
+            current_app.logger.error("cannot fetch user listen count: ", str(err))
+        og_meta_tags = {
+            "title": f"{user_name} on ListenBrainz",
+            "description": f'User{f" — {number_readable(listen_count)} listens" if listen_count else ""} — ListenBrainz',
+            "type": "profile",
+            "profile:username": user_name,
+            "url": f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/',
+        }
+    return render_template("index.html", og_meta_tags=og_meta_tags, user=user)

@@ -72,12 +72,6 @@ def handle_user_daily_activity(message):
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
-        stats_range = message["stats_range"]
-        databases = couchdb.list_databases(f"{stat_type}_{stats_range}")
-        if not databases:
-            current_app.logger.error(f"No database found to insert {stats_range} sitewide {stat_type} stats")
-            return
-
         stats = {
             "data": message["data"]
         }
@@ -85,7 +79,8 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
             stats["count"] = message["count"]
 
         db_stats.insert_sitewide_stats(
-            databases[0],
+            stat_type,
+            message["stats_range"],
             message["from_ts"],
             message["to_ts"],
             stats
@@ -97,6 +92,10 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
 def handle_sitewide_entity(message):
     """ Take sitewide entity stats and save it in the database. """
     _handle_sitewide_stats(message, message["entity"], has_count=True)
+
+
+def handle_sitewide_artist_map(message):
+    _handle_sitewide_stats(message, "artist_map")
 
 
 def handle_sitewide_listening_activity(message):
@@ -258,27 +257,6 @@ def notify_mapping_import(data):
     send_mail(
         subject='MSID MBID mapping has been imported into the Spark cluster',
         text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, import_time=import_time,
-                             time_taken_to_import=time_taken_to_import),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
-
-
-def notify_artist_relation_import(data):
-    """ Send an email after artist relation has been sucessfully imported into the cluster.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    artist_relation_name = data['imported_artist_relation']
-    import_time = data['import_time']
-    time_taken_to_import = data['time_taken_to_import']
-
-    send_mail(
-        subject='Artist relation has been imported into the Spark cluster',
-        text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, import_time=import_time,
                              time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',

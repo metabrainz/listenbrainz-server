@@ -8,7 +8,7 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import {
   Link,
   useLoaderData,
@@ -18,7 +18,6 @@ import {
 } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import NiceModal from "@ebay/nice-modal-react";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
@@ -38,9 +37,10 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import Username from "../common/Username";
+import CBReview from "../cb-review/CBReview";
 
 function SortingButtons({
   sort,
@@ -71,14 +71,15 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypes extends ReleaseGroup {
+interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
   secondary_types: string[];
+  total_listen_count: number | null;
 }
 
 export type ArtistPageProps = {
   popularRecordings: PopularRecording[];
   artist: MusicBrainzArtist;
-  releaseGroups: ReleaseGroupWithSecondaryTypes[];
+  releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
   similarArtists: {
     artists: SimilarArtist[];
     topReleaseGroupColor: ReleaseColor | undefined;
@@ -139,13 +140,17 @@ export default function ArtistPage(): JSX.Element {
   );
 
   const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypes[]
+    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
   ) =>
     orderBy(
       releaseGroupsInput,
       [
-        sort === "release_date" ? (rg) => rg.date || "" : "total_listen_count",
-        sort === "release_date" ? "total_listen_count" : (rg) => rg.date || "",
+        sort === "release_date"
+          ? (rg) => rg.date || ""
+          : (rg) => rg.total_listen_count ?? 0,
+        sort === "release_date"
+          ? (rg) => rg.total_listen_count ?? 0
+          : (rg) => rg.date || "",
         "name",
       ],
       ["desc", "desc", "asc"]
@@ -167,7 +172,7 @@ export default function ArtistPage(): JSX.Element {
 
   const groupedReleaseGroups: Record<
     string,
-    ReleaseGroupWithSecondaryTypes[]
+    ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
     groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
@@ -275,6 +280,16 @@ export default function ArtistPage(): JSX.Element {
 
   const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
 
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
+
   return (
     <div id="entity-page" className="artist-page" role="main">
       <Helmet>
@@ -285,7 +300,7 @@ export default function ArtistPage(): JSX.Element {
           className="cover-art"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(
+            __html: DOMPurify.sanitize(
               coverArtSVG ??
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
@@ -308,7 +323,7 @@ export default function ArtistPage(): JSX.Element {
                 className="content"
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: sanitize(wikipediaExtract.content),
+                  __html: DOMPurify.sanitize(wikipediaExtract.content),
                 }}
               />
               <a
@@ -339,9 +354,7 @@ export default function ArtistPage(): JSX.Element {
               <Link
                 type="button"
                 className="btn btn-info"
-                to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                  artist?.name
-                )})&mode=easy`}
+                to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
               >
                 <FontAwesomeIcon icon={faPlayCircle} /> Radio
               </Link>
@@ -358,20 +371,16 @@ export default function ArtistPage(): JSX.Element {
               <ul className="dropdown-menu">
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                      artist?.name
-                    )})::nosim&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
                   >
-                    This artist
+                    Artist radio
                   </Link>
                 </li>
                 <li>
                   <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                      artist?.name
-                    )})&mode=easy`}
+                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
                   >
-                    Similar artists
+                    This artist only
                   </Link>
                 </li>
                 {Boolean(filteredTags?.length) && (
@@ -492,9 +501,7 @@ export default function ArtistPage(): JSX.Element {
                   (listener: { listen_count: number; user_name: string }) => {
                     return (
                       <div key={listener.user_name} className="listener">
-                        <Link to={`/user/${listener.user_name}/`}>
-                          {listener.user_name}
-                        </Link>
+                        <Username username={listener.user_name} />
                         <span className="badge badge-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
@@ -507,7 +514,11 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className={`discography ${expandDiscography ? "expanded" : ""}`}>
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
           {releaseGroupTypesNames.map(([type, rgGroup]) => (
             <div className="albums">
               <div className="listen-header">
@@ -525,7 +536,7 @@ export default function ArtistPage(): JSX.Element {
               </HorizontalScrollContainer>
             </div>
           ))}
-          {releaseGroupTypesNames.length >= 2 && (
+          {showFullDiscographyButton && (
             <div className="read-more mb-10">
               <button
                 type="button"
@@ -557,42 +568,32 @@ export default function ArtistPage(): JSX.Element {
       ) : null}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
-        {reviews?.length ? (
-          <>
-            <div className="review-cards">
-              {reviews.slice(0, 3).map(getReviewEventContent)}
+        <div className="row">
+          <div className="col-md-6">
+            <CBReview
+              artistEntity={{
+                type: "artist",
+                mbid: artistMBID,
+                name: artist?.name,
+              }}
+            />
+          </div>
+          {reviews?.length ? (
+            <div className="col-md-6">
+              <div className="review-cards">
+                {reviews.slice(0, 3).map(getReviewEventContent)}
+              </div>
+              <a
+                href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
+                className="critiquebrainz-button btn btn-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                More on CritiqueBrainz…
+              </a>
             </div>
-            <a
-              href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
-              className="critiquebrainz-button btn btn-link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              More on CritiqueBrainz…
-            </a>
-          </>
-        ) : (
-          <p>Be the first to review this artist on CritiqueBrainz</p>
-        )}
-        <button
-          type="button"
-          className="btn btn-info"
-          data-toggle="modal"
-          data-target="#CBReviewModal"
-          onClick={() => {
-            NiceModal.show(CBReviewModal, {
-              entityToReview: [
-                {
-                  type: "artist",
-                  mbid: artistMBID,
-                  name: artist?.name,
-                },
-              ],
-            });
-          }}
-        >
-          Add my review
-        </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -2,12 +2,10 @@ from datetime import datetime, date, time
 
 from more_itertools import chunked
 
-from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
-from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache
+from listenbrainz_spark.postgres.release_group import create_release_group_metadata_cache, get_release_group_metadata_cache
 
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens_from_dump, read_files_from_HDFS
-
+from listenbrainz_spark.listens.data import get_listens_from_dump
 
 USERS_PER_MESSAGE = 500
 
@@ -18,7 +16,7 @@ def get_new_releases_of_top_artists(year):
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
 
     create_release_group_metadata_cache()
-    read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME).createOrReplaceTempView("release_groups_all")
+    get_release_group_metadata_cache().createOrReplaceTempView("release_groups_all")
 
     new_releases = run_query(_get_new_releases_of_top_artists(year))
 

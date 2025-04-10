@@ -79,10 +79,12 @@ COUCHDB_USER = "listenbrainz"
 COUCHDB_ADMIN_KEY = "listenbrainz"
 
 # MusicBrainz OAuth
-MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
-MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
-MUSICBRAINZ_OAUTH_URL = f"{MUSICBRAINZ_BASE_URL}/oauth2/userinfo"
+OAUTH_CLIENT_ID = "CLIENT_ID"
+OAUTH_CLIENT_SECRET = "CLIENT_SECRET"
+OAUTH_AUTHORIZE_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/authorize"
+OAUTH_TOKEN_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/token"
+OAUTH_INTROSPECTION_URL = f"{MUSICBRAINZ_BASE_URL}/new-oauth2/introspect"
 
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
@@ -210,3 +212,7 @@ REJECT_NEW_USERS_WITHOUT_EMAIL = False
 
 # base directory for user data exports
 USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
+
+# Service monitoring -- only needed for MetaBrainz production
+SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
+SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""

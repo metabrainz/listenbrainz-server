@@ -9,6 +9,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
 from listenbrainz.background.background_tasks import get_task
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.webserver import create_web_app
 from listenbrainz.webserver.testing import ServerAppPerTestTestCase
@@ -70,8 +71,8 @@ class IndexViewsTestCase(IntegrationTestCase):
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, user_id)
-            self.assertEquals(task.task, "delete_user")
+            self.assertEqual(task.user_id, user_id)
+            self.assertEqual(task.task, "delete_user")
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
     @mock.patch('listenbrainz.background.background_tasks.add_task')
@@ -82,31 +83,26 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_authorize_mb_user_deleter.assert_called_with('312421')
         mock_add_task.assert_not_called()
 
-    @mock.patch('listenbrainz.webserver.views.index.requests.get')
-    def test_mb_user_deleter_valid_access_token(self, mock_requests_get):
-        mock_requests_get.return_value = MagicMock()
-        mock_requests_get.return_value.json.return_value = {
+    @mock.patch.object(MusicBrainzService, "get_user_info")
+    def test_mb_user_deleter_valid_access_token(self, mock_get_user_info):
+        mock_get_user_info.return_value = {
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007538,
         }
         user_id = db_user.create(self.db_conn,1, 'iliekcomputers')
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
-        mock_requests_get.assert_called_with(
-            'https://musicbrainz.org/oauth2/userinfo',
-            headers={'Authorization': 'Bearer 132'},
-        )
+        mock_get_user_info.assert_called_with('132')
         with self.app.app_context():
             task = get_task()
             self.assertIsNotNone(task)
-            self.assertEquals(task.user_id, user_id)
-            self.assertEquals(task.task, "delete_user")
+            self.assertEqual(task.user_id, user_id)
+            self.assertEqual(task.task, "delete_user")
 
-    @mock.patch('listenbrainz.webserver.views.index.requests.get')
+    @mock.patch.object(MusicBrainzService, "get_user_info")
     @mock.patch('listenbrainz.background.background_tasks.add_task')
-    def test_mb_user_deleter_invalid_access_tokens(self, mock_add_task, mock_requests_get):
-        mock_requests_get.return_value = MagicMock()
-        mock_requests_get.return_value.json.return_value = {
+    def test_mb_user_deleter_invalid_access_tokens(self, mock_add_task, mock_get_user_info):
+        mock_get_user_info.return_value = {
             'sub': 'UserDeleter',
             'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
         }
@@ -116,7 +112,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_add_task.assert_not_called()
 
         # no sub value
-        mock_requests_get.return_value.json.return_value = {
+        mock_get_user_info.return_value = {
             'metabrainz_user_id': 2007538,
         }
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
@@ -124,7 +120,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_add_task.assert_not_called()
 
         # no row id
-        mock_requests_get.return_value.json.return_value = {
+        mock_get_user_info.return_value = {
             'sub': 'UserDeleter',
         }
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
@@ -132,7 +128,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_add_task.assert_not_called()
 
         # incorrect username
-        mock_requests_get.return_value.json.return_value = {
+        mock_get_user_info.return_value = {
             'sub': 'iliekcomputers',
             'metabrainz_user_id': 2007538
         }
@@ -141,7 +137,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_add_task.assert_not_called()
 
         # everything incorrect
-        mock_requests_get.return_value.json.return_value = {
+        mock_get_user_info.return_value = {
             'sub': 'iliekcomputers',
             'metabrainz_user_id': 1,
         }
@@ -150,7 +146,7 @@ class IndexViewsTestCase(IntegrationTestCase):
         mock_add_task.assert_not_called()
 
         # HTTPError while getting userinfo from MusicBrainz
-        mock_requests_get.return_value.raise_for_status.side_effect = HTTPError
+        mock_get_user_info.side_effect = HTTPError
         r = self.client.get(self.custom_url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_add_task.assert_not_called()

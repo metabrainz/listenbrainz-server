@@ -139,6 +139,9 @@ class ListensImporter(abc.ABC):
         failure = 0
         for user in users:
             try:
+                if user['is_paused']:
+                    continue
+
                 self._listens_imported_since_last_update += self.process_one_user(user)
                 success += 1
             except (DatabaseException, DatabaseError, SQLAlchemyError):
@@ -153,7 +156,7 @@ class ListensImporter(abc.ABC):
             if time.monotonic() > self._metric_submission_time:
                 self._metric_submission_time += METRIC_UPDATE_INTERVAL
                 metrics.set(self.name, imported_listens=self._listens_imported_since_last_update)
-                _listens_imported_since_last_update = 0
+                self._listens_imported_since_last_update = 0
 
         current_app.logger.info('Processed %d users successfully!', success)
         current_app.logger.info('Encountered errors while processing %d users.', failure)
