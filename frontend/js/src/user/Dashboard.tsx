@@ -55,6 +55,8 @@ export type ListensProps = {
   userPinnedRecording?: PinnedRecording;
   playingNow?: Listen;
   already_reported_user: boolean;
+  searchStartTs: number;
+  searchEndTs: number;
 };
 
 type ListenLoaderData = ListensProps;
@@ -72,7 +74,7 @@ export default function Listen() {
     location.pathname
   );
 
-  const { data, refetch } = useQuery<ListenLoaderData>({
+  const { data, refetch, isLoading, isFetching } = useQuery<ListenLoaderData>({
     queryKey,
     queryFn,
     staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
@@ -87,6 +89,8 @@ export default function Listen() {
     latestListenTs = 0,
     oldestListenTs = 0,
     already_reported_user = false,
+    searchStartTs = 0,
+    searchEndTs = 0,
   } = data || {};
 
   const previousListenTs = listens[0]?.listened_at;
@@ -465,6 +469,17 @@ export default function Listen() {
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUsersPage = currentUser?.name === user?.name;
 
+  if (isLoading || isFetching) {
+    return (
+      <div role="main" id="dashboard">
+        <div>
+          <h2>Fetching listens...</h2>
+          <h4>This might take some time</h4>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div role="main" id="dashboard">
       <Helmet>
@@ -512,7 +527,7 @@ export default function Listen() {
           {user && <UserSocialNetwork user={user} />}
         </div>
         <div className="col-md-8 col-md-pull-4">
-          {!listens.length && (
+          {!listens.length && latestListenTs === 0 && oldestListenTs === 0 && (
             <div className="empty-listens">
               <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
               {isCurrentUsersPage ? (
@@ -559,7 +574,9 @@ export default function Listen() {
             </div>
           )}
           <div className="listen-header">
-            {listens.length === 0 ? (
+            {listens.length === 0 &&
+            latestListenTs === 0 &&
+            oldestListenTs === 0 ? (
               <div id="spacer" />
             ) : (
               <h3 className="header-with-line">Recent listens</h3>
@@ -671,7 +688,7 @@ export default function Listen() {
             </button>
           </div>
 
-          {listens.length > 0 && (
+          {listens.length >= 0 && latestListenTs > 0 && oldestListenTs > 0 && (
             <div>
               <div
                 id="listens"
@@ -681,9 +698,26 @@ export default function Listen() {
               >
                 {listens.map(getListenCard)}
               </div>
-              {listens.length < expectedListensPerPage && (
-                <h5 className="text-center">No more listens to show</h5>
-              )}
+
+              {listens.length < expectedListensPerPage &&
+                nextListenTs === oldestListenTs && (
+                  <h5 className="text-center">No more listens to show</h5>
+                )}
+              {listens.length < expectedListensPerPage &&
+                (nextListenTs > oldestListenTs || listens.length === 0) && (
+                  <div className="text-center">
+                    <Link
+                      role="button"
+                      className="btn btn-primary"
+                      aria-label="Load more listens"
+                      tabIndex={0}
+                      to={`?max_ts=${searchEndTs - 1}`}
+                    >
+                      Load more listens
+                    </Link>
+                  </div>
+                )}
+
               <ul className="pager" id="navigation">
                 <li
                   className={`previous ${

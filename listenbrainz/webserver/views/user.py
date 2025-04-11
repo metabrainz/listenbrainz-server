@@ -82,10 +82,12 @@ def profile(user_name):
         args['to_ts'] = datetime.fromtimestamp(max_ts, timezone.utc)
     elif min_ts:
         args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
-    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
+    data, min_ts_per_user, max_ts_per_user, search_start_ts, search_end_ts = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
     max_ts_per_user = int(max_ts_per_user.timestamp())
+    search_start_ts = int(search_start_ts.timestamp())
+    search_end_ts = int(search_end_ts.timestamp())
 
     listens = []
     for listen in data:
@@ -116,6 +118,9 @@ def profile(user_name):
         "playingNow": playing_now,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
         "already_reported_user": already_reported_user,
+        "searchStartTs": search_start_ts,
+        "searchEndTs": search_end_ts,
+
     }
 
     return jsonify(data)
