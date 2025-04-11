@@ -6,7 +6,7 @@ import {
   faComments,
   faEye,
   faEyeSlash,
-  faHandshake,
+  faHandHoldingHeart,
   faHeadphones,
   faHeart,
   faPaperPlane,
@@ -104,7 +104,7 @@ function getEventTypeIcon(eventType: EventTypeT) {
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return faPaperPlane;
     case EventType.THANKS:
-      return faHandshake;
+      return faHandHoldingHeart;
     default:
       return faQuestion;
   }
@@ -207,7 +207,45 @@ export default function UserFeedPage() {
 
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
   // Flatten the pages of events from the infite query
-  const events = pages?.map((page) => page.events).flat();
+  const events = pages?.map((page) => page.events).flat() ?? [];
+
+  // Events mentioned in thank you events but not part of current cache, fetched separately as needed
+  const [separatelyLoadedEvents, setSeparatelyLoadedEvents] = React.useState<TimelineEvent<EventMetadata>[]>([])
+
+  React.useEffect(() => {
+    async function fetchOGEvents(missingEventsIDs:number[]) {
+      // Prefetch each missing original event missing from thank you events
+      // separately from fetching the feed pages
+      const promises = missingEventsIDs.map( eventId => {
+        return queryClient.ensureQueryData({
+          queryKey: ['feed-event', eventId],
+          queryFn: () => APIService.getFeedEvent(eventId, currentUser.name, currentUser.auth_token as string),
+        });
+      });
+      const resultsArray:TimelineEvent<EventMetadata>[] = [];
+      const promiseResults = await Promise.allSettled(promises);
+      promiseResults.forEach((res,idx) => {
+        if(res.status === "fulfilled"){
+          resultsArray.push(res.value);
+        }
+        else{
+          // eslint-disable-next-line no-console
+          console.error(res.reason);
+        }
+      })
+      setSeparatelyLoadedEvents(resultsArray);
+    }
+    const feedEvents = data?.pages.map((page) => page.events).flat();
+    // Extract IDs of events referenced in thank you events currently in cache
+    const thankYouOriginalEventIds = feedEvents?.filter(ev => ev.event_type === EventType.THANKS).map(ev=>{
+      const metadata = ev.metadata as ThanksMetadata;
+      return metadata.original_event_id
+    })
+    const missingEventsIDs = thankYouOriginalEventIds?.filter(originalEventId=> !feedEvents?.some(ev=>ev.id === originalEventId))
+    if (missingEventsIDs?.length) {
+      fetchOGEvents(missingEventsIDs)
+    }
+  }, [data, APIService, currentUser, queryClient]);
 
   const listens = events
     ?.filter(isEventListenable)
@@ -419,9 +457,10 @@ export default function UserFeedPage() {
         <>
           { isThankable && (
             <ListenControl
-              title="Thanks"
+              title="Say thanks"
               text=""
-              icon={faHandshake}
+              icon={faHandHoldingHeart}
+              iconSize="lg"
               buttonClassName="btn btn-link btn-xs"
               action={() => {
                 NiceModal.show(ThanksModal, {
@@ -437,6 +476,7 @@ export default function UserFeedPage() {
             title="Unhide Event"
             text=""
             icon={faEye}
+            iconSize="lg"
             buttonClassName="btn btn-link btn-xs"
             action={() => {
               hideEventMutation(event);
@@ -447,6 +487,7 @@ export default function UserFeedPage() {
             title="Hide Event"
             text=""
             icon={faEyeSlash}
+            iconSize="lg"
             buttonClassName="btn btn-link btn-xs"
             action={() => {
               hideEventMutation(event);
@@ -457,6 +498,7 @@ export default function UserFeedPage() {
             title="Delete Event"
             text=""
             icon={faTrash}
+            iconSize="lg"
             buttonClassName="btn btn-link btn-xs"
             action={() => {
               deleteEventMutation(event);
@@ -626,7 +668,7 @@ export default function UserFeedPage() {
   };
 
   const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
-    if (!subEvent) return null;
+    if (!subEvent) return <div className="muted">This event was deleted or cannot be loaded</div>;
 
     return (
       <div>
@@ -776,13 +818,8 @@ export default function UserFeedPage() {
                     let subEventElement;
                     if(event_type === EventType.THANKS && !event.hidden){
                       const {original_event_id, original_event_type} = metadata as ThanksMetadata;
-                      const subEvent = events?.find(
-                        (evt) => evt.id === original_event_id && evt.event_type === original_event_type
-                      );
-                      if(!subEvent){
-                        // Search for the event?
-                        subEventElement = <div className="muted">Load more evens to preview this older event</div>
-                      }
+                      const filterMethod = (evt:TimelineEvent<EventMetadata> | undefined) => evt?.id === original_event_id && evt?.event_type === original_event_type;
+                      const subEvent = events?.find(filterMethod) || separatelyLoadedEvents?.find(filterMethod)
                       subEventElement = renderSubEvent(subEvent);
                     }
 
@@ -802,7 +839,7 @@ export default function UserFeedPage() {
                               <FontAwesomeIcon
                                 icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
-                                transform="shrink-4"
+                                transform="shrink-3"
                                 fixedWidth
                               />
                             </span>
