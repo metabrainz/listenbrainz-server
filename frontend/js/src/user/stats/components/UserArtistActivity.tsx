@@ -56,7 +56,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     const words = str.split(" ");
     const lines: string[] = [];
     let currentLine = words[0];
-    for (let i = 1; i < words.length; i++) {
+    for (let i = 1; i < words.length; i += 1) {
       if (currentLine.length + 1 + words[i].length <= maxLen) {
         currentLine += ` ${words[i]}`;
       } else {
