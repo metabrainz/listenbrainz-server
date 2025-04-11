@@ -462,10 +462,10 @@ def year_in_music(user_name, year: int = 2024):
 # Embedable widgets, return HTML page to embed in an iframe
 
 
-@user_bp.route("/<user_name>/embed/playing-now", methods=['GET'])
+@user_bp.get("/<user_name>/embed/playing-now/")
 def embed_playing_now(user_name):
-    # Which database to use to show playing_now stream.
-    playing_now_conn = webserver.redis_connection._redis
+    """ Returns either the HTML page that load the current playing-now for a user
+     or the HTMX fragment consisting only in the playing-now card HTML markup """
 
     user = _get_user(user_name)
     if not user:
@@ -474,18 +474,90 @@ def embed_playing_now(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
+    # If the request has HTMX headers, return partial content for the pin
+    if current_app.htmx:
+        return render_playing_now_card(user=user)
+
+    # Otherwise return the container page
+    return render_template(
+        "widgets/playing_now.html", user_name=user_name
+    )
+
+
+def render_playing_now_card(user):
+    """ Returns the HTMX fragment consisting only in the playing-now card HTML markup """
+    # Which database to use to show playing_now stream.
+    playing_now_conn = webserver.redis_connection._redis
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
     playing_now = playing_now_conn.get_playing_now(user.id)
-    if playing_now:
-        playing_now = playing_now.to_api()
+    if playing_now is None:
+        return render_template(
+            "widgets/playing_now_card.html",
+            user_name=user_name,
+            no_playing_now=True
+        )
 
-    return render_template("widgets/playing_now.html", user_name=user_name, playing_now=playing_now)
+    playing_now = playing_now.to_api()
 
-# Embedable widgets, return HTML page to embed in an iframe
+    metadata = playing_now.get("track_metadata", {})
+    mbid_mapping = metadata.get("mbid_mapping", {})
+    additional_info = metadata.get("additional_info", {})
+
+    caa_id = mbid_mapping.get("caa_id")
+    caa_release_mbid = mbid_mapping.get("caa_release_mbid")
+    release_cover_art_src = None
+    if caa_id is not None and caa_release_mbid is not None:
+        release_cover_art_src = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb250.jpg"
+    release_mbid = (
+        additional_info.get("release_mbid")
+        or metadata.get("release_mbid")
+        or mbid_mapping.get("release_mbid")
+    )
+    release_name = metadata.get("release_name") or metadata.get(
+        "mbid_mapping").get("release_name")
+
+    recording_mbid = (
+        additional_info.get("recording_mbid")
+        or mbid_mapping.get("recording_mbid")
+    )
+    recording_name = metadata.get("track_name") or metadata.get(
+        "mbid_mapping").get("recording_name")
+
+    artist_mbids_list = mbid_mapping.get("artist_mbids")
+    artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
+    artist_name = metadata.get("artist_name")
+
+    duration_ms = additional_info.get("duration_ms")
+    if duration_ms:
+        track_seconds = round(duration_ms / 1000)
+        hours, remainder = divmod(track_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours > 0:
+            duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+        else:
+            duration = '{:d}:{:02d}'.format(minutes, seconds)
+
+    return render_template(
+        "widgets/playing_now_card.html",
+        user_name=user_name,
+        release_cover_art_src=release_cover_art_src,
+        release_mbid=release_mbid,
+        release_name=release_name,
+        recording_mbid=recording_mbid,
+        recording_name=recording_name,
+        artist_mbid=artist_mbid,
+        artist_name=artist_name,
+        duration=duration
+    )
 
 
 @user_bp.get("/<user_name>/embed/pin/")
 def embed_pin(user_name):
-
+    """ Returns either the HTML page that load the current pin for a user
+     or the HTMX fragment consisting only in the pin HTML markup """
     user = _get_user(user_name)
     if not user:
         return jsonify({"error": "Cannot find user: %s" % user_name}), 404
@@ -504,7 +576,7 @@ def embed_pin(user_name):
 
 
 def render_pin_card(user):
-
+    """ Returns the HTMX fragment consisting only in the pin HTML markup """
     user_name = user.musicbrainz_id
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
@@ -520,6 +592,7 @@ def render_pin_card(user):
 
     metadata = pin.get("track_metadata", {})
     mbid_mapping = metadata.get("mbid_mapping", {})
+    additional_info = metadata.get("additional_info", {})
 
     caa_id = mbid_mapping.get("caa_id")
     caa_release_mbid = mbid_mapping.get("caa_release_mbid")
@@ -527,7 +600,7 @@ def render_pin_card(user):
     if caa_id is not None and caa_release_mbid is not None:
         release_cover_art_src = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb250.jpg"
     release_mbid = (
-        metadata.get("additional_info").get("release_mbid")
+        additional_info.get("release_mbid")
         or metadata.get("release_mbid")
         or mbid_mapping.get("release_mbid")
     )
@@ -536,7 +609,7 @@ def render_pin_card(user):
 
     recording_mbid = (
         pin.get("recording_mbid")
-        or metadata.get("additional_info").get("recording_mbid")
+        or additional_info.get("recording_mbid")
         or mbid_mapping.get("recording_mbid")
     )
     recording_name = metadata.get("track_name") or metadata.get(
@@ -546,9 +619,12 @@ def render_pin_card(user):
     artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
     artist_name = metadata.get("artist_name")
 
+    pin_date = datetime.fromtimestamp(
+        pin.get("created")).strftime("%b %d, %H:%M %p")
+
     # We could show the duration, needs the proper formatting
     # Something like:
-    # track_seconds = round(metadata.additional_info.duration_ms / 1000)
+    # track_seconds = round(additional_info.get("duration_ms") / 1000)
     # hours,remainder = divmod(track_seconds,3600)
     # minutes,seconds = divmod(remainder,60)
     # duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
@@ -563,7 +639,7 @@ def render_pin_card(user):
         recording_name=recording_name,
         artist_mbid=artist_mbid,
         artist_name=artist_name,
-        pin_date=datetime.fromtimestamp(pin.get("created")),
+        pin_date=pin_date,
         blurb_content=pin.get("blurb_content"),
     )
 
