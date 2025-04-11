@@ -485,7 +485,6 @@ def embed_playing_now(user_name):
 
 @user_bp.get("/<user_name>/embed/pin/")
 def embed_pin(user_name):
-    # Which database to use to show playing_now stream.
 
     user = _get_user(user_name)
     if not user:
@@ -494,25 +493,18 @@ def embed_pin(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    pin = get_current_pin_for_user(db_conn, user_id=user.id)
-    if pin:
-        pin = fetch_track_metadata_for_items(
-            webserver.ts_conn, [pin])[0].to_api()
+    # If the request has HTMX headers, return partial content for the pin
+    if current_app.htmx:
+        return render_pin_card(user=user)
 
+    # Otherwise return the container page
     return render_template(
         "widgets/pin.html", user_name=user_name
     )
 
 
-@user_bp.get("/<user_name>/embed/pin/content/")
-def render_pin_card(user_name):
-    # Which database to use to show playing_now stream.
+def render_pin_card(user):
 
-    user = _get_user(user_name)
-    if not user:
-        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
-
-    # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
