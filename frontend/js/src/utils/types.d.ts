@@ -292,6 +292,7 @@ declare type UserArtistActivityResponse = {
   result: Array<{
     name: string;
     listen_count: number;
+    artist_mbid: string | null;
     albums: Array<{
       name: string;
       listen_count: number;

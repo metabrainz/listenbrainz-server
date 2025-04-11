@@ -19,7 +19,8 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
-from listenbrainz.webserver import db_conn
+from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -408,33 +409,67 @@ def get_listening_activity(user_name: str):
         "last_updated": stats.last_updated
     }})
 
-def _get_artist_activity(release_groups_list):
-    result = defaultdict(lambda: {"listen_count": 0, "albums": {}})
- 
-    for release_group in release_groups_list:
-        artist_names = release_group["artist_name"].split(",")
-        listen_count = release_group["listen_count"]
-        release_group_name = release_group["release_group_name"]
-        release_group_mbid = release_group.get("release_group_mbid")
- 
-        for artist_name in artist_names:
-            artist_entry = result[artist_name]
-            artist_entry["listen_count"] += listen_count
- 
-            if release_group_name in artist_entry["albums"]:
-                artist_entry["albums"][release_group_name]["listen_count"] += listen_count
-            else:
-                artist_entry["albums"][release_group_name] = {
-                    "name": release_group_name,
-                    "listen_count": listen_count,
-                    "release_group_mbid": release_group_mbid,
-                }
- 
-    for artist_name, artist_data in result.items():
-        artist_data["name"] = artist_name
-        artist_data["albums"] = list(artist_data["albums"].values())
 
-    return heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
+def _build_artist_activity_entries(result, artist_name, artist_mbid, release_group):
+    listen_count = release_group["listen_count"]
+    release_group_name = release_group["release_group_name"]
+    release_group_mbid = release_group.get("release_group_mbid")
+
+    artist_key = artist_mbid if artist_mbid else artist_name
+    release_group_key = release_group_mbid if release_group_mbid else release_group_name
+
+    if artist_key in result:
+        artist_entry = result[artist_key]
+        artist_entry["listen_count"] += listen_count
+    else:
+        artist_entry = {
+            "name": artist_name,
+            "artist_mbid": artist_mbid,
+            "listen_count": listen_count,
+            "albums": {}
+        }
+        result[artist_key] = artist_entry
+
+    if release_group_key in artist_entry["albums"]:
+        artist_entry["albums"][release_group_key]["listen_count"] += listen_count
+    else:
+        artist_entry["albums"][release_group_key] = {
+            "name": release_group_name,
+            "listen_count": listen_count,
+            "release_group_mbid": release_group_mbid,
+        }
+
+
+def _get_artist_activity(release_groups_list):
+    result = {}
+    for release_group in release_groups_list:
+        if artists := release_group.get("artists"):
+            for artist in artists:
+                artist_name = artist["artist_credit_name"]
+                artist_mbid = artist["artist_mbid"]
+                _build_artist_activity_entries(result, artist_name, artist_mbid, release_group)
+        else:
+            _build_artist_activity_entries(result, release_group["artist_name"], None, release_group)
+
+    for item in result.values():
+        item["albums"] = list(item["albums"].values())
+
+    top_results = heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
+    artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
+    metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+
+    # replace credited artist name on release group with artist name where possible
+    artist_mbid_name_map = {}
+    for item in metadata:
+        artist_mbid_name_map[str(item.artist_mbid)] = item.artist_data["name"]
+
+    for result in top_results:
+        artist_mbid = result["artist_mbid"]
+        if artist_mbid in artist_mbid_name_map:
+            result["artist_name"] = artist_mbid_name_map[artist_mbid]
+
+    return top_results
+
 
 @stats_api_bp.get("/user/<user_name>/artist-activity")
 @crossdomain
