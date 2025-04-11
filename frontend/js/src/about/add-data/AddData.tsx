@@ -375,7 +375,7 @@ export default function AddData() {
         into automatic Spotify submissions you may notice duplicates for your
         last 50 Spotify listens.
       </p>
-    <ul>
+      <ul>
         <li>
           <em>
             <Link to="/settings/music-services/details/">
