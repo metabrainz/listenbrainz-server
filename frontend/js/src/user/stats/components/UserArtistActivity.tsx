@@ -54,11 +54,11 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
 
   const wrapWordsByLength = (str: string, maxLen: number): string => {
     const words = str.split(" ");
-    let lines: string[] = [];
+    const lines: string[] = [];
     let currentLine = words[0];
     for (let i = 1; i < words.length; i++) {
       if (currentLine.length + 1 + words[i].length <= maxLen) {
-        currentLine += " " + words[i];
+        currentLine += ` ${words[i]}`;
       } else {
         lines.push(currentLine);
         currentLine = words[i];
