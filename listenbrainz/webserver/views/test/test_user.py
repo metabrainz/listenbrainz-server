@@ -152,7 +152,7 @@ class UserViewsTestCase(IntegrationTestCase):
     def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         user = self.user.to_dict()
-        timescale.return_value = ([], EPOCH, EPOCH)
+        timescale.return_value = ([], EPOCH, EPOCH, EPOCH, EPOCH)
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
         req_call = mock.call(user, limit=25)

@@ -164,7 +164,7 @@ def get_listens(user_name):
     if min_ts and max_ts and min_ts >= max_ts:
         raise APIBadRequest("min_ts should be less than max_ts")
 
-    listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
+    listens, min_ts_per_user, max_ts_per_user, _, _ = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
         from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
