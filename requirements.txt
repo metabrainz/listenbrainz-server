@@ -51,3 +51,4 @@ packaging~=23.1
 feedgen==1.0.0
 WTForms<=3.1.2
 requests-oauthlib==2.0.0
+flask-htmx==0.4.0
