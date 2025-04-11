@@ -333,16 +333,17 @@ class TimescaleListenStore:
                     if to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS:
                         done = True
                         break
+                    
+                    # Move window only when the next pass is valid.
+                    if passes < MAX_PASS:
+                        if to_dynamic:
+                            from_ts += window_size - timedelta(seconds=1)
+                            window_size *= WINDOW_SIZE_MULTIPLIER
+                            to_ts += window_size
 
-                    if to_dynamic:
-                        from_ts += window_size - timedelta(seconds=1)
-                        window_size *= WINDOW_SIZE_MULTIPLIER
-                        to_ts += window_size
-
-                    if from_dynamic:
-                        to_ts -= window_size
-                        window_size *= WINDOW_SIZE_MULTIPLIER
-                        if passes < MAX_PASS: # Move window only when the next pass is valid.
+                        if from_dynamic:
+                            to_ts -= window_size
+                            window_size *= WINDOW_SIZE_MULTIPLIER
                             from_ts -= window_size
 
                     break
