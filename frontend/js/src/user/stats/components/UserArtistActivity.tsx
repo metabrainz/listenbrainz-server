@@ -52,15 +52,28 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     errorMessage = "",
   } = loaderData || {};
 
+  const wrapWordsByLength = (str: string, maxLen: number): string => {
+    const words = str.split(" ");
+    let lines: string[] = [];
+    let currentLine = words[0];
+    for (let i = 1; i < words.length; i++) {
+      if (currentLine.length + 1 + words[i].length <= maxLen) {
+        currentLine += " " + words[i];
+      } else {
+        lines.push(currentLine);
+        currentLine = words[i];
+      }
+    }
+    lines.push(currentLine);
+    return lines.join("\n");
+  };
+
   const processData = (data?: UserArtistActivityResponse) => {
     if (!data || !data.result || data.result.length === 0) {
       return [];
     }
     return data.result.map((artist) => {
-      let wrappedLabel = artist.name.replace(/(.{14})/g, "$1-\n");
-      if (wrappedLabel.endsWith("-\n")) {
-        wrappedLabel = wrappedLabel.slice(0, -2); // Remove the last hyphen and keep the newline
-      }
+      const wrappedLabel = wrapWordsByLength(artist.name, 14);
       return {
         label: wrappedLabel,
         ...artist.albums.reduce(
