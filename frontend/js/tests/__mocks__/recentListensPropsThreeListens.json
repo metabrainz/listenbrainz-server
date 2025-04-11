@@ -145,6 +145,8 @@
   ],
   "oldestListenTs": 1653503416,
   "latestListenTs": 1653588533,
+  "searchStartTs": 1653588533,
+  "searchEndTs": 1619892533,
   "spotify": {
     "access_token": "access token",
     "permission": [

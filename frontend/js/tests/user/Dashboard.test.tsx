@@ -37,6 +37,8 @@ const {
   oldestListenTs,
   user,
   userPinnedRecording,
+  searchStartTs,
+  searchEndTs,
 } = recentListensProps;
 
 const props: ListensProps = {
@@ -44,6 +46,8 @@ const props: ListensProps = {
   listens,
   oldestListenTs,
   user,
+  searchStartTs,
+  searchEndTs,
   userPinnedRecording,
   already_reported_user: false,
 };
