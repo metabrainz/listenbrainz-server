@@ -146,7 +146,7 @@ class TestTimescaleListenStore(DatabaseTestCase, TimescaleTestCase):
 
         # test from_ts with gaps
         from_ts = datetime.fromtimestamp(1399999999, timezone.utc)
-        listens, min_ts, max_ts = self.logstore.fetch_listens(user=self.testuser, from_ts=from_ts)
+        listens, min_ts, max_ts, _, _ = self.logstore.fetch_listens(user=self.testuser, from_ts=from_ts)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1420000050)
         self.assertEqual(listens[1].ts_since_epoch, 1420000000)
