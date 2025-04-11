@@ -483,7 +483,7 @@ def embed_playing_now(user_name):
 # Embedable widgets, return HTML page to embed in an iframe
 
 
-@user_bp.route("/<user_name>/embed/pin", methods=['GET'])
+@user_bp.get("/<user_name>/embed/pin/")
 def embed_pin(user_name):
     # Which database to use to show playing_now stream.
 
@@ -499,7 +499,81 @@ def embed_pin(user_name):
         pin = fetch_track_metadata_for_items(
             webserver.ts_conn, [pin])[0].to_api()
 
-    return render_template("widgets/pin.html", user_name=user_name, pinned_recording=pin)
+    return render_template(
+        "widgets/pin.html", user_name=user_name
+    )
+
+
+@user_bp.get("/<user_name>/embed/pin/content/")
+def render_pin_card(user_name):
+    # Which database to use to show playing_now stream.
+
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
+    pin = get_current_pin_for_user(db_conn, user_id=user.id)
+    if pin is None:
+        return render_template(
+            "widgets/pin_card.html",
+            user_name=user_name,
+            no_pin=True
+        )
+
+    pin = fetch_track_metadata_for_items(
+        webserver.ts_conn, [pin])[0].to_api()
+
+    metadata = pin.get("track_metadata", {})
+    mbid_mapping = metadata.get("mbid_mapping", {})
+
+    caa_id = mbid_mapping.get("caa_id")
+    caa_release_mbid = mbid_mapping.get("caa_release_mbid")
+    release_cover_art_src = None
+    if caa_id is not None and caa_release_mbid is not None:
+        release_cover_art_src = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb250.jpg"
+    release_mbid = (
+        metadata.get("additional_info").get("release_mbid")
+        or metadata.get("release_mbid")
+        or mbid_mapping.get("release_mbid")
+    )
+    release_name = metadata.get("release_name") or metadata.get(
+        "mbid_mapping").get("release_name")
+
+    recording_mbid = (
+        pin.get("recording_mbid")
+        or metadata.get("additional_info").get("recording_mbid")
+        or mbid_mapping.get("recording_mbid")
+    )
+    recording_name = metadata.get("track_name") or metadata.get(
+        "mbid_mapping").get("recording_name")
+
+    artist_mbids_list = mbid_mapping.get("artist_mbids")
+    artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
+    artist_name = metadata.get("artist_name")
+
+    # We could show the duration, needs the proper formatting
+    # Something like:
+    # track_seconds = round(metadata.additional_info.duration_ms / 1000)
+    # hours,remainder = divmod(track_seconds,3600)
+    # minutes,seconds = divmod(remainder,60)
+    # duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+
+    return render_template(
+        "widgets/pin_card.html",
+        user_name=user_name,
+        release_cover_art_src=release_cover_art_src,
+        release_mbid=release_mbid,
+        release_name=release_name,
+        recording_mbid=recording_mbid,
+        recording_name=recording_name,
+        artist_mbid=artist_mbid,
+        artist_name=artist_name,
+        pin_date=datetime.fromtimestamp(pin.get("created")),
+        blurb_content=pin.get("blurb_content"),
+    )
 
 
 @user_bp.get("/<user_name>/",  defaults={'path': ''})

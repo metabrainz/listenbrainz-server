@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    {%- block head -%}
     <meta charset="utf-8" />
     <title>
-      {% block title %}{{user_name|safe}}'s' pin - ListenBrainz{% endblock
-      %}
+      {{user_name|safe}}'s' pin - ListenBrainz
     </title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
@@ -64,191 +62,18 @@
       href="{{ url_for('static', filename='img/favicon-32.png') }}"
       type="image/png"
     />
+    <script src="{{ url_for('static', filename='js/lib/htmx.min.js') }}"></script>
 
-    {# The css file has a .less extension in the manifest file entry (due to its
-    original name in Webpack entry) #}
     <link
-      href="{{ get_static_path('main.less') }}"
+      href="{{ url_for('static', filename='css/widgets.css') }}"
       rel="stylesheet"
       media="screen"
     />
-    {%- endblock -%}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/timeago.js/2.0.2/timeago.min.js" integrity="sha512-sl01o/gVwybF1FNzqO4NDRDNPJDupfN0o2+tMm4K2/nr35FjGlxlvXZ6kK6faa9zhXbnfLIXioHnExuwJdlTMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   </head>
 
   <body>
-    <div class="card listen-card pinned-recording-card currently-pinned" id="pin-card" style="max-width: 650px; min-width: 350px;">
-    </div>
+    <div hx-target="#pin-container" hx-get="./content/" hx-trigger="load"></div>
+    <div id="pin-container"></div>
     <div id="error"></div>
-
-    <script>
-      const userName = "{{ user_name | safe }}";
-      let pinnedRecording = {{ pinned_recording|tojson }};
-
-      // More options can be passed as search parameters in the URL
-      let url = new URL(location);
-    
-      // Copying the required helper functions
-      // so as to avoid loading big JS files
-      function pad(num) {
-        return `${num}`.padStart(2, "0");
-      }
-      function millisecondsToStr(milliseconds) {
-        const asSeconds = milliseconds / 1000;
-
-        let hours;
-        let minutes = Math.floor(asSeconds / 60);
-        const seconds = Math.floor(asSeconds % 60);
-
-        if (minutes > 59) {
-          hours = Math.floor(minutes / 60);
-          minutes %= 60;
-        }
-
-        return hours
-          ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-          : `${minutes}:${pad(seconds)}`;
-      } 
-      function updatePage() {
-        if (!pinnedRecording?.track_metadata) {
-          console.error("No track metadata in pinned_recording object: ", pinnedRecording);
-          return;
-        }
-        const metadata = pinnedRecording.track_metadata;
-        const releaseName =
-          metadata.release_name ?? metadata.mbid_mapping?.release_name;
-        const releaseMBID =
-          metadata.additional_info?.release_mbid ??
-          metadata.release_mbid ??
-          metadata.mbid_mapping?.release_mbid;
-        const recordingMBID =
-          pinnedRecording.recording_mbid ??
-          metadata.additional_info?.recording_mbid ??
-          metadata.mbid_mapping?.recording_mbid;
-        const recordingName =
-          metadata.track_name ?? metadata.mbid_mapping?.recording_name;
-        const artistName = metadata.artist_name;
-        const artistMBID = metadata.mbid_mapping?.artist_mbids?.[0];
-        const duration =
-          metadata.additional_info?.duration_ms &&
-          millisecondsToStr(metadata.additional_info?.duration_ms);
-        // pinnedRecording.pinned_until is also available,
-        // but not sure we want to do anything with it here
-        const pin_date = 
-          pinnedRecording.created &&
-          timeago().format(pinnedRecording.created * 1000);
-
-        const caaId = metadata.mbid_mapping?.caa_id;
-        const caaReleaseMBID = metadata.mbid_mapping?.caa_release_mbid;
-        let releaseCoverArtSrc;
-        if (caaId && caaReleaseMBID) {
-          releaseCoverArtSrc = `https://archive.org/download/mbid-${caaReleaseMBID}/mbid-${caaReleaseMBID}-${caaId}_thumb250.jpg`;
-        }
-
-        const blurbContent = "";
-
-        if(pinnedRecording.blurb_content){
-            blurbContent = `
-                <div class="additional-content">
-                    <div class="blurb-content">
-                        "${pinnedRecording.blurb_content}"
-                    </div>
-                </div>
-            `
-        }
-
-        document.getElementById("pin-card").innerHTML = `
-            <div class="main-content">
-                ${releaseCoverArtSrc ? `<div class="listen-thumbnail">
-                    <a
-                    title="${releaseName}"
-                    href="https://listenbrainz.org/release/${releaseMBID}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    ><img
-                    src="${releaseCoverArtSrc}"
-                    alt="${releaseName}"
-                    /></a>
-                </div>` : ""}
-                <div class="listen-details">
-                    <div class="title-duration">
-                    <div title="${recordingName}" class="ellipsis-2-lines">
-                    <a
-                        href="https://musicbrainz.org/recording/${recordingMBID}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >${recordingName}</a
-                    >
-                    </div>
-                    <div class="small text-muted" title="Duration">${
-                        duration ?? ""
-                    }</div>
-                    </div>
-                    <div class="small text-muted ellipsis" title="${artistName}">
-                    ${artistMBID ? `<a title="${artistName}" href="https://listenbrainz.org/artist/${artistMBID}/"
-                    target="_blank" rel="noopener noreferrer">
-                        ${artistName}
-                    </a>` : artistName}
-                    </div>
-                </div>
-                <div class="right-section">
-                    <div class="username-and-timestamp">
-                        <a title="${userName}" href="https://listenbrainz.org/user/${userName}/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        >${userName}</a>
-                        <span class="listen-time">pinned on ListenBrainz</span>
-                    </div>
-                </div>
-                <div class="pinned-recording-icon">
-                    <span class="icon">
-                        <svg aria-hidden="true" focusable="false" style="height: 1em; vertical-align: -0.125em;" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-                            <path fill="currentColor" d="M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z"></path>
-                        </svg>
-                    </span>
-                    <span class="listen-time">${pin_date ??""}</span>
-                </div>
-            </div>
-            ${blurbContent}
-        `;
-      }
-
-      async function fetchCurrentPin() {
-        console.debug("Fetching pin");
-        try {
-          let response = await fetch(
-            `https://api.listenbrainz.org/1/user/${userName}/pins/current/`
-          );
-          if (response.ok) {
-            document.getElementById("error").innerHTML = "";
-            const body = await response.json();
-
-            if (!body?.pinned_recording) {
-              document.getElementById(
-                "pin-card"
-              ).innerHTML = `<div class="main-content">
-                No current pinned track for <a title="${userName}"
-                    href="https://listenbrainz.org/user/${userName}/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >${userName}</a></div>`;
-            } else {
-              pinnedRecording = body.pinned_recording;
-              updatePage();
-            }
-          } else {
-            throw response.statusText;
-          }
-        } catch (error) {
-          document.getElementById("error").innerHTML =
-            "Something went wrong: " + error.toString();
-        }
-      }
-      if (pinnedRecording) {
-        updatePage();
-      } else if (userName) {
-        fetchCurrentPin();
-      }
-    </script>
   </body>
 </html>
