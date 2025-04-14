@@ -535,6 +535,7 @@ def render_playing_now_card(user):
     artist_name = metadata.get("artist_name")
 
     duration_ms = additional_info.get("duration_ms")
+    duration = None
     if duration_ms:
         track_seconds = round(duration_ms / 1000)
         hours, remainder = divmod(track_seconds, 3600)

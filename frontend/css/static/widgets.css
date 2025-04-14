@@ -1,6 +1,7 @@
 .card {
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid lightgrey;
     box-shadow: rgba(192, 192, 192, 0.1) 0px 1px 1px 0px,
         rgba(192, 192, 192, 0.15) 0px 2px 2px 0px,
         rgba(192, 192, 192, 0.2) 0px 4px 4px 0px;
@@ -16,11 +17,8 @@
     padding: 15px;
 }
 
-
 .card .main-content {
-    height: 4em;
     display: flex;
-    flex-wrap: wrap;
 }
 
 .card .main-content>div {
@@ -29,14 +27,28 @@
     flex: 1 1 0%;
 }
 
-.card .main-content>.pinned-recording-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-right: 1em;
-    justify-content: center;
-    flex: 0 1 0%;
+.card .main-content>div.listen-thumbnail {
+    min-width: 66px;
+    flex: 0;
+    margin: -15px;
+    margin-right: 2em;
+    aspect-ratio: 1;
+    display: block;
 }
+
+.card .main-content .listen-thumbnail>a {
+    height: 100%;
+    width: inherit;
+    aspect-ratio: 1;
+    display: block;
+}
+
+.card .main-content .listen-thumbnail>a img {
+    height: inherit;
+    width: inherit;
+    object-fit: cover;
+}
+
 
 .card .main-content .listen-details {
     flex-direction: column;
@@ -119,4 +131,17 @@
 
 .pinned-recording-card .additional-content {
     border-top-color: #8c87cc;
+}
+
+.pinned-recording-card .main-content>.pinned-recording-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 0%;
+}
+
+.pinned-recording-card .main-content>.pinned-recording-icon .icon {
+    font-size: 1.6em;
+    margin: auto;
 }
