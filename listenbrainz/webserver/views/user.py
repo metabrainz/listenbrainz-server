@@ -520,15 +520,15 @@ def render_playing_now_card(user):
         or metadata.get("release_mbid")
         or mbid_mapping.get("release_mbid")
     )
-    release_name = metadata.get("release_name") or metadata.get(
-        "mbid_mapping").get("release_name")
+    release_name = metadata.get(
+        "release_name") or mbid_mapping.get("release_name")
 
     recording_mbid = (
         additional_info.get("recording_mbid")
         or mbid_mapping.get("recording_mbid")
     )
-    recording_name = metadata.get("track_name") or metadata.get(
-        "mbid_mapping").get("recording_name")
+    recording_name = metadata.get(
+        "track_name") or mbid_mapping.get("recording_name")
 
     artist_mbids_list = mbid_mapping.get("artist_mbids")
     artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
@@ -609,16 +609,16 @@ def render_pin_card(user):
         or metadata.get("release_mbid")
         or mbid_mapping.get("release_mbid")
     )
-    release_name = metadata.get("release_name") or metadata.get(
-        "mbid_mapping").get("release_name")
+    release_name = metadata.get(
+        "release_name") or mbid_mapping.get("release_name")
 
     recording_mbid = (
         pin.get("recording_mbid")
         or additional_info.get("recording_mbid")
         or mbid_mapping.get("recording_mbid")
     )
-    recording_name = metadata.get("track_name") or metadata.get(
-        "mbid_mapping").get("recording_name")
+    recording_name = metadata.get(
+        "track_name") or mbid_mapping.get("recording_name")
 
     artist_mbids_list = mbid_mapping.get("artist_mbids")
     artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
