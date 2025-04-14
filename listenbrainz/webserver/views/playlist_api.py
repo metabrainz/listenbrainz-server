@@ -853,7 +853,7 @@ def copy_playlist(playlist_mbid):
     return jsonify({'status': 'ok', 'playlist_mbid': new_playlist.mbid})
 
 
-@playlist_api_bp.post("/<playlist_mbid>/export/<service>")
+@playlist_api_bp.route("/<playlist_mbid>/export/<service>", methods=["POST", "OPTIONS"])
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -908,8 +908,6 @@ def export_playlist(playlist_mbid, service):
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
-    except Exception as e:
-        raise APIError(str(e), 500)
 
 
 @playlist_api_bp.get("/import/<service>")
@@ -1041,7 +1039,7 @@ def import_tracks_from_apple_playlist(playlist_id):
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
 
 
-@playlist_api_bp.get("/soundcloud/<playlist_id>/tracks", methods=["GET", "OPTIONS"])
+@playlist_api_bp.get("/soundcloud/<playlist_id>/tracks")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -1065,58 +1063,6 @@ def import_tracks_from_soundcloud_playlist(playlist_id):
     try:
         playlist = import_from_soundcloud(token["access_token"], user["auth_token"], playlist_id)
         return playlist
-    except requests.exceptions.HTTPError as exc:
-        error = exc.response.json()
-        raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)
-
-
-@playlist_api_bp.route("/<playlist_mbid>/export/<service>", methods=["POST", "OPTIONS"])
-@crossdomain
-@ratelimit()
-@api_listenstore_needed
-def export_playlist(playlist_mbid, service):
-    """
-
-    Export a playlist to an external service, given a playlist MBID.
-
-    :reqheader Authorization: Token <user token>
-    :param playlist_mbid: The playlist mbid to export.
-    :param is_public: Should the exported playlist be public or not?
-    :statuscode 200: playlist copied.
-    :statuscode 401: invalid authorization. See error message for details.
-    :statuscode 404: Playlist not found
-    :resheader Content-Type: *application/json*
-    """
-    user = validate_auth_header()
-
-    if not is_valid_uuid(playlist_mbid):
-        log_raise_400("Provided playlist ID is invalid.")
-
-    if service != "spotify" and service != "soundcloud":
-        raise APIBadRequest(f"Service {service} is not supported. We currently only support 'spotify', 'apple_music' and 'soundcloud'.")
-
-    if service == "spotify":
-        spotify_service = SpotifyService()
-        token = spotify_service.get_user(user["id"], refresh=True)
-    elif service == "soundcloud":
-        soundcloud_service = SoundCloudService()
-        token = soundcloud_service.get_user(user["id"])
-
-    if not token:
-        raise APIBadRequest(f"Service {service} is not linked. Please link your {service} account first.")
-
-    if service == 'spotify' and not SPOTIFY_PLAYLIST_PERMISSIONS.issubset(set(token["scopes"])):
-        raise APIBadRequest(f"Missing scopes playlist-modify-public and playlist-modify-private to export playlists."
-                            f" Please relink your {service} account from ListenBrainz settings with appropriate scopes"
-                            f" to use this feature.")
-
-    is_public = parse_boolean_arg("is_public", True)
-    try:
-        if service == "spotify":
-            url = export_to_spotify(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
-        else:
-            url = export_to_soundcloud(user["auth_token"], token["access_token"], is_public, playlist_mbid=playlist_mbid)
-        return jsonify({"external_url": url})
     except requests.exceptions.HTTPError as exc:
         error = exc.response.json()
         raise APIError(error.get("error") or exc.response.reason, exc.response.status_code)

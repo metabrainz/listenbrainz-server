@@ -360,49 +360,50 @@ export default class UserPlaylists extends React.Component<
                       onClick={() => {
                         NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
                           ImportSoundCloudPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    data-toggle="modal"
-                    data-target="#ImportMusicServicePlaylistModal"
-                  >
-                    <FontAwesomeIcon icon={faSoundcloud} />
-                    &nbsp;SoundCloud
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                        ImportPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
-                      });
-                    }}
-                    data-toggle="modal"
-                    data-target="#ImportPlaylistModal"
-                  >
-                    <FontAwesomeIcon icon={faFileImport} />
-                    &nbsp;Upload JSPF file
-                  </button>
-                </li>
-              </ul>
-            </div>
-          )}</div>
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#ImportMusicServicePlaylistModal"
+                    >
+                      <FontAwesomeIcon icon={faSoundcloud} />
+                      &nbsp;SoundCloud
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                          ImportPlaylistModal
+                        ).then((playlist) => {
+                          if (Array.isArray(playlist)) {
+                            playlist.forEach((p: JSPFPlaylist) => {
+                              this.onPlaylistCreated(p);
+                            });
+                          } else {
+                            this.onPlaylistCreated(playlist);
+                          }
+                        });
+                      }}
+                      data-toggle="modal"
+                      data-target="#ImportPlaylistModal"
+                    >
+                      <FontAwesomeIcon icon={faFileImport} />
+                      &nbsp;Upload JSPF file
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
         <PlaylistsList
           onCopiedPlaylist={this.onCopiedPlaylist}
