@@ -49,13 +49,11 @@ def export_to_apple_music(lb_token, apple_music_token, music_user_token, is_publ
 
 
 def export_to_soundcloud(lb_token, soundcloud_token, is_public, playlist_mbid=None, jspf=None):
-    soundcloud_user_id = SoundCloud(soundcloud_token).get("https://api.soundcloud.com/me/")["id"]
     args = {
         "mbid": playlist_mbid,
         "jspf": jspf,
         "read_only_token": lb_token,
         "soundcloud": {
-            "user_id": soundcloud_user_id,
             "token": soundcloud_token,
             "is_public": is_public,
         },
