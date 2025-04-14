@@ -63,6 +63,7 @@
       type="image/png"
     />
     <script src="{{ url_for('static', filename='js/lib/htmx.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/htmx-sse-extension.min.js') }}"></script>
 
     <link
       href="{{ url_for('static', filename='css/widgets.css') }}"
@@ -73,6 +74,13 @@
 
   <body>
     <div hx-target="#playing-now-container" hx-get="./" hx-trigger="load"></div>
+    <!-- Maybe enable the auto-refresh with SSE optionally, under a request arg flag? -->
+    <div
+      hx-ext="sse"
+      sse-connect="./sse/"
+      sse-swap="message"
+      hx-target="#playing-now-container"
+    ></div>
     <div id="playing-now-container"></div>
     <div id="error"></div>
   </body>
