@@ -477,54 +477,22 @@ def embed_playing_now(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    # If the request has HTMX headers, return partial content for the pin
+    # If the request has HTMX headers, return partial content for the pin card fragment
     if current_app.htmx:
-        # Here, fork again depending on SSE HTMX header
-        # if current_app.htmx.sse:
-        #     current_app.logger.warning("SSE detected")
-        # Which database to use to show playing_now stream.
-        playing_now_conn = webserver.redis_connection._redis
-        playing_now = playing_now_conn.get_playing_now(user.id)
-        return render_playing_now_card(user=user, playing_now=playing_now)
+        return render_playing_now_card(user=user)
 
     # Otherwise return the container page
     return render_template(
         "widgets/playing_now.html", user_name=user_name
     )
 
-@user_bp.get("/<user_name>/embed/playing-now/sse/")
-def sse_playing_now(user_name):
-    """ Returns server-sent events as a stream """
 
-    user = _get_user(user_name)
-    if not user:
-        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
-
-    @stream_with_context
-    def sse_events():
-        user = _get_user(user_name)
-        # Use a vairable to keep track of the value change
-        # So that we can send update only when value is changed
-        old_value = None
-        while True:
-            # Fetch value from redis
-            playing_now_conn = webserver.redis_connection._redis
-            playing_now = playing_now_conn.get_playing_now(user.id)
-            track_name = playing_now.data["track_name"] if playing_now else None
-            if old_value != track_name:
-                markup = render_playing_now_card(user, playing_now)
-                # Strip newlines and leading/trailing spaces
-                markup = re.sub(r'\s+', ' ', markup.strip())
-                yield "data: %s\n\n" % markup
-                old_value = track_name
-
-            time.sleep(5)
-            
-    return Response(sse_events(), mimetype="text/event-stream")
-
-
-def render_playing_now_card(user, playing_now):
+def render_playing_now_card(user):
     """ Returns the HTMX fragment consisting only in the playing-now card HTML markup """
+
+    # Which database to use to show playing_now stream.
+    playing_now_conn = webserver.redis_connection._redis
+    playing_now = playing_now_conn.get_playing_now(user.id)
 
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
