@@ -207,59 +207,43 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           fontSize: "inherit",
           borderRadius: "2px",
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
-          padding: "5px 9px",
           maxWidth: `${tooltipWidth}px`,
         }}
         onClick={(e) => e.stopPropagation()} // Prevent clicks inside tooltip from closing it
       >
         <div
           style={{
+            padding: "8px 12px",
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
+            background: `linear-gradient(180deg,rgba(252, 252, 252, 1) 0%, rgba(209, 209, 209, 1) 100%)`,
           }}
         >
-          <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
-          <span>
-            {countryName}:{" "}
-            <strong>
-              {value} {suffix}
-            </strong>
-          </span>
-        </div>
-        {artists?.length > 0 && (
-          <>
-            <hr style={{ margin: "0.5em 0" }} />
-            {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
-              <div key={artist.artist_mbid}>
-                <span
-                  className="badge color-purple"
-                  style={{ marginRight: "4px" }}
-                >
-                  <FontAwesomeIcon
-                    style={{ marginRight: "4px" }}
-                    icon={faHeadphones as IconProp}
-                  />
-                  {artist.listen_count}
-                </span>
-                <Link to={`/artist/${artist.artist_mbid}/`}>
-                  {artist.artist_name}
-                </Link>
-                <br />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div>
+              <div style={{ fontWeight: "bold", fontSize: "16px" }}>
+                {countryName}
               </div>
-            ))}
-          </>
-        )}
-        <hr style={{ margin: "0.5em 0" }} />
-        <div
-          style={{
-            textAlign: "center",
-            backgroundColor: "white",
-          }}
-        >
+              <div style={{ fontSize: "12px" }}>8.3k artists</div>
+            </div>
+          </div>
           <button
             type="button"
             className="btn btn-info btn-rounded btn-sm"
             title={`Play tracks from ${countryName}`}
+            style={{
+              borderRadius: "50%",
+              width: "30px",
+              height: "30px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              cursor: "pointer",
+              background: "#353070",
+              color: "white",
+            }}
             onClick={async () => {
               const prompt = `country:(${countryName})`;
               const mode = "easy";
@@ -338,9 +322,48 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               }
             }}
           >
-            <FontAwesomeIcon icon={faPlayCircle as IconProp} fixedWidth /> Play{" "}
-            {countryName}
+            <FontAwesomeIcon icon={faPlayCircle as IconProp} />
           </button>
+        </div>
+        <div style={{ padding: "8px 12px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
+            <span>
+              {"My Listens: "}
+              <strong>
+                {value} {suffix}
+              </strong>
+            </span>
+          </div>
+
+          {artists?.length > 0 && (
+            <>
+              <hr style={{ margin: "0.5em 0" }} />
+              {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
+                <div key={artist.artist_mbid}>
+                  <span
+                    className="badge color-purple"
+                    style={{ marginRight: "4px" }}
+                  >
+                    <FontAwesomeIcon
+                      style={{ marginRight: "4px" }}
+                      icon={faHeadphones as IconProp}
+                    />
+                    {artist.listen_count}
+                  </span>
+                  <Link to={`/artist/${artist.artist_mbid}/`}>
+                    {artist.artist_name}
+                  </Link>
+                  <br />
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
     );
