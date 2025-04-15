@@ -325,7 +325,7 @@ def user_feed_event(user_name: str, event_id: int):
         db_conn, event_id)
 
     if not user_event:
-        raise APIBadRequest(f"Event with id {event_id} not found")
+        raise APINotFound(f"Event with id {event_id} not found")
 
     # Get metadata for event
     _ = fetch_track_metadata_for_items(ts_conn, [user_event.metadata])
