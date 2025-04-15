@@ -625,14 +625,18 @@ def render_pin_card(user):
     artist_name = metadata.get("artist_name")
 
     pin_date = datetime.fromtimestamp(
-        pin.get("created")).strftime("%b %d, %H:%M %p")
+        pin.get("created")).strftime("%B %d")
 
-    # We could show the duration, needs the proper formatting
-    # Something like:
-    # track_seconds = round(additional_info.get("duration_ms") / 1000)
-    # hours,remainder = divmod(track_seconds,3600)
-    # minutes,seconds = divmod(remainder,60)
-    # duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+    duration_ms = additional_info.get("duration_ms")
+    duration = None
+    if duration_ms:
+        track_seconds = round(duration_ms / 1000)
+        hours, remainder = divmod(track_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours > 0:
+            duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+        else:
+            duration = '{:d}:{:02d}'.format(minutes, seconds)
 
     return render_template(
         "widgets/pin_card.html",
@@ -645,6 +649,7 @@ def render_pin_card(user):
         artist_mbid=artist_mbid,
         artist_name=artist_name,
         pin_date=pin_date,
+        duration=duration,
         blurb_content=pin.get("blurb_content"),
     )
 
