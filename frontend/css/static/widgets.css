@@ -1,3 +1,8 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
 .card {
     border-radius: 8px;
     overflow: hidden;
@@ -12,10 +17,14 @@
     min-width: 500px;
 }
 
+.card.listen-card,
+.card>* {
+    box-sizing: border-box;
+    height: 75px;
+}
+
 .card>* {
     padding: 15px;
-    box-sizing: border-box;
-    height: 80px;
 }
 
 .card .main-content {
@@ -120,6 +129,7 @@
 
 .additional-content>* {
     margin: auto;
+    width: 100%;
 }
 
 /* Style the scrollbar for pin content / text blurbs */

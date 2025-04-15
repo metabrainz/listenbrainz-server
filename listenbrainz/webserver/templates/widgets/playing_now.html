@@ -62,6 +62,14 @@
       href="{{ url_for('static', filename='img/favicon-32.png') }}"
       type="image/png"
     />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Sintony:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
     <script src="{{ url_for('static', filename='js/lib/htmx.min.js') }}"></script>
 
     <link
@@ -75,12 +83,12 @@
     <div
       hx-target="#playing-now-container"
       hx-get="./"
-      hx-trigger="load, every 45s"
+      hx-trigger="load, every 1m"
     ></div>
     <div id="playing-now-container"></div>
 
     <!-- Below you will find other implementation tests for auto-updates, kept in case we decide to use
-     one of those mechanisms instead of the timer polling (hx-trigger="every 45s")-->
+     one of those mechanisms instead of the timer polling (hx-trigger="every 1m")-->
 
     <!-- SSE: If you wanted to use Server-Sent Events to update the page only when required: -->
     <!-- Don't forget to save the SSE extension from a CDN and load it like so:  -->
