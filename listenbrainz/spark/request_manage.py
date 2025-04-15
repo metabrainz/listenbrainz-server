@@ -357,7 +357,8 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip):
+@click.option("--only-stage2", is_flag=True, default=False, help="whether to only run stage2 of computation")
+def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip, only_stage2):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording.mlhd",
@@ -365,7 +366,8 @@ def request_similar_recordings_mlhd(session, contribution, threshold, limit, ski
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        only_stage2=only_stage2
     )
 
 

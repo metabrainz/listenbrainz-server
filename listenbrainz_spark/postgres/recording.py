@@ -4,7 +4,7 @@ from pyspark import StorageLevel
 from pyspark.sql import DataFrame
 
 from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME, \
-    RECORDING_LENGTH_WITH_ID_DATAFRAME
+    RECORDING_LENGTH_DATAFRAME
 from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 from listenbrainz_spark.utils import read_files_from_HDFS
 
@@ -18,17 +18,19 @@ def create_recording_length_cache():
         SELECT r.gid AS recording_mbid
              , r.length
              , r.id AS recording_id
+             , 'f' AS is_redirect
           FROM musicbrainz.recording r
          UNION ALL
         SELECT rgr.gid AS recording_mbid
              , r.length
              , rgr.new_id AS recording_id
+             , 't' AS is_redirect
           FROM musicbrainz.recording_gid_redirect rgr
           JOIN musicbrainz.recording r
             ON rgr.new_id = r.id
     """
 
-    save_pg_table_to_hdfs(query, RECORDING_LENGTH_WITH_ID_DATAFRAME)
+    save_pg_table_to_hdfs(query, RECORDING_LENGTH_DATAFRAME)
 
 
 def create_recording_artist_cache():
