@@ -116,7 +116,7 @@ def stage1(metadata_table, output_dir, session, contribution, skip):
         logger.info("Processing chunk: %s", chunk)
         mlhd_df.filter(f"user_id LIKE '{chunk}%'").createOrReplaceTempView(table)
         query = build_partial_sessioned_index(table, metadata_table, session, contribution, skip_threshold)
-        run_query(query).write.mode("overwrite").parquet(f"/{output_dir}/{chunk}")
+        run_query(query).write.mode("overwrite").parquet(f"{output_dir}/{chunk}")
 
 
 def stage2(metadata_table, stage1_output_dir, threshold, limit):
