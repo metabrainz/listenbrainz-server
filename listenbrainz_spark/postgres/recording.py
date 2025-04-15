@@ -18,13 +18,13 @@ def create_recording_length_cache():
         SELECT r.gid AS recording_mbid
              , r.length
              , r.id AS recording_id
-             , 'f' AS is_redirect
+             , false AS is_redirect
           FROM musicbrainz.recording r
          UNION ALL
         SELECT rgr.gid AS recording_mbid
              , r.length
              , rgr.new_id AS recording_id
-             , 't' AS is_redirect
+             , true AS is_redirect
           FROM musicbrainz.recording_gid_redirect rgr
           JOIN musicbrainz.recording r
             ON rgr.new_id = r.id
