@@ -19,6 +19,7 @@
 
 .card .main-content {
     display: flex;
+    height: 50px;
 }
 
 .card .main-content>div {
@@ -28,17 +29,15 @@
 }
 
 .card .main-content>div.listen-thumbnail {
-    min-width: 66px;
     flex: 0;
     margin: -15px;
-    margin-right: 2em;
+    margin-right: 1.5em;
     aspect-ratio: 1;
     display: block;
 }
 
 .card .main-content .listen-thumbnail>a {
     height: 100%;
-    width: inherit;
     aspect-ratio: 1;
     display: block;
 }
@@ -54,6 +53,9 @@
     flex-direction: column;
     line-height: 1.3em;
     overflow: hidden;
+    flex: auto;
+    margin: -15px 0;
+    margin-right: 15px;
 }
 
 .card .main-content .title-duration {
@@ -91,14 +93,11 @@
 
 .card .main-content .username-and-timestamp {
     flex-direction: column;
-    justify-content: center;
-    padding-right: 1em;
+    justify-content: flex-end;
+    padding-right: 15px;
     align-items: flex-end;
-}
-
-.card .main-content .right-section> :not(.dropdown-menu) {
-    min-width: 1.5em;
     display: flex;
+    height: 100%;
 }
 
 .card .main-content .listen-time {
@@ -112,9 +111,33 @@
 .additional-content {
     border-top: 1px solid #dbccc6;
     font-style: italic;
+    line-height: 1.3em;
+    max-height: 50px;
+    overflow-y: auto;
+}
+
+/* Style the scrollbar for pin content / text blurbs */
+.additional-content::-webkit-scrollbar {
+    width: 8px;
+    display: block;
+}
+
+.additional-content::-webkit-scrollbar-track {
+    background-color: #b7b2f0;
+    border-radius: 5px;
+}
+
+.additional-content::-webkit-scrollbar-thumb {
+    background-color: #7a70e6;
+    border-radius: 5px;
 }
 
 /* Styles for pinned recording cards */
+
+.pinned-recording-card {
+    border: none;
+    max-height: 160px;
+}
 
 .pinned-recording-card .text-muted {
     color: #cccccc;
