@@ -127,7 +127,7 @@ def stage2(metadata_table, stage1_output_dir, threshold, limit):
 
     query = build_full_sessioned_index(chunks_table, metadata_table, threshold, limit)
     run_query(query) \
-        .repartition(256, "mbid0") \
+        .repartition(1, "mbid0") \
         .write \
         .mode("overwrite") \
         .parquet("/mlhd-similarity-recordings", compression="zstd")
