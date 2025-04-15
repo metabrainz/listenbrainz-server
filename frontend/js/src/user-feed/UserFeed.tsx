@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faBell,
@@ -53,7 +52,8 @@ import {
   preciseTimestamp,
 } from "../utils/utils";
 import ThanksModal from "./ThanksModal";
-import { EventType, type FeedFetchParams } from "./types";
+import type { FeedFetchParams } from "./types";
+import { EventType } from "./types";
 import Card from "../components/Card";
 
 enum EventTypeinMessage {
@@ -210,40 +210,50 @@ export default function UserFeedPage() {
   const events = pages?.map((page) => page.events).flat() ?? [];
 
   // Events mentioned in thank you events but not part of current cache, fetched separately as needed
-  const [separatelyLoadedEvents, setSeparatelyLoadedEvents] = React.useState<TimelineEvent<EventMetadata>[]>([])
+  const [separatelyLoadedEvents, setSeparatelyLoadedEvents] = React.useState<
+    TimelineEvent<EventMetadata>[]
+  >([]);
 
   React.useEffect(() => {
-    async function fetchOGEvents(missingEventsIDs:number[]) {
+    async function fetchOGEvents(missingEventsIDs: number[]) {
       // Prefetch each missing original event missing from thank you events
       // separately from fetching the feed pages
-      const promises = missingEventsIDs.map( eventId => {
+      const promises = missingEventsIDs.map((eventId) => {
         return queryClient.ensureQueryData({
-          queryKey: ['feed-event', eventId],
-          queryFn: () => APIService.getFeedEvent(eventId, currentUser.name, currentUser.auth_token as string),
+          queryKey: ["feed-event", eventId],
+          queryFn: () =>
+            APIService.getFeedEvent(
+              eventId,
+              currentUser.name,
+              currentUser.auth_token as string
+            ),
         });
       });
-      const resultsArray:TimelineEvent<EventMetadata>[] = [];
+      const resultsArray: TimelineEvent<EventMetadata>[] = [];
       const promiseResults = await Promise.allSettled(promises);
-      promiseResults.forEach((res,idx) => {
-        if(res.status === "fulfilled"){
+      promiseResults.forEach((res, idx) => {
+        if (res.status === "fulfilled") {
           resultsArray.push(res.value);
-        }
-        else{
+        } else {
           // eslint-disable-next-line no-console
           console.error(res.reason);
         }
-      })
+      });
       setSeparatelyLoadedEvents(resultsArray);
     }
     const feedEvents = data?.pages.map((page) => page.events).flat();
     // Extract IDs of events referenced in thank you events currently in cache
-    const thankYouOriginalEventIds = feedEvents?.filter(ev => ev.event_type === EventType.THANKS).map(ev=>{
-      const metadata = ev.metadata as ThanksMetadata;
-      return metadata.original_event_id
-    })
-    const missingEventsIDs = thankYouOriginalEventIds?.filter(originalEventId=> !feedEvents?.some(ev=>ev.id === originalEventId))
+    const thankYouOriginalEventIds = feedEvents
+      ?.filter((ev) => ev.event_type === EventType.THANKS)
+      .map((ev) => {
+        const metadata = ev.metadata as ThanksMetadata;
+        return metadata.original_event_id;
+      });
+    const missingEventsIDs = thankYouOriginalEventIds?.filter(
+      (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
+    );
     if (missingEventsIDs?.length) {
-      fetchOGEvents(missingEventsIDs)
+      fetchOGEvents(missingEventsIDs);
     }
   }, [data, APIService, currentUser, queryClient]);
 
@@ -430,49 +440,60 @@ export default function UserFeedPage() {
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent<EventMetadata>, isSubEvent=false) => {
-    const {event_type, hidden} = event;
+  const renderEventActionButton = (
+    event: TimelineEvent<EventMetadata>,
+    isSubEvent = false
+  ) => {
+    const { event_type, hidden } = event;
     const isOwnEvent = event.user_name === currentUser.name;
-    const isDeletable = isOwnEvent && [
-      EventType.NOTIFICATION,
-      EventType.RECORDING_RECOMMENDATION,
-      EventType.PERSONAL_RECORDING_RECOMMENDATION,
-      EventType.RECORDING_PIN,
-      EventType.THANKS,
-     ].includes(event_type as EventType);
-    const isThankable = !isSubEvent && !isOwnEvent && [
-      EventType.RECORDING_RECOMMENDATION,
-      EventType.PERSONAL_RECORDING_RECOMMENDATION,
-      EventType.RECORDING_PIN,
-      EventType.REVIEW,
-    ].includes(event_type as EventType);
-    const isHidable = !isSubEvent && !isOwnEvent &&
-    ![
-      EventType.FOLLOW,
-      EventType.BLOCK_FOLLOW,
-      EventType.STOP_FOLLOW,
-    ].includes(event_type as EventType);
-      
-      return (
-        <>
-          { isThankable && (
-            <ListenControl
-              title="Say thanks"
-              text=""
-              icon={faHandHoldingHeart}
-              iconSize="lg"
-              buttonClassName="btn btn-link btn-xs"
-              action={() => {
-                NiceModal.show(ThanksModal, {
-                  original_event_id: event.id!,
-                  original_event_type: event.event_type,
-                });
-              }}
-              dataToggle="modal"
-              dataTarget="#ThanksModal"
-            />
-          )} 
-          { hidden && <ListenControl
+    const isDeletable =
+      isOwnEvent &&
+      [
+        EventType.NOTIFICATION,
+        EventType.RECORDING_RECOMMENDATION,
+        EventType.PERSONAL_RECORDING_RECOMMENDATION,
+        EventType.RECORDING_PIN,
+        EventType.THANKS,
+      ].includes(event_type as EventType);
+    const isThankable =
+      !isSubEvent &&
+      !isOwnEvent &&
+      [
+        EventType.RECORDING_RECOMMENDATION,
+        EventType.PERSONAL_RECORDING_RECOMMENDATION,
+        EventType.RECORDING_PIN,
+        EventType.REVIEW,
+      ].includes(event_type as EventType);
+    const isHidable =
+      !isSubEvent &&
+      !isOwnEvent &&
+      ![
+        EventType.FOLLOW,
+        EventType.BLOCK_FOLLOW,
+        EventType.STOP_FOLLOW,
+      ].includes(event_type as EventType);
+
+    return (
+      <>
+        {isThankable && (
+          <ListenControl
+            title="Say thanks"
+            text=""
+            icon={faHandHoldingHeart}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-xs"
+            action={() => {
+              NiceModal.show(ThanksModal, {
+                original_event_id: event.id!,
+                original_event_type: event.event_type,
+              });
+            }}
+            dataToggle="modal"
+            dataTarget="#ThanksModal"
+          />
+        )}
+        {hidden && (
+          <ListenControl
             title="Unhide Event"
             text=""
             icon={faEye}
@@ -482,8 +503,9 @@ export default function UserFeedPage() {
               hideEventMutation(event);
             }}
           />
-          }
-          { !hidden && isHidable && <ListenControl
+        )}
+        {!hidden && isHidable && (
+          <ListenControl
             title="Hide Event"
             text=""
             icon={faEyeSlash}
@@ -493,8 +515,9 @@ export default function UserFeedPage() {
               hideEventMutation(event);
             }}
           />
-          }
-          { isDeletable &&<ListenControl
+        )}
+        {isDeletable && (
+          <ListenControl
             title="Delete Event"
             text=""
             icon={faTrash}
@@ -504,10 +527,9 @@ export default function UserFeedPage() {
               deleteEventMutation(event);
             }}
           />
-          }
-        </>
-      );
-  
+        )}
+      </>
+    );
   };
 
   const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
@@ -565,7 +587,7 @@ export default function UserFeedPage() {
     }
     if (event.event_type === EventType.THANKS && !event.hidden) {
       const { metadata } = event as TimelineEvent<ThanksMetadata>;
-      if(!metadata?.blurb_content?.length){
+      if (!metadata?.blurb_content?.length) {
         return null;
       }
       return (
@@ -640,7 +662,11 @@ export default function UserFeedPage() {
         return (
           <span className="event-description-text">
             You thanked <Username username={thankee_username} /> for{" "}
-            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
+            {
+              EventTypeinMessage[
+                original_event_type as keyof typeof EventTypeinMessage
+              ]
+            }
           </span>
         );
       }
@@ -648,7 +674,11 @@ export default function UserFeedPage() {
         return (
           <span className="event-description-text">
             <Username username={thanker_username} /> thanked you for{" "}
-            {EventTypeinMessage[original_event_type as keyof typeof EventTypeinMessage]}
+            {
+              EventTypeinMessage[
+                original_event_type as keyof typeof EventTypeinMessage
+              ]
+            }
           </span>
         );
       }
@@ -667,24 +697,29 @@ export default function UserFeedPage() {
     );
   };
 
-  const renderSubEvent = (subEvent: TimelineEvent<EventMetadata> | undefined) => {
-    if (!subEvent) return <div className="muted">This event was deleted or cannot be loaded</div>;
+  const renderSubEvent = (
+    subEvent: TimelineEvent<EventMetadata> | undefined
+  ) => {
+    if (!subEvent)
+      return (
+        <div className="muted">This event was deleted or cannot be loaded</div>
+      );
 
     return (
       <div>
         <details>
-            <summary className="event-description">
-              <span className={`event-icon ${subEvent.event_type}`} />
-              {renderEventText(subEvent)}
-              
-              <span className="event-time">
-                {preciseTimestamp(subEvent.created * 1000)}
-                {renderEventActionButton(subEvent, true)}
-              </span>
-            </summary>
-            {renderEventContent(subEvent)}
-          </details>
-        </div>
+          <summary className="event-description">
+            <span className={`event-icon ${subEvent.event_type}`} />
+            {renderEventText(subEvent)}
+
+            <span className="event-time">
+              {preciseTimestamp(subEvent.created * 1000)}
+              {renderEventActionButton(subEvent, true)}
+            </span>
+          </summary>
+          {renderEventContent(subEvent)}
+        </details>
+      </div>
     );
   };
 
@@ -816,10 +851,19 @@ export default function UserFeedPage() {
                   {events?.map((event) => {
                     const { created, event_type, user_name, metadata } = event;
                     let subEventElement;
-                    if(event_type === EventType.THANKS && !event.hidden){
-                      const {original_event_id, original_event_type} = metadata as ThanksMetadata;
-                      const filterMethod = (evt:TimelineEvent<EventMetadata> | undefined) => evt?.id === original_event_id && evt?.event_type === original_event_type;
-                      const subEvent = events?.find(filterMethod) || separatelyLoadedEvents?.find(filterMethod)
+                    if (event_type === EventType.THANKS && !event.hidden) {
+                      const {
+                        original_event_id,
+                        original_event_type,
+                      } = metadata as ThanksMetadata;
+                      const filterMethod = (
+                        evt: TimelineEvent<EventMetadata> | undefined
+                      ) =>
+                        evt?.id === original_event_id &&
+                        evt?.event_type === original_event_type;
+                      const subEvent =
+                        events?.find(filterMethod) ||
+                        separatelyLoadedEvents?.find(filterMethod);
                       subEventElement = renderSubEvent(subEvent);
                     }
 
@@ -854,14 +898,13 @@ export default function UserFeedPage() {
 
                         {renderEventContent(event)}
 
-                          {subEventElement &&
-                            <ul>
-                              <li className="timeline-event timeline-sub-event">
-                                {subEventElement}
-                              </li>
-                            </ul>
-                          }
-                        
+                        {subEventElement && (
+                          <ul>
+                            <li className="timeline-event timeline-sub-event">
+                              {subEventElement}
+                            </li>
+                          </ul>
+                        )}
                       </li>
                     );
                   })}
