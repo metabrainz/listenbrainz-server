@@ -3,7 +3,7 @@ import { useBrainzPlayerDispatch } from "./BrainzPlayerContext";
 
 function VolumeControlButton() {
   const dispatch = useBrainzPlayerDispatch();
-  const handleVolumeChange = (e: React.MouseEvent<HTMLInputElement>) => {
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({
       type: "VOLUME_CHANGE",
       data: e.currentTarget?.value ?? 100,
@@ -11,7 +11,7 @@ function VolumeControlButton() {
   };
   return (
     <input
-      onMouseUp={handleVolumeChange}
+      onChange={handleVolumeChange}
       className="volume-input"
       type="range"
       defaultValue="100"
