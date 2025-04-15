@@ -939,11 +939,6 @@ const getAlbumArtFromListenMetadata = async (
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
     return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
   }
-  if (YoutubePlayer.isListenFromThisService(listen)) {
-    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
-    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
-    return images?.[0].src;
-  }
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
@@ -971,6 +966,13 @@ const getAlbumArtFromListenMetadata = async (
   // user submitted release mbids not found, check if there is a match from mbid mapper.
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
+  }
+  /* We are putting Youtube thumbnails as last resort fallback as the quality
+  and format is usually not very good, user preferring proper cover art. */
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+    return images?.[0].src;
   }
   return undefined;
 };
