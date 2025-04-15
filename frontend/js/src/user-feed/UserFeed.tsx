@@ -215,7 +215,7 @@ export default function UserFeedPage() {
   >([]);
 
   React.useEffect(() => {
-    async function fetchOGEvents(missingEventsIDs: number[]) {
+    async function fetchThankedEvents(missingEventsIDs: number[]) {
       // Prefetch each missing original event missing from thank you events
       // separately from fetching the feed pages
       const promises = missingEventsIDs.map((eventId) => {
@@ -253,7 +253,7 @@ export default function UserFeedPage() {
       (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
     );
     if (missingEventsIDs?.length) {
-      fetchOGEvents(missingEventsIDs);
+      fetchThankedEvents(missingEventsIDs);
     }
   }, [data, APIService, currentUser, queryClient]);
 
