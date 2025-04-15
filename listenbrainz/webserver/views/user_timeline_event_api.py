@@ -295,7 +295,7 @@ def user_feed(user_name: str):
     }})
 
 
-@user_timeline_event_api_bp.get('/user/<user_name>/feed/events/<event_id>')
+@user_timeline_event_api_bp.get('/user/<string:user_name>/feed/events/<int:event_id>')
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
