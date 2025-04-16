@@ -355,7 +355,7 @@ export default class YearInMusic extends React.Component<
           <YIMYearMetaTags year={2022} />
           <div id="main-header" className="flex-center">
             <img
-              className="img-responsive header-image"
+              className="img-fluid header-image"
               src="/static/img/year-in-music-22/yim22-logo.png"
               alt="Your year in music 2022"
             />
@@ -491,7 +491,7 @@ export default class YearInMusic extends React.Component<
         <YIMYearMetaTags year={2022} />
         <div id="main-header" className="flex-center">
           <img
-            className="img-responsive header-image"
+            className="img-fluid header-image"
             src="/static/img/year-in-music-22/yim22-logo.png"
             alt="Your year in music 2022"
           />

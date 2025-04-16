@@ -613,7 +613,7 @@ export default class YearInMusic extends React.Component<
               }}
             >
               <img
-                className="img-responsive header-image"
+                className="img-fluid header-image"
                 src="/static/img/year-in-music-23/yim23-logo.png"
                 alt="Your year in music 2023"
               />
