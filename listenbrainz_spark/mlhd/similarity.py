@@ -1,5 +1,7 @@
 import logging
 
+from more_itertools import chunked
+
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection, config
 from listenbrainz_spark.mlhd.download import MLHD_PLUS_CHUNKS
@@ -8,6 +10,7 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 
 
+RECORDINGS_PER_MESSAGE = 10000
 DEFAULT_TRACK_LENGTH = 180
 
 logger = logging.getLogger(__name__)
@@ -126,14 +129,10 @@ def stage2(metadata_table, stage1_output_dir, threshold, limit):
     listenbrainz_spark.session.read.parquet(*chunks_path).createOrReplaceTempView(chunks_table)
 
     query = build_full_sessioned_index(chunks_table, metadata_table, threshold, limit)
-    run_query(query) \
-        .repartition(1, "mbid0") \
-        .write \
-        .mode("overwrite") \
-        .parquet("/mlhd-similarity-recordings", compression="zstd")
+    return run_query(query)
 
 
-def main(session, contribution, threshold, limit, skip, only_stage2):
+def main(session, contribution, threshold, limit, skip, only_stage2, is_production_dataset):
     """ Generate similar recordings based on MLHD listening sessions.
 
     Args:
@@ -146,19 +145,39 @@ def main(session, contribution, threshold, limit, skip, only_stage2):
             as skip because there may be a difference in track length in MB and music services and also issues in
             timestamping listens.
         only_stage2: use existing mlhd processed intermediate chunks
+        is_production_dataset: only determines how the dataset is stored in ListenBrainz database.
     """
     metadata_table = "recording_length"
     read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(metadata_table)
 
-    run_query("SET spark.sql.shuffle.partitions = 2000").collect()
-
     stage1_output_dir = "/mlhd-session-output"
     if not only_stage2:
+        run_query("SET spark.sql.shuffle.partitions = 2000").collect()
         stage1(metadata_table, stage1_output_dir, session, contribution, skip)
-    stage2(metadata_table, stage1_output_dir, threshold, limit)
+    data = stage2(metadata_table, stage1_output_dir, threshold, limit)
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
-    return {
-        "type": "similar_recordings_mlhd",
-        "algorithm": algorithm
-    }
+
+    if is_production_dataset:
+        yield {
+            "type": "mlhd_similarity_recording_start",
+            "algorithm": algorithm,
+            "is_production_dataset": is_production_dataset
+        }
+
+    for entries in chunked(data, RECORDINGS_PER_MESSAGE):
+        items = [row.asDict() for row in entries]
+        yield {
+            "type": "mlhd_similarity_recording",
+            "algorithm": algorithm,
+            "data": items,
+            "is_production_dataset": is_production_dataset
+        }
+
+    if is_production_dataset:
+        yield {
+            "type": "mlhd_similarity_recording_end",
+            "algorithm": algorithm,
+            "is_production_dataset": is_production_dataset
+        }
+

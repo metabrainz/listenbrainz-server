@@ -40,7 +40,7 @@ from listenbrainz.spark.handlers import (
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
     ListeningActivityStatsDataset, EntityListenerStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
-from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset
+from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.webserver import ts_conn, db_conn
 
@@ -83,6 +83,7 @@ class BackgroundJobProcessor:
             EntityListenerStatsDataset,
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
+            MlhdSimilarRecordingsDataset,
             TagsDataset,
             *get_all_popularity_datasets()
         ]
@@ -123,7 +124,6 @@ class BackgroundJobProcessor:
                     self.app.logger.debug("Empty internal message queue")
 
             self.stop()
-
 
     def stop(self):
         """ Stop running spark reader and associated handlers """

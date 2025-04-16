@@ -129,7 +129,8 @@
       "threshold",
       "limit",
       "skip",
-      "only_stage2"
+      "only_stage2",
+      "is_production_dataset"
     ]
   },
   "similarity.recording": {

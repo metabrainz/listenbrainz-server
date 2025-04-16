@@ -8,17 +8,27 @@ from listenbrainz.spark.spark_dataset import DatabaseDataset, SparkDataset
 
 class SimilarityProdDataset(DatabaseDataset):
 
-    def __init__(self, entity):
-        super().__init__(f"similarity_{entity}", entity, "similarity")
+    def __init__(self, entity, is_mlhd):
+        if is_mlhd:
+            name = f"mlhd_similarity_{entity}"
+            table_name = f"mlhd_{entity}"
+            index_prefix = f"mlhd_sim"
+        else:
+            name = f"similarity_{entity}"
+            table_name = entity
+            index_prefix = f"sim"
+        super().__init__(name, table_name, "similarity")
+        self.is_mlhd = is_mlhd
         self.entity = entity
+        self.index_prefix = index_prefix
 
     def get_table(self):
         return "CREATE TABLE {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, score INT NOT NULL)"
 
     def get_indices(self):
         return [
-            f"CREATE UNIQUE INDEX sim_prod_{self.entity}s_uniq_idx_{{suffix}} ON {{table}} (mbid0, mbid1)",
-            f"CREATE UNIQUE INDEX sim_prod_{self.entity}s_reverse_uniq_idx_{{suffix}} ON {{table}} (mbid1, mbid0)"
+            f"CREATE UNIQUE INDEX {self.index_prefix}_{self.entity}s_uniq_idx_{{suffix}} ON {{table}} (mbid0, mbid1)",
+            f"CREATE UNIQUE INDEX {self.index_prefix}_{self.entity}s_reverse_uniq_idx_{{suffix}} ON {{table}} (mbid1, mbid0)"
         ]
 
     def get_inserts(self, message):
@@ -36,9 +46,19 @@ class SimilarityProdDataset(DatabaseDataset):
 
 class SimilarityDevDataset(DatabaseDataset):
 
-    def __init__(self, entity):
-        super().__init__(f"similarity_{entity}", f"{entity}_dev", "similarity")
+    def __init__(self, entity, is_mlhd):
+        if is_mlhd:
+            name = f"mlhd_similarity_{entity}_dev"
+            table_name = f"mlhd_{entity}_dev"
+            index_prefix = "mlhd_sim_dev"
+        else:
+            name = f"similarity_{entity}_dev"
+            table_name = f"{entity}_dev"
+            index_prefix = "sim_dev"
+        super().__init__(name, table_name, "similarity")
+        self.is_mlhd = is_mlhd
         self.entity = entity
+        self.index_prefix = index_prefix
 
     def get_table(self):
         return "CREATE TABLE IF NOT EXISTS {table} (mbid0 UUID NOT NULL, mbid1 UUID NOT NULL, metadata JSONB NOT NULL)"
@@ -52,9 +72,9 @@ class SimilarityDevDataset(DatabaseDataset):
 
     def get_indices(self):
         return [
-            f"CREATE UNIQUE INDEX IF NOT EXISTS sim_dev_{self.entity}s_uniq_idx ON {{table}} (mbid0, mbid1)",
-            f"CREATE UNIQUE INDEX IF NOT EXISTS sim_dev_{self.entity}s_reverse_uniq_idx ON {{table}} (mbid1, mbid0)",
-            f"CREATE INDEX IF NOT EXISTS sim_dev_{self.entity}s_algorithm_idx ON {{table}} USING GIN (metadata jsonb_path_ops)"
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {self.index_prefix}_{self.entity}s_uniq_idx ON {{table}} (mbid0, mbid1)",
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {self.index_prefix}_{self.entity}s_reverse_uniq_idx ON {{table}} (mbid1, mbid0)",
+            f"CREATE INDEX IF NOT EXISTS {self.index_prefix}_{self.entity}s_algorithm_idx ON {{table}} USING GIN (metadata jsonb_path_ops)"
         ]
 
     def create_indices(self, cursor):
@@ -101,10 +121,10 @@ class SimilarityDevDataset(DatabaseDataset):
 
 class SimilarityDataset(SparkDataset):
 
-    def __init__(self, entity):
+    def __init__(self, entity, is_mlhd):
         super().__init__(f"similarity_{entity}")
-        self.dev_dataset = SimilarityDevDataset(entity)
-        self.prod_dataset = SimilarityProdDataset(entity)
+        self.dev_dataset = SimilarityDevDataset(entity, is_mlhd)
+        self.prod_dataset = SimilarityProdDataset(entity, is_mlhd)
 
     def choose_dataset(self, message):
         return self.prod_dataset if message["is_production_dataset"] else self.dev_dataset
@@ -126,8 +146,9 @@ class SimilarityDataset(SparkDataset):
         self.prod_dataset.handle_shutdown()
 
 
-SimilarRecordingsDataset = SimilarityDataset("recording")
-SimilarArtistsDataset = SimilarityDataset("artist")
+SimilarRecordingsDataset = SimilarityDataset("recording", False)
+SimilarArtistsDataset = SimilarityDataset("artist", False)
+MlhdSimilarRecordingsDataset = SimilarityDataset("recording", True)
 
 
 def get(curs, table, mbids, algorithm, count):
