@@ -468,7 +468,23 @@ def year_in_music(user_name, year: int = 2024):
 @user_bp.get("/<user_name>/embed/playing-now/")
 def embed_playing_now(user_name):
     """ Returns either the HTML page that load the current playing-now for a user
-     or the HTMX fragment consisting only in the playing-now card HTML markup """
+     or the HTMX fragment consisting only in the playing-now card HTML markup 
+     
+    The iframe height must be set to 80px, while the width can be adjusted:
+    .. code-block:: html
+
+        <iframe
+            src="https://listenbrainz.org/user/mr_monkey/embed/playing-now"
+            frameborder="0"
+            width="650px"
+            height="80px"
+        ></iframe>
+    
+    :param user_name: the MusicBrainz ID of the user whose currently playing listen you want to embed.
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *text/html*
+    :statuscode 404: The requested user was not found.
+    """
 
     user = _get_user(user_name)
     if not user:
@@ -562,7 +578,23 @@ def render_playing_now_card(user):
 @user_bp.get("/<user_name>/embed/pin/")
 def embed_pin(user_name):
     """ Returns either the HTML page that load the current pin for a user
-     or the HTMX fragment consisting only in the pin HTML markup """
+     or the HTMX fragment consisting only in the pin HTML markup
+          
+    The iframe height must be set to 150px, while the width can be adjusted:
+    .. code-block:: html
+
+        <iframe
+            src="https://listenbrainz.org/user/mr_monkey/embed/pin"
+            frameborder="0"
+            width="650px"
+            height="150px"
+        ></iframe>
+    
+    :param user_name: the MusicBrainz ID of the user whose current pin you want to embed.
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *text/html*
+    :statuscode 404: The requested user was not found.
+    """
     user = _get_user(user_name)
     if not user:
         return jsonify({"error": "Cannot find user: %s" % user_name}), 404
