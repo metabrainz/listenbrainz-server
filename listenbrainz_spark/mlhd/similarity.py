@@ -129,7 +129,7 @@ def stage2(metadata_table, stage1_output_dir, threshold, limit):
     listenbrainz_spark.session.read.parquet(*chunks_path).createOrReplaceTempView(chunks_table)
 
     query = build_full_sessioned_index(chunks_table, metadata_table, threshold, limit)
-    return run_query(query)
+    return run_query(query).toLocalIterator()
 
 
 def main(session, contribution, threshold, limit, skip, only_stage2, is_production_dataset):
