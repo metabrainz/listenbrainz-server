@@ -211,10 +211,6 @@ def feed():
 
     user_events = user_events[:count]
 
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(user_events):
-        user_events[index].event_type = event.event_type.value
-
     return jsonify({
         'events': [event.dict() for event in user_events],
     })
