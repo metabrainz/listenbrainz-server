@@ -158,12 +158,11 @@ def main(session, contribution, threshold, limit, skip, only_stage2, is_producti
 
     algorithm = f"session_based_mlhd_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
-    if is_production_dataset:
-        yield {
-            "type": "mlhd_similarity_recording_start",
-            "algorithm": algorithm,
-            "is_production_dataset": is_production_dataset
-        }
+    yield {
+        "type": "mlhd_similarity_recording_start",
+        "algorithm": algorithm,
+        "is_production_dataset": is_production_dataset
+    }
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
@@ -174,10 +173,9 @@ def main(session, contribution, threshold, limit, skip, only_stage2, is_producti
             "is_production_dataset": is_production_dataset
         }
 
-    if is_production_dataset:
-        yield {
-            "type": "mlhd_similarity_recording_end",
-            "algorithm": algorithm,
-            "is_production_dataset": is_production_dataset
-        }
+    yield {
+        "type": "mlhd_similarity_recording_end",
+        "algorithm": algorithm,
+        "is_production_dataset": is_production_dataset
+    }
 

@@ -122,7 +122,11 @@ class SimilarityDevDataset(DatabaseDataset):
 class SimilarityDataset(SparkDataset):
 
     def __init__(self, entity, is_mlhd):
-        super().__init__(f"similarity_{entity}")
+        if is_mlhd:
+            name = "mlhd_similarity"
+        else:
+            name = "similarity"
+        super().__init__(f"{name}_{entity}")
         self.dev_dataset = SimilarityDevDataset(entity, is_mlhd)
         self.prod_dataset = SimilarityProdDataset(entity, is_mlhd)
 
