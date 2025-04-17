@@ -1,12 +1,10 @@
 from datetime import datetime, timezone
+import timeago
 from math import ceil
 from collections import defaultdict
 
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
-
-import re
-import time
 
 from flask import Blueprint, Response, render_template, request, url_for, jsonify, current_app, stream_with_context
 from flask_login import current_user, login_required
@@ -27,7 +25,6 @@ from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.webserver.views.api_tools import get_non_negative_param
-from werkzeug.exceptions import NotFound
 
 from brainzutils import cache
 
@@ -653,8 +650,8 @@ def embed_pin(user_name):
     artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
     artist_name = metadata.get("artist_name")
 
-    pin_date = datetime.fromtimestamp(
-        pin.get("created")).strftime("%B %d")
+    pin_date = datetime.fromtimestamp(pin.get("created"))
+    pin_date = timeago.format(pin_date)
 
     duration_ms = additional_info.get("duration_ms")
     duration = None
