@@ -125,12 +125,11 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
 
     algorithm = f"session_based_days_{days}_session_{session}_contribution_{contribution}_threshold_{threshold}_limit_{limit}_skip_{skip}"
 
-    if is_production_dataset:
-        yield {
-            "type": "similarity_recording_start",
-            "algorithm": algorithm,
-            "is_production_dataset": is_production_dataset
-        }
+    yield {
+        "type": "similarity_recording_start",
+        "algorithm": algorithm,
+        "is_production_dataset": is_production_dataset
+    }
 
     for entries in chunked(data, RECORDINGS_PER_MESSAGE):
         items = [row.asDict() for row in entries]
@@ -141,9 +140,8 @@ def main(days, session, contribution, threshold, limit, skip, is_production_data
             "is_production_dataset": is_production_dataset
         }
 
-    if is_production_dataset:
-        yield {
-            "type": "similarity_recording_end",
-            "algorithm": algorithm,
-            "is_production_dataset": is_production_dataset
-        }
+    yield {
+        "type": "similarity_recording_end",
+        "algorithm": algorithm,
+        "is_production_dataset": is_production_dataset
+    }
