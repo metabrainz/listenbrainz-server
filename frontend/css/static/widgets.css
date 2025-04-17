@@ -78,7 +78,7 @@ body {
     margin-left: 2em;
 }
 
-.card a {
+a {
     color: inherit;
     text-decoration: none;
     font-weight: 700;
@@ -120,6 +120,18 @@ body {
     white-space: nowrap;
 }
 
+.profile-link {
+    align-self: center;
+    text-align: end;
+    line-height: 0;
+    font-weight: normal;
+}
+
+.profile-link>img {
+    vertical-align: middle;
+    margin-left: 0.5em;
+}
+
 .additional-content {
     border-top: 1px solid #dbccc6;
     font-style: italic;
@@ -141,6 +153,9 @@ body {
     display: block;
 }
 
+
+/* Styles for pinned recording cards */
+
 .pinned-recording-card .additional-content::-webkit-scrollbar-track {
     background-color: #b7b2f0;
     border-radius: 5px;
@@ -151,14 +166,12 @@ body {
     border-radius: 5px;
 }
 
-/* Styles for pinned recording cards */
-
 .pinned-recording-card {
-    border: none;
     max-height: 160px;
 }
 
 .pinned-recording-card.currently-pinned {
+    border: none;
     background-color: #353070;
     color: white;
 }

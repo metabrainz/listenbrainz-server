@@ -618,7 +618,7 @@ def embed_pin(user_name):
             "widgets/pin_card.html",
             user_name=user_name,
             no_pin=True,
-            pin_is_current=pin_is_current
+            pin_is_current=False
         )
 
     pin = fetch_track_metadata_for_items(

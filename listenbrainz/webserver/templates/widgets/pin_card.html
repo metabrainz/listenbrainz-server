@@ -16,7 +16,15 @@
     {% endif %}
     <div class="listen-details">
       {% if no_pin %}
-      <div class="title-duration text-muted">No current pin</div>
+      <div class="text-muted">
+        <a
+          title="{{ user_name | safe }}"
+          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ user_name | safe }}</a
+        >&nbsp;has no pinned tracks at the moment
+      </div>
       {% else %}
       <div class="title-duration">
         <div title="{{ recording_name }}" class="ellipsis-2-lines">
@@ -46,7 +54,20 @@
       </div>
       {% endif %}
     </div>
-
+    {% if no_pin %}
+    <a
+      class="profile-link"
+      href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+      target="_blank"
+      rel="noopener noreferrer"
+      >See profile on
+      <img
+        src="{{ url_for('static', filename='img/listenbrainz-logo.svg') }}"
+        height="42"
+        alt="ListenBrainz"
+      />
+    </a>
+    {% else %}
     <div class="right-section">
       <div class="username-and-timestamp">
         <a
@@ -77,6 +98,7 @@
       </span>
       <span class="listen-time">{{ pin_date }}</span>
     </div>
+    {% endif %}
   </div>
   {% if blurb_content %}
   <div class="additional-content">

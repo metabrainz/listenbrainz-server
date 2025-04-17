@@ -13,7 +13,7 @@
     {% endif %}
     <div class="listen-details">
       {% if no_playing_now %}
-      <div class="title-duration">
+      <div class="text-muted">
         <a
           title="{{ user_name | safe }}"
           href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
@@ -55,6 +55,20 @@
       {% endif %}
     </div>
 
+    {% if no_playing_now %}
+    <a
+      class="profile-link"
+      href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+      target="_blank"
+      rel="noopener noreferrer"
+      >See profile on
+      <img
+        src="{{ url_for('static', filename='img/listenbrainz-logo.svg') }}"
+        height="42"
+        alt="ListenBrainz"
+      />
+    </a>
+    {% else %}
     <div class="right-section">
       <div class="username-and-timestamp">
         <a
@@ -67,5 +81,6 @@
         <span class="listen-time">on ListenBrainz</span>
       </div>
     </div>
+    {% endif %}
   </div>
 </div>
