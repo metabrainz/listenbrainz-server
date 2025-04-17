@@ -70,8 +70,6 @@
       rel="stylesheet"
     />
 
-    <script src="{{ url_for('static', filename='js/lib/htmx.min.js') }}"></script>
-
     <link
       href="{{ url_for('static', filename='css/static/widgets.css') }}"
       rel="stylesheet"
@@ -80,8 +78,8 @@
   </head>
 
   <body>
-    <div hx-target="#pin-container" hx-get="./" hx-trigger="load"></div>
-    <div id="pin-container"></div>
-    <div id="error"></div>
+    {%- block content -%}
+    <!-- Pin content -->
+    {%- endblock -%}
   </body>
 </html>

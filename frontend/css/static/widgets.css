@@ -1,6 +1,7 @@
 body {
     margin: 0;
     padding: 0;
+    color: #46433a;
 }
 
 .card {
@@ -79,6 +80,8 @@ body {
 
 .card a {
     color: inherit;
+    text-decoration: none;
+    font-weight: 700;
 }
 
 .ellipsis-2-lines {
@@ -138,12 +141,12 @@ body {
     display: block;
 }
 
-.additional-content::-webkit-scrollbar-track {
+.pinned-recording-card .additional-content::-webkit-scrollbar-track {
     background-color: #b7b2f0;
     border-radius: 5px;
 }
 
-.additional-content::-webkit-scrollbar-thumb {
+.pinned-recording-card .additional-content::-webkit-scrollbar-thumb {
     background-color: #7a70e6;
     border-radius: 5px;
 }
@@ -155,24 +158,24 @@ body {
     max-height: 160px;
 }
 
-.pinned-recording-card .text-muted {
+.pinned-recording-card.currently-pinned {
+    background-color: #353070;
+    color: white;
+}
+
+.pinned-recording-card.currently-pinned .text-muted {
     color: #cccccc;
 }
 
-.pinned-recording-card .main-content .listen-time {
+.pinned-recording-card.currently-pinned .main-content .listen-time {
     color: #e6e6e6;
 }
 
-.pinned-recording-card>* {
-    background-color: rgb(53, 48, 112);
-    color: rgb(255, 255, 255);
-}
-
-.pinned-recording-card .additional-content {
+.pinned-recording-card.currently-pinned .additional-content {
     border-top-color: #8c87cc;
 }
 
-.pinned-recording-card .main-content>.pinned-recording-icon {
+.pinned-recording-card .main-content .pinned-recording-icon {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -180,7 +183,7 @@ body {
     flex: 0 1 0%;
 }
 
-.pinned-recording-card .main-content>.pinned-recording-icon .icon {
+.pinned-recording-card .pinned-recording-icon .icon {
     font-size: 1.6em;
     margin: auto;
 }

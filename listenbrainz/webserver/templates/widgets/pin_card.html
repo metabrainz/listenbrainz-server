@@ -1,4 +1,7 @@
-<div class="card pinned-recording-card">
+{%- extends 'widgets/pin.html' -%} {%- block content -%}
+<div
+  class="card pinned-recording-card {{ 'currently-pinned' if pin_is_current else ''}}"
+>
   <div class="main-content">
     {% if release_cover_art_src %}
     <div class="listen-thumbnail">
@@ -13,7 +16,7 @@
     {% endif %}
     <div class="listen-details">
       {% if no_pin %}
-      <div class="title-duration">No current pin</div>
+      <div class="title-duration text-muted">No current pin</div>
       {% else %}
       <div class="title-duration">
         <div title="{{ recording_name }}" class="ellipsis-2-lines">
@@ -83,3 +86,4 @@
   </div>
   {% endif %}
 </div>
+{%- endblock -%}

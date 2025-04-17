@@ -602,26 +602,23 @@ def embed_pin(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    # If the request has HTMX headers, return partial content for the pin
-    if current_app.htmx:
-        return render_pin_card(user=user)
-
-    # Otherwise return the container page
-    return render_template(
-        "widgets/pin.html", user_name=user_name
-    )
-
-
-def render_pin_card(user):
-    """ Returns the HTMX fragment consisting only in the pin HTML markup """
-    user_name = user.musicbrainz_id
-
     pin = get_current_pin_for_user(db_conn, user_id=user.id)
+    pin_is_current = True
+
+    if pin is None:
+        # Fallback to latest pin if no current pin
+        pin_is_current = False
+        older_pins = get_pin_history_for_user(db_conn, user_id=user.id, count=1, offset=0)
+        # If still none, there are no pins to show
+        if older_pins is not None and len(older_pins) > 0:
+            pin = older_pins[0]
+
     if pin is None:
         return render_template(
             "widgets/pin_card.html",
             user_name=user_name,
-            no_pin=True
+            no_pin=True,
+            pin_is_current=pin_is_current
         )
 
     pin = fetch_track_metadata_for_items(
@@ -682,6 +679,7 @@ def render_pin_card(user):
         artist_name=artist_name,
         pin_date=pin_date,
         duration=duration,
+        pin_is_current=pin_is_current,
         blurb_content=pin.get("blurb_content"),
     )
 
