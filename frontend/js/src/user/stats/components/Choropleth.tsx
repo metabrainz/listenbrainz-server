@@ -225,7 +225,6 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               <div style={{ fontWeight: "bold", fontSize: "16px" }}>
                 {countryName}
               </div>
-              <div style={{ fontSize: "12px" }}>8.3k artists</div>
             </div>
           </div>
           <button
