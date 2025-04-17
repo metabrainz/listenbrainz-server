@@ -148,24 +148,46 @@ a {
 }
 
 /* Style the scrollbar for pin content / text blurbs */
+
 .additional-content::-webkit-scrollbar {
-    width: 8px;
     display: block;
+    width: 8px;
+    height: 8px;
 }
 
+.additional-content::-webkit-scrollbar-track,
+.additional-content::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+}
+
+.additional-content::-webkit-scrollbar-track {
+    background-color: lightgrey;
+}
+
+.additional-content::-webkit-scrollbar-thumb {
+    background-color: grey;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+
+    .additional-content {
+        scrollbar-width: thin;
+    }
+
+    .pinned-recording-card.currently-pinned {
+        scrollbar-color: #7a70e6 #b7b2f0;
+    }
+}
+
+.pinned-recording-card.currently-pinned .additional-content::-webkit-scrollbar-track {
+    background-color: #b7b2f0;
+}
+
+.pinned-recording-card.currently-pinned .additional-content::-webkit-scrollbar-thumb {
+    background-color: #7a70e6;
+}
 
 /* Styles for pinned recording cards */
-
-.pinned-recording-card .additional-content::-webkit-scrollbar-track {
-    background-color: #b7b2f0;
-    border-radius: 5px;
-}
-
-.pinned-recording-card .additional-content::-webkit-scrollbar-thumb {
-    background-color: #7a70e6;
-    border-radius: 5px;
-}
-
 .pinned-recording-card {
     max-height: 160px;
 }
