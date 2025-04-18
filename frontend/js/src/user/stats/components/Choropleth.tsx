@@ -201,6 +201,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     return (
       <button
         ref={tooltipRef}
+        type="button"
         style={{
           background: "white",
           color: "inherit",
