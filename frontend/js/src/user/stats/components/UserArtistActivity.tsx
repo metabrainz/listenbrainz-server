@@ -245,7 +245,10 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                                 }}
                               >
                                 {lines.map((line: string, i: number) => (
-                                  <div key={i}>{line}</div>
+                                  // 248:45 error Do not use Array index in keys react/no-array-index-key
+                                  <div key={`${artistName}-${line}`}>
+                                    {line}
+                                  </div>
                                 ))}
                               </Link>
                             </div>
