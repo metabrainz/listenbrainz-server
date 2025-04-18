@@ -86,6 +86,46 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     return mapping;
   }, [rawData]);
 
+  function CustomTooltip({
+    id,
+    value,
+    color,
+  }: {
+    id: string;
+    value: number;
+    color: string;
+  }) {
+    return (
+      <div
+        style={{
+          padding: "10px",
+          background: "white",
+          border: `1px solid ${color}`,
+          borderRadius: "4px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        }}
+      >
+        <strong>
+          {id}: {value}
+        </strong>
+      </div>
+    );
+  }
+
+  const handleArtistLabelClick = (
+    artistNameTemp: string,
+    event: React.MouseEvent
+  ) => {
+    const artistName = artistNameTemp.replace(/-/g, " ");
+    event.preventDefault();
+    const artistData = rawData?.result.find(
+      (artist) => artist.name === artistName
+    );
+    if (artistData?.artist_mbid) {
+      navigate(`/artist/${artistData.artist_mbid}`);
+    }
+  };
+
   React.useEffect(() => {
     if (rawData && rawData.result.length > 0) {
       const processedData = processData(rawData);
@@ -156,7 +196,13 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     tickPadding: 5,
                     tickRotation: -45,
                     renderTick: (tick) => (
-                      <g transform={`translate(${tick.x},${tick.y})`}>
+                      <g
+                        transform={`translate(${tick.x},${tick.y})`}
+                        onClick={(event) =>
+                          handleArtistLabelClick(tick.value, event)
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
                         {tick.value
                           .split("\n")
                           .map((line: string, i: number) => (
@@ -167,8 +213,10 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                               textAnchor="end"
                               dominantBaseline="middle"
                               style={{
-                                fontSize: 10,
-                                fill: "#000",
+                                fontSize: 11,
+                                fill: "#c81f70",
+                                textDecoration: "none",
+                                fontWeight: 1000,
                                 transform: `rotate(-45deg)`,
                               }}
                             >
@@ -187,6 +235,13 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                       navigate(`/album/${releaseGroupMbid}`);
                     }
                   }}
+                  tooltip={({ id, value, color }) => (
+                    <CustomTooltip
+                      id={id as string}
+                      value={value}
+                      color={color}
+                    />
+                  )}
                 />
               </div>
             </div>
