@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import { useQuery } from "@tanstack/react-query";
+import { useMediaQuery } from "react-responsive";
 import _ from "lodash";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
@@ -27,6 +28,7 @@ export type UserArtistMapState = {
 
 export default function UserArtistMap(props: UserArtistMapProps) {
   const { APIService } = React.useContext(GlobalAppContext);
+  const isMobile = useMediaQuery({ maxWidth: 767 });
 
   // Props
   const { user, range } = props;
@@ -90,10 +92,10 @@ export default function UserArtistMap(props: UserArtistMapProps) {
     <Card className="user-stats-card" data-testid="user-stats-map">
       <div className="row">
         <div className="col-md-9 col-xs-6">
-          <h3 style={{ marginLeft: 20 }}>
-            <span className="capitalize-bold">Artist Origins</span>
-            <small>&nbsp;Click on a country to see more details</small>
+          <h3 className="capitalize-bold" style={{ display: "inline-block" }}>
+            Artist Origins
           </h3>
+          <small className="hidden-xs">&nbsp;(top 1,000 artists)</small>
         </div>
         <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
           <span>Rank by</span>
@@ -143,6 +145,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
           </h4>
         </div>
       </div>
+      <p>Click on a country to see more details</p>
       <Loader isLoading={loading}>
         {hasError ? (
           <div
