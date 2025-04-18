@@ -102,7 +102,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   >();
   const refContainer = useRef<HTMLDivElement>(null);
   const { APIService } = React.useContext(GlobalAppContext);
-  const tooltipRef = useRef<HTMLButtonElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
   const [containerWidth, setContainerWidth] = useState<number>(1000);
@@ -199,7 +199,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     }
 
     return (
-      <button
+      <div
         ref={tooltipRef}
         style={{
           background: "white",
@@ -208,17 +208,11 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           borderRadius: "2px",
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
           maxWidth: `${tooltipWidth}px`,
-          textAlign: "left", // Keep text aligned left
-          border: "none", // Remove default button styling
-          padding: 0, // Remove default button padding
-          cursor: "default", // Keep default cursor
         }}
-        role="dialog"
-        aria-modal="true"
+        role="tooltip"
         aria-label={`Country details for ${countryName}`}
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
+        tabIndex={0} // Added back tabIndex for keyboard accessibility
+        onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             setSelectedCountry(undefined);
@@ -242,7 +236,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </div>
           </div>
           <button
-            type="button"
+            type="button" // Explicit button type
             className="btn btn-info btn-rounded btn-sm"
             title={`Play tracks from ${countryName}`}
             style={{
@@ -379,7 +373,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </>
           )}
         </div>
-      </button>
+      </div>
     );
   }, [selectedCountry, selectedMetric]);
 
