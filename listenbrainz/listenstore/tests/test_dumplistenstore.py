@@ -90,7 +90,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         recalculate_all_user_data()
 
         to_ts = datetime.fromtimestamp(base + 11, timezone.utc)
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
+        listens, min_ts, max_ts, _, _ = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -119,7 +119,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(base + 11, timezone.utc))
+        listens, min_ts, max_ts, _, _ = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(base + 11, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
@@ -150,7 +150,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         recalculate_all_user_data()
 
         to_ts = datetime.fromtimestamp(1400000300, timezone.utc)
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
+        listens, min_ts, max_ts, _, _ = self.ls.fetch_listens(user=self.testuser, to_ts=to_ts)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -179,7 +179,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.ls.import_listens_dump(dump_location)
         recalculate_all_user_data()
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=user, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        listens, min_ts, max_ts, _, _ = self.ls.fetch_listens(user=user, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -187,7 +187,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
-        listens, min_ts, max_ts = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
+        listens, min_ts, max_ts, _, _ = self.ls.fetch_listens(user=self.testuser, to_ts=datetime.fromtimestamp(1400000300, timezone.utc))
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
