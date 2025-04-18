@@ -358,24 +358,32 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           {artists?.length > 0 && (
             <>
               <hr style={{ margin: "0.5em 0" }} />
-              {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
-                <div key={artist.artist_mbid}>
-                  <span
-                    className="badge color-purple"
-                    style={{ marginRight: "4px" }}
-                  >
-                    <FontAwesomeIcon
+              <div
+                style={{
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                }}
+              >
+                {artists?.map((artist: UserArtistMapArtist) => (
+                  <div key={artist.artist_mbid}>
+                    <span
+                      className="badge color-purple"
                       style={{ marginRight: "4px" }}
-                      icon={faHeadphones as IconProp}
-                    />
-                    {artist.listen_count}
-                  </span>
-                  <Link to={`/artist/${artist.artist_mbid}/`}>
-                    {artist.artist_name}
-                  </Link>
-                  <br />
-                </div>
-              ))}
+                    >
+                      <FontAwesomeIcon
+                        style={{ marginRight: "4px" }}
+                        icon={faHeadphones as IconProp}
+                      />
+                      {artist.listen_count}
+                    </span>
+                    <Link to={`/artist/${artist.artist_mbid}/`}>
+                      {artist.artist_name}
+                    </Link>
+                    <br />
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>
