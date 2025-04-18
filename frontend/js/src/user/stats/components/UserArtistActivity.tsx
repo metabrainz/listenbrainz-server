@@ -20,6 +20,33 @@ export declare type ChartDataItem = {
   [albumName: string]: number | string;
 };
 
+// Define CustomTooltip outside of the main component
+function CustomTooltip({
+  id,
+  value,
+  color,
+}: {
+  id: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: "10px",
+        background: "white",
+        border: `1px solid ${color}`,
+        borderRadius: "4px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
+    >
+      <strong>
+        {id}: {value}
+      </strong>
+    </div>
+  );
+}
+
 export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
@@ -99,32 +126,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     return mapping;
   }, [rawData]);
 
-  function CustomTooltip({
-    id,
-    value,
-    color,
-  }: {
-    id: string;
-    value: number;
-    color: string;
-  }) {
-    return (
-      <div
-        style={{
-          padding: "10px",
-          background: "white",
-          border: `1px solid ${color}`,
-          borderRadius: "4px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        }}
-      >
-        <strong>
-          {id}: {value}
-        </strong>
-      </div>
-    );
-  }
-
   const handleArtistLabelClick = (
     artistNameTemp: string,
     event: React.MouseEvent
@@ -145,6 +146,14 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
       setChartData(processedData);
     }
   }, [rawData]);
+
+  const tooltipRenderer = React.useCallback(
+    (tooltipProps: { id: string | number; value: number; color: string }) => {
+      const { id, value, color } = tooltipProps;
+      return <CustomTooltip id={id as string} value={value} color={color} />;
+    },
+    []
+  );
 
   return (
     <Card className="user-stats-card" data-testid="user-artist-activity">
@@ -248,13 +257,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                       navigate(`/album/${releaseGroupMbid}`);
                     }
                   }}
-                  tooltip={({ id, value, color }) => (
-                    <CustomTooltip
-                      id={id as string}
-                      value={value}
-                      color={color}
-                    />
-                  )}
+                  tooltip={tooltipRenderer}
                 />
               </div>
             </div>
