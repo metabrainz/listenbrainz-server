@@ -1,20 +1,14 @@
 import calendar
-from collections import defaultdict
-from datetime import datetime
-from typing import Dict, List, Tuple, Iterable
+import heapq
+from typing import Dict, Tuple, Optional
 
-from requests import HTTPError
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import pycountry
-import requests
-import heapq
-
-from data.model.common_stat import StatApi, StatisticsRange, StatRecordList
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
-from flask import Blueprint, current_app, jsonify, request
-
+from data.model.common_stat import StatApi, StatisticsRange
+from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
@@ -23,13 +17,11 @@ from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError,
                                            APINoContent, APINotFound)
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActivityReleaseGroupData
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param, is_valid_uuid)
-
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -410,28 +402,13 @@ def get_listening_activity(user_name: str):
     }})
 
 
-def _build_artist_activity_entries(result, artist_name, artist_mbid, release_group):
-
-class ArtistEntry(TypedDict):
-    name: str
-    artist_mbid: Optional[str]
-    listen_count: int
-    albums: Dict[str, Any]
-
-class ReleaseGroupData(TypedDict):
-    listen_count: int
-    release_group_name: str
-    release_group_mbid: Optional[str]
-    artist_name: Optional[str]
-    artists: Optional[List[Dict[str, str]]]
-
-
 def _build_artist_activity_entries(
-    result: Dict[str, ArtistEntry],
+    result: Dict[str, ArtistActivityArtistEntry],
     artist_name: str,
     artist_mbid: Optional[str],
-    release_group: ReleaseGroupData
+    release_group: ArtistActivityReleaseGroupData
 ) -> None:
+    listen_count = release_group["listen_count"]
     release_group_name = release_group["release_group_name"]
     release_group_mbid = release_group.get("release_group_mbid")
 
