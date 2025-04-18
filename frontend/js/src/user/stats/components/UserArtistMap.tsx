@@ -92,19 +92,10 @@ export default function UserArtistMap(props: UserArtistMapProps) {
     <Card className="user-stats-card" data-testid="user-stats-map">
       <div className="row">
         <div className="col-md-9 col-xs-6">
-          <h3 style={{ marginLeft: 20 }}>
-            <span className="capitalize-bold">Artist Origins</span>
-            {!isMobile ? <small>&nbsp;(top 1,000 artists)</small> : null}
-            <br />
-            <p
-              style={{
-                fontSize: 12,
-                color: "#666",
-              }}
-            >
-              Click on a country to see more details
-            </p>
+          <h3 className="capitalize-bold" style={{ display: "inline-block" }}>
+            Artist Origins
           </h3>
+          <small className="hidden-xs">&nbsp;(top 1,000 artists)</small>
         </div>
         <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
           <span>Rank by</span>
@@ -154,6 +145,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
           </h4>
         </div>
       </div>
+      <p>Click on a country to see more details</p>
       <Loader isLoading={loading}>
         {hasError ? (
           <div
