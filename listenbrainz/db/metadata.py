@@ -3,7 +3,7 @@ import psycopg2.extras
 
 from listenbrainz.db.model.metadata import RecordingMetadata, ArtistMetadata, ReleaseGroupMetadata
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_GET
-from typing import List, Dict
+from typing import List
 
 
 def fixup_mbids_to_artists(row):

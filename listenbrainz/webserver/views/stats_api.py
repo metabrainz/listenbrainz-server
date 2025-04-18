@@ -1,20 +1,14 @@
 import calendar
-from collections import defaultdict
-from datetime import datetime
-from typing import Dict, List, Tuple, Iterable
+import heapq
+from typing import Dict, Tuple, Optional
 
-from requests import HTTPError
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import pycountry
-import requests
-import heapq
-
-from data.model.common_stat import StatApi, StatisticsRange, StatRecordList
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
-from flask import Blueprint, current_app, jsonify, request
-
+from data.model.common_stat import StatApi, StatisticsRange
+from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
@@ -23,13 +17,11 @@ from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError,
                                            APINoContent, APINotFound)
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActivityReleaseGroupData
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param, is_valid_uuid)
-
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -410,7 +402,12 @@ def get_listening_activity(user_name: str):
     }})
 
 
-def _build_artist_activity_entries(result, artist_name, artist_mbid, release_group):
+def _build_artist_activity_entries(
+    result: Dict[str, ArtistActivityArtistEntry],
+    artist_name: str,
+    artist_mbid: Optional[str],
+    release_group: ArtistActivityReleaseGroupData
+) -> None:
     listen_count = release_group["listen_count"]
     release_group_name = release_group["release_group_name"]
     release_group_mbid = release_group.get("release_group_mbid")
@@ -441,7 +438,7 @@ def _build_artist_activity_entries(result, artist_name, artist_mbid, release_gro
 
 
 def _get_artist_activity(release_groups_list):
-    result = {}
+    result: dict = {}
     for release_group in release_groups_list:
         if artists := release_group.get("artists"):
             for artist in artists:
@@ -455,18 +452,19 @@ def _get_artist_activity(release_groups_list):
         item["albums"] = list(item["albums"].values())
 
     top_results = heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
+
     artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
-    metadata = get_metadata_for_artist(ts_conn, artist_mbids)
-
-    # replace credited artist name on release group with artist name where possible
-    artist_mbid_name_map = {}
-    for item in metadata:
-        artist_mbid_name_map[str(item.artist_mbid)] = item.artist_data["name"]
-
-    for result in top_results:
-        artist_mbid = result["artist_mbid"]
-        if artist_mbid in artist_mbid_name_map:
-            result["artist_name"] = artist_mbid_name_map[artist_mbid]
+    if artist_mbids:
+        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        # replace credited artist name on release group with artist name where possible
+        artist_mbid_name_map: dict[str, str] = {
+            str(item.artist_mbid): item.artist_data["name"]
+            for item in metadata
+        }
+        for result in top_results:
+            artist_mbid = result["artist_mbid"]
+            if artist_mbid in artist_mbid_name_map:
+                result["artist_name"] = artist_mbid_name_map[artist_mbid]
 
     return top_results
 
