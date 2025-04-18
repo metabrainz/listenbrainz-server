@@ -126,17 +126,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     return mapping;
   }, [rawData]);
 
-  const handleArtistLabelClick = (
-    tickIndex: number,
-    event: React.MouseEvent
-  ) => {
-    event.preventDefault();
-    const artistData = rawData?.result[tickIndex];
-    if (artistData?.artist_mbid) {
-      navigate(`/artist/${artistData.artist_mbid}`);
-    }
-  };
-
   React.useEffect(() => {
     if (rawData && rawData.result.length > 0) {
       const processedData = processData(rawData);
@@ -224,6 +213,12 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                               `/artist/${
                                 rawData?.result?.[tick.tickIndex]?.artist_mbid
                               }`
+                            );
+                          } else {
+                            navigate(
+                              `/search?search_term=${encodeURIComponent(
+                                rawData?.result?.[tick.tickIndex]?.name
+                              )}&search_type=artist`
                             );
                           }
                         }}
