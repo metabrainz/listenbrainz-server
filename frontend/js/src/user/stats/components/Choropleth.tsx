@@ -102,7 +102,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   >();
   const refContainer = useRef<HTMLDivElement>(null);
   const { APIService } = React.useContext(GlobalAppContext);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLButtonElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
   const [containerWidth, setContainerWidth] = useState<number>(1000);
@@ -199,7 +199,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     }
 
     return (
-      <div
+      <button
         ref={tooltipRef}
         style={{
           background: "white",
@@ -208,10 +208,13 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           borderRadius: "2px",
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
           maxWidth: `${tooltipWidth}px`,
+          width: "100%",
+          textAlign: "left",
+          padding: 0,
+          border: "none",
+          cursor: "default",
         }}
-        role="tooltip"
         aria-label={`Country details for ${countryName}`}
-        tabIndex={0} // Added back tabIndex for keyboard accessibility
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -236,7 +239,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </div>
           </div>
           <button
-            type="button" // Explicit button type
+            type="button"
             className="btn btn-info btn-rounded btn-sm"
             title={`Play tracks from ${countryName}`}
             style={{
@@ -373,7 +376,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </>
           )}
         </div>
-      </div>
+      </button>
     );
   }, [selectedCountry, selectedMetric]);
 
