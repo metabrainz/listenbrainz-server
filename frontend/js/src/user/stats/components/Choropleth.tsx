@@ -102,7 +102,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   >();
   const refContainer = useRef<HTMLDivElement>(null);
   const { APIService } = React.useContext(GlobalAppContext);
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLButtonElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
   const [containerWidth, setContainerWidth] = useState<number>(1000);
@@ -199,7 +199,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     }
 
     return (
-      <div
+      <button
         ref={tooltipRef}
         style={{
           background: "white",
@@ -208,12 +208,17 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           borderRadius: "2px",
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
           maxWidth: `${tooltipWidth}px`,
+          textAlign: "left", // Keep text aligned left
+          border: "none", // Remove default button styling
+          padding: 0, // Remove default button padding
+          cursor: "default", // Keep default cursor
         }}
         role="dialog"
         aria-modal="true"
         aria-label={`Country details for ${countryName}`}
-        tabIndex={0}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             setSelectedCountry(undefined);
@@ -252,7 +257,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
               background: "#353070",
               color: "white",
             }}
-            onClick={async () => {
+            onClick={async (e) => {
+              e.stopPropagation();
               const prompt = `country:(${countryName})`;
               const mode = "easy";
               try {
@@ -373,7 +379,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             </>
           )}
         </div>
-      </div>
+      </button>
     );
   }, [selectedCountry, selectedMetric]);
 
