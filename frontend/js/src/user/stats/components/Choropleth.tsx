@@ -14,10 +14,15 @@ import * as React from "react";
 import { useMediaQuery } from "react-responsive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faHeadphones } from "@fortawesome/free-solid-svg-icons";
+import { faHeadphones, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 import * as worldCountries from "../data/world_countries.json";
 import { COLOR_BLACK } from "../../../utils/constants";
+import GlobalAppContext from "../../../utils/GlobalAppContext";
+import {
+  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
+  getRecordingMBIDFromJSPFTrack,
+} from "../../../playlists/utils";
 
 const {
   useState,
@@ -96,6 +101,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     ChoroplethBoundFeature
   >();
   const refContainer = useRef<HTMLDivElement>(null);
+  const { APIService } = React.useContext(GlobalAppContext);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
   const [containerWidth, setContainerWidth] = useState<number>(1000);
@@ -177,58 +184,195 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   );
 
   const customTooltip = useMemo(() => {
-    if (!selectedCountry?.data) {
+    if (!selectedCountry) {
       return null;
     }
+
+    const countryName =
+      selectedCountry.label || (selectedCountry as any).properties?.name;
+    const countryData = selectedCountry.data ?? { value: 0, artists: [] };
+    const { value, artists } = countryData;
 
     let suffix = `${selectedMetric[0].toUpperCase()}${selectedMetric.slice(1)}`;
     if (Number(selectedCountry.formattedValue) !== 1) {
       suffix = `${suffix}s`;
     }
-    const { artists } = selectedCountry.data;
 
     return (
       <div
+        ref={tooltipRef}
         style={{
           background: "white",
           color: "inherit",
           fontSize: "inherit",
           borderRadius: "2px",
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
-          padding: "5px 9px",
           maxWidth: `${tooltipWidth}px`,
+        }}
+        role="tooltip"
+        aria-label={`Country details for ${countryName}`}
+        tabIndex={0} // Added back tabIndex for keyboard accessibility
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setSelectedCountry(undefined);
+          }
         }}
       >
         <div
           style={{
+            padding: "8px 12px",
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
+            background: `linear-gradient(180deg,rgba(252, 252, 252, 1) 0%, rgba(209, 209, 209, 1) 100%)`,
           }}
         >
-          <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
-          <span>
-            {selectedCountry.label}:{" "}
-            <strong>
-              {selectedCountry.formattedValue} {suffix}
-            </strong>
-          </span>
-        </div>
-        <hr style={{ margin: "0.5em 0" }} />
-        {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
-          <div key={artist.artist_mbid}>
-            <span className="badge color-purple" style={{ marginRight: "4px" }}>
-              <FontAwesomeIcon
-                style={{ marginRight: "4px" }}
-                icon={faHeadphones as IconProp}
-              />
-              {artist.listen_count}
-            </span>
-            <Link to={`/artist/${artist.artist_mbid}/`}>
-              {artist.artist_name}
-            </Link>
-            <br />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div>
+              <div style={{ fontWeight: "bold", fontSize: "16px" }}>
+                {countryName}
+              </div>
+            </div>
           </div>
-        ))}
+          <button
+            type="button" // Explicit button type
+            className="btn btn-info btn-rounded btn-sm"
+            title={`Play tracks from ${countryName}`}
+            style={{
+              borderRadius: "50%",
+              width: "30px",
+              height: "30px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+              cursor: "pointer",
+              background: "#353070",
+              color: "white",
+            }}
+            onClick={async (e) => {
+              e.stopPropagation();
+              const prompt = `country:(${countryName})`;
+              const mode = "easy";
+              try {
+                const request = await fetch(
+                  `${
+                    APIService.APIBaseURI
+                  }/explore/lb-radio?prompt=${encodeURIComponent(
+                    prompt
+                  )}&mode=${mode}`
+                );
+                if (request.ok) {
+                  const body: {
+                    payload: { jspf: JSPFObject; feedback: string[] };
+                  } = await request.json();
+                  const { payload } = body;
+                  const { playlist } = payload?.jspf as JSPFObject;
+                  if (playlist?.track?.length) {
+                    // Augment track with metadata fetched from LB server, mainly so we can have cover art
+                    try {
+                      const recordingMetadataMap = await APIService.getRecordingMetadata(
+                        playlist.track.map(getRecordingMBIDFromJSPFTrack)
+                      );
+                      if (recordingMetadataMap) {
+                        playlist?.track.forEach((track) => {
+                          const mbid = getRecordingMBIDFromJSPFTrack(track);
+                          if (recordingMetadataMap[mbid]) {
+                            // This object MUST follow the JSPFTrack type.
+                            // We don't set the correct ype here because we have an incomplete object
+                            const newTrackObject = {
+                              duration:
+                                recordingMetadataMap[mbid].recording?.length,
+                              extension: {
+                                [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
+                                  additional_metadata: {
+                                    caa_id:
+                                      recordingMetadataMap[mbid].release
+                                        ?.caa_id,
+                                    caa_release_mbid:
+                                      recordingMetadataMap[mbid].release
+                                        ?.caa_release_mbid,
+                                    artists: recordingMetadataMap[
+                                      mbid
+                                    ].artist?.artists?.map((a) => {
+                                      return {
+                                        artist_credit_name: a.name,
+                                        artist_mbid: a.artist_mbid,
+                                        join_phrase: a.join_phrase || "",
+                                      };
+                                    }),
+                                  },
+                                },
+                              },
+                            };
+                          }
+                        });
+                        // play the entire playlist
+                        window.postMessage(
+                          {
+                            brainzplayer_event: "play-ambient-queue",
+                            payload: playlist.track,
+                          },
+                          window.location.origin
+                        );
+                      }
+                    } catch (error) {
+                      console.error("Error fetching metadata", error);
+                    }
+                  }
+                } else {
+                  const msg = await request.json();
+                  console.error("Error fetching data", msg);
+                }
+              } catch (error) {
+                console.error("Error fetching data", error);
+              }
+            }}
+          >
+            <FontAwesomeIcon icon={faPlayCircle as IconProp} />
+          </button>
+        </div>
+        <div style={{ padding: "8px 12px" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
+            <span>
+              {"My Listens: "}
+              <strong>
+                {value} {suffix}
+              </strong>
+            </span>
+          </div>
+
+          {artists?.length > 0 && (
+            <>
+              <hr style={{ margin: "0.5em 0" }} />
+              {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
+                <div key={artist.artist_mbid}>
+                  <span
+                    className="badge color-purple"
+                    style={{ marginRight: "4px" }}
+                  >
+                    <FontAwesomeIcon
+                      style={{ marginRight: "4px" }}
+                      icon={faHeadphones as IconProp}
+                    />
+                    {artist.listen_count}
+                  </span>
+                  <Link to={`/artist/${artist.artist_mbid}/`}>
+                    {artist.artist_name}
+                  </Link>
+                  <br />
+                </div>
+              ))}
+            </>
+          )}
+        </div>
       </div>
     );
   }, [selectedCountry, selectedMetric]);
@@ -236,6 +380,12 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   // Hide our custom tooltip when user clicks somewhere that isn't a country
   const handleClickOutside = useCallback(
     (event: MouseEvent) => {
+      if (
+        tooltipRef.current &&
+        tooltipRef.current.contains(event.target as Node)
+      ) {
+        return; // Don't hide if clicking inside tooltip
+      }
       setSelectedCountry(undefined);
     },
     [setSelectedCountry]
@@ -249,7 +399,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   });
 
   const showTooltipFromEvent: ChoroplethEventHandler = useCallback(
-    (feature, event: React.MouseEvent<HTMLElement>) => {
+    async (feature, event: React.MouseEvent<HTMLElement>) => {
       // Cancel other events, such as our handleClickOutside defined above
       event.preventDefault();
       // relative mouse position
