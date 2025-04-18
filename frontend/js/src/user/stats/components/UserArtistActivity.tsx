@@ -127,14 +127,11 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   }, [rawData]);
 
   const handleArtistLabelClick = (
-    artistNameTemp: string,
+    tickIndex: number,
     event: React.MouseEvent
   ) => {
-    const artistName = artistNameTemp.replace(/-/g, " ");
     event.preventDefault();
-    const artistData = rawData?.result.find(
-      (artist) => artist.name === artistName
-    );
+    const artistData = rawData?.result[tickIndex];
     if (artistData?.artist_mbid) {
       navigate(`/artist/${artistData.artist_mbid}`);
     }
@@ -220,9 +217,16 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     renderTick: (tick) => (
                       <g
                         transform={`translate(${tick.x},${tick.y})`}
-                        onClick={(event) =>
-                          handleArtistLabelClick(tick.value, event)
-                        }
+                        onClick={(event) => {
+                          event.preventDefault();
+                          if (rawData?.result?.[tick.tickIndex]?.artist_mbid) {
+                            navigate(
+                              `/artist/${
+                                rawData?.result?.[tick.tickIndex]?.artist_mbid
+                              }`
+                            );
+                          }
+                        }}
                         style={{ cursor: "pointer" }}
                       >
                         {tick.value
@@ -238,7 +242,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                                 fontSize: 11,
                                 fill: "#c81f70",
                                 textDecoration: "none",
-                                fontWeight: 1000,
+                                fontWeight: 700,
                                 transform: `rotate(-45deg)`,
                               }}
                             >
