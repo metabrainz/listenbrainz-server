@@ -4,7 +4,7 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import { COLOR_BLACK } from "../../../utils/constants";
@@ -19,6 +19,33 @@ export declare type ChartDataItem = {
   label: string;
   [albumName: string]: number | string;
 };
+
+// Define CustomTooltip outside of the main component
+function CustomTooltip({
+  id,
+  value,
+  color,
+}: {
+  id: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: "10px",
+        background: "white",
+        border: `1px solid ${color}`,
+        borderRadius: "4px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
+    >
+      <strong>
+        {id}: {value}
+      </strong>
+    </div>
+  );
+}
 
 export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
@@ -106,6 +133,14 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     }
   }, [rawData]);
 
+  const tooltipRenderer = React.useCallback(
+    (tooltipProps: { id: string | number; value: number; color: string }) => {
+      const { id, value, color } = tooltipProps;
+      return <CustomTooltip id={id as string} value={value} color={color} />;
+    },
+    []
+  );
+
   return (
     <Card className="user-stats-card" data-testid="user-artist-activity">
       <div className="row">
@@ -168,28 +203,59 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: -45,
-                    renderTick: (tick) => (
-                      <g transform={`translate(${tick.x},${tick.y})`}>
-                        {tick.value
-                          .split("\n")
-                          .map((line: string, i: number) => (
-                            <text
-                              key={line}
-                              x={0}
-                              y={10 + i * 15}
-                              textAnchor="end"
-                              dominantBaseline="middle"
+                    renderTick: (tick) => {
+                      const artistMbid =
+                        rawData?.result?.[tick.tickIndex]?.artist_mbid || "";
+                      const artistName =
+                        rawData?.result?.[tick.tickIndex]?.name || "";
+                      const lines = tick.value.split("\n");
+                      const height = lines.length * 10; // Adjust height based on number of lines
+                      const width = Math.max(
+                        ...lines.map((line: string) => line.length * 7)
+                      );
+                      const linkTo = artistMbid
+                        ? `/artist/${artistMbid}`
+                        : `/search?search_term=${encodeURIComponent(
+                            artistName
+                          )}&search_type=artist`;
+                      return (
+                        <g transform={`translate(${tick.x},${tick.y})`}>
+                          <foreignObject
+                            x={-width + 10}
+                            y={0}
+                            width={width}
+                            height={height}
+                            style={{ overflow: "visible" }}
+                          >
+                            <div
                               style={{
-                                fontSize: 10,
-                                fill: "#000",
-                                transform: `rotate(-45deg)`,
+                                transform: "rotate(-45deg)",
+                                transformOrigin: "right bottom",
+                                textAlign: "right",
                               }}
                             >
-                              {line}
-                            </text>
-                          ))}
-                      </g>
-                    ),
+                              <Link
+                                to={linkTo}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "#c81f70",
+                                  fontWeight: 700,
+                                  fontSize: "11px",
+                                  display: "block",
+                                }}
+                              >
+                                {lines.map((line: string, i: number) => (
+                                  // 248:45 error Do not use Array index in keys react/no-array-index-key
+                                  <div key={`${artistName}-${line}`}>
+                                    {line}
+                                  </div>
+                                ))}
+                              </Link>
+                            </div>
+                          </foreignObject>
+                        </g>
+                      );
+                    },
                   }}
                   onClick={(barData, event) => {
                     const albumName = barData.id;
@@ -200,6 +266,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                       navigate(`/album/${releaseGroupMbid}`);
                     }
                   }}
+                  tooltip={tooltipRenderer}
                 />
               </div>
             </div>
