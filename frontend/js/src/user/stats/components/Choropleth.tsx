@@ -209,7 +209,16 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           boxShadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
           maxWidth: `${tooltipWidth}px`,
         }}
-        onClick={(e) => e.stopPropagation()} // Prevent clicks inside tooltip from closing it
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Country details for ${countryName}`}
+        tabIndex={0}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setSelectedCountry(undefined);
+          }
+        }}
       >
         <div
           style={{
