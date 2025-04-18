@@ -411,7 +411,27 @@ def get_listening_activity(user_name: str):
 
 
 def _build_artist_activity_entries(result, artist_name, artist_mbid, release_group):
-    listen_count = release_group["listen_count"]
+
+class ArtistEntry(TypedDict):
+    name: str
+    artist_mbid: Optional[str]
+    listen_count: int
+    albums: Dict[str, Any]
+
+class ReleaseGroupData(TypedDict):
+    listen_count: int
+    release_group_name: str
+    release_group_mbid: Optional[str]
+    artist_name: Optional[str]
+    artists: Optional[List[Dict[str, str]]]
+
+
+def _build_artist_activity_entries(
+    result: Dict[str, ArtistEntry],
+    artist_name: str,
+    artist_mbid: Optional[str],
+    release_group: ReleaseGroupData
+) -> None:
     release_group_name = release_group["release_group_name"]
     release_group_mbid = release_group.get("release_group_mbid")
 
