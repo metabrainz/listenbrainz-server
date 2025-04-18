@@ -208,42 +208,48 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                         rawData?.result?.[tick.tickIndex]?.artist_mbid || "";
                       const artistName =
                         rawData?.result?.[tick.tickIndex]?.name || "";
+                      const lines = tick.value.split("\n");
+                      const height = lines.length * 10; // Adjust height based on number of lines
+                      const width = Math.max(
+                        ...lines.map((line: string) => line.length * 7)
+                      );
+                      const linkTo = artistMbid
+                        ? `/artist/${artistMbid}`
+                        : `/search?search_term=${encodeURIComponent(
+                            artistName
+                          )}&search_type=artist`;
                       return (
-                        <g
-                          transform={`translate(${tick.x},${tick.y})`}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {tick.value
-                            .split("\n")
-                            .map((line: string, i: number) => (
+                        <g transform={`translate(${tick.x},${tick.y})`}>
+                          <foreignObject
+                            x={-width + 10}
+                            y={0}
+                            width={width}
+                            height={height}
+                            style={{ overflow: "visible" }}
+                          >
+                            <div
+                              style={{
+                                transform: "rotate(-45deg)",
+                                transformOrigin: "right bottom",
+                                textAlign: "right",
+                              }}
+                            >
                               <Link
-                                key={line}
-                                to={
-                                  artistMbid
-                                    ? `/artist/${artistMbid}`
-                                    : `/search?search_term=${encodeURIComponent(
-                                        artistName
-                                      )}&search_type=artist`
-                                }
-                                style={{ textDecoration: "none" }}
+                                to={linkTo}
+                                style={{
+                                  textDecoration: "none",
+                                  color: "#c81f70",
+                                  fontWeight: 700,
+                                  fontSize: "11px",
+                                  display: "block",
+                                }}
                               >
-                                <text
-                                  x={0}
-                                  y={10 + i * 15}
-                                  textAnchor="end"
-                                  dominantBaseline="middle"
-                                  style={{
-                                    fontSize: 11,
-                                    fill: "#c81f70",
-                                    textDecoration: "none",
-                                    fontWeight: 700,
-                                    transform: `rotate(-45deg)`,
-                                  }}
-                                >
-                                  {line}
-                                </text>
+                                {lines.map((line: string, i: number) => (
+                                  <div key={i}>{line}</div>
+                                ))}
                               </Link>
-                            ))}
+                            </div>
+                          </foreignObject>
                         </g>
                       );
                     },
