@@ -19,7 +19,7 @@ import { Link } from "react-router-dom";
 import * as worldCountries from "../data/world_countries.json";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import { enrichJSPFTracks } from "../../../utils/Playlist";
+import enrichJSPFTracks from "../../../utils/Playlist";
 
 const {
   useState,

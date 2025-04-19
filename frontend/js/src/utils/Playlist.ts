@@ -7,9 +7,9 @@ import {
 
 export default async function enrichJSPFTracks(
   tracks: JSPFObject["playlist"]["track"],
-  api: APIService
+  api: APIService,
 ): Promise<
-  (JSPFObject["playlist"]["track"][number] & {
+(JSPFObject["playlist"]["track"][number] & {
     duration?: number;
     extension?: {
       [key: string]: {
