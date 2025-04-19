@@ -19,10 +19,7 @@ import { Link } from "react-router-dom";
 import * as worldCountries from "../data/world_countries.json";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import {
-  MUSICBRAINZ_JSPF_TRACK_EXTENSION,
-  getRecordingMBIDFromJSPFTrack,
-} from "../../../playlists/utils";
+import { enrichJSPFTracks } from "../../../utils/Playlist";
 
 const {
   useState,
@@ -185,79 +182,25 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   const handlePlayCountryTracks = useCallback(
     async (countryName: string) => {
-      const prompt = `country:(${countryName})`;
-      const mode = "easy";
       try {
-        const request = await fetch(
-          `${
-            APIService.APIBaseURI
-          }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`
+        const { payload } = await APIService.getLBRadioPlaylist(
+          `country:(${countryName})`,
         );
-        if (request.ok) {
-          const body: {
-            payload: { jspf: JSPFObject; feedback: string[] };
-          } = await request.json();
-          const { payload } = body;
-          const { playlist } = payload?.jspf as JSPFObject;
-          if (playlist?.track?.length) {
-            // Augment track with metadata fetched from LB server, mainly so we can have cover art
-            try {
-              const recordingMetadataMap = await APIService.getRecordingMetadata(
-                playlist.track.map(getRecordingMBIDFromJSPFTrack)
-              );
-              if (recordingMetadataMap) {
-                playlist?.track.forEach((track) => {
-                  const mbid = getRecordingMBIDFromJSPFTrack(track);
-                  if (recordingMetadataMap[mbid]) {
-                    // This object MUST follow the JSPFTrack type.
-                    // We don't set the correct type here because we have an incomplete object
-                    const newTrackObject = {
-                      duration: recordingMetadataMap[mbid].recording?.length,
-                      extension: {
-                        [MUSICBRAINZ_JSPF_TRACK_EXTENSION]: {
-                          additional_metadata: {
-                            caa_id: recordingMetadataMap[mbid].release?.caa_id,
-                            caa_release_mbid:
-                              recordingMetadataMap[mbid].release
-                                ?.caa_release_mbid,
-                            artists: recordingMetadataMap[
-                              mbid
-                            ].artist?.artists?.map((a) => {
-                              return {
-                                artist_credit_name: a.name,
-                                artist_mbid: a.artist_mbid,
-                                join_phrase: a.join_phrase || "",
-                              };
-                            }),
-                          },
-                        },
-                      },
-                    };
-                  }
-                });
-                // play the entire playlist
-                window.postMessage(
-                  {
-                    brainzplayer_event: "play-ambient-queue",
-                    payload: playlist.track,
-                  },
-                  window.location.origin
-                );
-              }
-            } catch (error) {
-              console.error("Error fetching metadata", error);
-            }
-          }
-        } else {
-          const msg = await request.json();
-          console.error("Error fetching data", msg);
-        }
-      } catch (error) {
-        console.error("Error fetching data", error);
+        const tracks = payload.jspf.playlist.track;
+        if (!tracks?.length) return;
+  
+        const enriched = await enrichJSPFTracks(tracks, APIService);
+        window.postMessage(
+          { brainzplayer_event: "play-ambient-queue", payload: enriched },
+          window.location.origin,
+        );
+      } catch (err) {
+        console.error("LB Radio error", err);
       }
     },
-    [APIService]
+    [APIService],
   );
+  
 
   const customTooltip = useMemo(() => {
     if (!selectedCountry) {
