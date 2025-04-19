@@ -5,7 +5,7 @@ import {
   getRecordingMBIDFromJSPFTrack,
 } from "../playlists/utils";
 
-export async function enrichJSPFTracks(
+export default async function enrichJSPFTracks(
   tracks: JSPFObject["playlist"]["track"],
   api: APIService
 ): Promise<
