@@ -184,23 +184,22 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     async (countryName: string) => {
       try {
         const { payload } = await APIService.getLBRadioPlaylist(
-          `country:(${countryName})`,
+          `country:(${countryName})`
         );
         const tracks = payload.jspf.playlist.track;
         if (!tracks?.length) return;
-  
+
         const enriched = await enrichJSPFTracks(tracks, APIService);
         window.postMessage(
           { brainzplayer_event: "play-ambient-queue", payload: enriched },
-          window.location.origin,
+          window.location.origin
         );
       } catch (err) {
         console.error("LB Radio error", err);
       }
     },
-    [APIService],
+    [APIService]
   );
-  
 
   const customTooltip = useMemo(() => {
     if (!selectedCountry) {

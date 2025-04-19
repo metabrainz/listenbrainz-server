@@ -1997,11 +1997,11 @@ export default class APIService {
 
   async getLBRadioPlaylist(
     prompt: string,
-    mode: Modes = Modes.easy,
+    mode: Modes = Modes.easy
   ): Promise<LBRadioResponse> {
-    const url = `${this.APIBaseURI}/explore/lb-radio?prompt=${encodeURIComponent(
-      prompt,
-    )}&mode=${mode}`;
+    const url = `${
+      this.APIBaseURI
+    }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
