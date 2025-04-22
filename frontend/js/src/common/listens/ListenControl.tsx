@@ -84,8 +84,8 @@ function ListenControl(props: ListenControlProps) {
       title={title ?? text}
       onClick={disabled ? undefined : action}
       type="button"
-      data-toggle={dataToggle}
-      data-target={dataTarget}
+      data-bs-toggle={dataToggle}
+      data-bs-target={dataTarget}
       aria-label={ariaLabel ?? text}
       role="menuitem"
     >

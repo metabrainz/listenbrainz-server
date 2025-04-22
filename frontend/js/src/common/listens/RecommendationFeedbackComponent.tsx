@@ -114,7 +114,7 @@ export default class RecommendationFeedbackComponent extends React.Component<
         <button
           className={`btn ${currentFeedback}`}
           id="recommendationControlsDropdown"
-          data-toggle="dropdown"
+          data-bs-toggle="dropdown"
           aria-haspopup="true"
           aria-expanded="true"
           type="button"

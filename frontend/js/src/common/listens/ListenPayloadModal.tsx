@@ -17,8 +17,8 @@ export type ListenPayloadModalProps = {
 /** A note about this modal:
  * We use Bootstrap 3 modals, which work with jQuery and data- attributes
  * In order to show the modal properly, including backdrop and visibility,
- * you'll need dataToggle="modal" and dataTarget="#ListenPayloadModal"
- * on the buttons that open this modal as well as data-dismiss="modal"
+ * you'll need data-bs-toggle="modal" and data-bs-target="#ListenPayloadModal"
+ * on the buttons that open this modal as well as data-bs-dismiss="modal"
  * on the buttons that close the modal. Modals won't work (be visible) without it
  * until we move to Bootstrap 5 / Bootstrap React which don't require those attributes.
  */
@@ -46,7 +46,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="ListenPayloadModalLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content">
@@ -54,7 +54,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
               onClick={closeModal}
             />
@@ -84,7 +84,7 @@ export default NiceModal.create(({ listen }: ListenPayloadModalProps) => {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               onClick={closeModal}
             >
               Close

@@ -54,7 +54,7 @@ function ReportUserModal(props: ReportUserModalProps) {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
             />
             <h4 className="modal-title" id="reportUserModalLabel">
@@ -102,7 +102,7 @@ function ReportUserModal(props: ReportUserModalProps) {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
             >
               Cancel
             </button>
@@ -110,7 +110,7 @@ function ReportUserModal(props: ReportUserModalProps) {
               type="submit"
               className="btn btn-primary"
               onClick={submit}
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
             >
               Report user
             </button>

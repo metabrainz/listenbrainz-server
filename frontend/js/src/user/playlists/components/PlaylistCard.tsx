@@ -159,7 +159,7 @@ export default function PlaylistCard({
             icon={faEllipsisVertical}
             fixedWidth
             id="playlistOptionsDropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="true"
             type="button"
@@ -212,7 +212,7 @@ export default function PlaylistCard({
             className="dropdown-toggle playlist-card-action-button"
             type="button"
             id="playlistOptionsDropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="true"
           >

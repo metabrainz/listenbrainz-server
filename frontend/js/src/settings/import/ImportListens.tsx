@@ -45,7 +45,7 @@ export default function Import() {
       )}
       <p>
         Import your existing{" "}
-        <span className="strong" data-tip data-for="info-tooltip">
+        <span className="strong" data-bs-tip data-bs-for="info-tooltip">
           listen
         </span>{" "}
         history from other databases.{" "}

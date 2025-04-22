@@ -30,7 +30,7 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
       style={{ display: modal.visible ? "block" : "none" }}
       tabIndex={-1}
       role="dialog"
-      data-backdrop="true"
+      data-bs-backdrop="true"
       aria-hidden={!modal.visible}
     >
       <div

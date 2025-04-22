@@ -292,7 +292,7 @@ export default class UserPlaylists extends React.Component<
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="ImportPlaylistDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
                 >
                   <FontAwesomeIcon icon={faPlusCircle} title="Import" />
@@ -317,8 +317,8 @@ export default class UserPlaylists extends React.Component<
                         }
                       });
                     }}
-                    data-toggle="modal"
-                    data-target="#ImportMusicServicePlaylistModal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#ImportMusicServicePlaylistModal"
                     className="dropdown-item"
                   >
                     <FontAwesomeIcon icon={faSpotify} />
@@ -339,8 +339,8 @@ export default class UserPlaylists extends React.Component<
                         }
                       });
                     }}
-                    data-toggle="modal"
-                    data-target="#ImportMusicServicePlaylistModal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#ImportMusicServicePlaylistModal"
                     className="dropdown-item"
                   >
                     <FontAwesomeIcon icon={faItunesNote} />
@@ -361,8 +361,8 @@ export default class UserPlaylists extends React.Component<
                         }
                       });
                     }}
-                    data-toggle="modal"
-                    data-target="#ImportPlaylistModal"
+                    data-bs-toggle="modal"
+                    data-bs-target="#ImportPlaylistModal"
                     className="dropdown-item"
                   >
                     <FontAwesomeIcon icon={faFileImport} />
@@ -391,8 +391,8 @@ export default class UserPlaylists extends React.Component<
               className={`new-playlist ${
                 view === PlaylistView.LIST ? "list-view" : ""
               }`}
-              data-toggle="modal"
-              data-target="#CreateOrEditPlaylistModal"
+              data-bs-toggle="modal"
+              data-bs-target="#CreateOrEditPlaylistModal"
               onClick={() => {
                 NiceModal.show<JSPFPlaylist, any>(
                   CreateOrEditPlaylistModal

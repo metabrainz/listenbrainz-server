@@ -351,8 +351,8 @@ export default function RecommendationsPage() {
             <button
               type="button"
               className="btn btn-link"
-              data-toggle="modal"
-              data-target="#StatsExplanationsModal"
+              data-bs-toggle="modal"
+              data-bs-target="#StatsExplanationsModal"
               onClick={() => {
                 NiceModal.show(StatsExplanationsModal);
               }}

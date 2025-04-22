@@ -334,8 +334,8 @@ export default NiceModal.create(
         id="MultiTrackMBIDMappingModal"
         role="dialog"
         aria-labelledby="MultiTrackMBIDMappingModalLabel"
-        data-backdrop
-        data-keyboard
+        data-bs-backdrop
+        data-bs-keyboard
       >
         <div className="modal-dialog" role="document">
           <Tooltip id="musicbrainz-helptext" type="info" multiline>
@@ -369,8 +369,8 @@ export default NiceModal.create(
                   .
                   <FontAwesomeIcon
                     icon={faQuestionCircle}
-                    data-tip
-                    data-for="musicbrainz-helptext"
+                    data-bs-tip
+                    data-bs-for="musicbrainz-helptext"
                     size="sm"
                   />
                 </p>
@@ -399,8 +399,8 @@ export default NiceModal.create(
                     Include artist name when searching{" "}
                     <FontAwesomeIcon
                       icon={faQuestionCircle}
-                      data-tip
-                      data-for="includeArtistNameHelp"
+                      data-bs-tip
+                      data-bs-for="includeArtistNameHelp"
                       size="sm"
                     />{" "}
                   </label>
@@ -428,8 +428,8 @@ export default NiceModal.create(
                     Preserve special characters{" "}
                     <FontAwesomeIcon
                       icon={faQuestionCircle}
-                      data-tip
-                      data-for="escapeSpecialCharactersHepl"
+                      data-bs-tip
+                      data-bs-for="escapeSpecialCharactersHepl"
                       size="sm"
                     />{" "}
                   </label>
@@ -568,8 +568,8 @@ export default NiceModal.create(
                   Include artist name when matching{" "}
                   <FontAwesomeIcon
                     icon={faQuestionCircle}
-                    data-tip
-                    data-for="includeArtistNameMatchHelp"
+                    data-bs-tip
+                    data-bs-for="includeArtistNameMatchHelp"
                     size="sm"
                   />{" "}
                 </label>

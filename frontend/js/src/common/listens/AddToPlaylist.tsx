@@ -147,7 +147,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="AddToPlaylistLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div className="modal-dialog" role="document">
         <div className="modal-content">
@@ -155,7 +155,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
               onClick={closeModal}
             />
@@ -179,9 +179,9 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
               <button
                 type="button"
                 className="list-group-item list-group-item-info"
-                data-dismiss="modal"
-                data-toggle="modal"
-                data-target="#CreateOrEditPlaylistModal"
+                data-bs-dismiss="modal"
+                data-bs-toggle="modal"
+                data-bs-target="#CreateOrEditPlaylistModal"
                 onClick={createPlaylist}
               >
                 <FontAwesomeIcon icon={faFileCirclePlus} /> Create new playlist
@@ -208,7 +208,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               onClick={closeModal}
             >
               Close

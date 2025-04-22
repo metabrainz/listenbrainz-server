@@ -389,13 +389,13 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       <span>
         <span
           className="CBInfoButton"
-          data-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
+          data-bs-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
           MetaBrainz project</a> aimed at providing an open platform for music critics
           and hosting Creative Commons licensed music reviews. </br></br>
           Your reviews will be independently visible on CritiqueBrainz and appear publicly
           on your CritiqueBrainz profile. To view or delete your reviews, visit your
           <a href='${CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
-          data-event="click focus"
+          data-bs-event="click focus"
         >
           <FontAwesomeIcon
             icon={faInfoCircle as IconProp}
@@ -430,7 +430,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
             onClick={() => {
               navigate("/settings/music-services/details/");
             }}
-            data-dismiss="modal"
+            data-bs-dismiss="modal"
           >
             {" "}
             music services page.
@@ -476,7 +476,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           <span className="dropdown">
             <button
               className="dropdown-toggle btn-transparent"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
@@ -625,7 +625,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           onClick={() => {
             navigate("/settings/music-services/details/");
           }}
-          data-dismiss="modal"
+          data-bs-dismiss="modal"
         >
           {" "}
           Connect To CritiqueBrainz{" "}
@@ -651,7 +651,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       <button
         type="button"
         className="btn btn-secondary"
-        data-dismiss="modal"
+        data-bs-dismiss="modal"
         onClick={closeModal}
       >
         Cancel
@@ -673,7 +673,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="CBReviewModalLabel"
-      data-backdrop="true"
+      data-bs-backdrop="true"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content" onSubmit={submitReviewToCB}>
@@ -681,7 +681,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
               onClick={closeModal}
             />

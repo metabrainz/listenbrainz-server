@@ -261,7 +261,7 @@ export default function UserEntityChart() {
                 <span className="dropdown" style={{ fontSize: 22 }}>
                   <button
                     className="dropdown-toggle btn-transparent capitalize-bold"
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     type="button"
                   >
                     {ranges.get(range)}
@@ -303,8 +303,8 @@ export default function UserEntityChart() {
                 type="button"
                 className="btn btn-icon btn-info atom-button"
                 style={{ marginLeft: "auto" }}
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
+                data-bs-toggle="modal"
+                data-bs-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {

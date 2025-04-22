@@ -145,7 +145,7 @@ export default function MagicShareButton({
         tabIndex={-1}
         role="dialog"
         aria-labelledby="ShareModalLabel"
-        data-backdrop="true"
+        data-bs-backdrop="true"
       >
         <div className="modal-dialog" role="document">
           <form className="modal-content">
@@ -154,7 +154,7 @@ export default function MagicShareButton({
                 type="button"
                 className="btn-close"
                 aria-label="Close"
-                data-dismiss="modal"
+                data-bs-dismiss="modal"
               />
               <h4 className="modal-title" id="ShareModalLabel">
                 Share your stats
@@ -203,8 +203,8 @@ export default function MagicShareButton({
       <button
         className="yim-share-button btn btn-icon btn-info"
         type="button"
-        data-toggle="modal"
-        data-target={`#${id}`}
+        data-bs-toggle="modal"
+        data-bs-target={`#${id}`}
       >
         <FontAwesomeIcon icon={faShareAlt} />
       </button>

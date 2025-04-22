@@ -362,7 +362,7 @@ export default function ArtistPage(): JSX.Element {
               <button
                 type="button"
                 className="btn btn-info dropdown-toggle"
-                data-toggle="dropdown"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
                 aria-label="Toggle dropdown"
@@ -584,8 +584,8 @@ export default function ArtistPage(): JSX.Element {
         <button
           type="button"
           className="btn btn-info"
-          data-toggle="modal"
-          data-target="#CBReviewModal"
+          data-bs-toggle="modal"
+          data-bs-target="#CBReviewModal"
           onClick={() => {
             NiceModal.show(CBReviewModal, {
               entityToReview: [

@@ -425,8 +425,8 @@ export class ListenCard extends React.Component<
           onKeyDown={openModal}
           role="button"
           tabIndex={0}
-          data-toggle="modal"
-          data-target="#MBIDMappingModal"
+          data-bs-toggle="modal"
+          data-bs-target="#MBIDMappingModal"
         >
           <div className="not-mapped">
             <FontAwesomeIcon icon={faLink} />
@@ -548,7 +548,7 @@ export class ListenCard extends React.Component<
                     title="More actions"
                     className="btn btn-transparent dropdown-toggle"
                     id="listenControlsDropdown"
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     aria-haspopup="true"
                     aria-expanded="true"
                     type="button"

@@ -31,7 +31,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="confirmationModalLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div className="modal-dialog modal-sm" role="document">
         <div className="modal-content">
@@ -39,7 +39,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
             />
             <h4 className="modal-title" id="confirmationModalLabel">
@@ -55,7 +55,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               onClick={onCancel}
             >
               Cancel
@@ -64,7 +64,7 @@ export default NiceModal.create((props: ConfirmationModalProps) => {
               type="button"
               className="btn btn-danger"
               onClick={onConfirm}
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
             >
               Confirm
             </button>

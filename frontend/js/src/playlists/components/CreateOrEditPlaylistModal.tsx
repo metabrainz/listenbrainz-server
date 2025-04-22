@@ -273,7 +273,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="playlistModalLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content">
@@ -281,7 +281,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
             />
             <h4 className="modal-title" id="playlistModalLabel">
@@ -393,7 +393,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               onClick={closeModal}
             >
               Cancel
@@ -401,7 +401,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             <button
               type="submit"
               className="btn btn-primary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               disabled={!currentUser?.auth_token}
               onClick={onSubmit}
             >

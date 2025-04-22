@@ -244,7 +244,7 @@ export default NiceModal.create(() => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="AddListenModalLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div className="modal-dialog" role="document">
         <form className="modal-content">
@@ -252,7 +252,7 @@ export default NiceModal.create(() => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
               onClick={closeModal}
             />
@@ -371,7 +371,7 @@ export default NiceModal.create(() => {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               onClick={closeModal}
             >
               Close
@@ -379,7 +379,7 @@ export default NiceModal.create(() => {
             <button
               type="submit"
               className="btn btn-success"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               disabled={!selectedListens?.length}
               onClick={submitListens}
             >

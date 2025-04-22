@@ -77,7 +77,7 @@ export default NiceModal.create(
         tabIndex={-1}
         role="dialog"
         aria-labelledby="confirmDeleteModalLabel"
-        data-backdrop="static"
+        data-bs-backdrop="static"
       >
         <div className="modal-dialog modal-sm" role="document">
           <div className="modal-content">
@@ -85,7 +85,7 @@ export default NiceModal.create(
               <button
                 type="button"
                 className="btn-close"
-                data-dismiss="modal"
+                data-bs-dismiss="modal"
                 aria-label="Close"
               />
               <h4 className="modal-title" id="confirmDeleteModalLabel">
@@ -103,7 +103,7 @@ export default NiceModal.create(
               <button
                 type="button"
                 className="btn btn-secondary"
-                data-dismiss="modal"
+                data-bs-dismiss="modal"
               >
                 Cancel
               </button>
@@ -111,7 +111,7 @@ export default NiceModal.create(
                 type="button"
                 className="btn btn-danger"
                 onClick={onConfirm}
-                data-dismiss="modal"
+                data-bs-dismiss="modal"
               >
                 Confirm
               </button>

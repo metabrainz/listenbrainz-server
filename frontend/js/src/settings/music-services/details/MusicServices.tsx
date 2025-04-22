@@ -429,7 +429,7 @@ export default function MusicServices() {
               <button
                 type="button"
                 className="btn-close"
-                data-dismiss="alert"
+                data-bs-dismiss="alert"
                 aria-label="Close"
               />
             </div>

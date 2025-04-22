@@ -131,7 +131,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="ImportMusicServicePlaylistLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div className="modal-dialog" role="document">
         <div className="modal-content">
@@ -139,7 +139,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
               onClick={resolveAndClose}
             />
@@ -195,7 +195,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
             <button
               type="button"
               className="btn btn-secondary"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               onClick={resolveAndClose}
             >
               Close

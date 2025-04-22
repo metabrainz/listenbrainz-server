@@ -54,7 +54,7 @@ function CompatibilityCard(props: CompatibilityCardProps) {
         })}
         {hasMoreThanFive && (
           <>
-            <span data-tip data-for="more-artists-tooltip">
+            <span data-bs-tip data-bs-for="more-artists-tooltip">
               , and more.{" "}
               <FontAwesomeIcon icon={faSquarePlus} size="sm" color="gray" />
             </span>
@@ -83,7 +83,7 @@ function CompatibilityCard(props: CompatibilityCardProps) {
 
   return (
     <Card id="compatibility-card" data-testid="compatibility-card">
-      <div className="info-icon" data-tip data-for="info-tooltip">
+      <div className="info-icon" data-bs-tip data-bs-for="info-tooltip">
         <Link
           to={`/user/${user?.name}/stats/?range=all_time`}
           target="_blank"

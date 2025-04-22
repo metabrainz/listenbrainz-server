@@ -502,7 +502,7 @@ export default function PlaylistPage() {
                 className="btn btn-info dropdown-toggle"
                 type="button"
                 id="playlistOptionsDropdown"
-                data-toggle="dropdown"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="true"
               >
@@ -522,8 +522,8 @@ export default function PlaylistPage() {
               <button
                 type="button"
                 className="btn btn-icon btn-info btn-sm atom-button"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
+                data-bs-toggle="modal"
+                data-bs-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {

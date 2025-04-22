@@ -140,7 +140,7 @@ export default class PlayerPage extends React.Component<
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="playlistOptionsDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
                   aria-expanded="true"
                 >

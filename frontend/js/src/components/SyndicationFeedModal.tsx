@@ -95,7 +95,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
       tabIndex={-1}
       role="dialog"
       aria-labelledby="syndicationFeedModalLabel"
-      data-backdrop="static"
+      data-bs-backdrop="static"
     >
       <div
         className="modal-dialog"
@@ -107,7 +107,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
             <button
               type="button"
               className="btn-close"
-              data-dismiss="modal"
+              data-bs-dismiss="modal"
               aria-label="Close"
               onClick={closeModal}
             />
@@ -127,7 +127,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
                       &nbsp;
                       <FontAwesomeIcon
                         icon={faCircleQuestion}
-                        data-tip={option.tooltip}
+                        data-bs-tip={option.tooltip}
                       />
                       <Tooltip place="right" type="dark" effect="solid" />
                     </>

@@ -378,8 +378,8 @@ export default function FreshReleases() {
               <button
                 type="button"
                 className="btn btn-icon btn-info atom-button"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
+                data-bs-toggle="modal"
+                data-bs-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   if (pageType === PAGE_TYPE_SITEWIDE) {

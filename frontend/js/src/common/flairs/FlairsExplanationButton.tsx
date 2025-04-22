@@ -21,8 +21,8 @@ function FlairsExplanationButton(props: { className?: string }) {
     <button
       type="button"
       className={`btn btn-link ${className}`}
-      data-toggle="modal"
-      data-target="#FlairsExplanationsModal"
+      data-bs-toggle="modal"
+      data-bs-target="#FlairsExplanationsModal"
       onClick={() => {
         NiceModal.show(FlairsExplanationModal);
       }}

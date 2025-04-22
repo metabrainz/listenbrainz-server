@@ -76,8 +76,8 @@ class ReportUserButton extends React.Component<
         <button
           className="btn btn-danger"
           style={{ float: "right" }}
-          data-toggle="modal"
-          data-target="#reportUserModal"
+          data-bs-toggle="modal"
+          data-bs-target="#reportUserModal"
           type="button"
         >
           {buttonText}

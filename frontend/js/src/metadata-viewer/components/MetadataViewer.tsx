@@ -558,7 +558,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   ? " disabled"
                   : ""
               }`}
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               <b>Support the artist</b>

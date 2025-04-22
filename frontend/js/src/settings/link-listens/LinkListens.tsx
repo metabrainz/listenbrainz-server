@@ -332,8 +332,8 @@ export default function LinkListensPage() {
         Your top 1,000 listens (grouped by album) that have&nbsp;
         <u
           className="link-listens-tooltip"
-          data-tip
-          data-for="matching-tooltip"
+          data-bs-tip
+          data-bs-for="matching-tooltip"
         >
           not been automatically linked
         </u>
@@ -435,8 +435,8 @@ export default function LinkListensPage() {
                 onClick={() => {
                   openMultiTrackMappingModal(group, releaseName);
                 }}
-                data-toggle="modal"
-                data-target="#MultiTrackMBIDMappingModal"
+                data-bs-toggle="modal"
+                data-bs-target="#MultiTrackMBIDMappingModal"
               >
                 <FontAwesomeIcon icon={faLink} />
               </button>

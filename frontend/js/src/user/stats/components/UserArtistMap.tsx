@@ -100,7 +100,7 @@ export default function UserArtistMap(props: UserArtistMapProps) {
           <span className="dropdown">
             <button
               className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               {selectedMetric}s

@@ -162,7 +162,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
         className="modal fade"
         id="MBIDMappingModal"
         role="dialog"
-        data-backdrop="true"
+        data-bs-backdrop="true"
         aria-labelledby="MBIDMappingModalLabel"
       >
         <div className="modal-dialog" role="document">
