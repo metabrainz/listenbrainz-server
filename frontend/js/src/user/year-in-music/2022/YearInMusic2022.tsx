@@ -510,24 +510,20 @@ export default class YearInMusic extends React.Component<
                   size={linkToThisPage.length - 5}
                   value={linkToThisPage}
                 />
-                <span className="input-group-prepend">
-                  <span className="input-group-text">
-                    <FontAwesomeIcon
-                      icon={faCopy}
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(linkToThisPage);
-                      }}
-                    />
-                  </span>
+                <span className="input-group-text">
+                  <FontAwesomeIcon
+                    icon={faCopy}
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(linkToThisPage);
+                    }}
+                  />
                 </span>
                 {!isUndefined(navigator.canShare) ? (
-                  <span className="input-group-prepend">
-                    <span className="input-group-text">
-                      <FontAwesomeIcon
-                        icon={faShareAlt}
-                        onClick={this.sharePage}
-                      />
-                    </span>
+                  <span className="input-group-text">
+                    <FontAwesomeIcon
+                      icon={faShareAlt}
+                      onClick={this.sharePage}
+                    />
                   </span>
                 ) : null}
               </div>

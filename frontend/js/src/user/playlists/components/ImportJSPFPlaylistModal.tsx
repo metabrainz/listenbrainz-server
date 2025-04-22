@@ -163,8 +163,8 @@ export default NiceModal.create(() => {
             </h4>
           </div>
           <div className="modal-body">
-            <div className="form-group">
-              <label htmlFor="playlistFile">
+            <div className="mb-4">
+              <label className="form-label" htmlFor="playlistFile">
                 Choose or drop a file with .json or .jspf extension
               </label>
               <input

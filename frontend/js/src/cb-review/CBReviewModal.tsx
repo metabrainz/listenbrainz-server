@@ -505,7 +505,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           for <a href={CBBaseUrl}>CritiqueBrainz</a>. {CBInfoButton}
         </div>
 
-        <div className="form-group">
+        <div className="mb-4">
           <textarea
             className="form-control"
             id="review-text"

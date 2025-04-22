@@ -116,7 +116,7 @@ export default NiceModal.create(
             </div>
             <div className="modal-body">
               <p>Leave a message (optional)</p>
-              <div className="form-group">
+              <div className="mb-4">
                 <textarea
                   className="form-control"
                   id="blurb-content"

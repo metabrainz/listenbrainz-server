@@ -554,7 +554,7 @@ export default class YearInMusic extends React.Component<
               size={linkToThisPage.length - 5}
               value={linkToThisPage}
             />
-            <span className="btn btn-info input-group-addon">
+            <span className="btn btn-info">
               <FontAwesomeIcon
                 icon={faCopy}
                 onClick={async () => {

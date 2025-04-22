@@ -119,8 +119,8 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
 
           <div className="modal-body">
             {options.map((option) => (
-              <div className="form-group" key={option.key}>
-                <label htmlFor={option.key}>
+              <div className="mb-4" key={option.key}>
+                <label className="form-label" htmlFor={option.key}>
                   {option.label}
                   {option.tooltip && (
                     <>
@@ -164,8 +164,10 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
                 )}
               </div>
             ))}
-            <div className="form-group">
-              <label htmlFor="feedLink">Subscription URL</label>
+            <div className="mb-4">
+              <label className="form-label" htmlFor="feedLink">
+                Subscription URL
+              </label>
               <div style={{ display: "flex", alignItems: "center" }}>
                 <input
                   type="text"

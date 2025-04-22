@@ -69,7 +69,7 @@ export default function Search() {
         </ol>
       </div>
       <div role="main">
-        <form className="form-group" onSubmit={search}>
+        <form className="mb-4" onSubmit={search}>
           <h2
             className="header-with-line"
             style={{ alignItems: "center", flexWrap: "wrap" }}

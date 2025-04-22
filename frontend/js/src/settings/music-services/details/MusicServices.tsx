@@ -436,7 +436,9 @@ export default function MusicServices() {
             <form onSubmit={handleConnectToLaftFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
-                  <label htmlFor="lastfmUsername">Your Last.FM username:</label>
+                  <label className="form-label" htmlFor="lastfmUsername">
+                    Your Last.FM username:
+                  </label>
                   <input
                     type="text"
                     className="form-control"
@@ -450,7 +452,7 @@ export default function MusicServices() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="datetime">
+                  <label className="form-label" htmlFor="datetime">
                     Start import from (optional):
                   </label>
                   <input

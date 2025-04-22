@@ -321,7 +321,7 @@ export default NiceModal.create(() => {
                 </Pill>
                 <div className="timestamp-date-picker">
                   <div>
-                    <label htmlFor="starts-at">
+                    <label className="form-label" htmlFor="starts-at">
                       <input
                         name="invert-timestamp"
                         type="radio"
@@ -334,7 +334,7 @@ export default NiceModal.create(() => {
                       />
                       &nbsp;Starts at:
                     </label>
-                    <label htmlFor="ends-at">
+                    <label className="form-label" htmlFor="ends-at">
                       <input
                         name="invert-timestamp"
                         type="radio"

@@ -78,8 +78,10 @@ function ReportUserModal(props: ReportUserModalProps) {
               your report.
               <br />
             </p>
-            <div className="form-group">
-              <label htmlFor="reason">Reason</label>
+            <div className="mb-4">
+              <label className="form-label" htmlFor="reason">
+                Reason
+              </label>
               <textarea
                 className="form-control"
                 id="reason"

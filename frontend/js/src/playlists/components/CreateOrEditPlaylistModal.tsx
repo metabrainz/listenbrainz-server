@@ -289,8 +289,10 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             </h4>
           </div>
           <div className="modal-body">
-            <div className="form-group">
-              <label htmlFor="playlistName">Name</label>
+            <div className="mb-4">
+              <label className="form-label" htmlFor="playlistName">
+                Name
+              </label>
               <input
                 type="text"
                 className="form-control"
@@ -302,8 +304,10 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="playlistdescription">Description</label>
+            <div className="mb-4">
+              <label className="form-label" htmlFor="playlistdescription">
+                Description
+              </label>
               <textarea
                 className="form-control"
                 id="playlistdescription"
@@ -314,8 +318,10 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
               />
             </div>
             {isEdit && coverArtGridOptions && (
-              <div className="form-group">
-                <label htmlFor="artwork">Cover Art</label>
+              <div className="mb-4">
+                <label className="form-label" htmlFor="artwork">
+                  Cover Art
+                </label>
                 <div className="cover-art-grid">
                   {coverArtGridOptions?.map((option, index) => (
                     <label className="cover-art-option">
@@ -353,9 +359,13 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
               </label>
             </div>
 
-            <div className="form-group">
+            <div className="mb-4">
               <div>
-                <label style={{ display: "block" }} htmlFor="collaborators">
+                <label
+                  className="form-label"
+                  style={{ display: "block" }}
+                  htmlFor="collaborators"
+                >
                   Collaborators
                 </label>
                 <div id="collaborators">

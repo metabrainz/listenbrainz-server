@@ -200,7 +200,7 @@ export default NiceModal.create(
               />
               <SearchDropDown suggestions={suggestions} action={addUser} />
               <p>Leave a message (optional)</p>
-              <div className="form-group">
+              <div className="mb-4">
                 <textarea
                   className="form-control"
                   id="blurb-content"
