@@ -35,7 +35,7 @@ function Navbar() {
 
   return (
     <nav role="navigation">
-      <div className="navbar-light navbar-header">
+      <div className="navbar navbar-light navbar-header">
         <button
           type="button"
           className="navbar-toggler"
