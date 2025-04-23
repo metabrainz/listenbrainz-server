@@ -611,7 +611,7 @@ export default class YearInMusic extends React.Component<
           </div>
           {hasSomeData ? (
             <img
-              className="img-responsive header-image"
+              className="img-fluid header-image"
               src="/static/img/year-in-music-24/yim24-header.png"
               alt="Your year in music 2024"
             />
