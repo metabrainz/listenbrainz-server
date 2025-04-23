@@ -1,0 +1,224 @@
+body {
+    margin: 0;
+    padding: 0;
+    color: #46433a;
+}
+
+.card {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid lightgrey;
+    box-shadow: rgba(192, 192, 192, 0.1) 0px 1px 1px 0px,
+        rgba(192, 192, 192, 0.15) 0px 2px 2px 0px,
+        rgba(192, 192, 192, 0.2) 0px 4px 4px 0px;
+    font-family: Sintony, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5em;
+    min-width: 500px;
+}
+
+.card.listen-card,
+.card>* {
+    box-sizing: border-box;
+    height: 75px;
+}
+
+.card>* {
+    padding: 15px;
+}
+
+.card .main-content {
+    display: flex;
+}
+
+.card .main-content>div {
+    display: flex;
+    justify-content: center;
+    flex: 1 1 0%;
+}
+
+.card .main-content>div.listen-thumbnail {
+    flex: 0;
+    margin: -15px;
+    margin-right: 15px;
+    aspect-ratio: 1;
+    display: block;
+}
+
+.card .main-content .listen-thumbnail>a {
+    height: 100%;
+    aspect-ratio: 1;
+    display: block;
+}
+
+.card .main-content .listen-thumbnail>a img {
+    height: inherit;
+    width: inherit;
+    object-fit: scale-down;
+}
+
+
+.card .main-content .listen-details {
+    flex-direction: column;
+    line-height: 1.3em;
+    overflow: hidden;
+    flex: auto;
+    margin: -15px 0;
+    margin-right: 15px;
+}
+
+.card .main-content .title-duration {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.card .main-content .title-duration>:not(:first-child) {
+    margin-left: 2em;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.ellipsis-2-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.card .main-content .right-section {
+    flex-wrap: wrap-reverse;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0px;
+}
+
+.text-muted {
+    color: #8d8d8d;
+}
+
+.card .main-content .username-and-timestamp {
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-right: 15px;
+    align-items: flex-end;
+    display: flex;
+    height: 100%;
+}
+
+.card .main-content .listen-time {
+    color: #8d8d8d;
+    font-style: italic;
+    font-size: 80%;
+    text-align: end;
+    white-space: nowrap;
+}
+
+.profile-link {
+    align-self: center;
+    text-align: end;
+    line-height: 0;
+    font-weight: normal;
+}
+
+.profile-link>img {
+    vertical-align: middle;
+    margin-left: 0.5em;
+}
+
+.additional-content {
+    border-top: 1px solid #dbccc6;
+    font-style: italic;
+    line-height: 1.3em;
+    overflow-y: auto;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+}
+
+.additional-content>* {
+    margin: auto;
+    width: 100%;
+}
+
+/* Style the scrollbar for pin content / text blurbs */
+
+.additional-content::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+    height: 8px;
+}
+
+.additional-content::-webkit-scrollbar-track,
+.additional-content::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+}
+
+.additional-content::-webkit-scrollbar-track {
+    background-color: lightgrey;
+}
+
+.additional-content::-webkit-scrollbar-thumb {
+    background-color: grey;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+
+    .additional-content {
+        scrollbar-width: thin;
+    }
+
+    .pinned-recording-card.currently-pinned {
+        scrollbar-color: #7a70e6 #b7b2f0;
+    }
+}
+
+.pinned-recording-card.currently-pinned .additional-content::-webkit-scrollbar-track {
+    background-color: #b7b2f0;
+}
+
+.pinned-recording-card.currently-pinned .additional-content::-webkit-scrollbar-thumb {
+    background-color: #7a70e6;
+}
+
+/* Styles for pinned recording cards */
+.pinned-recording-card {
+    max-height: 160px;
+}
+
+.pinned-recording-card.currently-pinned {
+    border: none;
+    background-color: #353070;
+    color: white;
+}
+
+.pinned-recording-card.currently-pinned .text-muted {
+    color: #cccccc;
+}
+
+.pinned-recording-card.currently-pinned .main-content .listen-time {
+    color: #e6e6e6;
+}
+
+.pinned-recording-card.currently-pinned .additional-content {
+    border-top-color: #8c87cc;
+}
+
+.pinned-recording-card .main-content .pinned-recording-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 0%;
+}
+
+.pinned-recording-card .pinned-recording-icon .icon {
+    font-size: 1.6em;
+    margin: auto;
+}
