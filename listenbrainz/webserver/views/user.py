@@ -6,7 +6,7 @@ from collections import defaultdict
 import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 
-from flask import Blueprint, Response, render_template, request, url_for, jsonify, current_app, stream_with_context
+from flask import Blueprint, render_template, request, url_for, jsonify, current_app
 from flask_login import current_user, login_required
 import psycopg2
 from psycopg2.extras import DictCursor
