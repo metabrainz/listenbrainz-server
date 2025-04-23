@@ -281,8 +281,12 @@ def music_services_connect(service_name: str):
         "external_user_id": data["external_user_id"],
         "latest_listened_at": latest_listened_at,
     })
+    LFM_data = response.json()
+    if "user" in LFM_data:
+        total_listens = LFM_data["user"]["playcount"]
+    else:
+        total_listens = 0
 
-    total_listens = response.json()["user"]["playcount"]
     return jsonify({"success": True, "totalLFMListens": total_listens})
 
 
