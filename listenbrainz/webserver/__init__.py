@@ -9,6 +9,7 @@ from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect, g
 from flask_login import current_user
 from werkzeug.local import LocalProxy
+from flask_htmx import HTMX
 
 from listenbrainz import db
 from listenbrainz.db import create_test_database_connect_strings, timescale, donation
@@ -241,6 +242,7 @@ def init_admin(app):
 def create_web_app(debug=None):
     """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
     app = create_app(debug=debug)
+    htmx = HTMX(app)
 
     # Static files
     import listenbrainz.webserver.static_manager
