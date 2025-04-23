@@ -132,6 +132,8 @@ CREATE TABLE external_service_oauth (
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    import_status           TEXT NOT NULL DEFAULT 'queued',
+    imported_listens        INTEGER NOT NULL DEFAULT 0,
     scopes                  TEXT[]
 );
 
