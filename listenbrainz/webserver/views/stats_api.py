@@ -453,18 +453,18 @@ def _get_artist_activity(release_groups_list):
 
     top_results = heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
 
-    # artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
-    # if artist_mbids:
-    #     metadata = get_metadata_for_artist(ts_conn, artist_mbids)
-    #     # replace credited artist name on release group with artist name where possible
-    #     artist_mbid_name_map: dict[str, str] = {
-    #         str(item.artist_mbid): item.artist_data["name"]
-    #         for item in metadata
-    #     }
-    #     for result in top_results:
-    #         artist_mbid = result["artist_mbid"]
-    #         if artist_mbid in artist_mbid_name_map:
-    #             result["artist_name"] = artist_mbid_name_map[artist_mbid]
+    artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
+    if artist_mbids:
+        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        # replace credited artist name on release group with artist name where possible
+        artist_mbid_name_map: dict[str, str] = {
+            str(item.artist_mbid): item.artist_data["name"]
+            for item in metadata
+        }
+        for result in top_results:
+            artist_mbid = result["artist_mbid"]
+            if artist_mbid in artist_mbid_name_map:
+                result["artist_name"] = artist_mbid_name_map[artist_mbid]
 
     return top_results
 
