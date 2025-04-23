@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
+import ImportStatus from "./components/ImportStatus";
 import {
   authorizeWithAppleMusic,
   loadAppleMusicKit,
@@ -62,7 +63,8 @@ export default function MusicServices() {
     permissions.lastfm !== "import"
       ? "btn-default"
       : (lastFMEdit && "btn-success") || "btn-warning";
-
+  const [showImportStatus, setshowImportStatus] = React.useState(false);
+  const [totalLFMListens, setTotalLFMListens] = React.useState<number>(0);
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -191,7 +193,7 @@ export default function MusicServices() {
     }
   };
 
-  const handleConnectToLaftFM = async (
+  const handleConnectToLastFM = async (
     evt: React.FormEvent<HTMLFormElement>
   ) => {
     evt.preventDefault();
@@ -224,10 +226,13 @@ export default function MusicServices() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        setTotalLFMListens(data.totalLFMListens);
         toast.success(
           <ToastMsg
             title="Success"
-            message="Your Last.FM account is connected to ListenBrainz"
+            message={`Your Last.FM account is connected to ListenBrainz.
+              ${data.totalLFMListens} listens are being imported.`}
           />
         );
 
@@ -430,6 +435,25 @@ export default function MusicServices() {
         </div>
 
         <div className="panel panel-default">
+          <div className="text-right">
+            {permissions.lastfm === "import" && !showImportStatus && (
+              <button
+                type="button"
+                className="btn btn-default"
+                onClick={() => setshowImportStatus(true)}
+              >
+                View Import Status
+              </button>
+            )}
+          </div>
+
+          {showImportStatus && (
+            <ImportStatus
+              onClose={() => setshowImportStatus(false)}
+              serviceName="lastfm"
+              totalListens={totalLFMListens}
+            />
+          )}
           <div className="panel-heading">
             <h3 className="panel-title">Last.FM</h3>
           </div>
@@ -461,7 +485,7 @@ export default function MusicServices() {
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
-            <form onSubmit={handleConnectToLaftFM}>
+            <form onSubmit={handleConnectToLastFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
                   <label htmlFor="lastfmUsername">Your Last.FM username:</label>

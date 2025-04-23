@@ -16,6 +16,8 @@ class ExternalService(db.Model):
     refresh_token = db.Column(db.String)
     token_expires = db.Column(db.DateTime(timezone=True))
     last_updated = db.Column(db.DateTime(timezone=True), server_default=db.func.now())
+    import_status = db.Column(db.String, nullable=False, default='queued')
+    imported_listens = db.Column(db.Integer, nullable=False, default=0)
     scopes = db.Column(db.ARRAY(db.String))
     user = db.relationship('User')
 
@@ -29,6 +31,8 @@ class ExternalServiceAdminView(AdminModelView):
         'refresh_token',
         'token_expires',
         'last_updated',
+        'import_status',
+        'imported_listens',
         'scopes'
     ]
 
@@ -41,6 +45,8 @@ class ExternalServiceAdminView(AdminModelView):
         'refresh_token',
         'token_expires',
         'last_updated',
+        'import_status',
+        'imported_listens',
         'scopes'
     ]
 
