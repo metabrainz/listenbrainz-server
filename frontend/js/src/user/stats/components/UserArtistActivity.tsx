@@ -242,13 +242,10 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                                   fontWeight: 700,
                                   fontSize: "11px",
                                   display: "block",
+                                  whiteSpace: "pre-line", // <-- this is the key part
                                 }}
                               >
-                                {lines.map((line: string, i: number) => (
-                                  <div key={`${artistName}-${line}`}>
-                                    {line}
-                                  </div>
-                                ))}
+                                {lines.join("\n")}
                               </Link>
                             </div>
                           </foreignObject>
