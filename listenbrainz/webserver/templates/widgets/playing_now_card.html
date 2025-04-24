@@ -1,0 +1,81 @@
+<div class="card listen-card">
+  <div class="main-content">
+    {% if release_cover_art_src %}
+    <div class="listen-thumbnail">
+      <a
+        title="{{ release_name }}"
+        href="https://listenbrainz.org/release/{{ release_mbid }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        ><img src="{{ release_cover_art_src }}" alt="{{ release_name }}"
+      /></a>
+    </div>
+    {% endif %}
+    <div class="listen-details">
+      {% if no_playing_now %}
+      <div class="text-muted">
+        <a
+          title="{{ user_name | safe }}"
+          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ user_name | safe }}</a
+        >&nbsp;is not playing anything at the moment
+      </div>
+      {% else %}
+      <div class="title-duration">
+        <div title="{{ recording_name }}" class="ellipsis-2-lines">
+          {% if recording_mbid %}
+          <a
+            href="https://musicbrainz.org/recording/{{ recording_mbid }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ recording_name }}</a
+          >
+          {# Fallback to plain text if we don't have an MBID available #} {%
+          else %} {{ recording_name }} {% endif %}
+        </div>
+        {% if duration %}
+        <div class="small text-muted" title="Duration">{{ duration }}</div>
+        {% endif %}
+      </div>
+      <div class="small text-muted ellipsis" title="{{ artist_name }}">
+        {% if artist_mbid %}
+        <a
+          title="{{ artist_name }}"
+          href="https://listenbrainz.org/artist/{{ artist_mbid }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ artist_name }}
+        </a>
+        {# Fallback to plain text if we don't have an MBID available #} {% else
+        %} {{ artist_name }} {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    {% if no_playing_now %}
+    <a
+      class="profile-link"
+      href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+      target="_blank"
+      rel="noopener noreferrer"
+      >See profile on ListenBrainz
+    </a>
+    {% else %}
+    <div class="right-section">
+      <div class="username-and-timestamp">
+        <a
+          title="{{ user_name | safe }}"
+          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ user_name | safe }}</a
+        >
+        <span class="listen-time">on ListenBrainz</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>

@@ -145,9 +145,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     <Card className="user-stats-card" data-testid="user-artist-activity">
       <div className="row">
         <div className="col-xs-10">
-          <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-            Artist Activity
-          </h3>
+          <h3 className="capitalize-bold">Artist Activity</h3>
         </div>
         <div className="col-xs-2 text-right">
           <h4 style={{ marginTop: 20 }}>
