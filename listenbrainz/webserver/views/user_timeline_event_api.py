@@ -282,10 +282,6 @@ def user_feed(user_name: str):
     user_events = get_feed_events_for_user(
         user=user, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
 
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(user_events):
-        user_events[index].event_type = event.event_type.value
-
     user_events = user_events[:count]
 
     return jsonify({'payload': {
@@ -333,7 +329,7 @@ def user_feed_event(user_name: str, event_id: int):
     # Format the event
     user_event = APITimelineEvent(
         id=user_event.id,
-        event_type=user_event.event_type.value,
+        event_type=user_event.event_type,
         user_name=user_name,
         created=user_event.created.timestamp(),
         metadata=user_event.metadata,
@@ -389,10 +385,6 @@ def user_feed_listens_following(user_name: str):
         listen_events = get_all_listen_events(
             users_following, min_ts, max_ts, count)
 
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(listen_events):
-        listen_events[index].event_type = event.event_type.value
-
     return jsonify({'payload': {
         'count': len(listen_events),
         'user_id': user_name,
@@ -447,9 +439,7 @@ def user_feed_listens_similar(user_name: str):
     id_similarity_map = {user["musicbrainz_id"]
         : user["similarity"] for user in similar_users}
 
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
     for index, event in enumerate(listen_events):
-        listen_events[index].event_type = event.event_type.value
         listen_events[index].similarity = id_similarity_map[event.user_name]
 
     return jsonify({
