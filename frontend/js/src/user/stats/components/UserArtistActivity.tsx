@@ -221,33 +221,19 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                       return (
                         <g transform={`translate(${tick.x},${tick.y})`}>
                           <foreignObject
-                            x={-width + 10}
-                            y={0}
-                            width={width}
-                            height={height}
-                            style={{ overflow: "visible" }}
+                            x="-90"
+                            y="0"
+                            width="90"
+                            height="30"
+                            style={{
+                              overflow: "visible",
+                              transform: "translate(-5px, 5px) rotate(-45deg)",
+                              textAlign: "right",
+                              fontSize: "11px",
+                              lineHeight: "1.25em",
+                            }}
                           >
-                            <div
-                              style={{
-                                transform: "rotate(-45deg)",
-                                transformOrigin: "right bottom",
-                                textAlign: "right",
-                              }}
-                            >
-                              <Link
-                                to={linkTo}
-                                style={{
-                                  textDecoration: "none",
-                                  color: "#c81f70",
-                                  fontWeight: 700,
-                                  fontSize: "11px",
-                                  display: "block",
-                                  whiteSpace: "pre-line", // <-- this is the key part
-                                }}
-                              >
-                                {lines.join("\n")}
-                              </Link>
-                            </div>
+                            <Link to={linkTo}>{lines.join("\n")}</Link>
                           </foreignObject>
                         </g>
                       );
