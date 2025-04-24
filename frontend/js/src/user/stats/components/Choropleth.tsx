@@ -4,6 +4,7 @@ import {
   ChoroplethBoundFeature,
   ChoroplethEventHandler,
 } from "@nivo/geo";
+import { toast } from "react-toastify";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
 import { Chip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
@@ -20,6 +21,7 @@ import * as worldCountries from "../data/world_countries.json";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import enrichJSPFTracks from "../../../utils/Playlist";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 const {
   useState,
@@ -194,8 +196,10 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           { brainzplayer_event: "play-ambient-queue", payload: enriched },
           window.location.origin
         );
-      } catch (err) {
-        console.error("LB Radio error", err);
+      } catch (error) {
+        toast.error(<ToastMsg title="Error" message={error.message} />, {
+          toastId: "error",
+        });
       }
     },
     [APIService]
@@ -331,7 +335,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         </div>
       </button>
     );
-  }, [selectedCountry, selectedMetric]);
+  }, [selectedCountry, selectedMetric, handlePlayCountryTracks]);
 
   // Hide our custom tooltip when user clicks somewhere that isn't a country
   const handleClickOutside = useCallback(
