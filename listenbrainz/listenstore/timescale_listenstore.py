@@ -359,17 +359,19 @@ class TimescaleListenStore:
                     window_size *= WINDOW_SIZE_MULTIPLIER
                     from_ts -= window_size
 
-        # Search ends at this timestamp.
+        if order == ORDER_ASC:
+            listens.reverse()
+
         if len(listens) == limit:
             dynamic_ts = listens[-1].timestamp
         else:
+            # Search ends at this timestamp.
             dynamic_ts = from_ts if from_dynamic else to_ts
+
         search_end_ts, search_start_ts = sorted((dynamic_ts, constant_ts))
 
         fetch_listens_time = time.monotonic() - t0
 
-        if order == ORDER_ASC:
-            listens.reverse()
 
         self.log.info("fetch listens %s %.2fs (%d passes)" % (user["musicbrainz_id"], fetch_listens_time, passes))
 
