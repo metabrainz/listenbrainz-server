@@ -305,16 +305,9 @@ class TimescaleListenStore:
         t0 = time.monotonic()
 
         # Search starts from this timestamp.
-        constant_ts = to_ts if not to_dynamic else from_ts 
+        constant_ts = to_ts if not to_dynamic else from_ts
         passes = 0
-        while True:
-            passes += 1
-
-            # Oh shit valve. I'm keeping it here for the time being. :)
-            if passes > MAX_PASS:
-                done = True
-                break
-
+        for passes in range(MAX_PASS):
             curs = ts_conn.execute(
                 sqlalchemy.text(query),
                 {"user_id": user["id"], "from_ts": from_ts, "to_ts": to_ts, "limit": limit}
@@ -322,30 +315,12 @@ class TimescaleListenStore:
             while True:
                 result = curs.fetchone()
                 if not result:
-                    if not to_dynamic and not from_dynamic:
+                    if (
+                            (not to_dynamic and not from_dynamic)
+                         or (from_ts < min_user_ts - timedelta(seconds=1))
+                         or (to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS)
+                    ):
                         done = True
-                        break
-
-                    if from_ts < min_user_ts - timedelta(seconds=1):
-                        done = True
-                        break
-
-                    if to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS:
-                        done = True
-                        break
-                    
-                    # Move window only when the next pass is valid.
-                    if passes < MAX_PASS:
-                        if to_dynamic:
-                            from_ts += window_size - timedelta(seconds=1)
-                            window_size *= WINDOW_SIZE_MULTIPLIER
-                            to_ts += window_size
-
-                        if from_dynamic:
-                            to_ts -= window_size
-                            window_size *= WINDOW_SIZE_MULTIPLIER
-                            from_ts -= window_size
-
                     break
 
                 listens.append(Listen.from_timescale(
@@ -372,9 +347,20 @@ class TimescaleListenStore:
             if done:
                 break
 
+            # update window size
+            if passes + 1 != MAX_PASS:
+                if to_dynamic:
+                    from_ts += window_size - timedelta(seconds=1)
+                    window_size *= WINDOW_SIZE_MULTIPLIER
+                    to_ts += window_size
+
+                if from_dynamic:
+                    to_ts -= window_size
+                    window_size *= WINDOW_SIZE_MULTIPLIER
+                    from_ts -= window_size
 
         # Search ends at this timestamp.
-        dynamic_ts = from_ts if from_dynamic else to_ts 
+        dynamic_ts = from_ts if from_dynamic else to_ts
         search_end_ts, search_start_ts = sorted((dynamic_ts, constant_ts))
 
         fetch_listens_time = time.monotonic() - t0
