@@ -96,9 +96,7 @@ const tooltipWidth = 250;
 
 export default function CustomChoropleth(props: ChoroplethProps) {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0]);
-  const [selectedCountry, setSelectedCountry] = useState<
-    ChoroplethBoundFeature
-  >();
+  const [selectedCountry, setSelectedCountry] = useState<CountryFeature>();
   const refContainer = useRef<HTMLDivElement>(null);
   const { APIService } = React.useContext(GlobalAppContext);
   const tooltipRef = useRef<HTMLButtonElement>(null);
@@ -211,7 +209,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     }
 
     const countryName =
-      selectedCountry.label || (selectedCountry as any).properties?.name;
+      selectedCountry.properties?.name || selectedCountry.label;
     const countryData = selectedCountry.data ?? { value: 0, artists: [] };
     const { value, artists } = countryData;
 
@@ -359,7 +357,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   });
 
   const showTooltipFromEvent: ChoroplethEventHandler = useCallback(
-    (feature, event: React.MouseEvent<HTMLElement>) => {
+    (feature: CountryFeature, event: React.MouseEvent<HTMLElement>) => {
       // Cancel other events, such as our handleClickOutside defined above
       event.preventDefault();
       // relative mouse position
@@ -399,7 +397,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         tooltip={() => <></>}
         onClick={showTooltipFromEvent}
         unknownColor="#efefef"
-        label="properties.name"
+        label={(feature: CountryFeature) => feature.properties.name}
         projectionScale={containerWidth / 5.5}
         projectionType="naturalEarth1"
         projectionTranslation={[0.5, 0.53]}

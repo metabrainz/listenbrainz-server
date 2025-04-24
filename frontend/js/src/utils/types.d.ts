@@ -322,6 +322,12 @@ declare type UserArtistMapResponse = {
   };
 };
 
+declare type CountryFeature = ChoroplethBoundFeature & {
+  properties: {
+    name: string;
+  };
+};
+
 declare type UserArtistMapDatum = {
   id: string;
   value: number;
