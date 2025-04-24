@@ -193,7 +193,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     )
                   )}
                   indexBy="label"
-                  margin={{ top: 20, right: 80, bottom: 80, left: 80 }}
+                  margin={{ top: 20, right: 80, bottom: 100, left: 120 }}
                   padding={0.2}
                   layout="vertical"
                   colors={{ scheme: "nivo" }}
@@ -209,10 +209,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                       const artistName =
                         rawData?.result?.[tick.tickIndex]?.name || "";
                       const lines = tick.value.split("\n");
-                      const height = lines.length * 10; // Adjust height based on number of lines
-                      const width = Math.max(
-                        ...lines.map((line: string) => line.length * 7)
-                      );
                       const linkTo = artistMbid
                         ? `/artist/${artistMbid}`
                         : `/search?search_term=${encodeURIComponent(
@@ -233,7 +229,9 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                               lineHeight: "1.25em",
                             }}
                           >
-                            <Link to={linkTo}>{lines.join("\n")}</Link>
+                            <Link to={linkTo} className="ellipsis-3-lines">
+                              {lines.join("\n")}
+                            </Link>
                           </foreignObject>
                         </g>
                       );
