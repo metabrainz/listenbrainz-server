@@ -368,7 +368,7 @@ class TimescaleListenStore:
             # Search ends at this timestamp.
             dynamic_ts = from_ts if from_dynamic else to_ts
 
-        search_end_ts, search_start_ts = sorted((dynamic_ts, constant_ts))
+        search_end_ts, search_start_ts = dynamic_ts, constant_ts
 
         fetch_listens_time = time.monotonic() - t0
 
