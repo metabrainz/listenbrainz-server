@@ -49,14 +49,14 @@ class TestTimescaleUtils(NonAPIIntegrationTestCase):
         update_user_listen_data()
 
         metadata_1 = self._get_count_and_timestamp(user_1)
-        self.assertEqual(metadata_1["min_listened_at"], datetime.fromtimestamp(1400000000, timezone.utc))
+        self.assertEqual(metadata_1["min_listened_at"], datetime.fromtimestamp(1399999975, timezone.utc))
         self.assertEqual(metadata_1["max_listened_at"], datetime.fromtimestamp(1400000200, timezone.utc))
-        self.assertEqual(metadata_1["count"], 5)
+        self.assertEqual(metadata_1["count"], 26)
 
         metadata_2 = self._get_count_and_timestamp(user_2)
-        self.assertEqual(metadata_2["min_listened_at"], datetime.fromtimestamp(1400000000, timezone.utc))
+        self.assertEqual(metadata_2["min_listened_at"], datetime.fromtimestamp(1399999975, timezone.utc))
         self.assertEqual(metadata_2["max_listened_at"], datetime.fromtimestamp(1400000200, timezone.utc))
-        self.assertEqual(metadata_2["count"], 5)
+        self.assertEqual(metadata_2["count"], 26)
 
         # to test the case when the update script has not run since delete, so metadata in listen_user_metadata does
         # account for this listen and deleting should not affect it either.
@@ -69,9 +69,9 @@ class TestTimescaleUtils(NonAPIIntegrationTestCase):
 
         # test min_listened_at is updated if that listen is deleted for a user
         self.ls.delete_listen(
-            datetime.fromtimestamp(1400000000, timezone.utc),
+            datetime.fromtimestamp(1399999975, timezone.utc),
             user_1["id"],
-            "4269ddbc-9241-46da-935d-4fa9e0f7f371"
+            "4b505d1e-b1c6-4a58-a550-8ea4eebfdc91"
         )
         # test max_listened_at is updated if that listen is deleted for a user
         self.ls.delete_listen(
@@ -89,11 +89,11 @@ class TestTimescaleUtils(NonAPIIntegrationTestCase):
         delete_listens()
 
         metadata_1 = self._get_count_and_timestamp(user_1)
-        self.assertEqual(metadata_1["min_listened_at"], datetime.fromtimestamp(1400000050, timezone.utc))
+        self.assertEqual(metadata_1["min_listened_at"], datetime.fromtimestamp(1399999976, timezone.utc))
         self.assertEqual(metadata_1["max_listened_at"], datetime.fromtimestamp(1400000150, timezone.utc))
-        self.assertEqual(metadata_1["count"], 3)
+        self.assertEqual(metadata_1["count"], 24)
 
         metadata_2 = self._get_count_and_timestamp(user_2)
-        self.assertEqual(metadata_2["min_listened_at"], datetime.fromtimestamp(1400000000, timezone.utc))
+        self.assertEqual(metadata_2["min_listened_at"], datetime.fromtimestamp(1399999975, timezone.utc))
         self.assertEqual(metadata_2["max_listened_at"], datetime.fromtimestamp(1400000200, timezone.utc))
-        self.assertEqual(metadata_2["count"], 4)
+        self.assertEqual(metadata_2["count"], 25)
