@@ -361,9 +361,15 @@ class TimescaleListenStore:
 
         if order == ORDER_ASC:
             listens.reverse()
-
-        if len(listens) == limit:
+        
+        # for older listens, use the last listen's timestamp
+        if len(listens) == limit and from_dynamic:
             dynamic_ts = listens[-1].timestamp
+
+        # for newer listens, use the first listen's timestamp
+        elif len(listens) == limit and to_dynamic:
+            dynamic_ts = listens[0].timestamp
+
         else:
             # Search ends at this timestamp.
             dynamic_ts = from_ts if from_dynamic else to_ts
