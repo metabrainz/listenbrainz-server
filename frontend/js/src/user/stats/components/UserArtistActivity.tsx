@@ -179,7 +179,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
           <div className="row">
             <div className="col-xs-12">
               <div
-                style={{ width: "100%", height: "600px", minHeight: "400px" }}
+                style={{ width: "100%", height: "600px", minHeight: "400px", textAlign: "right", fontSize: "11px", lineHeight: "1em" }}
               >
                 <ResponsiveBar
                   data={chartData}
@@ -224,11 +224,11 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                               transform: "translate(-5px, 5px) rotate(-45deg)",
                               textAlign: "right",
                               fontSize: "11px",
-                              lineHeight: "1.25em",
+                              lineHeight: "1em",
                             }}
                           >
                             <Link to={linkTo} className="ellipsis-3-lines">
-                              {lines.join("\n")}
+                              {tick.value}
                             </Link>
                           </foreignObject>
                         </g>
