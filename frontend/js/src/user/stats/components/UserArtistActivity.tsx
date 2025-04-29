@@ -206,7 +206,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                         rawData?.result?.[tick.tickIndex]?.artist_mbid || "";
                       const artistName =
                         rawData?.result?.[tick.tickIndex]?.name || "";
-                      const lines = tick.value.split("\n");
                       const linkTo = artistMbid
                         ? `/artist/${artistMbid}`
                         : `/search?search_term=${encodeURIComponent(
