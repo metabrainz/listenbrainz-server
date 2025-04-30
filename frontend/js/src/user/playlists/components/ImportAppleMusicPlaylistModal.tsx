@@ -1,5 +1,6 @@
 import React from "react";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import Modal from "react-bootstrap/Modal";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -12,12 +13,6 @@ type ImportPLaylistModalProps = {
 
 export default NiceModal.create((props: ImportPLaylistModalProps) => {
   const modal = useModal();
-
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [playlists, setPlaylists] = React.useState<AppleMusicPlaylistObject[]>(
@@ -70,7 +65,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
 
   const resolveAndClose = () => {
     modal.resolve(newPlaylists);
-    closeModal();
+    modal.hide();
   };
 
   const alertMustBeLoggedIn = () => {
@@ -125,84 +120,67 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   };
 
   return (
-    <div
-      className="modal fade"
-      id="ImportMusicServicePlaylistModal"
-      tabIndex={-1}
-      role="dialog"
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Import playlists from Apple Music"
       aria-labelledby="ImportMusicServicePlaylistLabel"
-      data-bs-backdrop="static"
+      id="ImportMusicServicePlaylistModal"
     >
-      <div className="modal-dialog" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
+      <Modal.Header closeButton closeLabel="Done" onHide={resolveAndClose}>
+        <Modal.Title id="ImportMusicServicePlaylistLabel">
+          Import playlists from Apple Music
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p className="text-muted">
+          Add one or more of your Apple Music playlists below:
+        </p>
+        <div
+          className="list-group"
+          style={{ maxHeight: "50vh", overflow: "scroll" }}
+        >
+          {playlists?.map((playlist: AppleMusicPlaylistObject) => (
             <button
               type="button"
-              className="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              onClick={resolveAndClose}
-            />
-            <h4
-              className="modal-title"
-              id="ImportMusicServicePlaylistLabel"
-              style={{ textAlign: "center" }}
+              key={playlist.id}
+              className="list-group-item"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+              disabled={!!playlistLoading}
+              name={playlist.attributes.name}
+              onClick={() =>
+                importTracksToPlaylist(playlist.id, playlist.attributes.name)
+              }
             >
-              Import playlist from Apple Music
-            </h4>
-          </div>
-          <div className="modal-body">
-            <p className="text-muted">
-              Add one or more of your Apple Music playlists below:
-            </p>
-            <div
-              className="list-group"
-              style={{ maxHeight: "50vh", overflow: "scroll" }}
-            >
-              {playlists?.map((playlist: AppleMusicPlaylistObject) => (
-                <button
-                  type="button"
-                  key={playlist.id}
-                  className="list-group-item"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                  disabled={!!playlistLoading}
-                  name={playlist.attributes.name}
-                  onClick={() =>
-                    importTracksToPlaylist(
-                      playlist.id,
-                      playlist.attributes.name
-                    )
-                  }
-                >
-                  <span>{playlist.attributes.name}</span>
-                </button>
-              ))}
-            </div>
-            {!!playlistLoading && (
-              <div>
-                <p>
-                  Loading playlist {playlistLoading}... It might take some time
-                </p>
-                <Loader isLoading={!!playlistLoading} />
-              </div>
-            )}
-          </div>
-
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              data-bs-dismiss="modal"
-              onClick={resolveAndClose}
-            >
-              Close
+              <span>{playlist.attributes.name}</span>
             </button>
-          </div>
+          ))}
         </div>
-      </div>
-    </div>
+        {!!playlistLoading && (
+          <div>
+            <p>Loading playlist {playlistLoading}... It might take some time</p>
+            <Loader isLoading={!!playlistLoading} />
+          </div>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={modal.hide}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="btn btn-Primary"
+          onClick={resolveAndClose}
+        >
+          Done
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });
