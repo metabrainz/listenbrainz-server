@@ -148,25 +148,25 @@ export default NiceModal.create(() => {
         <Modal.Title id="ImportPlaylistModalLabel">Import playlist</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <div className="mb-4">
+        <div>
           <label className="form-label" htmlFor="playlistFile">
             Choose or drop a file with .json or .jspf extension
           </label>
           <input
             type="file"
-            className=""
+            className="form-control"
             id="playlistFile"
             accept=".jspf, .json"
             onChange={handleFileChange}
           />
-          {fileError && <div className="has-error">{fileError}</div>}
-          <p className="form-text">
-            For information on the JSPF playlist format, please visit{" "}
-            <a href="https://musicbrainz.org/doc/jspf">
-              musicbrainz.org/doc/jspf
-            </a>
-          </p>
         </div>
+        {fileError && <div className="has-error">{fileError}</div>}
+        <p className="form-text">
+          For information on the JSPF playlist format, please visit{" "}
+          <a href="https://musicbrainz.org/doc/jspf">
+            musicbrainz.org/doc/jspf
+          </a>
+        </p>
       </Modal.Body>
       <Modal.Footer>
         <button

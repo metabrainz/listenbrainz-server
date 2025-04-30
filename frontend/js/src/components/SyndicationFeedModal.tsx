@@ -141,28 +141,26 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
             )}
           </div>
         ))}
-        <div className="mb-4">
-          <label className="form-label" htmlFor="feedLink">
-            Subscription URL
-          </label>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <input
-              type="text"
-              className="form-control"
-              id="feedLink"
-              value={buildLink()}
-              readOnly
-              style={{ marginRight: "10px", flexGrow: 1 }}
-            />
-            <button
-              type="button"
-              className="btn btn-info btn-sm"
-              onClick={handleCopyClick}
-              style={{ minWidth: "100px", height: "34px" }}
-            >
-              {copyButtonText}
-            </button>
-          </div>
+        <label className="form-label" htmlFor="feedLink">
+          Subscription URL
+        </label>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <input
+            type="text"
+            className="form-control"
+            id="feedLink"
+            value={buildLink()}
+            readOnly
+            style={{ marginRight: "10px", flexGrow: 1 }}
+          />
+          <button
+            type="button"
+            className="btn btn-info btn-sm"
+            onClick={handleCopyClick}
+            style={{ minWidth: "100px" }}
+          >
+            {copyButtonText}
+          </button>
         </div>
       </Modal.Body>
       <Modal.Footer>

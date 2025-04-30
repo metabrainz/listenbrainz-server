@@ -1,5 +1,10 @@
-@import "lobes4/scss/bootstrap.scss";
 
-.nav-tabs {
-    --bs-nav-link-font-weight: 700;
-}
+/* Override default values
+before importing bootstrap files */
+
+$nav-link-font-weight: 700;
+
+$input-font-size: unset;
+$input-padding-y: .5rem;
+
+@import "lobes4/scss/bootstrap.scss";
