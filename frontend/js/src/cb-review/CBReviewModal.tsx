@@ -382,13 +382,13 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       <span>
         <span
           className="CBInfoButton"
-          data-bs-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
+          data-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
           MetaBrainz project</a> aimed at providing an open platform for music critics
           and hosting Creative Commons licensed music reviews. </br></br>
           Your reviews will be independently visible on CritiqueBrainz and appear publicly
           on your CritiqueBrainz profile. To view or delete your reviews, visit your
           <a href='${CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
-          data-bs-event="click focus"
+          data-event="click focus"
         >
           <FontAwesomeIcon
             icon={faInfoCircle as IconProp}

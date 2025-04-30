@@ -332,8 +332,8 @@ export default function LinkListensPage() {
         Your top 1,000 listens (grouped by album) that have&nbsp;
         <u
           className="link-listens-tooltip"
-          data-bs-tip
-          data-bs-for="matching-tooltip"
+          data-tip
+          data-for="matching-tooltip"
         >
           not been automatically linked
         </u>

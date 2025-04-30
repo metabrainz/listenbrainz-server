@@ -485,7 +485,7 @@ export default function Listen() {
             )}
             <Link
               to={`https://musicbrainz.org/user/${user?.name}`}
-              className="btn musicbrainz-profile-button"
+              className="btn btn-info musicbrainz-profile-button"
             >
               <img
                 src="/static/img/musicbrainz-16.svg"

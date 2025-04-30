@@ -108,7 +108,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
                   &nbsp;
                   <FontAwesomeIcon
                     icon={faCircleQuestion}
-                    data-bs-tip={option.tooltip}
+                    data-tip={option.tooltip}
                   />
                   <Tooltip place="right" type="dark" effect="solid" />
                 </>

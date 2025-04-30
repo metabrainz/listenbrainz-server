@@ -105,7 +105,7 @@ function ProgressBar(props: ProgressBarProps) {
       aria-valuemax={100}
       aria-valuenow={progressPercentage}
       tabIndex={0}
-      data-bs-tip={tipContent}
+      data-tip={tipContent}
     >
       <div
         className="progress-bar"

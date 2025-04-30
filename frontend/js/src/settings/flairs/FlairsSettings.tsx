@@ -117,8 +117,8 @@ export default function FlairsSettings() {
           &nbsp;
           <FontAwesomeIcon
             icon={faQuestionCircle}
-            data-bs-tip
-            data-bs-for="flair-tooltip"
+            data-tip
+            data-for="flair-tooltip"
             size="sm"
           />
           .<br />
@@ -135,8 +135,8 @@ export default function FlairsSettings() {
             will not be shown on the website until your next donation.{" "}
             <FontAwesomeIcon
               icon={faQuestionCircle}
-              data-bs-tip
-              data-bs-for="flair-tooltip"
+              data-tip
+              data-for="flair-tooltip"
               size="sm"
             />
           </div>

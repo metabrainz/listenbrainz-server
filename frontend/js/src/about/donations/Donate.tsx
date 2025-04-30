@@ -12,8 +12,8 @@ export default function Donate() {
   const flairQuestionMarkIcon = (
     <FontAwesomeIcon
       icon={faQuestionCircle}
-      data-bs-tip
-      data-bs-for="flair-tooltip"
+      data-tip
+      data-for="flair-tooltip"
       size="sm"
     />
   );

@@ -288,8 +288,8 @@ export default class YearInMusic extends React.Component<
             </a>
             <FontAwesomeIcon
               icon={faQuestionCircle}
-              data-bs-tip
-              data-bs-for={`playlist-${index}-tooltip`}
+              data-tip
+              data-for={`playlist-${index}-tooltip`}
               size="xs"
             />
             <Tooltip id={`playlist-${index}-tooltip`}>
@@ -781,8 +781,8 @@ export default class YearInMusic extends React.Component<
                 {capitalize(yourOrUsersName)} listening activity{" "}
                 <FontAwesomeIcon
                   icon={faQuestionCircle}
-                  data-bs-tip
-                  data-bs-for="listening-activity"
+                  data-tip
+                  data-for="listening-activity"
                   size="xs"
                 />
                 <Tooltip id="listening-activity">
@@ -853,8 +853,8 @@ export default class YearInMusic extends React.Component<
                 What year are {yourOrUsersName} favorite songs from?{" "}
                 <FontAwesomeIcon
                   icon={faQuestionCircle}
-                  data-bs-tip
-                  data-bs-for="most-listened-year-helptext"
+                  data-tip
+                  data-for="most-listened-year-helptext"
                   size="xs"
                 />
                 <Tooltip id="most-listened-year-helptext">
@@ -899,8 +899,8 @@ export default class YearInMusic extends React.Component<
                 What countries are {yourOrUsersName} favorite artists from?{" "}
                 <FontAwesomeIcon
                   icon={faQuestionCircle}
-                  data-bs-tip
-                  data-bs-for="user-artist-map-helptext"
+                  data-tip
+                  data-for="user-artist-map-helptext"
                   size="xs"
                 />
                 <Tooltip id="user-artist-map-helptext">
@@ -1020,8 +1020,8 @@ export default class YearInMusic extends React.Component<
                     New albums from {yourOrUsersName} top artists{" "}
                     <FontAwesomeIcon
                       icon={faQuestionCircle}
-                      data-bs-tip
-                      data-bs-for="new-albums-helptext"
+                      data-tip
+                      data-for="new-albums-helptext"
                       size="xs"
                     />
                     <Tooltip id="new-albums-helptext">
@@ -1110,8 +1110,8 @@ export default class YearInMusic extends React.Component<
                     Music buddies{" "}
                     <FontAwesomeIcon
                       icon={faQuestionCircle}
-                      data-bs-tip
-                      data-bs-for="music-buddies-helptext"
+                      data-tip
+                      data-for="music-buddies-helptext"
                       size="xs"
                     />
                     <Tooltip id="music-buddies-helptext">

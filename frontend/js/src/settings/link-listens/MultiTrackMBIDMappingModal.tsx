@@ -335,8 +335,8 @@ export default NiceModal.create(
               .
               <FontAwesomeIcon
                 icon={faQuestionCircle}
-                data-bs-tip
-                data-bs-for="musicbrainz-helptext"
+                data-tip
+                data-for="musicbrainz-helptext"
                 size="sm"
               />
             </p>
@@ -363,8 +363,8 @@ export default NiceModal.create(
                 Include artist name when searching{" "}
                 <FontAwesomeIcon
                   icon={faQuestionCircle}
-                  data-bs-tip
-                  data-bs-for="includeArtistNameHelp"
+                  data-tip
+                  data-for="includeArtistNameHelp"
                   size="sm"
                 />{" "}
               </label>
@@ -390,8 +390,8 @@ export default NiceModal.create(
                 Preserve special characters{" "}
                 <FontAwesomeIcon
                   icon={faQuestionCircle}
-                  data-bs-tip
-                  data-bs-for="escapeSpecialCharactersHepl"
+                  data-tip
+                  data-for="escapeSpecialCharactersHepl"
                   size="sm"
                 />{" "}
               </label>
@@ -528,8 +528,8 @@ export default NiceModal.create(
               Include artist name when matching{" "}
               <FontAwesomeIcon
                 icon={faQuestionCircle}
-                data-bs-tip
-                data-bs-for="includeArtistNameMatchHelp"
+                data-tip
+                data-for="includeArtistNameMatchHelp"
                 size="sm"
               />{" "}
             </label>
