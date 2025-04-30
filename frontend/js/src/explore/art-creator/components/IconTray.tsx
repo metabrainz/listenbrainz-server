@@ -54,8 +54,6 @@ function IconTray(props: IconTrayProps) {
         <button
           type="button"
           className="btn btn-icon btn-info"
-          data-bs-toggle="modal"
-          data-bs-target="#SyndicationFeedModal"
           onClick={onClickCopyFeedUrl}
           title="Subscribe to syndication feed (Atom)"
         >

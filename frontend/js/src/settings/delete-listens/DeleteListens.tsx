@@ -108,8 +108,6 @@ export default function DeleteListens() {
         type="button"
         style={{ width: "250px" }}
         onClick={deleteListens}
-        data-bs-toggle="modal"
-        data-bs-target="#ConfirmationModal"
       >
         Delete listens
       </button>

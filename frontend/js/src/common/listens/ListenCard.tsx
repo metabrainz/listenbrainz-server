@@ -425,8 +425,6 @@ export class ListenCard extends React.Component<
           onKeyDown={openModal}
           role="button"
           tabIndex={0}
-          data-bs-toggle="modal"
-          data-bs-target="#MBIDMappingModal"
         >
           <div className="not-mapped">
             <FontAwesomeIcon icon={faLink} />
@@ -642,8 +640,6 @@ export class ListenCard extends React.Component<
                             recordingToPin: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
                       />
                     )}
                     {isLoggedIn && hasInfoAndMBID && (
@@ -665,8 +661,6 @@ export class ListenCard extends React.Component<
                             listenToPersonallyRecommend: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#PersonalRecommendationModal"
                       />
                     )}
                     {isLoggedIn && Boolean(recordingMSID) && (
@@ -679,8 +673,6 @@ export class ListenCard extends React.Component<
                             listenToMap: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#MBIDMappingModal"
                       />
                     )}
                     {isLoggedIn && isListenReviewable && (
@@ -693,8 +685,6 @@ export class ListenCard extends React.Component<
                             listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#CBReviewModal"
                       />
                     )}
                     {isLoggedIn && (
@@ -707,8 +697,6 @@ export class ListenCard extends React.Component<
                             listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#AddToPlaylistModal"
                       />
                     )}
                     {additionalMenuItems}
@@ -721,8 +709,6 @@ export class ListenCard extends React.Component<
                           listen,
                         });
                       }}
-                      dataToggle="modal"
-                      dataTarget="#ListenPayloadModal"
                     />
                   </ul>
                 </>

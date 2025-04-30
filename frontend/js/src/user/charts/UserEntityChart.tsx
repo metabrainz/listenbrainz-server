@@ -303,8 +303,6 @@ export default function UserEntityChart() {
                 type="button"
                 className="btn btn-icon btn-info atom-button"
                 style={{ marginLeft: "auto" }}
-                data-bs-toggle="modal"
-                data-bs-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {

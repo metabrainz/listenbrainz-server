@@ -115,8 +115,6 @@ function Queue(props: BrainzPlayerQueueProps) {
             <div className="queue-buttons">
               <button
                 className="btn btn-info btn-sm"
-                data-bs-toggle="modal"
-                data-bs-target="#CreateOrEditPlaylistModal"
                 onClick={addQueueToPlaylist}
                 type="button"
               >

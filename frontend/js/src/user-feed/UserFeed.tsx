@@ -430,8 +430,6 @@ export default function UserFeedPage() {
                   original_event_type: event.event_type,
                 });
               }}
-              dataToggle="modal"
-              dataTarget="#ThanksModal"
               isDropdown={false}
             />
           )} 
@@ -661,8 +659,6 @@ export default function UserFeedPage() {
             {/* <button
               type="button"
               className="btn btn-icon btn-info atom-button"
-              data-bs-toggle="modal"
-              data-bs-target="#SyndicationFeedModal"
               title="Subscribe to syndication feed (Atom)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {

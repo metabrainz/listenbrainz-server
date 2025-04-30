@@ -584,8 +584,6 @@ export default function ArtistPage(): JSX.Element {
         <button
           type="button"
           className="btn btn-info"
-          data-bs-toggle="modal"
-          data-bs-target="#CBReviewModal"
           onClick={() => {
             NiceModal.show(CBReviewModal, {
               entityToReview: [

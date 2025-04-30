@@ -68,8 +68,6 @@ export default function UserReports() {
     <button
       type="button"
       className="btn btn-link"
-      data-bs-toggle="modal"
-      data-bs-target="#StatsExplanationsModal"
       onClick={() => {
         NiceModal.show(StatsExplanationsModal);
       }}
