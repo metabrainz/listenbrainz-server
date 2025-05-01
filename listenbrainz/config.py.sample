@@ -155,9 +155,10 @@ APPROVED_PLAYLIST_BOTS = ['troi-bot', 'troi-bot-debug']
 WHITELISTED_AUTH_TOKENS = []
 
 # SPOTIFY
+# Note: Spotify now requires the redirect url to use HTTPS and an explicit loopback IP address (127.0.0.1) instead of 'localhost'
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SPOTIFY_CALLBACK_URL = 'http://localhost:8100/settings/music-services/spotify/callback/'
+SPOTIFY_CALLBACK_URL = 'https://127.0.0.1:8100/settings/music-services/spotify/callback/'
 
 # SPOTIFY-CACHE
 SPOTIFY_CACHE_CLIENT_ID = 'needs a non empty default value for tests, change this'
