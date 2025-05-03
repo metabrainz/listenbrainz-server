@@ -855,6 +855,25 @@ export default function BrainzPlayer() {
     });
   };
 
+  const handleCloseYoutubePlayer = () => {
+    // Stop the playback first
+    if (!brainzPlayerContextRef.current.playerPaused) {
+      const dataSource =
+        dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
+          ?.current;
+      if (dataSource) {
+        dataSource.togglePlay();
+      }
+    }
+
+    // Reset player state
+    stopPlayerStateTimer();
+    reinitializeWindowTitle();
+
+    // Hide the player
+    dispatch({ isActivated: false });
+  };
+
   const playNextListenFromQueue = (datasourceIndex: number = 0): void => {
     const currentPlayingListenIndex =
       brainzPlayerContextRef.current.currentListenIndex;
@@ -1070,6 +1089,7 @@ export default function BrainzPlayer() {
             handleError={handleError}
             handleWarning={handleWarning}
             handleSuccess={handleSuccess}
+            onClose={handleCloseYoutubePlayer}
           />
         )}
         {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
