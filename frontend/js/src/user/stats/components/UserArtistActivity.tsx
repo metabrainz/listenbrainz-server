@@ -221,9 +221,6 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                             style={{
                               overflow: "visible",
                               transform: "translate(-5px, 5px) rotate(-45deg)",
-                              textAlign: "right",
-                              fontSize: "11px",
-                              lineHeight: "1em",
                             }}
                           >
                             <Link to={linkTo} className="ellipsis-3-lines">
