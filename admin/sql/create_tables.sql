@@ -132,8 +132,6 @@ CREATE TABLE external_service_oauth (
     refresh_token           TEXT,
     token_expires           TIMESTAMP WITH TIME ZONE,
     last_updated            TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    import_status           TEXT NOT NULL DEFAULT 'queued',
-    imported_listens        INTEGER NOT NULL DEFAULT 0,
     scopes                  TEXT[]
 );
 
@@ -144,6 +142,7 @@ CREATE TABLE listens_importer (
     service                     external_service_oauth_type NOT NULL,
     last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
+    import_info                 JSONB,
     error_message               TEXT
 );
 
