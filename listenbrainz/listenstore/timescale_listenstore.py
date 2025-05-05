@@ -38,6 +38,9 @@ WINDOW_SIZE_MULTIPLIER = 3
 
 LISTEN_COUNT_BUCKET_WIDTH = 2592000
 
+# Set maximum no of passes made. 
+MAX_PASS = 3 # 1 month + 3 months + 9 months
+
 MAX_FUTURE_SECONDS = timedelta(minutes=10)  # max fwd clock skew
 EPOCH = datetime.fromtimestamp(0, timezone.utc)
 
@@ -223,7 +226,7 @@ class TimescaleListenStore:
         min_user_ts, max_user_ts = self.get_timestamps_for_user(user["id"])
 
         if min_user_ts == EPOCH and max_user_ts == EPOCH:
-            return [], min_user_ts, max_user_ts
+            return [], min_user_ts, max_user_ts, EPOCH, EPOCH
 
         if to_ts is None and from_ts is None:
             to_ts = max_user_ts + timedelta(seconds=1)
@@ -301,15 +304,10 @@ class TimescaleListenStore:
 
         t0 = time.monotonic()
 
+        # Search starts from this timestamp.
+        constant_ts = to_ts if not to_dynamic else from_ts
         passes = 0
-        while True:
-            passes += 1
-
-            # Oh shit valve. I'm keeping it here for the time being. :)
-            if passes == 10:
-                done = True
-                break
-
+        for passes in range(MAX_PASS):
             curs = ts_conn.execute(
                 sqlalchemy.text(query),
                 {"user_id": user["id"], "from_ts": from_ts, "to_ts": to_ts, "limit": limit}
@@ -317,28 +315,12 @@ class TimescaleListenStore:
             while True:
                 result = curs.fetchone()
                 if not result:
-                    if not to_dynamic and not from_dynamic:
+                    if (
+                            (not to_dynamic and not from_dynamic)
+                         or (from_ts < min_user_ts - timedelta(seconds=1))
+                         or (to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS)
+                    ):
                         done = True
-                        break
-
-                    if from_ts < min_user_ts - timedelta(seconds=1):
-                        done = True
-                        break
-
-                    if to_ts > datetime.now(tz=timezone.utc) + MAX_FUTURE_SECONDS:
-                        done = True
-                        break
-
-                    if to_dynamic:
-                        from_ts += window_size - timedelta(seconds=1)
-                        window_size *= WINDOW_SIZE_MULTIPLIER
-                        to_ts += window_size
-
-                    if from_dynamic:
-                        to_ts -= window_size
-                        window_size *= WINDOW_SIZE_MULTIPLIER
-                        from_ts -= window_size
-
                     break
 
                 listens.append(Listen.from_timescale(
@@ -365,14 +347,41 @@ class TimescaleListenStore:
             if done:
                 break
 
-        fetch_listens_time = time.monotonic() - t0
+            # update window size
+            if passes + 1 != MAX_PASS:
+                if to_dynamic:
+                    from_ts += window_size - timedelta(seconds=1)
+                    window_size *= WINDOW_SIZE_MULTIPLIER
+                    to_ts += window_size
+
+                if from_dynamic:
+                    to_ts -= window_size
+                    window_size *= WINDOW_SIZE_MULTIPLIER
+                    from_ts -= window_size
 
         if order == ORDER_ASC:
             listens.reverse()
+        
+        # for older listens, use the last listen's timestamp
+        if len(listens) == limit and from_dynamic:
+            dynamic_ts = listens[-1].timestamp
+
+        # for newer listens, use the first listen's timestamp
+        elif len(listens) == limit and to_dynamic:
+            dynamic_ts = listens[0].timestamp
+
+        else:
+            # Search ends at this timestamp.
+            dynamic_ts = from_ts if from_dynamic else to_ts
+
+        search_end_ts, search_start_ts = dynamic_ts, constant_ts
+
+        fetch_listens_time = time.monotonic() - t0
+
 
         self.log.info("fetch listens %s %.2fs (%d passes)" % (user["musicbrainz_id"], fetch_listens_time, passes))
 
-        return listens, min_user_ts, max_user_ts
+        return listens, min_user_ts, max_user_ts, search_start_ts, search_end_ts
 
     def fetch_recent_listens_for_users(self, users, min_ts: datetime = None, max_ts: datetime = None, per_user_limit=2, limit=10):
         """ Fetch recent listens for a list of users, given a limit which applies per user. If you

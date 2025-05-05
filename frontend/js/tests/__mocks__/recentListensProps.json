@@ -1033,6 +1033,8 @@
       ],
     "oldestListenTs": 1586440000,
     "latestListenTs": 1586523524,
+    "searchStartTs": 1586523524,
+    "searchEndTs": 1552827524,
     "latestSpotifyUri": "spotify:track:5svEhroDfeTt0ePvASUtZ6",
     "artistCount": null,
     "userPinnedRecording": {
