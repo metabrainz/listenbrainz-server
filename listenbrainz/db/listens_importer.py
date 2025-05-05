@@ -5,6 +5,7 @@ from sqlalchemy import text
 
 from data.model.external_service import ExternalServiceType
 import sqlalchemy
+import json
 
 
 def update_import_status(db_conn, user_id: int, service: ExternalServiceType, error_message: str = None):
@@ -111,3 +112,60 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     users = [row for row in result.mappings()]
     db_conn.rollback()
     return users
+
+
+def get_import_info(db_conn, user_id: int, service: ExternalServiceType) -> [dict]:
+
+    """ Get import_status and imported_listens for a user.
+
+    Args:
+        db_conn: database connection
+        user_id: ListenBrainz row ID of the user
+        service: ExternalServiceType enum of the service
+    """
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT import_info
+        FROM listens_importer
+        WHERE user_id = :user_id 
+        AND service = :service
+    """), {
+        'user_id': user_id,
+        'service': service.value
+        })
+
+    row = result.fetchone()
+    return row.import_info if row else None
+
+
+def update_import_info(db_conn, user_id: int, service: ExternalServiceType, import_status: str, imported_listens: int):
+    """ 
+        Update import_status and imported_listens for a user.
+
+    Args:
+        db_conn: database connection
+        user_id: ListenBrainz row ID of the user
+        service: ExternalServiceType enum of the service
+        import_status: Import status of that service
+        imported_listens: No. of listens imported
+    """
+
+    params = {
+        "import_info":json.dumps({
+            "import_status": import_status,
+            "imported_listens": imported_listens   
+        }),
+        "service": service.value,
+        "user_id": user_id,
+    }
+
+    query = """
+            UPDATE listens_importer
+            SET import_info = :import_info
+            WHERE user_id = :user_id
+            AND service = :service
+        """
+
+    db_conn.execute(text(query), params)
+    db_conn.commit()
+
+

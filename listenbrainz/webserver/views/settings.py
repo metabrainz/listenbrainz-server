@@ -27,7 +27,7 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, AP
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db.external_service_oauth import get_import_data
+from listenbrainz.db.listens_importer import get_import_info
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -295,8 +295,16 @@ def music_services_connect(service_name: str):
 def import_status(service_name: str):
     if service_name.lower() != "lastfm":
         raise APINotFound("Service %s is invalid." % (service_name))
-    result = get_import_data(db_conn,current_user.id, ExternalServiceType.LASTFM)
-    return jsonify({"status": result.import_status, "listens_imported": result.imported_listens})
+
+    result = get_import_info(db_conn, current_user.id, ExternalServiceType.LASTFM)
+
+    if result is None:
+        result = {
+            "import_status": "Queued",
+            "imported_listens": 0
+        }
+    
+    return jsonify({"status": result["import_status"], "listens_imported": result["imported_listens"]})
 
 
 @settings_bp.post('/music-services/<service_name>/disconnect/')
