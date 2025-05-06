@@ -111,7 +111,12 @@ export default function ImportStatus({
 
             <dt className="col-xs-4">Import Progress:</dt>
             <dd className="col-xs-8">
-              {((importData.listens_imported * 100) / totalListens).toFixed(2)}%
+              {totalListens > 0
+                ? ((importData.listens_imported * 100) / totalListens).toFixed(
+                    2
+                  )
+                : 0}
+              %
             </dd>
           </dl>
         )}
