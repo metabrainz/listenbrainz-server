@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { Navigation, Keyboard, EffectCoverflow } from "swiper";
+import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { toast } from "react-toastify";
