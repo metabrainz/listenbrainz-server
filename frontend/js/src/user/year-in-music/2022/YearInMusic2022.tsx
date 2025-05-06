@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
+import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
@@ -544,16 +544,11 @@ export default class YearInMusic extends React.Component<
               {yearInMusicData.top_releases ? (
                 <div id="top-albums">
                   <Swiper
-                    modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
+                    modules={[Navigation, Keyboard, EffectCoverflow]}
                     spaceBetween={15}
                     slidesPerView={2}
                     initialSlide={0}
                     centeredSlides
-                    lazy={{
-                      enabled: true,
-                      loadPrevNext: true,
-                      loadPrevNextAmount: 4,
-                    }}
                     watchSlidesProgress
                     navigation
                     effect="coverflow"
@@ -588,6 +583,7 @@ export default class YearInMusic extends React.Component<
                         return (
                           <SwiperSlide
                             key={`coverflow-${release.release_name}`}
+                            lazy
                           >
                             <img
                               data-src={
@@ -596,6 +592,7 @@ export default class YearInMusic extends React.Component<
                               }
                               alt={release.release_name}
                               className="swiper-lazy"
+                              loading="lazy"
                             />
                             <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                             <div title={release.release_name}>
