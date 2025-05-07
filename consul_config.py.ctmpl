@@ -217,7 +217,7 @@ LOG_SENTRY = {
     'traces_sample_rate': {{template "KEY" "sentry/traces_sample_rate"}},
 }
 DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
-
+CRON_SENTRY_DSN = '''{{template "KEY" "sentry/cron_dsn"}}'''
 
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ

@@ -121,6 +121,8 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #     'traces_sample_rate': 1.0,
 # }
 
+# CRON_SENTRY_DSN = ''
+
 
 # MISCELLANEOUS
 
