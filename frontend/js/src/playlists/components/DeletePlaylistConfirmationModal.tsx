@@ -1,5 +1,5 @@
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import Modal from "react-bootstrap/Modal";
+import { Modal } from "react-bootstrap";
 import * as React from "react";
 import { toast } from "react-toastify";
 import { ToastMsg } from "../../notifications/Notifications";

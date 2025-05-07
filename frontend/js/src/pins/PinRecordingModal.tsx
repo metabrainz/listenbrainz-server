@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import Modal from "react-bootstrap/Modal";
+import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import {

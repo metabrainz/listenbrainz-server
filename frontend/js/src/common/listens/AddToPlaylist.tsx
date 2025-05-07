@@ -8,7 +8,7 @@ import {
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import Modal from "react-bootstrap/Modal";
+import { Modal } from "react-bootstrap";
 import { ToastMsg } from "../../notifications/Notifications";
 import { PLAYLIST_URI_PREFIX, listenToJSPFTrack } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";

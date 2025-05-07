@@ -1,5 +1,5 @@
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import Modal from "react-bootstrap/Modal";
+import { Modal } from "react-bootstrap";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faExchangeAlt,

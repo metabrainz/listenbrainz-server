@@ -9,7 +9,7 @@ import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import Modal from "react-bootstrap/Modal";
+import { Modal } from "react-bootstrap";
 import { kebabCase, lowerCase } from "lodash";
 import { Link, useNavigate } from "react-router-dom";
 import GlobalAppContext from "../utils/GlobalAppContext";

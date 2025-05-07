@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get } from "lodash";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import Modal from "react-bootstrap/Modal";
+import { Modal } from "react-bootstrap";
 
 export default NiceModal.create(() => {
   const modal = useModal();
