@@ -339,7 +339,7 @@ export default function FreshReleases() {
               <div className="input-group">
                 <select
                   id="fresh-releases-sort-select"
-                  className="form-control"
+                  className="form-select"
                   value={sort}
                   onChange={(event) => {
                     setSort(event.target.value as SortOption);
@@ -361,7 +361,7 @@ export default function FreshReleases() {
               <div className="input-group">
                 <select
                   id="fresh-releases-sort-direction-select"
-                  className="form-control"
+                  className="form-select"
                   value={sortDirection}
                   onChange={(event) => {
                     setSortDirection(event.target.value as SortDirection);

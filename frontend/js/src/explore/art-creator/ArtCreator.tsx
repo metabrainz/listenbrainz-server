@@ -453,7 +453,7 @@ export default function ArtCreator() {
                 </label>
                 <select
                   id="style"
-                  className="form-control"
+                  className="form-select"
                   value={style.name}
                   onChange={updateStyleCallback}
                 >
@@ -470,7 +470,7 @@ export default function ArtCreator() {
                 </label>
                 <select
                   id="time-range"
-                  className="form-control"
+                  className="form-select"
                   value={timeRange}
                   onChange={updateTimeRangeCallback}
                 >
@@ -522,7 +522,7 @@ export default function ArtCreator() {
                     </div>
                     <select
                       id="grid-layout"
-                      className="form-control"
+                      className="form-select"
                       value={gridLayout + 1}
                       onChange={(event) => {
                         setGridLayout(Number(event.target.value) - 1);
@@ -703,7 +703,7 @@ export default function ArtCreator() {
                 className="form-label" htmlFor="font-select">Font:</label>
                 <select
                   id="font-select"
-                  className="form-control"
+                  className="form-select"
                   value={font}
                   onChange={updateFontCallback}
                 >

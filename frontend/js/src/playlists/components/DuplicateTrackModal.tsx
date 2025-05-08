@@ -52,13 +52,15 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
             <p>{message}</p>
           </div>
           <div className="modal-footer" style={{ display: "inline-block" }}>
-            <div className="checkbox pull-left">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={localDontAskAgain}
-                  onChange={(e) => setLocalDontAskAgain(e.target.checked)}
-                />
+            <div className="form-check pull-left">
+              <input
+                id="dontAskAgain"
+                type="checkbox"
+                className="form-check-input"
+                checked={localDontAskAgain}
+                onChange={(e) => setLocalDontAskAgain(e.target.checked)}
+              />
+              <label className="form-check-label" htmlFor="dontAskAgain">
                 Don&apos;t ask me again until I close this page
               </label>
             </div>

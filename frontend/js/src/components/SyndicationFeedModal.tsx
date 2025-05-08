@@ -116,7 +116,7 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
             </label>
             {option.type === "dropdown" && (
               <select
-                className="form-control"
+                className="form-select"
                 id={option.key}
                 onChange={(e) => handleOptionChange(option.key, e.target.value)}
                 defaultValue={selectedOptions[option.key]}

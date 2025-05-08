@@ -37,7 +37,7 @@ function IconTray(props: IconTrayProps) {
           <FontAwesomeIcon icon={faUser} fixedWidth />
         </div>
         &nbsp;add to profile, refresh
-        <select className="borderless">
+        <select className="form-select borderless">
           <option value="daily">daily</option>
           <option value="weekly">weekly</option>
           <option value="monthly">monthly</option>

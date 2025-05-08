@@ -332,15 +332,16 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
             </div>
           </div>
         )}
-        <div className="checkbox">
-          <label>
-            <input
-              id="isPublic"
-              type="checkbox"
-              checked={isPublic}
-              name="isPublic"
-              onChange={(event) => setIsPublic(event.target.checked)}
-            />
+        <div className="form-check checkbox">
+          <input
+            id="isPublic"
+            type="checkbox"
+            className="form-check-input"
+            checked={isPublic}
+            name="isPublic"
+            onChange={(event) => setIsPublic(event.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="isPublic">
             &nbsp;Make playlist public
           </label>
         </div>

@@ -282,7 +282,7 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
         </span>
         {Boolean(searchResults?.length) && (
           <select
-            className="dropdown-search-suggestions"
+            className="form-select dropdown-search-suggestions"
             size={Math.min(searchResults.length + 1, 8)}
             onChange={(e) => {
               if (!e.currentTarget.value) {

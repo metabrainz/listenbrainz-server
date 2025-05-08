@@ -276,7 +276,7 @@ export default class UserPlaylists extends React.Component<
                 onChange={(e) =>
                   this.setSortOption(e.target.value as SortOption)
                 }
-                className="form-control"
+                className="form-select"
                 style={{ width: "200px" }}
               >
                 <option value={SortOption.DATE_CREATED}>Date Created</option>
@@ -293,6 +293,7 @@ export default class UserPlaylists extends React.Component<
                   type="button"
                   id="ImportPlaylistDropdown"
                   data-bs-toggle="dropdown"
+                  data-bs-config="{'boundary': 'body'}"
                   aria-haspopup="true"
                 >
                   <FontAwesomeIcon icon={faPlusCircle} title="Import" />

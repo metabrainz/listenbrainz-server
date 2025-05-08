@@ -359,6 +359,7 @@ export default NiceModal.create(
               <label
                 htmlFor="includeArtistSearch"
                 style={{ fontWeight: "initial" }}
+                className="form-check-label"
               >
                 Include artist name when searching{" "}
                 <FontAwesomeIcon
@@ -384,6 +385,7 @@ export default NiceModal.create(
               />
               &nbsp;
               <label
+                className="form-check-label"
                 htmlFor="escapeSpecialCharacters"
                 style={{ fontWeight: "initial" }}
               >
@@ -522,6 +524,7 @@ export default NiceModal.create(
             />
             &nbsp;
             <label
+              className="form-check-label"
               htmlFor="includeArtistMatch"
               style={{ fontWeight: "initial" }}
             >

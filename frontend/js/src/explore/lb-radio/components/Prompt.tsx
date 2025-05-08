@@ -84,7 +84,7 @@ function Prompt(props: PromptProps) {
             onChange={onInputChangeCallback}
           />
           <select
-            className="form-control"
+            className="form-select"
             id="mode-dropdown"
             name="mode"
             value={mode}

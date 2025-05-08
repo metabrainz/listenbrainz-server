@@ -534,6 +534,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
         <div className="dropdown">
           <b>Language of your review: </b>
           <select
+            className="form-select"
             id="language-selector"
             value={language}
             name="language"
