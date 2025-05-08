@@ -293,7 +293,6 @@ export default class UserPlaylists extends React.Component<
                   type="button"
                   id="ImportPlaylistDropdown"
                   data-bs-toggle="dropdown"
-                  data-bs-config="{'boundary': 'body'}"
                   aria-haspopup="true"
                 >
                   <FontAwesomeIcon icon={faPlusCircle} title="Import" />

@@ -214,7 +214,7 @@ export default function PlaylistCard({
             id="playlistOptionsDropdown"
             data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
