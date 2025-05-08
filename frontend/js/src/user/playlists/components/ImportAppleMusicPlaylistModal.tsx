@@ -143,7 +143,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
             <button
               type="button"
               key={playlist.id}
-              className="list-group-item"
+              className="list-group-item list-group-item-action"
               style={{
                 display: "flex",
                 justifyContent: "space-between",

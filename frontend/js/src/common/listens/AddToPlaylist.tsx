@@ -169,7 +169,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
               <button
                 type="button"
                 key={playlist.identifier}
-                className="list-group-item"
+                className="list-group-item list-group-item-action"
                 name={playlist.title}
                 data-playlist-identifier={playlist.identifier}
                 onClick={addToPlaylist}
