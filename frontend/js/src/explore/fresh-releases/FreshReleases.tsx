@@ -304,7 +304,7 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div className="fresh-releases-pill-row">
+          <div className="fresh-releases-pill-row gap-5">
             <div className="fresh-releases-row">
               <Pill
                 id="sitewide-releases"

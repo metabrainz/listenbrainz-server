@@ -3,11 +3,7 @@
 before importing bootstrap files */
 @use 'sass:color';
 
-$nav-link-font-weight: 700;
-
-$input-font-size: unset;
-$input-padding-y: .5rem;
-
+/* Colors */
 $listenbrainz-blue: #353070;
 $orange: #eb743b;
 // $purple: #ba478f;
@@ -24,7 +20,6 @@ $cafe-con-leche: #ede5e2;
 $gray-lighter: color.adjust($cafe-con-leche, $lightness: 6%, $space: hsl);
 $gray-light: color.adjust($gray-lighter, $lightness: -15%, $space: hsl);
 
-
 // brand colors
 $primary: $orange;
 // $secondary: $purple; // <- I don't think this was set in Bootstrap 3 styles
@@ -32,15 +27,51 @@ $success: $green;
 $warning: $yellow;
 $danger: $red;
 $info: $blue;
-$light: $gray-light;
+$light: $gray-lighter;
 
+$tertiary-bg-rgb: $gray-light;
+
+$success-text-emphasis: #3c763d;
+$success-bg-subtle: #dff0d8;
+$info-text-emphasis:                #31708f;
+$info-bg-subtle:                  #d9edf7;
+$warning-text-emphasis:             #8a6d3b;
+$warning-bg-subtle:               #fcf8e3;
+$danger-text-emphasis:              #a94442;
+$danger-bg-subtle:                #f2dede;
+
+
+/* Tables */
+$table-striped-bg: #f9f9f9;
+$table-cell-padding-y: 0.8rem;
+$table-cell-padding-x: $table-cell-padding-y;
+
+/* Inputs */
+$input-padding-y: .5rem;
+$input-padding-x: .7rem;
 $input-padding-y-lg: 0.7rem;
+$input-padding-x-lg: 1.5rem;
+$input-font-size: unset;
 $input-font-size-lg: 1.8rem;
+
+/* Nav */
+$nav-link-font-weight: 700;
+
 
 @import "lobes4/scss/bootstrap.scss";
 
+/* Buttons */
 @each $color, $value in $theme-colors {
   .btn-outline-#{$color} {
     --bs-btn-border-radius: 6px;
   }
+}
+.btn-warning {
+    --bs-btn-color: $white;
+}
+
+// pre is used in a tooltip with a different background color
+pre {
+    background-color: inherit;
+    border: none;
 }

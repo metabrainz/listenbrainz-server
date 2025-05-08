@@ -425,9 +425,15 @@ input[type="range"] {
 }
 
 #export-buttons {
-  details[open] > summary > svg {
-    -webkit-transform: rotate(90deg);
-    transform: rotate(90deg);
+  details > summary::marker {
+    display: none;
+    content: "";
+  }
+  details[open] > summary {
+    > svg {
+      -webkit-transform: rotate(90deg);
+      transform: rotate(90deg);
+    }
   }
 }
 
