@@ -569,7 +569,7 @@ export default function UserEntityChart() {
                     const listen = listenableItems[index];
                     const listenDetails = getChartEntityDetails(datum);
                     const listenCountComponent = (
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {datum.count}
                         &nbsp;
                         <FontAwesomeIcon icon={faHeadphones} />

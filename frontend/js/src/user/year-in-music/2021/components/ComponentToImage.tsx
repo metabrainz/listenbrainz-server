@@ -103,7 +103,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
                 artist.artist_mbids[0]
               );
               const thumbnail = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   <FontAwesomeIcon
                     style={{ marginRight: "4px" }}
                     icon={faHeadphones as IconProp}

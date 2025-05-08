@@ -433,7 +433,7 @@ export default function ArtistPage(): JSX.Element {
             let listenCountComponent;
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   {bigNumberFormatter.format(recording.total_listen_count)}
                   &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
@@ -498,7 +498,7 @@ export default function ArtistPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />

@@ -111,7 +111,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {artist.listen_count}
                       </span>
                     }
@@ -156,7 +156,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {release.listen_count}
                       </span>
                     }
@@ -211,7 +211,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">{listen_count}</span>
+                      <span className="badge bg-info">{listen_count}</span>
                     }
                     // Disabling the feedback component here because of display issues with the badge
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -248,7 +248,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {releaseGroup.listen_count}
                       </span>
                     }
@@ -261,7 +261,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
             )}
         </div>
         <div className="mb-15 text-center">
-          <Link to={statsUrl} className="btn btn-outline">
+          <Link to={statsUrl} className="btn btn-outline-info">
             View more…
           </Link>
         </div>

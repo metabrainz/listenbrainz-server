@@ -216,7 +216,10 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         <hr style={{ margin: "0.5em 0" }} />
         {artists?.slice(0, 10).map((artist: UserArtistMapArtist) => (
           <div key={artist.artist_mbid}>
-            <span className="badge color-purple" style={{ marginRight: "4px" }}>
+            <span
+              className="badge bg-light text-info"
+              style={{ marginRight: "4px" }}
+            >
               <FontAwesomeIcon
                 style={{ marginRight: "4px" }}
                 icon={faHeadphones as IconProp}

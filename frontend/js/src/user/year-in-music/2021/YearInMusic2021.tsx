@@ -626,7 +626,7 @@ export default class YearInMusic extends React.Component<
                     artist.artist_mbids[0]
                   );
                   const thumbnail = (
-                    <span className="badge badge-info">
+                    <span className="badge bg-info">
                       {artist.listen_count} listens
                     </span>
                   );
