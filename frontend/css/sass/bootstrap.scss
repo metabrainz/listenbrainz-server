@@ -34,6 +34,9 @@ $danger: $red;
 $info: $blue;
 $light: $gray-light;
 
+$input-padding-y-lg: 0.7rem;
+$input-font-size-lg: 1.8rem;
+
 @import "lobes4/scss/bootstrap.scss";
 
 @each $color, $value in $theme-colors {
