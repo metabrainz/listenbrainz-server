@@ -547,7 +547,7 @@ export default function Listen() {
               <div className="read-more">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     refetch();
                     setWebSocketListens([]);

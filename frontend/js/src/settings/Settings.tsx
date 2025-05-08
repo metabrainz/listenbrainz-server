@@ -71,7 +71,7 @@ export default function Settings() {
             href={`https://musicbrainz.org/user/${name}`}
             aria-label="Edit Profile on MusicBrainz"
             title="Edit Profile on MusicBrainz"
-            className="btn btn-outline"
+            className="btn btn-outline-info"
             target="_blank"
             rel="noopener noreferrer"
           >

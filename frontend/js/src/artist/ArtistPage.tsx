@@ -454,7 +454,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() =>
                   setExpandPopularTracks((prevValue) => !prevValue)
                 }
@@ -536,7 +536,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more mb-10">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() => setExpandDiscography((prevValue) => !prevValue)}
               >
                 See {expandDiscography ? "less" : "full discography"}

@@ -8,3 +8,7 @@ $input-font-size: unset;
 $input-padding-y: .5rem;
 
 @import "lobes4/scss/bootstrap.scss";
+
+.btn[class^="btn-outline"] {
+    border-radius: 6px;
+}
