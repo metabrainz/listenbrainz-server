@@ -36,6 +36,8 @@ $light: $gray-light;
 
 @import "lobes4/scss/bootstrap.scss";
 
-.btn[class^="btn-outline"] {
-    border-radius: 6px;
+@each $color, $value in $theme-colors {
+  .btn-outline-#{$color} {
+    --bs-btn-border-radius: 6px;
+  }
 }

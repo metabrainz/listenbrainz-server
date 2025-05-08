@@ -134,6 +134,7 @@ ol {
 
 .btn {
   white-space: nowrap;
+  border-radius: var(--bs-btn-border-radius);
 }
 
 .col-lg-1,
@@ -204,26 +205,11 @@ ol {
   color: @blue;
 }
 
-.btn-info {
-  background-color: @blue;
-  border-color: @blue;
-  &:hover {
-    background-color: #413b89;
-  }
-}
-
 .panel {
   margin-bottom: 2rem;
   .panel-heading {
     background-color: #fafafa;
   }
-}
-
-.btn-info.disabled,
-.btn-info:disabled {
-  background-color: #3f3c64;
-  border-color: @blue;
-  cursor: not-allowed;
 }
 
 .form-text {
