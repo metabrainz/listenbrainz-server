@@ -413,7 +413,7 @@ export default function MusicServices() {
               history and automatically add your new scrobbles to ListenBrainz.
             </p>
             <div
-              className="alert alert-warning alert-dismissible fade in"
+              className="alert alert-warning alert-dismissible fade show"
               role="alert"
             >
               You must first disable the &#34;Hide recent listening
@@ -428,17 +428,17 @@ export default function MusicServices() {
               .
               <button
                 type="button"
-                className="close"
-                data-dismiss="alert"
+                className="btn-close"
+                data-bs-dismiss="alert"
                 aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
+              />
             </div>
             <form onSubmit={handleConnectToLaftFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
-                  <label htmlFor="lastfmUsername">Your Last.FM username:</label>
+                  <label className="form-label" htmlFor="lastfmUsername">
+                    Your Last.FM username:
+                  </label>
                   <input
                     type="text"
                     className="form-control"
@@ -452,7 +452,7 @@ export default function MusicServices() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="datetime">
+                  <label className="form-label" htmlFor="datetime">
                     Start import from (optional):
                   </label>
                   <input

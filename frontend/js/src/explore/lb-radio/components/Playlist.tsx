@@ -51,7 +51,7 @@ export function Playlist(props: PlaylistProps) {
             className="btn btn-info dropdown-toggle"
             type="button"
             id="options-dropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="true"
           >

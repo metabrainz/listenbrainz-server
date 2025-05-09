@@ -117,8 +117,6 @@ export default function RecommendationPlaylistSettings({
                 listen: playlist,
               });
             }}
-            data-toggle="modal"
-            data-target="#ListenPayloadModal"
             type="button"
           >
             <FontAwesomeIcon
@@ -132,7 +130,7 @@ export default function RecommendationPlaylistSettings({
               className="dropdown-toggle btn btn-icon btn-info"
               type="button"
               id="playlistOptionsDropdown"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="true"
             >
@@ -147,8 +145,6 @@ export default function RecommendationPlaylistSettings({
               <button
                 type="button"
                 className="btn btn-icon btn-info"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {

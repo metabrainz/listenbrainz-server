@@ -485,7 +485,7 @@ export default function Listen() {
             )}
             <Link
               to={`https://musicbrainz.org/user/${user?.name}`}
-              className="btn musicbrainz-profile-button"
+              className="btn btn-info musicbrainz-profile-button"
             >
               <img
                 src="/static/img/musicbrainz-16.svg"
@@ -547,7 +547,7 @@ export default function Listen() {
               <div className="read-more">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     refetch();
                     setWebSocketListens([]);
@@ -570,7 +570,7 @@ export default function Listen() {
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="addListensDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
                 >
                   Add listens&nbsp;
@@ -585,8 +585,6 @@ export default function Listen() {
                     onClick={() => {
                       NiceModal.show(AddListenModal);
                     }}
-                    data-toggle="modal"
-                    data-target="#AddListenModal"
                     className="dropdown-item"
                   >
                     Manual addition
@@ -612,8 +610,6 @@ export default function Listen() {
             <button
               type="button"
               className="btn btn-icon btn-info atom-button"
-              data-toggle="modal"
-              data-target="#SyndicationFeedModal"
               title="Subscribe to syndication feed (Atom)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {

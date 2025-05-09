@@ -3,7 +3,8 @@ import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { add } from "date-fns";
@@ -104,12 +105,6 @@ export default NiceModal.create(() => {
   // Used for the automatic switching and search trigger if pasting URL for another entity type
   const [textToSearch, setTextToSearch] = useState<string>();
 
-  const closeModal = useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
-
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
       if (!error) {
@@ -186,7 +181,7 @@ export default NiceModal.create(() => {
           />,
           { toastId: "added-listens-success" }
         );
-        closeModal();
+        modal.hide();
       } catch (error) {
         handleError(
           error,
@@ -209,7 +204,7 @@ export default NiceModal.create(() => {
     selectedDate,
     invertOrder,
     APIService,
-    closeModal,
+    modal,
     handleError,
   ]);
 
@@ -238,159 +233,138 @@ export default NiceModal.create(() => {
     : navigator.language;
 
   return (
-    <div
-      className="modal fade"
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Add Listens"
       id="AddListenModal"
-      tabIndex={-1}
-      role="dialog"
       aria-labelledby="AddListenModalLabel"
-      data-backdrop="static"
     >
-      <div className="modal-dialog" role="document">
-        <form className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={closeModal}
+      <Modal.Header closeButton>
+        <Modal.Title id="AddListenModalLabel">Add Listens</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <div className="add-listen-header">
+          <Pill
+            active={listenOption === SubmitListenType.track}
+            onClick={() => {
+              setListenOption(SubmitListenType.track);
+            }}
+            type="secondary"
+          >
+            Add track
+          </Pill>
+          <Pill
+            active={listenOption === SubmitListenType.album}
+            onClick={() => {
+              setListenOption(SubmitListenType.album);
+            }}
+            type="secondary"
+          >
+            Add album
+          </Pill>
+        </div>
+        {listenOption === SubmitListenType.track && (
+          <AddSingleListen
+            onPayloadChange={setSelectedListens}
+            switchMode={switchMode}
+            initialText={textToSearch}
+          />
+        )}
+        {listenOption === SubmitListenType.album && (
+          <AddAlbumListens
+            onPayloadChange={setSelectedListens}
+            switchMode={switchMode}
+            initialText={textToSearch}
+          />
+        )}
+        <hr />
+        <div className="timestamp">
+          <h5>Timestamp</h5>
+          <div className="timestamp-entities">
+            <Pill
+              active={customTimestamp === false}
+              onClick={() => {
+                setCustomTimestamp(false);
+                setSelectedDate(new Date());
+              }}
+              type="secondary"
             >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4 className="modal-title" id="AddListenModalLabel">
-              Add Listens
-            </h4>
-          </div>
-          <div className="modal-body">
-            <div className="add-listen-header">
-              <Pill
-                active={listenOption === SubmitListenType.track}
-                onClick={() => {
-                  setListenOption(SubmitListenType.track);
-                }}
-                type="secondary"
-              >
-                Add track
-              </Pill>
-              <Pill
-                active={listenOption === SubmitListenType.album}
-                onClick={() => {
-                  setListenOption(SubmitListenType.album);
-                }}
-                type="secondary"
-              >
-                Add album
-              </Pill>
-            </div>
-            {listenOption === SubmitListenType.track && (
-              <AddSingleListen
-                onPayloadChange={setSelectedListens}
-                switchMode={switchMode}
-                initialText={textToSearch}
-              />
-            )}
-            {listenOption === SubmitListenType.album && (
-              <AddAlbumListens
-                onPayloadChange={setSelectedListens}
-                switchMode={switchMode}
-                initialText={textToSearch}
-              />
-            )}
-            <hr />
-            <div className="timestamp">
-              <h5>Timestamp</h5>
-              <div className="timestamp-entities">
-                <Pill
-                  active={customTimestamp === false}
-                  onClick={() => {
-                    setCustomTimestamp(false);
-                    setSelectedDate(new Date());
-                  }}
-                  type="secondary"
-                >
-                  Now
-                </Pill>
-                <Pill
-                  active={customTimestamp === true}
-                  onClick={() => {
-                    setCustomTimestamp(true);
-                    setSelectedDate(new Date());
-                  }}
-                  type="secondary"
-                >
-                  Custom
-                </Pill>
-                <div className="timestamp-date-picker">
-                  <div>
-                    <label htmlFor="starts-at">
-                      <input
-                        name="invert-timestamp"
-                        type="radio"
-                        checked={invertOrder === false}
-                        id="starts-at"
-                        aria-label="Set the time of the beginning of the album"
-                        onChange={() => {
-                          setInvertOrder(false);
-                        }}
-                      />
-                      &nbsp;Starts at:
-                    </label>
-                    <label htmlFor="ends-at">
-                      <input
-                        name="invert-timestamp"
-                        type="radio"
-                        checked={invertOrder === true}
-                        id="ends-at"
-                        aria-label="Set the time of the end of the album"
-                        onChange={() => {
-                          setInvertOrder(true);
-                        }}
-                      />
-                      &nbsp;Finishes at:
-                    </label>
-                  </div>
-                  <DateTimePicker
-                    value={selectedDate}
-                    onChange={(newDateTimePickerValue: Date) => {
-                      setSelectedDate(newDateTimePickerValue);
+              Now
+            </Pill>
+            <Pill
+              active={customTimestamp === true}
+              onClick={() => {
+                setCustomTimestamp(true);
+                setSelectedDate(new Date());
+              }}
+              type="secondary"
+            >
+              Custom
+            </Pill>
+            <div className="timestamp-date-picker">
+              <div>
+                <label className="form-label" htmlFor="starts-at">
+                  <input
+                    name="invert-timestamp"
+                    type="radio"
+                    checked={invertOrder === false}
+                    id="starts-at"
+                    aria-label="Set the time of the beginning of the album"
+                    onChange={() => {
+                      setInvertOrder(false);
                     }}
-                    calendarIcon={
-                      <FontAwesomeIcon icon={faCalendar as IconProp} />
-                    }
-                    maxDate={new Date()}
-                    clearIcon={null}
-                    format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
-                    locale={userLocale}
-                    maxDetail="second"
-                    disabled={!customTimestamp}
                   />
-                </div>
+                  &nbsp;Starts at:
+                </label>
+                <label className="form-label" htmlFor="ends-at">
+                  <input
+                    name="invert-timestamp"
+                    type="radio"
+                    checked={invertOrder === true}
+                    id="ends-at"
+                    aria-label="Set the time of the end of the album"
+                    onChange={() => {
+                      setInvertOrder(true);
+                    }}
+                  />
+                  &nbsp;Finishes at:
+                </label>
               </div>
+              <DateTimePicker
+                value={selectedDate}
+                onChange={(newDateTimePickerValue: Date) => {
+                  setSelectedDate(newDateTimePickerValue);
+                }}
+                calendarIcon={<FontAwesomeIcon icon={faCalendar as IconProp} />}
+                maxDate={new Date()}
+                clearIcon={null}
+                format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
+                locale={userLocale}
+                maxDetail="second"
+                disabled={!customTimestamp}
+              />
             </div>
           </div>
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              data-dismiss="modal"
-              onClick={closeModal}
-            >
-              Close
-            </button>
-            <button
-              type="submit"
-              className="btn btn-success"
-              data-dismiss="modal"
-              disabled={!selectedListens?.length}
-              onClick={submitListens}
-            >
-              Submit {selectedListens.length ?? 0} listen
-              {selectedListens.length > 1 ? "s" : ""}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={modal.hide}
+        >
+          Close
+        </button>
+        <button
+          type="submit"
+          className="btn btn-success"
+          disabled={!selectedListens?.length}
+          onClick={submitListens}
+        >
+          Submit {selectedListens.length ?? 0} listen
+          {selectedListens.length > 1 ? "s" : ""}
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });

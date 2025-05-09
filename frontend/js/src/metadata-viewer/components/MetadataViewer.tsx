@@ -445,7 +445,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 {lyricsLink?.lyrics && (
                   <a
                     href={lyricsLink.lyrics}
-                    className="btn btn-outline"
+                    className="btn btn-outline-info"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -558,7 +558,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   ? " disabled"
                   : ""
               }`}
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               <b>Support the artist</b>

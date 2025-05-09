@@ -435,8 +435,6 @@ export default function LinkListensPage() {
                 onClick={() => {
                   openMultiTrackMappingModal(group, releaseName);
                 }}
-                data-toggle="modal"
-                data-target="#MultiTrackMBIDMappingModal"
               >
                 <FontAwesomeIcon icon={faLink} />
               </button>

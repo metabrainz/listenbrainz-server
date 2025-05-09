@@ -35,12 +35,12 @@ function Navbar() {
 
   return (
     <nav role="navigation">
-      <div className="navbar-light navbar-header">
+      <div className="navbar navbar-light navbar-header">
         <button
           type="button"
           className="navbar-toggler"
-          data-toggle="collapse"
-          data-target="#side-nav,#side-nav-overlay"
+          data-bs-toggle="collapse"
+          data-bs-target="#side-nav,#side-nav-overlay"
           ref={toggleSidebarButton}
         >
           <span className="navbar-toggler-icon" />
@@ -157,8 +157,8 @@ function Navbar() {
       <div
         id="side-nav-overlay"
         className="collapse"
-        data-toggle="collapse"
-        data-target="#side-nav,#side-nav-overlay"
+        data-bs-toggle="collapse"
+        data-bs-target="#side-nav,#side-nav-overlay"
       />
     </nav>
   );

@@ -68,10 +68,6 @@ pre code.hljs {
   width: auto !important;
 }
 
-.btn.dropdown-toggle {
-  border-radius: 4px;
-}
-
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
 
@@ -142,6 +138,50 @@ pre code.hljs {
   li {
     vertical-align: middle;
   }
+}
+
+/* Buttons */
+.btn {
+  box-shadow: none;
+}
+
+.btn.dropdown-toggle {
+  border-radius: 4px;
+}
+
+// Fix button height inside an input group
+.input-group:not(.input-group-lg):not(.input-group-sm)
+  > .input-group-btn
+  > .btn {
+  line-height: 2em;
+}
+
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+
+  & + * {
+    margin-left: 0.4em;
+  }
+
+  > svg {
+    /* We might forget to set the fixedWidth attribute on FontAwesome icons
+    but we do want to make sure all icons have the same width, so extend the FA class */
+    &:extend(.fa-fw);
+  }
+}
+
+.btn-rounded {
+  border-radius: 3em;
+}
+
+.btn-link {
+  border-color: transparent;
 }
 
 .center-p {
@@ -243,9 +283,8 @@ pre code.hljs {
   }
 }
 
-.form-control {
-  font-size: unset;
-  height: 34px;
+textarea.form-control {
+  height: auto;
 }
 
 .full-page-loader {
@@ -375,48 +414,8 @@ pre code.hljs {
   border-radius: 10px;
 }
 
-.badge-info {
-  color: @white;
-  background-color: @blue;
-}
-
 input[type="range"] {
   accent-color: @blue;
-}
-
-// Fix button height inside an input group
-.input-group:not(.input-group-lg):not(.input-group-sm)
-  > .input-group-btn
-  > .btn {
-  line-height: 2em;
-}
-
-.btn-icon {
-  padding: 0.5em;
-  font-size: 1.5em;
-  height: 2em;
-  line-height: 1em;
-  border-radius: 5px;
-  text-align: center;
-  display: inline-block;
-
-  & + * {
-    margin-left: 0.4em;
-  }
-
-  > svg {
-    /* We might forget to set the fixedWidth attribute on FontAwesome icons
-    but we do want to make sure all icons have the same width, so extend the FA class */
-    &:extend(.fa-fw);
-  }
-}
-
-.btn-rounded {
-  border-radius: 3em;
-}
-
-.btn-link {
-  border-color: transparent;
 }
 
 .Importer {
@@ -426,9 +425,15 @@ input[type="range"] {
 }
 
 #export-buttons {
-  details[open] > summary > svg {
-    -webkit-transform: rotate(90deg);
-    transform: rotate(90deg);
+  details > summary::marker {
+    display: none;
+    content: "";
+  }
+  details[open] > summary {
+    > svg {
+      -webkit-transform: rotate(90deg);
+      transform: rotate(90deg);
+    }
   }
 }
 
@@ -449,6 +454,7 @@ input[type="range"] {
   margin: 20px 0;
   .page-link {
     padding: 5px 14px;
+    font-size: 14px;
     color: @blue;
   }
 }
@@ -459,11 +465,10 @@ input[type="range"] {
   }
 
   .modal-header {
-    padding: 15px;
-    display: block;
+    padding: 5px 15px;
 
-    .close {
-      font-size: 2rem;
+    .btn-close {
+      font-size: 1rem;
     }
   }
 

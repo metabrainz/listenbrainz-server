@@ -304,7 +304,7 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div className="fresh-releases-pill-row">
+          <div className="fresh-releases-pill-row gap-5">
             <div className="fresh-releases-row">
               <Pill
                 id="sitewide-releases"
@@ -339,7 +339,7 @@ export default function FreshReleases() {
               <div className="input-group">
                 <select
                   id="fresh-releases-sort-select"
-                  className="form-control"
+                  className="form-select"
                   value={sort}
                   onChange={(event) => {
                     setSort(event.target.value as SortOption);
@@ -361,7 +361,7 @@ export default function FreshReleases() {
               <div className="input-group">
                 <select
                   id="fresh-releases-sort-direction-select"
-                  className="form-control"
+                  className="form-select"
                   value={sortDirection}
                   onChange={(event) => {
                     setSortDirection(event.target.value as SortDirection);
@@ -378,8 +378,6 @@ export default function FreshReleases() {
               <button
                 type="button"
                 className="btn btn-icon btn-info atom-button"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   if (pageType === PAGE_TYPE_SITEWIDE) {

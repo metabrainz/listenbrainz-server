@@ -325,7 +325,7 @@ export default class YearInMusic extends React.Component<
           <hr />
           <a
             href={topLevelPlaylist.identifier}
-            className="btn btn-info btn-block"
+            className="btn btn-info w-100"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -510,24 +510,20 @@ export default class YearInMusic extends React.Component<
                   size={linkToThisPage.length - 5}
                   value={linkToThisPage}
                 />
-                <span className="input-group-prepend">
-                  <span className="input-group-text">
-                    <FontAwesomeIcon
-                      icon={faCopy}
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(linkToThisPage);
-                      }}
-                    />
-                  </span>
+                <span className="input-group-text">
+                  <FontAwesomeIcon
+                    icon={faCopy}
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(linkToThisPage);
+                    }}
+                  />
                 </span>
                 {!isUndefined(navigator.canShare) ? (
-                  <span className="input-group-prepend">
-                    <span className="input-group-text">
-                      <FontAwesomeIcon
-                        icon={faShareAlt}
-                        onClick={this.sharePage}
-                      />
-                    </span>
+                  <span className="input-group-text">
+                    <FontAwesomeIcon
+                      icon={faShareAlt}
+                      onClick={this.sharePage}
+                    />
                   </span>
                 ) : null}
               </div>
@@ -718,7 +714,7 @@ export default class YearInMusic extends React.Component<
                             artist.artist_mbid
                           );
                           const thumbnail = (
-                            <span className="badge badge-info">
+                            <span className="badge bg-info">
                               <FontAwesomeIcon
                                 style={{ marginRight: "4px" }}
                                 icon={faHeadphones}
@@ -919,7 +915,7 @@ export default class YearInMusic extends React.Component<
                       <span className="dropdown">
                         <button
                           className="dropdown-toggle btn-transparent capitalize-bold"
-                          data-toggle="dropdown"
+                          data-bs-toggle="dropdown"
                           type="button"
                         >
                           {selectedMetric}s

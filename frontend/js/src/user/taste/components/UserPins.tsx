@@ -187,7 +187,7 @@ export default class UserPins extends React.Component<
                 );
               })}
               <button
-                className={`mt-15 btn btn-block ${
+                className={`mt-15 btn w-100 ${
                   noMorePins ? "btn-secondary" : "btn-info"
                 }`}
                 disabled={noMorePins}

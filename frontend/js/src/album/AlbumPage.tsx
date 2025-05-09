@@ -332,7 +332,7 @@ export default function AlbumPage(): JSX.Element {
             <button
               type="button"
               className="btn btn-info dropdown-toggle"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
               aria-label="Toggle dropdown"
@@ -419,7 +419,7 @@ export default function AlbumPage(): JSX.Element {
                     Number.isFinite(recording.total_listen_count)
                   ) {
                     listenCountComponent = (
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {bigNumberFormatter.format(
                           recording.total_listen_count
                         )}
@@ -487,7 +487,7 @@ export default function AlbumPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -519,8 +519,6 @@ export default function AlbumPage(): JSX.Element {
           <button
             type="button"
             className="btn btn-info"
-            data-toggle="modal"
-            data-target="#CBReviewModal"
             onClick={() => {
               NiceModal.show(CBReviewModal, {
                 entityToReview: [

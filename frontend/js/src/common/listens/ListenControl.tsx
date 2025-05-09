@@ -15,12 +15,9 @@ export type ListenControlProps = {
   iconColor?: string;
   iconSize?: SizeProp;
   text: string;
-  dataToggle?: string;
-  dataTarget?: string;
   disabled?: boolean;
   // When link is passed, an <a> tag will be rendered instead of an icon or button
-  // icon and title props will still be used.
-  // The props iconOnly action, dataToggle and dataTarget will be ignored.
+  // icon and title props will still be used. The iconOnly prop will be ignored.
   link?: string;
   // optional anchor tag attributes such as {target:"_blank", rel:"noopener noreferrer"}
   anchorTagAttributes?: any;
@@ -39,8 +36,6 @@ function ListenControl(props: ListenControlProps) {
     iconColor,
     iconSize,
     text,
-    dataToggle,
-    dataTarget,
     disabled,
     link,
     anchorTagAttributes,
@@ -84,8 +79,6 @@ function ListenControl(props: ListenControlProps) {
       title={title ?? text}
       onClick={disabled ? undefined : action}
       type="button"
-      data-toggle={dataToggle}
-      data-target={dataTarget}
       aria-label={ariaLabel ?? text}
       role="menuitem"
     >

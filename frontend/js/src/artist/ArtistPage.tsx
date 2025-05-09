@@ -362,7 +362,7 @@ export default function ArtistPage(): JSX.Element {
               <button
                 type="button"
                 className="btn btn-info dropdown-toggle"
-                data-toggle="dropdown"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
                 aria-label="Toggle dropdown"
@@ -433,7 +433,7 @@ export default function ArtistPage(): JSX.Element {
             let listenCountComponent;
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   {bigNumberFormatter.format(recording.total_listen_count)}
                   &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
@@ -454,7 +454,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() =>
                   setExpandPopularTracks((prevValue) => !prevValue)
                 }
@@ -498,7 +498,7 @@ export default function ArtistPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -536,7 +536,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more mb-10">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() => setExpandDiscography((prevValue) => !prevValue)}
               >
                 See {expandDiscography ? "less" : "full discography"}
@@ -584,8 +584,6 @@ export default function ArtistPage(): JSX.Element {
         <button
           type="button"
           className="btn btn-info"
-          data-toggle="modal"
-          data-target="#CBReviewModal"
           onClick={() => {
             NiceModal.show(CBReviewModal, {
               entityToReview: [

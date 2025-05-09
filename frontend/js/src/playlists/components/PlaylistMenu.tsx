@@ -241,8 +241,6 @@ function PlaylistMenu({
         <>
           <div role="separator" className="dropdown-divider" />
           <a
-            data-toggle="modal"
-            data-target="#CreateOrEditPlaylistModal"
             role="button"
             href="#"
             className="dropdown-item"
@@ -263,8 +261,6 @@ function PlaylistMenu({
             <FontAwesomeIcon icon={faPen as IconProp} /> Edit
           </a>
           <a
-            data-toggle="modal"
-            data-target="#ConfirmPlaylistDeletionModal"
             role="button"
             href="#"
             className="dropdown-item"

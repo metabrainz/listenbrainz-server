@@ -200,7 +200,7 @@ export default function NetworkFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -255,7 +255,7 @@ export default function NetworkFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-outline btn-block"
+                  className="btn btn-outline-info w-100"
                   onClick={() => fetchNextPage()}
                   disabled={!hasNextPage || isFetchingNextPage}
                 >

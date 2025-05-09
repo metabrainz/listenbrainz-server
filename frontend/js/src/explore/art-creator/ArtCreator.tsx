@@ -438,11 +438,9 @@ export default function ArtCreator() {
             <div className="sidenav-content-grid">
               <h4>Settings</h4>
               <div className="input-group">
-                <div className="input-group-prepend">
-                  <label className="input-group-text" htmlFor="user-name">
-                    Username
-                  </label>
-                </div>
+                <label className="input-group-text" htmlFor="user-name">
+                  Username
+                </label>
                 <UserSearch
                   initialValue={userName}
                   onSelectUser={setUserName}
@@ -450,14 +448,12 @@ export default function ArtCreator() {
                 />
               </div>
               <div className="input-group">
-                <div className="input-group-prepend">
-                  <label className="input-group-text" htmlFor="style">
-                    Template
-                  </label>
-                </div>
+                <label className="input-group-text" htmlFor="style">
+                  Template
+                </label>
                 <select
                   id="style"
-                  className="form-control"
+                  className="form-select"
                   value={style.name}
                   onChange={updateStyleCallback}
                 >
@@ -469,14 +465,12 @@ export default function ArtCreator() {
                 </select>
               </div>
               <div className="input-group">
-                <div className="input-group-prepend">
-                  <label className="input-group-text" htmlFor="time-range">
-                    Time range
-                  </label>
-                </div>
+                <label className="input-group-text" htmlFor="time-range">
+                  Time range
+                </label>
                 <select
                   id="time-range"
-                  className="form-control"
+                  className="form-select"
                   value={timeRange}
                   onChange={updateTimeRangeCallback}
                 >
@@ -528,7 +522,7 @@ export default function ArtCreator() {
                     </div>
                     <select
                       id="grid-layout"
-                      className="form-control"
+                      className="form-select"
                       value={gridLayout + 1}
                       onChange={(event) => {
                         setGridLayout(Number(event.target.value) - 1);
@@ -553,7 +547,9 @@ export default function ArtCreator() {
               {style.type === "text" && (
                 <>
                   <div>
-                    <label htmlFor="color-presets">Color presets:</label>
+                    <label className="form-label" htmlFor="color-presets">
+                      Color presets:
+                    </label>
                     <div className="color-picker-panel" id="color-presets">
                       <ColorPicker
                         firstColor="#6b4078"
@@ -603,7 +599,9 @@ export default function ArtCreator() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="text-color-input">Text color:</label>
+                    <label className="form-label" htmlFor="text-color-input">
+                      Text color:
+                    </label>
                     <div className="input-group">
                       <span className="input-group-btn">
                         <input
@@ -625,7 +623,9 @@ export default function ArtCreator() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="bg-color">Background colors:</label>
+                    <label className="form-label" htmlFor="bg-color">
+                      Background colors:
+                    </label>
                     <div className="input-group">
                       <span className="input-group-btn">
                         <input
@@ -669,7 +669,7 @@ export default function ArtCreator() {
                 </>
               )}
               {/* <div className="flex-center input-group">
-                <label htmlFor="bg-upload">Background image:</label>
+                <label className="form-label" htmlFor="bg-upload">Background image:</label>
                 <div className="input-group">
                   <input className="form-control" type="text" disabled />
                   <div className="input-group-btn">
@@ -682,7 +682,7 @@ export default function ArtCreator() {
               </div> */}
 
               {/* <div>
-                <label htmlFor="genres">
+                <label className="form-label" htmlFor="genres">
                   Genres: <FontAwesomeIcon icon={faCircleQuestion} />
                 </label>
                 <input
@@ -700,10 +700,10 @@ export default function ArtCreator() {
                 <ToggleOption onClick={genresToggler} buttonName="Genres" />
               </div> */}
               {/* <div>
-                <label htmlFor="font-select">Font:</label>
+                className="form-label" htmlFor="font-select">Font:</label>
                 <select
                   id="font-select"
-                  className="form-control"
+                  className="form-select"
                   value={font}
                   onChange={updateFontCallback}
                 >

@@ -114,6 +114,7 @@ p {
 // Unordered and Ordered lists
 ul,
 ol {
+  padding-left: revert;
   margin-top: 0;
   margin-bottom: (@line-height-computed / 2);
   ul,
@@ -133,6 +134,7 @@ ol {
 
 .btn {
   white-space: nowrap;
+  border-radius: var(--bs-btn-border-radius);
 }
 
 .col-lg-1,
@@ -192,23 +194,8 @@ ol {
   margin-left: -1.5rem;
 }
 
-.input-group-lg > .form-control,
-.input-group-lg > .input-group-addon,
-.input-group-lg > .input-group-btn > .btn {
-  font-size: 1.8rem;
-  height: 4.5rem !important;
-}
-
 .btn-link {
   color: @blue;
-}
-
-.btn-info {
-  background-color: @blue;
-  border-color: @blue;
-  &:hover {
-    background-color: #413b89;
-  }
 }
 
 .panel {
@@ -216,13 +203,6 @@ ol {
   .panel-heading {
     background-color: #fafafa;
   }
-}
-
-.btn-info.disabled,
-.btn-info:disabled {
-  background-color: #3f3c64;
-  border-color: @blue;
-  cursor: not-allowed;
 }
 
 .form-text {

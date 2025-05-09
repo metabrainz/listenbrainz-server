@@ -251,7 +251,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             <div className="input-group">
               <select
                 id="style"
-                className="form-control"
+                className="form-select"
                 value={range}
                 onChange={handleRangeDropdown}
               >
@@ -297,7 +297,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 <span id="tags">Include (only):</span>
                 <select
                   id="include-tags"
-                  className="form-control"
+                  className="form-select"
                   value=""
                   onChange={handleIncludeTagChange}
                 >
@@ -328,7 +328,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                 <span id="tags">Exclude:</span>
                 <select
                   id="style"
-                  className="form-control"
+                  className="form-select"
                   value=""
                   onChange={handleExcludeTagChange}
                 >

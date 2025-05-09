@@ -37,7 +37,7 @@ function IconTray(props: IconTrayProps) {
           <FontAwesomeIcon icon={faUser} fixedWidth />
         </div>
         &nbsp;add to profile, refresh
-        <select className="borderless">
+        <select className="form-select borderless">
           <option value="daily">daily</option>
           <option value="weekly">weekly</option>
           <option value="monthly">monthly</option>
@@ -54,8 +54,6 @@ function IconTray(props: IconTrayProps) {
         <button
           type="button"
           className="btn btn-icon btn-info"
-          data-toggle="modal"
-          data-target="#SyndicationFeedModal"
           onClick={onClickCopyFeedUrl}
           title="Subscribe to syndication feed (Atom)"
         >

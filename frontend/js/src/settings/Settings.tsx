@@ -71,7 +71,7 @@ export default function Settings() {
             href={`https://musicbrainz.org/user/${name}`}
             aria-label="Edit Profile on MusicBrainz"
             title="Edit Profile on MusicBrainz"
-            className="btn btn-outline"
+            className="btn btn-outline-info"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -94,7 +94,7 @@ export default function Settings() {
           ListenBrainz, you will need the following user token:
         </p>
 
-        <form className="form-inline">
+        <form className="form-text d-flex align-items-center flex-wrap">
           <input
             type={showToken ? "text" : "password"}
             className="form-control"
