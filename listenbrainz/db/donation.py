@@ -3,12 +3,17 @@ from typing import Optional
 
 import psycopg2
 import sqlalchemy
+from brainzutils import cache
 from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, NullPool, text
 
 engine: Optional[sqlalchemy.engine.Engine] = None
 
 FLAIR_MONTHLY_DONATION_THRESHOLD = 5
+ELIGIBLE_DONOR_CACHE_KEY = "eligible_donor.%d"
+BIGGEST_DONOR_CACHE_KEY = "biggest_donors"
+RECENT_DONOR_CACHE_KEY = "recent_donors"
+DONOR_CACHE_TIMEOUT = 10 * 60
 
 
 def init_meb_db_connection(connect_str):
@@ -27,7 +32,7 @@ def init_meb_db_connection(connect_str):
 def get_flairs_for_donors(db_conn, donors):
     """ Given a list of donors, add information about the user's musicbrainz username and whether the user is a listenbrainz
      user and returns the updated list. """
-    musicbrainz_row_ids = {d.editor_id for d in donors}
+    musicbrainz_row_ids = {d["editor_id"] for d in donors}
 
     query = """
             SELECT u.musicbrainz_row_id
@@ -53,25 +58,50 @@ def get_flairs_for_donors(db_conn, donors):
 
     donors_with_flair = []
     for donor in donors:
-        donation = {
+        editor_id = donor.pop("editor_id")
+        user = lb_users.get(editor_id)
+        if user:
+            donor["is_listenbrainz_user"] = True
+            donor["musicbrainz_id"] = user["musicbrainz_id"]
+            donor["flair"] = user["flair"]
+        else:
+            donor["is_listenbrainz_user"] = False
+            donor["flair"] = None
+
+        donors_with_flair.append(donor)
+
+    return donors_with_flair
+
+
+def get_all_donors_from_db(meb_conn, query):
+    """ Retrieve all donors from the database using the specified query. """
+    results = meb_conn.execute(text(query), {
+        "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
+    })
+    return [
+        {
             "donation": float(donor.donation),
             "currency": donor.currency,
             "donated_at": donor.payment_date.isoformat(),
             "show_flair": donor.show_flair,
+            "editor_id": donor.editor_id,
+            "musicbrainz_id": donor.editor_name,
         }
-        user = lb_users.get(donor.editor_id)
-        if user:
-            donation["is_listenbrainz_user"] = True
-            donation["musicbrainz_id"] = user["musicbrainz_id"]
-            donation["flair"] = user["flair"]
-        else:
-            donation["is_listenbrainz_user"] = False
-            donation["musicbrainz_id"] = donor.editor_name
-            donation["flair"] = None
+        for donor in results
+    ]
 
-        donors_with_flair.append(donation)
 
-    return donors_with_flair
+def get_donors(meb_conn, db_conn, query: str, cache_key: str, limit: int, offset: int):
+    """ Retrieve donors from the cache or database using the specified query and add flair information to them.. """
+    all_donors = cache.get(cache_key)
+    if all_donors is None:
+        all_donors = get_all_donors_from_db(meb_conn, query)
+        cache.set(cache_key, all_donors, expirein=DONOR_CACHE_TIMEOUT)
+
+    total_count = len(all_donors)
+    donors = all_donors[offset : offset + limit]
+
+    return get_flairs_for_donors(db_conn, donors), total_count
 
 
 def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
@@ -97,28 +127,8 @@ def get_recent_donors(meb_conn, db_conn, count: int, offset: int):
            AND (anonymous != 't' OR anonymous IS NULL)
            AND payment_date >= (NOW() - INTERVAL '1 year')
       ORDER BY payment_date DESC
-         LIMIT :count
-        OFFSET :offset
     """
-    results = meb_conn.execute(text(query), {
-        "count": count,
-        "offset": offset,
-        "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
-    })
-    donors = results.all()
-
-    total_count_query = """
-        SELECT COUNT(*)
-          FROM payment
-         WHERE editor_id IS NOT NULL
-           AND is_donation = 't'
-           AND payment_date >= (NOW() - INTERVAL '1 year')
-    """
-
-    result = meb_conn.execute(text(total_count_query))
-    total_count = result.scalar()
-
-    return get_flairs_for_donors(db_conn, donors), total_count
+    return get_donors(meb_conn, db_conn, query, RECENT_DONOR_CACHE_KEY, count, offset)
 
 
 def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
@@ -156,39 +166,8 @@ def get_biggest_donors(meb_conn, db_conn, count: int, offset: int):
              , editor_id
              , currency
       ORDER BY donation DESC
-         LIMIT :count
-        OFFSET :offset 
     """
-
-    results = meb_conn.execute(text(query), {
-        "count": count,
-        "offset": offset,
-        "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
-    })
-    donors = results.all()
-
-    total_count_query = """
-        WITH select_donations AS (
-      SELECT editor_id
-           , currency
-        FROM payment
-        WHERE editor_id IS NOT NULL
-          AND is_donation = 't'
-          AND payment_date >= (NOW() - INTERVAL '1 year')
-        )
-       SELECT COUNT(*)
-        FROM (
-            SELECT editor_id
-                 , currency
-              FROM select_donations
-          GROUP BY editor_id, currency
-        ) AS total_count;
-    """
-
-    result = meb_conn.execute(text(total_count_query))
-    total_count = result.scalar()
-
-    return get_flairs_for_donors(db_conn, donors), total_count
+    return get_donors(meb_conn, db_conn, query, BIGGEST_DONOR_CACHE_KEY, count, offset)
 
 
 def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
@@ -201,6 +180,20 @@ def is_user_eligible_donor(meb_conn, musicbrainz_row_id: int):
 def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
     """ Check if the users with the given musicbrainz row ids are donors and have enough recent
     donations to be eligible for flair """
+    eligibility_map = {}
+    pending_ids = []
+
+    for musicbrainz_row_id in musicbrainz_row_ids:
+        cache_key = ELIGIBLE_DONOR_CACHE_KEY % musicbrainz_row_id
+        is_eligible = cache.get(cache_key)
+        if is_eligible is None:
+            pending_ids.append(musicbrainz_row_id)
+        else:
+            eligibility_map[musicbrainz_row_id] = is_eligible
+
+    if not pending_ids:
+        return eligibility_map
+
     query = """
         SELECT editor_id
              , (
@@ -222,10 +215,11 @@ def are_users_eligible_donors(meb_conn, musicbrainz_row_ids: list[int]):
           FROM unnest(:editor_ids) as e (editor_id)
     """
     result = meb_conn.execute(text(query), {
-        "editor_ids": musicbrainz_row_ids,
+        "editor_ids": pending_ids,
         "threshold": FLAIR_MONTHLY_DONATION_THRESHOLD
     })
-    eligibility_map = {}
     for row in result.all():
         eligibility_map[row.editor_id] = row.show_flair
+        cache.set(ELIGIBLE_DONOR_CACHE_KEY % row.editor_id, row.show_flair, expirein=DONOR_CACHE_TIMEOUT)
+
     return eligibility_map
