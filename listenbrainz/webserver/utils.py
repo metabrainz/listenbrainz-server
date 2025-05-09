@@ -108,7 +108,7 @@ def get_global_props():
             props["flair"] = flair_props
 
         if meb_conn:
-            show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.id)
+            show_flair = db_donation.is_user_eligible_donor(meb_conn, current_user.musicbrainz_row_id)
             if show_flair is not None:
                 props["show_flair"] = show_flair
 
