@@ -413,7 +413,7 @@ export default function MusicServices() {
               history and automatically add your new scrobbles to ListenBrainz.
             </p>
             <div
-              className="alert alert-warning alert-dismissible fade in"
+              className="alert alert-warning alert-dismissible fade show"
               role="alert"
             >
               You must first disable the &#34;Hide recent listening
