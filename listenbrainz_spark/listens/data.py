@@ -112,7 +112,7 @@ def get_base_listens_df(location, start: datetime, end: datetime):
              , artist_credit_mbids
           from parquet.`{location}`
     """) + where_clause
-    return listenbrainz_spark.sql_context.sql(query)
+    return listenbrainz_spark.session.sql(query)
 
 
 def get_latest_listen_ts() -> datetime:

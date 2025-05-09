@@ -31,7 +31,6 @@ from requests import HTTPError
 from sentry_sdk import start_span
 
 from data.model.common_stat import StatApi
-from data.model.user_artist_map import UserArtistMapRecord
 from listenbrainz.db import couchdb
 from listenbrainz.db.couchdb import try_insert_data
 from listenbrainz.db.user import get_users_by_id

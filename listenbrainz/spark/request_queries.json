@@ -128,7 +128,8 @@
       "contribution",
       "threshold",
       "limit",
-      "skip"
+      "skip",
+      "only_stage2"
     ]
   },
   "similarity.recording": {

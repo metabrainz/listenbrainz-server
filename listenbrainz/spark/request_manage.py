@@ -357,7 +357,8 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings(session, contribution, threshold, limit, skip):
+@click.option("--only-stage2", is_flag=True, default=False, help="whether to only run stage2 of computation")
+def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip, only_stage2):
     """ Send the cluster a request to generate similar recordings index. """
     send_request_to_spark_cluster(
         "similarity.recording.mlhd",
@@ -365,7 +366,8 @@ def request_similar_recordings(session, contribution, threshold, limit, skip):
         contribution=contribution,
         threshold=threshold,
         limit=limit,
-        skip=skip
+        skip=skip,
+        only_stage2=only_stage2
     )
 
 
@@ -429,7 +431,7 @@ def request_similar_artists(days, session, contribution, threshold, limit, skip,
 
 @cli.command(name="request_popularity")
 @click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
-@click.option("--entity", "entity", type=click.Choice(["artist", "recording", "release", "release_group"]))
+@click.option("--entity", "entity", type=click.Choice(["artist", "recording", "release", "release_group"]), required=True)
 def request_popularity(mlhd, entity):
     """ Request mlhd popularity data using the specified dataset. """
     send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity")
@@ -437,7 +439,7 @@ def request_popularity(mlhd, entity):
 
 @cli.command(name="request_per_artist_popularity")
 @click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
-@click.option("--entity", "entity", type=click.Choice(["recording", "release", "release_group"]))
+@click.option("--entity", "entity", type=click.Choice(["recording", "release", "release_group"]), required=True)
 def request_per_artist_popularity(mlhd, entity):
     """ Request mlhd popularity data using the specified dataset. """
     send_request_to_spark_cluster("popularity.popularity", entity=entity, mlhd=mlhd, type="popularity_top")
@@ -569,3 +571,12 @@ def cron_request_similarity_datasets(ctx):
                threshold=10, limit=100, skip=30, production=True)
     ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
                threshold=10, limit=100, skip=30, production=True)
+
+
+@cli.command(name='cron_request_popularity')
+@click.pass_context
+def cron_request_popularity(ctx):
+    for entity in ["artist", "recording", "release", "release_group"]:
+        ctx.invoke(request_popularity, mlhd=False, entity=entity)
+    for entity in ["recording", "release", "release_group"]:
+        ctx.invoke(request_per_artist_popularity, mlhd=False, entity=entity)

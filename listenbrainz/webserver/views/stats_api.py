@@ -1,33 +1,27 @@
 import calendar
-from collections import defaultdict
-from datetime import datetime
-from typing import Dict, List, Tuple, Iterable
+import heapq
+from typing import Dict, Tuple, Optional
 
-from requests import HTTPError
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import pycountry
-import requests
-
-from data.model.common_stat import StatApi, StatisticsRange, StatRecordList
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
-from flask import Blueprint, current_app, jsonify, request
-
+from data.model.common_stat import StatApi, StatisticsRange
+from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
-from listenbrainz.webserver import db_conn
+from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError,
                                            APINoContent, APINotFound)
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActivityReleaseGroupData
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param, is_valid_uuid)
-
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -301,7 +295,7 @@ def get_recording(user_name):
     return _get_entity_stats(user_name, "recordings", "total_recording_count")
 
 
-def _get_entity_stats(user_name: str, entity: str, count_key: str):
+def _get_entity_stats(user_name: str, entity: str, count_key: str, entire_range: bool = False):
     user, stats_range = _validate_stats_user_params(user_name)
 
     offset = get_non_negative_param("offset", default=0)
@@ -311,7 +305,7 @@ def _get_entity_stats(user_name: str, entity: str, count_key: str):
     if stats is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_user_entity(stats, offset, count)
+    entity_list, total_entity_count = _process_user_entity(stats, offset, count, entire_range)
     return jsonify({"payload": {
         "user_id": user_name,
         entity: entity_list,
@@ -330,9 +324,8 @@ def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
     stats = db_stats.get(user["id"], entity, stats_range, EntityRecord)
     if stats is None:
         return None
-
-    entity_list, total_entity_count = _process_user_entity(stats, 0, 1)
     return stats.last_updated
+
 
 @stats_api_bp.get("/user/<user_name>/listening-activity")
 @crossdomain
@@ -408,6 +401,129 @@ def get_listening_activity(user_name: str):
         "last_updated": stats.last_updated
     }})
 
+
+def _build_artist_activity_entries(
+    result: Dict[str, ArtistActivityArtistEntry],
+    artist_name: str,
+    artist_mbid: Optional[str],
+    release_group: ArtistActivityReleaseGroupData
+) -> None:
+    listen_count = release_group["listen_count"]
+    release_group_name = release_group["release_group_name"]
+    release_group_mbid = release_group.get("release_group_mbid")
+
+    artist_key = artist_mbid if artist_mbid else artist_name
+    release_group_key = release_group_mbid if release_group_mbid else release_group_name
+
+    if artist_key in result:
+        artist_entry = result[artist_key]
+        artist_entry["listen_count"] += listen_count
+    else:
+        artist_entry = {
+            "name": artist_name,
+            "artist_mbid": artist_mbid,
+            "listen_count": listen_count,
+            "albums": {}
+        }
+        result[artist_key] = artist_entry
+
+    if release_group_key in artist_entry["albums"]:
+        artist_entry["albums"][release_group_key]["listen_count"] += listen_count
+    else:
+        artist_entry["albums"][release_group_key] = {
+            "name": release_group_name,
+            "listen_count": listen_count,
+            "release_group_mbid": release_group_mbid,
+        }
+
+
+def _get_artist_activity(release_groups_list):
+    result: dict = {}
+    for release_group in release_groups_list:
+        if artists := release_group.get("artists"):
+            for artist in artists:
+                artist_name = artist["artist_credit_name"]
+                artist_mbid = artist["artist_mbid"]
+                _build_artist_activity_entries(result, artist_name, artist_mbid, release_group)
+        else:
+            _build_artist_activity_entries(result, release_group["artist_name"], None, release_group)
+
+    for item in result.values():
+        item["albums"] = list(item["albums"].values())
+
+    top_results = heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
+
+    artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
+    if artist_mbids:
+        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        # replace credited artist name on release group with artist name where possible
+        artist_mbid_name_map: dict[str, str] = {
+            str(item.artist_mbid): item.artist_data["name"]
+            for item in metadata
+        }
+        for result in top_results:
+            artist_mbid = result["artist_mbid"]
+            if artist_mbid in artist_mbid_name_map:
+                result["artist_name"] = artist_mbid_name_map[artist_mbid]
+
+    return top_results
+
+
+@stats_api_bp.get("/user/<user_name>/artist-activity")
+@crossdomain
+@ratelimit()
+def get_artist_activity(user_name: str):
+    """
+    Get the artist activity for user ``user_name``. The artist activity shows the total number of listens
+    for each artist along with their albums and corresponding listen counts.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "name": "Radiohead",
+                    "listen_count": 120,
+                    "albums": [
+                        {"name": "OK Computer", "listen_count": 45},
+                        {"name": "In Rainbows", "listen_count": 75}
+                    ]
+                },
+                {
+                    "name": "The Beatles",
+                    "listen_count": 95,
+                    "albums": [
+                        {"name": "Abbey Road", "listen_count": 60},
+                        {"name": "Revolver", "listen_count": 35}
+                    ]
+                }
+            ]
+        }
+
+    .. note::
+
+        - The example above shows artist activity data with two artists and their respective albums.
+        - The statistics are aggregated based on the number of listens recorded for each artist and their albums.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(user["id"], "release_groups", stats_range, EntityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    result = _get_artist_activity(release_groups_list)
+    return jsonify({"result": result})
+    
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -749,6 +865,7 @@ def get_sitewide_artist():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_artist_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -775,7 +892,7 @@ def get_sitewide_artist():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("artists")
+    return _get_sitewide_stats("artists", "total_artist_count")
 
 
 @stats_api_bp.get("/sitewide/releases")
@@ -816,6 +933,7 @@ def get_sitewide_release():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_release_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -842,7 +960,7 @@ def get_sitewide_release():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("releases")
+    return _get_sitewide_stats("releases", "total_release_count")
 
 
 @stats_api_bp.get("/sitewide/release-groups")
@@ -886,6 +1004,7 @@ def get_sitewide_release_group():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_release_group_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -911,7 +1030,7 @@ def get_sitewide_release_group():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("release_groups")
+    return _get_sitewide_stats("release_groups", "total_release_group_count")
 
 
 @stats_api_bp.get("/sitewide/recordings")
@@ -949,6 +1068,7 @@ def get_sitewide_recording():
                 ],
                 "offset": 0,
                 "count": 2,
+                "total_recording_count": 2,
                 "range": "year",
                 "last_updated": 1588494361,
                 "from_ts": 1009823400,
@@ -976,10 +1096,10 @@ def get_sitewide_recording():
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :resheader Content-Type: *application/json*
     """
-    return _get_sitewide_stats("recordings")
+    return _get_sitewide_stats("recordings", "total_recording_count")
 
 
-def _get_sitewide_stats(entity: str):
+def _get_sitewide_stats(entity: str, count_key: str, entire_range: bool = False):
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
@@ -994,12 +1114,18 @@ def _get_sitewide_stats(entity: str):
     count = min(count, MAX_ITEMS_PER_GET)
     total_entity_count = stats["count"]
 
+    if entire_range:
+        entity_list = stats["data"]
+    else:
+        entity_list = stats["data"][offset:count + offset]
+
     return jsonify({
         "payload": {
-            entity: stats["data"][offset:count + offset],
+            entity: entity_list,
             "range": stats_range,
             "offset": offset,
-            "count": total_entity_count,
+            "count": count,
+            count_key: total_entity_count,
             "from_ts": stats["from_ts"],
             "to_ts": stats["to_ts"],
             "last_updated": stats["last_updated"]
@@ -1078,6 +1204,70 @@ def get_sitewide_listening_activity():
             "last_updated": stats["last_updated"]
         }
     })
+
+
+@stats_api_bp.get("/sitewide/artist-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_artist_activity():
+    """
+    Get the sitewide artist activity. The daily activity shows the number of listens
+    submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "daily_activity": {
+                    "Monday": [
+                        {
+                            "hour": 0
+                            "listen_count": 26,
+                        },
+                        {
+                            "hour": 1
+                            "listen_count": 30,
+                        },
+                        {
+                            "hour": 2
+                            "listen_count": 4,
+                        },
+                        "..."
+                    ],
+                    "Tuesday": ["..."],
+                    "..."
+                },
+                "stats_range": "all_time",
+                "to_ts": 1589155200,
+                "user_id": "ishaanshah"
+            }
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    
+    stats = db_stats.get_sitewide_stats("artists", stats_range)
+    if stats is None:
+        raise APINoContent('')
+    
+    release_groups_list = stats["data"]
+    result = _get_artist_activity(release_groups_list)
+    return jsonify({"result": result})
 
 
 @stats_api_bp.get("/sitewide/artist-map")
@@ -1164,7 +1354,7 @@ def year_in_music(user_name: str, year: int = 2024):
     })
 
 
-def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) -> Tuple[list[dict], int]:
+def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int, entire_range: bool) -> Tuple[list[dict], int]:
     """ Process the statistics data according to query params
 
         Args:
@@ -1181,7 +1371,10 @@ def _process_user_entity(stats: StatApi[EntityRecord], offset: int, count: int) 
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = stats.count
-    entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
+    if entire_range:
+        entity_list = [x.dict() for x in stats.data.__root__]
+    else:
+        entity_list = [x.dict() for x in stats.data.__root__[offset:count]]
 
     return entity_list, total_entity_count
 

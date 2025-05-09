@@ -131,9 +131,7 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
     <Card className="user-stats-card" data-testid="user-daily-activity">
       <div className="row">
         <div className="col-10">
-          <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-            Daily Activity
-          </h3>
+          <h3 className="capitalize-bold">Daily Activity</h3>
         </div>
         <div className="col-2 text-end">
           <h4 style={{ marginTop: 20 }}>

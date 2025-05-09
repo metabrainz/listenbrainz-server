@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { get, has } from "lodash";
-import * as tinycolor from "tinycolor2";
+import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate, useParams } from "react-router-dom";

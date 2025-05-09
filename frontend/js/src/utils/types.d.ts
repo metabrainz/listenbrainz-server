@@ -288,6 +288,19 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistActivityResponse = {
+  result: Array<{
+    name: string;
+    listen_count: number;
+    artist_mbid: string | null;
+    albums: Array<{
+      name: string;
+      listen_count: number;
+      release_group_mbid: string;
+    }>;
+  }>;
+};
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
@@ -307,6 +320,12 @@ declare type UserArtistMapResponse = {
       listen_count: number;
       artists: Array<UserArtistMapArtist>;
     }>;
+  };
+};
+
+declare type CountryFeature = ChoroplethBoundFeature & {
+  properties: {
+    name: string;
   };
 };
 
@@ -670,6 +689,7 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
     "spotify" | "youtube" | "soundcloud" | "appleMusic"
   >;

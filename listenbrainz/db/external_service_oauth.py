@@ -1,10 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Union
 
 from sqlalchemy import text
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz import db, utils
 import sqlalchemy
 
 
@@ -32,7 +31,7 @@ def save_token(db_conn, user_id: int, service: ExternalServiceType, access_token
     # to use the new values. any column which does not have a new value to be set should
     # be explicitly set to the default value (which would have been used if the row was
     # inserted instead).
-    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts) if token_expires_ts else None
+    token_expires = datetime.fromtimestamp(token_expires_ts, timezone.utc) if token_expires_ts else None
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO external_service_oauth AS eso
         (user_id, external_user_id, service, access_token, refresh_token, token_expires, scopes)
@@ -121,7 +120,7 @@ def update_token(db_conn, user_id: int, service: ExternalServiceType, access_tok
         refresh_token: the new token used to refresh access tokens, if omitted the old token in the database remains unchanged
         expires_at: the unix timestamp at which the access token expires
     """
-    token_expires = utils.unix_timestamp_to_datetime(expires_at)
+    token_expires = datetime.fromtimestamp(expires_at, timezone.utc)
     params = {
         "access_token": access_token,
         "token_expires": token_expires,

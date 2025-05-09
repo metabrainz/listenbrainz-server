@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+import timeago
 from math import ceil
 from collections import defaultdict
 
@@ -24,7 +25,6 @@ from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.webserver.views.api_tools import get_non_negative_param
-from werkzeug.exceptions import NotFound
 
 from brainzutils import cache
 
@@ -79,9 +79,9 @@ def profile(user_name):
 
     args = {}
     if max_ts:
-        args['to_ts'] = datetime.utcfromtimestamp(max_ts)
+        args['to_ts'] = datetime.fromtimestamp(max_ts, timezone.utc)
     elif min_ts:
-        args['from_ts'] = datetime.utcfromtimestamp(min_ts)
+        args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
     data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
     min_ts_per_user = int(min_ts_per_user.timestamp())
@@ -458,6 +458,227 @@ def year_in_music(user_name, year: int = 2024):
             "name": user.musicbrainz_id,
         },
     })
+
+# Embedable widgets, return HTML page to embed in an iframe
+
+
+@user_bp.get("/<user_name>/embed/playing-now/")
+def embed_playing_now(user_name):
+    """ Returns either the HTML page that load the current playing-now for a user
+     or the HTMX fragment consisting only in the playing-now card HTML markup 
+     
+    The iframe height must be set to 80px, while the width can be adjusted:
+    .. code-block:: html
+
+        <iframe
+            src="https://listenbrainz.org/user/mr_monkey/embed/playing-now"
+            frameborder="0"
+            width="650px"
+            height="80px"
+        ></iframe>
+    
+    :param user_name: the MusicBrainz ID of the user whose currently playing listen you want to embed.
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *text/html*
+    :statuscode 404: The requested user was not found.
+    """
+
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
+    # If the request has HTMX headers, return partial content for the pin card fragment
+    if current_app.htmx:
+        return render_playing_now_card(user=user)
+
+    # Otherwise return the container page
+    return render_template(
+        "widgets/playing_now.html", user_name=user_name
+    )
+
+
+def render_playing_now_card(user):
+    """ Returns the HTMX fragment consisting only in the playing-now card HTML markup """
+
+    # Which database to use to show playing_now stream.
+    playing_now_conn = webserver.redis_connection._redis
+    playing_now = playing_now_conn.get_playing_now(user.id)
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
+    if playing_now is None:
+        return render_template(
+            "widgets/playing_now_card.html",
+            user_name=user_name,
+            no_playing_now=True
+        )
+
+    playing_now = playing_now.to_api()
+
+    metadata = playing_now.get("track_metadata", {})
+    mbid_mapping = metadata.get("mbid_mapping", {})
+    additional_info = metadata.get("additional_info", {})
+
+    caa_id = mbid_mapping.get("caa_id")
+    caa_release_mbid = mbid_mapping.get("caa_release_mbid")
+    release_cover_art_src = None
+    if caa_id is not None and caa_release_mbid is not None:
+        release_cover_art_src = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb250.jpg"
+    release_mbid = (
+        additional_info.get("release_mbid")
+        or metadata.get("release_mbid")
+        or mbid_mapping.get("release_mbid")
+    )
+    release_name = metadata.get(
+        "release_name") or mbid_mapping.get("release_name")
+
+    recording_mbid = (
+        additional_info.get("recording_mbid")
+        or mbid_mapping.get("recording_mbid")
+    )
+    recording_name = metadata.get(
+        "track_name") or mbid_mapping.get("recording_name")
+
+    artist_mbids_list = mbid_mapping.get("artist_mbids")
+    artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
+    artist_name = metadata.get("artist_name")
+
+    duration_ms = additional_info.get("duration_ms")
+    duration = None
+    if duration_ms:
+        track_seconds = round(duration_ms / 1000)
+        hours, remainder = divmod(track_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours > 0:
+            duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+        else:
+            duration = '{:d}:{:02d}'.format(minutes, seconds)
+
+    return render_template(
+        "widgets/playing_now_card.html",
+        user_name=user_name,
+        release_cover_art_src=release_cover_art_src,
+        release_mbid=release_mbid,
+        release_name=release_name,
+        recording_mbid=recording_mbid,
+        recording_name=recording_name,
+        artist_mbid=artist_mbid,
+        artist_name=artist_name,
+        duration=duration
+    )
+
+
+@user_bp.get("/<user_name>/embed/pin/")
+def embed_pin(user_name):
+    """ Returns either the HTML page that load the current pin for a user
+     or the HTMX fragment consisting only in the pin HTML markup
+          
+    The iframe height must be set to 150px, while the width can be adjusted:
+    .. code-block:: html
+
+        <iframe
+            src="https://listenbrainz.org/user/mr_monkey/embed/pin"
+            frameborder="0"
+            width="650px"
+            height="150px"
+        ></iframe>
+    
+    :param user_name: the MusicBrainz ID of the user whose current pin you want to embed.
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *text/html*
+    :statuscode 404: The requested user was not found.
+    """
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
+
+    pin = get_current_pin_for_user(db_conn, user_id=user.id)
+    pin_is_current = True
+
+    if pin is None:
+        # Fallback to latest pin if no current pin
+        pin_is_current = False
+        older_pins = get_pin_history_for_user(db_conn, user_id=user.id, count=1, offset=0)
+        # If still none, there are no pins to show
+        if older_pins is not None and len(older_pins) > 0:
+            pin = older_pins[0]
+
+    if pin is None:
+        return render_template(
+            "widgets/pin_card.html",
+            user_name=user_name,
+            no_pin=True,
+            pin_is_current=False
+        )
+
+    pin = fetch_track_metadata_for_items(
+        webserver.ts_conn, [pin])[0].to_api()
+
+    metadata = pin.get("track_metadata", {})
+    mbid_mapping = metadata.get("mbid_mapping", {})
+    additional_info = metadata.get("additional_info", {})
+
+    caa_id = mbid_mapping.get("caa_id")
+    caa_release_mbid = mbid_mapping.get("caa_release_mbid")
+    release_cover_art_src = None
+    if caa_id is not None and caa_release_mbid is not None:
+        release_cover_art_src = f"https://archive.org/download/mbid-{caa_release_mbid}/mbid-{caa_release_mbid}-{caa_id}_thumb250.jpg"
+    release_mbid = (
+        additional_info.get("release_mbid")
+        or metadata.get("release_mbid")
+        or mbid_mapping.get("release_mbid")
+    )
+    release_name = metadata.get(
+        "release_name") or mbid_mapping.get("release_name")
+
+    recording_mbid = (
+        pin.get("recording_mbid")
+        or additional_info.get("recording_mbid")
+        or mbid_mapping.get("recording_mbid")
+    )
+    recording_name = metadata.get(
+        "track_name") or mbid_mapping.get("recording_name")
+
+    artist_mbids_list = mbid_mapping.get("artist_mbids")
+    artist_mbid = artist_mbids_list[0] if artist_mbids_list else None
+    artist_name = metadata.get("artist_name")
+
+    pin_date = datetime.fromtimestamp(pin.get("created"))
+    pin_date = timeago.format(pin_date)
+
+    duration_ms = additional_info.get("duration_ms")
+    duration = None
+    if duration_ms:
+        track_seconds = round(duration_ms / 1000)
+        hours, remainder = divmod(track_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours > 0:
+            duration = '{:d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+        else:
+            duration = '{:d}:{:02d}'.format(minutes, seconds)
+
+    return render_template(
+        "widgets/pin_card.html",
+        user_name=user_name,
+        release_cover_art_src=release_cover_art_src,
+        release_mbid=release_mbid,
+        release_name=release_name,
+        recording_mbid=recording_mbid,
+        recording_name=recording_name,
+        artist_mbid=artist_mbid,
+        artist_name=artist_name,
+        pin_date=pin_date,
+        duration=duration,
+        pin_is_current=pin_is_current,
+        blurb_content=pin.get("blurb_content"),
+    )
 
 
 @user_bp.get("/<user_name>/",  defaults={'path': ''})

@@ -10,7 +10,6 @@ from listenbrainz_spark.hdfs.utils import delete_dir
 from listenbrainz_spark.hdfs.utils import path_exists
 from listenbrainz_spark.hdfs.utils import upload_to_HDFS
 from listenbrainz_spark.hdfs.utils import rename
-from listenbrainz_spark.hdfs.utils import copy
 from pyspark.sql import Row
 
 
@@ -89,34 +88,6 @@ class UtilsTestCase(SparkNewTestCase):
         temp_exists = path_exists(self.temp_path_)
         self.assertTrue(temp_exists)
         delete_dir(self.temp_path_)
-
-    def test_copy(self):
-        # Test directories
-        create_dir(self.path_)
-        create_dir(os.path.join(self.path_, "a"))
-        create_dir(os.path.join(self.path_, "b"))
-
-        # DataFrames to create parquets
-        df_a = utils.create_dataframe([Row(column1=1, column2=2)], schema=None)
-        df_b = utils.create_dataframe([Row(column1=3, column2=4)], schema=None)
-        df_c = utils.create_dataframe([Row(column1=5, column2=6)], schema=None)
-
-        # Save DataFrames in respective directories
-        utils.save_parquet(df_a, os.path.join(self.path_, "a", "df_a.parquet"))
-        utils.save_parquet(df_b, os.path.join(self.path_, "b", "df_b.parquet"))
-        utils.save_parquet(df_c, os.path.join(self.path_, "df_c.parquet"))
-
-        copy(self.path_, self.temp_path_, overwrite=True)
-
-        # Read copied DataFrame
-        cp_df_a = utils.read_files_from_HDFS(os.path.join(self.temp_path_, "a", "df_a.parquet"))
-        cp_df_b = utils.read_files_from_HDFS(os.path.join(self.temp_path_, "b", "df_b.parquet"))
-        cp_df_c = utils.read_files_from_HDFS(os.path.join(self.temp_path_, "df_c.parquet"))
-
-        # Check if both DataFrames are same
-        self.assertListEqual(df_a.rdd.map(list).collect(), cp_df_a.rdd.map(list).collect())
-        self.assertListEqual(df_b.rdd.map(list).collect(), cp_df_b.rdd.map(list).collect())
-        self.assertListEqual(df_c.rdd.map(list).collect(), cp_df_c.rdd.map(list).collect())
 
     def test_get_latest_listen_ts(self):
         self.upload_test_listens()

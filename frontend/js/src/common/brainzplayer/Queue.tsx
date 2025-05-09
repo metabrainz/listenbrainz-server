@@ -154,7 +154,7 @@ function Queue(props: BrainzPlayerQueueProps) {
                 if (!queueItem) return null;
                 return (
                   <QueueItemCard
-                    key={queueItem?.id}
+                    key={`${queueItem?.id}-${index.toString()}`}
                     track={queueItem}
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem

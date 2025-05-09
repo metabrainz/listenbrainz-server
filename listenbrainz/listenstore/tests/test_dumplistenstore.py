@@ -1,8 +1,10 @@
 import os
 import shutil
+import subprocess
 import tarfile
 import tempfile
 from datetime import datetime, timezone, timedelta
+from tempfile import TemporaryDirectory
 
 from psycopg2.extras import execute_values
 
@@ -196,7 +198,7 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
 
     # test test_import_dump_many_users is gone -- why are we testing user dump/restore here??
 
-    def create_test_dump(self, archive_name, archive_path, schema_version=None):
+    def create_test_dump(self, temp_dir, archive_name, archive_path, schema_version=None):
         """ Creates a test dump to test the import listens functionality.
         Args:
             archive_name (str): the name of the archive
@@ -206,40 +208,43 @@ class TestDumpListenStore(NonAPIIntegrationTestCase):
         Returns:
             the full path to the archive created
         """
-
-        temp_dir = tempfile.mkdtemp()
-        with tarfile.open(archive_path, mode='w|xz') as tar:
-            schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
-            with open(schema_version_path, 'w') as f:
-                f.write(str(schema_version or ' '))
-            tar.add(schema_version_path,
-                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
-
+        with open(archive_path, 'w') as archive:
+            zstd_command = ['zstd', '--compress', '-T4']
+            zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
+            with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
+                schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+                with open(schema_version_path, 'w') as f:
+                    f.write(str(schema_version or ' '))
+                tar.add(schema_version_path,
+                        arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+            zstd.stdin.close()
+            zstd.wait()
         return archive_path
 
     def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
         """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
-
-        # create a temp archive with incorrect SCHEMA_VERSION_CORE
-        temp_dir = tempfile.mkdtemp()
-        archive_name = 'temp_dump'
-        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
-        archive_path = self.create_test_dump(
-            archive_name=archive_name,
-            archive_path=archive_path,
-            schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1
-        )
-        with self.assertRaises(SchemaMismatchException):
-            self.ls.import_listens_dump(archive_path)
+        with TemporaryDirectory() as temp_dir:
+            # create a temp archive with incorrect SCHEMA_VERSION_CORE
+            archive_name = 'temp_dump'
+            archive_path = os.path.join(temp_dir, archive_name + '.tar.zst')
+            archive_path = self.create_test_dump(
+                temp_dir=temp_dir,
+                archive_name=archive_name,
+                archive_path=archive_path,
+                schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1
+            )
+            with self.assertRaises(SchemaMismatchException):
+                self.ls.import_listens_dump(archive_path)
 
     def test_schema_mismatch_exception_for_dump_no_schema(self):
         """ Tests that SchemaMismatchException is raised when there is no schema version in the archive """
-
-        temp_dir = tempfile.mkdtemp()
-        archive_name = 'temp_dump'
-        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
-
-        archive_path = self.create_test_dump(archive_name=archive_name, archive_path=archive_path)
-
-        with self.assertRaises(SchemaMismatchException):
-            self.ls.import_listens_dump(archive_path)
+        with TemporaryDirectory() as temp_dir:
+            archive_name = 'temp_dump'
+            archive_path = os.path.join(temp_dir, archive_name + '.tar.zst')
+            archive_path = self.create_test_dump(
+                temp_dir=temp_dir,
+                archive_name=archive_name,
+                archive_path=archive_path
+            )
+            with self.assertRaises(SchemaMismatchException):
+                self.ls.import_listens_dump(archive_path)

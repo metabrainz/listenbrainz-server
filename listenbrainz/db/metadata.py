@@ -83,10 +83,10 @@ def get_metadata_for_artist(ts_conn, artist_mbid_list: List[str]) -> List[Artist
         to recording_mbid
 
         Args:
-            artist_mbid_list: A list of recording_mbids to fetch metadata for
+            artist_mbid_list: A list of artist_mbids to fetch metadata for
 
         Returns:
-            A list of RecordingMetadata objects
+            A list of ArtistMetadata objects
     """
 
     artist_mbid_list = tuple(artist_mbid_list)

@@ -2,12 +2,10 @@
 
 import datetime
 from functools import wraps
-from traceback import format_exc
 import sys
 
 import click
 import sentry_sdk
-from sentry_sdk import monitor
 from sentry_sdk.crons import capture_checkin
 from sentry_sdk.crons.consts import MonitorStatus
 
@@ -27,10 +25,12 @@ from similar.tag_similarity import create_tag_similarity
 from mapping.utils import log
 
 
-
 def cron(slug):
     """ Cron decorator making it easy to monitor a cron job. The slug argument defines the sentry cron job identifier. """
     def wrapper(func):
+        if not config.LOG_SENTRY:
+            return func
+
         @wraps(func)
         def wrapped_f(*args, **kwargs):
             sentry_sdk.init(**config.LOG_SENTRY)

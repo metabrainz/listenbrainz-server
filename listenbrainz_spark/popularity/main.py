@@ -30,4 +30,4 @@ def main(type, entity, mlhd):
         engine = MlhdStatsEngine(provider, message_creator)
     else:
         engine = IncrementalStatsEngine(provider, message_creator)
-    return engine.main()
+    return engine.run()

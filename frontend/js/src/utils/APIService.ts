@@ -3,6 +3,11 @@ import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 import type { Flair } from "./constants";
+import { Modes } from "../explore/lb-radio/components/Prompt";
+
+export interface LBRadioResponse {
+  payload: { jspf: JSPFObject; feedback: string[] };
+}
 
 export default class APIService {
   APIBaseURI: string;
@@ -561,6 +566,30 @@ export default class APIService {
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserDailyActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserArtistActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-activity`;
+    }
+    url += `?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
@@ -1361,6 +1390,26 @@ export default class APIService {
     return response.json();
   };
 
+  getFeedEvent = async (
+    eventId: number,
+    username: string,
+    userToken: string
+  ): Promise<TimelineEvent<EventMetadata>> => {
+    if (!eventId) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/feed/events/${eventId}`;
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.payload.events?.[0];
+  };
+
   deleteFeedEvent = async (
     eventType: string,
     username: string,
@@ -1945,4 +1994,16 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  async getLBRadioPlaylist(
+    prompt: string,
+    mode: Modes = Modes.easy
+  ): Promise<LBRadioResponse> {
+    const url = `${
+      this.APIBaseURI
+    }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  }
 }

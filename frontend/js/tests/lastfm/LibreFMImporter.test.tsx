@@ -4,12 +4,12 @@ import fetchMock from "jest-fetch-mock";
 import { act } from "react-dom/test-utils";
 import LibreFmImporter, { RETRIES } from "../../src/lastfm/LibreFMImporter";
 // Mock data to test functions
-import * as page from "../__mocks__/page.json";
-import * as getInfo from "../__mocks__/getInfo.json";
-import * as getInfoNoPlayCount from "../__mocks__/getInfoNoPlayCount.json";
+import page from "../__mocks__/page.json";
+import getInfo from "../__mocks__/getInfo.json";
+import getInfoNoPlayCount from "../__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
-import * as encodeScrobbleOutput from "../__mocks__/encodeScrobbleOutput.json";
-import * as lastFMPrivateUser from "../__mocks__/lastFMPrivateUser.json";
+import encodeScrobbleOutput from "../__mocks__/encodeScrobbleOutput.json";
+import lastFMPrivateUser from "../__mocks__/lastFMPrivateUser.json";
 
 jest.useFakeTimers({ advanceTimers: true });
 const props = {

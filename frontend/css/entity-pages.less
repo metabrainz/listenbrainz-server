@@ -1,10 +1,9 @@
 @white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
 
 .entity-page-header {
-  --bg-color: #e7e4e4; // default color
   padding: 2em;
   gap: 2em;
-  background: linear-gradient(45deg, var(--bg-color), transparent 60%);
+  background: linear-gradient(45deg, var(--bg-color), transparent 80%);
   flex-wrap: wrap;
   justify-content: center;
   .cover-art {
@@ -83,6 +82,7 @@
 }
 
 #entity-page {
+  --bg-color: #e7e4e4; // default color
   .top-listeners {
     max-width: 400px;
     .listener {
@@ -203,6 +203,18 @@
   .listen-card .main-content .listen-controls {
     // with the badges at the end of the listencard we need to align it to the right;
     justify-content: flex-end;
+  }
+
+  @media (min-width: @screen-md) {
+    .reviews .review-cards {
+      .review:first-of-type {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .CBReviewForm {
+    width: auto;
   }
 }
 

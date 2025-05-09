@@ -57,6 +57,12 @@ export default function MusicServices() {
       : undefined
   );
 
+  const [lastFMEdit, setLastFMEdit] = React.useState(false);
+  const lastFMEditButtonClass =
+    permissions.lastfm !== "import"
+      ? "btn-default"
+      : (lastFMEdit && "btn-success") || "btn-warning";
+
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -99,6 +105,9 @@ export default function MusicServices() {
             break;
           case "critiquebrainz":
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
+            break;
+          case "lastfm":
+            setLastFMEdit(false);
             break;
           default:
             break;
@@ -187,6 +196,20 @@ export default function MusicServices() {
   ) => {
     evt.preventDefault();
     try {
+      if (!lastfmUserId) {
+        setLastfmUserId(loaderData.current_lastfm_settings?.external_user_id);
+        setLastfmLatestListenedAt(
+          loaderData.current_lastfm_settings?.latest_listened_at
+            ? format(
+                new Date(
+                  loaderData.current_lastfm_settings?.latest_listened_at
+                ),
+                "yyyy-MM-dd'T'HH:mm:ss"
+              )
+            : undefined
+        );
+        throw Error("LastFM username empty");
+      }
       const response = await fetch(`/settings/music-services/lastfm/connect/`, {
         method: "POST",
         body: JSON.stringify({
@@ -212,12 +235,11 @@ export default function MusicServices() {
           ...prevState,
           lastfm: "import",
         }));
+        setLastFMEdit(false);
       } else {
-        if (response.bodyUsed) {
-          const body = await response.json();
-          if (body.error) {
-            throw body.error;
-          }
+        const body = await response.json();
+        if (body?.error) {
+          throw body.error;
         }
         throw response.statusText;
       }
@@ -355,7 +377,11 @@ export default function MusicServices() {
               premium user -{" "}
               <b>ListenBrainz will never read these pieces of data</b>. Please
               feel free to{" "}
-              <a href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/spotify_updater/spotify_read_listens.py">
+              <a
+                href="https://github.com/metabrainz/listenbrainz-server/blob/master/listenbrainz/listens_importer/spotify.py"
+                target="_blank"
+                rel="noreferrer"
+              >
                 inspect our source code
               </a>{" "}
               any time!
@@ -449,6 +475,7 @@ export default function MusicServices() {
                     onChange={(e) => {
                       setLastfmUserId(e.target.value);
                     }}
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
                 </div>
                 <div>
@@ -465,7 +492,20 @@ export default function MusicServices() {
                     }}
                     name="lastFMStartDatetime"
                     title="Date and time to start import at"
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
+                </div>
+                <div style={{ flex: 0, alignSelf: "end" }}>
+                  <button
+                    disabled={permissions.lastfm !== "import"}
+                    type={lastFMEdit ? "button" : "submit"}
+                    className={`btn ${lastFMEditButtonClass}`}
+                    onClick={() => {
+                      setLastFMEdit((prev) => !prev);
+                    }}
+                  >
+                    {lastFMEdit ? "Save" : "Edit"}
+                  </button>
                 </div>
               </div>
               <br />

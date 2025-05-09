@@ -63,8 +63,8 @@ export default NiceModal.create(
             if (status === 200) {
               toast.success(
                 <ToastMsg
-                  title={`You thanked this ${startCase(original_event_type)}`}
-                  message="OK"
+                  title="Success"
+                  message={`You thanked this ${startCase(original_event_type)}`}
                 />,
                 { toastId: "thanks-success" }
               );
