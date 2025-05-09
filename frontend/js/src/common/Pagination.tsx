@@ -19,7 +19,7 @@ export default function Pagination(props: PaginationProps) {
     <nav role="navigation" aria-label="Pagination" style={{ maxWidth: "none" }}>
       <ul className="pagination" style={{ display: "flex" }}>
         <li
-          className={`page-item previous ${
+          className={`page-item ${
             currentPageNo && currentPageNo <= 1 ? "hidden" : ""
           }`}
         >
@@ -38,7 +38,7 @@ export default function Pagination(props: PaginationProps) {
           </a>
         </li>
         <li
-          className={`page-item next ${
+          className={`page-item ${
             currentPageNo && currentPageNo >= totalPageCount ? "hidden" : ""
           }`}
           style={{ marginLeft: "auto" }}

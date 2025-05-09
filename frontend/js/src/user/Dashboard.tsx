@@ -680,7 +680,7 @@ export default function Listen() {
               )}
               <ul className="pagination" id="navigation">
                 <li
-                  className={`page-item previous ${
+                  className={`page-item ${
                     isNewestButtonDisabled ? "disabled" : ""
                   }`}
                 >
@@ -696,7 +696,7 @@ export default function Listen() {
                   </Link>
                 </li>
                 <li
-                  className={`page-item previous ${
+                  className={`page-item ${
                     isNewerButtonDisabled ? "disabled" : ""
                   }`}
                 >
