@@ -56,13 +56,17 @@ $input-padding-y: .5rem;
 $input-padding-x: 1rem;
 $input-padding-y-lg: 0.7rem;
 $input-padding-x-lg: 1.5rem;
-$input-font-size: unset;
+$input-font-size: 1.4rem;
 $input-font-size-lg: 1.8rem;
 $input-disabled-bg: $gray-lighter;
 
 /* Nav */
 $nav-link-font-weight: 700;
 
+/* Dropdowns */
+$dropdown-min-width: 16rem;
+$dropdown-font-size: 1.4rem;
+$dropdown-item-padding-x: 2rem;
 /* Misc */
 $hr-margin-y: 20px;
 $hr-border-color: $gray-light;
