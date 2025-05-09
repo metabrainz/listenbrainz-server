@@ -91,7 +91,9 @@ function CBReviewForm({
           <span className="dropdown">
             <button
               className="dropdown-toggle btn-transparent"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
               type="button"
             >
               {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
@@ -138,8 +140,9 @@ function CBReviewForm({
             />
           </div>
           <small
-            className={!isReviewValid ? "text-danger" : ""}
-            style={{ display: "block", textAlign: "right" }}
+            className={`d-flex justify-content-end ${
+              !isReviewValid ? "invalid-feedback" : "valid-feedback"
+            }`}
           >
             Words: {countWords(blurbContent)} / Characters:{" "}
             {blurbContent.length}
@@ -160,6 +163,7 @@ function CBReviewForm({
           <div className="dropdown">
             <b>Language of your review: </b>
             <select
+              className="form-select"
               id="language-selector"
               value={language}
               name="language"
@@ -186,7 +190,7 @@ function CBReviewForm({
               onChange={handleLicenseChange}
               required
             />
-            <small>
+            <small className="fw-normal">
               &nbsp;You acknowledge and agree that your contributed reviews to
               CritiqueBrainz are licensed under a Creative Commons
               Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license. You

@@ -352,9 +352,9 @@ export default NiceModal.create((props: CBReviewModalProps) => {
         <span
           className="CBInfoButton"
           data-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
-          MetaBrainz project</a> aimed at providing an open platform for music critics
+          MetaBrainz project</a> aimed at providing an open platform </br>for music critics
           and hosting Creative Commons licensed music reviews. </br></br>
-          Your reviews will be independently visible on CritiqueBrainz and appear publicly
+          Your reviews will be independently visible on CritiqueBrainz and appear publicly</br>
           on your CritiqueBrainz profile. To view or delete your reviews, visit your
           <a href='${CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
           data-event="click focus"
