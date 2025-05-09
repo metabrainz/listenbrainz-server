@@ -151,7 +151,7 @@ export default class PlayerPage extends React.Component<
                   aria-labelledby="playlistOptionsDropdown"
                 >
                   {releaseLink && (
-                    <li>
+                    <li className="dropdown-item">
                       See on MusicBrainz
                       <ListenControl
                         icon={faExternalLinkAlt}
@@ -166,16 +166,15 @@ export default class PlayerPage extends React.Component<
                     </li>
                   )}
                   {currentUser?.auth_token && (
-                    <li>
-                      <a
-                        id="exportPlaylistToSpotify"
-                        role="button"
-                        href="#"
-                        onClick={this.savePlaylist}
-                      >
-                        Save Playlist
-                      </a>
-                    </li>
+                    <a
+                      className="dropdown-item"
+                      id="exportPlaylistToSpotify"
+                      role="button"
+                      href="#"
+                      onClick={this.savePlaylist}
+                    >
+                      Save Playlist
+                    </a>
                   )}
                 </ul>
               </span>

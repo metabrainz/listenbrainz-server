@@ -176,15 +176,18 @@ export default function PlaylistCard({
               className="dropdown-menu dropdown-menu-right"
               aria-labelledby="playlistOptionsDropdown"
             >
-              <li>
-                <a onClick={onCopyPlaylist} role="button" href="#">
-                  <FontAwesomeIcon
-                    icon={faSave as IconProp}
-                    title="Save to my playlists"
-                  />
-                  &nbsp;Save
-                </a>
-              </li>
+              <a
+                className="dropdown-item"
+                onClick={onCopyPlaylist}
+                role="button"
+                href="#"
+              >
+                <FontAwesomeIcon
+                  icon={faSave as IconProp}
+                  title="Save to my playlists"
+                />
+                &nbsp;Save
+              </a>
             </ul>
           )}
         </div>

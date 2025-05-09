@@ -103,6 +103,7 @@ function CBReviewForm({
                 if (entity) {
                   return (
                     <button
+                      className="dropdown-item"
                       key={entity.mbid}
                       name={`select-${kebabCase(entityToReview.type)}`}
                       onClick={() => setEntityToReview(entity)}

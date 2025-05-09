@@ -552,11 +552,15 @@ export default function MetadataViewer(props: MetadataViewerProps) {
               {!isEmpty(supportLinks) ? (
                 Object.entries(supportLinks).map(([key, value]) => {
                   return (
-                    <li key={key}>
-                      <a href={value} target="_blank" rel="noopener noreferrer">
-                        {key}
-                      </a>
-                    </li>
+                    <a
+                      className="dropdown-item"
+                      key={key}
+                      href={value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {key}
+                    </a>
                   );
                 })
               ) : (
@@ -567,28 +571,27 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   >
                     We couldn&apos;t find any links
                   </li>
-                  <li>
-                    <a
-                      href={
-                        artistMBID
-                          ? `${musicBrainzURLRoot}artist/${artistMBID}`
-                          : `${musicBrainzURLRoot}artist/create`
-                      }
-                      aria-label="Edit in MusicBrainz"
-                      title="Edit in MusicBrainz"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        src="/static/img/meb-icons/MusicBrainz.svg"
-                        width="18"
-                        height="18"
-                        alt="MusicBrainz"
-                        style={{ verticalAlign: "bottom" }}
-                      />{" "}
-                      {artistMBID ? "Add links" : "Create"} in MusicBrainz
-                    </a>
-                  </li>
+                  <a
+                    className="dropdown-item"
+                    href={
+                      artistMBID
+                        ? `${musicBrainzURLRoot}artist/${artistMBID}`
+                        : `${musicBrainzURLRoot}artist/create`
+                    }
+                    aria-label="Edit in MusicBrainz"
+                    title="Edit in MusicBrainz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      src="/static/img/meb-icons/MusicBrainz.svg"
+                      width="18"
+                      height="18"
+                      alt="MusicBrainz"
+                      style={{ verticalAlign: "bottom" }}
+                    />{" "}
+                    {artistMBID ? "Add links" : "Create"} in MusicBrainz
+                  </a>
                 </>
               )}
             </ul>

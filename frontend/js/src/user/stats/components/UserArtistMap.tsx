@@ -105,32 +105,26 @@ export default function UserArtistMap(props: UserArtistMapProps) {
             >
               {selectedMetric}s
             </button>
-            <ul className="dropdown-menu" role="menu">
-              <li
+            <div className="dropdown-menu" role="menu">
+              <button
+                type="button"
+                onClick={() => setSelectedMetric("listen")}
                 className={`dropdown-item ${
                   selectedMetric === "listen" ? "active" : undefined
                 }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedMetric("listen")}
-                >
-                  Listens
-                </button>
-              </li>
-              <li
+                Listens
+              </button>
+              <button
                 className={`dropdown-item ${
                   selectedMetric === "artist" ? "active" : undefined
                 }`}
+                type="button"
+                onClick={() => setSelectedMetric("artist")}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedMetric("artist")}
-                >
-                  Artists
-                </button>
-              </li>
-            </ul>
+                Artists
+              </button>
+            </div>
           </span>
         </div>
         <div className="col-md-1 col-2 text-end">

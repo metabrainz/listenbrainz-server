@@ -270,17 +270,17 @@ export default function UserEntityChart() {
                   <ul className="dropdown-menu" role="menu">
                     {Array.from(ranges, ([stat_type, stat_name]) => {
                       return (
-                        <li key={`${stat_type}-${stat_name}`}>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=1&range=${stat_type}`,
-                            }}
-                            role="button"
-                          >
-                            {stat_name}
-                          </Link>
-                        </li>
+                        <Link
+                          className="dropdown-item"
+                          key={`${stat_type}-${stat_name}`}
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=1&range=${stat_type}`,
+                          }}
+                          role="button"
+                        >
+                          {stat_name}
+                        </Link>
                       );
                     })}
                   </ul>
