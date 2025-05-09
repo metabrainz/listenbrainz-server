@@ -116,7 +116,7 @@ export default class RecommendationFeedbackComponent extends React.Component<
           id="recommendationControlsDropdown"
           data-bs-toggle="dropdown"
           aria-haspopup="true"
-          aria-expanded="true"
+          aria-expanded="false"
           type="button"
         >
           <FontAwesomeIcon icon={icon as IconProp} /> {text}

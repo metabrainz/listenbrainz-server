@@ -229,21 +229,19 @@ function PlaylistMenu({
       className="dropdown-menu dropdown-menu-right"
       aria-labelledby="playlistOptionsDropdown"
     >
-      <a
+      <button
         className={`dropdown-item ${!isLoggedIn ? "disabled" : ""}`}
         onClick={isLoggedIn ? copyPlaylist : noop}
-        role="button"
-        href="#"
+        type="button"
       >
         <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
         {playlistID ? "Duplicate" : "Save to my playlists"}
-      </a>
+      </button>
       {isPlaylistOwner(playlist, currentUser) && (
         <>
           <div role="separator" className="dropdown-divider" />
-          <a
-            role="button"
-            href="#"
+          <button
+            type="button"
             className="dropdown-item"
             onClick={() => {
               NiceModal.show(CreateOrEditPlaylistModal, {
@@ -260,10 +258,9 @@ function PlaylistMenu({
             }}
           >
             <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-          </a>
-          <a
-            role="button"
-            href="#"
+          </button>
+          <button
+            type="button"
             className="dropdown-item"
             onClick={() => {
               NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
@@ -276,48 +273,44 @@ function PlaylistMenu({
             }}
           >
             <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
-          </a>
+          </button>
         </>
       )}
       <div role="separator" className="dropdown-divider" />
-      <a
+      <button
         className={`dropdown-item ${enableSpotifyExport ? "" : "disabled"}`}
         id="exportPlaylistToSpotify"
-        role="button"
-        href="#"
+        type="button"
         onClick={() =>
           enableSpotifyExport && handlePlaylistExport(exportToSpotify)
         }
       >
         <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
-      </a>
+      </button>
 
-      <a
+      <button
         className={`dropdown-item ${enableAppleMusicExport ? "" : "disabled"}`}
         id="exportPlaylistToAppleMusic"
-        role="button"
-        href="#"
+        type="button"
         onClick={() =>
           enableAppleMusicExport && handlePlaylistExport(exportToAppleMusic)
         }
       >
         <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
         Music
-      </a>
+      </button>
       <div role="separator" className="dropdown-divider" />
-      <a
+      <button
         id="exportPlaylistToJSPF"
-        role="button"
-        href="#"
+        type="button"
         onClick={() => handlePlaylistExport(exportAsJSPF)}
         className="dropdown-item"
       >
         <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as JSPF
-      </a>
-      {/* <a
+      </button>
+      {/* <button
         id="exportPlaylistToXSPF"
-        role="button"
-        href="#"
+        type="button"
         onClick={() => this.handlePlaylistExport(this.exportAsXSPF)}
         className="dropdown-item"
       >

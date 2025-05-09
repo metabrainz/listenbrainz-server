@@ -53,7 +53,7 @@ export function Playlist(props: PlaylistProps) {
             id="options-dropdown"
             data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
             &nbsp;Options

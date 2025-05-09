@@ -504,7 +504,7 @@ export default function PlaylistPage() {
                 id="playlistOptionsDropdown"
                 data-bs-toggle="dropdown"
                 aria-haspopup="true"
-                aria-expanded="true"
+                aria-expanded="false"
               >
                 <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                 &nbsp;Options

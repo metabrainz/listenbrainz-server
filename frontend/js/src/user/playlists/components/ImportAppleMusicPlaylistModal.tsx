@@ -175,7 +175,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         </button>
         <button
           type="button"
-          className="btn btn-Primary"
+          className="btn btn-primary"
           onClick={resolveAndClose}
         >
           Done

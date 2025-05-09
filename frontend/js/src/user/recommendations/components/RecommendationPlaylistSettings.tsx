@@ -132,7 +132,7 @@ export default function RecommendationPlaylistSettings({
               id="playlistOptionsDropdown"
               data-bs-toggle="dropdown"
               aria-haspopup="true"
-              aria-expanded="true"
+              aria-expanded="false"
             >
               <FontAwesomeIcon icon={faCog} title="More options" fixedWidth />
             </button>

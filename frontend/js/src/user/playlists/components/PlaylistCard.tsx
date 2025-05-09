@@ -161,7 +161,7 @@ export default function PlaylistCard({
             id="playlistOptionsDropdown"
             data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
             type="button"
           />
           {showOptions ? (
@@ -176,18 +176,17 @@ export default function PlaylistCard({
               className="dropdown-menu dropdown-menu-right"
               aria-labelledby="playlistOptionsDropdown"
             >
-              <a
+              <button
                 className="dropdown-item"
                 onClick={onCopyPlaylist}
-                role="button"
-                href="#"
+                type="button"
               >
                 <FontAwesomeIcon
                   icon={faSave as IconProp}
                   title="Save to my playlists"
                 />
                 &nbsp;Save
-              </a>
+              </button>
             </ul>
           )}
         </div>

@@ -552,7 +552,7 @@ export class ListenCard extends React.Component<
                     id="listenControlsDropdown"
                     data-bs-toggle="dropdown"
                     aria-haspopup="true"
-                    aria-expanded="true"
+                    aria-expanded="false"
                     type="button"
                   >
                     <FontAwesomeIcon icon={faEllipsisVertical} fixedWidth />

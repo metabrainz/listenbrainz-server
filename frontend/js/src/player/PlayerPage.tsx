@@ -141,7 +141,7 @@ export default class PlayerPage extends React.Component<
                   id="playlistOptionsDropdown"
                   data-bs-toggle="dropdown"
                   aria-haspopup="true"
-                  aria-expanded="true"
+                  aria-expanded="false"
                 >
                   <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                   &nbsp;Options
@@ -166,15 +166,14 @@ export default class PlayerPage extends React.Component<
                     </li>
                   )}
                   {currentUser?.auth_token && (
-                    <a
+                    <button
                       className="dropdown-item"
                       id="exportPlaylistToSpotify"
-                      role="button"
-                      href="#"
+                      type="button"
                       onClick={this.savePlaylist}
                     >
                       Save Playlist
-                    </a>
+                    </button>
                   )}
                 </ul>
               </span>
