@@ -191,7 +191,7 @@ class RecordingSimilarityBase(abc.ABC):
 
             table_name = f"{self.name}_chunk_{chunk_name}"
             chunk_df.createOrReplaceTempView(table_name)
-            query = chunk_query.substitute(chunk_name=chunk_name)
+            query = chunk_query.substitute(chunk_table=table_name)
             run_query(query).write.mode("overwrite").parquet(f"{self.intermediate_dir}/{chunk_name}")
 
     def combine_chunks_output(self) -> DataFrame:
