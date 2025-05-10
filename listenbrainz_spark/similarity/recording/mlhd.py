@@ -23,6 +23,9 @@ class MlhdRecordingSimilarity(RecordingSimilarityBase):
             only_stage2=only_stage2,
         )
 
+    def get_algorithm(self) -> str:
+        return f"session_based_mlhd_session_{self.session}_contribution_{self.max_contribution}_threshold_{self.threshold}_limit_{self.limit}_skip_{-self.skip_threshold}"
+
     def get_dataset(self) -> DataFrame:
         return read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)
 
