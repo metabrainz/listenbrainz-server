@@ -101,12 +101,17 @@ export default NiceModal.create(() => {
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invertOrder, setInvertOrder] = useState(false);
+  const [keepModalOpen, setKeepModalOpen] = useState(false);
   // Used for the automatic switching and search trigger if pasting URL for another entity type
   const [textToSearch, setTextToSearch] = useState<string>();
 
   const closeModal = useCallback(() => {
     modal.hide();
     document?.body?.classList?.remove("modal-open");
+    const backdrop = document?.querySelector(".modal-backdrop");
+    if (backdrop) {
+      backdrop.remove();
+    }
     setTimeout(modal.remove, 200);
   }, [modal]);
 
@@ -186,7 +191,14 @@ export default NiceModal.create(() => {
           />,
           { toastId: "added-listens-success" }
         );
-        closeModal();
+
+        if (!keepModalOpen) {
+          closeModal();
+        } else {
+          // Reset the form state but keep the modal open
+          setSelectedListens([]);
+          setTextToSearch("");
+        }
       } catch (error) {
         handleError(
           error,
@@ -211,6 +223,7 @@ export default NiceModal.create(() => {
     APIService,
     closeModal,
     handleError,
+    keepModalOpen,
   ]);
 
   const switchMode = React.useCallback(
@@ -369,19 +382,31 @@ export default NiceModal.create(() => {
               </div>
             </div>
           </div>
-          <div className="modal-footer">
+          <div
+            className="modal-footer"
+            style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+          >
+            <div style={{ flex: 1 }}>
+              <label style={{ userSelect: "none", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={keepModalOpen}
+                  onChange={(e) => setKeepModalOpen(e.target.checked)}
+                  style={{ marginRight: "0.5em" }}
+                />
+                Add another
+              </label>
+            </div>
             <button
               type="button"
               className="btn btn-default"
-              data-dismiss="modal"
               onClick={closeModal}
             >
               Close
             </button>
             <button
-              type="submit"
+              type="button"
               className="btn btn-success"
-              data-dismiss="modal"
               disabled={!selectedListens?.length}
               onClick={submitListens}
             >
