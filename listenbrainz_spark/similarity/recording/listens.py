@@ -24,6 +24,9 @@ class ListensRecordingSimilarity(RecordingSimilarityBase):
         self.to_date = datetime.combine(date.today(), time.min)
         self.from_date = self.to_date + timedelta(days=-days)
 
+    def get_algorithm(self) -> str:
+        return f"session_based_days_{self.days}_session_{self.session}_contribution_{self.max_contribution}_threshold_{self.threshold}_limit_{self.limit}_skip_{-self.skip_threshold}"
+
     def get_dataset(self) -> DataFrame:
         return get_listens_from_dump(self.from_date, self.to_date)
 

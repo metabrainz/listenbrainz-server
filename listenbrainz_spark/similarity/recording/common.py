@@ -47,11 +47,14 @@ class RecordingSimilarityBase(abc.ABC):
         self.skip_threshold = -skip_threshold
         self.threshold = threshold
         self.limit = limit
-        self.algorithm = f"session_based_{name}_session_{session}_contribution_{max_contribution}_threshold_{threshold}_limit_{limit}_skip_{skip_threshold}"
 
         self.only_stage2 = only_stage2
         self.intermediate_dir = f"/similarity/{self.entity}/{self.name}/intermediate-output"
         self.metadata_table = None
+
+    @abc.abstractmethod
+    def get_algorithm(self) -> str:
+        pass
 
     def get_chunk_index_query(self) -> Template:
         """
@@ -205,10 +208,11 @@ class RecordingSimilarityBase(abc.ABC):
 
     def create_messages(self, results_df: DataFrame) -> Iterator[dict]:
         message_type = f"{self.name}_similarity_{self.entity}"
+        algorithm = self.get_algorithm()
 
         yield {
             "type": f"{message_type}_start",
-            "algorithm": self.algorithm,
+            "algorithm": algorithm,
             "is_production_dataset": self.is_production_dataset
         }
 
@@ -216,14 +220,14 @@ class RecordingSimilarityBase(abc.ABC):
             items = [row.asDict() for row in entries]
             yield {
                 "type": message_type,
-                "algorithm": self.algorithm,
+                "algorithm": algorithm,
                 "data": items,
                 "is_production_dataset": self.is_production_dataset
             }
 
         yield {
             "type": f"{message_type}_end",
-            "algorithm": self.algorithm,
+            "algorithm": algorithm,
             "is_production_dataset": self.is_production_dataset
         }
 
