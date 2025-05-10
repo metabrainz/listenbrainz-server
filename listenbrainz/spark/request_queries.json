@@ -120,29 +120,18 @@
       "max_num_users"
     ]
   },
-  "similarity.recording.mlhd": {
-    "name": "similarity.recording.mlhd",
-    "description": "Generate recording similarity from MLHD",
+  "similarity.recording": {
+    "name": "similarity.recording",
+    "description": "Generate recording similarity from mlhd or listenbrainz data.",
     "params": [
+      "days",
+      "mlhd",
       "session",
       "contribution",
       "threshold",
       "limit",
       "skip",
       "only_stage2",
-      "is_production_dataset"
-    ]
-  },
-  "similarity.recording": {
-    "name": "similarity.recording",
-    "description": "Generate recording similarity",
-    "params": [
-      "days",
-      "session",
-      "contribution",
-      "threshold",
-      "limit",
-      "skip",
       "is_production_dataset"
     ]
   },
