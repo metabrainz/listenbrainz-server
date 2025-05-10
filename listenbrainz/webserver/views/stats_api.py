@@ -1261,7 +1261,7 @@ def get_sitewide_artist_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
     
-    stats = db_stats.get_sitewide_stats("artists", stats_range)
+    stats = db_stats.get_sitewide_stats("release_groups", stats_range)
     if stats is None:
         raise APINoContent('')
     
