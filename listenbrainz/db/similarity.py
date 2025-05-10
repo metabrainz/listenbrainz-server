@@ -14,7 +14,7 @@ class SimilarityProdDataset(DatabaseDataset):
             table_name = f"mlhd_{entity}"
             index_prefix = f"mlhd_sim"
         else:
-            name = f"similarity_{entity}"
+            name = f"listens_similarity_{entity}"
             table_name = entity
             index_prefix = f"sim"
         super().__init__(name, table_name, "similarity")
@@ -52,7 +52,7 @@ class SimilarityDevDataset(DatabaseDataset):
             table_name = f"mlhd_{entity}_dev"
             index_prefix = "mlhd_sim_dev"
         else:
-            name = f"similarity_{entity}_dev"
+            name = f"listens_similarity_{entity}_dev"
             table_name = f"{entity}_dev"
             index_prefix = "sim_dev"
         super().__init__(name, table_name, "similarity")
@@ -125,7 +125,7 @@ class SimilarityDataset(SparkDataset):
         if is_mlhd:
             name = "mlhd_similarity"
         else:
-            name = "similarity"
+            name = "listens_similarity"
         super().__init__(f"{name}_{entity}")
         self.dev_dataset = SimilarityDevDataset(entity, is_mlhd)
         self.prod_dataset = SimilarityProdDataset(entity, is_mlhd)

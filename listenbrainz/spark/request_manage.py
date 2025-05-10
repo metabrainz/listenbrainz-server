@@ -4,6 +4,7 @@ from datetime import date
 
 import click
 import orjson
+from click import UsageError
 from dateutil.relativedelta import relativedelta, MO
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
@@ -347,6 +348,8 @@ def request_similar_users(max_num_users):
 
 
 @cli.command(name="request_similar_recordings_mlhd")
+@click.option("--days", type=int, help="The number of days of listens to use. required if using listens data")
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
 @click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
                                           " session.", required=True)
 @click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
@@ -357,49 +360,25 @@ def request_similar_users(max_num_users):
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
 @click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--only-stage2", is_flag=True, default=False, help="whether to only run stage2 of computation")
+@click.option("--only-stage2", is_flag=True, default=False, help="whether to reuse existing outputs of intermediate chunks")
 @click.option("--production", is_flag=True, default=False,
               help="whether the dataset is being created as a production dataset. affects"
                    " how the resulting dataset is stored in LB.", required=True)
-def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip, only_stage2, production):
+def request_similar_recordings(days, mlhd, session, contribution, threshold, limit, skip, only_stage2, production):
     """ Send the cluster a request to generate similar recordings index. """
+    if mlhd and days is not None:
+        raise UsageError("'days' cannot be specified when using MLHD data.")
+
     send_request_to_spark_cluster(
-        "similarity.recording.mlhd",
+        "similarity.recording",
+        days=days,
+        mlhd=mlhd,
         session=session,
         contribution=contribution,
         threshold=threshold,
         limit=limit,
         skip=skip,
         only_stage2=only_stage2,
-        is_production_dataset=production
-    )
-
-
-@cli.command(name="request_similar_recordings")
-@click.option("--days", type=int, help="The number of days of listens to use.", required=True)
-@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
-                                          " session.", required=True)
-@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
-                                               " score of a recording pair.", required=True)
-@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
-                                            " simlarity index.", required=True)
-@click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
-                                        " (the limit is instructive. upto 2x recordings may be returned than"
-                                        " the limit).", required=True)
-@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-@click.option("--production", is_flag=True, default=False,
-              help="whether the dataset is being created as a production dataset. affects"
-                   " how the resulting dataset is stored in LB.", required=True)
-def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
-    """ Send the cluster a request to generate similar recordings index. """
-    send_request_to_spark_cluster(
-        "similarity.recording",
-        days=days,
-        session=session,
-        contribution=contribution,
-        threshold=threshold,
-        limit=limit,
-        skip=skip,
         is_production_dataset=production
     )
 
