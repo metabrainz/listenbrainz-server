@@ -127,10 +127,10 @@
       "days",
       "mlhd",
       "session",
-      "contribution",
+      "max_contribution",
       "threshold",
       "limit",
-      "skip",
+      "skip_threshold",
       "only_stage2",
       "is_production_dataset"
     ]
