@@ -366,21 +366,22 @@ def request_similar_users(max_num_users):
                    " how the resulting dataset is stored in LB.", required=True)
 def request_similar_recordings(days, mlhd, session, max_contribution, threshold, limit, skip_threshold, only_stage2, production):
     """ Send the cluster a request to generate similar recordings index. """
-    if mlhd and days is not None:
-        raise UsageError("'days' cannot be specified when using MLHD data.")
+    kwargs = {
+        "mlhd": mlhd,
+        "session": session,
+        "max_contribution": max_contribution,
+        "threshold": threshold,
+        "limit": limit,
+        "skip_threshold": skip_threshold,
+        "only_stage2": only_stage2,
+        "is_production_dataset": production
+    }
+    if days is not None:
+        if mlhd:
+            raise UsageError("'days' cannot be specified when using MLHD data.")
+        kwargs["days"] = days
 
-    send_request_to_spark_cluster(
-        "similarity.recording",
-        days=days,
-        mlhd=mlhd,
-        session=session,
-        max_contribution=max_contribution,
-        threshold=threshold,
-        limit=limit,
-        skip_threshold=skip_threshold,
-        only_stage2=only_stage2,
-        is_production_dataset=production
-    )
+    send_request_to_spark_cluster("similarity.recording", **kwargs)
 
 
 @cli.command(name='request_similar_artists')
@@ -550,8 +551,8 @@ def cron_request_recommendations(ctx):
 @cli.command(name='cron_request_similarity_datasets')
 @click.pass_context
 def cron_request_similarity_datasets(ctx):
-    ctx.invoke(request_similar_recordings, days=7500, session=300, contribution=5,
-               threshold=10, limit=100, skip=30, production=True)
+    ctx.invoke(request_similar_recordings, days=7500, session=300, max_contribution=5,
+               threshold=10, limit=100, skip_threshold=30, production=True)
     ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
                threshold=10, limit=100, skip=30, production=True)
 
