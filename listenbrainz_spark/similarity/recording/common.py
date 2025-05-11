@@ -183,10 +183,13 @@ class RecordingSimilarityBase(abc.ABC):
         pass
 
     def create_cache_tables(self):
+        """ Creates cache tables for storing metadata information. """
         self.metadata_table = "recording_length"
         read_files_from_HDFS(RECORDING_LENGTH_DATAFRAME).createOrReplaceTempView(self.metadata_table)
 
     def process_chunked(self):
+        """ Processes a dataset in chunks, applying the chunkwise processing query to each
+        chunk, and writing the results in Parquet format to an intermediate directory. """
         dataset = self.get_dataset()
         chunk_query = self.get_chunk_index_query()
         for chunk_name, chunk_df in self.chunk_dataset(dataset):
@@ -198,6 +201,9 @@ class RecordingSimilarityBase(abc.ABC):
             run_query(query).write.mode("overwrite").parquet(f"{self.intermediate_dir}/{chunk_name}")
 
     def combine_chunks_output(self) -> DataFrame:
+        """ Loads all the data chunks into a single DataFrame and combines them by performing aggregating
+        the scores across users and trims the dataset by filtering out low score recordings and only keeping
+        the limit number of recording pairs. """
         chunks = hdfs_connection.client.list(self.intermediate_dir)
         chunks_path = [f"{config.HDFS_CLUSTER_URI}{self.intermediate_dir}/{chunk}" for chunk in chunks]
         chunks_table = f"{self.name}_similarity_partial_agg_chunks"
@@ -207,6 +213,7 @@ class RecordingSimilarityBase(abc.ABC):
         return run_query(query)
 
     def create_messages(self, results_df: DataFrame) -> Iterator[dict]:
+        """ Generates and yields messages from results DataFrame. """
         message_type = f"{self.name}_similarity_{self.entity}"
         algorithm = self.get_algorithm()
 
@@ -232,6 +239,13 @@ class RecordingSimilarityBase(abc.ABC):
         }
 
     def run(self) -> Iterator[dict]:
+        """ Executes the data processing pipeline and yields processed messages.
+
+        This method orchestrates the data pipeline by first creating necessary cache
+        tables, then processing data in chunks if stage 2 processing is not the only
+        desired operation. After chunked processing, it combines the output of all
+        chunks into a single data frame and generates messages from the resulting data.
+        """
         self.create_cache_tables()
 
         if not self.only_stage2:
