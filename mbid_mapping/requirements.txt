@@ -2,10 +2,10 @@ click==8.1.8
 pytest==8.3.5
 pytest-cov==6.1.1
 psycopg2-binary==2.9.10
-ujson==5.4.0
+ujson==5.10.0
 typesense==1.0.3
 unidecode>=1.4.0
 python-dateutil==2.9.0.post0
-brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@3.13
+brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v3.0.0
 tqdm==4.67.1
 sentry_sdk==2.27.0
