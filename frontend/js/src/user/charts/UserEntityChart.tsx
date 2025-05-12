@@ -520,8 +520,8 @@ export default function UserEntityChart() {
                       </li>
                     )}
                     {currPage + 2 < totalPages && (
-                      <li className="page-item">
-                        <span>...</span>
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
                       </li>
                     )}
                     <li
