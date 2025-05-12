@@ -429,7 +429,7 @@ export default function LinkListensPage() {
             const releaseName = group.at(0)?.release_name ?? null;
             const multiTrackMappingButton = (
               <button
-                className="btn btn-link btn-icon color-orange"
+                className="btn btn-link btn-icon text-primary"
                 style={{ padding: "0", height: "initial" }}
                 type="button"
                 onClick={() => {
@@ -471,7 +471,7 @@ export default function LinkListensPage() {
                 if (listen?.track_metadata?.additional_info?.recording_msid) {
                   const linkWithMB = (
                     <ListenControl
-                      buttonClassName="btn btn-link color-orange"
+                      buttonClassName="btn btn-link text-primary"
                       text=""
                       title="Link with MusicBrainz"
                       icon={faLink}

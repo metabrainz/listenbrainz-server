@@ -18,7 +18,7 @@ export default function Footer() {
               />
             </h3>
             <br />
-            <p className="color-gray">
+            <p>
               ListenBrainz keeps track of music you listen to and provides you
               with insights into your listening habits.
               <br />
@@ -33,7 +33,7 @@ export default function Footer() {
             </p>
             <ul className="list-unstyled">
               <li className="color-a">
-                <span className="color-gray">Chat with us: </span>{" "}
+                <span>Chat with us: </span>{" "}
                 <a
                   href="https://musicbrainz.org/doc/Communication/ChatBrainz"
                   target="_blank"
@@ -43,7 +43,7 @@ export default function Footer() {
                 </a>
               </li>
               <li className="color-a">
-                <span className="color-gray">Email: </span>{" "}
+                <span>Email: </span>{" "}
                 <a href="mailto:support@metabrainz.org">
                   support@metabrainz.org{" "}
                 </a>
@@ -233,7 +233,7 @@ export default function Footer() {
         </div>
         <div className="row center-p">
           <div className="col-lg-3 d-none d-md-block">
-            <p className="color-gray section-line">
+            <p className="section-line">
               OSS Geek?{" "}
               <a
                 href="https://github.com/metabrainz/listenbrainz-server"
@@ -258,7 +258,7 @@ export default function Footer() {
             </p>
           </div>
           <div className="col-lg-3 d-none d-md-block">
-            <p className="color-gray section-line">
+            <p className="section-line">
               Found an Issue?{" "}
               <a
                 href="https://tickets.metabrainz.org/"
