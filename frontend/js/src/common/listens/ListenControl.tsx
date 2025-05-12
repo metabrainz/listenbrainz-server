@@ -75,7 +75,9 @@ function ListenControl(props: ListenControlProps) {
   return (
     <button
       disabled={disabled ?? false}
-      className={`${isDropdown ? "dropdown-item" : ""} ${buttonClassName}`}
+      className={`${isDropdown ? "dropdown-item" : ""} ${
+        buttonClassName ?? ""
+      }`}
       title={title ?? text}
       onClick={disabled ? undefined : action}
       type="button"
