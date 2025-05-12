@@ -9,7 +9,6 @@
 
   .artist-similarity-header {
     display: flex;
-    align-items: center;
     justify-content: start;
     flex-wrap: wrap;
     padding: 2vh 0;
@@ -18,64 +17,8 @@
       justify-content: space-between;
     }
 
-    #artist-search-button {
-      margin-right: 10px;
-      background-color: @blue;
-      color: @white;
-
-      &:hover {
-        background-color: @mb_blue_light;
-        border-color: @mb_blue_dark;
-      }
-    }
-
-    #artist-search-box {
-      width: initial;
-      input {
-        height: initial;
-      }
-    }
-
-    .share-buttons {
-      margin-left: 30px;
-      display: flex;
-      align-items: center;
-    }
-
-    .artist-search-input {
-      display: flex;
-      margin-left: 10px;
-      margin-right: 10px;
-
-      #artist-graph-size-input {
-        width: 100px;
-        text-align: center;
-      }
-
-      #searchbox-icon {
-        vertical-align: middle;
-        background-color: @blue;
-        border: none;
-        height: inherit;
-        width: 20%;
-        min-width: fit-content;
-
-        &:hover {
-          background-color: @mb_blue_light;
-          border-color: @mb_blue_dark;
-        }
-      }
-    }
-
-    .graph-size-input {
-      display: flex;
-      align-items: center;
-    }
-
-    .track-search-dropdown {
-      max-height: 20vh;
-      width: calc(100% - 20px);
-      margin-left: 10px;
+    #artist-graph-size-input {
+      max-width: 6em;
     }
   }
 

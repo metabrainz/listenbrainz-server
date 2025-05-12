@@ -603,16 +603,14 @@ export default function ArtCreator() {
                       Text color:
                     </label>
                     <div className="input-group">
-                      <span className="input-group-btn">
-                        <input
-                          id="text-color-input"
-                          type="color"
-                          className="btn btn-transparent form-control"
-                          onChange={updateTextColorCallback}
-                          placeholder="#321529"
-                          value={textColor}
-                        />
-                      </span>
+                      <input
+                        id="text-color-input"
+                        type="color"
+                        className="form-control form-control-color"
+                        onChange={updateTextColorCallback}
+                        placeholder="#321529"
+                        value={textColor}
+                      />
                       <input
                         className="form-control"
                         type="text"
@@ -627,15 +625,13 @@ export default function ArtCreator() {
                       Background colors:
                     </label>
                     <div className="input-group">
-                      <span className="input-group-btn">
-                        <input
-                          id="bg-color"
-                          type="color"
-                          className="btn btn-transparent form-control"
-                          onChange={updateFirstBgColorCallback}
-                          value={firstBgColor}
-                        />
-                      </span>
+                      <input
+                        id="bg-color"
+                        type="color"
+                        className="form-control form-control-color"
+                        onChange={updateFirstBgColorCallback}
+                        value={firstBgColor}
+                      />
                       <input
                         type="text"
                         className="form-control"
@@ -648,15 +644,13 @@ export default function ArtCreator() {
                   </div>
 
                   <div className="input-group">
-                    <span className="input-group-btn">
-                      <input
-                        id="bg-color-2"
-                        type="color"
-                        className="btn btn-transparent form-control"
-                        onChange={updateSecondBgColorCallback}
-                        value={secondBgColor}
-                      />
-                    </span>
+                    <input
+                      id="bg-color-2"
+                      type="color"
+                      className="form-control form-control-color"
+                      onChange={updateSecondBgColorCallback}
+                      value={secondBgColor}
+                    />
                     <input
                       type="text"
                       className="form-control"
@@ -670,15 +664,10 @@ export default function ArtCreator() {
               )}
               {/* <div className="flex-center input-group">
                 <label className="form-label" htmlFor="bg-upload">Background image:</label>
-                <div className="input-group">
-                  <input className="form-control" type="text" disabled />
-                  <div className="input-group-btn">
-                    <button type="button" className="btn btn-secondary btn-sm">
-                      <FontAwesomeIcon icon={faCloudArrowUp} />
-                    </button>
-                    <input id="bg-upload" type="file" className="hidden" />
-                  </div>
-                </div>
+                <input className="form-control" type="text" />
+                <button type="button" className="btn btn-secondary btn-sm">
+                  <FontAwesomeIcon icon={faCloudArrowUp} />
+                </button>
               </div> */}
 
               {/* <div>

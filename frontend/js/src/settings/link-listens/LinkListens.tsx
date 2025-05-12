@@ -366,7 +366,7 @@ export default function LinkListensPage() {
       )}
       {unlinkedListensProps.length > 0 && (
         <form
-          className="input-group input-group-flex"
+          className="input-group"
           style={{ maxWidth: "400px" }}
           onSubmit={handleSearch}
         >
@@ -379,32 +379,30 @@ export default function LinkListensPage() {
             <option value="artist">Artist</option>
             <option value="track">Track</option>
           </select>
-          <div className="input-group-btn">
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="form-control"
-            />
-            <button
-              type="submit"
-              className="btn btn-info"
-              disabled={!searchQuery.trim()}
-              aria-disabled={!searchQuery.trim()}
-              title="Search"
-            >
-              <FontAwesomeIcon icon={faSearch} />
-            </button>
-            <button
-              type="button"
-              className="btn btn-info"
-              onClick={handleReset}
-              title="Reset"
-            >
-              Reset
-            </button>
-          </div>
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="form-control"
+          />
+          <button
+            type="submit"
+            className="btn btn-info"
+            disabled={!searchQuery.trim()}
+            aria-disabled={!searchQuery.trim()}
+            title="Search"
+          >
+            <FontAwesomeIcon icon={faSearch} />
+          </button>
+          <button
+            type="button"
+            className="btn btn-info"
+            onClick={handleReset}
+            title="Reset"
+          >
+            Reset
+          </button>
         </form>
       )}
       <br />

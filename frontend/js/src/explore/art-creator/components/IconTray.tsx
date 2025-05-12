@@ -85,15 +85,13 @@ function IconTray(props: IconTrayProps) {
             className="form-control"
           />
           {browserHasClipboardAPI && (
-            <span className="input-group-btn">
-              <button
-                type="button"
-                onClick={onClickCopyURL}
-                className="btn btn-info btn-sm"
-              >
-                <FontAwesomeIcon icon={faLink} fixedWidth />
-              </button>
-            </span>
+            <button
+              type="button"
+              onClick={onClickCopyURL}
+              className="btn btn-info btn-sm"
+            >
+              <FontAwesomeIcon icon={faLink} fixedWidth />
+            </button>
           )}
         </div>
         {browserHasClipboardAPI && (
