@@ -235,7 +235,7 @@ export default function MusicNeighborhood() {
         <title>Music Neighborhood</title>
       </Helmet>
       <div className="artist-similarity-main-container" role="main">
-        <div className="artist-similarity-header pb-4">
+        <div className="artist-similarity-header align-items-end">
           <SearchBox
             onArtistChange={onArtistChange}
             onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
