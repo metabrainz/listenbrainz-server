@@ -154,7 +154,7 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
         </p>
         <div
           className="list-group"
-          style={{ maxHeight: "50vh", overflow: "scroll" }}
+          style={{ maxHeight: "50vh", overflow: "auto" }}
         >
           <button
             type="button"

@@ -120,7 +120,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
         </p>
         <div
           className="list-group"
-          style={{ maxHeight: "50vh", overflow: "scroll" }}
+          style={{ maxHeight: "50vh", overflow: "auto" }}
         >
           {playlists?.map((playlist: SpotifyPlaylistObject) => (
             <button
