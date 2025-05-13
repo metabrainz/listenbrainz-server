@@ -430,20 +430,3 @@ def dump_user_feedback(connection, location):
                                  'created': row[3].isoformat()})
             last_day = today
         transaction.rollback()
-
-
-def copy_table(cursor, location, columns, table_name):
-    """ Copies a PostgreSQL table to a file
-
-        Arguments:
-            cursor: a psycopg cursor
-            location: the directory where the table should be copied
-            columns: a comma seperated string listing the columns of the table
-                     that should be dumped
-            table_name: the name of the table to be copied
-    """
-    table, fields = _escape_table_columns(table_name, columns)
-    with open(os.path.join(location, table_name), 'w') as f:
-        query = SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT") \
-            .format(fields=fields, table=table)
-        cursor.copy_expert(query, f)
