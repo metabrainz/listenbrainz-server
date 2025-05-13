@@ -79,8 +79,8 @@ def current_status():
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
+        day = datetime.today() - relativedelta(days=delta)
         try:
-            day = datetime.utcnow() - relativedelta(days=delta)
             day_listen_count = _redis.get_listen_count_for_day(day)
         except:
             current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'),
