@@ -853,7 +853,7 @@ def insert_recordings(db_conn, ts_conn, playlist_id: int, recordings: List[model
     """)
     return_recordings = []
     user_id_map = {}
-    insert_ts = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    insert_ts = datetime.datetime.now(tz=datetime.timezone.utc)
     for recording in recordings:
         if not recording.created:
             recording.created = insert_ts
