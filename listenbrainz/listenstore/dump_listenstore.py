@@ -6,24 +6,22 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import orjson
 import pandas as pd
 import psycopg2
 import psycopg2.sql
 import pyarrow as pa
 import pyarrow.parquet as pq
 import sqlalchemy
-import tempfile
-import orjson
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db import timescale
 from listenbrainz.db.user import get_all_usernames
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
 from listenbrainz.utils import create_path
 
 # These values are defined to create spark parquet files that are at most 128MB in size.
