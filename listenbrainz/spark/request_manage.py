@@ -54,8 +54,8 @@ def _prepare_query_message(query, **params):
     message = {'query': possible_queries[query]['name']}
     required_params = set(possible_queries[query]['params'])
     given_params = set(params.keys())
-    if required_params != given_params:
-        raise InvalidSparkRequestError
+    if not given_params.issubset(required_params):
+        raise InvalidSparkRequestError()
 
     if params:
         message['params'] = {}
