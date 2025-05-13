@@ -30,14 +30,15 @@ from datetime import datetime, timezone, timedelta
 import pytest
 from click.testing import CliRunner
 
-import listenbrainz.db.dump as db_dump
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.recommendations_cf_recording_feedback as db_rec_feedback
 import listenbrainz.db.user as db_user
-from listenbrainz.db import dump_manager
+import listenbrainz.dumps.manager as dump_manager
+from listenbrainz.db.dump_entry import add_dump_entry, get_dump_entries, get_dump_entry
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.model.recommendation_feedback import RecommendationFeedbackSubmit
 from listenbrainz.db.testing import DatabaseTestCase, TimescaleTestCase
+from listenbrainz.dumps.cleanup import _cleanup_dumps
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app, timescale_connection
@@ -94,7 +95,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
 
         create_path(os.path.join(self.tempdir, 'not-a-dump'))
 
-        dump_manager._cleanup_dumps(self.tempdir)
+        _cleanup_dumps(self.tempdir)
 
         newdirs = os.listdir(self.tempdir)
         self.assertNotIn('listenbrainz-dump-1-20180312-000001-full', newdirs)
@@ -177,7 +178,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
         # now, add a dump entry to the database and create a dump with that specific dump id
-        dump_id = db_dump.add_dump_entry(datetime.now(tz=timezone.utc), "full")
+        dump_id = add_dump_entry(datetime.now(tz=timezone.utc), "full")
         result = self.runner.invoke(dump_manager.create_full, [
             '--location',
             self.tempdir,
@@ -255,7 +256,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
         base = datetime.now()
-        dump_id = db_dump.add_dump_entry(base  - timedelta(seconds=60), "incremental")
+        dump_id = add_dump_entry(base  - timedelta(seconds=60), "incremental")
         self.listenstore.insert(generate_data(
             1,
             self.user_name,
@@ -287,9 +288,9 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         """
         listened_at = int((datetime.now() - timedelta(hours=3)).timestamp())
         self.listenstore.insert(generate_data(self.user_id, self.user_name, listened_at,5))
-        self.assertEqual(db_dump.get_dump_entries(), [])
+        self.assertEqual(get_dump_entries(), [])
         inc_dump_created = datetime.now(tz=timezone.utc)
-        db_dump.add_dump_entry(inc_dump_created, "incremental")
+        add_dump_entry(inc_dump_created, "incremental")
 
         # dumps filter on created timestamp and not listened_at which is auto-generated on insert
         # hence actual sleep is needed for the timestamp value to elapse
@@ -310,7 +311,7 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         dump_name = os.listdir(self.tempdir)[0]
         dump_id = int(dump_name.split('-')[2])
 
-        full_dump = db_dump.get_dump_entry(dump_id, "full")
+        full_dump = get_dump_entry(dump_id, "full")
         self.assertEqual(full_dump["created"], inc_dump_created)
 
         # make sure that the dump contains a full listens and spark dump
@@ -340,11 +341,11 @@ class DumpManagerTestCase(DatabaseTestCase, TimescaleTestCase):
         self.assertEqual(result.exit_code, -1)
 
         # create a base dump entry
-        db_dump.add_dump_entry(datetime.now(tz=timezone.utc), "incremental")
+        add_dump_entry(datetime.now(tz=timezone.utc), "incremental")
         self.listenstore.insert(generate_data(1, self.user_name, 1500000000, 5))
 
         # create a new dump ID to recreate later
-        dump_id = db_dump.add_dump_entry(datetime.now(tz=timezone.utc), "incremental")
+        dump_id = add_dump_entry(datetime.now(tz=timezone.utc), "incremental")
         # now, create a dump with that specific dump id
         result = self.runner.invoke(dump_manager.create_incremental, [
                                     '--location', self.tempdir, '--dump-id', dump_id])

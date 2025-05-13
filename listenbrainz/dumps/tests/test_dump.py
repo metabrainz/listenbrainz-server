@@ -1,7 +1,8 @@
-""" This module tests data dump creation and import functions
-in listenbrainz.db.dump
-"""
+""" This module tests data dump creation and import functions. """
 
+import os
+import os.path
+import shutil
 # listenbrainz-server - Server for the ListenBrainz project
 #
 # Copyright (C) 2017 MetaBrainz Foundation Inc.
@@ -21,26 +22,24 @@ in listenbrainz.db.dump
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 import subprocess
 import tarfile
+import tempfile
+from datetime import datetime
 
 import orjson
 
 import listenbrainz.db as db
-import listenbrainz.db.dump as db_dump
-import listenbrainz.db.user as db_user
-import os
-import os.path
-import shutil
-import tempfile
 import listenbrainz.db.feedback as db_feedback
-
-from datetime import datetime
-
+import listenbrainz.db.user as db_user
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz.db import timescale
+from listenbrainz.db.dump_entry import add_dump_entry, get_dump_entries
+from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
+from listenbrainz.dumps.check import _parse_ftp_name_with_id, _parse_ftp_name_without_id
+from listenbrainz.dumps.exporter import create_private_dump, create_statistics_dump, copy_table, dump_postgres_db
+from listenbrainz.dumps.importer import import_postgres_dump
 from listenbrainz.webserver import create_app
-from listenbrainz.db.model.feedback import Feedback
 
 
 class DumpTestCase(DatabaseTestCase):
@@ -59,7 +58,7 @@ class DumpTestCase(DatabaseTestCase):
 
     def test_create_private_dump(self):
         time_now = datetime.today()
-        dump_location = db_dump.create_private_dump(self.tempdir, time_now)
+        dump_location = create_private_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
 
     def test_create_stats_dump(self):
@@ -77,7 +76,7 @@ class DumpTestCase(DatabaseTestCase):
 
         time_now = datetime.today()
         with self.app.app_context():
-            dump_location = db_dump.create_statistics_dump(self.tempdir, time_now)
+            dump_location = create_statistics_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
 
         found = set()
@@ -100,22 +99,16 @@ class DumpTestCase(DatabaseTestCase):
 
         delete_all_couch_databases()
 
-    def test_add_dump_entry(self):
-        prev_dumps = db_dump.get_dump_entries()
-        db_dump.add_dump_entry(datetime.today(), "incremental")
-        now_dumps = db_dump.get_dump_entries()
-        self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
-
     def test_copy_table(self):
-        db_dump.add_dump_entry(datetime.today(), "incremental")
+        add_dump_entry(datetime.today(), "incremental")
         with db.engine.connect() as connection:
-            db_dump.copy_table(
+            copy_table(
                 cursor=connection.connection.cursor(),
                 location=self.tempdir,
                 columns=['id', 'created'],
                 table_name='data_dump',
             )
-        dumps = db_dump.get_dump_entries()
+        dumps = get_dump_entries()
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
             file_contents = [line for line in f]
         self.assertEqual(len(dumps), len(file_contents))
@@ -129,13 +122,13 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
 
             # do a db dump and reset the db
-            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
+            private_dump, public_dump = dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
             # import the dump
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None)
+            import_postgres_dump(private_dump, None, public_dump, None)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -144,7 +137,7 @@ class DumpTestCase(DatabaseTestCase):
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
 
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+            import_postgres_dump(private_dump, None, public_dump, None, threads=2)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
             two_id = db_user.create(self.db_conn, 2, 'vnskprk')
@@ -167,14 +160,14 @@ class DumpTestCase(DatabaseTestCase):
             db_feedback.insert(self.db_conn, feedback)
 
             # do a db dump and reset the db
-            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir, self.tempdir_private)
+            private_dump, public_dump = dump_postgres_db(self.tempdir, self.tempdir_private)
             self.reset_db()
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
             self.assertEqual(db_feedback.get_feedback_count_for_user(self.db_conn, user_id=one_id), 0)
 
             # import the dump and check the records are inserted
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None)
+            import_postgres_dump(private_dump, None, public_dump, None)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -192,7 +185,7 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 0)
             dumped_feedback = []
 
-            db_dump.import_postgres_dump(private_dump, None, public_dump, None, threads=2)
+            import_postgres_dump(private_dump, None, public_dump, None, threads=2)
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 1)
 
@@ -205,31 +198,31 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(dumped_feedback[0].score, feedback.score)
 
     def test_parse_ftp_name_with_id(self):
-        parts = db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-040003-full')
+        parts = _parse_ftp_name_with_id('listenbrainz-dump-712-20220201-040003-full')
         self.assertEqual(parts[0], 712)
         self.assertEqual(parts[1], datetime(2022, 2, 1, 4, 0, 3))
 
         # Not enough parts
         with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_with_id('listenbrainz-feedback-20220207-060003-full')
+            _parse_ftp_name_with_id('listenbrainz-feedback-20220207-060003-full')
         self.assertIn("expected to have", str(ex.exception))
 
         # Invalid date
         with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_with_id('listenbrainz-dump-712-20220201-xxxxxx-full')
+            _parse_ftp_name_with_id('listenbrainz-dump-712-20220201-xxxxxx-full')
         self.assertIn("does not match format", str(ex.exception))
 
     def test_parse_ftp_name_without_id(self):
-        parts = db_dump._parse_ftp_name_without_id('listenbrainz-feedback-20220207-060003-full')
+        parts = _parse_ftp_name_without_id('listenbrainz-feedback-20220207-060003-full')
         self.assertEqual(parts[0], '20220207-060003')
         self.assertEqual(parts[1], datetime(2022, 2, 7, 6, 0, 3))
 
         # Not enough parts
         with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_without_id('listenbrainz-dump-712-20220201-040003-full')
+            _parse_ftp_name_without_id('listenbrainz-dump-712-20220201-040003-full')
         self.assertIn("expected to have", str(ex.exception))
 
         # Invalid date
         with self.assertRaises(ValueError) as ex:
-            db_dump._parse_ftp_name_without_id('listenbrainz-feedback-20220207-xxxxxx-full')
+            _parse_ftp_name_without_id('listenbrainz-feedback-20220207-xxxxxx-full')
         self.assertIn("does not match format", str(ex.exception))

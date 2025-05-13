@@ -1,8 +1,6 @@
 """ This module contains a click group with commands to
 create and import postgres data dumps.
 """
-from pathlib import PurePath
-
 # listenbrainz-server - Server for the ListenBrainz project
 #
 # Copyright (C) 2017 MetaBrainz Foundation Inc.
@@ -21,47 +19,30 @@ from pathlib import PurePath
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import click
-from datetime import datetime, timedelta, timezone
 import os
-import re
-import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
+from pathlib import PurePath
 
-from flask import current_app, render_template
+import click
+from flask import current_app
 
-from brainzutils.mail import send_mail
-import listenbrainz.db.dump as db_dump
-from listenbrainz.db import mapping_dump
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db.dump_entry import get_latest_incremental_dump, add_dump_entry, get_dump_entry, \
+    get_previous_incremental_dump
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.dumps.check import check_ftp_dump_ages
+from listenbrainz.dumps.cleanup import _cleanup_dumps
+from listenbrainz.dumps.exporter import dump_postgres_db, create_statistics_dump, dump_timescale_db, \
+    dump_feedback_for_spark
+from listenbrainz.dumps.importer import import_postgres_dump
+from listenbrainz.dumps.mapping import create_mapping_dump
 from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
-from listenbrainz.db.dump import check_ftp_dump_ages
-
-NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
-NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 30
-NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP = 2
-NUMBER_OF_CANONICAL_DUMPS_TO_KEEP = 2
 
 cli = click.Group()
-
-
-def send_dump_creation_notification(dump_name, dump_type):
-    if not current_app.config['TESTING']:
-        dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/{}/{}'.format(
-            dump_type, dump_name)
-        send_mail(
-            subject="ListenBrainz {} dump created - {}".format(
-                dump_type, dump_name),
-            text=render_template('emails/data_dump_created_notification.txt',
-                                 dump_name=dump_name, dump_link=dump_link),
-            recipients=['listenbrainz-observability@metabrainz.org'],
-            from_name='ListenBrainz',
-            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
-        )
 
 
 @cli.command(name="create_mbcanonical")
@@ -91,7 +72,7 @@ def create_mbcanonical(location, use_lb_conn):
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
 
-        mapping_dump.create_mapping_dump(dump_path, end_time, use_lb_conn)
+        create_mapping_dump(dump_path, end_time, use_lb_conn)
         expected_num_dumps = 1
 
         try:
@@ -153,14 +134,14 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
             sys.exit(-1)
         ls = DumpListenStore(app)
         if dump_id is None:
-            latest_inc_dump = db_dump.get_latest_incremental_dump()
+            latest_inc_dump = get_latest_incremental_dump()
             if latest_inc_dump is not None:
                 end_time = latest_inc_dump['created']
             else:
                 end_time = datetime.now(tz=timezone.utc)
-            dump_id = db_dump.add_dump_entry(end_time, "full")
+            dump_id = add_dump_entry(end_time, "full")
         else:
-            dump_entry = db_dump.get_dump_entry(dump_id, "full")
+            dump_entry = get_dump_entry(dump_id, "full")
             if dump_entry is None:
                 current_app.logger.error("No full dump with ID %d found", dump_id)
                 sys.exit(-1)
@@ -179,11 +160,11 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
         expected_num_dumps = 0
         expected_num_private_dumps = 0
         if do_db_dump:
-            db_dump.dump_postgres_db(dump_path, private_dump_path, end_time, threads)
+            dump_postgres_db(dump_path, private_dump_path, end_time, threads)
             expected_num_dumps += 1
             expected_num_private_dumps += 1
         if do_timescale_dump:
-            db_dump.dump_timescale_db(dump_path, private_dump_path, end_time, threads)
+            dump_timescale_db(dump_path, private_dump_path, end_time, threads)
             expected_num_dumps += 1
             expected_num_private_dumps += 1
         if do_listen_dump:
@@ -197,7 +178,7 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
                                       start_time=start_time, end_time=end_time)
             expected_num_dumps += 1
         if do_stats_dump:
-            db_dump.create_statistics_dump(dump_path, end_time, threads)
+            create_statistics_dump(dump_path, end_time, threads)
             expected_num_dumps += 1
 
         try:
@@ -247,15 +228,15 @@ def create_incremental(location, threads, dump_id):
         ls = DumpListenStore(app)
         if dump_id is None:
             end_time = datetime.now(tz=timezone.utc)
-            dump_id = db_dump.add_dump_entry(end_time, "incremental")
+            dump_id = add_dump_entry(end_time, "incremental")
         else:
-            dump_entry = db_dump.get_dump_entry(dump_id, "incremental")
+            dump_entry = get_dump_entry(dump_id, "incremental")
             if dump_entry is None:
                 current_app.logger.error("No incremental dump with ID %d found, exiting!", dump_id)
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        prev_dump_entry = db_dump.get_previous_incremental_dump(dump_id)
+        prev_dump_entry = get_previous_incremental_dump(dump_id)
         if prev_dump_entry is None:  # incremental dumps must have a previous dump in the series
             current_app.logger.error("Invalid dump ID %d, could not find previous incrmental dump", dump_id)
             sys.exit(-1)
@@ -306,7 +287,7 @@ def create_feedback(location, threads):
         dump_name = 'listenbrainz-feedback-{time}-full'.format(time=ts)
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        db_dump.dump_feedback_for_spark(dump_path, end_time, threads)
+        dump_feedback_for_spark(dump_path, end_time, threads)
 
         try:
             write_hashes(dump_path)
@@ -364,7 +345,7 @@ def import_dump(private_archive, private_timescale_archive,
     """
     app = create_app()
     with app.app_context():
-        db_dump.import_postgres_dump(private_archive, private_timescale_archive,
+        import_postgres_dump(private_archive, private_timescale_archive,
                                      public_archive, public_timescale_archive,
                                      threads)
         if listen_archive:
@@ -386,105 +367,6 @@ def check_dump_ages():
     """Check to make sure that data dumps are sufficiently fresh. Send mail if they are not."""
     check_ftp_dump_ages()
     sys.exit(0)
-
-
-@cli.command(name="create_parquet")
-def create_test_parquet_files():
-    app = create_app()
-    with app.app_context():
-        ls = DumpListenStore(app)
-        start = datetime.now() - timedelta(days=30)
-        ls.dump_listens_for_spark("/tmp", 1000, "full", start)
-        sys.exit(-2)
-
-
-def get_dump_id(dump_name):
-    return int(dump_name.split('-')[2])
-
-
-def get_dump_ts(dump_name):
-    return dump_name.split('-')[2] + dump_name.split('-')[3]
-
-
-def _cleanup_dumps(location):
-    """ Delete old dumps while keeping the latest two dumps in the specified directory
-
-    Args:
-        location (str): the dir which needs to be cleaned up
-
-    Returns:
-        (int, int): the number of dumps remaining, the number of dumps deleted
-    """
-    if not os.path.exists(location):
-        print(f'Location {location} does not exist!')
-        return
-
-    # Clean up full dumps
-    full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
-    dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
-    full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
-    if not full_dumps:
-        print('No full dumps present in specified directory!')
-    else:
-        remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
-
-    # Clean up incremental dumps
-    incremental_dump_re = re.compile(
-        'listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
-    dump_files = [x for x in os.listdir(
-        location) if incremental_dump_re.match(x)]
-    incremental_dumps = [x for x in sorted(
-        dump_files, key=get_dump_id, reverse=True)]
-    if not incremental_dumps:
-        print('No incremental dumps present in specified directory!')
-    else:
-        remove_dumps(location, incremental_dumps,
-                     NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
-
-    # Clean up spark / feedback dumps
-    spark_dump_re = re.compile(
-        'listenbrainz-feedback-[0-9]*-[0-9]*-full')
-    dump_files = [x for x in os.listdir(
-        location) if spark_dump_re.match(x)]
-    spark_dumps = [x for x in sorted(
-        dump_files, key=get_dump_ts, reverse=True)]
-    if not spark_dumps:
-        print('No spark feedback dumps present in specified directory!')
-    else:
-        remove_dumps(location, spark_dumps,
-                     NUMBER_OF_FEEDBACK_DUMPS_TO_KEEP)
-
-    # Clean up canonical dumps
-    mbcanonical_dump_re = re.compile(
-        'musicbrainz-canonical-dump-[0-9]*-[0-9]*')
-    dump_files = [x for x in os.listdir(
-        location) if mbcanonical_dump_re.match(x)]
-    mbcanonical_dumps = [x for x in sorted(
-        dump_files, key=lambda dump_name: dump_name.split('-')[3] + dump_name.split('-')[4], reverse=True)]
-    if not mbcanonical_dumps:
-        print('No canonical dumps present in specified directory!')
-    else:
-        remove_dumps(location, mbcanonical_dumps,
-                     NUMBER_OF_CANONICAL_DUMPS_TO_KEEP)
-
-
-def remove_dumps(location, dumps, remaining_count):
-    keep = dumps[0:remaining_count]
-    keep_count = 0
-    for dump in keep:
-        print('Keeping %s...' % dump)
-        keep_count += 1
-
-    remove = dumps[remaining_count:]
-    remove_count = 0
-    for dump in remove:
-        print('Removing %s...' % dump)
-        shutil.rmtree(os.path.join(location, dump))
-        remove_count += 1
-
-    print('Deleted %d old exports, kept %d exports!' %
-          (remove_count, keep_count))
-    return keep_count, remove_count
 
 
 def write_hashes(location):
