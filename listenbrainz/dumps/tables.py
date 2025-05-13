@@ -1,3 +1,5 @@
+import os
+
 from psycopg2.sql import SQL, Composable, Identifier
 
 # this dict contains the tables dumped in public dump as keys
@@ -261,3 +263,23 @@ def _escape_table_columns(table: str, columns: list[str | Composable]) \
     escaped_table_name = Identifier(*table.split("."))
 
     return escaped_table_name, joined_fields
+
+
+def copy_table(cursor, location, columns, table_name, file_format=None):
+    """ Copies a PostgreSQL table to a file
+
+        Arguments:
+            cursor: a psycopg cursor
+            location: the directory where the table should be copied
+            columns: a comma seperated string listing the columns of the table
+                     that should be dumped
+            table_name: the name of the table to be copied
+            file_format: if None uses the default postgres text format
+    """
+    table, fields = _escape_table_columns(table_name, columns)
+    with open(os.path.join(location, table_name), 'w') as f:
+        query = "COPY (SELECT {fields} FROM {table}) TO STDOUT"
+        if file_format == "csv":
+            query += " WITH CSV HEADER"
+        query = SQL(query).format(fields=fields, table=table)
+        cursor.copy_expert(query, f)

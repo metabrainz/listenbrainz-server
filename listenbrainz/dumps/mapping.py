@@ -33,11 +33,10 @@ from datetime import datetime
 import sqlalchemy
 from brainzutils import musicbrainz_db
 from flask import current_app
-from psycopg2.sql import SQL
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import timescale
-from listenbrainz.dumps.tables import _escape_table_columns, PUBLIC_TABLES_MAPPING
+from listenbrainz.dumps.tables import PUBLIC_TABLES_MAPPING, copy_table
 from listenbrainz.utils import create_path
 
 
@@ -108,6 +107,7 @@ def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine,
                                 location=archive_tables_dir,
                                 columns=tables[table]['columns'],
                                 table_name=table,
+                                file_format="csv"
                             )
                             transaction.rollback()
                 except Exception as e:
@@ -144,20 +144,3 @@ def create_mapping_dump(location: str, dump_time: datetime, use_lb_conn: bool):
         tables=PUBLIC_TABLES_MAPPING,
         dump_time=dump_time
     )
-
-
-def copy_table(cursor, location, columns, table_name):
-    """ Copies a PostgreSQL table to a file
-
-        Arguments:
-            cursor: a psycopg cursor
-            location: the directory where the table should be copied
-            columns: a comma seperated string listing the columns of the table
-                     that should be dumped
-            table_name: the name of the table to be copied
-    """
-    table, fields = _escape_table_columns(table_name, columns)
-    with open(os.path.join(location, table_name), 'w') as f:
-        query = SQL("COPY (SELECT {fields} FROM {table}) TO STDOUT WITH CSV HEADER") \
-            .format(fields=fields, table=table)
-        cursor.copy_expert(query, f)
