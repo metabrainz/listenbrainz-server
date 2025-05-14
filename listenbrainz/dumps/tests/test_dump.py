@@ -37,8 +37,9 @@ from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.dumps.check import _parse_ftp_name_with_id, _parse_ftp_name_without_id
-from listenbrainz.dumps.exporter import create_private_dump, create_statistics_dump, copy_table, dump_postgres_db
+from listenbrainz.dumps.exporter import create_private_dump, create_statistics_dump, dump_postgres_db
 from listenbrainz.dumps.importer import import_postgres_dump
+from listenbrainz.dumps.models import DumpTable
 from listenbrainz.webserver import create_app
 
 
@@ -101,12 +102,15 @@ class DumpTestCase(DatabaseTestCase):
 
     def test_copy_table(self):
         add_dump_entry(datetime.today(), "incremental")
+
+        dump_table = DumpTable(
+            table_name="data_dump",
+            columns=["id", "created"],
+        )
         with db.engine.connect() as connection:
-            copy_table(
-                cursor=connection.connection.cursor(),
-                location=self.tempdir,
-                columns=['id', 'created'],
-                table_name='data_dump',
+            dump_table.export(
+                connection.connection.cursor(),
+                self.tempdir
             )
         dumps = get_dump_entries()
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
