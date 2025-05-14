@@ -208,14 +208,15 @@ class TimescaleListenStore:
             If neither from_ts nor to_ts is provided, the latest listens for the user are returned.
             Returns a tuple of (listens, min_user_timestamp, max_user_timestamp)
 
-            from_ts: seconds since epoch, in float. if specified, listens will be returned in ascending order. otherwise
+            from_ts: seconds since epoch, in float. if only from_ts is specified, listens will be returned in ascending order. otherwise
                 listens will be returned in descending order
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
         """
         if from_ts and to_ts and from_ts >= to_ts:
             raise ValueError("from_ts should be less than to_ts")
-        if from_ts:
+
+        if from_ts and not to_ts:
             order = ORDER_ASC
         else:
             order = ORDER_DESC
@@ -333,11 +334,15 @@ class TimescaleListenStore:
                         from_ts += window_size - timedelta(seconds=1)
                         window_size *= WINDOW_SIZE_MULTIPLIER
                         to_ts += window_size
+                        if to_ts > max_user_ts:
+                            to_ts = max_user_ts + timedelta(seconds=1)
 
                     if from_dynamic:
                         to_ts -= window_size
                         window_size *= WINDOW_SIZE_MULTIPLIER
                         from_ts -= window_size
+                        if from_ts < min_user_ts:
+                            from_ts = min_user_ts - timedelta(seconds=1)
 
                     break
 
