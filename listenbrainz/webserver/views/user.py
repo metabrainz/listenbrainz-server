@@ -30,6 +30,7 @@ from brainzutils import cache
 
 LISTENS_PER_PAGE = 25
 DEFAULT_NUMBER_OF_FEEDBACK_ITEMS_PER_CALL = 25
+EPOCH = datetime.fromtimestamp(0, timezone.utc)
 
 TAG_HEIRARCHY_CACHE_KEY = "tag_hierarchy"
 TAG_HEIRARCHY_CACHE_EXPIRY = 60 * 60 * 24 * 7  # 7 days
@@ -83,11 +84,13 @@ def profile(user_name):
     elif min_ts:
         args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
     elif not max_ts and not min_ts:
-        
+
         # for initial load, fix search window to 12 months.
         min_ts_per_user, max_ts_per_user = ts_conn.get_timestamps_for_user(user.id)
-        args['to_ts'] = max_ts_per_user + timedelta(seconds=1)
-        args['from_ts'] = args['to_ts'] - timedelta(days=365)
+
+        if min_ts_per_user != EPOCH and max_ts_per_user != EPOCH:
+            args['to_ts'] = max_ts_per_user + timedelta(seconds=1)
+            args['from_ts'] = args['to_ts'] - timedelta(days=365)
     
     data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
         user.to_dict(), limit=LISTENS_PER_PAGE, **args)
