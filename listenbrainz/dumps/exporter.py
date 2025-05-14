@@ -32,13 +32,14 @@ import sqlalchemy
 from flask import current_app
 
 import listenbrainz.db as db
-import listenbrainz.dumps
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz import DUMP_LICENSE_FILE_PATH
-from listenbrainz.db import timescale, couchdb
-from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.db import couchdb
+from listenbrainz.db.timescale import SCHEMA_VERSION_TIMESCALE
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
 from listenbrainz.dumps.tables import PUBLIC_TABLES_TIMESCALE_DUMP, PUBLIC_TABLES_DUMP, \
-    PRIVATE_TABLES_TIMESCALE, PRIVATE_TABLES, copy_table
+    PRIVATE_TABLES_TIMESCALE, PRIVATE_TABLES
+from listenbrainz.dumps.models import DumpTablesCollection
 from listenbrainz.utils import create_path
 
 
@@ -166,24 +167,21 @@ def dump_statistics(location: str):
             current_app.logger.info(f"Failed to create dump for {stat}:", exc_info=True)
 
 
-def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], dump_type: str, tables: Optional[dict],
-                 schema_version: int, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
+def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: datetime,
+                 tables_collection: DumpTablesCollection | None = None, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
             location: the path where the dump should be created
-            db_engine: an sqlalchemy Engine instance for making a connection
             dump_type: the type of data dump being made - private or public
-            tables: a dict containing the names of the tables to be dumped as keys and the columns
-                    to be dumped as values
             schema_version: the current schema version, to add to the archive file
             dump_time: the time at which the dump process was started
             threads: the maximum number of threads to use for compression
+            tables_collection: postgres tables to dump
 
         Returns:
             the path to the archive file created
     """
-
     archive_name = "listenbrainz-{dump_type}-dump-{time}".format(
         dump_type=dump_type,
         time=dump_time.strftime("%Y%m%d-%H%M%S")
@@ -191,32 +189,17 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
 
     metadata = {"SCHEMA_SEQUENCE": schema_version, "TIMESTAMP": dump_time}
     with zstd_dump(location, archive_name, metadata, threads) as (zstd, tar, temp_dir, archive_path):
-        archive_tables_dir = os.path.join(temp_dir, "lbdump", "lbdump")
+        archive_tables_dir = os.path.join(temp_dir, "lbdump")
         create_path(archive_tables_dir)
 
         if dump_type == "statistics":
             dump_statistics(archive_tables_dir)
+        elif dump_type == "feedback":
+            dump_user_feedback(archive_tables_dir)
         else:
-            with db_engine.connect() as connection:
-                if dump_type == "feedback":
-                    dump_user_feedback(connection, location=archive_tables_dir)
-                else:
-                    with connection.begin() as transaction:
-                        cursor = connection.connection.cursor()
-                        for table in tables:
-                            try:
-                                copy_table(
-                                    cursor=cursor,
-                                    location=archive_tables_dir,
-                                    columns=tables[table],
-                                    table_name=table,
-                                )
-                            except Exception:
-                                current_app.logger.error("Error while copying table %s: ", table, exc_info=True)
-                                raise
-                        transaction.rollback()
+            tables_collection.dump_tables(archive_tables_dir)
 
-        if not tables:
+        if not tables_collection:
             # order doesn't matter or name of tables can't be determined before dumping so just
             # add entire directory with all files inside it
             tar.add(archive_tables_dir, arcname=os.path.join(archive_name, "lbdump"))
@@ -224,10 +207,10 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
             # Add the files to the archive in the order that they are defined in the dump definition.
             # This is so that when imported into a db with FK constraints added, we import dependent
             # tables first
-            for table in tables:
+            for table in tables_collection.tables:
                 tar.add(
-                    os.path.join(archive_tables_dir, table),
-                    arcname=os.path.join(archive_name, "lbdump", table)
+                    os.path.join(archive_tables_dir, table.filename),
+                    arcname=os.path.join(archive_name, "lbdump", table.filename)
                 )
 
     return archive_path
@@ -242,10 +225,9 @@ def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT
     """
     return _create_dump(
         location=location,
-        db_engine=db.engine,
         dump_type='private',
-        tables=PRIVATE_TABLES,
-        schema_version=listenbrainz.dumps.SCHEMA_VERSION_CORE,
+        tables_collection=PRIVATE_TABLES,
+        schema_version=SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -256,10 +238,9 @@ def create_private_timescale_dump(location: str, dump_time: datetime, threads=DU
     """
     return _create_dump(
         location=location,
-        db_engine=timescale.engine,
         dump_type='private-timescale',
-        tables=PRIVATE_TABLES_TIMESCALE,
-        schema_version=timescale.SCHEMA_VERSION_TIMESCALE,
+        tables_collection=PRIVATE_TABLES_TIMESCALE,
+        schema_version=SCHEMA_VERSION_TIMESCALE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -276,10 +257,9 @@ def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_
     """
     return _create_dump(
         location=location,
-        db_engine=db.engine,
         dump_type='public',
-        tables=PUBLIC_TABLES_DUMP,
-        schema_version=listenbrainz.dumps.SCHEMA_VERSION_CORE,
+        tables_collection=PUBLIC_TABLES_DUMP,
+        schema_version=SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -291,10 +271,9 @@ def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUM
     """
     return _create_dump(
         location=location,
-        db_engine=timescale.engine,
         dump_type='public-timescale',
-        tables=PUBLIC_TABLES_TIMESCALE_DUMP,
-        schema_version=timescale.SCHEMA_VERSION_TIMESCALE,
+        tables_collection=PUBLIC_TABLES_TIMESCALE_DUMP,
+        schema_version=SCHEMA_VERSION_TIMESCALE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -305,10 +284,9 @@ def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAUL
     """
     return _create_dump(
         location=location,
-        db_engine=db.engine,
         dump_type='feedback',
-        tables=None,
-        schema_version=listenbrainz.dumps.SCHEMA_VERSION_CORE,
+        tables_collection=None,
+        schema_version=SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
@@ -318,21 +296,19 @@ def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFA
     """ Create couchdb statistics dump. """
     return _create_dump(
         location=location,
-        db_engine=None,
         dump_type='statistics',
-        tables=None,
-        schema_version=listenbrainz.dumps.SCHEMA_VERSION_CORE,
+        tables_collection=None,
+        schema_version=SCHEMA_VERSION_CORE,
         dump_time=dump_time,
         threads=threads,
     )
 
 
-def dump_user_feedback(connection, location):
+def dump_user_feedback(location):
     """ Carry out the actual dumping of user listen and user recommendation feedback.
     """
 
-    with connection.begin() as transaction:
-
+    with db.engine.connect() as connection, connection.begin() as transaction:
         # First dump the user feedback
         result = connection.execute(sqlalchemy.text("""
             SELECT musicbrainz_id, recording_msid, score, r.created,
@@ -403,6 +379,7 @@ def dump_user_feedback(connection, location):
                                  'feedback': row[2],
                                  'created': row[3].isoformat()})
             last_day = today
+
         transaction.rollback()
 
 
