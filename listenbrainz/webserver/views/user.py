@@ -83,6 +83,8 @@ def profile(user_name):
     elif min_ts:
         args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
     elif not max_ts and not min_ts:
+        
+        # for initial load, fix search window to 12 months.
         min_ts_per_user, max_ts_per_user = ts_conn.get_timestamps_for_user(user.id)
         args['to_ts'] = max_ts_per_user + timedelta(seconds=1)
         args['from_ts'] = args['to_ts'] - timedelta(days=365)
