@@ -16,19 +16,20 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
+import contextlib
 import os
 import shutil
 import subprocess
 import tarfile
-import tempfile
 from datetime import datetime
-from typing import Tuple, Optional
+from subprocess import Popen
+from tarfile import TarFile
+from tempfile import TemporaryDirectory
+from typing import Tuple, Optional, Any, Generator
 
 import orjson
 import sqlalchemy
 from flask import current_app
-from psycopg2.sql import SQL
 
 import listenbrainz.db as db
 import listenbrainz.dumps
@@ -36,8 +37,8 @@ from data.model.common_stat import ALLOWED_STATISTICS_RANGE
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import timescale, couchdb
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
-from listenbrainz.dumps.tables import _escape_table_columns, PUBLIC_TABLES_TIMESCALE_DUMP, PUBLIC_TABLES_DUMP, \
-    PRIVATE_TABLES_TIMESCALE, PRIVATE_TABLES
+from listenbrainz.dumps.tables import PUBLIC_TABLES_TIMESCALE_DUMP, PUBLIC_TABLES_DUMP, \
+    PRIVATE_TABLES_TIMESCALE, PRIVATE_TABLES, copy_table
 from listenbrainz.utils import create_path
 
 
@@ -183,79 +184,52 @@ def _create_dump(location: str, db_engine: Optional[sqlalchemy.engine.Engine], d
             the path to the archive file created
     """
 
-    archive_name = 'listenbrainz-{dump_type}-dump-{time}'.format(
+    archive_name = "listenbrainz-{dump_type}-dump-{time}".format(
         dump_type=dump_type,
-        time=dump_time.strftime('%Y%m%d-%H%M%S')
+        time=dump_time.strftime("%Y%m%d-%H%M%S")
     )
-    archive_path = os.path.join(location, f'{archive_name}.tar.zst')
 
-    with open(archive_path, 'w') as archive:
-        zstd_command = ['zstd', '--compress', f'-T{threads}', '-10']
-        zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
+    metadata = {"SCHEMA_SEQUENCE": schema_version, "TIMESTAMP": dump_time}
+    with zstd_dump(location, archive_name, metadata, threads) as (zstd, tar, temp_dir, archive_path):
+        archive_tables_dir = os.path.join(temp_dir, "lbdump", "lbdump")
+        create_path(archive_tables_dir)
 
-        with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
+        if dump_type == "statistics":
+            dump_statistics(archive_tables_dir)
+        else:
+            with db_engine.connect() as connection:
+                if dump_type == "feedback":
+                    dump_user_feedback(connection, location=archive_tables_dir)
+                else:
+                    with connection.begin() as transaction:
+                        cursor = connection.connection.cursor()
+                        for table in tables:
+                            try:
+                                copy_table(
+                                    cursor=cursor,
+                                    location=archive_tables_dir,
+                                    columns=tables[table],
+                                    table_name=table,
+                                )
+                            except Exception:
+                                current_app.logger.error("Error while copying table %s: ", table, exc_info=True)
+                                raise
+                        transaction.rollback()
 
-            temp_dir = tempfile.mkdtemp()
+        if not tables:
+            # order doesn't matter or name of tables can't be determined before dumping so just
+            # add entire directory with all files inside it
+            tar.add(archive_tables_dir, arcname=os.path.join(archive_name, "lbdump"))
+        else:
+            # Add the files to the archive in the order that they are defined in the dump definition.
+            # This is so that when imported into a db with FK constraints added, we import dependent
+            # tables first
+            for table in tables:
+                tar.add(
+                    os.path.join(archive_tables_dir, table),
+                    arcname=os.path.join(archive_name, "lbdump", table)
+                )
 
-            try:
-                schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
-                with open(schema_seq_path, "w") as f:
-                    f.write(str(schema_version))
-                tar.add(schema_seq_path,
-                        arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
-                timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
-                with open(timestamp_path, "w") as f:
-                    f.write(dump_time.isoformat(" "))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, "TIMESTAMP"))
-                tar.add(DUMP_LICENSE_FILE_PATH,
-                        arcname=os.path.join(archive_name, "COPYING"))
-            except Exception:
-                current_app.logger.error('Exception while adding dump metadata: ', exc_info=True)
-                raise
-
-            archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
-            create_path(archive_tables_dir)
-
-            if dump_type == "statistics":
-                dump_statistics(archive_tables_dir)
-            else:
-                with db_engine.connect() as connection:
-                    if dump_type == "feedback":
-                        dump_user_feedback(connection, location=archive_tables_dir)
-                    else:
-                        with connection.begin() as transaction:
-                            cursor = connection.connection.cursor()
-                            for table in tables:
-                                try:
-                                    copy_table(
-                                        cursor=cursor,
-                                        location=archive_tables_dir,
-                                        columns=tables[table],
-                                        table_name=table,
-                                    )
-                                except Exception:
-                                    current_app.logger.error('Error while copying table %s: ', table, exc_info=True)
-                                    raise
-                            transaction.rollback()
-
-            if not tables:
-                # order doesn't matter or name of tables can't be determined before dumping so just
-                # add entire directory with all files inside it
-                tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lbdump'))
-            else:
-                # Add the files to the archive in the order that they are defined in the dump definition.
-                # This is so that when imported into a db with FK constraints added, we import dependent
-                # tables first
-                for table in tables:
-                    tar.add(os.path.join(archive_tables_dir, table),
-                            arcname=os.path.join(archive_name, 'lbdump', table))
-
-            shutil.rmtree(temp_dir)
-
-        zstd.stdin.close()
-
-    zstd.wait()
     return archive_path
 
 
@@ -430,3 +404,70 @@ def dump_user_feedback(connection, location):
                                  'created': row[3].isoformat()})
             last_day = today
         transaction.rollback()
+
+
+def write_string_to_tar(tar: TarFile, temp_dir: str, archive_name: str, filename: str, string: str) -> None:
+    """ Writes a string to a temporary file and adds it to a tar archive. """
+    temp_path = os.path.join(temp_dir, filename)
+    with open(temp_path, "w") as f:
+        f.write(string)
+    tar.add(
+        temp_path,
+        arcname=os.path.join(archive_name, filename)
+    )
+
+
+def write_dump_metadata(tar: TarFile, temp_dir: str, archive_name: str,
+                        metadata: dict[str, int | datetime | str]) -> None:
+    """
+    Writes metadata entry to their individual files in the dump archive. A license file is always copied
+    and does not need to be specified in the metadata.
+    """
+    try:
+        for filename, value in metadata.items():
+            if isinstance(value, int):
+                value = str(value)
+            elif isinstance(value, datetime):
+                value = value.isoformat(" ")
+            write_string_to_tar(
+                tar, temp_dir, archive_name, filename, value
+            )
+
+        # the license is always copied to the dump
+        tar.add(
+            DUMP_LICENSE_FILE_PATH,
+            arcname=os.path.join(archive_name, "COPYING")
+        )
+    except Exception:
+        current_app.logger.error("Exception while adding dump metadata: ", exc_info=True)
+        raise
+
+
+@contextlib.contextmanager
+def uncompressed_dump(location: str, archive_name: str, metadata: dict[str, int | datetime | str]) -> Generator[
+    tuple[TarFile, str, str], Any, None]:
+    """ Create an uncompressed dump of the database in the specified location """
+    archive_path = os.path.join(location, f"{archive_name}.tar")
+    with tarfile.open(archive_path, mode="w") as tar, TemporaryDirectory() as temp_dir:
+        write_dump_metadata(tar, temp_dir, archive_name, metadata)
+        yield tar, temp_dir, archive_path
+
+
+@contextlib.contextmanager
+def zstd_dump(location: str, archive_name: str, metadata: dict[str, int | datetime | str],
+              threads: int = DUMP_DEFAULT_THREAD_COUNT) -> \
+        Generator[tuple[Popen[bytes], TarFile, str, str], Any, None]:
+    """ Create a zstd compressed dump of the database in the specified location """
+    archive_path = os.path.join(location, f"{archive_name}.tar.zst")
+
+    with open(archive_path, "w") as archive:
+        zstd_command = ["zstd", "--compress", f"-T{threads}", "-10"]
+        zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
+
+        with tarfile.open(fileobj=zstd.stdin, mode="w|") as tar, TemporaryDirectory() as temp_dir:
+            write_dump_metadata(tar, temp_dir, archive_name, metadata)
+
+            yield zstd, tar, temp_dir, archive_path
+
+        zstd.stdin.close()
+        zstd.wait()

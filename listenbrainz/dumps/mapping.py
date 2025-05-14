@@ -24,18 +24,15 @@ https://listenbrainz.readthedocs.io/en/latest/users/listenbrainz-dumps.html
 
 
 import os
-import shutil
-import subprocess
-import tarfile
-import tempfile
 from datetime import datetime
 
 import sqlalchemy
 from brainzutils import musicbrainz_db
 from flask import current_app
 
-from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import timescale
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.dumps.exporter import zstd_dump
 from listenbrainz.dumps.tables import PUBLIC_TABLES_MAPPING, copy_table
 from listenbrainz.utils import create_path
 
@@ -59,73 +56,45 @@ def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine,
     archive_name = 'musicbrainz-canonical-dump-{time}'.format(
         time=dump_time.strftime('%Y%m%d-%H%M%S')
     )
-    archive_path = os.path.join(location, '{archive_name}.tar.zst'.format(
-        archive_name=archive_name,
-    ))
 
-    with open(archive_path, 'w') as archive:
+    metadata = {"TIMESTAMP": dump_time}
+    with zstd_dump(location, archive_name, metadata, DUMP_DEFAULT_THREAD_COUNT) as (zstd, tar, temp_dir, archive_path):
+        archive_tables_dir = os.path.join(temp_dir, 'canonical')
+        create_path(archive_tables_dir)
 
-        zstd_command = ["zstd", "--compress", "-10"]
-        zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
-
-        with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
-
-            temp_dir = tempfile.mkdtemp()
-
+        for table in tables:
             try:
-                timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
-                with open(timestamp_path, "w") as f:
-                    f.write(dump_time.isoformat(" "))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, "TIMESTAMP"))
-                tar.add(DUMP_LICENSE_FILE_PATH,
-                        arcname=os.path.join(archive_name, "COPYING"))
+                engine_name = tables[table]['engine']
+                if engine_name == 'mb':
+                    engine = mb_engine
+                elif engine_name == 'lb_if_set' and lb_engine:
+                    engine = lb_engine
+                elif engine_name == 'lb_if_set':
+                    engine = mb_engine
+                else:
+                    raise ValueError(f'Unknown table engine name: {engine_name}')
+                with engine.connect() as connection:
+                    with connection.begin() as transaction:
+                        cursor = connection.connection.cursor()
+                        copy_table(
+                            cursor=cursor,
+                            location=archive_tables_dir,
+                            columns=tables[table]['columns'],
+                            table_name=table,
+                            file_format="csv"
+                        )
+                        transaction.rollback()
             except Exception as e:
                 current_app.logger.error(
-                    'Exception while adding dump metadata: %s', str(e), exc_info=True)
+                    'Error while copying table %s: %s', table, str(e), exc_info=True)
                 raise
 
-            archive_tables_dir = os.path.join(temp_dir, 'canonical')
-            create_path(archive_tables_dir)
+        # Add the files to the archive in the order that they are defined in the dump definition.
+        for table, tabledata in tables.items():
+            filename = tabledata['filename']
+            tar.add(os.path.join(archive_tables_dir, table),
+                    arcname=os.path.join(archive_name, 'canonical', filename))
 
-            for table in tables:
-                try:
-                    engine_name = tables[table]['engine']
-                    if engine_name == 'mb':
-                        engine = mb_engine
-                    elif engine_name == 'lb_if_set' and lb_engine:
-                        engine = lb_engine
-                    elif engine_name == 'lb_if_set':
-                        engine = mb_engine
-                    else:
-                        raise ValueError(f'Unknown table engine name: {engine_name}')
-                    with engine.connect() as connection:
-                        with connection.begin() as transaction:
-                            cursor = connection.connection.cursor()
-                            copy_table(
-                                cursor=cursor,
-                                location=archive_tables_dir,
-                                columns=tables[table]['columns'],
-                                table_name=table,
-                                file_format="csv"
-                            )
-                            transaction.rollback()
-                except Exception as e:
-                    current_app.logger.error(
-                        'Error while copying table %s: %s', table, str(e), exc_info=True)
-                    raise
-
-            # Add the files to the archive in the order that they are defined in the dump definition.
-            for table, tabledata in tables.items():
-                filename = tabledata['filename']
-                tar.add(os.path.join(archive_tables_dir, table),
-                        arcname=os.path.join(archive_name, 'canonical', filename))
-
-            shutil.rmtree(temp_dir)
-
-        zstd.stdin.close()
-
-    zstd.wait()
     return archive_path
 
 
