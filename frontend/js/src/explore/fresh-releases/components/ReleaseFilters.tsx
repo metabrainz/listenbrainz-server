@@ -11,6 +11,7 @@ import type {
   filterRangeOption,
 } from "../FreshReleases";
 import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
+import useFilterPersistence from "../../../hooks/userPersistanceFilter";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -147,6 +148,23 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
           (option) => option !== filterRangeOptions.three_months
         )
       : Object.values(filterRangeOptions);
+
+  const { clearSavedFilters } = useFilterPersistence({
+    checkedList,
+    releaseTagsCheckList,
+    releaseTagsExcludeCheckList,
+    includeVariousArtists,
+    coverartOnly,
+    showPastReleases,
+    showFutureReleases,
+    setCheckedList,
+    setReleaseTagsCheckList,
+    setReleaseTagsExcludeCheckList,
+    setIncludeVariousArtists,
+    setCoverartOnly,
+    setShowPastReleases,
+    setShowFutureReleases,
+  });
 
   // Reset filters when range changes
   React.useEffect(() => {
