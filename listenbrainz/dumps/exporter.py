@@ -28,8 +28,8 @@ from tempfile import TemporaryDirectory
 from typing import Any, Generator
 
 import orjson
-import sqlalchemy
 from flask import current_app
+from sqlalchemy import text
 
 import listenbrainz.db as db
 from data.model.common_stat import ALLOWED_STATISTICS_RANGE
@@ -106,11 +106,17 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_D
         Returns:
             path to feedback dump
     """
-
     current_app.logger.info('Beginning dump of feedback data...')
     current_app.logger.info('dump path: %s', location)
     try:
-        feedback_dump = create_feedback_dump(location, dump_time, threads)
+        feedback_dump = _create_dump(
+            location=location,
+            dump_type='feedback',
+            tables_collection=None,
+            schema_version=SCHEMA_VERSION_CORE,
+            dump_time=dump_time,
+            threads=threads,
+        )
     except Exception:
         current_app.logger.critical('Unable to create feedback dump due to error: ', exc_info=True)
         current_app.logger.info('Removing created files and giving up...')
@@ -190,24 +196,11 @@ def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: 
     return archive_path
 
 
-def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create a spark format dump of user listen and user recommendation feedback.
-    """
-    return _create_dump(
-        location=location,
-        dump_type='feedback',
-        tables_collection=None,
-        schema_version=SCHEMA_VERSION_CORE,
-        dump_time=dump_time,
-        threads=threads,
-    )
-
-
 def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create couchdb statistics dump. """
     return _create_dump(
         location=location,
-        dump_type='statistics',
+        dump_type="statistics",
         tables_collection=None,
         schema_version=SCHEMA_VERSION_CORE,
         dump_time=dump_time,
@@ -216,80 +209,60 @@ def create_statistics_dump(location: str, dump_time: datetime, threads=DUMP_DEFA
 
 
 def dump_user_feedback(location):
-    """ Carry out the actual dumping of user listen and user recommendation feedback.
-    """
+    """ Carry out the actual dumping of user listen and user recommendation feedback. """
+    user_feedback_query = """
+        SELECT musicbrainz_id, recording_msid, score, r.created,
+               EXTRACT(YEAR FROM r.created) AS year,
+               EXTRACT(MONTH FROM r.created) AS month,
+               EXTRACT(DAY FROM r.created) AS day
+          FROM recording_feedback r
+          JOIN "user"
+            ON r.user_id = "user".id
+      ORDER BY created"""
+    recommendation_feedback_query = """
+        SELECT musicbrainz_id, recording_mbid, rating, r.created,
+               EXTRACT(YEAR FROM r.created) AS year,
+               EXTRACT(MONTH FROM r.created) AS month,
+               EXTRACT(DAY FROM r.created) AS day
+          FROM recommendation_feedback r
+          JOIN "user"
+            ON r.user_id = "user".id
+      ORDER BY created"""
 
     with db.engine.connect() as connection, connection.begin() as transaction:
-        # First dump the user feedback
-        result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id, recording_msid, score, r.created,
-                   EXTRACT(YEAR FROM r.created) AS year,
-                   EXTRACT(MONTH FROM r.created) AS month,
-                   EXTRACT(DAY FROM r.created) AS day
-              FROM recording_feedback r
-              JOIN "user"
-                ON r.user_id = "user".id
-          ORDER BY created"""))
+        for query, feedback_type, id_field in [
+            (user_feedback_query, "listens", "recording_msid"),
+            (recommendation_feedback_query, "recommendations", "recording_mbid"),
+        ]:
+            result = connection.execute(text(query))
 
-        last_day = ()
-        todays_items = []
+            last_day = ()
+            todays_items = []
 
-        while True:
-            row = result.fetchone()
-            today = (row[4], row[5], row[6]) if row else ()
-            if (not row or today != last_day) and len(todays_items) > 0:
-                full_path = os.path.join(location, "feedback", "listens", "%02d" % int(last_day[0]),
-                                         "%02d" % int(last_day[1]), "%02d" % int(last_day[2]))
-                os.makedirs(full_path)
-                with open(os.path.join(full_path, "data.json"), "wb") as f:
-                    for item in todays_items:
-                        f.write(orjson.dumps(item))
-                        f.write(bytes("\n", "utf-8"))
-                todays_items = []
+            while True:
+                row = result.fetchone()
+                today = (row[4], row[5], row[6]) if row else ()
+                if (not row or today != last_day) and len(todays_items) > 0:
+                    full_path = os.path.join(
+                        location, "feedback", feedback_type,
+                        "%02d" % int(last_day[0]), "%02d" % int(last_day[1]), "%02d" % int(last_day[2])
+                    )
+                    os.makedirs(full_path)
+                    with open(os.path.join(full_path, "data.json"), "wb") as f:
+                        for item in todays_items:
+                            f.write(orjson.dumps(item, option=orjson.OPT_APPEND_NEWLINE))
+                    todays_items = []
 
-            if not row:
-                break
+                if not row:
+                    break
 
-            todays_items.append({'user_name': row[0],
-                                 'recording_msid': str(row[1]),
-                                 'feedback': row[2],
-                                 'created': row[3].isoformat()})
-            last_day = today
-
-        # Now dump the recommendation feedback
-        result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id, recording_mbid, rating, r.created,
-                   EXTRACT(YEAR FROM r.created) AS year,
-                   EXTRACT(MONTH FROM r.created) AS month,
-                   EXTRACT(DAY FROM r.created) AS day
-              FROM recommendation_feedback r
-              JOIN "user"
-                ON r.user_id = "user".id
-          ORDER BY created"""))
-
-        last_day = ()
-        todays_items = []
-
-        while True:
-            row = result.fetchone()
-            today = (row[4], row[5], row[6]) if row else ()
-            if (not row or today != last_day) and len(todays_items) > 0:
-                full_path = os.path.join(location, "feedback", "recommendation", "%02d" % int(last_day[0]),
-                                         "%02d" % int(last_day[1]), "%02d" % int(last_day[2]))
-                os.makedirs(full_path)
-                with open(os.path.join(full_path, "data.json"), "wb") as f:
-                    for item in todays_items:
-                        f.write(orjson.dumps(item, option=orjson.OPT_APPEND_NEWLINE))
-                todays_items = []
-
-            if not row:
-                break
-
-            todays_items.append({'user_name': row[0],
-                                 'mb_recording_mbid': str(row[1]),
-                                 'feedback': row[2],
-                                 'created': row[3].isoformat()})
-            last_day = today
+                todays_items.append({
+                    'user_name': row[0],
+                    id_field: str(row[1]),
+                    'feedback': row[2],
+                    'created': row[3].isoformat()
+                })
+                last_day = today
 
         transaction.rollback()
 
