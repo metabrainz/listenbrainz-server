@@ -25,7 +25,7 @@ from datetime import datetime
 from subprocess import Popen
 from tarfile import TarFile
 from tempfile import TemporaryDirectory
-from typing import Tuple, Optional, Any, Generator
+from typing import Any, Generator
 
 import orjson
 import sqlalchemy
@@ -43,82 +43,56 @@ from listenbrainz.dumps.models import DumpTablesCollection
 from listenbrainz.utils import create_path
 
 
-def dump_postgres_db(location, location_private, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create postgres database dump in the specified location
+def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Create the specified database dump in the specified location
 
         Arguments:
-            location: Directory where the final public dump will be stored
-            location_private: Directory where the final private dump will be stored
+            db_name: the name of the database to create dumps for
+            locations: dict referencing the directories where the final public and private dumps will be stored
             dump_time: datetime object representing when the dump was started
             threads: Maximal number of threads to run during compression
 
         Returns:
-            a tuple: (path to private dump, path to public dump)
+            a dict containing path to both the private dump, and the public dump
     """
-    current_app.logger.info('Beginning dump of PostgreSQL database...')
-    current_app.logger.info('private dump path: %s', location_private)
+    if db_name == "postgres":
+        tables_dict = {
+            "private": PRIVATE_TABLES,
+            "public": PUBLIC_TABLES_DUMP,
+        }
+        schema_version = SCHEMA_VERSION_CORE
+    elif db_name == "timescale":
+        tables_dict = {
+            "private": PRIVATE_TABLES_TIMESCALE,
+            "public": PUBLIC_TABLES_TIMESCALE_DUMP,
+        }
+        schema_version = SCHEMA_VERSION_TIMESCALE
+    else:
+        raise ValueError(f"Unknown database type: {db_name}")
 
-    current_app.logger.info('Creating dump of private data...')
-    try:
-        private_dump = create_private_dump(location_private, dump_time, threads)
-    except Exception:
-        current_app.logger.critical('Unable to create private db dump due to error: ', exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location_private)
-        return
-    current_app.logger.info('Dump of private data created at %s!', private_dump)
+    current_app.logger.info(f"Beginning dump of {db_name} database...")
 
-    current_app.logger.info('public dump path: %s', location)
-    current_app.logger.info('Creating dump of public data...')
-    try:
-        public_dump = create_public_dump(location, dump_time, threads)
-    except Exception:
-        current_app.logger.critical('Unable to create public dump due to error: ', exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
+    dump_locations = {}
+    for dump_type in ["private", "public"]:
+        current_app.logger.info(f"Creating dump of {dump_type} data...")
+        tables_collection = tables_dict[dump_type]
+        location = locations[dump_type]
+        try:
+            dump_locations[dump_type] = _create_dump(
+                location=location,
+                dump_type=dump_type,
+                tables_collection=tables_collection,
+                schema_version=schema_version,
+                dump_time=dump_time,
+                threads=threads,
+            )
+        except Exception:
+            current_app.logger.critical(f"Unable to create {dump_type} db dump due to error: ", exc_info=True)
+            current_app.logger.info("Removing created files and giving up...")
+            shutil.rmtree(location)
+            raise
 
-    current_app.logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
-    return private_dump, public_dump
-
-
-def dump_timescale_db(location: str, location_private: str, dump_time: datetime = datetime.today(),
-                      threads: int = DUMP_DEFAULT_THREAD_COUNT) -> Optional[Tuple[str, str]]:
-    """ Create timescale database (excluding listens) dump in the specified location
-
-        Arguments:
-            location: Directory where the final public dump will be stored
-            location_private: Directory where the final private dump will be stored
-            dump_time: datetime object representing when the dump was started
-            threads: Maximal number of threads to run during compression
-
-        Returns:
-            a tuple: (path to private dump, path to public dump)
-    """
-    current_app.logger.info('Beginning dump of Timescale database...')
-
-    current_app.logger.info('Creating dump of timescale private data...')
-    try:
-        private_timescale_dump = create_private_timescale_dump(location_private, dump_time, threads)
-    except Exception:
-        current_app.logger.critical('Unable to create private timescale db dump due to error: ', exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location_private)
-        return
-    current_app.logger.info('Dump of private timescale data created at %s!', private_timescale_dump)
-
-    current_app.logger.info('Creating dump of timescale public data...')
-    try:
-        public_timescale_dump = create_public_timescale_dump(location, dump_time, threads)
-    except Exception:
-        current_app.logger.critical('Unable to create public timescale dump due to error: ', exc_info=True)
-        current_app.logger.info('Removing created files and giving up...')
-        shutil.rmtree(location)
-        return
-
-    current_app.logger.info('Dump of public timescale data created at %s!', public_timescale_dump)
-
-    return private_timescale_dump, public_timescale_dump
+    return dump_locations
 
 
 def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
@@ -141,7 +115,7 @@ def dump_feedback_for_spark(location, dump_time=datetime.today(), threads=DUMP_D
         current_app.logger.critical('Unable to create feedback dump due to error: ', exc_info=True)
         current_app.logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
-        return
+        raise
 
     current_app.logger.info('Dump of feedback data created at %s!', feedback_dump)
 
@@ -214,69 +188,6 @@ def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: 
                 )
 
     return archive_path
-
-
-def create_private_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create postgres database dump for private data in db.
-        This includes dumps of the following tables:
-            "user",
-            api_compat.token,
-            api_compat.session
-    """
-    return _create_dump(
-        location=location,
-        dump_type='private',
-        tables_collection=PRIVATE_TABLES,
-        schema_version=SCHEMA_VERSION_CORE,
-        dump_time=dump_time,
-        threads=threads,
-    )
-
-
-def create_private_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create timescale database dump for private data in db.
-    """
-    return _create_dump(
-        location=location,
-        dump_type='private-timescale',
-        tables_collection=PRIVATE_TABLES_TIMESCALE,
-        schema_version=SCHEMA_VERSION_TIMESCALE,
-        dump_time=dump_time,
-        threads=threads,
-    )
-
-
-def create_public_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create postgres database dump for statistics and user info in db.
-        This includes a sanitized dump of the "user" table and dumps of all tables
-        in the statistics schema:
-            statistics.user
-            statistics.artist
-            statistics.release
-            statistics.recording
-    """
-    return _create_dump(
-        location=location,
-        dump_type='public',
-        tables_collection=PUBLIC_TABLES_DUMP,
-        schema_version=SCHEMA_VERSION_CORE,
-        dump_time=dump_time,
-        threads=threads,
-    )
-
-
-def create_public_timescale_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
-    """ Create postgres database dump for public info in the timescale database.
-        This includes the MBID mapping table
-    """
-    return _create_dump(
-        location=location,
-        dump_type='public-timescale',
-        tables_collection=PUBLIC_TABLES_TIMESCALE_DUMP,
-        schema_version=SCHEMA_VERSION_TIMESCALE,
-        dump_time=dump_time,
-        threads=threads,
-    )
 
 
 def create_feedback_dump(location: str, dump_time: datetime, threads=DUMP_DEFAULT_THREAD_COUNT):
