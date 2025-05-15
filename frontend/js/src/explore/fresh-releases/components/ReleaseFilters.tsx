@@ -177,6 +177,7 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     if (includeVariousArtists === true) {
       setIncludeVariousArtists(false);
     }
+    clearSavedFilters();
   }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {
@@ -260,6 +261,13 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             {"  "}
             <b>Filter</b>
           </h4>
+          <button
+            onClick={clearSavedFilters}
+            className="btn btn-default btn-reset-filters"
+            style={{ margin: "10px 0" }}
+          >
+            Reset All Filters
+          </button>
         </div>
 
         {filtersOpen && (
