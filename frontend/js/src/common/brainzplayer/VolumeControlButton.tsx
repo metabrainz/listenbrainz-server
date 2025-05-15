@@ -1,18 +1,37 @@
 import * as React from "react";
+import localforage from "localforage";
 import {
   useBrainzPlayerDispatch,
   useBrainzPlayerContext,
 } from "./BrainzPlayerContext";
 
+const brainzplayer_cache = localforage.createInstance({
+  name: "listenbrainz",
+  driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
+  storeName: "brainzplayer",
+});
 const BP_VOLUME_STORAGE_KEY = "brainzplayer-volume";
 
 function VolumeControlButton() {
   const dispatch = useBrainzPlayerDispatch();
   const { isActivated } = useBrainzPlayerContext();
-  const [volume, setVolume] = React.useState(() => {
-    const savedVolume = localStorage.getItem(BP_VOLUME_STORAGE_KEY);
-    return savedVolume !== null ? Number(savedVolume) : 100;
-  });
+  const [volume, setVolume] = React.useState(100);
+
+  React.useEffect(() => {
+    const loadVolume = async () => {
+      try {
+        const savedVolume = await brainzplayer_cache.getItem(
+          BP_VOLUME_STORAGE_KEY
+        );
+        if (savedVolume !== null) {
+          setVolume(Number(savedVolume));
+        }
+      } catch (error) {
+        console.error("Failed to load volume:", error);
+      }
+    };
+    loadVolume();
+  }, []);
 
   React.useEffect(() => {
     if (isActivated) {
@@ -23,7 +42,11 @@ function VolumeControlButton() {
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = Number(e.target.value);
     setVolume(newVolume);
-    localStorage.setItem(BP_VOLUME_STORAGE_KEY, newVolume.toString());
+    try {
+      brainzplayer_cache.setItem(BP_VOLUME_STORAGE_KEY, newVolume);
+    } catch (error) {
+      console.error("Failed to save volume:", error);
+    }
   };
   return (
     <input
