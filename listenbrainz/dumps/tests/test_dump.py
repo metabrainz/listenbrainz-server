@@ -37,7 +37,7 @@ from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.tests.utils import insert_test_stats, delete_all_couch_databases
 from listenbrainz.dumps.check import _parse_ftp_name_with_id, _parse_ftp_name_without_id
-from listenbrainz.dumps.exporter import create_private_dump, create_statistics_dump, dump_postgres_db
+from listenbrainz.dumps.exporter import dump_database, create_statistics_dump
 from listenbrainz.dumps.importer import import_postgres_dump
 from listenbrainz.dumps.models import DumpTable
 from listenbrainz.webserver import create_app
@@ -49,6 +49,7 @@ class DumpTestCase(DatabaseTestCase):
         super().setUp()
         self.tempdir = tempfile.mkdtemp()
         self.tempdir_private = tempfile.mkdtemp()
+        self.tempdir_locations = {"public": self.tempdir, "private": self.tempdir_private}
         self.app = create_app()
         self.ts_conn = timescale.engine.connect()
 
@@ -59,8 +60,10 @@ class DumpTestCase(DatabaseTestCase):
 
     def test_create_private_dump(self):
         time_now = datetime.today()
-        dump_location = create_private_dump(self.tempdir, time_now)
-        self.assertTrue(os.path.isfile(dump_location))
+        with self.app.app_context():
+            dump_location = dump_database("postgres", self.tempdir_locations, time_now)
+        self.assertTrue(os.path.isfile(dump_location["public"]))
+        self.assertTrue(os.path.isfile(dump_location["private"]))
 
     def test_create_stats_dump(self):
         all_stats = {
@@ -105,7 +108,7 @@ class DumpTestCase(DatabaseTestCase):
 
         dump_table = DumpTable(
             table_name="data_dump",
-            columns=["id", "created"],
+            columns=("id", "created"),
         )
         with db.engine.connect() as connection:
             dump_table.export(
@@ -126,7 +129,8 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
 
             # do a db dump and reset the db
-            private_dump, public_dump = dump_postgres_db(self.tempdir, self.tempdir_private)
+            dumps = dump_database("postgres", self.tempdir_locations)
+            private_dump, public_dump = dumps["private"], dumps["public"]
             self.reset_db()
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
@@ -157,14 +161,15 @@ class DumpTestCase(DatabaseTestCase):
 
             # insert a feedback record
             feedback = Feedback(
-                    user_id=one_id,
-                    recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-                    score=1
-                )
+                user_id=one_id,
+                recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+                score=1
+            )
             db_feedback.insert(self.db_conn, feedback)
 
             # do a db dump and reset the db
-            private_dump, public_dump = dump_postgres_db(self.tempdir, self.tempdir_private)
+            dumps = dump_database("postgres", self.tempdir_locations)
+            private_dump, public_dump = dumps["private"], dumps["public"]
             self.reset_db()
             user_count = db_user.get_user_count(self.db_conn)
             self.assertEqual(user_count, 0)
