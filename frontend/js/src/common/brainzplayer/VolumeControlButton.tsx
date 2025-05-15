@@ -4,13 +4,13 @@ import {
   useBrainzPlayerContext,
 } from "./BrainzPlayerContext";
 
-const STORAGE_KEY = "brainzplayer-volume";
+const BP_VOLUME_STORAGE_KEY = "brainzplayer-volume";
 
 function VolumeControlButton() {
   const dispatch = useBrainzPlayerDispatch();
   const { isActivated } = useBrainzPlayerContext();
   const [volume, setVolume] = React.useState(() => {
-    const savedVolume = localStorage.getItem(STORAGE_KEY);
+    const savedVolume = localStorage.getItem(BP_VOLUME_STORAGE_KEY);
     return savedVolume !== null ? Number(savedVolume) : 100;
   });
 
@@ -23,7 +23,7 @@ function VolumeControlButton() {
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = Number(e.target.value);
     setVolume(newVolume);
-    localStorage.setItem(STORAGE_KEY, newVolume.toString());
+    localStorage.setItem(BP_VOLUME_STORAGE_KEY, newVolume.toString());
   };
   return (
     <input
