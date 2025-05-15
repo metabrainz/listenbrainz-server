@@ -46,7 +46,6 @@ function VolumeControlButton() {
         brainzplayer_cache.setItem(BP_VOLUME_STORAGE_KEY, v).catch((err) => {
           console.error("Failed to save volume:", err);
         });
-        console.log("Volume saved to cache:", v);
       }, 1000),
     []
   );
