@@ -1,5 +1,6 @@
 import * as React from "react";
 import localforage from "localforage";
+import { throttle } from "lodash";
 import {
   useBrainzPlayerDispatch,
   useBrainzPlayerContext,
@@ -39,14 +40,21 @@ function VolumeControlButton() {
     }
   }, [isActivated, volume, dispatch]);
 
+  const throttledSaveVolume = React.useMemo(
+    () =>
+      throttle((v: number) => {
+        brainzplayer_cache.setItem(BP_VOLUME_STORAGE_KEY, v).catch((err) => {
+          console.error("Failed to save volume:", err);
+        });
+        console.log("Volume saved to cache:", v);
+      }, 1000),
+    []
+  );
+
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = Number(e.target.value);
     setVolume(newVolume);
-    try {
-      brainzplayer_cache.setItem(BP_VOLUME_STORAGE_KEY, newVolume);
-    } catch (error) {
-      console.error("Failed to save volume:", error);
-    }
+    throttledSaveVolume(newVolume);
   };
   return (
     <input
