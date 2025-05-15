@@ -61,12 +61,14 @@ def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_D
             "public": PUBLIC_TABLES_DUMP,
         }
         schema_version = SCHEMA_VERSION_CORE
+        dump_type_suffix = ""
     elif db_name == "timescale":
         tables_dict = {
             "private": PRIVATE_TABLES_TIMESCALE,
             "public": PUBLIC_TABLES_TIMESCALE_DUMP,
         }
         schema_version = SCHEMA_VERSION_TIMESCALE
+        dump_type_suffix = "-timescale"
     else:
         raise ValueError(f"Unknown database type: {db_name}")
 
@@ -80,7 +82,7 @@ def dump_database(db_name, locations, dump_time=datetime.today(), threads=DUMP_D
         try:
             dump_locations[dump_type] = _create_dump(
                 location=location,
-                dump_type=dump_type,
+                dump_type=dump_type + dump_type_suffix,
                 tables_collection=tables_collection,
                 schema_version=schema_version,
                 dump_time=dump_time,
