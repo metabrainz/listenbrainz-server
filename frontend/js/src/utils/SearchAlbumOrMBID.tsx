@@ -51,20 +51,27 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
   >([]);
 
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    onSelectAlbum();
+    setLoading(false);
+    searchInputRef?.current?.focus();
+  }, [onSelectAlbum]);
+
   // Allow parents to focus on input and trigger search
   useImperativeHandle(
     inputRefForParent,
-    () => {
-      return {
-        focus() {
-          searchInputRef?.current?.focus();
-        },
-        triggerSearch(newText: string) {
-          setInputValue(newText);
-        },
-      };
-    },
-    []
+    () => ({
+      focus() {
+        searchInputRef?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
   );
 
   const handleError = useCallback(
@@ -152,14 +159,6 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     },
     [onSelectAlbum]
   );
-
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    onSelectAlbum();
-    setLoading(false);
-    searchInputRef?.current?.focus();
-  };
 
   useEffect(() => {
     if (!inputValue) {

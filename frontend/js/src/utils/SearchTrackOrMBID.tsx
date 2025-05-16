@@ -70,20 +70,26 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
   const inputRefLocal = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
 
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    setSelectedIndex(-1);
+    inputRefLocal?.current?.focus();
+  }, []);
+
   // Allow parents to focus on input
   useImperativeHandle(
     inputRefForParent,
-    () => {
-      return {
-        focus() {
-          inputRefLocal?.current?.focus();
-        },
-        triggerSearch(newText: string) {
-          setInputValue(newText);
-        },
-      };
-    },
-    []
+    () => ({
+      focus() {
+        inputRefLocal?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
   );
 
   // Autofocus once on load
@@ -225,13 +231,6 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
       };
       onSelectRecording(metadata);
     }
-  };
-
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    setSelectedIndex(-1);
-    inputRefLocal?.current?.focus();
   };
 
   useEffect(() => {

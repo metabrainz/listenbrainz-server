@@ -111,6 +111,7 @@ const AddAlbumListens = forwardRef(function AddAlbumListens(
   const searchInputRef = useRef<{
     focus(): void;
     triggerSearch(newText: string): void;
+    reset(): void;
   }>(null);
 
   const initialTextRef = useRef(initialText);
@@ -250,7 +251,7 @@ const AddAlbumListens = forwardRef(function AddAlbumListens(
       setSelectedAlbumMBID(undefined);
       setSelectedAlbum(undefined);
       setSelectedTracks([]);
-      searchInputRef.current?.triggerSearch("");
+      searchInputRef.current?.reset();
     },
   }));
 

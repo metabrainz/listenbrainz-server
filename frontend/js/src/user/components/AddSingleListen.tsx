@@ -38,6 +38,7 @@ const AddSingleListen = forwardRef(function AddSingleListen(
   const searchInputRef = useRef<{
     focus(): void;
     triggerSearch(newText: string): void;
+    reset(): void;
   }>(null);
 
   const initialTextRef = useRef(initialText);
@@ -56,6 +57,7 @@ const AddSingleListen = forwardRef(function AddSingleListen(
     reset: () => {
       setSelectedRecordings([]);
       setSelectedReleases({});
+      searchInputRef.current?.reset();
     },
   }));
 
