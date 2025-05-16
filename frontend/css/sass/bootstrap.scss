@@ -67,6 +67,7 @@ $nav-link-font-weight: 700;
 $dropdown-min-width: 16rem;
 $dropdown-font-size: 1.4rem;
 $dropdown-item-padding-x: 2rem;
+
 /* Misc */
 $hr-margin-y: 20px;
 $hr-border-color: $gray-light;
@@ -74,6 +75,7 @@ $hr-opacity: 1;
 $alert-padding-x: 1.5rem;
 $alert-padding-y: $alert-padding-x;
 $alert-margin-bottom: 2rem;
+$progress-bg: $body-tertiary-bg;
 
 
 @import "lobes5/scss/bootstrap.scss";
