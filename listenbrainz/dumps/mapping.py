@@ -29,55 +29,16 @@ import subprocess
 import tarfile
 import tempfile
 from datetime import datetime
-from typing import Optional
 
 import sqlalchemy
-from flask import current_app, render_template
+from brainzutils import musicbrainz_db
+from flask import current_app
 from psycopg2.sql import SQL
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
-from brainzutils import musicbrainz_db
 from listenbrainz.db import timescale
-from listenbrainz.db.dump import _escape_table_columns
+from listenbrainz.dumps.tables import _escape_table_columns, PUBLIC_TABLES_MAPPING
 from listenbrainz.utils import create_path
-
-
-PUBLIC_TABLES_MAPPING = {
-    'mapping.canonical_musicbrainz_data': {
-        'engine': 'lb_if_set',
-        'filename': 'canonical_musicbrainz_data.csv',
-        'columns': (
-            'id',
-            'artist_credit_id',
-            SQL("array_to_string(artist_mbids, ',') AS artist_mbids"),
-            'artist_credit_name',
-            'release_mbid',
-            'release_name',
-            'recording_mbid',
-            'recording_name',
-            'combined_lookup',
-            'score',
-        ),
-    },
-    'mapping.canonical_recording_redirect': {
-        'engine': 'lb_if_set',
-        'filename': 'canonical_recording_redirect.csv',
-        'columns': (
-            'recording_mbid',
-            'canonical_recording_mbid',
-            'canonical_release_mbid'
-        )
-    },
-    'mapping.canonical_release_redirect': {
-        'engine': 'lb_if_set',
-        'filename': 'canonical_release_redirect.csv',
-        'columns': (
-            'release_mbid',
-            'canonical_release_mbid',
-            'release_group_mbid'
-        )
-    }
-}
 
 
 def _create_dump(location: str, lb_engine: sqlalchemy.engine.Engine, 

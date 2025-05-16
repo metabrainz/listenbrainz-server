@@ -247,6 +247,8 @@ class APICompatServerTestCase(ServerTestCase):
 
     @classmethod
     def create_app(cls):
-        app = create_api_compat_app()
+        # set debug = false to avoid initializing Flask-DebugToolbar
+        # related warnings from missing body tag in response.
+        app = create_api_compat_app(debug=False)
         app.config['TESTING'] = True
         return app
