@@ -95,7 +95,12 @@ function SearchBox({
 
   return (
     <>
-      <div className="input-group dropdown-search" ref={dropdownRef}>
+      <label htmlFor="searchbox-artist-name">Artist name</label>
+      <div
+        className="input-group dropdown-search"
+        ref={dropdownRef}
+        id="artist-search-box"
+      >
         <input
           ref={searchInputRef}
           id="searchbox-artist-name"
@@ -108,20 +113,18 @@ function SearchBox({
           aria-haspopup={Boolean(searchResults?.length)}
           required
         />
-        <span className="input-group-btn">
-          <button
-            className="btn btn-default"
-            type="button"
-            onClick={reset}
-            id="artist-search-button"
-          >
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faSearch} />
-            )}
-          </button>
-        </span>
+        <button
+          className="btn btn-info"
+          type="button"
+          onClick={reset}
+          id="artist-search-button"
+        >
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faSearch} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"
@@ -161,23 +164,31 @@ function SearchBox({
         )}
       </div>
       <div className="graph-size-input">
-        <label htmlFor="artist-graph-size-input">Web Size</label>
-        <div className="artist-search-input">
-          <button id="searchbox-icon" type="button" onClick={decrement}>
+        <label htmlFor="artist-graph-size-input">Web size</label>
+        <div className="input-group artist-search-input">
+          <button
+            className="btn btn-info btn-sm"
+            type="button"
+            onClick={decrement}
+          >
             <FontAwesomeIcon icon={faMinus} color="white" />
           </button>
           <input
             id="artist-graph-size-input"
             type="number"
-            className="form-control"
-            name="graoh_size"
+            className="form-control text-center"
+            name="graph_size"
             onChange={(e) =>
               onSimilarArtistsLimitChange(e.target.valueAsNumber)
             }
             placeholder="Graph Size"
             value={currentSimilarArtistsLimit}
           />
-          <button id="searchbox-icon" type="button" onClick={increment}>
+          <button
+            className="btn btn-info btn-sm"
+            type="button"
+            onClick={increment}
+          >
             <FontAwesomeIcon icon={faPlus} color="white" />
           </button>
         </div>

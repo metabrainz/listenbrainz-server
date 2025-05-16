@@ -138,7 +138,7 @@ export default function NetworkFeedPage() {
         <title>My Network Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-sm-8 col-xs-12">
+        <div className="col-sm-8 col-12">
           <div className="listen-header pills">
             <h3 className="header-with-line">
               What are{" "}
@@ -200,7 +200,7 @@ export default function NetworkFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -255,7 +255,7 @@ export default function NetworkFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-outline btn-block"
+                  className="btn btn-outline-info w-100"
                   onClick={() => fetchNextPage()}
                   disabled={!hasNextPage || isFetchingNextPage}
                 >

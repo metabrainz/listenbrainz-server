@@ -25,6 +25,7 @@ module.exports = function (env, argv) {
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");
+  const sassDir = path.join(cssDir, "sass");
   const plugins = [
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
@@ -40,7 +41,7 @@ module.exports = function (env, argv) {
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
       failOnError: isProd,
-      files: "**/static/css/**/*.less",
+      files: "**/static/css/**/*.{less,scss}",
       fix: !isProd,
       threads: true,
     }),
@@ -57,6 +58,7 @@ module.exports = function (env, argv) {
       indexPage: [
         path.resolve(jsDir, "src/index.tsx"),
         path.resolve(cssDir, "main.less"),
+        path.resolve(sassDir, "bootstrap.scss"),
       ],
     },
     output: {
@@ -89,6 +91,14 @@ module.exports = function (env, argv) {
               math: "always",
               plugins: [new LessPluginCleanCSS({ advanced: true })],
             },
+          },
+        },
+        {
+          test: /\.scss$/i,
+          type: "asset/resource",
+          loader: "sass-loader",
+          generator: {
+            filename: isProd ? "[name].[contenthash].css" : "[name].css",
           },
         },
         {

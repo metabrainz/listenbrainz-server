@@ -225,114 +225,98 @@ function PlaylistMenu({
     isLoggedIn && spotifyAuth?.permission?.includes("playlist-modify-public");
   const enableAppleMusicExport = isLoggedIn && appleAuth?.music_user_token;
   return (
-    <ul
+    <div
       className="dropdown-menu dropdown-menu-right"
       aria-labelledby="playlistOptionsDropdown"
     >
-      <li className={!isLoggedIn ? "disabled" : ""}>
-        <a onClick={isLoggedIn ? copyPlaylist : noop} role="button" href="#">
-          <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
-          {playlistID ? "Duplicate" : "Save to my playlists"}
-        </a>
-      </li>
+      <button
+        className={`dropdown-item ${!isLoggedIn ? "disabled" : ""}`}
+        onClick={isLoggedIn ? copyPlaylist : noop}
+        type="button"
+      >
+        <FontAwesomeIcon icon={faCopy as IconProp} />{" "}
+        {playlistID ? "Duplicate" : "Save to my playlists"}
+      </button>
       {isPlaylistOwner(playlist, currentUser) && (
         <>
-          <li role="separator" className="divider" />
-          <li>
-            <a
-              data-toggle="modal"
-              data-target="#CreateOrEditPlaylistModal"
-              role="button"
-              href="#"
-              onClick={() => {
-                NiceModal.show(CreateOrEditPlaylistModal, {
-                  playlist,
-                  coverArtGridOptions,
-                  currentCoverArt,
-                })
-                  // @ts-ignore
-                  .then((editedPlaylist: JSPFPlaylist) => {
-                    if (onPlaylistSaved) {
-                      onPlaylistSaved(editedPlaylist);
-                    }
-                  });
-              }}
-            >
-              <FontAwesomeIcon icon={faPen as IconProp} /> Edit
-            </a>
-          </li>
-          <li>
-            <a
-              data-toggle="modal"
-              data-target="#ConfirmPlaylistDeletionModal"
-              role="button"
-              href="#"
-              onClick={() => {
-                NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
-                  // @ts-ignore
-                  .then((deletedPlaylist: JSPFPlaylist) => {
-                    if (onPlaylistDeleted) {
-                      onPlaylistDeleted(deletedPlaylist);
-                    }
-                  });
-              }}
-            >
-              <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
-            </a>
-          </li>
+          <div role="separator" className="dropdown-divider" />
+          <button
+            type="button"
+            className="dropdown-item"
+            onClick={() => {
+              NiceModal.show(CreateOrEditPlaylistModal, {
+                playlist,
+                coverArtGridOptions,
+                currentCoverArt,
+              })
+                // @ts-ignore
+                .then((editedPlaylist: JSPFPlaylist) => {
+                  if (onPlaylistSaved) {
+                    onPlaylistSaved(editedPlaylist);
+                  }
+                });
+            }}
+          >
+            <FontAwesomeIcon icon={faPen as IconProp} /> Edit
+          </button>
+          <button
+            type="button"
+            className="dropdown-item"
+            onClick={() => {
+              NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
+                // @ts-ignore
+                .then((deletedPlaylist: JSPFPlaylist) => {
+                  if (onPlaylistDeleted) {
+                    onPlaylistDeleted(deletedPlaylist);
+                  }
+                });
+            }}
+          >
+            <FontAwesomeIcon icon={faTrashAlt as IconProp} /> Delete
+          </button>
         </>
       )}
-      <li role="separator" className="divider" />
-      <li className={enableSpotifyExport ? "" : "disabled"}>
-        <a
-          id="exportPlaylistToSpotify"
-          role="button"
-          href="#"
-          onClick={() =>
-            enableSpotifyExport && handlePlaylistExport(exportToSpotify)
-          }
-        >
-          <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
-        </a>
-      </li>
-      <li className={enableAppleMusicExport ? "" : "disabled"}>
-        <a
-          id="exportPlaylistToAppleMusic"
-          role="button"
-          href="#"
-          onClick={() =>
-            enableAppleMusicExport && handlePlaylistExport(exportToAppleMusic)
-          }
-        >
-          <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
-          Music
-        </a>
-      </li>
-      <li role="separator" className="divider" />
-      <li>
-        <a
-          id="exportPlaylistToJSPF"
-          role="button"
-          href="#"
-          onClick={() => handlePlaylistExport(exportAsJSPF)}
-        >
-          <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as JSPF
-        </a>
-      </li>
-      {/* <li>
-            <a
-              id="exportPlaylistToXSPF"
-              role="button"
-              href="#"
-              onClick={() =>
-                this.handlePlaylistExport(this.exportAsXSPF)
-              }
-            >
-              <FontAwesomeIcon icon={faFileExport as IconProp} />{" "}
-              Export as XSPF
-            </a>
-          </li> */}
-    </ul>
+      <div role="separator" className="dropdown-divider" />
+      <button
+        className={`dropdown-item ${enableSpotifyExport ? "" : "disabled"}`}
+        id="exportPlaylistToSpotify"
+        type="button"
+        onClick={() =>
+          enableSpotifyExport && handlePlaylistExport(exportToSpotify)
+        }
+      >
+        <FontAwesomeIcon icon={faSpotify as IconProp} /> Export to Spotify
+      </button>
+
+      <button
+        className={`dropdown-item ${enableAppleMusicExport ? "" : "disabled"}`}
+        id="exportPlaylistToAppleMusic"
+        type="button"
+        onClick={() =>
+          enableAppleMusicExport && handlePlaylistExport(exportToAppleMusic)
+        }
+      >
+        <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
+        Music
+      </button>
+      <div role="separator" className="dropdown-divider" />
+      <button
+        id="exportPlaylistToJSPF"
+        type="button"
+        onClick={() => handlePlaylistExport(exportAsJSPF)}
+        className="dropdown-item"
+      >
+        <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as JSPF
+      </button>
+      {/* <button
+        id="exportPlaylistToXSPF"
+        type="button"
+        onClick={() => this.handlePlaylistExport(this.exportAsXSPF)}
+        className="dropdown-item"
+      >
+        <FontAwesomeIcon icon={faFileExport as IconProp} /> Export as XSPF
+      </a> */}
+    </div>
   );
 }
 

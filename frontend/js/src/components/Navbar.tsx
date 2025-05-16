@@ -35,18 +35,15 @@ function Navbar() {
 
   return (
     <nav role="navigation">
-      <div className="navbar-header">
+      <div className="navbar navbar-light navbar-header">
         <button
           type="button"
-          className="navbar-toggle collapsed"
-          data-toggle="collapse"
-          data-target="#side-nav,#side-nav-overlay"
+          className="navbar-toggler"
+          data-bs-toggle="collapse"
+          data-bs-target="#side-nav,#side-nav-overlay"
           ref={toggleSidebarButton}
         >
-          <span className="sr-only">Toggle navigation</span>
-          <span className="icon-bar" />
-          <span className="icon-bar" />
-          <span className="icon-bar" />
+          <span className="navbar-toggler-icon" />
         </button>
         <Link
           className="navbar-logo"
@@ -144,7 +141,7 @@ function Navbar() {
             <input
               type="text"
               name="search_term"
-              className="form-control input-sm"
+              className="form-control form-control-sm"
               placeholder="Search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -160,8 +157,8 @@ function Navbar() {
       <div
         id="side-nav-overlay"
         className="collapse"
-        data-toggle="collapse"
-        data-target="#side-nav,#side-nav-overlay"
+        data-bs-toggle="collapse"
+        data-bs-target="#side-nav,#side-nav-overlay"
       />
     </nav>
   );

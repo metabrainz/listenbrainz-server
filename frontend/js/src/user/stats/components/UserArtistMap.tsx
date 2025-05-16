@@ -89,48 +89,45 @@ export default function UserArtistMap(props: UserArtistMapProps) {
   return (
     <Card className="user-stats-card" data-testid="user-stats-map">
       <div className="row">
-        <div className="col-md-9 col-xs-6">
+        <div className="col-md-9 col-6">
           <h3 className="capitalize-bold" style={{ display: "inline-block" }}>
             Artist Origins
           </h3>
           <small className="hidden-xs">&nbsp;(top 1,000 artists)</small>
         </div>
-        <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
+        <div className="col-md-2 col-4 text-end" style={{ marginTop: 20 }}>
           <span>Rank by</span>
           <span className="dropdown">
             <button
               className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               {selectedMetric}s
-              <span className="caret" />
             </button>
-            <ul className="dropdown-menu" role="menu">
-              <li
-                className={selectedMetric === "listen" ? "active" : undefined}
+            <div className="dropdown-menu" role="menu">
+              <button
+                type="button"
+                onClick={() => setSelectedMetric("listen")}
+                className={`dropdown-item ${
+                  selectedMetric === "listen" ? "active" : undefined
+                }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedMetric("listen")}
-                >
-                  Listens
-                </button>
-              </li>
-              <li
-                className={selectedMetric === "artist" ? "active" : undefined}
+                Listens
+              </button>
+              <button
+                className={`dropdown-item ${
+                  selectedMetric === "artist" ? "active" : undefined
+                }`}
+                type="button"
+                onClick={() => setSelectedMetric("artist")}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedMetric("artist")}
-                >
-                  Artists
-                </button>
-              </li>
-            </ul>
+                Artists
+              </button>
+            </div>
           </span>
         </div>
-        <div className="col-md-1 col-xs-2 text-right">
+        <div className="col-md-1 col-2 text-end">
           <h4 style={{ marginTop: 20 }}>
             <a href="#artist-origin">
               <FontAwesomeIcon

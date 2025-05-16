@@ -101,7 +101,7 @@ export default function FlairsSettings() {
 
   return (
     <div className="mb-15 donation-flairs-settings">
-      <form className="form-group" onSubmit={submitFlairPreferences}>
+      <form className="mb-4" onSubmit={submitFlairPreferences}>
         <ReactTooltip id="flair-tooltip" place="bottom" multiline>
           Every $5 donation unlocks flairs for 1 month,
           <br />

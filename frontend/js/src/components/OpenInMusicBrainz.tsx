@@ -13,7 +13,7 @@ export default function OpenInMusicBrainzButton(props: {
       href={`https://musicbrainz.org/${entityType}/${entityMBID}`}
       aria-label="Open in MusicBrainz"
       title="Open in MusicBrainz"
-      className="btn btn-outline"
+      className="btn btn-outline-info"
       target="_blank"
       rel="noopener noreferrer"
     >
