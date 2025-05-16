@@ -25,14 +25,20 @@ import {
 
 const THROTTLE_MILLISECONDS = 1500;
 
-type SearchTrackOrMBIDProps = {
+type SearchAlbumOrMBIDProps = {
   onSelectAlbum: (releaseMBID?: string) => void;
   defaultValue?: string;
   switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 };
 
 const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
-  { onSelectAlbum, defaultValue, switchMode }: SearchTrackOrMBIDProps,
+  {
+    onSelectAlbum,
+    defaultValue,
+    switchMode,
+    requiredInput = true,
+  }: SearchAlbumOrMBIDProps,
   inputRefForParent
 ) {
   const { APIService } = useContext(GlobalAppContext);
@@ -203,7 +209,7 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
             setInputValue(event.target.value);
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
           aria-haspopup={Boolean(searchResults?.length)}
         />
         <span className="input-group-btn">

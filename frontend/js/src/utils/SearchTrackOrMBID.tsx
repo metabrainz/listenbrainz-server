@@ -45,6 +45,7 @@ type SearchTrackOrMBIDProps = {
   defaultValue?: string;
   expectedPayload: PayloadType;
   switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 } & ConditionalReturnValue;
 
 const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
@@ -54,6 +55,7 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
     defaultValue,
     autofocus = true,
     switchMode,
+    requiredInput = true,
   }: SearchTrackOrMBIDProps,
   inputRefForParent
 ) {
@@ -269,7 +271,7 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
             setInputValue(event.target.value);
           }}
           placeholder="Track name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
         />
         <span className="input-group-btn">
           <button className="btn btn-default" type="button" onClick={reset}>
