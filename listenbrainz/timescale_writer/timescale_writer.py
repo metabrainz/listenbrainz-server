@@ -138,7 +138,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
             return len(data)
 
         try:
-            redis_connection._redis.increment_listen_count_for_day(day=datetime.utcnow(), count=len(rows_inserted))
+            redis_connection._redis.increment_listen_count_for_day(day=datetime.today(), count=len(rows_inserted))
         except Exception:
             # Not critical, so if this errors out, just log it to Sentry and move forward
             current_app.logger.error("Could not update listen count per day in redis", exc_info=True)
