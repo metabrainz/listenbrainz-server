@@ -179,7 +179,14 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
           <div className="row">
             <div className="col-xs-12">
               <div
-                style={{ width: "100%", height: "600px", minHeight: "400px", textAlign: "right", fontSize: "11px", lineHeight: "1em" }}
+                style={{
+                  width: "100%",
+                  height: "600px",
+                  minHeight: "400px",
+                  textAlign: "right",
+                  fontSize: "11px",
+                  lineHeight: "1em",
+                }}
               >
                 <ResponsiveBar
                   data={chartData}
