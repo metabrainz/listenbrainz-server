@@ -5,6 +5,8 @@ import React, {
   useMemo,
   useRef,
   useState,
+  forwardRef,
+  useImperativeHandle,
 } from "react";
 import { toast } from "react-toastify";
 import {
@@ -95,11 +97,10 @@ export function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
   );
 }
 
-export default function AddAlbumListens({
-  onPayloadChange,
-  switchMode,
-  initialText,
-}: AddAlbumListensProps) {
+const AddAlbumListens = forwardRef(function AddAlbumListens(
+  { onPayloadChange, switchMode, initialText }: AddAlbumListensProps,
+  ref
+) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRelease } = APIService;
   const [selectedAlbumMBID, setSelectedAlbumMBID] = useState<string>();
@@ -110,6 +111,7 @@ export default function AddAlbumListens({
   const searchInputRef = useRef<{
     focus(): void;
     triggerSearch(newText: string): void;
+    reset(): void;
   }>(null);
 
   const initialTextRef = useRef(initialText);
@@ -244,6 +246,15 @@ export default function AddAlbumListens({
     { format: ["minutes", "seconds"] }
   );
 
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setSelectedAlbumMBID(undefined);
+      setSelectedAlbum(undefined);
+      setSelectedTracks([]);
+      searchInputRef.current?.reset();
+    },
+  }));
+
   return (
     <div>
       <SearchAlbumOrMBID
@@ -252,6 +263,7 @@ export default function AddAlbumListens({
         }}
         switchMode={switchMode}
         ref={searchInputRef}
+        requiredInput={selectedAlbumMBID === undefined}
       />
       <div className="track-info">
         {selectedAlbum && (
@@ -348,4 +360,6 @@ export default function AddAlbumListens({
       </div>
     </div>
   );
-}
+});
+
+export default AddAlbumListens;
