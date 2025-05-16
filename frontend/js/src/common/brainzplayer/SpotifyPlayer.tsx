@@ -583,13 +583,10 @@ export default class SpotifyPlayer
     }
 
     onProgressChange(position);
-
-    if (duration !== durationMs) {
-      onDurationChange(duration);
-      this.setState({
-        durationMs: duration,
-      });
-    }
+    onDurationChange(duration);
+    this.setState({
+      durationMs: duration,
+    });
   };
 
   getAlbumArt = (): JSX.Element | null => {
