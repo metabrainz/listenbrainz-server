@@ -468,6 +468,22 @@ def _get_artist_activity(release_groups_list):
 
     return top_results
 
+def _get_album_activity(releases_list):
+    """
+    Process releases data to generate album activity.
+    This would transform the raw database records into the structured format
+    required for the API response.
+    
+    Args:
+        releases_list: List of release records from the database
+        
+    Returns:
+        List of album activity entries with associated artists
+    """
+    # In the actual implementation, this function would process the real data
+    # For now, this is just a placeholder
+    return []
+
 
 @stats_api_bp.get("/user/<user_name>/artist-activity")
 @crossdomain
@@ -524,6 +540,142 @@ def get_artist_activity(user_name: str):
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
     
+
+@stats_api_bp.get("/user/<user_name>/album-activity")
+@crossdomain
+@ratelimit()
+def get_album_activity(user_name: str):
+    """
+    Get the album activity for user ``user_name``. The album activity shows the total number of listens
+    for each album along with the artists who contributed to them and their corresponding listen counts.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "name": "OK Computer",
+                    "listen_count": 45,
+                    "release_group_mbid": "12345-abcde",
+                    "artists": [
+                        {"name": "Radiohead", "listen_count": 45, "artist_mbid": "a1234-xyz"}
+                    ]
+                },
+                {
+                    "name": "Abbey Road",
+                    "listen_count": 60,
+                    "release_group_mbid": "67890-fghij",
+                    "artists": [
+                        {"name": "The Beatles", "listen_count": 60, "artist_mbid": "b5678-abc"}
+                    ]
+                },
+                {
+                    "name": "In Rainbows",
+                    "listen_count": 75,
+                    "release_group_mbid": "54321-vwxyz",
+                    "artists": [
+                        {"name": "Radiohead", "listen_count": 75, "artist_mbid": "a1234-xyz"}
+                    ]
+                },
+                {
+                    "name": "Revolver",
+                    "listen_count": 35,
+                    "release_group_mbid": "09876-klmno",
+                    "artists": [
+                        {"name": "The Beatles", "listen_count": 35, "artist_mbid": "b5678-abc"}
+                    ]
+                }
+            ]
+        }
+
+    .. note::
+
+        - The example above shows album activity data with four albums and their respective artists.
+        - The statistics are aggregated based on the number of listens recorded for each album and the artists associated with them.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    # Temporary hardcoded data for testing
+    hardcoded_result =[
+  {
+    "Raoul": 122,
+    "Josiane": 71,
+    "Marcel": 165,
+    "René": 165,
+    "Paul": 49,
+    "Jacques": 26
+  },
+  {
+    "Raoul": 53,
+    "Josiane": 124,
+    "Marcel": 110,
+    "René": 16,
+    "Paul": 56,
+    "Jacques": 120
+  },
+  {
+    "Raoul": 274,
+    "Josiane": 97,
+    "Marcel": 48,
+    "René": 166,
+    "Paul": 147,
+    "Jacques": 137
+  },
+  {
+    "Raoul": 132,
+    "Josiane": 37,
+    "Marcel": 75,
+    "René": 107,
+    "Paul": 31,
+    "Jacques": 21
+  },
+  {
+    "Raoul": 115,
+    "Josiane": 83,
+    "Marcel": 94,
+    "René": 35,
+    "Paul": 180,
+    "Jacques": 196
+  },
+  {
+    "Raoul": 36,
+    "Josiane": 77,
+    "Marcel": 92,
+    "René": 11,
+    "Paul": 108,
+    "Jacques": 131
+  },
+  {
+    "Raoul": 104,
+    "Josiane": 51,
+    "Marcel": 64,
+    "René": 28,
+    "Paul": 88,
+    "Jacques": 88
+  }
+]
+    
+    return jsonify({"result": hardcoded_result})
+    
+    # The commented code below represents what the actual implementation would look like:
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(user["id"], "releases", stats_range, EntityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    releases_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    result = _get_album_activity(releases_list)
+    return jsonify({"result": result})
+    """
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1268,6 +1420,100 @@ def get_sitewide_artist_activity():
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
+
+@stats_api_bp.get("/sitewide/album-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_album_activity():
+    """
+    Get the sitewide album activity. This shows the most popular albums across all ListenBrainz users
+    and the artists who contributed to them.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "name": "OK Computer",
+                    "listen_count": 12450,
+                    "release_group_mbid": "12345-abcde",
+                    "artists": [
+                        {"name": "Radiohead", "listen_count": 12450, "artist_mbid": "a1234-xyz"}
+                    ]
+                },
+                {
+                    "name": "Abbey Road",
+                    "listen_count": 10320,
+                    "release_group_mbid": "67890-fghij",
+                    "artists": [
+                        {"name": "The Beatles", "listen_count": 10320, "artist_mbid": "b5678-abc"}
+                    ]
+                }
+            ]
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    # Temporary hardcoded data for testing
+    hardcoded_result = [
+        {
+            "name": "OK Computer",
+            "listen_count": 12450,
+            "release_group_mbid": "12345-abcde",
+            "artists": [
+                {"name": "Radiohead", "listen_count": 12450, "artist_mbid": "a1234-xyz"}
+            ]
+        },
+        {
+            "name": "Abbey Road",
+            "listen_count": 10320,
+            "release_group_mbid": "67890-fghij",
+            "artists": [
+                {"name": "The Beatles", "listen_count": 10320, "artist_mbid": "b5678-abc"}
+            ]
+        },
+        {
+            "name": "In Rainbows",
+            "listen_count": 9875,
+            "release_group_mbid": "54321-vwxyz",
+            "artists": [
+                {"name": "Radiohead", "listen_count": 9875, "artist_mbid": "a1234-xyz"}
+            ]
+        },
+        {
+            "name": "Dark Side of the Moon",
+            "listen_count": 8960,
+            "release_group_mbid": "abcde-12345",
+            "artists": [
+                {"name": "Pink Floyd", "listen_count": 8960, "artist_mbid": "c9012-def"}
+            ]
+        }
+    ]
+    
+    return jsonify({"result": hardcoded_result})
+    
+    # The commented code below represents what the actual implementation would look like:
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    
+    stats = db_stats.get_sitewide_stats("releases", stats_range)
+    if stats is None:
+        raise APINoContent('')
+    
+    releases_list = stats["data"]
+    result = _get_album_activity(releases_list)
+    return jsonify({"result": result})
+    """
 
 
 @stats_api_bp.get("/sitewide/artist-map")
