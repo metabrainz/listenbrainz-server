@@ -33,8 +33,7 @@ from listenbrainz.db.dump_entry import get_latest_incremental_dump, add_dump_ent
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.check import check_ftp_dump_ages
 from listenbrainz.dumps.cleanup import _cleanup_dumps
-from listenbrainz.dumps.exporter import dump_postgres_db, create_statistics_dump, dump_timescale_db, \
-    dump_feedback_for_spark
+from listenbrainz.dumps.exporter import create_statistics_dump, dump_feedback_for_spark, dump_database
 from listenbrainz.dumps.importer import import_postgres_dump
 from listenbrainz.dumps.mapping import create_mapping_dump
 from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
@@ -157,14 +156,19 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
             private_dump_path = os.path.join(location_private, dump_name)
             create_path(private_dump_path)
 
+        locations = {
+            "public": dump_path,
+            "private": private_dump_path
+        }
+
         expected_num_dumps = 0
         expected_num_private_dumps = 0
         if do_db_dump:
-            dump_postgres_db(dump_path, private_dump_path, end_time, threads)
+            dump_database("postgres", locations, end_time, threads)
             expected_num_dumps += 1
             expected_num_private_dumps += 1
         if do_timescale_dump:
-            dump_timescale_db(dump_path, private_dump_path, end_time, threads)
+            dump_database("timescale", locations, end_time, threads)
             expected_num_dumps += 1
             expected_num_private_dumps += 1
         if do_listen_dump:

@@ -3,29 +3,33 @@ import tarfile
 
 import sqlalchemy
 from flask import current_app
-from psycopg2.sql import SQL
+from psycopg2.sql import Identifier
 
 from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
 from listenbrainz.dumps.exceptions import SchemaMismatchException
+from listenbrainz.dumps.models import DumpTablesCollection
 from listenbrainz.dumps.tables import PRIVATE_TABLES, PRIVATE_TABLES_TIMESCALE, PUBLIC_TABLES_IMPORT, \
-    PUBLIC_TABLES_TIMESCALE_DUMP, _escape_table_columns
+    PUBLIC_TABLES_TIMESCALE_DUMP
 
 
 def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
-                 tables, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
+                 tables_collection: DumpTablesCollection, schema_version: int, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
             archive_path: path to the .tar.zst archive to be imported
             db_engine: an sqlalchemy Engine instance for making a connection
-            tables: dict of tables present in the archive with table name as key and
+            tables_collection: dict of tables present in the archive with table name as key and
                     columns to import as values
             schema_version: the current schema version, to compare against the dumped file
             threads (int): the number of threads to use while decompressing, defaults to
                             db.DUMP_DEFAULT_THREAD_COUNT
     """
+    file_table_mapping = {
+        t.filename: t for t in tables_collection.tables
+    }
 
     zstd_command = ['zstd', '--decompress', '--stdout', archive_path, f'-T{threads}']
     zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
@@ -48,15 +52,14 @@ def _import_dump(archive_path, db_engine: sqlalchemy.engine.Engine,
                         current_app.logger.info('Schema version verified.')
 
                 else:
-                    if file_name in tables:
-                        current_app.logger.info('Importing data into %s table...', file_name)
+                    if file_name in file_table_mapping:
+                        current_app.logger.info('Importing data from %s...', file_name)
                         try:
-                            table, fields = _escape_table_columns(file_name, tables[file_name])
-                            query = SQL("COPY {table}({fields}) FROM STDIN").format(fields=fields, table=table)
-                            cursor.copy_expert(query, tar.extractfile(member))
+                            table = file_table_mapping[file_name]
+                            table._import(cursor, tar.extractfile(member))
                             connection.commit()
                         except Exception:
-                            current_app.logger.critical('Exception while importing table %s: ', file_name,
+                            current_app.logger.critical('Exception while importing %s: ', file_name,
                                                         exc_info=True)
                             raise
 
@@ -149,7 +152,10 @@ def import_postgres_dump(private_dump_archive_path=None,
             # if the private dump exists and has been imported, we need to
             # ignore the sanitized user table in the public dump
             # so remove it from tables_to_import
-            del tables_to_import['user']
+            tables_to_import.tables = [
+                t for t in tables_to_import.tables
+                if t.table_name != Identifier("user")
+            ]
 
         _import_dump(public_dump_archive_path, db.engine, tables_to_import, SCHEMA_VERSION_CORE, threads)
         current_app.logger.info('Import of Public dump %s done!', public_dump_archive_path)
