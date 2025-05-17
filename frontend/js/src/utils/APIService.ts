@@ -602,6 +602,30 @@ export default class APIService {
     return response.json();
   };
 
+  getUserAlbumActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserAlbumActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/album-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/album-activity`;
+    }
+    url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
   getUserArtistMap = async (
     userName?: string,
     range: UserStatsAPIRange = "all_time",
