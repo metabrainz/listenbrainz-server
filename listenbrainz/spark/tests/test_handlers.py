@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import mock
 from unittest.mock import call
 
@@ -423,7 +423,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_dataframes(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_dataframes({
@@ -448,7 +448,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_model(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_model({
@@ -469,7 +469,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_candidate_sets(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_candidate_sets({

@@ -29,7 +29,6 @@ import listenbrainz_spark.postgres
 import listenbrainz_spark.troi.periodic_jams
 import listenbrainz_spark.tags.tags
 import listenbrainz_spark.mlhd.download
-import listenbrainz_spark.mlhd.similarity
 import listenbrainz_spark.popularity.main
 import listenbrainz_spark.echo.echo
 import listenbrainz_spark.listens.dump
@@ -55,7 +54,6 @@ functions = {
     'cf.recommendations.recording.discovery':
         listenbrainz_spark.recommendations.recording.discovery.get_recording_discovery,
     'similarity.similar_users': listenbrainz_spark.similarity.user.main,
-    'similarity.recording.mlhd': listenbrainz_spark.mlhd.similarity.main,
     'similarity.recording': listenbrainz_spark.similarity.recording.main,
     'similarity.artist': listenbrainz_spark.similarity.artist.main,
     'popularity.popularity': listenbrainz_spark.popularity.main.main,

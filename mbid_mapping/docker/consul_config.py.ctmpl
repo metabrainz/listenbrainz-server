@@ -87,7 +87,7 @@ USE_MINIMAL_DATASET = False
 
 # Sentry config
 LOG_SENTRY = {
-    'dsn': '''{{template "KEY" "sentry/dsn"}}''',
+    'dsn': '''{{template "KEY" "sentry/cron_dsn"}}''',
     'environment': '''{{template "KEY" "sentry/environment"}}''',
     'release': os.getenv('GIT_SHA', None),
     'traces_sample_rate': {{template "KEY" "sentry/traces_sample_rate"}},
