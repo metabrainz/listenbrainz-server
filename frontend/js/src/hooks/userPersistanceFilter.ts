@@ -1,7 +1,12 @@
 import { useEffect } from "react";
 import localforage from "localforage";
 
-const FILTERS_STORAGE_KEY = "releaseFiltersState";
+const release_filters_cache = localforage.createInstance({
+  name: "listenbrainz",
+  driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
+  storeName: "fresh-releases",
+});
+const RELEASE_FILTERS_STORAGE_KEY = "release-filters";
 
 interface StoredFilters {
   checkedList: Array<string | undefined>;
@@ -9,28 +14,20 @@ interface StoredFilters {
   releaseTagsExcludeCheckList: Array<string | undefined>;
   includeVariousArtists: boolean;
   coverartOnly: boolean;
-  showPastReleases: boolean;
-  showFutureReleases: boolean;
 }
 
 interface UseFilterPersistenceParams {
-  // State values
   checkedList: Array<string | undefined>;
   releaseTagsCheckList: Array<string | undefined>;
   releaseTagsExcludeCheckList: Array<string | undefined>;
   includeVariousArtists: boolean;
   coverartOnly: boolean;
-  showPastReleases: boolean;
-  showFutureReleases: boolean;
 
-  // State setters
   setCheckedList: (list: Array<string | undefined>) => void;
   setReleaseTagsCheckList: (list: Array<string | undefined>) => void;
   setReleaseTagsExcludeCheckList: (list: Array<string | undefined>) => void;
   setIncludeVariousArtists: (value: boolean) => void;
   setCoverartOnly: (value: boolean) => void;
-  setShowPastReleases?: (value: boolean) => void;
-  setShowFutureReleases?: (value: boolean) => void;
 }
 
 export default function useFilterPersistence(
@@ -42,23 +39,19 @@ export default function useFilterPersistence(
     releaseTagsExcludeCheckList,
     includeVariousArtists,
     coverartOnly,
-    showPastReleases,
-    showFutureReleases,
     setCheckedList,
     setReleaseTagsCheckList,
     setReleaseTagsExcludeCheckList,
     setIncludeVariousArtists,
     setCoverartOnly,
-    setShowPastReleases,
-    setShowFutureReleases,
   } = params;
 
   // Load filters on component mount
   useEffect(() => {
     const loadFilters = async () => {
       try {
-        const savedFilters = await localforage.getItem<StoredFilters>(
-          FILTERS_STORAGE_KEY
+        const savedFilters = await release_filters_cache.getItem<StoredFilters>(
+          RELEASE_FILTERS_STORAGE_KEY
         );
         if (savedFilters) {
           setCheckedList(savedFilters.checkedList ?? []);
@@ -68,15 +61,11 @@ export default function useFilterPersistence(
           );
           setIncludeVariousArtists(savedFilters.includeVariousArtists ?? false);
           setCoverartOnly(savedFilters.coverartOnly ?? false);
-
-          setShowPastReleases?.(savedFilters.showPastReleases ?? true);
-          setShowFutureReleases?.(savedFilters.showFutureReleases ?? true);
         }
       } catch (error) {
         console.error("Failed to load filters:", error);
       }
     };
-
     loadFilters();
   }, []);
 
@@ -84,7 +73,6 @@ export default function useFilterPersistence(
   useEffect(() => {
     const saveFilters = async () => {
       try {
-        // Filter out undefined values before saving
         const filtersToSave: StoredFilters = {
           checkedList: checkedList.filter(
             (item): item is string => item !== undefined
@@ -97,15 +85,15 @@ export default function useFilterPersistence(
           ),
           includeVariousArtists,
           coverartOnly,
-          showPastReleases,
-          showFutureReleases,
         };
-        await localforage.setItem(FILTERS_STORAGE_KEY, filtersToSave);
+        await release_filters_cache.setItem(
+          RELEASE_FILTERS_STORAGE_KEY,
+          filtersToSave
+        );
       } catch (error) {
         console.error("Failed to save filters:", error);
       }
     };
-
     saveFilters();
   }, [
     checkedList,
@@ -113,24 +101,19 @@ export default function useFilterPersistence(
     releaseTagsExcludeCheckList,
     includeVariousArtists,
     coverartOnly,
-    showPastReleases,
-    showFutureReleases,
   ]);
 
   const clearSavedFilters = async () => {
     try {
-      await localforage.removeItem(FILTERS_STORAGE_KEY);
+      await release_filters_cache.removeItem(RELEASE_FILTERS_STORAGE_KEY);
       setCheckedList([]);
       setReleaseTagsCheckList([]);
       setReleaseTagsExcludeCheckList([]);
       setIncludeVariousArtists(false);
       setCoverartOnly(false);
-      setShowPastReleases?.(true);
-      setShowFutureReleases?.(true);
     } catch (error) {
       console.error("Failed to clear filters:", error);
     }
   };
-
   return { clearSavedFilters };
 }
