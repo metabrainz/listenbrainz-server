@@ -301,6 +301,14 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare type UserListensEraActivityResponse = {
+	result: Array<{
+		year: string;
+		count: number;
+		formattedYear?: string;
+	}>;
+}
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
