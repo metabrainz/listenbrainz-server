@@ -155,29 +155,31 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
     releaseTagsExcludeCheckList,
     includeVariousArtists,
     coverartOnly,
-    showPastReleases,
-    showFutureReleases,
     setCheckedList,
     setReleaseTagsCheckList,
     setReleaseTagsExcludeCheckList,
     setIncludeVariousArtists,
     setCoverartOnly,
-    setShowPastReleases,
-    setShowFutureReleases,
   });
 
+  const hasMounted = React.useRef(false);
   // Reset filters when range changes
   React.useEffect(() => {
-    if (coverartOnly === true) {
-      setCoverartOnly(false);
+    if (hasMounted.current) {
+      // Reset filters when releaseTags or releaseTypes change (but not on first render)
+      if (coverartOnly === true) {
+        setCoverartOnly(false);
+      }
+      if (checkedList?.length > 0) {
+        setCheckedList([]);
+      }
+      if (includeVariousArtists === true) {
+        setIncludeVariousArtists(false);
+      }
+      clearSavedFilters();
+    } else {
+      hasMounted.current = true;
     }
-    if (checkedList?.length > 0) {
-      setCheckedList([]);
-    }
-    if (includeVariousArtists === true) {
-      setIncludeVariousArtists(false);
-    }
-    clearSavedFilters();
   }, [releaseTags, releaseTypes]);
 
   React.useEffect(() => {
@@ -242,6 +244,14 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         </p>
       </div>
       <div className="sidenav-content-grid">
+        <button
+          onClick={clearSavedFilters}
+          type="button"
+          className="btn btn-default btn-reset-filters"
+          style={{ margin: "10px 0" }}
+        >
+          Reset All Filters
+        </button>
         <div
           onClick={toggleFilters}
           onKeyDown={(e) => {
@@ -261,13 +271,6 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             {"  "}
             <b>Filter</b>
           </h4>
-          <button
-            onClick={clearSavedFilters}
-            className="btn btn-default btn-reset-filters"
-            style={{ margin: "10px 0" }}
-          >
-            Reset All Filters
-          </button>
         </div>
 
         {filtersOpen && (
