@@ -32,7 +32,10 @@ type SearchAlbumOrMBIDProps = {
   requiredInput?: boolean;
 };
 
-const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
+const SearchAlbumOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchAlbumOrMBIDProps
+>(function SearchAlbumOrMBID(
   {
     onSelectAlbum,
     defaultValue,

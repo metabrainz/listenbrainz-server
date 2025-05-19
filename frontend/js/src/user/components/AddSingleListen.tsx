@@ -35,11 +35,7 @@ const AddSingleListen = forwardRef(function AddSingleListen(
       | undefined;
   }>({});
 
-  const searchInputRef = useRef<{
-    focus(): void;
-    triggerSearch(newText: string): void;
-    reset(): void;
-  }>(null);
+  const searchInputRef = useRef<SearchInputImperativeHandle>(null);
 
   const initialTextRef = useRef(initialText);
   React.useEffect(() => {

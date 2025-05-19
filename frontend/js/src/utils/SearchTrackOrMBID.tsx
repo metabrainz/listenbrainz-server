@@ -48,7 +48,10 @@ type SearchTrackOrMBIDProps = {
   requiredInput?: boolean;
 } & ConditionalReturnValue;
 
-const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
+const SearchTrackOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchTrackOrMBIDProps
+>(function SearchTrackOrMBID(
   {
     onSelectRecording,
     expectedPayload,
