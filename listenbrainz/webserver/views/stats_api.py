@@ -664,18 +664,22 @@ def get_album_activity(user_name: str):
     return jsonify({"result": hardcoded_result})
     
     # The commented code below represents what the actual implementation would look like:
-    """
     user, stats_range = _validate_stats_user_params(user_name)
-    offset = get_non_negative_param("offset", default=0)
-    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-    stats = db_stats.get(user["id"], "releases", stats_range, EntityRecord)
+    
+    stats = db_stats.get(user["id"], "album_activity", stats_range, ListeningActivityRecord)
     if stats is None:
         raise APINoContent('')
+    
+    album_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "album_activity": album_activity,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated
+    }})
 
-    releases_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
-    result = _get_album_activity(releases_list)
-    return jsonify({"result": result})
-    """
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
