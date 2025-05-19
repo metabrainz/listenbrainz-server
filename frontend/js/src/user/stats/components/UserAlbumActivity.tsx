@@ -18,33 +18,6 @@ export type StreamDataItem = {
   [key: string]: string | number;
 };
 
-// Define CustomTooltip outside of the main component
-function CustomTooltip({
-  id,
-  value,
-  color,
-}: {
-  id: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div
-      style={{
-        padding: "10px",
-        background: "white",
-        border: `1px solid ${color}`,
-        borderRadius: "4px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      }}
-    >
-      <strong>
-        {id}: {value}
-      </strong>
-    </div>
-  );
-}
-
 export default function ArtistEvolutionStreamGraph(
   props: UserArtistEvolutionProps
 ) {
