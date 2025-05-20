@@ -25,14 +25,23 @@ import {
 
 const THROTTLE_MILLISECONDS = 1500;
 
-type SearchTrackOrMBIDProps = {
+type SearchAlbumOrMBIDProps = {
   onSelectAlbum: (releaseMBID?: string) => void;
   defaultValue?: string;
   switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 };
 
-const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
-  { onSelectAlbum, defaultValue, switchMode }: SearchTrackOrMBIDProps,
+const SearchAlbumOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchAlbumOrMBIDProps
+>(function SearchAlbumOrMBID(
+  {
+    onSelectAlbum,
+    defaultValue,
+    switchMode,
+    requiredInput = true,
+  }: SearchAlbumOrMBIDProps,
   inputRefForParent
 ) {
   const { APIService } = useContext(GlobalAppContext);
@@ -45,20 +54,27 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
   >([]);
 
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    onSelectAlbum();
+    setLoading(false);
+    searchInputRef?.current?.focus();
+  }, [onSelectAlbum]);
+
   // Allow parents to focus on input and trigger search
   useImperativeHandle(
     inputRefForParent,
-    () => {
-      return {
-        focus() {
-          searchInputRef?.current?.focus();
-        },
-        triggerSearch(newText: string) {
-          setInputValue(newText);
-        },
-      };
-    },
-    []
+    () => ({
+      focus() {
+        searchInputRef?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
   );
 
   const handleError = useCallback(
@@ -147,14 +163,6 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     [onSelectAlbum]
   );
 
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    onSelectAlbum();
-    setLoading(false);
-    searchInputRef?.current?.focus();
-  };
-
   useEffect(() => {
     if (!inputValue) {
       return;
@@ -203,7 +211,7 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
             setInputValue(event.target.value);
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
           aria-haspopup={Boolean(searchResults?.length)}
         />
         <button className="btn btn-secondary" type="button" onClick={reset}>

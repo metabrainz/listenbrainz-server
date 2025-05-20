@@ -48,7 +48,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     TrackMetadata
   >();
 
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputRef = React.useRef<SearchInputImperativeHandle>(null);
 
   const handleError = React.useCallback(
     (error: string | Error, title?: string): void => {

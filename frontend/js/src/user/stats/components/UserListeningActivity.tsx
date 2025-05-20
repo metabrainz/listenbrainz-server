@@ -432,6 +432,7 @@ export default function UserListeningActivity(
 
   return (
     <Card
+      className="user-stats-card"
       style={{ marginTop: 20, minHeight: 400 }}
       data-testid="listening-activity"
     >
