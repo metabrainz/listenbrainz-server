@@ -194,7 +194,7 @@ def get_listens(user_name):
 
     to_ts = datetime.now()
     from_ts = to_ts - timedelta(minutes=minutes)
-    listens, _, _ = timescale_connection._ts.fetch_listens(
+    listens, _, _, _, _ = timescale_connection._ts.fetch_listens(
         user, from_ts=from_ts, to_ts=to_ts, limit=MAX_ITEMS_PER_GET
     )
     

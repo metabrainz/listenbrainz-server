@@ -27,12 +27,16 @@ const {
   oldestListenTs,
   user,
   currentUser,
+  searchStartTs,
+  searchEndTs,
 } = recentListensPropsOneListen;
 
 const props: ListensProps = {
   latestListenTs,
   listens,
   oldestListenTs,
+  searchStartTs,
+  searchEndTs,
   user,
   already_reported_user: false,
 };
