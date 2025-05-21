@@ -616,7 +616,7 @@ export default function ArtCreator() {
                         type="text"
                         placeholder="#321529"
                         value={textColor}
-                        disabled
+                        readOnly
                       />
                     </div>
                   </div>
@@ -636,7 +636,6 @@ export default function ArtCreator() {
                         type="text"
                         className="form-control"
                         placeholder="Select a color…"
-                        disabled
                         readOnly
                         value={firstBgColor}
                       />
@@ -655,7 +654,6 @@ export default function ArtCreator() {
                       type="text"
                       className="form-control"
                       placeholder="Select a color…"
-                      disabled
                       readOnly
                       value={secondBgColor}
                     />

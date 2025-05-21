@@ -81,7 +81,7 @@ function IconTray(props: IconTrayProps) {
           <input
             type="text"
             value={previewUrl}
-            disabled
+            readOnly
             className="form-control"
           />
           {browserHasClipboardAPI && (
