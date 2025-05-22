@@ -8,6 +8,7 @@ import {
   faMusic,
   faPauseCircle,
   faPlayCircle,
+  faShuffle,
   faSlash,
   faVolumeUp,
   faMaximize,
@@ -452,6 +453,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 color: brainzPlayerContextRef.current.queueRepeatMode.color,
               }}
               onClick={toggleRepeatMode}
+            />
+          )}
+          {!isMobile && (
+            <FontAwesomeIcon
+              icon={faShuffle}
+              title="Shuffle queue"
+              onClick={() => dispatch({ type: "SHUFFLE_QUEUE" })}
             />
           )}
           {showFeedback && !isMobile && (

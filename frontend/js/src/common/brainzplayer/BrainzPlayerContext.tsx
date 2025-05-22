@@ -2,7 +2,7 @@ import * as React from "react";
 import { faRepeat } from "@fortawesome/free-solid-svg-icons";
 import { isEqual, isNil } from "lodash";
 import { faRepeatOnce } from "../../utils/icons";
-import { listenOrJSPFTrackToQueueItem } from "./utils";
+import { listenOrJSPFTrackToQueueItem, shuffleQueue } from "./utils";
 
 export const QueueRepeatModes = {
   off: {
@@ -85,7 +85,8 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
-    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
+    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
+    | "SHUFFLE_QUEUE";
   data?: any;
 };
 
@@ -322,6 +323,14 @@ function valueReducer(
       return {
         ...state,
         ambientQueue: [...ambientQueue, ...tracksToAdd],
+      };
+    }
+    case "SHUFFLE_QUEUE": {
+      const { queue, currentListenIndex } = state;
+      const newQueue = shuffleQueue(queue, currentListenIndex);
+      return {
+        ...state,
+        queue: newQueue,
       };
     }
     default: {
