@@ -11,6 +11,7 @@ import type {
   filterRangeOption,
 } from "../FreshReleases";
 import { PAGE_TYPE_SITEWIDE, filterRangeOptions } from "../FreshReleases";
+import useFilterPersistence from "../../../hooks/userPersistanceFilter";
 
 const VARIOUS_ARTISTS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377";
 
@@ -148,16 +149,36 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         )
       : Object.values(filterRangeOptions);
 
+  const { clearSavedFilters } = useFilterPersistence({
+    checkedList,
+    releaseTagsCheckList,
+    releaseTagsExcludeCheckList,
+    includeVariousArtists,
+    coverartOnly,
+    setCheckedList,
+    setReleaseTagsCheckList,
+    setReleaseTagsExcludeCheckList,
+    setIncludeVariousArtists,
+    setCoverartOnly,
+  });
+
+  const hasMounted = React.useRef(false);
   // Reset filters when range changes
   React.useEffect(() => {
-    if (coverartOnly === true) {
-      setCoverartOnly(false);
-    }
-    if (checkedList?.length > 0) {
-      setCheckedList([]);
-    }
-    if (includeVariousArtists === true) {
-      setIncludeVariousArtists(false);
+    if (hasMounted.current) {
+      // Reset filters when releaseTags or releaseTypes change (but not on first render)
+      if (coverartOnly === true) {
+        setCoverartOnly(false);
+      }
+      if (checkedList?.length > 0) {
+        setCheckedList([]);
+      }
+      if (includeVariousArtists === true) {
+        setIncludeVariousArtists(false);
+      }
+      clearSavedFilters();
+    } else {
+      hasMounted.current = true;
     }
   }, [releaseTags, releaseTypes]);
 
@@ -223,6 +244,14 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
         </p>
       </div>
       <div className="sidenav-content-grid">
+        <button
+          onClick={clearSavedFilters}
+          type="button"
+          className="btn btn-default btn-reset-filters"
+          style={{ margin: "10px 0" }}
+        >
+          Reset All Filters
+        </button>
         <div
           onClick={toggleFilters}
           onKeyDown={(e) => {
