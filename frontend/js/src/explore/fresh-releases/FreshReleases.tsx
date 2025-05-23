@@ -304,7 +304,7 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div className="fresh-releases-pill-row gap-5">
+          <div className="align-items-end fresh-releases-pill-row gap-3">
             <div className="fresh-releases-row">
               <Pill
                 id="sitewide-releases"
@@ -334,9 +334,14 @@ export default function FreshReleases() {
                 For You
               </Pill>
             </div>
-            <div className="fresh-releases-row">
-              <span className="text-nowrap">Sort By:</span>{" "}
-              <div className="input-group">
+            <div className="fresh-releases-row align-items-end">
+              <div>
+                <label
+                  className="text-nowrap"
+                  htmlFor="fresh-releases-sort-select"
+                >
+                  Sort By:
+                </label>
                 <select
                   id="fresh-releases-sort-select"
                   className="form-select"
@@ -357,8 +362,10 @@ export default function FreshReleases() {
                   ))}
                 </select>
               </div>
-              <span>Direction:</span>{" "}
-              <div className="input-group">
+              <div>
+                <label htmlFor="fresh-releases-sort-direction-select">
+                  Direction:
+                </label>
                 <select
                   id="fresh-releases-sort-direction-select"
                   className="form-select"
@@ -377,7 +384,7 @@ export default function FreshReleases() {
               </div>
               <button
                 type="button"
-                className="btn btn-icon btn-info atom-button"
+                className="btn btn-icon btn-info atom-button ms-auto"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   if (pageType === PAGE_TYPE_SITEWIDE) {

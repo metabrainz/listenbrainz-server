@@ -246,9 +246,10 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
         {filtersOpen && (
           <>
-            <div id="range">Range: </div>
-
-            <div className="input-group">
+            <div>
+              <label id="range" htmlFor="style">
+                Range:{" "}
+              </label>
               <select
                 id="style"
                 className="form-select"
@@ -278,7 +279,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
             />
             {releaseTypes.length > 0 && (
               <>
-                <span id="types">Types:</span>
+                <label id="types" htmlFor="filters-item-1">
+                  Types:
+                </label>
                 {releaseTypes?.map((type, index) => (
                   <Switch
                     id={`filters-item-${index}`}
@@ -294,7 +297,9 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
 
             {releaseTags.length > 0 && (
               <>
-                <span id="tags">Include (only):</span>
+                <label id="tags" htmlFor="include-tags">
+                  Include (only):
+                </label>
                 <select
                   id="include-tags"
                   className="form-select"
@@ -325,9 +330,11 @@ export default function ReleaseFilters(props: ReleaseFiltersProps) {
                   ))}
                 </div>
 
-                <span id="tags">Exclude:</span>
+                <label id="tags" htmlFor="exclude-tags">
+                  Exclude:
+                </label>
                 <select
-                  id="style"
+                  id="exclude-tags"
                   className="form-select"
                   value=""
                   onChange={handleExcludeTagChange}

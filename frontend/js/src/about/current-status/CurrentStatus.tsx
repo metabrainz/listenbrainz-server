@@ -85,7 +85,7 @@ export default function CurrentStatus() {
           <h3>load average</h3>
 
           <p>Current server load average</p>
-          <div className="border p-4 rounded bg-light">{load}</div>
+          <div className="border p-4 rounded bg-body-tertiary">{load}</div>
         </div>
 
         <div className="col-md-5 col-lg-4">
