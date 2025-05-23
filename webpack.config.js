@@ -1,7 +1,8 @@
 const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const LessPluginCleanCSS = require("less-plugin-clean-css");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const lightningcss = require("lightningcss");
 const StylelintPlugin = require("stylelint-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 
@@ -89,7 +90,6 @@ module.exports = function (env, argv) {
           options: {
             lessOptions: {
               math: "always",
-              plugins: [new LessPluginCleanCSS({ advanced: true })],
             },
           },
         },
@@ -114,6 +114,14 @@ module.exports = function (env, argv) {
             },
           ],
         },
+      ],
+    },
+    optimization: {
+      minimize: true,
+      minimizer: [
+        new CssMinimizerPlugin({
+          minify: CssMinimizerPlugin.lightningCssMinify,
+        }),
       ],
     },
     resolve: {
