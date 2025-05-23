@@ -270,8 +270,9 @@ export default class UserPlaylists extends React.Component<
           </div>
           <div className="playlist-view-options">
             <div className="playlist-sort-controls">
-              <b>Sort by:</b>
+              <label htmlFor="sort-by">Sort by:</label>
               <select
+                id="sort-by"
                 value={sortBy}
                 onChange={(e) =>
                   this.setSortOption(e.target.value as SortOption)
