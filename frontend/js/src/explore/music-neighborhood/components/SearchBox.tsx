@@ -95,75 +95,77 @@ function SearchBox({
 
   return (
     <>
-      <label htmlFor="searchbox-artist-name">Artist name</label>
-      <div
-        className="input-group dropdown-search"
-        ref={dropdownRef}
-        id="artist-search-box"
-      >
-        <input
-          ref={searchInputRef}
-          id="searchbox-artist-name"
-          type="search"
-          className="form-control"
-          name="artist_mbid"
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Artist name"
-          value={searchQuery}
-          aria-haspopup={Boolean(searchResults?.length)}
-          required
-        />
-        <button
-          className="btn btn-info"
-          type="button"
-          onClick={reset}
-          id="artist-search-button"
+      <div>
+        <label htmlFor="searchbox-artist-name">Artist name</label>
+        <div
+          className="input-group dropdown-search"
+          ref={dropdownRef}
+          id="artist-search-box"
         >
-          {loading ? (
-            <FontAwesomeIcon icon={faSpinner} spin />
-          ) : (
-            <FontAwesomeIcon icon={faSearch} />
-          )}
-        </button>
-        {Boolean(searchResults?.length) && (
-          <select
-            className="dropdown-search-suggestions"
-            onChange={(e) => {
-              if (!e.currentTarget.value) {
-                // clicked on "no more options"
-                return;
-              }
-              setSearchQuery(e.currentTarget.selectedOptions[0].text);
-              handleButtonClick(e.currentTarget.value);
-              e.target.blur();
-            }}
-            size={Math.min(searchResults.length + 1, 8)}
-            tabIndex={-1}
+          <input
+            ref={searchInputRef}
+            id="searchbox-artist-name"
+            type="search"
+            className="form-control"
+            name="artist_mbid"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Artist name"
+            value={searchQuery}
+            aria-haspopup={Boolean(searchResults?.length)}
+            required
+          />
+          <button
+            className="btn btn-info"
+            type="button"
+            onClick={reset}
+            id="artist-search-button"
           >
-            {searchResults.map((artist, index) => {
-              const artistInfoString = `${artist.name} - ${
-                artist.country ?? "Unknown"
-              }`;
-              return (
-                <option
-                  key={artist.id}
-                  value={artist.id}
-                  data-release-info={artistInfoString}
-                  title={artistInfoString}
-                >
-                  {artistInfoString}
-                </option>
-              );
-            })}
-            {searchResults.length < 25 && (
-              <option value="" style={{ textAlign: "center", color: "gray" }}>
-                — No more options —
-              </option>
+            {loading ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={faSearch} />
             )}
-          </select>
-        )}
+          </button>
+          {Boolean(searchResults?.length) && (
+            <select
+              className="dropdown-search-suggestions"
+              onChange={(e) => {
+                if (!e.currentTarget.value) {
+                  // clicked on "no more options"
+                  return;
+                }
+                setSearchQuery(e.currentTarget.selectedOptions[0].text);
+                handleButtonClick(e.currentTarget.value);
+                e.target.blur();
+              }}
+              size={Math.min(searchResults.length + 1, 8)}
+              tabIndex={-1}
+            >
+              {searchResults.map((artist, index) => {
+                const artistInfoString = `${artist.name} - ${
+                  artist.country ?? "Unknown"
+                }`;
+                return (
+                  <option
+                    key={artist.id}
+                    value={artist.id}
+                    data-release-info={artistInfoString}
+                    title={artistInfoString}
+                  >
+                    {artistInfoString}
+                  </option>
+                );
+              })}
+              {searchResults.length < 25 && (
+                <option value="" style={{ textAlign: "center", color: "gray" }}>
+                  — No more options —
+                </option>
+              )}
+            </select>
+          )}
+        </div>
       </div>
-      <div className="graph-size-input">
+      <div>
         <label htmlFor="artist-graph-size-input">Web size</label>
         <div className="input-group artist-search-input">
           <button

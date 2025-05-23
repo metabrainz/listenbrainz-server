@@ -243,7 +243,7 @@ export default function MusicNeighborhood() {
           />
           <button
             type="button"
-            className="ms-auto btn btn-icon btn-info"
+            className="ms-auto btn btn-icon btn-info my-0 mx-0"
             onClick={onClickDownload}
           >
             <FontAwesomeIcon icon={faDownload} color="white" />
@@ -251,7 +251,7 @@ export default function MusicNeighborhood() {
           {browserHasClipboardAPI && (
             <button
               type="button"
-              className="btn btn-icon btn-info"
+              className="btn btn-icon btn-info my-0 mx-0"
               onClick={copyImage}
             >
               <FontAwesomeIcon icon={faCopy} color="white" />
