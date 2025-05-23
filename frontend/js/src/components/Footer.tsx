@@ -7,8 +7,8 @@ import { Link } from "react-router-dom";
 export default function Footer() {
   return (
     <section className="footer">
-      <div className="container-fluid">
-        <div className="row">
+      <div className="container-fluid px-4">
+        <div className="row align-items-baseline">
           <div className="col-12 col-sm-12 col-lg-6">
             <h3>
               <img
@@ -51,7 +51,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="col-12 col-sm-6 col-lg-3">
-            <h3 className="w-title-a text-brand">Useful Links</h3>
+            <h3 className="text-brand text-body">Useful Links</h3>
             <ul className="list-unstyled">
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
@@ -130,7 +130,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="col-12 col-sm-6 col-lg-3">
-            <h3 className="w-title-a text-brand">Fellow Projects</h3>
+            <h3 className="text-brand text-body">Fellow Projects</h3>
             <ul className="list-unstyled">
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}

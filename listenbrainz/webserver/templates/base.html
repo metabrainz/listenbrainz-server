@@ -38,8 +38,8 @@
 
   {%- block footer -%}
   <section class="footer">
-    <div class="container-fluid">
-      <div class="row">
+    <div class="container-fluid px-4">
+      <div class="row align-items-baseline">
         <div class="col-sm-12 col-md-6">
           <h3>
             <img src="{{ url_for('static', filename='img/listenbrainz-logo.svg') }}" width="180" alt="ListenBrainz"/>
@@ -61,7 +61,7 @@
         </div>
         <br/>
         <div class="col-xs-12 col-sm-6 col-md-3">
-          <h3 class="w-title-a text-brand">Useful Links</h3>
+          <h3 class="text-brand text-body">Useful Links</h3>
           <ul class="list-unstyled">
             <li>
               <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/> <a href="https://metabrainz.org/donate" target="_blank" rel="noopener noreferrer" >Donate</a>
@@ -90,7 +90,7 @@
           </ul>
         </div>
         <div class="col-xs-12 col-sm-6 col-md-3">
-          <h3 class="w-title-a text-brand">Fellow Projects</h3>
+          <h3 class="text-brand text-body">Fellow Projects</h3>
           <ul class="list-unstyled">
             <li>
               <img src="{{ url_for('static', filename='img/icons/angle_double_right_icon.svg') }}" width="18" height="18"/>  <img src="{{ url_for('static', filename='img/meb-icons/MusicBrainz.svg') }}" width="18" height="18" alt="MusicBrainz"/> <a href="https://musicbrainz.org/" target="_blank" rel="noopener noreferrer" >MusicBrainz</a>
