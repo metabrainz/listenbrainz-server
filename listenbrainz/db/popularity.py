@@ -3,7 +3,7 @@ import logging
 import psycopg2
 from flask import current_app
 from psycopg2.extras import DictCursor, execute_values
-from psycopg2.sql import SQL, Identifier
+from psycopg2.sql import SQL, Identifier, Composable
 from sqlalchemy import text
 
 from listenbrainz.db import color
@@ -137,19 +137,24 @@ def get_all_popularity_datasets():
     return datasets
 
 
+def to_entity_mbid(entity, per_artist):
+    """ Convert entity name to entity_mbid if its a supported entity. """
+    entities = {"recording", "release_group", "release"}
+    if not per_artist:
+        entities.add("artist")
+
+    if entity not in entities:
+        raise ValueError(f"Unsupported entity: {entity}")
+
+    return f"{entity}_mbid"
+
+
 def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
     """ Get the top 'count' recordings, releases or release-groups for a given artist mbid
 
         By default running all recordings (entities) of the artist returned.
     """
-    if entity == "recording":
-        entity_mbid = "recording_mbid"
-    elif entity == "release_group":
-        entity_mbid = "release_group_mbid"
-    elif entity == "release":
-        entity_mbid = "release_mbid"
-    else:
-        return []
+    entity_mbid = to_entity_mbid(entity, True)
 
     if count is None:
         limit = ""
@@ -183,16 +188,7 @@ def get_top_entity_for_artist(ts_conn, entity, artist_mbid, count=None):
 
 def get_counts(ts_conn, entity, mbids):
     """ Get the total listen and user counts for a given entity and list of mbids """
-    if entity == "recording":
-        entity_mbid = "recording_mbid"
-    elif entity == "release_group":
-        entity_mbid = "release_group_mbid"
-    elif entity == "release":
-        entity_mbid = "release_mbid"
-    elif entity == "artist":
-        entity_mbid = "artist_mbid"
-    else:
-        return [], {}
+    entity_mbid = to_entity_mbid(entity, False)
 
     query = SQL("""
           WITH mbids (mbid) AS (
@@ -216,7 +212,7 @@ def get_counts(ts_conn, entity, mbids):
              , SUM(total_listen_count) AS total_listen_count
              , SUM(total_user_count) AS total_user_count
           FROM intermediate
-      GROUP BY mbid    
+      GROUP BY mbid
     """).format(
         entity_mbid=Identifier(entity_mbid),
         table=Identifier("popularity", entity),
