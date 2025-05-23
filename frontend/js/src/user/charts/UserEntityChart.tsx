@@ -261,7 +261,7 @@ export default function UserEntityChart() {
                 <span className="dropdown" style={{ fontSize: 22 }}>
                   <button
                     className="dropdown-toggle btn-transparent capitalize-bold"
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     type="button"
                   >
                     {ranges.get(range)}
@@ -270,17 +270,17 @@ export default function UserEntityChart() {
                   <ul className="dropdown-menu" role="menu">
                     {Array.from(ranges, ([stat_type, stat_name]) => {
                       return (
-                        <li key={`${stat_type}-${stat_name}`}>
-                          <Link
-                            to={{
-                              pathname: window.location.pathname,
-                              search: `?page=1&range=${stat_type}`,
-                            }}
-                            role="button"
-                          >
-                            {stat_name}
-                          </Link>
-                        </li>
+                        <Link
+                          className="dropdown-item"
+                          key={`${stat_type}-${stat_name}`}
+                          to={{
+                            pathname: window.location.pathname,
+                            search: `?page=1&range=${stat_type}`,
+                          }}
+                          role="button"
+                        >
+                          {stat_name}
+                        </Link>
                       );
                     })}
                   </ul>
@@ -303,8 +303,6 @@ export default function UserEntityChart() {
                 type="button"
                 className="btn btn-icon btn-info atom-button"
                 style={{ marginLeft: "auto" }}
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {
@@ -344,7 +342,7 @@ export default function UserEntityChart() {
             )}
           </div>
           {hasError && (
-            <div className="mt-15 mb-15">
+            <div className="mt-4 mb-4">
               <div className="text-center">
                 <span style={{ fontSize: 24 }}>
                   <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
@@ -412,15 +410,16 @@ export default function UserEntityChart() {
                 />
               </div>
               {totalPages > 1 && (
-                <div className="text-center">
-                  <ul className="pagination">
+                <nav>
+                  <ul className="pagination justify-content-center">
                     <li
-                      className={`previous ${
+                      className={`page-item ${
                         !(prevPage > 0) ? "disabled" : ""
                       }`}
                       title="First page"
                     >
                       <Link
+                        className="page-link"
                         to={{
                           pathname: window.location.pathname,
                           search: `?page=1&range=${range}`,
@@ -435,12 +434,13 @@ export default function UserEntityChart() {
                       </Link>
                     </li>
                     <li
-                      className={`previous ${
+                      className={`page-item ${
                         !(prevPage > 0) ? "disabled" : ""
                       }`}
                       title="Previous page"
                     >
                       <Link
+                        className="page-link"
                         to={{
                           pathname: window.location.pathname,
                           search: `?page=${prevPage}&range=${range}`,
@@ -456,13 +456,14 @@ export default function UserEntityChart() {
                       </Link>
                     </li>
                     {currPage > 3 && (
-                      <li>
-                        <span>...</span>
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
                       </li>
                     )}
                     {currPage > 2 && currPage - 2 < totalPages && (
-                      <li>
+                      <li className="page-item">
                         <Link
+                          className="page-link"
                           to={{
                             pathname: window.location.pathname,
                             search: `?page=${currPage - 2}&range=${range}`,
@@ -474,8 +475,9 @@ export default function UserEntityChart() {
                       </li>
                     )}
                     {currPage > 1 && currPage - 1 < totalPages && (
-                      <li>
+                      <li className="page-item">
                         <Link
+                          className="page-link"
                           to={{
                             pathname: window.location.pathname,
                             search: `?page=${currPage - 1}&range=${range}`,
@@ -486,12 +488,13 @@ export default function UserEntityChart() {
                         </Link>
                       </li>
                     )}
-                    <li title="Current page" className="active">
-                      <span>page {currPage}</span>
+                    <li title="Current page" className="page-item active">
+                      <span className="page-link">page {currPage}</span>
                     </li>
                     {currPage + 1 <= totalPages && (
-                      <li>
+                      <li className="page-item">
                         <Link
+                          className="page-link"
                           to={{
                             pathname: window.location.pathname,
                             search: `?page=${currPage + 1}&range=${range}`,
@@ -503,8 +506,9 @@ export default function UserEntityChart() {
                       </li>
                     )}
                     {currPage + 2 <= totalPages && (
-                      <li>
+                      <li className="page-item">
                         <Link
+                          className="page-link"
                           to={{
                             pathname: window.location.pathname,
                             search: `?page=${currPage + 2}&range=${range}`,
@@ -516,17 +520,18 @@ export default function UserEntityChart() {
                       </li>
                     )}
                     {currPage + 2 < totalPages && (
-                      <li>
-                        <span>...</span>
+                      <li className="page-item disabled">
+                        <span className="page-link">...</span>
                       </li>
                     )}
                     <li
-                      className={`next ${
+                      className={`page-item ${
                         !(nextPage <= totalPages) ? "disabled" : ""
                       }`}
                       title="Next page"
                     >
                       <Link
+                        className="page-link"
                         to={{
                           pathname: window.location.pathname,
                           search: `?page=${nextPage}&range=${range}`,
@@ -542,12 +547,13 @@ export default function UserEntityChart() {
                       </Link>
                     </li>
                     <li
-                      className={`next ${
+                      className={`page-item ${
                         !(nextPage <= totalPages) ? "disabled" : ""
                       }`}
                       title="Last page"
                     >
                       <Link
+                        className="page-link"
                         to={{
                           pathname: window.location.pathname,
                           search: `?page=${totalPages}&range=${range}`,
@@ -562,7 +568,7 @@ export default function UserEntityChart() {
                       </Link>
                     </li>
                   </ul>
-                </div>
+                </nav>
               )}
 
               {(entity === "artist" || entity === "recording") && (
@@ -571,7 +577,7 @@ export default function UserEntityChart() {
                     const listen = listenableItems[index];
                     const listenDetails = getChartEntityDetails(datum);
                     const listenCountComponent = (
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {datum.count}
                         &nbsp;
                         <FontAwesomeIcon icon={faHeadphones} />

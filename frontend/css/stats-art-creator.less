@@ -233,7 +233,14 @@
     }
   }
   input[type="color"] {
-    width: revert;
-    padding: revert;
+    padding: 0;
+    max-width: 5em;
+  }
+
+  .input-group {
+    flex-wrap: nowrap;
+    .input-group-text {
+      font-size: 1.4rem;
+    }
   }
 }

@@ -37,7 +37,7 @@ function IconTray(props: IconTrayProps) {
           <FontAwesomeIcon icon={faUser} fixedWidth />
         </div>
         &nbsp;add to profile, refresh
-        <select className="borderless">
+        <select className="form-select borderless">
           <option value="daily">daily</option>
           <option value="weekly">weekly</option>
           <option value="monthly">monthly</option>
@@ -54,8 +54,6 @@ function IconTray(props: IconTrayProps) {
         <button
           type="button"
           className="btn btn-icon btn-info"
-          data-toggle="modal"
-          data-target="#SyndicationFeedModal"
           onClick={onClickCopyFeedUrl}
           title="Subscribe to syndication feed (Atom)"
         >
@@ -83,25 +81,23 @@ function IconTray(props: IconTrayProps) {
           <input
             type="text"
             value={previewUrl}
-            disabled
+            readOnly
             className="form-control"
           />
           {browserHasClipboardAPI && (
-            <span className="input-group-btn">
-              <button
-                type="button"
-                onClick={onClickCopyURL}
-                className="btn btn-info btn-sm"
-              >
-                <FontAwesomeIcon icon={faLink} fixedWidth />
-              </button>
-            </span>
+            <button
+              type="button"
+              onClick={onClickCopyURL}
+              className="btn btn-info btn-sm"
+            >
+              <FontAwesomeIcon icon={faLink} fixedWidth />
+            </button>
           )}
         </div>
         {browserHasClipboardAPI && (
           <button
             type="button"
-            className="btn btn-icon btn-link"
+            className="btn btn-icon btn-link text-nowrap"
             onClick={onClickCopyAlt}
           >
             <span className="text-muted">alt text</span>

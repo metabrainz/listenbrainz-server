@@ -120,7 +120,7 @@ class SelectTroiPreferences extends React.Component<
               />
               <label htmlFor="export-to-spotify">
                 <b>Auto-export playlists to Spotify</b>
-                <span className="switch label-primary" />
+                <span className="switch bg-primary" />
               </label>
             </div>
             <p>

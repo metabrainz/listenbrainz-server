@@ -1,5 +1,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import Username from "../common/Username";
@@ -59,10 +61,9 @@ export default function UserSearch(props: UserSearchProps) {
           {username && (
             <th>
               Similarity to you{" "}
-              <span
-                className="glyphicon glyphicon-question-sign"
-                title="Similarity between users is calculated based on their listen history."
-              />
+              <span title="Similarity between users is calculated based on their listen history.">
+                <FontAwesomeIcon icon={faQuestionCircle} />
+              </span>
             </th>
           )}
         </tr>

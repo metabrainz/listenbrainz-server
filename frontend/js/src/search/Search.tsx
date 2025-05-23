@@ -69,7 +69,7 @@ export default function Search() {
         </ol>
       </div>
       <div role="main">
-        <form className="form-group" onSubmit={search}>
+        <form className="mb-4" onSubmit={search}>
           <h2
             className="header-with-line"
             style={{ alignItems: "center", flexWrap: "wrap" }}
@@ -88,7 +88,7 @@ export default function Search() {
             >
               <input
                 type="text"
-                className="form-control input-lg"
+                className="form-control form-control-lg"
                 name="search_term"
                 placeholder="Search"
                 value={searchTermInput}

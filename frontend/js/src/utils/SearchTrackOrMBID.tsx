@@ -275,15 +275,13 @@ const SearchTrackOrMBID = forwardRef<
           placeholder="Track name or MusicBrainz URL/MBID"
           required={requiredInput}
         />
-        <span className="input-group-btn">
-          <button className="btn btn-default" type="button" onClick={reset}>
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faTimesCircle} />
-            )}
-          </button>
-        </span>
+        <button className="btn btn-secondary" type="button" onClick={reset}>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faTimesCircle} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"

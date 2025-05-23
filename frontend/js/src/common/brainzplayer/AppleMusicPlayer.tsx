@@ -462,7 +462,7 @@ export default class AppleMusicPlayer
     return (
       <img
         alt="coverart"
-        className="img-responsive"
+        className="img-fluid"
         src={artwork.url
           .replace("{w}", artwork.width)
           .replace("{h}", artwork.height)}

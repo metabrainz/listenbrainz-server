@@ -434,6 +434,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                   icon={faVolumeUp}
                   style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
+                  className="d-none d-md-block"
                 />
               )}
             </>
