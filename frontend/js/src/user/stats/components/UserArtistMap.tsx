@@ -9,7 +9,6 @@ import _ from "lodash";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import Choropleth from "./Choropleth";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistMapProps = {
@@ -88,14 +87,12 @@ export default function UserArtistMap(props: UserArtistMapProps) {
 
   return (
     <Card className="user-stats-card" data-testid="user-stats-map">
-      <div className="row">
-        <div className="col-md-9 col-6">
-          <h3 className="capitalize-bold" style={{ display: "inline-block" }}>
-            Artist Origins
-          </h3>
+      <div className="d-flex align-items-baseline">
+        <div className="d-flex align-items-baseline flex-shrink-1 flex-wrap gap-1">
+          <h3 className="capitalize-bold">Artist Origins</h3>
           <small className="hidden-xs">&nbsp;(top 1,000 artists)</small>
         </div>
-        <div className="col-md-2 col-4 text-end" style={{ marginTop: 20 }}>
+        <div className="ms-auto">
           <span>Rank by</span>
           <span className="dropdown">
             <button
@@ -127,18 +124,12 @@ export default function UserArtistMap(props: UserArtistMapProps) {
             </div>
           </span>
         </div>
-        <div className="col-md-1 col-2 text-end">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#artist-origin">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
-        </div>
+        <a
+          href="#artist-origin"
+          className="btn btn-icon btn-link text-body fs-3"
+        >
+          <FontAwesomeIcon icon={faLink as IconProp} />
+        </a>
       </div>
       <p>Click on a country to see more details</p>
       <Loader isLoading={loading}>

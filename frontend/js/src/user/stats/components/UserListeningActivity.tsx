@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import BarDualTone from "./BarDualTone";
 import Loader from "../../../components/Loader";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserListeningActivityProps = {
@@ -436,24 +435,15 @@ export default function UserListeningActivity(
       style={{ marginTop: 20, minHeight: 400 }}
       data-testid="listening-activity"
     >
-      <div className="row">
-        <div className="col-10">
-          <h3 className="capitalize-bold">Listening Activity</h3>
-        </div>
-        <div className="col-2 text-end">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#listening-activity">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
-        </div>
+      <div className="d-flex align-items-baseline">
+        <h3 className="capitalize-bold">Listening Activity</h3>
+        <a
+          href="#listening-activity"
+          className="btn btn-icon btn-link ms-auto text-body fs-3"
+        >
+          <FontAwesomeIcon icon={faLink as IconProp} />
+        </a>
       </div>
-
       <Loader isLoading={loading}>
         {hasError && (
           <div
