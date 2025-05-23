@@ -469,7 +469,7 @@ export default function UserListeningActivity(
               lastRangePeriod={lastRangePeriod}
               thisRangePeriod={thisRangePeriod}
             />
-            <div className="row mt-5 mb-15">
+            <div className="row mt-5 mb-4">
               <MediaQuery minWidth={768}>
                 <div className="col-md-6 text-center">
                   <span

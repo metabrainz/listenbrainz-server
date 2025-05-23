@@ -319,7 +319,7 @@ export default class UserSocialNetwork extends React.Component<
         {isAnotherUser && (
           <FlairsExplanationButton className="d-none d-md-block" />
         )}
-        <Card className="mt-15 card-user-sn d-none d-md-block">
+        <Card className="mt-4 card-user-sn d-none d-md-block">
           <SimilarUsersModal
             user={user}
             similarUsersList={similarUsersList}

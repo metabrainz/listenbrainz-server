@@ -212,7 +212,7 @@ export default function AlbumPage(): JSX.Element {
           width={200}
         />
         <br />
-        <div className="form-text small mb-15">
+        <div className="form-text small mb-4">
           Broken CD by{" "}
           <a href="https://www.vecteezy.com/members/amandalamsyah/uploads">
             amandalamsyah on Vecteezy

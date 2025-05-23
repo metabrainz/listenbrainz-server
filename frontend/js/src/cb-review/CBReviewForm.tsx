@@ -210,7 +210,7 @@ function CBReviewForm({
       {showAlert && (
         <div
           id="text-too-short-alert"
-          className="alert alert-danger mt-10"
+          className="alert alert-danger mt-3"
           role="alert"
         >
           Your review needs to be longer than {minTextLength} characters.

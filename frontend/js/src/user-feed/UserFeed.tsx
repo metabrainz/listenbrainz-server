@@ -828,7 +828,7 @@ export default function UserFeedPage() {
             </>
           ) : (
             <>
-              <div className="text-center mb-15">
+              <div className="text-center mb-4">
                 <button
                   type="button"
                   className="btn btn-outline-info"
@@ -912,7 +912,7 @@ export default function UserFeedPage() {
               </div>
               {Boolean(events?.length) && (
                 <div
-                  className="text-center mb-15"
+                  className="text-center mb-4"
                   style={{
                     width: "50%",
                     marginLeft: "auto",

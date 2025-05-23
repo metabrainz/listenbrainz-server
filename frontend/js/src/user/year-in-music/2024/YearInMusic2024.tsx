@@ -266,7 +266,7 @@ export default class YearInMusic extends React.Component<
     const selectedSeason = YIM2024Seasons[selectedSeasonName];
     const { user } = this.props;
     return (
-      <div className="card content-card mb-10" id={`${coverArtKey}`}>
+      <div className="card content-card mb-3" id={`${coverArtKey}`}>
         <div className="center-p heading">
           <object
             className="img-header"

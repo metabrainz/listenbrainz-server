@@ -667,7 +667,7 @@ export default class YearInMusic extends React.Component<
           >
             <h3 className="text-center">
               {capitalize(yourOrUsersName)} listening activity in 2021
-              <div className="small mt-15">
+              <div className="small mt-4">
                 Number of listens submitted for each day of the year
               </div>
             </h3>
@@ -725,7 +725,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="most-listened-year">
             <h3 className="text-center">
               What year are {yourOrUsersName} favorite songs from?
-              <div className="small mt-15">
+              <div className="small mt-4">
                 How much were you on the lookout for new music this year? Not
                 that we&apos;re judging.
               </div>
@@ -765,7 +765,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="similar-users">
             <h3 className="text-center">
               Music buddies
-              <div className="small mt-15">
+              <div className="small mt-4">
                 Here are the users with the most similar taste to {user.name}{" "}
                 this year. Maybe go check them out?
               </div>
@@ -798,7 +798,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="new-releases">
             <h3 className="text-center">
               New albums of {yourOrUsersName} top artists
-              <div className="small mt-15">
+              <div className="small mt-4">
                 New albums released in 2021 from {yourOrUsersName} favorite
                 artists
               </div>
@@ -861,7 +861,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="playlists">
             <h3 className="text-center">
               We made some personalized playlists for {youOrUsername}!
-              <div className="small mt-15">
+              <div className="small mt-4">
                 You&apos;ll find below 3 playlists that encapsulate{" "}
                 {yourOrUsersName} year, and 1 playlist of music exploration
                 based on users similar to {youOrUsername}
@@ -875,7 +875,7 @@ export default class YearInMusic extends React.Component<
                     }
                     return (
                       <div
-                        className="card content-card mb-10"
+                        className="card content-card mb-3"
                         id="top-discoveries"
                       >
                         <h3 className="text-center">
@@ -883,7 +883,7 @@ export default class YearInMusic extends React.Component<
                             {topLevelPlaylist.jspf?.playlist?.title}
                           </Link>
                           {topLevelPlaylist.description && (
-                            <div className="small mt-15">
+                            <div className="small mt-4">
                               {topLevelPlaylist.description}
                             </div>
                           )}

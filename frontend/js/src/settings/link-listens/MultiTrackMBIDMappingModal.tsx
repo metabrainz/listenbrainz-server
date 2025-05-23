@@ -347,7 +347,7 @@ export default NiceModal.create(
                 defaultValue={searchTerm ?? ""}
               />
             </div>
-            <div className="form-check mt-15">
+            <div className="form-check mt-4">
               <input
                 className="form-check-input"
                 id="includeArtistSearch"
@@ -446,7 +446,7 @@ export default NiceModal.create(
                 Found {matchingTracksEntries.length} matches. Please check each
                 listen below:
               </h5>
-              <div className="mt-15">
+              <div className="mt-4">
                 {matchingTracksEntries.map(([recordingMSID, track]) => {
                   return (
                     <div
@@ -514,7 +514,7 @@ export default NiceModal.create(
               </ul>
             </>
           )}
-          <div className="form-check mt-15">
+          <div className="form-check mt-4">
             <input
               className="form-check-input"
               id="includeArtistMatch"

@@ -191,7 +191,7 @@ export default function NetworkFeedPage() {
           ) : (
             <>
               <div
-                className="mb-15"
+                className="mb-4"
                 style={{
                   display: "flex",
                   justifyContent: "center",
@@ -246,7 +246,7 @@ export default function NetworkFeedPage() {
                 </div>
               )}
               <div
-                className="text-center mb-15"
+                className="text-center mb-4"
                 style={{
                   width: "50%",
                   marginLeft: "auto",

@@ -532,7 +532,7 @@ export default function ArtistPage(): JSX.Element {
             </div>
           ))}
           {showFullDiscographyButton && (
-            <div className="read-more mb-10">
+            <div className="read-more mb-3">
               <button
                 type="button"
                 className="btn btn-outline-info"

@@ -342,7 +342,7 @@ export default function UserEntityChart() {
             )}
           </div>
           {hasError && (
-            <div className="mt-15 mb-15">
+            <div className="mt-4 mb-4">
               <div className="text-center">
                 <span style={{ fontSize: 24 }}>
                   <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}

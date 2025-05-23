@@ -164,7 +164,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
             compact
           />
 
-          <div className="text-center mb-10 mt-10">
+          <div className="text-center mb-3 mt-3">
             <button
               type="button"
               className="btn btn-transparent btn-rounded"
@@ -220,7 +220,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
           }}
         >
           <div
-            className="mb-10"
+            className="mb-3"
             style={{
               display: "flex",
               justifyContent: "space-between",
