@@ -2,7 +2,6 @@ const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
-const lightningcss = require("lightningcss");
 const StylelintPlugin = require("stylelint-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 
@@ -117,12 +116,8 @@ module.exports = function (env, argv) {
       ],
     },
     optimization: {
-      minimize: true,
-      minimizer: [
-        new CssMinimizerPlugin({
-          minify: CssMinimizerPlugin.lightningCssMinify,
-        }),
-      ],
+      minimize: isProd,
+      minimizer: [new CssMinimizerPlugin()],
     },
     resolve: {
       modules: [
