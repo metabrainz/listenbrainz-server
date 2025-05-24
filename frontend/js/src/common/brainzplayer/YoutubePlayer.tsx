@@ -32,6 +32,7 @@ export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
   onClose?: () => void;
+  onVisibilityChange?: (visible: boolean) => void;
 };
 
 // For some reason Youtube types do not document getVideoData,
@@ -384,14 +385,9 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
 
     // Handle close button click
     const handleClose = () => {
-      if (this.youtubePlayer) {
-        this.youtubePlayer.stopVideo();
-        // Clear playlist
-        this.youtubePlayer.cueVideoById("");
-      }
-      // Hide the player by updating the show prop in the parent component
-      if (this.props.onVisibilityChange) {
-        this.props.onVisibilityChange(false);
+      const { onVisibilityChange } = this.props;
+      if (onVisibilityChange) {
+        onVisibilityChange(false);
       }
     };
 
@@ -412,7 +408,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
             <FontAwesomeIcon icon={faArrowsAlt} />
           </button>
           <button
-            className="btn btn-sm youtube-close-button"
+            className="btn btn-sm youtube-button"
             type="button"
             onClick={onClose}
           >
