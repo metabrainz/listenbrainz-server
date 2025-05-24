@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, {useCallback,useContext,useState,useRef,RefObject,} from "react";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -101,12 +101,19 @@ export default NiceModal.create(() => {
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invertOrder, setInvertOrder] = useState(false);
+  const [keepModalOpen, setKeepModalOpen] = useState(false);
   // Used for the automatic switching and search trigger if pasting URL for another entity type
   const [textToSearch, setTextToSearch] = useState<string>();
+  const addSingleListenRef = useRef<{ reset: () => void }>(null);
+  const addAlbumListensRef = useRef<{ reset: () => void }>(null);
 
   const closeModal = useCallback(() => {
     modal.hide();
     document?.body?.classList?.remove("modal-open");
+    const backdrop = document?.querySelector(".modal-backdrop");
+    if (backdrop) {
+      backdrop.remove();
+    }
     setTimeout(modal.remove, 200);
   }, [modal]);
 
@@ -126,92 +133,113 @@ export default NiceModal.create(() => {
     []
   );
 
-  const submitListens = useCallback(async () => {
-    if (auth_token) {
-      let payload: Listen[] = [];
-      const listenType: ListenType =
-        selectedListens?.length <= 1 ? "single" : "import";
-      // Use the user-selected date, default to "now"
-      const date = customTimestamp ? selectedDate : new Date();
-      if (selectedListens?.length) {
-        let orderedSelectedListens = [...selectedListens];
-        if (invertOrder) {
-          orderedSelectedListens = orderedSelectedListens.reverse();
-        }
-        let cumulativeDateTime = date;
-        payload = orderedSelectedListens.map((listen) => {
-          // Now we need to set the listening time for each listen
-          const modifiedListen = { ...listen };
-          const durationMS = get(
-            modifiedListen,
-            "track_metadata.additional_info.duration_ms"
-          );
-          const timeToAdd =
-            (durationMS && durationMS / 1000) ??
-            modifiedListen.track_metadata.additional_info?.duration ??
-            DEFAULT_TRACK_LENGTH_SECONDS;
-          // We either use the previous value of cumulativeDateTime,
-          // or if inverting listening order directly use the new value newTime
-          const newTime = add(cumulativeDateTime, {
-            seconds: invertOrder ? -timeToAdd : timeToAdd,
-          });
+  const submitListens = useCallback(
+    async (e?: React.FormEvent<HTMLFormElement>) => {
+      if (e) e.preventDefault();
+      if (auth_token) {
+        let payload: Listen[] = [];
+        const listenType: ListenType =
+          selectedListens?.length <= 1 ? "single" : "import";
+        // Use the user-selected date, default to "now"
+        const date = customTimestamp ? selectedDate : new Date();
+        if (selectedListens?.length) {
+          let orderedSelectedListens = [...selectedListens];
           if (invertOrder) {
-            modifiedListen.listened_at = convertDateToUnixTimestamp(newTime);
-          } else {
-            modifiedListen.listened_at = convertDateToUnixTimestamp(
-              cumulativeDateTime
-            );
+            orderedSelectedListens = orderedSelectedListens.reverse();
           }
-          // Then we assign the new time value for the next iteration
-          cumulativeDateTime = newTime;
-          return modifiedListen;
-        });
-      }
-      if (!payload?.length) {
-        return;
-      }
-      const listenOrListens = payload.length > 1 ? "listens" : "listen";
-      try {
-        const response = await APIService.submitListens(
-          auth_token,
-          listenType,
-          payload
-        );
-        await APIService.checkStatus(response);
+          let cumulativeDateTime = date;
 
-        toast.success(
+          payload = orderedSelectedListens.map((listen) => {
+            // Now we need to set the listening time for each listen
+            const modifiedListen = { ...listen };
+            const durationMS = get(
+              modifiedListen,
+              "track_metadata.additional_info.duration_ms"
+            );
+            const timeToAdd =
+              (durationMS && durationMS / 1000) ??
+              modifiedListen.track_metadata.additional_info?.duration ??
+              DEFAULT_TRACK_LENGTH_SECONDS;
+            // We either use the previous value of cumulativeDateTime,
+            // or if inverting listening order directly use the new value newTime
+            const newTime = add(cumulativeDateTime, {
+              seconds: invertOrder ? -timeToAdd : timeToAdd,
+            });
+            if (invertOrder) {
+              modifiedListen.listened_at = convertDateToUnixTimestamp(newTime);
+            } else {
+              modifiedListen.listened_at = convertDateToUnixTimestamp(
+                cumulativeDateTime
+              );
+            }
+            // Then we assign the new time value for the next iteration
+            cumulativeDateTime = newTime;
+            return modifiedListen;
+          });
+        }
+        if (!payload?.length) {
+          return;
+        }
+        const listenOrListens = payload.length > 1 ? "listens" : "listen";
+        try {
+          const response = await APIService.submitListens(
+            auth_token,
+            listenType,
+            payload
+          );
+          await APIService.checkStatus(response);
+
+          toast.success(
+            <ToastMsg
+              title="Success"
+              message={`You added ${payload.length} ${listenOrListens}`}
+            />,
+            { toastId: "added-listens-success" }
+          );
+
+          if (!keepModalOpen) {
+            closeModal();
+          } else {
+            // Reset the form state but keep the modal open
+            setSelectedListens([]);
+            setTextToSearch("");
+            if (listenOption === SubmitListenType.track) {
+              addSingleListenRef.current?.reset();
+            } else if (listenOption === SubmitListenType.album) {
+              addAlbumListensRef.current?.reset();
+            }
+          }
+        } catch (error) {
+          handleError(
+            error,
+            `Error while submitting ${payload.length} ${listenOrListens}`
+          );
+        }
+      } else {
+        toast.error(
           <ToastMsg
-            title="Success"
-            message={`You added ${payload.length} ${listenOrListens}`}
+            title="You need to be logged in to submit listens"
+            message={<Link to="/login/">Log in here</Link>}
           />,
-          { toastId: "added-listens-success" }
-        );
-        closeModal();
-      } catch (error) {
-        handleError(
-          error,
-          `Error while submitting ${payload.length} ${listenOrListens}`
+          { toastId: "auth-error" }
         );
       }
-    } else {
-      toast.error(
-        <ToastMsg
-          title="You need to be logged in to submit listens"
-          message={<Link to="/login/">Log in here</Link>}
-        />,
-        { toastId: "auth-error" }
-      );
-    }
-  }, [
-    auth_token,
-    selectedListens,
-    customTimestamp,
-    selectedDate,
-    invertOrder,
-    APIService,
-    closeModal,
-    handleError,
-  ]);
+    },
+    [
+      auth_token,
+      selectedListens,
+      customTimestamp,
+      selectedDate,
+      invertOrder,
+      APIService,
+      closeModal,
+      handleError,
+      keepModalOpen,
+      listenOption,
+      addSingleListenRef,
+      addAlbumListensRef,
+    ]
+  );
 
   const switchMode = React.useCallback(
     (pastedURL: string) => {
@@ -247,7 +275,7 @@ export default NiceModal.create(() => {
       data-backdrop="static"
     >
       <div className="modal-dialog" role="document">
-        <form className="modal-content">
+        <form className="modal-content" onSubmit={submitListens}>
           <div className="modal-header">
             <button
               type="button"
@@ -285,6 +313,7 @@ export default NiceModal.create(() => {
             </div>
             {listenOption === SubmitListenType.track && (
               <AddSingleListen
+                ref={addSingleListenRef}
                 onPayloadChange={setSelectedListens}
                 switchMode={switchMode}
                 initialText={textToSearch}
@@ -292,6 +321,7 @@ export default NiceModal.create(() => {
             )}
             {listenOption === SubmitListenType.album && (
               <AddAlbumListens
+                ref={addAlbumListensRef}
                 onPayloadChange={setSelectedListens}
                 switchMode={switchMode}
                 initialText={textToSearch}
@@ -369,11 +399,24 @@ export default NiceModal.create(() => {
               </div>
             </div>
           </div>
-          <div className="modal-footer">
+          <div
+            className="modal-footer"
+            style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+          >
+            <div style={{ flex: 1 }}>
+              <label style={{ userSelect: "none", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={keepModalOpen}
+                  onChange={(e) => setKeepModalOpen(e.target.checked)}
+                  style={{ marginRight: "0.5em" }}
+                />
+                Add another
+              </label>
+            </div>
             <button
               type="button"
               className="btn btn-default"
-              data-dismiss="modal"
               onClick={closeModal}
             >
               Close
@@ -381,9 +424,7 @@ export default NiceModal.create(() => {
             <button
               type="submit"
               className="btn btn-success"
-              data-dismiss="modal"
               disabled={!selectedListens?.length}
-              onClick={submitListens}
             >
               Submit {selectedListens.length ?? 0} listen
               {selectedListens.length > 1 ? "s" : ""}

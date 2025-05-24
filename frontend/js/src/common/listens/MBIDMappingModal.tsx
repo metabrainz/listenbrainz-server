@@ -50,7 +50,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     TrackMetadata
   >();
 
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputRef = React.useRef<SearchInputImperativeHandle>(null);
 
   const closeModal = React.useCallback(() => {
     modal.hide();

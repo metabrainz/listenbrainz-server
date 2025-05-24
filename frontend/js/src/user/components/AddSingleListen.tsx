@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import {
   faChevronDown,
   faTimesCircle,
@@ -16,11 +22,10 @@ interface AddSingleListenProps {
   initialText?: string;
 }
 
-export default function AddSingleListen({
-  onPayloadChange,
-  switchMode,
-  initialText,
-}: AddSingleListenProps) {
+const AddSingleListen = forwardRef(function AddSingleListen(
+  { onPayloadChange, switchMode, initialText }: AddSingleListenProps,
+  ref
+) {
   const [selectedRecordings, setSelectedRecordings] = useState<
     MusicBrainzRecordingWithReleasesAndRGs[]
   >([]);
@@ -30,10 +35,7 @@ export default function AddSingleListen({
       | undefined;
   }>({});
 
-  const searchInputRef = useRef<{
-    focus(): void;
-    triggerSearch(newText: string): void;
-  }>(null);
+  const searchInputRef = useRef<SearchInputImperativeHandle>(null);
 
   const initialTextRef = useRef(initialText);
   React.useEffect(() => {
@@ -46,6 +48,14 @@ export default function AddSingleListen({
       initialTextRef.current = undefined;
     };
   }, [initialText]);
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setSelectedRecordings([]);
+      setSelectedReleases({});
+      searchInputRef.current?.reset();
+    },
+  }));
 
   const removeRecording = (recordingMBID: string) => {
     setSelectedRecordings((prevRecordings) =>
@@ -97,6 +107,7 @@ export default function AddSingleListen({
         expectedPayload="recording"
         onSelectRecording={selectRecording}
         switchMode={switchMode}
+        requiredInput={selectedRecordings.length === 0}
       />
       <div className="track-info">
         <div className="content">
@@ -231,4 +242,6 @@ export default function AddSingleListen({
       </div>
     </div>
   );
-}
+});
+
+export default AddSingleListen;
