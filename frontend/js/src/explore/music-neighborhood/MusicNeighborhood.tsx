@@ -243,7 +243,7 @@ export default function MusicNeighborhood() {
           />
           <button
             type="button"
-            className="ms-auto btn btn-icon btn-info my-0 mx-0"
+            className="ms-5 btn btn-icon btn-info my-0 mx-0"
             onClick={onClickDownload}
           >
             <FontAwesomeIcon icon={faDownload} color="white" />
