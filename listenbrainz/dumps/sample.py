@@ -77,8 +77,6 @@ def get_popularity_data(cursor, entity: str, mbids: list[str], *, per_artist: bo
     return results
 
 
-# TODO: Discuss how to fix the issue of recording msid for tracks existing in production but not locally
-#   dump msid table and msid to mbid mapping table too?
 def dump_sample_data(location: str):
     """ Creates a sample data dump containing a subset of metadata and popularity information.
 
