@@ -114,9 +114,9 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     return users
 
 
-def get_import_info(db_conn, user_id: int, service: ExternalServiceType) -> [dict]:
+def get_status(db_conn, user_id: int, service: ExternalServiceType) -> dict:
 
-    """ Get import_status and imported_listens for a user.
+    """ Get status information for a user's import.
 
     Args:
         db_conn: database connection
@@ -124,35 +124,35 @@ def get_import_info(db_conn, user_id: int, service: ExternalServiceType) -> [dic
         service: ExternalServiceType enum of the service
     """
     result = db_conn.execute(sqlalchemy.text("""
-        SELECT import_info
-        FROM listens_importer
-        WHERE user_id = :user_id 
-        AND service = :service
+        SELECT status
+          FROM listens_importer
+         WHERE user_id = :user_id 
+           AND service = :service
     """), {
-        'user_id': user_id,
-        'service': service.value
-        })
+        "user_id": user_id,
+        "service": service.value
+    })
 
     row = result.fetchone()
-    return row.import_info if row else None
+    return row.status if row else None
 
 
-def update_import_info(db_conn, user_id: int, service: ExternalServiceType, import_status: str, imported_listens: int):
+def update_status(db_conn, user_id: int, service: ExternalServiceType, state: str, listens_count: int):
     """ 
-        Update import_status and imported_listens for a user.
+        Update status information for a user's import.
 
     Args:
         db_conn: database connection
         user_id: ListenBrainz row ID of the user
         service: ExternalServiceType enum of the service
-        import_status: Import status of that service
-        imported_listens: No. of listens imported
+        state: Import status of that service
+        listens_count: Number of listens imported
     """
 
     params = {
-        "import_info":json.dumps({
-            "import_status": import_status,
-            "imported_listens": imported_listens   
+        "status": json.dumps({
+            "state": state,
+            "count": listens_count
         }),
         "service": service.value,
         "user_id": user_id,
@@ -160,9 +160,9 @@ def update_import_info(db_conn, user_id: int, service: ExternalServiceType, impo
 
     query = """
             UPDATE listens_importer
-            SET import_info = :import_info
-            WHERE user_id = :user_id
-            AND service = :service
+               SET status = :status
+             WHERE user_id = :user_id
+               AND service = :service
         """
 
     db_conn.execute(text(query), params)

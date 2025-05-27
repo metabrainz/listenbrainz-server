@@ -12,6 +12,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.background.background_tasks import add_task
+from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
@@ -27,7 +28,6 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, AP
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db.listens_importer import get_import_info
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -281,11 +281,14 @@ def music_services_connect(service_name: str):
         "external_user_id": data["external_user_id"],
         "latest_listened_at": latest_listened_at,
     })
-    LFM_data = response.json()
-    if "user" in LFM_data:
-        total_listens = LFM_data["user"]["playcount"]
-    else:
-        total_listens = 0
+
+    total_listens = 0
+    try:
+        lfm_data = response.json()
+        if "user" in lfm_data:
+            total_listens = lfm_data["user"]["playcount"]
+    except Exception:
+        current_app.logger.error("Unable to fetch last.fm user data:", exc_info=True)
 
     return jsonify({"success": True, "totalLFMListens": total_listens})
 
@@ -294,17 +297,17 @@ def music_services_connect(service_name: str):
 @api_login_required
 def import_status(service_name: str):
     if service_name.lower() != "lastfm":
-        raise APINotFound("Service %s is invalid." % (service_name))
+        raise APINotFound("Service %s is invalid." % service_name)
 
-    result = get_import_info(db_conn, current_user.id, ExternalServiceType.LASTFM)
+    result = listens_importer.get_status(db_conn, current_user.id, ExternalServiceType.LASTFM)
 
     if result is None:
         result = {
-            "import_status": "Queued",
-            "imported_listens": 0
+            "state": "Queued",
+            "count": 0
         }
     
-    return jsonify({"status": result["import_status"], "listens_imported": result["imported_listens"]})
+    return jsonify({"status": result["state"], "listens_imported": result["count"]})
 
 
 @settings_bp.post('/music-services/<service_name>/disconnect/')

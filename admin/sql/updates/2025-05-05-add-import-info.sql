@@ -1,6 +1,5 @@
 BEGIN;
 
-ALTER TABLE "listens_importer"
-ADD COLUMN import_info JSONB;
+ALTER TABLE "listens_importer" ADD COLUMN status JSONB;
 
 COMMIT;

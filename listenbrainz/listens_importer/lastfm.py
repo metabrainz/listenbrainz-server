@@ -5,6 +5,7 @@ from flask import current_app
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
+from listenbrainz.db import listens_importer
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.listens_importer.base import ListensImporter
@@ -15,8 +16,6 @@ from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, \
 
 from listenbrainz.webserver import db_conn, ts_conn
 from data.model.external_service import ExternalServiceType
-from listenbrainz.db.listens_importer import get_import_info, update_import_info
-
 
 
 class LastfmImporter(ListensImporter):
@@ -110,7 +109,9 @@ class LastfmImporter(ListensImporter):
         """
         try:
             imported_listen_count = 0
-            import_info_dict = get_import_info(db_conn, user["user_id"], ExternalServiceType.LASTFM)
+            status = listens_importer.get_status(
+                db_conn, user["user_id"], ExternalServiceType.LASTFM
+            )
 
             session = requests.Session()
             session.mount(
@@ -124,8 +125,10 @@ class LastfmImporter(ListensImporter):
                 ))
             )
 
-            initial_imported_listens = import_info_dict["imported_listens"] if import_info_dict else 0
-            update_import_info(db_conn, user["user_id"], ExternalServiceType.LASTFM, "Importing", initial_imported_listens)
+            initial_imported_listens = status["count"] if status else 0
+            listens_importer.update_status(
+                db_conn, user["user_id"], ExternalServiceType.LASTFM, "Importing", initial_imported_listens
+            )
 
             response = self.get_user_recent_tracks(session, user, page=1)
             pages = int(response["recenttracks"]["@attr"]["totalPages"])
@@ -149,9 +152,15 @@ class LastfmImporter(ListensImporter):
                     current_app.logger.info('imported %d listens for %s' % (len(listens), str(user['musicbrainz_id'])))
                     imported_listen_count += len(listens)
                 
-                update_import_info(db_conn, user["user_id"], ExternalServiceType.LASTFM, "Importing", initial_imported_listens + imported_listen_count)
+                listens_importer.update_status(
+                    db_conn, user["user_id"], ExternalServiceType.LASTFM,
+                    "Importing", initial_imported_listens + imported_listen_count
+                )
 
-            update_import_info(db_conn, user["user_id"], ExternalServiceType.LASTFM, "Synced", initial_imported_listens + imported_listen_count)
+            listens_importer.update_status(
+                db_conn, user["user_id"], ExternalServiceType.LASTFM, "Synced",
+                initial_imported_listens + imported_listen_count
+            )
 
             return imported_listen_count
         except ExternalServiceAPIError as e:

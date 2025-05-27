@@ -18,7 +18,7 @@ class ListensImporter(db.Model):
     service = db.Column(db.String, nullable=False)
     last_updated = db.Column(db.DateTime(timezone=True))
     latest_listened_at = db.Column(db.DateTime(timezone=True))
-    import_info = db.Column(JSONB)
+    status = db.Column(JSONB)
     error_message = db.Column(db.String)
     user = db.relationship('User')
 
@@ -31,7 +31,7 @@ class ListensImporterAdminView(AdminModelView):
         'service',
         'last_updated',
         'latest_listened_at',
-        'import_info',
+        'status',
         'error_message'
     ]
 
@@ -43,7 +43,7 @@ class ListensImporterAdminView(AdminModelView):
         'service',
         'last_updated',
         'latest_listened_at',
-        'import_info',
+        'status',
         'error_message'
     ]
 
