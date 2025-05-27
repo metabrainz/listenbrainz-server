@@ -86,7 +86,7 @@ class LastfmImporter(ListensImporter):
             "api_key": current_app.config["LASTFM_API_KEY"],
             "limit": 200,
             "user": user["external_user_id"],
-            "from": int(latest_listened_at.timestamp()),
+            "from": int(latest_listened_at.timestamp()) + 1,
             "page": page
         }
         response = session.get(current_app.config["LASTFM_API_URL"], params=params)
