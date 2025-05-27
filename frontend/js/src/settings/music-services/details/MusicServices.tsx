@@ -63,8 +63,8 @@ export default function MusicServices() {
     permissions.lastfm !== "import"
       ? "btn-default"
       : (lastFMEdit && "btn-success") || "btn-warning";
-  const [showImportStatus, setshowImportStatus] = React.useState(false);
-  const [totalLFMListens, setTotalLFMListens] = React.useState<number>(0);
+  const [showImportStatus, setShowImportStatus] = React.useState(false);
+  const [totalLfmListens, setTotalLfmListens] = React.useState<number>(0);
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -227,12 +227,12 @@ export default function MusicServices() {
 
       if (response.ok) {
         const data = await response.json();
-        setTotalLFMListens(data.totalLFMListens);
+        setTotalLfmListens(data.totalLfmListens);
         toast.success(
           <ToastMsg
             title="Success"
             message={`Your Last.FM account is connected to ListenBrainz.
-              ${data.totalLFMListens} listens are being imported.`}
+              ${data.totalLfmListens} listens are being imported.`}
           />
         );
 
@@ -440,7 +440,7 @@ export default function MusicServices() {
               <button
                 type="button"
                 className="btn btn-default"
-                onClick={() => setshowImportStatus(true)}
+                onClick={() => setShowImportStatus(true)}
               >
                 View Import Status
               </button>
@@ -449,9 +449,9 @@ export default function MusicServices() {
 
           {showImportStatus && (
             <ImportStatus
-              onClose={() => setshowImportStatus(false)}
+              onClose={() => setShowImportStatus(false)}
               serviceName="lastfm"
-              totalListens={totalLFMListens}
+              totalListens={totalLfmListens}
             />
           )}
           <div className="panel-heading">

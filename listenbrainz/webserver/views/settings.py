@@ -290,7 +290,7 @@ def music_services_connect(service_name: str):
     except Exception:
         current_app.logger.error("Unable to fetch last.fm user data:", exc_info=True)
 
-    return jsonify({"success": True, "totalLFMListens": total_listens})
+    return jsonify({"success": True, "totalLfmListens": total_listens})
 
 
 @settings_bp.get('/music-services/<service_name>/import-status/')
