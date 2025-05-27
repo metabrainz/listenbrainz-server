@@ -124,7 +124,8 @@ function valueReducer(
       } else {
         elapsedTimeSinceLastUpdate = performance.now() - updateTime;
         const position = progressMs + elapsedTimeSinceLastUpdate;
-        newProgressMs = position > durationMs ? durationMs : position;
+        newProgressMs =
+          Boolean(durationMs) && position > durationMs ? durationMs : position;
       }
       return {
         ...state,
