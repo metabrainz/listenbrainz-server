@@ -1,4 +1,4 @@
-import logging
+import logging, os
 from datetime import datetime
 from typing import Dict, Tuple
 from urllib.parse import urlparse
@@ -18,8 +18,9 @@ import sentry_sdk
 
 from typing import NoReturn
 
-from flask import current_app, request
+from flask import current_app, request, jsonify
 
+from werkzeug.utils import secure_filename
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
@@ -542,3 +543,30 @@ def _allow_metabrainz_domains(tag, name, value):
 def _filter_description_html(description):
     ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
+
+
+def upload_listening_history_files(request):
+    UPLOAD_DIR = 'uploads'
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            raise APIBadRequest('No file in request!')
+        
+        uploaded_file = request.files['file']
+
+        if uploaded_file.filename == '':
+            raise APIBadRequest('No file selected!')
+
+        ext = os.path.splitext(uploaded_file.name)[1].lower()
+
+        if ext not in ['.zip', '.json', '.jsonl', '.csv']:
+            raise APIBadRequest('Unsupported file type!')
+        
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        
+        filename = f"{uuid.uuid4().hex}{ext}"
+        save_path = os.path.join(UPLOAD_DIR, secure_filename(filename))
+        uploaded_file.save(save_path)
+
+        return jsonify({'status': 'success'})
+
+    raise APIBadRequest("File not uploaded!")
