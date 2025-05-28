@@ -56,7 +56,7 @@ def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceTyp
     db_conn.commit()
 
 
-def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> Optional[dict]:
+def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> dict:
     """ Returns the timestamp of the last listen imported for the user with
     specified LB user ID from the given service.
 
@@ -80,7 +80,7 @@ def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> Op
         })
     row = result.fetchone()
     if row is None:
-        return None
+        return {"status": None, "latest_listened_at": 0}
 
     return {
         "status": row.status,
