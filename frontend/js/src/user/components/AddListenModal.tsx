@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useState,
-  useRef,
-  RefObject,
-} from "react";
+import React, { useCallback, useContext, useState, useRef } from "react";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -272,8 +266,8 @@ export default NiceModal.create(() => {
       <Modal.Header closeButton>
         <Modal.Title id="AddListenModalLabel">Add Listens</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <form onSubmit={submitListens}>
+      <form onSubmit={submitListens}>
+        <Modal.Body>
           <div className="add-listen-header">
             <Pill
               active={listenOption === SubmitListenType.track}
@@ -379,36 +373,36 @@ export default NiceModal.create(() => {
               </div>
             </div>
           </div>
-        </form>
-      </Modal.Body>
-      <Modal.Footer className="d-flex align-items-center gap-3">
-        <div style={{ flex: 1 }}>
-          <label style={{ userSelect: "none", cursor: "pointer" }}>
-            <input
-              type="checkbox"
-              checked={keepModalOpen}
-              onChange={(e) => setKeepModalOpen(e.target.checked)}
-              style={{ marginRight: "0.5em" }}
-            />
-            Add another
-          </label>
-        </div>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={modal.hide}
-        >
-          Close
-        </button>
-        <button
-          type="submit"
-          className="btn btn-success"
-          disabled={!selectedListens?.length}
-        >
-          Submit {selectedListens.length ?? 0} listen
-          {selectedListens.length > 1 ? "s" : ""}
-        </button>
-      </Modal.Footer>
+        </Modal.Body>
+        <Modal.Footer className="d-flex align-items-center gap-3">
+          <div style={{ flex: 1 }}>
+            <label style={{ userSelect: "none", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={keepModalOpen}
+                onChange={(e) => setKeepModalOpen(e.target.checked)}
+                style={{ marginRight: "0.5em" }}
+              />
+              Add another
+            </label>
+          </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={modal.hide}
+          >
+            Close
+          </button>
+          <button
+            type="submit"
+            className="btn btn-success"
+            disabled={!selectedListens?.length}
+          >
+            Submit {selectedListens.length ?? 0} listen
+            {selectedListens.length > 1 ? "s" : ""}
+          </button>
+        </Modal.Footer>
+      </form>
     </Modal>
   );
 });
