@@ -47,7 +47,7 @@ function renderExport(
             icon={faChevronCircleRight}
             size="sm"
             className="summary-indicator"
-          />{" "}
+          />
           Details
         </summary>
         <dl className="row">
