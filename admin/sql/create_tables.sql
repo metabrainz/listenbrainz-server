@@ -142,6 +142,7 @@ CREATE TABLE listens_importer (
     service                     external_service_oauth_type NOT NULL,
     last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
+    status                      JSONB,
     error_message               TEXT
 );
 

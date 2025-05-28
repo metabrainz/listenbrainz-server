@@ -43,7 +43,12 @@ function renderExport(
     <p>
       <details>
         <summary>
-          <FontAwesomeIcon icon={faChevronCircleRight} size="sm" /> Details
+          <FontAwesomeIcon
+            icon={faChevronCircleRight}
+            size="sm"
+            className="summary-indicator"
+          />{" "}
+          Details
         </summary>
         <dl className="row">
           <dt className="col-xs-4">Progress</dt>
