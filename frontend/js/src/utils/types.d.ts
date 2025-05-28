@@ -109,6 +109,14 @@ declare type LastFmScrobblePage = {
   };
 };
 
+declare type LatestImportResponse = {
+  latest_import: number;
+  status?: {
+    state: string;
+    count: number;
+  };
+};
+
 declare type UserArtistsResponse = {
   payload: {
     artists: Array<{

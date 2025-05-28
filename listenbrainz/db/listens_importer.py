@@ -56,7 +56,7 @@ def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceTyp
     db_conn.commit()
 
 
-def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) -> Optional[datetime]:
+def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> Optional[dict]:
     """ Returns the timestamp of the last listen imported for the user with
     specified LB user ID from the given service.
 
@@ -65,19 +65,27 @@ def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) 
         user_id: the ListenBrainz row ID of the user
         service: service to update latest listen timestamp for
     Returns:
-        timestamp: the unix timestamp of the latest listen imported for the user
+        a dict containing the latest listen unix timestamp and status information for
+        the user, if any, otherwise None.
     """
     result = db_conn.execute(sqlalchemy.text("""
         SELECT latest_listened_at
+             , status
           FROM listens_importer
          WHERE user_id = :user_id
            AND service = :service
         """), {
-            'user_id': user_id,
-            'service': service.value,
+            "user_id": user_id,
+            "service": service.value,
         })
     row = result.fetchone()
-    return row.latest_listened_at if row else None
+    if row is None:
+        return None
+
+    return {
+        "status": row.status,
+        "latest_listened_at": int(row.latest_listened_at.timestamp()) if row.latest_listened_at is not None else 0,
+    }
 
 
 def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[dict]:
@@ -98,6 +106,7 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
              , token_expires
              , scopes
              , latest_listened_at
+             , status
              , external_service_oauth.external_user_id
              , error_message
              , is_paused
@@ -112,29 +121,6 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     users = [row for row in result.mappings()]
     db_conn.rollback()
     return users
-
-
-def get_status(db_conn, user_id: int, service: ExternalServiceType) -> dict:
-
-    """ Get status information for a user's import.
-
-    Args:
-        db_conn: database connection
-        user_id: ListenBrainz row ID of the user
-        service: ExternalServiceType enum of the service
-    """
-    result = db_conn.execute(sqlalchemy.text("""
-        SELECT status
-          FROM listens_importer
-         WHERE user_id = :user_id 
-           AND service = :service
-    """), {
-        "user_id": user_id,
-        "service": service.value
-    })
-
-    row = result.fetchone()
-    return row.status if row else None
 
 
 def update_status(db_conn, user_id: int, service: ExternalServiceType, state: str, listens_count: int):
@@ -159,11 +145,11 @@ def update_status(db_conn, user_id: int, service: ExternalServiceType, state: st
     }
 
     query = """
-            UPDATE listens_importer
-               SET status = :status
-             WHERE user_id = :user_id
-               AND service = :service
-        """
+        UPDATE listens_importer
+           SET status = :status
+         WHERE user_id = :user_id
+           AND service = :service
+    """
 
     db_conn.execute(text(query), params)
     db_conn.commit()

@@ -64,7 +64,6 @@ export default function MusicServices() {
       ? "btn-default"
       : (lastFMEdit && "btn-success") || "btn-warning";
   const [showImportStatus, setShowImportStatus] = React.useState(false);
-  const [totalLfmListens, setTotalLfmListens] = React.useState<number>(0);
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -227,7 +226,6 @@ export default function MusicServices() {
 
       if (response.ok) {
         const data = await response.json();
-        setTotalLfmListens(data.totalLfmListens);
         toast.success(
           <ToastMsg
             title="Success"
@@ -451,7 +449,6 @@ export default function MusicServices() {
             <ImportStatus
               onClose={() => setShowImportStatus(false)}
               serviceName="lastfm"
-              totalListens={totalLfmListens}
             />
           )}
           <div className="panel-heading">

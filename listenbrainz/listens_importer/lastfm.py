@@ -109,9 +109,6 @@ class LastfmImporter(ListensImporter):
         """
         try:
             imported_listen_count = 0
-            status = listens_importer.get_status(
-                db_conn, user["user_id"], ExternalServiceType.LASTFM
-            )
 
             session = requests.Session()
             session.mount(
@@ -125,7 +122,7 @@ class LastfmImporter(ListensImporter):
                 ))
             )
 
-            initial_imported_listens = status["count"] if status else 0
+            initial_imported_listens = user["status"]["count"] if user["status"] else 0
             listens_importer.update_status(
                 db_conn, user["user_id"], ExternalServiceType.LASTFM, "Importing", initial_imported_listens
             )

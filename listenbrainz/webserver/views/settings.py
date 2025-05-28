@@ -293,23 +293,6 @@ def music_services_connect(service_name: str):
     return jsonify({"success": True, "totalLfmListens": total_listens})
 
 
-@settings_bp.get('/music-services/<service_name>/import-status/')
-@api_login_required
-def import_status(service_name: str):
-    if service_name.lower() != "lastfm":
-        raise APINotFound("Service %s is invalid." % service_name)
-
-    result = listens_importer.get_status(db_conn, current_user.id, ExternalServiceType.LASTFM)
-
-    if result is None:
-        result = {
-            "state": "Queued",
-            "count": 0
-        }
-    
-    return jsonify({"status": result["state"], "listens_imported": result["count"]})
-
-
 @settings_bp.post('/music-services/<service_name>/disconnect/')
 @api_login_required
 def music_services_disconnect(service_name: str):

@@ -4,44 +4,36 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRefresh, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../../../../notifications/Notifications";
 import Loader from "../../../../components/Loader";
+import GlobalAppContext from "../../../../utils/GlobalAppContext";
 
-type ImportStatusInfo = {
-  status: string;
-  listens_imported: number;
-};
 type ImportStatusProps = {
   onClose: () => void;
-  serviceName: string;
-  totalListens: number;
+  serviceName: ImportService;
 };
 
 export default function ImportStatus({
   onClose,
   serviceName,
-  totalListens,
 }: ImportStatusProps) {
   const [loading, setLoading] = React.useState(false);
-  const [importData, setImportData] = React.useState<ImportStatusInfo | null>(
-    null
-  );
+  const [
+    importData,
+    setImportData,
+  ] = React.useState<LatestImportResponse | null>(null);
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
 
   const fetchStatus = React.useCallback(async () => {
+    if (!currentUser) {
+      return;
+    }
     setLoading(true);
     setImportData(null);
     try {
-      const response = await fetch(
-        `/settings/music-services/${serviceName}/import-status/`,
-        {
-          method: "GET",
-        }
+      const data = await APIService.getLatestImport(
+        currentUser.name,
+        serviceName
       );
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
-      } else {
-        const data: ImportStatusInfo = await response.json();
-        setImportData(data || null);
-      }
+      setImportData(data);
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -53,7 +45,7 @@ export default function ImportStatus({
     } finally {
       setLoading(false);
     }
-  }, [serviceName]);
+  }, [APIService, currentUser, serviceName]);
 
   React.useEffect(() => {
     fetchStatus();
@@ -99,24 +91,14 @@ export default function ImportStatus({
         {!loading && importData && (
           <dl className="row">
             <dt className="col-xs-4">Service:</dt>
-
             <dd className="col-xs-8">{serviceName}</dd>
-
             <dt className="col-xs-4">Status:</dt>
-
-            <dd className="col-xs-8">{importData.status}</dd>
-
+            <dd className="col-xs-8">{importData.status?.state ?? "N/A"}</dd>
             <dt className="col-xs-4">Listens Imported:</dt>
-            <dd className="col-xs-8">{importData.listens_imported}</dd>
-
-            <dt className="col-xs-4">Import Progress:</dt>
+            <dd className="col-xs-8">{importData.status?.count ?? 0}</dd>
+            <dt className="col-xs-4">Timestamp of last imported listen:</dt>
             <dd className="col-xs-8">
-              {totalListens > 0
-                ? ((importData.listens_imported * 100) / totalListens).toFixed(
-                    2
-                  )
-                : 0}
-              %
+              {new Date(importData.latest_import * 1000 ?? 0).toLocaleString()}
             </dd>
           </dl>
         )}

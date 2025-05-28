@@ -472,7 +472,7 @@ export default class APIService {
   getLatestImport = async (
     userName: string,
     service: ImportService
-  ): Promise<number> => {
+  ): Promise<LatestImportResponse> => {
     const url = encodeURI(
       `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
@@ -480,8 +480,7 @@ export default class APIService {
       method: "GET",
     });
     await this.checkStatus(response);
-    const result = await response.json();
-    return parseInt(result.latest_import, 10);
+    return response.json();
   };
 
   /*
