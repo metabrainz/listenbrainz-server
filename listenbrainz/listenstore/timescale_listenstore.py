@@ -303,13 +303,11 @@ class TimescaleListenStore:
         t0 = time.monotonic()
 
         passes = 0
-        while True:
+        # this allows for a maximum of 6 passes, which at current default_fetch_window
+        # and window_size_multiplier is 59 years and hence the maximum number of passes
+        # needed in any case
+        while passes <= 5:
             passes += 1
-
-            # Oh shit valve. I'm keeping it here for the time being. :)
-            if passes == 10:
-                done = True
-                break
 
             curs = ts_conn.execute(
                 sqlalchemy.text(query),
