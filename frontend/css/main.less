@@ -416,11 +416,14 @@ input[type="range"] {
   border-radius: 5px;
 }
 
-#export-buttons {
-  details[open] > summary > svg {
-    -webkit-transform: rotate(90deg);
-    transform: rotate(90deg);
-  }
+/* Custom indicator for sdetails/summary expanded indicator */
+details > summary .summary-indicator {
+  transition: rotate 0.2s ease-in-out;
+  rotate: 0;
+}
+details > summary:hover .summary-indicator,
+details[open] > summary .summary-indicator {
+  rotate: 90deg;
 }
 
 .atom-button {
