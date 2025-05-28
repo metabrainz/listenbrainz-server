@@ -272,7 +272,7 @@ def music_services_connect(service_name: str):
         "api_key": current_app.config["LASTFM_API_KEY"],
         "limit": 1,
     }
-    if params:
+    if latest_listened_at:
         params["from"] = int(latest_listened_at.timestamp())
     response = session.get(current_app.config["LASTFM_API_URL"], params=params)
     if response.status_code == 404:
