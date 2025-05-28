@@ -384,17 +384,22 @@ input[type="range"] {
   border-radius: 5px;
 }
 
-#export-buttons {
-  details > summary::marker {
+/* Custom indicator for sdetails/summary expanded indicator */
+details > summary {
+  &::marker {
     display: none;
     content: "";
   }
-  details[open] > summary {
-    > svg {
-      -webkit-transform: rotate(90deg);
-      transform: rotate(90deg);
-    }
+  .summary-indicator {
+    transition: rotate 0.2s ease-in-out;
+    rotate: 0;
   }
+  &:hover .summary-indicator {
+    rotate: 90deg;
+  }
+}
+details[open] > summary .summary-indicator {
+  rotate: 90deg;
 }
 
 .atom-button {

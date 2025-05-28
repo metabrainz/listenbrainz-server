@@ -394,7 +394,10 @@ describe("LibreFMImporter", () => {
 
       // Needed for startImport
       instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
-        return Promise.resolve(0);
+        return Promise.resolve({
+          latest_import: 0,
+          status: null,
+        });
       });
       window.fetch = jest.fn().mockImplementationOnce(() => {
         return Promise.resolve({
@@ -523,7 +526,10 @@ describe("LibreFMImporter", () => {
       instance.setState({ librefmUsername: "dummyUser" });
       // needed for startImport
       instance.APIService.getLatestImport = jest.fn().mockImplementation(() => {
-        return Promise.resolve(0);
+        return Promise.resolve({
+          latest_import: 0,
+          status: null,
+        });
       });
 
       // Mock function for fetch

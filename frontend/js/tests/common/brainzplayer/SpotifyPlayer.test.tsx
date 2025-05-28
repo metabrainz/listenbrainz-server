@@ -396,8 +396,8 @@ describe("SpotifyPlayer", () => {
           position: 125,
         });
       });
-      expect(instance.props.onDurationChange).not.toHaveBeenCalled();
       expect(wrapper.state("durationMs")).toEqual(1234);
+      expect(instance.props.onDurationChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).toHaveBeenCalledWith(125);
     });
