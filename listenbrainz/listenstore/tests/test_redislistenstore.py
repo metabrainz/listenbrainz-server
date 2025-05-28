@@ -85,7 +85,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
             self.assertEqual(r.timestamp, listens[i].timestamp)
 
     def test_incr_listen_count_for_day(self):
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.today()
         # get without setting any value, should return None
         self.assertIsNone(self._redis.get_listen_count_for_day(today))
 

@@ -202,15 +202,23 @@ export default function AddData() {
               Funkwhale
             </a>
           </em>
-          , a decentralized music sharing and listening platform with built-in
-          support for ListenBrainz
+          , a decentralized music sharing and listening platform
         </li>
         <li>
           <em>
             <a href="https://github.com/sentriz/gonic">gonic</a>
           </em>
-          , a free software Subsonic-compatible music server, has built-in
-          support for ListenBrainz
+          , a free software Subsonic-compatible music server
+        </li>
+        <li>
+          <em>
+            <a href="https://www.home-assistant.io/">Home Assistant</a>
+          </em>
+          , open source home automation, ListenBrainz support via Music
+          Assistant:{" "}
+          <a href="https://www.music-assistant.io/plugins/listenbrainz_scrobble/">
+            <code>Listenbrainz Scrobbler</code>
+          </a>
         </li>
         <li>
           <em>
@@ -367,11 +375,15 @@ export default function AddData() {
         into automatic Spotify submissions you may notice duplicates for your
         last 50 Spotify listens.
       </p>
-      <p>
-        <Link to="/settings/music-services/details/">
-          Connect your Spotify or Last.fm account to ListenBrainz
-        </Link>
-      </p>
+      <ul>
+        <li>
+          <em>
+            <Link to="/settings/music-services/details/">
+              Connect your Spotify or Last.fm account to ListenBrainz
+            </Link>
+          </em>
+        </li>
+      </ul>
 
       <h3>Playlist management</h3>
       <p>

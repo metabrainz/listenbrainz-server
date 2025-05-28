@@ -79,8 +79,8 @@ def current_status():
 
     listen_counts_per_day: List[dict] = []
     for delta in range(2):
+        day = datetime.today() - relativedelta(days=delta)
         try:
-            day = datetime.utcnow() - relativedelta(days=delta)
             day_listen_count = _redis.get_listen_count_for_day(day)
         except:
             current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'),
@@ -210,10 +210,6 @@ def feed():
         user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
 
     user_events = user_events[:count]
-
-    # Sadly, we need to serialize the event_type ourselves, otherwise, jsonify converts it badly.
-    for index, event in enumerate(user_events):
-        user_events[index].event_type = event.event_type.value
 
     return jsonify({
         'events': [event.dict() for event in user_events],

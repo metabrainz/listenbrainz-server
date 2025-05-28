@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from listenbrainz.tests.integration import IntegrationTestCase
 
-import listenbrainz.db.dump as db_dump
+from listenbrainz.db.dump_entry import add_dump_entry
+from listenbrainz.tests.integration import IntegrationTestCase
 
 
 class StatusViewsTestCase(IntegrationTestCase):
@@ -12,7 +12,7 @@ class StatusViewsTestCase(IntegrationTestCase):
 
     def test_dump_get_200(self):
         t0 = datetime.now(timezone.utc)
-        dump_id = db_dump.add_dump_entry(t0, "full")
+        dump_id = add_dump_entry(t0, "full")
         r = self.client.get("/1/status/get-dump-info", query_string={"id": dump_id})
         self.assert200(r)
         self.assertDictEqual(r.json, {
@@ -23,7 +23,7 @@ class StatusViewsTestCase(IntegrationTestCase):
 
         # should return the latest dump if no dump ID passed
         t1 = t0 + timedelta(seconds=15)
-        dump_id_1 = db_dump.add_dump_entry(t1, "full")
+        dump_id_1 = add_dump_entry(t1, "full")
         r = self.client.get("/1/status/get-dump-info")
         self.assert200(r)
         self.assertDictEqual(r.json, {

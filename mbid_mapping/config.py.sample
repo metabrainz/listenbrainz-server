@@ -32,3 +32,5 @@ USE_MINIMAL_DATASET = True
 # Service monitoring -- only needed for MetaBrainz production
 SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
 SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""
+
+LOG_SENTRY = None

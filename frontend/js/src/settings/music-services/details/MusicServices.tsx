@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet";
 import { format } from "date-fns";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
+import ImportStatus from "./components/ImportStatus";
 import {
   authorizeWithAppleMusic,
   loadAppleMusicKit,
@@ -57,6 +58,11 @@ export default function MusicServices() {
       : undefined
   );
 
+  const [lastFMEdit, setLastFMEdit] = React.useState(false);
+  const lastFMEditButtonClass =
+    permissions.lastfm !== "import"
+      ? "btn-default"
+      : (lastFMEdit && "btn-success") || "btn-warning";
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -99,6 +105,9 @@ export default function MusicServices() {
             break;
           case "critiquebrainz":
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
+            break;
+          case "lastfm":
+            setLastFMEdit(false);
             break;
           default:
             break;
@@ -182,11 +191,25 @@ export default function MusicServices() {
     }
   };
 
-  const handleConnectToLaftFM = async (
+  const handleConnectToLastFM = async (
     evt: React.FormEvent<HTMLFormElement>
   ) => {
     evt.preventDefault();
     try {
+      if (!lastfmUserId) {
+        setLastfmUserId(loaderData.current_lastfm_settings?.external_user_id);
+        setLastfmLatestListenedAt(
+          loaderData.current_lastfm_settings?.latest_listened_at
+            ? format(
+                new Date(
+                  loaderData.current_lastfm_settings?.latest_listened_at
+                ),
+                "yyyy-MM-dd'T'HH:mm:ss"
+              )
+            : undefined
+        );
+        throw Error("LastFM username empty");
+      }
       const response = await fetch(`/settings/music-services/lastfm/connect/`, {
         method: "POST",
         body: JSON.stringify({
@@ -201,10 +224,12 @@ export default function MusicServices() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         toast.success(
           <ToastMsg
             title="Success"
-            message="Your Last.FM account is connected to ListenBrainz"
+            message={`Your Last.FM account is connected to ListenBrainz.
+              ${data.totalLfmListens} listens are being imported.`}
           />
         );
 
@@ -212,6 +237,7 @@ export default function MusicServices() {
           ...prevState,
           lastfm: "import",
         }));
+        setLastFMEdit(false);
       } else {
         const body = await response.json();
         if (body?.error) {
@@ -414,30 +440,34 @@ export default function MusicServices() {
               Connect to your Last.FM account to import your entire listening
               history and automatically add your new scrobbles to ListenBrainz.
             </p>
-            <div
-              className="alert alert-warning alert-dismissible fade in"
-              role="alert"
-            >
-              You must first disable the &#34;Hide recent listening
-              information&#34; setting in your Last.fm{" "}
-              <a
-                href="https://www.last.fm/settings/privacy"
-                target="_blank"
-                rel="noreferrer"
+            {permissions.lastfm === "import" ? (
+              <ImportStatus serviceName="lastfm" />
+            ) : (
+              <div
+                className="alert alert-warning alert-dismissible fade in"
+                role="alert"
               >
-                privacy settings
-              </a>
-              .
-              <button
-                type="button"
-                className="close"
-                data-dismiss="alert"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <form onSubmit={handleConnectToLaftFM}>
+                Before connecting, you must disable the &#34;Hide recent
+                listening information&#34; setting in your Last.fm{" "}
+                <a
+                  href="https://www.last.fm/settings/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  privacy settings
+                </a>
+                .
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="alert"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            )}
+            <form onSubmit={handleConnectToLastFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
                   <label htmlFor="lastfmUsername">Your Last.FM username:</label>
@@ -451,6 +481,7 @@ export default function MusicServices() {
                     onChange={(e) => {
                       setLastfmUserId(e.target.value);
                     }}
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
                 </div>
                 <div>
@@ -467,7 +498,20 @@ export default function MusicServices() {
                     }}
                     name="lastFMStartDatetime"
                     title="Date and time to start import at"
+                    readOnly={!lastFMEdit && permissions.lastfm === "import"}
                   />
+                </div>
+                <div style={{ flex: 0, alignSelf: "end" }}>
+                  <button
+                    disabled={permissions.lastfm !== "import"}
+                    type={lastFMEdit ? "button" : "submit"}
+                    className={`btn ${lastFMEditButtonClass}`}
+                    onClick={() => {
+                      setLastFMEdit((prev) => !prev);
+                    }}
+                  >
+                    {lastFMEdit ? "Save" : "Edit"}
+                  </button>
                 </div>
               </div>
               <br />

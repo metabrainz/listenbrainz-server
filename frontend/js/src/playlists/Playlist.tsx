@@ -98,7 +98,7 @@ export default function PlaylistPage() {
 
   // Ref
   const socketRef = React.useRef<Socket | null>(null);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputRef = React.useRef<SearchInputImperativeHandle>(null);
 
   // States
   const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
