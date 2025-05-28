@@ -112,7 +112,7 @@ declare type LastFmScrobblePage = {
 declare type LatestImportResponse = {
   latest_import: number;
   status?: {
-    state: string;
+    state: ImportStatusT;
     count: number;
   };
 };

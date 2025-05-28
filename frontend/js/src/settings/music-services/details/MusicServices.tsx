@@ -63,7 +63,6 @@ export default function MusicServices() {
     permissions.lastfm !== "import"
       ? "btn-default"
       : (lastFMEdit && "btn-success") || "btn-warning";
-  const [showImportStatus, setShowImportStatus] = React.useState(false);
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -433,24 +432,6 @@ export default function MusicServices() {
         </div>
 
         <div className="panel panel-default">
-          <div className="text-right">
-            {permissions.lastfm === "import" && !showImportStatus && (
-              <button
-                type="button"
-                className="btn btn-default"
-                onClick={() => setShowImportStatus(true)}
-              >
-                View Import Status
-              </button>
-            )}
-          </div>
-
-          {showImportStatus && (
-            <ImportStatus
-              onClose={() => setShowImportStatus(false)}
-              serviceName="lastfm"
-            />
-          )}
           <div className="panel-heading">
             <h3 className="panel-title">Last.FM</h3>
           </div>
@@ -459,29 +440,33 @@ export default function MusicServices() {
               Connect to your Last.FM account to import your entire listening
               history and automatically add your new scrobbles to ListenBrainz.
             </p>
-            <div
-              className="alert alert-warning alert-dismissible fade in"
-              role="alert"
-            >
-              You must first disable the &#34;Hide recent listening
-              information&#34; setting in your Last.fm{" "}
-              <a
-                href="https://www.last.fm/settings/privacy"
-                target="_blank"
-                rel="noreferrer"
+            {permissions.lastfm === "import" ? (
+              <ImportStatus serviceName="lastfm" />
+            ) : (
+              <div
+                className="alert alert-warning alert-dismissible fade in"
+                role="alert"
               >
-                privacy settings
-              </a>
-              .
-              <button
-                type="button"
-                className="close"
-                data-dismiss="alert"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
+                Before connecting, you must disable the &#34;Hide recent
+                listening information&#34; setting in your Last.fm{" "}
+                <a
+                  href="https://www.last.fm/settings/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  privacy settings
+                </a>
+                .
+                <button
+                  type="button"
+                  className="close"
+                  data-dismiss="alert"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            )}
             <form onSubmit={handleConnectToLastFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
