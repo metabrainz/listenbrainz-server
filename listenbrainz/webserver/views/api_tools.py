@@ -567,6 +567,6 @@ def upload_listening_history_files(request):
         save_path = os.path.join(UPLOAD_DIR, secure_filename(filename))
         uploaded_file.save(save_path)
 
-        return jsonify({'status': 'success'})
+        return save_path
 
-    raise APIBadRequest("File not uploaded!")
+    return None
