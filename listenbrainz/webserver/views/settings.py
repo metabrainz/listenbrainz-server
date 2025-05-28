@@ -254,19 +254,6 @@ def music_services_connect(service_name: str):
 
     if "external_user_id" not in data:
         raise APIBadRequest("Missing 'external_user_id' in request.")
-    
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
-
-    params = {
-        "method": "user.getinfo",
-        "user": data['external_user_id'],
-        "format": "json",
-        "api_key": current_app.config["LASTFM_API_KEY"],
-    }
-    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
-    if response.status_code == 404:
-        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
 
     latest_listened_at = None
     if data.get("latest_listened_at") is not None:
@@ -274,6 +261,22 @@ def music_services_connect(service_name: str):
             latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
         except (ValueError, TypeError):
             raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
+    
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
+
+    params = {
+        "method": "user.getrecenttracks",
+        "user": data['external_user_id'],
+        "format": "json",
+        "api_key": current_app.config["LASTFM_API_KEY"],
+        "limit": 1,
+    }
+    if params:
+        params["from"] = int(latest_listened_at.timestamp())
+    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
+    if response.status_code == 404:
+        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
 
     # TODO: make last.fm start import timestamp configurable
     service = LastfmService()
@@ -285,8 +288,7 @@ def music_services_connect(service_name: str):
     total_listens = 0
     try:
         lfm_data = response.json()
-        if "user" in lfm_data:
-            total_listens = lfm_data["user"]["playcount"]
+        total_listens = int(lfm_data["recenttracks"]["@attr"]["total"])
     except Exception:
         current_app.logger.error("Unable to fetch last.fm user data:", exc_info=True)
 
