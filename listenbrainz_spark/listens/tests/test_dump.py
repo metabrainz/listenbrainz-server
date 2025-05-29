@@ -128,10 +128,11 @@ class DumpImporterJobTestCase(SparkNewTestCase):
 
     @patch("ftplib.FTP")
     @patch.object(ListenBrainzFtpDumpLoader, "get_latest_dump_id", return_value=210)
+    @patch.object(ListenBrainzFtpDumpLoader, "check_dump_type", return_value=DumpType.INCREMENTAL)
     @patch("listenbrainz_spark.listens.dump.import_incremental_dump_to_hdfs", side_effect=mock_import_dump_to_hdfs)
     @patch("listenbrainz_spark.listens.dump.search_dump", side_effect=mock_search_dump)
     @patch("listenbrainz_spark.listens.dump.get_latest_full_dump")
-    def test_import_incremental_dump_handler(self, mock_latest_full_dump, _, mock_import_dump, __, ___):
+    def test_import_incremental_dump_handler(self, mock_latest_full_dump, _, mock_import_dump, __, ___, ____):
         """ Test to make sure required incremental dumps are imported. """
         mock_latest_full_dump.return_value = {
             "dump_id": 202,
@@ -151,10 +152,11 @@ class DumpImporterJobTestCase(SparkNewTestCase):
 
     @patch("ftplib.FTP")
     @patch.object(ListenBrainzFtpDumpLoader, "get_latest_dump_id", return_value=210)
+    @patch.object(ListenBrainzFtpDumpLoader, "check_dump_type", return_value=DumpType.INCREMENTAL)
     @patch("listenbrainz_spark.listens.dump.import_incremental_dump_to_hdfs", side_effect=mock_import_dump_to_hdfs_error)
     @patch("listenbrainz_spark.listens.dump.search_dump", side_effect=mock_search_dump)
     @patch("listenbrainz_spark.listens.dump.get_latest_full_dump")
-    def test_import_incremental_dump_handler_error(self, mock_latest_full_dump, _, mock_import_dump, __, ___):
+    def test_import_incremental_dump_handler_error(self, mock_latest_full_dump, _, mock_import_dump, __, ___, ____):
         """ Test to make sure import continues if there is a fatal error. """
         mock_latest_full_dump.return_value = {
             "dump_id": 202,
