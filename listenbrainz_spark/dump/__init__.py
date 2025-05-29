@@ -3,6 +3,8 @@ from enum import Enum
 from typing import NamedTuple
 from abc import ABC, abstractmethod
 
+import requests
+
 from listenbrainz_spark.exceptions import DumpNotFoundException
 
 
@@ -101,3 +103,15 @@ class ListenbrainzDumpLoader(ABC):
             sha = f.read().lstrip().split(" ", 1)[0].strip()
 
         return sha
+
+    @abstractmethod
+    def get_api_base_url(self):
+        """ Get the base url for listenbrainz api """
+        pass
+
+    def check_dump_type(self, dump_id: int):
+        """ Query ListenBrainz dump info API to check whether the given dump ID is an incremental or full dump """
+        url = f"{self.get_api_base_url()}/1/status/get-dump-info"
+        response = requests.get(url, params={"id": dump_id})
+        response.raise_for_status()
+        return DumpType.FULL if response.json()["dump_type"] == "full" else DumpType.INCREMENTAL

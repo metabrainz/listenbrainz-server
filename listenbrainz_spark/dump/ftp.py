@@ -156,3 +156,6 @@ class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader):
         dest_path = self.download_dump(filename , directory)
         logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
         return dest_path
+
+    def get_api_base_url(self):
+        return "https://api.listenbrainz.org"
