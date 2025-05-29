@@ -449,26 +449,20 @@ export default function PlaylistPage() {
               )}
             </div>
             <small className="form-text">
-              <div>Created: {new Date(playlist.date).toLocaleString()}</div>
+              Created: {new Date(playlist.date).toLocaleString()}
             </small>
             {customFields?.last_modified_at && (
               <small className="form-text">
-                <div>
-                  Last modified:{" "}
-                  {new Date(customFields.last_modified_at).toLocaleString()}
-                </div>
+                Last modified:{" "}
+                {new Date(customFields.last_modified_at).toLocaleString()}
               </small>
             )}
             {customFields?.copied_from && (
               <small className="form-text">
-                <div>
-                  Copied from:
-                  <a href={sanitizeUrl(customFields.copied_from)}>
-                    {customFields.copied_from.substr(
-                      PLAYLIST_URI_PREFIX.length
-                    )}
-                  </a>
-                </div>
+                Copied from:
+                <a href={sanitizeUrl(customFields.copied_from)}>
+                  {customFields.copied_from.substr(PLAYLIST_URI_PREFIX.length)}
+                </a>
               </small>
             )}
           </div>
