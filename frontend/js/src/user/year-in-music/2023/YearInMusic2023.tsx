@@ -1,7 +1,9 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+/* eslint-disable import/no-unresolved */
 import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+/* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
 import { toast } from "react-toastify";

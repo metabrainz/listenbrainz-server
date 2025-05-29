@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+/* eslint-disable import/no-unresolved */
 import {
   Navigation,
   Keyboard,
@@ -7,6 +8,7 @@ import {
   EffectCube,
 } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+/* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { ResponsiveTreeMap } from "@nivo/treemap";
 import Tooltip from "react-tooltip";
