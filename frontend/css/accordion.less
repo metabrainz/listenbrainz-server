@@ -1,9 +1,11 @@
-.accordion .panel-heading {
+.accordion .card-header {
   display: flex;
   align-items: center;
   padding: 8px 10px;
   border-bottom: 0;
-  .panel-title {
+  background-color: #fafafa;
+  cursor: pointer;
+  .card-title {
     font-weight: 400;
     font-size: 1em;
     width: 100%;
@@ -11,10 +13,19 @@
       font-weight: 300;
     }
   }
-  .panel-actions {
+  .card-actions {
     margin-left: auto;
   }
   .accordion-arrow {
     margin-right: 0.7em;
+  }
+}
+
+.accordion {
+  margin-bottom: 2rem;
+  box-shadow: none;
+  border-radius: 0;
+  .card-body {
+    padding: 1.5rem;
   }
 }

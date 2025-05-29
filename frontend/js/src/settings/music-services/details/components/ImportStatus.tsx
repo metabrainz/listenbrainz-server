@@ -67,22 +67,22 @@ export default function ImportStatus({ serviceName }: ImportStatusProps) {
     <div className={`alert alert-${bsColorClass}`} role="alert">
       <details>
         <summary>
-          <h4 className="alert-heading" style={{ marginBottom: 0 }}>
+          <h4 className="alert-heading align-items-center d-flex m-0">
+            <FontAwesomeIcon
+              icon={faChevronCircleRight}
+              size="sm"
+              className="summary-indicator"
+            />
+            Import status{importData?.status?.state ? `: ${statusString}` : ""}
             <button
               type="button"
-              className="btn btn-sm btn-transparent pull-right"
+              className={`btn btn-sm btn-outline-${bsColorClass} ms-auto`}
               onClick={fetchStatus}
               disabled={loading}
               title="Refresh status"
             >
               <FontAwesomeIcon icon={faRefresh} spin={loading} />
             </button>
-            <FontAwesomeIcon
-              icon={faChevronCircleRight}
-              size="sm"
-              className="summary-indicator"
-            />{" "}
-            Import status{importData?.status?.state ? `: ${statusString}` : ""}
           </h4>
         </summary>
         <div className="alert-body">
@@ -97,19 +97,23 @@ export default function ImportStatus({ serviceName }: ImportStatusProps) {
           )}
 
           {!loading && importData && (
-            <dl className="row mt-10">
-              <dt className="col-xs-6">Status:</dt>
-              <dd className="col-xs-6">{importData?.status?.state ?? "N/A"}</dd>
-              <dt className="col-xs-6">Listens Imported:</dt>
-              <dd className="col-xs-6">{importData?.status?.count ?? 0}</dd>
-              <dt className="col-xs-6">Service:</dt>
-              <dd className="col-xs-6">{serviceName}</dd>
-              <dt className="col-xs-6">Timestamp of last imported listen:</dt>
-              <dd className="col-xs-6">
-                {new Date(
-                  (importData?.latest_import ?? 0) * 1000
-                ).toLocaleString()}
-              </dd>
+            <dl className="row mt-3">
+              <div className="col">
+                <dt>Listens Imported:</dt>
+                <dd>{importData?.status?.count ?? 0}</dd>
+                <dt>Last imported listen date:</dt>
+                <dd>
+                  {new Date(
+                    (importData?.latest_import ?? 0) * 1000
+                  ).toLocaleString()}
+                </dd>
+              </div>
+              <div className="col">
+                <dt>Service:</dt>
+                <dd>{serviceName}</dd>
+                <dt>Status:</dt>
+                <dd>{importData?.status?.state ?? "N/A"}</dd>
+              </div>
             </dl>
           )}
         </div>

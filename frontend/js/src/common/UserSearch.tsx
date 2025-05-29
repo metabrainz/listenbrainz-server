@@ -61,10 +61,7 @@ export default function UserSearch(props: UserSearchProps) {
   }, [newUser, throttledSearchUsers]);
 
   return (
-    <div
-      className="input-group input-group-flex dropdown-search"
-      ref={dropdownRef}
-    >
+    <div className="input-group dropdown-search" ref={dropdownRef}>
       <input
         id="user-name-search"
         type="text"

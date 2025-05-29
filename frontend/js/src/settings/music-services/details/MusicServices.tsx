@@ -306,11 +306,11 @@ export default function MusicServices() {
       <div id="user-profile">
         <h2 className="page-title">Connect third-party music services</h2>
 
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">Spotify</h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Spotify</h3>
           </div>
-          <div className="panel-body">
+          <div className="card-body">
             <p>
               Connect to your Spotify account to read your listening history,
               play music on ListenBrainz (requires Spotify Premium), or both.
@@ -396,11 +396,11 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">CritiqueBrainz</h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">CritiqueBrainz</h3>
           </div>
-          <div className="panel-body">
+          <div className="card-body">
             <p>
               Connect to your CritiqueBrainz account to publish reviews directly
               from ListenBrainz. Reviews are public on ListenBrainz and
@@ -431,11 +431,11 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">Last.FM</h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Last.FM</h3>
           </div>
-          <div className="panel-body">
+          <div className="card-body">
             <p>
               Connect to your Last.FM account to import your entire listening
               history and automatically add your new scrobbles to ListenBrainz.
@@ -444,7 +444,7 @@ export default function MusicServices() {
               <ImportStatus serviceName="lastfm" />
             ) : (
               <div
-                className="alert alert-warning alert-dismissible fade in"
+                className="alert alert-warning alert-dismissible fade show"
                 role="alert"
               >
                 Before connecting, you must disable the &#34;Hide recent
@@ -459,18 +459,18 @@ export default function MusicServices() {
                 .
                 <button
                   type="button"
-                  className="close"
-                  data-dismiss="alert"
+                  className="btn-close"
+                  data-bs-dismiss="alert"
                   aria-label="Close"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
+                />
               </div>
             )}
             <form onSubmit={handleConnectToLastFM}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
-                  <label htmlFor="lastfmUsername">Your Last.FM username:</label>
+                  <label className="form-label" htmlFor="lastfmUsername">
+                    Your Last.FM username:
+                  </label>
                   <input
                     type="text"
                     className="form-control"
@@ -485,7 +485,7 @@ export default function MusicServices() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="datetime">
+                  <label className="form-label" htmlFor="datetime">
                     Start import from (optional):
                   </label>
                   <input
@@ -574,11 +574,11 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">SoundCloud</h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">SoundCloud</h3>
           </div>
-          <div className="panel-body">
+          <div className="card-body">
             <p>
               Connect to your SoundCloud account to play music on ListenBrainz.
             </p>
@@ -606,11 +606,11 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">Apple Music</h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Apple Music</h3>
           </div>
-          <div className="panel-body">
+          <div className="card-body">
             <p>
               Connect to your Apple Music account to play music on ListenBrainz.
               <br />
@@ -644,11 +644,11 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <div className="panel panel-default">
-          <div className="panel-heading">
-            <h3 className="panel-title">Youtube</h3>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Youtube</h3>
           </div>
-          <div className="panel-body">
+          <div className="card-body">
             <p>
               Playing music using YouTube on ListenBrainz does not require an
               account to be connected.

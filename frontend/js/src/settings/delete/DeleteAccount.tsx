@@ -85,8 +85,6 @@ export default function DeleteAccount() {
         type="button"
         style={{ width: "250px" }}
         onClick={deleteAccount}
-        data-toggle="modal"
-        data-target="#ConfirmationModal"
       >
         Delete account
       </button>
