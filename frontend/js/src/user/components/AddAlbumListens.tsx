@@ -322,7 +322,7 @@ const AddAlbumListens = forwardRef(function AddAlbumListens(
                             title="select/deselect all tracks from this medium"
                             checked={allMediumTracksSelected}
                           />
-                          <span className="badge badge-info">
+                          <span className="badge bg-info">
                             {medium.format}&nbsp;
                             {medium.position}
                             {medium.title && ` - ${medium.title}`}

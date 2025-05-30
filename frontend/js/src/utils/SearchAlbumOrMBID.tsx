@@ -214,15 +214,13 @@ const SearchAlbumOrMBID = forwardRef<
           required={requiredInput}
           aria-haspopup={Boolean(searchResults?.length)}
         />
-        <span className="input-group-btn">
-          <button className="btn btn-default" type="button" onClick={reset}>
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faTimesCircle} />
-            )}
-          </button>
-        </span>
+        <button className="btn btn-secondary" type="button" onClick={reset}>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faTimesCircle} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"

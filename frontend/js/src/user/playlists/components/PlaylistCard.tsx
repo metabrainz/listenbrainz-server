@@ -159,9 +159,9 @@ export default function PlaylistCard({
             icon={faEllipsisVertical}
             fixedWidth
             id="playlistOptionsDropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
             type="button"
           />
           {showOptions ? (
@@ -176,15 +176,17 @@ export default function PlaylistCard({
               className="dropdown-menu dropdown-menu-right"
               aria-labelledby="playlistOptionsDropdown"
             >
-              <li>
-                <a onClick={onCopyPlaylist} role="button" href="#">
-                  <FontAwesomeIcon
-                    icon={faSave as IconProp}
-                    title="Save to my playlists"
-                  />
-                  &nbsp;Save
-                </a>
-              </li>
+              <button
+                className="dropdown-item"
+                onClick={onCopyPlaylist}
+                type="button"
+              >
+                <FontAwesomeIcon
+                  icon={faSave as IconProp}
+                  title="Save to my playlists"
+                />
+                &nbsp;Save
+              </button>
             </ul>
           )}
         </div>
@@ -212,9 +214,9 @@ export default function PlaylistCard({
             className="dropdown-toggle playlist-card-action-button"
             type="button"
             id="playlistOptionsDropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options

@@ -357,7 +357,7 @@ export default class YearInMusic extends React.Component<
         <div className="flex flex-wrap" id="header">
           <div className="content-card flex-center flex-wrap">
             <img
-              className="img-responsive header-image"
+              className="img-fluid header-image"
               src="/static/img/year-in-music-2021.svg"
               alt="Your year in music 2021"
             />
@@ -466,7 +466,7 @@ export default class YearInMusic extends React.Component<
         <hr className="wide" />
         <div className="row">
           <div className="card content-card" id="top-releases">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>{capitalize(yourOrUsersName)} top albums of 2021</h3>
               {yearInMusicData.top_releases && (
                 <ComponentToImage
@@ -562,7 +562,7 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="row flex flex-wrap">
           <div className="card content-card" id="top-recordings">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>
                 {capitalize(yourOrUsersName)} 50 most played songs of 2021
               </h3>
@@ -609,7 +609,7 @@ export default class YearInMusic extends React.Component<
             )}
           </div>
           <div className="card content-card" id="top-artists">
-            <div className="col-md-12 d-flex center-p">
+            <div className="center-p">
               <h3>{capitalize(yourOrUsersName)} top 50 artists of 2021</h3>
               {yearInMusicData.top_artists && (
                 <ComponentToImage
@@ -628,7 +628,7 @@ export default class YearInMusic extends React.Component<
                     artist.artist_mbids[0]
                   );
                   const thumbnail = (
-                    <span className="badge badge-info">
+                    <span className="badge bg-info">
                       {artist.listen_count} listens
                     </span>
                   );
@@ -662,10 +662,14 @@ export default class YearInMusic extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div className="card content-card" id="calendar">
+          <div
+            className="card content-card"
+            id="calendar"
+            style={{ width: "100%" }}
+          >
             <h3 className="text-center">
               {capitalize(yourOrUsersName)} listening activity in 2021
-              <div className="small mt-15">
+              <div className="small mt-4">
                 Number of listens submitted for each day of the year
               </div>
             </h3>
@@ -723,7 +727,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="most-listened-year">
             <h3 className="text-center">
               What year are {yourOrUsersName} favorite songs from?
-              <div className="small mt-15">
+              <div className="small mt-4">
                 How much were you on the lookout for new music this year? Not
                 that we&apos;re judging.
               </div>
@@ -763,7 +767,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="similar-users">
             <h3 className="text-center">
               Music buddies
-              <div className="small mt-15">
+              <div className="small mt-4">
                 Here are the users with the most similar taste to {user.name}{" "}
                 this year. Maybe go check them out?
               </div>
@@ -796,7 +800,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="new-releases">
             <h3 className="text-center">
               New albums of {yourOrUsersName} top artists
-              <div className="small mt-15">
+              <div className="small mt-4">
                 New albums released in 2021 from {yourOrUsersName} favorite
                 artists
               </div>
@@ -859,7 +863,7 @@ export default class YearInMusic extends React.Component<
           <div className="card content-card" id="playlists">
             <h3 className="text-center">
               We made some personalized playlists for {youOrUsername}!
-              <div className="small mt-15">
+              <div className="small mt-4">
                 You&apos;ll find below 3 playlists that encapsulate{" "}
                 {yourOrUsersName} year, and 1 playlist of music exploration
                 based on users similar to {youOrUsername}
@@ -873,7 +877,7 @@ export default class YearInMusic extends React.Component<
                     }
                     return (
                       <div
-                        className="card content-card mb-10"
+                        className="card content-card mb-3"
                         id="top-discoveries"
                       >
                         <h3 className="text-center">
@@ -881,7 +885,7 @@ export default class YearInMusic extends React.Component<
                             {topLevelPlaylist.jspf?.playlist?.title}
                           </Link>
                           {topLevelPlaylist.description && (
-                            <div className="small mt-15">
+                            <div className="small mt-4">
                               {topLevelPlaylist.description}
                             </div>
                           )}
@@ -917,7 +921,7 @@ export default class YearInMusic extends React.Component<
                           <hr />
                           <Link
                             to={`/playlist/${topLevelPlaylist.mbid}/`}
-                            className="btn btn-info btn-block"
+                            className="btn btn-info w-100"
                           >
                             See the full playlist…
                           </Link>

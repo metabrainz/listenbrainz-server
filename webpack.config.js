@@ -1,7 +1,7 @@
 const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const LessPluginCleanCSS = require("less-plugin-clean-css");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const StylelintPlugin = require("stylelint-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 
@@ -25,6 +25,7 @@ module.exports = function (env, argv) {
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");
+  const sassDir = path.join(cssDir, "sass");
   const plugins = [
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
@@ -40,7 +41,7 @@ module.exports = function (env, argv) {
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
       failOnError: isProd,
-      files: "**/static/css/**/*.less",
+      files: "**/static/css/**/*.{less,scss}",
       fix: !isProd,
       threads: true,
     }),
@@ -57,6 +58,7 @@ module.exports = function (env, argv) {
       indexPage: [
         path.resolve(jsDir, "src/index.tsx"),
         path.resolve(cssDir, "main.less"),
+        path.resolve(sassDir, "bootstrap.scss"),
       ],
     },
     output: {
@@ -87,8 +89,15 @@ module.exports = function (env, argv) {
           options: {
             lessOptions: {
               math: "always",
-              plugins: [new LessPluginCleanCSS({ advanced: true })],
             },
+          },
+        },
+        {
+          test: /\.scss$/i,
+          type: "asset/resource",
+          loader: "sass-loader",
+          generator: {
+            filename: isProd ? "[name].[contenthash].css" : "[name].css",
           },
         },
         {
@@ -105,6 +114,10 @@ module.exports = function (env, argv) {
           ],
         },
       ],
+    },
+    optimization: {
+      minimize: isProd,
+      minimizer: [new CssMinimizerPlugin()],
     },
     resolve: {
       modules: [

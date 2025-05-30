@@ -71,7 +71,6 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
       >
         <Loader isLoading={isLoading} loaderText="Generating image…">
           <FontAwesomeIcon
-            className="col-6"
             size="1x"
             style={{ marginRight: "4px" }}
             icon={faCamera as IconProp}
@@ -104,7 +103,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
                 artist.artist_mbids[0]
               );
               const thumbnail = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   <FontAwesomeIcon
                     style={{ marginRight: "4px" }}
                     icon={faHeadphones as IconProp}
