@@ -100,7 +100,6 @@ export async function copyImageToClipboard(element: HTMLElement) {
             .catch((error) => {
               throw error;
             });
-          return;
         }
       } catch (error) {
         toast.error(

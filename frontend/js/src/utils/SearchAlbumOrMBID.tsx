@@ -137,8 +137,6 @@ const SearchAlbumOrMBID = forwardRef<
                 })
               );
               setSearchResults(releasesWithAC);
-            } else {
-              return;
             }
           } catch (error) {
             handleError(
