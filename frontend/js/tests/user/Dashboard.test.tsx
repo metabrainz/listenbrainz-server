@@ -65,8 +65,8 @@ const reactQueryWrapper = ({ children }: any) => (
 const currentUser = { id: 1, name: "iliekcomputers", auth_token: "fnord" };
 
 let mockSearchParam = {};
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useSearchParams: () => {
     const [params, setParams] = React.useState(
       new URLSearchParams(mockSearchParam)

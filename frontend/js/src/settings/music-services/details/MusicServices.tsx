@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { capitalize } from "lodash";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { format } from "date-fns";

@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { kebabCase } from "lodash";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { ToastMsg } from "../../notifications/Notifications";

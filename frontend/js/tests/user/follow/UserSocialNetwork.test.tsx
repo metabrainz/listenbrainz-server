@@ -22,7 +22,7 @@ import * as React from "react";
 import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import UserSocialNetwork, {
   UserSocialNetworkProps,
   UserSocialNetworkState,

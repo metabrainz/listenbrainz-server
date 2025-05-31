@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { Navigate, Outlet } from "react-router-dom";
-import type { RouteObject } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
+import type { RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
 const getUserRoutes = (): RouteObject[] => {

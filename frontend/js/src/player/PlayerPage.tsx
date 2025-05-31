@@ -13,7 +13,7 @@ import {
   useLocation,
   useParams,
   useSearchParams,
-} from "react-router-dom";
+} from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 

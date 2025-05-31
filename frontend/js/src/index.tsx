@@ -8,7 +8,7 @@ import {
   matchRoutes,
   useLocation,
   useNavigationType,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";

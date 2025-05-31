@@ -14,7 +14,7 @@ import * as React from "react";
 import { useContext } from "react";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { noop } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";

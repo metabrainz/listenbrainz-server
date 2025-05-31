@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useContext } from "react";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { COLOR_LB_ORANGE } from "../utils/constants";

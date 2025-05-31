@@ -3,7 +3,7 @@ import { includes as _includes } from "lodash";
 
 import { faCircleInfo, faSquarePlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import ReactTooltip from "react-tooltip";
 import Card from "../../../components/Card";
 import SimilarityScore from "./SimilarityScore";

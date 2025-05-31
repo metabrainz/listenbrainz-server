@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import { Outlet, ScrollRestoration } from "react-router";
 import { ToastContainer } from "react-toastify";
 
 import { Provider as NiceModalProvider } from "@ebay/nice-modal-react";

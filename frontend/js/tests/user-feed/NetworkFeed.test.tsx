@@ -25,7 +25,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import * as timelineProps from "../__mocks__/listensTimelineProps.json";
 
 import { renderWithProviders } from "../test-utils/rtl-test-utils";

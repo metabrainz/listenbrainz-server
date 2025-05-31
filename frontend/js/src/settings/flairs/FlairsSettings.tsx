@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import { findKey, startCase } from "lodash";
 import Select, { OptionProps, components } from "react-select";

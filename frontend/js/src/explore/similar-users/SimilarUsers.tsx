@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { Helmet } from "react-helmet";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { RouteQuery } from "../../utils/Loader";
 import Username from "../../common/Username";
 import FlairsExplanationButton from "../../common/flairs/FlairsExplanationButton";

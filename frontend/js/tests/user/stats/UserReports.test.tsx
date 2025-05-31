@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { HttpResponse, http } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import { screen, waitFor } from "@testing-library/react";
@@ -49,8 +49,8 @@ const apiRoutes = [
 ];
 
 let mockSearchParam = { range: "week" };
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useSearchParams: () => {
     const [params, setParams] = React.useState(
       new URLSearchParams(mockSearchParam)

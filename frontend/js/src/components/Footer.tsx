@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { faAnglesRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function Footer() {
   return (

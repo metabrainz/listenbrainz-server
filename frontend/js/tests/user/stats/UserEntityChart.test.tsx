@@ -3,7 +3,7 @@ import { mount, ReactWrapper } from "enzyme";
 
 import { act } from "react-dom/test-utils";
 import { ResponsiveBar } from "@nivo/bar";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import UserEntityChart, {
   UserEntityChartProps,
   UserEntityChartLoader,

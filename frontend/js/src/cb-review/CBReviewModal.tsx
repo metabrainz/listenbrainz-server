@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
 import { Modal } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {

@@ -4,8 +4,7 @@ import { HttpResponse, http } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SetupServerApi, setupServer } from "msw/node";
 import { screen } from "@testing-library/react";
-import { RouterProvider, createMemoryRouter } from "react-router-dom";
-import { Router } from "@remix-run/router";
+import { RouterProvider, createMemoryRouter } from "react-router";
 import userEvent from "@testing-library/user-event";
 import * as missingDataProps from "../../__mocks__/missingMBDataProps.json";
 import {
@@ -38,7 +37,7 @@ const reactQueryWrapper = ({ children }: any) => (
 
 describe("LinkListensPage", () => {
   let server: SetupServerApi;
-  let router: Router;
+  let router: ReturnType<typeof createMemoryRouter>;
   beforeAll(async () => {
     window.scrollTo = jest.fn();
     window.HTMLElement.prototype.scrollIntoView = jest.fn();

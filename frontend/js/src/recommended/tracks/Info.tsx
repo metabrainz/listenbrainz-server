@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Helmet } from "react-helmet";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 
 export default function Info() {
   const loaderData = useLoaderData() as { user: ListenBrainzUser };

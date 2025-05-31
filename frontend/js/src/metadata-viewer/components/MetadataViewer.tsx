@@ -5,7 +5,7 @@ import * as React from "react";
 import type { Palette } from "@vibrant/color";
 import { Vibrant } from "node-vibrant/browser";
 import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import TagsComponent from "../../tags/TagsComponent";

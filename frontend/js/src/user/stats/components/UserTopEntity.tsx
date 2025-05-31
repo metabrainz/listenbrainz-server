@@ -2,7 +2,7 @@ import * as React from "react";
 import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
