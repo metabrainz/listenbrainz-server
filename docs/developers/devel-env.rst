@@ -80,7 +80,7 @@ text editor.
 .. note::
 
      If you are accessing your development server using a port other than ``8100``,
-     ensure that you update the ``SERVER_BASE_URL`` to reflect the appropriate port number.
+     ensure that you update the ``SERVER_ROOT_URL`` to reflect the appropriate port number.
      If you are accessing your development server using a host other than ``localhost`` (e.g., GitHub Codespaces),
      ensure that you uncomment and update ``SERVER_NAME``, and ensure ``SERVER_ROOT_URL``is updated
      accordingly to maintain consistency and support the appropriate host details.
