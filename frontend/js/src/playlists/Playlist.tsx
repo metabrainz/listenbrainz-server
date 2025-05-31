@@ -23,7 +23,7 @@ import {
   useLoaderData,
   useNavigate,
   useRevalidator,
-} from "react-router-dom";
+} from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";

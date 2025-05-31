@@ -14,7 +14,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import DOMPurify from "dompurify";
 import { toast } from "react-toastify";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import Card from "../../../components/Card";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";

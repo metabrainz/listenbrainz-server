@@ -12,7 +12,7 @@ import type { Palette } from "@vibrant/color";
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import { toast } from "react-toastify";
 import CBReview from "../cb-review/CBReview";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";

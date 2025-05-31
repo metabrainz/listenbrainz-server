@@ -21,7 +21,7 @@ import {
   useLocation,
   useParams,
   useSearchParams,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";

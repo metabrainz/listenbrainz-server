@@ -21,7 +21,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 import { act } from "react-dom/test-utils";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import FollowerFollowingModal from "../../../src/user/components/follow/FollowerFollowingModal";
 import APIService from "../../../src/utils/APIService";
 import GlobalAppContext, {

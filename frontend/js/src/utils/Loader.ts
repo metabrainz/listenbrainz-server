@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, Params } from "react-router-dom";
-import { json } from "react-router-dom";
+import type { LoaderFunctionArgs, Params } from "react-router";
+import { json } from "react-router";
 import { isEmpty } from "lodash";
 import queryClient from "./QueryClient";
 import { getObjectForURLSearchParams } from "./utils";

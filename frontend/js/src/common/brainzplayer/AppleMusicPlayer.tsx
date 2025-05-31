@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get, deburr, escapeRegExp, isString } from "lodash";
 import { faApple } from "@fortawesome/free-brands-svg-icons";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import fuzzysort from "fuzzysort";
 import {
   getArtistName,

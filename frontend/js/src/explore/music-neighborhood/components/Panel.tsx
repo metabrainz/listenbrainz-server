@@ -1,7 +1,7 @@
 import * as React from "react";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import Spinner from "react-loader-spinner";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import ReleaseCard from "../../fresh-releases/components/ReleaseCard";
 import SideBar from "../../../components/Sidebar";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";

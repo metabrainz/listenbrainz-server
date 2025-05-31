@@ -1,7 +1,7 @@
 import { faCheck, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import ReactTooltip from "react-tooltip";
 import { COLOR_LB_GREEN } from "../../utils/constants";
 import Blob from "../../home/Blob";
