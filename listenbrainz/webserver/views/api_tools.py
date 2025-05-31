@@ -42,6 +42,9 @@ MAX_LISTENS_PER_REQUEST = 1000
 #: The maximum size of a payload in bytes. The same as MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST.
 MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
 
+#: The maximum size of a uploaded listening history files in bytes and some buffer for other parts of the request.
+MAX_FILE_UPLOAD_SIZE = 104857600 + 20
+
 #: The maximum length of a tag
 MAX_TAG_SIZE = 64
 
@@ -545,28 +548,18 @@ def _filter_description_html(description):
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
 
 
-def upload_listening_history_files(request):
+def upload_listening_history_files(file, file_name):
     UPLOAD_DIR = 'uploads'
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            raise APIBadRequest('No file in request!')
-        
-        uploaded_file = request.files['file']
 
-        if uploaded_file.filename == '':
-            raise APIBadRequest('No file selected!')
+    ext = os.path.splitext(file_name)[1].lower()
 
-        ext = os.path.splitext(uploaded_file.name)[1].lower()
+    if ext not in ['.zip', '.json', '.jsonl', '.csv']:
+        raise APIBadRequest('Unsupported file type!')
+    
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    filename = f"{uuid.uuid4().hex}{ext}"
+    save_path = os.path.join(UPLOAD_DIR, secure_filename(filename))
+    file.save(save_path)
 
-        if ext not in ['.zip', '.json', '.jsonl', '.csv']:
-            raise APIBadRequest('Unsupported file type!')
-        
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
-        
-        filename = f"{uuid.uuid4().hex}{ext}"
-        save_path = os.path.join(UPLOAD_DIR, secure_filename(filename))
-        uploaded_file.save(save_path)
-
-        return save_path
-
-    return None
+    return save_path

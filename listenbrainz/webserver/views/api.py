@@ -23,9 +23,9 @@ from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
-    is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
-    LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
-    get_non_negative_param, _parse_int_arg
+    is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, MAX_FILE_UPLOAD_SIZE, \
+    LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
+    get_non_negative_param, _parse_int_arg, upload_listening_history_files
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -872,3 +872,26 @@ def get_artist_radio_recordings(seed_artist_mbid):
         raise APIBadRequest(f"pop_end: '{pop_end}' is not a valid number")
 
     return jsonify(lb_radio_artist(mode, seed_artist_mbid, max_similar_artists, max_recordings_per_artist, pop_begin, pop_end))
+
+@api_bp.post("/import-files")
+@crossdomain
+@ratelimit()
+def submit_listen():
+    """
+    
+    """
+    user = validate_auth_header(fetch_email=True)
+
+    file = request.files.get("file")
+    file_type = request.form.get("type")
+
+    if not file or not file_type:
+        APIBadRequest("Missing file or type")
+
+    if file.content_length and file.content_length > MAX_FILE_UPLOAD_SIZE:
+        APIBadRequest("File size exceeds 100MB")
+    
+    file_path = upload_listening_history_files(file, file.name)
+
+    if not file_path:
+        APIInternalServerError("The file was not able to upload!")
