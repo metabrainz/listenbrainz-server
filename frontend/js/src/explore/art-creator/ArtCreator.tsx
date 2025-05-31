@@ -257,7 +257,6 @@ export default function ArtCreator() {
         // We can't copy the image directly, but we can fall back to writing the SVG source string to the clipboard
         await (navigator.clipboard as Clipboard).writeText(outerHTML);
         toast.success("Copied image SVG to clipboard");
-        return;
       }
     } catch (error) {
       toast.error(

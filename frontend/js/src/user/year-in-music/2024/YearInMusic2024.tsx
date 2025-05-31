@@ -1,13 +1,14 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
+/* eslint-disable import/no-unresolved */
 import {
   Navigation,
   Keyboard,
   EffectCoverflow,
-  Lazy,
   EffectCube,
-} from "swiper";
+} from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+/* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { ResponsiveTreeMap } from "@nivo/treemap";
 import Tooltip from "react-tooltip";
@@ -687,16 +688,11 @@ export default class YearInMusic extends React.Component<
                   <h3 className="flex-center">Top albums of 2024</h3>
                   <div id="top-albums">
                     <Swiper
-                      modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
+                      modules={[Navigation, Keyboard, EffectCoverflow]}
                       spaceBetween={15}
                       slidesPerView={2}
                       initialSlide={0}
                       centeredSlides
-                      lazy={{
-                        enabled: true,
-                        loadPrevNext: true,
-                        loadPrevNextAmount: 4,
-                      }}
                       navigation
                       effect="coverflow"
                       coverflowEffect={{
@@ -733,6 +729,7 @@ export default class YearInMusic extends React.Component<
                           );
                           return (
                             <SwiperSlide
+                              lazy
                               key={`coverflow-${release_group.release_group_name}`}
                             >
                               <img
@@ -742,6 +739,7 @@ export default class YearInMusic extends React.Component<
                                 }
                                 alt={release_group.release_group_name}
                                 className="swiper-lazy"
+                                loading="lazy"
                               />
                               <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                               <div title={release_group.release_group_name}>
@@ -1460,7 +1458,7 @@ export default class YearInMusic extends React.Component<
               </div>
             </div>
             <Swiper
-              modules={[EffectCube, Navigation, Keyboard, Lazy]}
+              modules={[EffectCube, Navigation, Keyboard]}
               centeredSlides
               navigation
               loop
@@ -1469,16 +1467,14 @@ export default class YearInMusic extends React.Component<
                 shadow: false,
                 slideShadows: false,
               }}
-              lazy={{
-                enabled: true,
-                loadPrevNext: true,
-                loadPrevNextAmount: 2,
-              }}
             >
               {mosaics?.map((mosaicImage) => {
                 const imageLink = `https://static.metabrainz.org/LB/year-in-music/2024/${mosaicImage.release_mbid}.png`;
                 return (
-                  <SwiperSlide key={`coverflow-${mosaicImage.release_mbid}`}>
+                  <SwiperSlide
+                    key={`coverflow-${mosaicImage.release_mbid}`}
+                    lazy
+                  >
                     <div
                       style={{
                         marginInline: "auto",
@@ -1490,6 +1486,7 @@ export default class YearInMusic extends React.Component<
                           data-src={imageLink}
                           alt={mosaicImage.release_name}
                           className="swiper-lazy"
+                          loading="lazy"
                         />
                       </a>
                       <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
