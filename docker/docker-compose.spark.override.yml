@@ -27,5 +27,5 @@ services:
 
 networks:
   default:
-    external:
-      name: listenbrainz_default
+    external: true
+    name: listenbrainz_default

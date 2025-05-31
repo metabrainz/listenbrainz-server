@@ -3,13 +3,28 @@ import os
 import subprocess
 import tarfile
 from csv import DictWriter
+from functools import partial
+from typing import Iterable
 from uuid import UUID
+import pyarrow as pa
+import pyarrow.parquet as pq
+import pycountry
 
+from brainzutils import musicbrainz_db
 from flask import current_app
 from orjson import orjson
+from pandas import DataFrame
 from psycopg2.extras import execute_values, RealDictCursor
 from psycopg2.sql import Identifier, SQL
 from sqlalchemy import text
+
+from data.postgres.artist import get_artist_country_cache_query
+from data.postgres.artist_credit import get_artist_credit_cache_query
+from data.postgres.feedback import get_feedback_cache_query
+from data.postgres.recording import get_recording_length_cache_query, get_recording_artist_cache_query
+from data.postgres.release_group import get_release_group_metadata_cache_query
+from data.postgres.tag import get_tag_or_genre_cache_query
+from listenbrainz import db
 
 from listenbrainz.db import stats, timescale
 from listenbrainz.db.popularity import to_entity_mbid
@@ -36,7 +51,7 @@ def dump_query_to_jsonl(conn, query, params, fp, callback=None):
         fp.write(orjson.dumps(dict(row), option=orjson.OPT_APPEND_NEWLINE))
 
 
-def get_popularity_data(cursor, entity: str, mbids: list[str], *, per_artist: bool, is_mlhd: bool):
+def get_popularity_data(cursor, entity: str, mbids: Iterable[UUID], *, per_artist: bool, is_mlhd: bool):
     """ Retrieves popularity data for a given entity (recording or release group) from the database.
 
     Args:
@@ -107,7 +122,7 @@ def dump_sample_data(location: str):
         metadata_dir = os.path.join(location, "metadata")
         os.makedirs(metadata_dir, exist_ok=True)
 
-        logging.info("Dumping release_groups_cache")
+        logger.info("Dumping release_groups_cache")
         with open(os.path.join(metadata_dir, "release_groups_cache.jsonl"), "wb") as fp:
             dump_query_to_jsonl(
                 connection,
@@ -117,7 +132,7 @@ def dump_sample_data(location: str):
                 collect_artist_release_group_mbids,
             )
 
-        logging.info("Dumping recordings_cache")
+        logger.info("Dumping recordings_cache")
         with open(os.path.join(metadata_dir, "recordings_cache.jsonl"), "wb") as fp:
             dump_query_to_jsonl(
                 connection,
@@ -127,7 +142,7 @@ def dump_sample_data(location: str):
                 collect_artist_and_recording_mbids,
             )
 
-        logging.info("Dumping artists_cache")
+        logger.info("Dumping artists_cache")
         with open(os.path.join(metadata_dir, "artists_cache.jsonl"), "wb") as fp:
             dump_query_to_jsonl(
                 connection,
@@ -143,7 +158,7 @@ def dump_sample_data(location: str):
         for is_mlhd in [True, False]:
             mlhd_prefix = "mlhd_" if is_mlhd else ""
 
-            logging.info(f"Dumping popularity {mlhd_prefix}release_group")
+            logger.info(f"Dumping popularity {mlhd_prefix}release_group")
             rg_pop_data = get_popularity_data(
                 ts_curs, "release_group", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
             )
@@ -152,7 +167,7 @@ def dump_sample_data(location: str):
                 writer.writeheader()
                 writer.writerows(rg_pop_data)
 
-            logging.info(f"Dumping popularity {mlhd_prefix}recording")
+            logger.info(f"Dumping popularity {mlhd_prefix}recording")
             rec_pop_data = get_popularity_data(
                 ts_curs, "recording", rg_pop_mbids, per_artist=False, is_mlhd=is_mlhd
             )
@@ -161,7 +176,7 @@ def dump_sample_data(location: str):
                 writer.writeheader()
                 writer.writerows(rec_pop_data)
 
-            logging.info(f"Dumping popularity {mlhd_prefix}top_recording")
+            logger.info(f"Dumping popularity {mlhd_prefix}top_recording")
             rec_artist_pop_data = get_popularity_data(
                 ts_curs, "recording", all_artist_mbids, per_artist=True, is_mlhd=is_mlhd
             )
@@ -173,6 +188,102 @@ def dump_sample_data(location: str):
                 writer.writerows(rec_artist_pop_data)
 
         transaction.rollback()
+
+    dump_spark_sample_data(location, all_artist_mbids, rg_pop_mbids, rec_pop_mbids)
+
+
+def execute_sql_to_parquet(curs, query: str, mbids: Iterable[UUID], filepath: str):
+    """ Executes an SQL query and saves the results to a Parquet file. """
+    results = execute_values(curs, query, [(mbid,) for mbid in mbids], fetch=True)
+    table = pa.Table.from_pylist(results)
+    pq.write_table(table, filepath)
+
+
+def dump_artist_country_code_cache(curs, mbids: Iterable[UUID], filepath: str):
+    """ Dump the artist country code cache for sample spark dumps, this cannot be dumped directly
+        as there is post processing step to convert the country codes from 2 letter to 3 letter codes.
+    """
+    logger.info(f"Dumping artist_country_code")
+    artist_country_cache_query = get_artist_country_cache_query(with_filter=True)
+    results = execute_values(curs, artist_country_cache_query, [(mbid,) for mbid in mbids], fetch=True)
+    artist_df = DataFrame(results)
+
+    iso_codes = []
+    for country in pycountry.countries:
+        iso_codes.append({"alpha_2": country.alpha_2, "alpha_3": country.alpha_3})
+    iso_codes_df = DataFrame(iso_codes)
+
+    artist_df \
+        .merge(iso_codes_df, left_on="country_code_alpha_2", right_on="alpha_2", how="left") \
+        .drop(["country_code_alpha_2", "alpha_2"], axis=1) \
+        .rename({"alpha_3": "country_code"}, axis=1) \
+        .to_parquet(filepath)
+
+
+def dump_spark_sample_data(
+    location: str,
+    artist_mbids: Iterable[UUID],
+    release_group_mbids: Iterable[UUID],
+    recording_mbids: Iterable[UUID]
+):
+    """ Creates a sample dump of data relevant for Spark processing, filtered by the list of provided MBIDs. """
+    spark_data_dir = os.path.join(location, "spark")
+    os.makedirs(spark_data_dir, exist_ok=True)
+
+    connection = musicbrainz_db.engine.raw_connection()
+    try:
+        with connection.cursor(cursor_factory=RealDictCursor) as curs:
+            curs.execute("SET geqo = off")
+            curs.execute("SET geqo_threshold = 20")
+            curs.execute("SET from_collapse_limit = 15")
+            curs.execute("SET join_collapse_limit = 15")
+
+            dump_artist_country_code_cache(
+                curs,
+                artist_mbids,
+                os.path.join(spark_data_dir, "artist_country_code.parquet")
+            )
+
+            to_dump = [
+                ("recording_length", get_recording_length_cache_query, recording_mbids),
+                ("recording_artist", get_recording_artist_cache_query, recording_mbids),
+                ("artist_credit", get_artist_credit_cache_query, artist_mbids),
+                ("release_group_metadata", get_release_group_metadata_cache_query, release_group_mbids),
+            ]
+            for entity, mbids in [
+                ("artist", recording_mbids),
+                ("release_group", recording_mbids),
+                ("recording", recording_mbids)
+            ]:
+                to_dump.append((f"{entity}_tag", partial(get_tag_or_genre_cache_query, entity, only_genres=False), mbids))
+                to_dump.append((f"{entity}_genre", partial(get_tag_or_genre_cache_query, entity, only_genres=True), mbids))
+
+            for name, query_func, mbids in to_dump:
+                logger.info(f"Dumping {name}")
+                execute_sql_to_parquet(
+                    curs,
+                    query_func(with_filter=True),
+                    mbids,
+                    os.path.join(spark_data_dir, f"{name}.parquet")
+                )
+
+        connection.rollback()
+    finally:
+        connection.close()
+
+    connection = db.engine.raw_connection()
+    try:
+        with connection.cursor(cursor_factory=RealDictCursor) as curs:
+            logger.info("Dumping recording_feedback")
+            execute_sql_to_parquet(
+                curs,
+                get_feedback_cache_query(with_filter=True),
+                mbids,
+                os.path.join(spark_data_dir, "recording_feedback.parquet")
+            )
+        connection.rollback()
+    finally:
+        connection.close()
 
 
 def import_sample_data(archive_path, threads):
