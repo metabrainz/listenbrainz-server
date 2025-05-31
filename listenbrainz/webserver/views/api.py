@@ -876,7 +876,7 @@ def get_artist_radio_recordings(seed_artist_mbid):
 @api_bp.post("/import-files")
 @crossdomain
 @ratelimit()
-def submit_listen():
+def import_files():
     """
     
     """
@@ -895,3 +895,6 @@ def submit_listen():
 
     if not file_path:
         APIInternalServerError("The file was not able to upload!")
+
+    # For testing
+    return jsonify({"file_path":file_path})
