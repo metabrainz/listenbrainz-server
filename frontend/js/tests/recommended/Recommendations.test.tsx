@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { Router } from "@remix-run/router";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
@@ -45,7 +44,7 @@ const reactQueryWrapper = ({ children }: any) => (
 );
 
 describe("Recommendations", () => {
-  let router: Router;
+  let router: ReturnType<typeof createMemoryRouter>;
   let server: SetupServerApi;
   const recAPIFeedbackSpy = jest.fn();
   beforeAll(async () => {
