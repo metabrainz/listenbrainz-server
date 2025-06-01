@@ -473,7 +473,7 @@ export default function Listen() {
         } Listens`}</title>
       </Helmet>
       <div className="row">
-        <div className="col-md-4 col-md-push-8 side-column">
+        <div className="col-lg-4 order-lg-2 side-column">
           <div className="listen-header">
             {isUserLoggedIn && !isCurrentUsersPage && user && (
               <FollowButton
@@ -485,7 +485,7 @@ export default function Listen() {
             )}
             <Link
               to={`https://musicbrainz.org/user/${user?.name}`}
-              className="btn musicbrainz-profile-button"
+              className="btn btn-info musicbrainz-profile-button"
             >
               <img
                 src="/static/img/musicbrainz-16.svg"
@@ -511,7 +511,7 @@ export default function Listen() {
           {user && <ListenCountCard user={user} listenCount={listenCount} />}
           {user && <UserSocialNetwork user={user} />}
         </div>
-        <div className="col-md-8 col-md-pull-4">
+        <div className="col-lg-8 order-lg-1">
           {!listens.length && (
             <div className="empty-listens">
               <FontAwesomeIcon icon={faCompactDisc as IconProp} size="10x" />
@@ -547,7 +547,7 @@ export default function Listen() {
               <div className="read-more">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     refetch();
                     setWebSocketListens([]);
@@ -565,12 +565,12 @@ export default function Listen() {
               <h3 className="header-with-line">Recent listens</h3>
             )}
             {isCurrentUsersPage && (
-              <div className="dropdow add-listen-btn">
+              <div className="dropdown add-listen-btn">
                 <button
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="addListensDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
                 >
                   Add listens&nbsp;
@@ -580,42 +580,36 @@ export default function Listen() {
                   className="dropdown-menu dropdown-menu-right"
                   aria-labelledby="addListensDropdown"
                 >
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show(AddListenModal);
-                      }}
-                      data-toggle="modal"
-                      data-target="#AddListenModal"
-                    >
-                      Manual addition
-                    </button>
-                  </li>
-                  <li>
-                    <Link to="/settings/music-services/details/">
-                      Connect music services
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/settings/import/">Import your listens</Link>
-                  </li>
-                  <li>
-                    <Link to="/add-data/">Submit from music players</Link>
-                  </li>
-                  <li>
-                    <Link to="/settings/link-listens/">
-                      Link unmatched listens
-                    </Link>
-                  </li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show(AddListenModal);
+                    }}
+                    className="dropdown-item"
+                  >
+                    Manual addition
+                  </button>
+                  <Link
+                    to="/settings/music-services/details/"
+                    className="dropdown-item"
+                  >
+                    Connect music services
+                  </Link>
+                  <Link to="/settings/import/" className="dropdown-item">
+                    Import your listens
+                  </Link>
+                  <Link to="/add-data/" className="dropdown-item">
+                    Submit from music players
+                  </Link>
+                  <Link to="/settings/link-listens/" className="dropdown-item">
+                    Link unmatched listens
+                  </Link>
                 </ul>
               </div>
             )}
             <button
               type="button"
               className="btn btn-icon btn-info atom-button"
-              data-toggle="modal"
-              data-target="#SyndicationFeedModal"
               title="Subscribe to syndication feed (Atom)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {
@@ -684,9 +678,9 @@ export default function Listen() {
               {listens.length < expectedListensPerPage && (
                 <h5 className="text-center">No more listens to show</h5>
               )}
-              <ul className="pager" id="navigation">
+              <ul className="pagination" id="navigation">
                 <li
-                  className={`previous ${
+                  className={`page-item ${
                     isNewestButtonDisabled ? "disabled" : ""
                   }`}
                 >
@@ -696,12 +690,13 @@ export default function Listen() {
                     tabIndex={0}
                     aria-disabled={isNewestButtonDisabled}
                     to={location.pathname}
+                    className="page-link"
                   >
                     &#x21E4;
                   </Link>
                 </li>
                 <li
-                  className={`previous ${
+                  className={`page-item ${
                     isNewerButtonDisabled ? "disabled" : ""
                   }`}
                 >
@@ -711,6 +706,7 @@ export default function Listen() {
                     tabIndex={0}
                     aria-disabled={isNewerButtonDisabled}
                     to={`?min_ts=${previousListenTs}`}
+                    className="page-link"
                   >
                     &larr; Newer
                   </Link>
@@ -734,7 +730,9 @@ export default function Listen() {
                   />
                 </li>
                 <li
-                  className={`next ${isOlderButtonDisabled ? "disabled" : ""}`}
+                  className={`page-item next ${
+                    isOlderButtonDisabled ? "disabled" : ""
+                  }`}
                   style={{ marginLeft: "auto" }}
                 >
                   <Link
@@ -743,12 +741,15 @@ export default function Listen() {
                     aria-disabled={isOlderButtonDisabled}
                     tabIndex={0}
                     to={`?max_ts=${nextListenTs}`}
+                    className="page-link"
                   >
                     Older &rarr;
                   </Link>
                 </li>
                 <li
-                  className={`next ${isOldestButtonDisabled ? "disabled" : ""}`}
+                  className={`page-item next ${
+                    isOldestButtonDisabled ? "disabled" : ""
+                  }`}
                 >
                   <Link
                     aria-label="Navigate to oldest listens"
@@ -756,6 +757,7 @@ export default function Listen() {
                     tabIndex={0}
                     aria-disabled={isOldestButtonDisabled}
                     to={`?min_ts=${oldestListenTs - 1}`}
+                    className="page-link"
                   >
                     &#x21E5;
                   </Link>

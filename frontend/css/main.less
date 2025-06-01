@@ -1,5 +1,6 @@
 @import "theme/theme.less";
 @import "colors.less";
+@import "scaffolding.less";
 @import "homepage.less";
 @import "listens-page.less";
 @import "pinned-recordings.less";
@@ -71,15 +72,6 @@ pre code.hljs {
 
 .table-nonfluid {
   width: auto !important;
-}
-
-.btn {
-  .glyphicon {
-    margin-right: 4px;
-  }
-  &.dropdown-toggle {
-    border-radius: 4px;
-  }
 }
 
 // Navbar
@@ -154,6 +146,59 @@ pre code.hljs {
   }
 }
 
+/* Buttons */
+.btn {
+  box-shadow: none;
+}
+
+.btn.dropdown-toggle {
+  border-radius: 4px;
+}
+
+/* Fix for BS3 theme that defines styles in theme/links.less */
+a.dropdown-item:visited,
+a.btn:visited {
+  color: inherit;
+}
+
+// Fix button height inside an input group
+.input-group > .btn {
+  margin: 0;
+}
+
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+
+  & + * {
+    margin-left: 0.4em;
+  }
+
+  > svg {
+    /* We might forget to set the fixedWidth attribute on FontAwesome icons
+    but we do want to make sure all icons have the same width, so extend the FA class */
+    &:extend(.fa-fw);
+  }
+}
+
+.btn-rounded {
+  border-radius: 3em;
+}
+
+.btn-link {
+  border-color: transparent;
+  text-decoration: none;
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
 .center-p {
   color: var(--color);
   text-align: center;
@@ -174,43 +219,6 @@ pre code.hljs {
   .text-brand {
     font-size: 1.8rem;
   }
-}
-
-.color-purple {
-  color: #353070;
-}
-
-.color-orange {
-  color: #e9733d;
-}
-
-.color-gray {
-  text-decoration: none;
-  color: #000000;
-}
-
-.mt-5 {
-  margin-top: 5px;
-}
-
-.mt-10 {
-  margin-top: 10px;
-}
-
-.mt-15 {
-  margin-top: 15px;
-}
-
-.mb-5 {
-  margin-bottom: 5px;
-}
-
-.mb-10 {
-  margin-bottom: 10px;
-}
-
-.mb-15 {
-  margin-bottom: 15px;
 }
 
 .flex {
@@ -235,18 +243,8 @@ pre code.hljs {
   flex-wrap: wrap;
 }
 
-// Allows styling of elements other than <a> in Bootstrap dropdowns
-.dropdown-menu > li {
-  max-width: 300px;
-  > * {
-    &:extend(.dropdown-menu > li > a all);
-    background: inherit;
-    border: none;
-    width: 100%;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+textarea.form-control {
+  height: auto;
 }
 
 .full-page-loader {
@@ -269,7 +267,8 @@ pre code.hljs {
 
   &.compact {
     > * {
-      display: inline-block;
+      display: -webkit-inline-box;
+      display: inline-box;
       margin-bottom: 0px;
     }
 
@@ -370,44 +369,13 @@ pre code.hljs {
   }
 }
 
-.badge-info {
-  color: @white;
-  background-color: @blue;
+.badge {
+  font-size: 12px;
+  border-radius: 10px;
 }
 
 input[type="range"] {
   accent-color: @blue;
-}
-
-// Fix button height inside an input group
-.input-group:not(.input-group-lg):not(.input-group-sm)
-  > .input-group-btn
-  > .btn {
-  line-height: 2em;
-}
-
-.btn-icon {
-  padding: 0.5em;
-  font-size: 1.5em;
-  height: 2em;
-  line-height: 1em;
-  border-radius: 5px;
-  text-align: center;
-  display: inline-block;
-
-  & + * {
-    margin-left: 0.4em;
-  }
-
-  > svg {
-    /* We might forget to set the fixedWidth attribute on FontAwesome icons
-    but we do want to make sure all icons have the same width, so extend the FA class */
-    &:extend(.fa-fw);
-  }
-}
-
-.btn-rounded {
-  border-radius: 3em;
 }
 
 .Importer {
@@ -416,11 +384,23 @@ input[type="range"] {
   border-radius: 5px;
 }
 
-#export-buttons {
-  details[open] > summary > svg {
-    -webkit-transform: rotate(90deg);
-    transform: rotate(90deg);
+/* Custom indicator for sdetails/summary expanded indicator */
+details > summary {
+  &::marker {
+    display: none;
+    content: "";
   }
+  .summary-indicator {
+    transition: rotate 0.2s ease-in-out;
+    rotate: 0deg;
+    margin-right: 0.5em;
+  }
+  &:hover .summary-indicator {
+    rotate: 90deg;
+  }
+}
+details[open] > summary .summary-indicator {
+  rotate: 90deg;
 }
 
 .atom-button {
@@ -430,4 +410,38 @@ input[type="range"] {
   padding: 0.25em;
   margin: 0;
   margin-left: 5px;
+}
+
+.pagination {
+  margin: 20px 0;
+  .page-link {
+    padding: 5px 14px;
+    font-size: 14px;
+  }
+}
+
+.modal {
+  .modal-dialog {
+    max-width: 600px;
+  }
+
+  .modal-header {
+    padding: 5px 15px;
+
+    .btn-close {
+      font-size: 1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 20px;
+
+    .form-check {
+      margin: 10px 0;
+    }
+  }
+
+  .modal-footer {
+    padding: 20px;
+  }
 }

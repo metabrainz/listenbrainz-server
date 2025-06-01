@@ -4,14 +4,9 @@
 
 #playlists-page .playlist-view-options {
   display: flex;
+  align-items: end;
   margin-top: 0.8rem;
   gap: 1rem;
-
-  .playlist-sort-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
 }
 
 #playlists-container {
@@ -41,8 +36,14 @@
       bottom: 0;
       border: none;
       padding: 5px;
-      &:extend(.btn-block);
-      &:extend(.btn-info);
+      width: 100%;
+      display: block;
+      color: white;
+      background: @blue;
+
+      &::after {
+        display: none;
+      }
     }
 
     .info {
@@ -180,7 +181,7 @@
     .info {
       display: flex;
       flex-wrap: wrap;
-      &:extend(.text-muted);
+      color: @light-grey;
       margin: 0.5em 0;
       > * {
         padding: 0 0.7em;
@@ -189,7 +190,7 @@
   }
 
   #add-track {
-    background-color: @orange;
+    background-color: @orange !important;
     > *:first-child {
       display: flex;
       align-items: center;
@@ -292,4 +293,10 @@
   p {
     margin-bottom: 0;
   }
+}
+
+.playlist-sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }

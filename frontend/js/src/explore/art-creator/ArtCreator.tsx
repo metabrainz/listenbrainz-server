@@ -257,7 +257,6 @@ export default function ArtCreator() {
         // We can't copy the image directly, but we can fall back to writing the SVG source string to the clipboard
         await (navigator.clipboard as Clipboard).writeText(outerHTML);
         toast.success("Copied image SVG to clipboard");
-        return;
       }
     } catch (error) {
       toast.error(
@@ -438,7 +437,7 @@ export default function ArtCreator() {
             <div className="sidenav-content-grid">
               <h4>Settings</h4>
               <div className="input-group">
-                <label className="input-group-addon" htmlFor="user-name">
+                <label className="input-group-text" htmlFor="user-name">
                   Username
                 </label>
                 <UserSearch
@@ -448,12 +447,12 @@ export default function ArtCreator() {
                 />
               </div>
               <div className="input-group">
-                <label className="input-group-addon" htmlFor="style">
+                <label className="input-group-text" htmlFor="style">
                   Template
                 </label>
                 <select
                   id="style"
-                  className="form-control"
+                  className="form-select"
                   value={style.name}
                   onChange={updateStyleCallback}
                 >
@@ -465,12 +464,12 @@ export default function ArtCreator() {
                 </select>
               </div>
               <div className="input-group">
-                <label className="input-group-addon" htmlFor="time-range">
+                <label className="input-group-text" htmlFor="time-range">
                   Time range
                 </label>
                 <select
                   id="time-range"
-                  className="form-control"
+                  className="form-select"
                   value={timeRange}
                   onChange={updateTimeRangeCallback}
                 >
@@ -493,12 +492,14 @@ export default function ArtCreator() {
                     advanced layouts
                   </small>
                   <div className="input-group">
-                    <label
-                      className="input-group-addon"
-                      htmlFor="albums-per-row"
-                    >
-                      Albums per row
-                    </label>
+                    <div className="input-group-prepend">
+                      <label
+                        className="input-group-text"
+                        htmlFor="albums-per-row"
+                      >
+                        Albums per row
+                      </label>
+                    </div>
                     <input
                       id="albums-per-row"
                       className="form-control"
@@ -513,12 +514,14 @@ export default function ArtCreator() {
                     />
                   </div>
                   <div className="input-group">
-                    <label className="input-group-addon" htmlFor="grid-layout">
-                      Grid layout
-                    </label>
+                    <div className="input-group-prepend">
+                      <label className="input-group-text" htmlFor="grid-layout">
+                        Grid layout
+                      </label>
+                    </div>
                     <select
                       id="grid-layout"
-                      className="form-control"
+                      className="form-select"
                       value={gridLayout + 1}
                       onChange={(event) => {
                         setGridLayout(Number(event.target.value) - 1);
@@ -543,7 +546,9 @@ export default function ArtCreator() {
               {style.type === "text" && (
                 <>
                   <div>
-                    <label htmlFor="color-presets">Color presets:</label>
+                    <label className="form-label" htmlFor="color-presets">
+                      Color presets:
+                    </label>
                     <div className="color-picker-panel" id="color-presets">
                       <ColorPicker
                         firstColor="#6b4078"
@@ -593,44 +598,43 @@ export default function ArtCreator() {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="text-color-input">Text color:</label>
+                    <label className="form-label" htmlFor="text-color-input">
+                      Text color:
+                    </label>
                     <div className="input-group">
-                      <span className="input-group-btn">
-                        <input
-                          id="text-color-input"
-                          type="color"
-                          className="btn btn-transparent form-control"
-                          onChange={updateTextColorCallback}
-                          placeholder="#321529"
-                          value={textColor}
-                        />
-                      </span>
+                      <input
+                        id="text-color-input"
+                        type="color"
+                        className="form-control form-control-color"
+                        onChange={updateTextColorCallback}
+                        placeholder="#321529"
+                        value={textColor}
+                      />
                       <input
                         className="form-control"
                         type="text"
                         placeholder="#321529"
                         value={textColor}
-                        disabled
+                        readOnly
                       />
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="bg-color">Background colors:</label>
+                    <label className="form-label" htmlFor="bg-color">
+                      Background colors:
+                    </label>
                     <div className="input-group">
-                      <span className="input-group-btn">
-                        <input
-                          id="bg-color"
-                          type="color"
-                          className="btn btn-transparent form-control"
-                          onChange={updateFirstBgColorCallback}
-                          value={firstBgColor}
-                        />
-                      </span>
+                      <input
+                        id="bg-color"
+                        type="color"
+                        className="form-control form-control-color"
+                        onChange={updateFirstBgColorCallback}
+                        value={firstBgColor}
+                      />
                       <input
                         type="text"
                         className="form-control"
                         placeholder="Select a color…"
-                        disabled
                         readOnly
                         value={firstBgColor}
                       />
@@ -638,20 +642,17 @@ export default function ArtCreator() {
                   </div>
 
                   <div className="input-group">
-                    <span className="input-group-btn">
-                      <input
-                        id="bg-color-2"
-                        type="color"
-                        className="btn btn-transparent form-control"
-                        onChange={updateSecondBgColorCallback}
-                        value={secondBgColor}
-                      />
-                    </span>
+                    <input
+                      id="bg-color-2"
+                      type="color"
+                      className="form-control form-control-color"
+                      onChange={updateSecondBgColorCallback}
+                      value={secondBgColor}
+                    />
                     <input
                       type="text"
                       className="form-control"
                       placeholder="Select a color…"
-                      disabled
                       readOnly
                       value={secondBgColor}
                     />
@@ -659,20 +660,15 @@ export default function ArtCreator() {
                 </>
               )}
               {/* <div className="flex-center input-group">
-                <label htmlFor="bg-upload">Background image:</label>
-                <div className="input-group">
-                  <input className="form-control" type="text" disabled />
-                  <div className="input-group-btn">
-                    <button type="button" className="btn btn-default btn-sm">
-                      <FontAwesomeIcon icon={faCloudArrowUp} />
-                    </button>
-                    <input id="bg-upload" type="file" className="hidden" />
-                  </div>
-                </div>
+                <label className="form-label" htmlFor="bg-upload">Background image:</label>
+                <input className="form-control" type="text" />
+                <button type="button" className="btn btn-secondary btn-sm">
+                  <FontAwesomeIcon icon={faCloudArrowUp} />
+                </button>
               </div> */}
 
               {/* <div>
-                <label htmlFor="genres">
+                <label className="form-label" htmlFor="genres">
                   Genres: <FontAwesomeIcon icon={faCircleQuestion} />
                 </label>
                 <input
@@ -690,10 +686,10 @@ export default function ArtCreator() {
                 <ToggleOption onClick={genresToggler} buttonName="Genres" />
               </div> */}
               {/* <div>
-                <label htmlFor="font-select">Font:</label>
+                className="form-label" htmlFor="font-select">Font:</label>
                 <select
                   id="font-select"
-                  className="form-control"
+                  className="form-select"
                   value={font}
                   onChange={updateFontCallback}
                 >

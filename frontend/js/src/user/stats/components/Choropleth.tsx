@@ -312,7 +312,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
                 {artists?.map((artist: UserArtistMapArtist) => (
                   <div key={artist.artist_mbid}>
                     <span
-                      className="badge color-purple"
+                      className="badge bg-light text-info"
                       style={{ marginRight: "4px" }}
                     >
                       <FontAwesomeIcon

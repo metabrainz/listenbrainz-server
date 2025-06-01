@@ -235,30 +235,28 @@ export default function MusicNeighborhood() {
         <title>Music Neighborhood</title>
       </Helmet>
       <div className="artist-similarity-main-container" role="main">
-        <div className="artist-similarity-header">
+        <div className="artist-similarity-header align-items-end">
           <SearchBox
             onArtistChange={onArtistChange}
             onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
             currentSimilarArtistsLimit={similarArtistsLimit}
           />
-          <div className="share-buttons">
+          <button
+            type="button"
+            className="ms-5 btn btn-icon btn-info my-0 mx-0"
+            onClick={onClickDownload}
+          >
+            <FontAwesomeIcon icon={faDownload} color="white" />
+          </button>
+          {browserHasClipboardAPI && (
             <button
               type="button"
-              className="btn btn-icon btn-info"
-              onClick={onClickDownload}
+              className="btn btn-icon btn-info my-0 mx-0"
+              onClick={copyImage}
             >
-              <FontAwesomeIcon icon={faDownload} color="white" />
+              <FontAwesomeIcon icon={faCopy} color="white" />
             </button>
-            {browserHasClipboardAPI && (
-              <button
-                type="button"
-                className="btn btn-icon btn-info"
-                onClick={copyImage}
-              >
-                <FontAwesomeIcon icon={faCopy} color="white" />
-              </button>
-            )}
-          </div>
+          )}
         </div>
         <div className="artist-similarity-graph-panel-container">
           <SimilarArtist

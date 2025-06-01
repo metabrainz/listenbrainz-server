@@ -210,7 +210,7 @@ export default function Donate() {
           </div>
         </div>
         <div className="donations-page-footer row">
-          <h3 className="col-xs-12">Jokes aside</h3>
+          <h3 className="col-12">Jokes aside</h3>
           <div className="col-sm-6">
             <p>
               We are a{" "}

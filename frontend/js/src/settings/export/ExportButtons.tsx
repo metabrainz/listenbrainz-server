@@ -43,29 +43,34 @@ function renderExport(
     <p>
       <details>
         <summary>
-          <FontAwesomeIcon icon={faChevronCircleRight} size="sm" /> Details
+          <FontAwesomeIcon
+            icon={faChevronCircleRight}
+            size="sm"
+            className="summary-indicator"
+          />
+          Details
         </summary>
         <dl className="row">
-          <dt className="col-xs-4">Progress</dt>
-          <dd className="col-xs-8">{ex.progress}</dd>
-          <dt className="col-xs-4">Type</dt>
-          <dd className="col-xs-8">{startCase(ex.type)}</dd>
-          <dt className="col-xs-4">Requested on</dt>
-          <dd className="col-xs-8">{format(ex.created, "PPp")}</dd>
-          <dt className="col-xs-4">Export #</dt>
-          <dd className="col-xs-8">{ex.export_id}</dd>
+          <dt className="col-4">Progress</dt>
+          <dd className="col-8">{ex.progress}</dd>
+          <dt className="col-4">Type</dt>
+          <dd className="col-8">{startCase(ex.type)}</dd>
+          <dt className="col-4">Requested on</dt>
+          <dd className="col-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-4">Export #</dt>
+          <dd className="col-8">{ex.export_id}</dd>
         </dl>
       </details>
     </p>
   );
   if (ex.status === ExportStatus.complete) {
     return (
-      <div className="mt-15 alert alert-success" role="alert">
+      <div className="mt-4 alert alert-success" role="alert">
         <h4 className="alert-heading">Export ready to download</h4>
         <form
           action={`/export/download/${ex.export_id}/`}
           method="post"
-          className="mb-10"
+          className="mb-3"
         >
           <button
             type="submit"
@@ -87,7 +92,7 @@ function renderExport(
         </p>
         <form
           onSubmit={(e) => deleteExport(e, ex.export_id)}
-          className="mt-10 mb-10"
+          className="mt-3 mb-3"
         >
           <button type="submit" name="delete_export" className="btn btn-danger">
             <FontAwesomeIcon icon={faTrash} />
@@ -100,7 +105,7 @@ function renderExport(
   }
   if (ex.status === ExportStatus.failed) {
     return (
-      <div className="mt-15 alert alert-danger" role="alert">
+      <div className="mt-4 alert alert-danger" role="alert">
         <h4 className="alert-heading">Export failed</h4>
         <p>
           There was an error creating an export of your data.
@@ -127,7 +132,7 @@ function renderExport(
     </div>
   ); */
   return (
-    <div className="mt-15 alert alert-info" role="alert">
+    <div className="mt-4 alert alert-info" role="alert">
       <h4 className="alert-heading">
         Export in progress
         <br />
@@ -154,7 +159,7 @@ function renderExport(
       </p>
       <form
         onSubmit={(e) => deleteExport(e, ex.export_id)}
-        className="mt-10 mb-10"
+        className="mt-3 mb-3"
       >
         <button type="submit" name="cancel_export" className="btn btn-warning">
           <FontAwesomeIcon icon={faCancel} />

@@ -425,10 +425,11 @@ export default class LibreFmImporter extends React.Component<
     );
 
     try {
-      this.latestImportTime = await this.APIService.getLatestImport(
+      const data = await this.APIService.getLatestImport(
         this.userName,
         service
       );
+      this.latestImportTime = data.latest_import;
       this.incrementalImport = this.latestImportTime > 0;
       this.playCount = await this.getTotalNumberOfScrobbles();
       this.totalPages = await this.getNumberOfPages();
@@ -593,7 +594,7 @@ export default class LibreFmImporter extends React.Component<
             <img
               src="/static/img/listenbrainz-logo.svg"
               height="75"
-              className="img-responsive"
+              className="img-fluid"
               alt=""
             />
             <br />

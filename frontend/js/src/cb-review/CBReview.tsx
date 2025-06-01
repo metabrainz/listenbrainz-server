@@ -41,7 +41,7 @@ export default function CBReview(props: {
   if (!hasPermissions) {
     return (
       <div>
-        <h4> Submit Reviews </h4>
+        <h4>Submit Reviews</h4>
         <p>
           Before you can submit reviews for your Listens, you must{" "}
           <b>
@@ -82,8 +82,6 @@ export default function CBReview(props: {
       <button
         className="btn btn-success"
         type="button"
-        data-toggle="modal"
-        data-target="#CBReviewModal"
         disabled={!reviewValid}
         onClick={() => {
           NiceModal.show(CBReviewModal, {

@@ -214,8 +214,8 @@ export default class UserFeedback extends React.Component<
               })}
             </div>
             <button
-              className={`mt-15 btn btn-block ${
-                noMoreFeedback ? "btn-default" : "btn-info"
+              className={`mt-4 btn w-100 ${
+                noMoreFeedback ? "btn-secondary" : "btn-info"
               }`}
               disabled={noMoreFeedback}
               type="button"
