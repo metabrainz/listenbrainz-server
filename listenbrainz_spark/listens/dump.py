@@ -2,6 +2,8 @@
 """
 import logging
 import os
+import subprocess
+import tarfile
 import tempfile
 from datetime import datetime, timezone
 from typing import Optional
@@ -15,7 +17,7 @@ from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
 from listenbrainz_spark.dump.ftp import ListenBrainzFtpDumpLoader
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.exceptions import PathNotFoundException
-from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp
+from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp, upload_sample_dump
 from listenbrainz_spark.hdfs.utils import path_exists, delete_dir, rename
 from listenbrainz_spark.listens.cache import unpersist_incremental_df
 from listenbrainz_spark.listens.compact import write_partitioned_listens
@@ -255,3 +257,16 @@ def process_incremental_listens_dump(temp_path):
             .sql(query) \
             .collect()[0]
         update_listens_metadata(location, result.max_listened_at, result.max_created)
+
+
+def import_spark_sample_dump_handler():
+    """ Imports metadata cache parquet files from a spark sample dumps. """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        loader = ListenBrainzFtpDumpLoader()
+        local_path = loader.download_sample_dump(temp_dir)
+
+        zstd_command = ["zstd", "--decompress", "--stdout", local_path]
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
+
+        with tarfile.open(fileobj=zstd.stdout, mode="r|") as tar:
+            upload_sample_dump(tar, temp_dir)

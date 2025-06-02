@@ -46,6 +46,7 @@ functions = {
     'import.dump.full': listenbrainz_spark.listens.dump.import_full_dump_handler,
     'import.dump.mlhd': listenbrainz_spark.mlhd.download.import_mlhd_dump_to_hdfs,
     'import.dump.incremental': listenbrainz_spark.listens.dump.import_incremental_dump_handler,
+    'import.dump.sample': listenbrainz_spark.listens.dump.import_spark_sample_dump_handler,
     'cf.missing_mb_data': listenbrainz_spark.missing_mb_data.missing_mb_data.main,
     'cf.recommendations.recording.create_dataframes':
         listenbrainz_spark.recommendations.recording.create_dataframes.main,
