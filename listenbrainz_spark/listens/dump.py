@@ -13,7 +13,7 @@ from pyspark.sql.functions import col
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
+from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader, ListensDump
 from listenbrainz_spark.dump.ftp import ListenBrainzFtpDumpLoader
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.exceptions import PathNotFoundException
@@ -124,16 +124,19 @@ def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
         end_id = loader.get_latest_dump_id(DumpType.INCREMENTAL) + 1
 
         for dump_id in range(start_id, end_id, 1):
-            if not search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
-                try:
+            try:
+                if (
+                    not search_dump(dump_id, DumpType.INCREMENTAL, imported_at)
+                    and loader.check_dump_type(dump_id) == DumpType.INCREMENTAL
+                ):
                     imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=dump_id))
-                except Exception as e:
-                    # Skip current dump if any error occurs during import
-                    error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
-                    errors.append(error_msg)
-                    logger.error(error_msg, exc_info=True)
-                    continue
-            dump_id += 1
+            except Exception as e:
+                # Skip current dump if any error occurs during import
+                error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
+                errors.append(error_msg)
+                logger.error(error_msg, exc_info=True)
+                continue
+
     loader.close()
     return [{
         "type": "import_incremental_dump",
