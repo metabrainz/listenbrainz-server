@@ -5,7 +5,7 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";

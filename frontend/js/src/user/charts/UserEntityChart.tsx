@@ -11,7 +11,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { useLoaderData, Link, useNavigate, json } from "react-router-dom";
+import {
+  useLoaderData,
+  Link,
+  useNavigate,
+  data as routerData,
+} from "react-router";
 import { Helmet } from "react-helmet";
 import { BarItemProps } from "@nivo/bar";
 import NiceModal from "@ebay/nice-modal-react";
@@ -656,7 +661,7 @@ export const UserEntityChartLoader = async ({
   });
   const propsData = await response.json();
   if (!response.ok) {
-    throw json(propsData, { status: response.status });
+    throw routerData(propsData, { status: response.status });
   }
   const { user } = propsData;
 

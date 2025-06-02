@@ -9,6 +9,7 @@ from listenbrainz_spark.exceptions import DumpNotFoundException
 class DumpType(Enum):
     INCREMENTAL = "incremental"
     FULL = "full"
+    SAMPLE = "sample"
 
 
 class ListensDump(NamedTuple):
@@ -79,7 +80,7 @@ class ListenbrainzDumpLoader(ABC):
         return ListensDump.from_dir_name(dump_name).get_dump_file()
 
     @abstractmethod
-    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> (str, str, int):
+    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> tuple[str, str, int]:
         pass
 
     def _calc_sha256(self, filepath: str) -> str:

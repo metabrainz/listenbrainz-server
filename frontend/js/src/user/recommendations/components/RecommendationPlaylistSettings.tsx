@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import DOMPurify from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { getBaseUrl, preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";

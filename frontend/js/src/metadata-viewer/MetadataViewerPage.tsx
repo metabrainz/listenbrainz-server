@@ -2,7 +2,7 @@
 import * as React from "react";
 import { toast } from "react-toastify";
 import { io } from "socket.io-client";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import MetadataViewer from "./components/MetadataViewer";

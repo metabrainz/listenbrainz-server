@@ -6,7 +6,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 
 import Tooltip from "react-tooltip";

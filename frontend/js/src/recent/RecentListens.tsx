@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 
 import ListenCard from "../common/listens/ListenCard";

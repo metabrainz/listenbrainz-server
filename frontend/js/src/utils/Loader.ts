@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, Params } from "react-router-dom";
-import { json } from "react-router-dom";
+import type { LoaderFunctionArgs } from "react-router";
+import { data } from "react-router";
 import { isEmpty } from "lodash";
 import queryClient from "./QueryClient";
 import { getObjectForURLSearchParams } from "./utils";
@@ -11,11 +11,11 @@ const RouteLoader = async ({ request }: { request: Request }) => {
       Accept: "application/json",
     },
   });
-  const data = await response.json();
+  const responseData = await response.json();
   if (!response.ok) {
-    throw json(data, { status: response.status });
+    throw data(responseData, { status: response.status });
   }
-  return data;
+  return responseData;
 };
 
 export default RouteLoader;
@@ -27,18 +27,18 @@ const RouteLoaderURL = async (url: string) => {
       Accept: "application/json",
     },
   });
-  const data = await response.json();
+  const responseData = await response.json();
   if (!response.ok) {
-    throw json(data, { status: response.status });
+    throw data(responseData, { status: response.status });
   }
-  return data;
+  return responseData;
 };
 
 export const RouteQuery = (key: any[], url: string) => ({
   queryKey: key,
   queryFn: async () => {
-    const data = await RouteLoaderURL(url);
-    return data;
+    const responseData = await RouteLoaderURL(url);
+    return responseData;
   },
 });
 

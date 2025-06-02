@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { RouteObject } from "react-router-dom";
+import type { RouteObject } from "react-router";
 import getExploreRoutes from "../explore/routes";
 import getUserRedirectRoutes from "../user/routes/redirectRoutes";
 import getUserRoutes from "../user/routes/userRoutes";

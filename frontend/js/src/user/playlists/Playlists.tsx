@@ -4,14 +4,18 @@ import {
   faUsers,
   faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
-import { faSpotify, faItunesNote } from "@fortawesome/free-brands-svg-icons";
+import {
+  faSpotify,
+  faItunesNote,
+  faSoundcloud,
+} from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 
 import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useSearchParams } from "react-router-dom";
+import { useLoaderData, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import Card from "../../components/Card";
@@ -22,6 +26,7 @@ import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPl
 import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
 import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import ImportAppleMusicPlaylistModal from "./components/ImportAppleMusicPlaylistModal";
+import ImportSoundCloudPlaylistModal from "./components/ImportSoundCloudPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import {
   getPlaylistExtension,
@@ -342,6 +347,26 @@ export default class UserPlaylists extends React.Component<
                   >
                     <FontAwesomeIcon icon={faItunesNote} />
                     &nbsp;Apple Music
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportSoundCloudPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    data-toggle="modal"
+                  >
+                    <FontAwesomeIcon icon={faSoundcloud} />
+                    &nbsp;SoundCloud
                   </button>
                   <button
                     type="button"
