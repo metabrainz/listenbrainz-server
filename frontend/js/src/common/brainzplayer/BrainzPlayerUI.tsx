@@ -19,7 +19,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import tinycolor from "tinycolor2";

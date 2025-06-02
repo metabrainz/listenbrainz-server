@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router";
 
 function NavItem({
   label,

@@ -34,7 +34,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
