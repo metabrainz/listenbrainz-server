@@ -53,13 +53,12 @@ def process_similarities(matrix: CoordinateMatrix, max_num_users: int) -> DataFr
         of the most similar users in descending order of similarity.
     """
     all_similar_users = defaultdict(list)
-    for x, y, raw_value in matrix.entries.collect():
-        value = float(raw_value)
-        if x == y or math.isnan(value) or value < 0:
+    for entry in matrix.entries.collect():
+        if entry.x == entry.y or math.isnan(entry.value) or entry.value < 0:
             continue
 
-        all_similar_users[x].append((y, value))
-        all_similar_users[y].append((x, value))
+        all_similar_users[entry.x].append((entry.y, entry.value))
+        all_similar_users[entry.y].append((entry.x, entry.value))
 
     thresholded_similar_users = {}
     for user_id, similar_users in all_similar_users.items():
