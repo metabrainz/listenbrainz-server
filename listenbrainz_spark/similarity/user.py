@@ -54,11 +54,11 @@ def process_similarities(matrix: CoordinateMatrix, max_num_users: int) -> DataFr
     """
     all_similar_users = defaultdict(list)
     for entry in matrix.entries.collect():
-        if entry.x == entry.y or math.isnan(entry.value) or entry.value < 0:
+        if entry.i == entry.j or math.isnan(entry.value) or entry.value < 0:
             continue
 
-        all_similar_users[entry.x].append((entry.y, entry.value))
-        all_similar_users[entry.y].append((entry.x, entry.value))
+        all_similar_users[entry.i].append((entry.j, entry.value))
+        all_similar_users[entry.j].append((entry.i, entry.value))
 
     thresholded_similar_users = {}
     for user_id, similar_users in all_similar_users.items():
