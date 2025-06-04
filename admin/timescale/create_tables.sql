@@ -286,11 +286,6 @@ CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
     value   TEXT
 );
-
-CREATE TABLE background_worker_state (
-    key     TEXT NOT NULL,
-    value   TEXT
-);
 COMMENT ON TABLE background_worker_state IS 'This table is used to store miscellaneous data by various background processes or the ListenBrainz webserver. Use it when storing the data is redis is not reliable enough.';
 
 
