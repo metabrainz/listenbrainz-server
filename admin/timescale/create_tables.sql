@@ -271,6 +271,22 @@ CREATE TABLE soundcloud_cache.track (
     data                    JSONB NOT NULL
 );
 
+-- Internet Archive metadata cache tables
+CREATE SCHEMA IF NOT EXISTS internetarchive_cache;
+
+CREATE TABLE internetarchive_cache.track (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id                TEXT NOT NULL,
+    title                   TEXT NOT NULL,
+    artist                  TEXT,
+    data                    JSONB NOT NULL
+);
+
+CREATE TABLE background_worker_state (
+    key     TEXT NOT NULL,
+    value   TEXT
+);
+
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
     value   TEXT
