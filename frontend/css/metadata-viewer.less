@@ -159,52 +159,14 @@
       }
     }
 
-    > * {
-      &.expanded {
+    #accordion {
+      .accordion-collapse.collapse.show {
+        // Making full-height flex accordion
         flex: 1;
-        display: flex;
-        flex-direction: column;
-        .panel-heading .caret {
-          transform: rotate(0deg);
-        }
+        // display: flex;
       }
-      .panel-collapse {
-        flex: 1;
-      }
-      .panel-body {
-        padding: @outer-padding;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        > *:last-child {
-          align-self: center;
-          margin-top: auto;
-        }
-        > *:not(:last-child) {
-          margin-bottom: 0.7em;
-        }
-      }
-      .panel-heading {
-        background: inherit;
-        cursor: pointer;
-        .date {
-          font-size: 0.7em;
-          margin-left: auto;
-        }
-        .caret {
-          transform: rotate(-90deg);
-          transition: transform ease-out 0.35s;
-          margin-left: @outer-padding;
-        }
-        .panel-title {
-          .name {
-            font-size: 1.3em;
-          }
-          > * {
-            display: flex;
-            align-items: center;
-          }
-        }
+      .accordion-header {
+        margin: 0;
       }
 
       .credits-table {
