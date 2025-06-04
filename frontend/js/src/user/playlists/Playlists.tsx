@@ -351,16 +351,10 @@ export default class UserPlaylists extends React.Component<
                   <button
                     type="button"
                     onClick={() => {
-                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                      NiceModal.show<JSPFPlaylist[], any>(
                         ImportSoundCloudPlaylistModal
-                      ).then((playlist) => {
-                        if (Array.isArray(playlist)) {
-                          playlist.forEach((p: JSPFPlaylist) => {
-                            this.onPlaylistCreated(p);
-                          });
-                        } else {
-                          this.onPlaylistCreated(playlist);
-                        }
+                      ).then((newPlaylists) => {
+                        newPlaylists.forEach(this.onPlaylistCreated);
                       });
                     }}
                     data-toggle="modal"

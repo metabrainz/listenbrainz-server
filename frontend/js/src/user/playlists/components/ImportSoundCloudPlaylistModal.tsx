@@ -1,23 +1,14 @@
 import React from "react";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { bootstrapDialog, useModal } from "@ebay/nice-modal-react";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
 import Loader from "../../../components/Loader";
+import { Modal } from "react-bootstrap";
 
-type ImportPLaylistModalProps = {
-  listenlist: JSPFTrack[];
-};
-
-export default NiceModal.create((props: ImportPLaylistModalProps) => {
+export default NiceModal.create(() => {
   const modal = useModal();
-
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const [playlists, setPlaylists] = React.useState<SoundCloudPlaylistObject[]>(
@@ -74,7 +65,7 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
 
   const resolveAndClose = () => {
     modal.resolve(newPlaylists);
-    closeModal();
+    modal.hide();
   };
 
   const alertMustBeLoggedIn = () => {
@@ -129,83 +120,60 @@ export default NiceModal.create((props: ImportPLaylistModalProps) => {
   };
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
-      id="ImportMusicServicePlaylistModal"
-      tabIndex={-1}
-      role="dialog"
-      aria-labelledby="ImportMusicServicePlaylistLabel"
-      data-backdrop="static"
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Import playlists from SoundCloud"
+      aria-labelledby="ImportPlaylistModalLabel"
+      id="ImportPlaylistModal"
     >
-      <div className="modal-dialog" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
+      <Modal.Header closeButton>
+        <Modal.Title id="ImportPlaylistModalLabel">
+          Import playlists from SoundCloud
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p className="text-muted">
+          Add one or more of your SoundCloud playlists below:
+        </p>
+        <div
+          className="list-group"
+          style={{ maxHeight: "50vh", overflow: "scroll" }}
+        >
+          {playlists?.map((playlist: SoundCloudPlaylistObject) => (
             <button
               type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={resolveAndClose}
+              key={playlist.id}
+              className="list-group-item"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+              disabled={!!playlistLoading}
+              name={playlist.title}
+              onClick={() =>
+                importTracksToPlaylist(playlist.id, playlist.title)
+              }
             >
-              <span aria-hidden="true">&times;</span>
+              <span>{playlist.title}</span>
             </button>
-            <h4
-              className="modal-title"
-              id="ImportMusicServicePlaylistLabel"
-              style={{ textAlign: "center" }}
-            >
-              Import playlist from SoundCloud
-            </h4>
-          </div>
-          <div className="modal-body">
-            <p className="text-muted">
-              Add one or more of your SoundCloud playlists below:
-            </p>
-            <div
-              className="list-group"
-              style={{ maxHeight: "50vh", overflow: "scroll" }}
-            >
-              {playlists?.map((playlist: SoundCloudPlaylistObject) => (
-                <button
-                  type="button"
-                  key={playlist.id}
-                  className="list-group-item"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                  disabled={!!playlistLoading}
-                  name={playlist.title}
-                  onClick={() =>
-                    importTracksToPlaylist(playlist.id, playlist.title)
-                  }
-                >
-                  <span>{playlist.title}</span>
-                </button>
-              ))}
-            </div>
-            {!!playlistLoading && (
-              <div>
-                <p>
-                  Loading playlist {playlistLoading}... It might take some time
-                </p>
-                <Loader isLoading={!!playlistLoading} />
-              </div>
-            )}
-          </div>
-
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-default"
-              data-dismiss="modal"
-              onClick={resolveAndClose}
-            >
-              Close
-            </button>
-          </div>
+          ))}
         </div>
-      </div>
-    </div>
+        <div>
+          <Loader
+            isLoading={!!playlistLoading}
+            loaderText={`Loading playlist ${playlistLoading}... It might take some time`}
+          />
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={resolveAndClose}
+        >
+          Cancel
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });
