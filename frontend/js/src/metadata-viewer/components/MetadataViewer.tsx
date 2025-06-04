@@ -280,7 +280,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           <div
             id="collapseOne"
             className={`panel-collapse collapse ${
-              expandedAccordion === 1 ? "in" : ""
+              expandedAccordion === 1 ? "show" : ""
             }`}
             role="tabpanel"
             aria-labelledby="headingOne"
@@ -357,7 +357,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
             <div
               id="collapseTwo"
               className={`panel-collapse collapse ${
-                expandedAccordion === 2 ? "in" : ""
+                expandedAccordion === 2 ? "show" : ""
               }`}
               role="tabpanel"
               aria-labelledby="headingTwo"
@@ -405,7 +405,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           <div
             id="collapseThree"
             className={`panel-collapse collapse ${
-              expandedAccordion === 3 ? "in" : ""
+              expandedAccordion === 3 ? "show" : ""
             }`}
             role="tabpanel"
             aria-labelledby="headingThree"
