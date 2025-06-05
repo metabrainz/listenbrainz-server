@@ -15,7 +15,8 @@ function NamePill(props: NamePillProps) {
       <span>{title}</span>
       {isFunction(closeAction) && (
         <ListenControl
-          text="Remove"
+          title="Remove"
+          text=""
           icon={faTimesCircle}
           action={closeAction}
           isDropdown={false}
