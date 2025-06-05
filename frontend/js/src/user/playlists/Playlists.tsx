@@ -235,7 +235,7 @@ export default class UserPlaylists extends React.Component<
           } Playlists`}</title>
         </Helmet>
         <div className="tertiary-nav">
-          <div className="playlist-view-options">
+          <div className="playlist-view-options flex-wrap">
             <div className="playlist-view-controls">
               <Pill
                 active={playlistType === PlaylistType.playlists}
@@ -273,7 +273,7 @@ export default class UserPlaylists extends React.Component<
               </Pill>
             </div>
           </div>
-          <div className="playlist-view-options">
+          <div className="playlist-view-options flex-wrap">
             <div className="playlist-sort-controls">
               <label htmlFor="sort-by">Sort by:</label>
               <select
