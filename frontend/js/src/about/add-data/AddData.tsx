@@ -137,8 +137,8 @@ export default function AddData() {
             <a href="https://tidal.com/">TIDAL</a>
           </em>
           , a cross-platform music player and streaming service:{" "}
-          <a href="https://github.com/uwu/neptune">
-            <code>neptune client mod</code>
+          <a href="https://github.com/Inrixia/TidaLuna">
+            <code>TidaLuna client mod</code>
           </a>
           +{" "}
           <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
