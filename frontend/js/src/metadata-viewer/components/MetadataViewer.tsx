@@ -4,7 +4,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import type { Palette } from "@vibrant/color";
 import { Vibrant } from "node-vibrant/browser";
-import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
+import {
+  first,
+  isEmpty,
+  isNumber,
+  isPlainObject,
+  isString,
+  pick,
+} from "lodash";
 import { Link } from "react-router";
 import { Accordion } from "react-bootstrap";
 import { millisecondsToStr } from "../../playlists/utils";
@@ -252,7 +259,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           className="h-100 d-flex flex-column"
           onSelect={(eKey) => {
             setTimeout(() => {
-              setSelectedAccordion(eKey);
+              if (isString(eKey)) {
+                setSelectedAccordion(eKey);
+              } else {
+                setSelectedAccordion("");
+              }
             }, 300);
           }}
         >
