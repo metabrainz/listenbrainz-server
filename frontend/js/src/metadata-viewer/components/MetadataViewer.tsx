@@ -258,13 +258,11 @@ export default function MetadataViewer(props: MetadataViewerProps) {
           id="accordion"
           className="h-100 d-flex flex-column"
           onSelect={(eKey) => {
-            setTimeout(() => {
-              if (isString(eKey)) {
-                setSelectedAccordion(eKey);
-              } else {
-                setSelectedAccordion("");
-              }
-            }, 300);
+            if (isString(eKey)) {
+              setSelectedAccordion(eKey);
+            } else {
+              setSelectedAccordion("");
+            }
           }}
         >
           <Accordion.Item
