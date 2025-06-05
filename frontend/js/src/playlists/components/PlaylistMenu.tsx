@@ -341,19 +341,16 @@ function PlaylistMenu({
         <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
         Music
       </button>
-      <li className={enableSoundCloudExport ? "" : "disabled"}>
-        <a
-          id="exportPlaylistToSoundCloud"
-          role="button"
-          href="#"
-          onClick={() =>
-            enableSoundCloudExport && handlePlaylistExport(exportToSoundcloud)
-          }
-        >
-          <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
-          SoundCloud
-        </a>
-      </li>
+      <button
+        className={`dropdown-item ${enableSoundCloudExport ? "" : "disabled"}`}
+        id="exportPlaylistToSoundCloud"
+        type="button"
+        onClick={() =>
+          enableSoundCloudExport && handlePlaylistExport(exportToSoundcloud)
+        }
+      >
+        <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to SoundCloud
+      </button>
       <div role="separator" className="dropdown-divider" />
       <button
         id="exportPlaylistToJSPF"
