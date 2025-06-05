@@ -357,7 +357,7 @@ export default class UserPlaylists extends React.Component<
                         newPlaylists.forEach(this.onPlaylistCreated);
                       });
                     }}
-                    data-toggle="modal"
+                    className="dropdown-item"
                   >
                     <FontAwesomeIcon icon={faSoundcloud} />
                     &nbsp;SoundCloud
