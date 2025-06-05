@@ -95,7 +95,7 @@
     "react-loader-spinner": "^3.1.14",
     "react-markdown": "^8.0.7",
     "react-responsive": "^8.1.0",
-    "react-router-dom": "^6.21.2",
+    "react-router": "^7.6.1",
     "react-select": "^5.7.3",
     "react-simple-star-rating": "^4.0.0",
     "react-sortablejs": "^6.1.4",

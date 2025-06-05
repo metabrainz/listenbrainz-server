@@ -51,3 +51,5 @@ TS_PASSWORD = ""
 LB_JDBC_URI = ""
 LB_USER = ""
 LB_PASSWORD = ""
+
+LISTENBRAINZ_API_URL = "http://localhost:8100"

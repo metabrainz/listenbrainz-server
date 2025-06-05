@@ -1,7 +1,11 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faSpotify, faItunesNote } from "@fortawesome/free-brands-svg-icons";
+import {
+  faItunesNote,
+  faSoundcloud,
+  faSpotify,
+} from "@fortawesome/free-brands-svg-icons";
 import {
   faCopy,
   faFileExport,
@@ -14,7 +18,7 @@ import * as React from "react";
 import { useContext } from "react";
 import { toast } from "react-toastify";
 import NiceModal from "@ebay/nice-modal-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { noop } from "lodash";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -41,9 +45,13 @@ function PlaylistMenu({
   onPlaylistCopied,
   disallowEmptyPlaylistExport,
 }: PlaylistMenuProps) {
-  const { APIService, currentUser, spotifyAuth, appleAuth } = useContext(
-    GlobalAppContext
-  );
+  const {
+    APIService,
+    currentUser,
+    spotifyAuth,
+    appleAuth,
+    soundcloudAuth,
+  } = useContext(GlobalAppContext);
   const { auth_token } = currentUser;
   const playlistID = getPlaylistId(playlist);
   const playlistTitle = playlist.title;
@@ -203,6 +211,39 @@ function PlaylistMenu({
       { toastId: "export-playlist" }
     );
   };
+  const exportToSoundcloud = async () => {
+    if (!auth_token) {
+      alertMustBeLoggedIn();
+      return;
+    }
+    let result;
+    if (playlistID) {
+      result = await APIService.exportPlaylistToSoundCloud(
+        auth_token,
+        playlistID
+      );
+    } else {
+      result = await APIService.exportJSPFPlaylistToSoundCloud(
+        auth_token,
+        playlist
+      );
+    }
+    const { external_url } = result;
+    toast.success(
+      <ToastMsg
+        title="Playlist exported to Soundcloud"
+        message={
+          <>
+            Successfully exported playlist:{" "}
+            <a href={external_url} target="_blank" rel="noopener noreferrer">
+              {playlistTitle}
+            </a>
+          </>
+        }
+      />,
+      { toastId: "export-playlist" }
+    );
+  };
   const handlePlaylistExport = async (handler: () => Promise<void>) => {
     if (!playlist || (disallowEmptyPlaylistExport && !playlist.track.length)) {
       toast.warn(
@@ -224,6 +265,7 @@ function PlaylistMenu({
   const enableSpotifyExport =
     isLoggedIn && spotifyAuth?.permission?.includes("playlist-modify-public");
   const enableAppleMusicExport = isLoggedIn && appleAuth?.music_user_token;
+  const enableSoundCloudExport = isLoggedIn && soundcloudAuth;
   return (
     <div
       className="dropdown-menu dropdown-menu-right"
@@ -299,6 +341,19 @@ function PlaylistMenu({
         <FontAwesomeIcon icon={faItunesNote as IconProp} /> Export to Apple
         Music
       </button>
+      <li className={enableSoundCloudExport ? "" : "disabled"}>
+        <a
+          id="exportPlaylistToSoundCloud"
+          role="button"
+          href="#"
+          onClick={() =>
+            enableSoundCloudExport && handlePlaylistExport(exportToSoundcloud)
+          }
+        >
+          <FontAwesomeIcon icon={faSoundcloud as IconProp} /> Export to
+          SoundCloud
+        </a>
+      </li>
       <div role="separator" className="dropdown-divider" />
       <button
         id="exportPlaylistToJSPF"

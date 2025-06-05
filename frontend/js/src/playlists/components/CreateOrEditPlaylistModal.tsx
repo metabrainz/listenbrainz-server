@@ -3,7 +3,7 @@ import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { omit, isEqual } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   getPlaylistExtension,

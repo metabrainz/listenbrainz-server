@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 import ReactTooltip from "react-tooltip";
 import LibreFmImporter from "../../lastfm/LibreFMImporter";

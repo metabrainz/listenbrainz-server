@@ -6,7 +6,7 @@ import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { add } from "date-fns";
 import { get } from "lodash";
 import GlobalAppContext from "../../utils/GlobalAppContext";

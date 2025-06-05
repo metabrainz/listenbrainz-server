@@ -2,7 +2,7 @@ import * as React from "react";
 import { Helmet } from "react-helmet";
 
 import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPeopleArrows,
