@@ -1,5 +1,4 @@
 from listenbrainz.model import db
-from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 
 
