@@ -33,7 +33,11 @@ export default function Accordion({
   const contentID = uniqueId();
   return (
     <Card border={bootstrapType} key={contentID} className="mb-4">
-      <CardHeader className="d-flex align-items-center justify-content-between">
+      <CardHeader
+        className="d-flex align-items-center justify-content-between"
+        role="heading"
+        aria-level={3}
+      >
         <div
           role="button"
           onClick={() => setIsActive(!isActive)}
