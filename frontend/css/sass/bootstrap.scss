@@ -77,7 +77,9 @@ $alert-padding-x: 1.5rem;
 $alert-padding-y: $alert-padding-x;
 $alert-margin-bottom: 2rem;
 $progress-bg: $body-tertiary-bg;
-
+$border-color-translucent:$light;
+$link-decoration: none;
+$accordion-button-active-bg: $gray-lighter;
 
 @import "lobes5/scss/bootstrap.scss";
 
@@ -104,4 +106,8 @@ b, .strong {
 
 .form-control:read-only {
   background-color: $input-disabled-bg;
+}
+
+.card-header {
+  border-color: $border-color-translucent;
 }
