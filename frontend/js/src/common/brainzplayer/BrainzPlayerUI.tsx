@@ -331,7 +331,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           disabled={disabled}
         />
       </div>
-      <div className={`queue ${showQueue ? "show" : ""}`}>
+      <div
+        className={`queue ${showQueue ? "show" : ""} ${
+          isMobile ? "mobile" : ""
+        }`}
+      >
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
