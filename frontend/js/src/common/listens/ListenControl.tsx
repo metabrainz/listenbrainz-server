@@ -53,6 +53,7 @@ function ListenControl(props: ListenControlProps) {
         aria-label={ariaLabel ?? title ?? text}
         title={title ?? text}
         {...anchorTagAttributes}
+        className={`${isDropdown ? "dropdown-item" : ""}`}
       >
         {icon && <FontAwesomeIcon icon={icon} color={iconColor} />}
         &nbsp;{text}

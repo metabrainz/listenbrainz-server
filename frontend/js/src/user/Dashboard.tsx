@@ -691,7 +691,7 @@ export default function Listen() {
                   </Link>
                 </li>
                 <li
-                  className={`page-item ${
+                  className={`page-item me-auto ${
                     isNewerButtonDisabled ? "disabled" : ""
                   }`}
                 >
@@ -706,7 +706,7 @@ export default function Listen() {
                     &larr; Newer
                   </Link>
                 </li>
-                <li className="feed-button-and-date-time-picker">
+                <li className="feed-button-and-date-time-picker mx-auto">
                   <DateTimePicker
                     onChange={onChangeDateTimePicker}
                     value={dateTimePickerValue}
@@ -725,7 +725,7 @@ export default function Listen() {
                   />
                 </li>
                 <li
-                  className={`page-item next ${
+                  className={`page-item ms-auto ${
                     isOlderButtonDisabled ? "disabled" : ""
                   }`}
                   style={{ marginLeft: "auto" }}
