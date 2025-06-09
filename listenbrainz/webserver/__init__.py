@@ -437,4 +437,4 @@ def _register_blueprints(app):
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
 
     from listenbrainz.webserver.views.funkwhale import funkwhale_api_bp
-    app.register_blueprint(funkwhale_api_bp, url_prefix=API_PREFIX+'/funkwhale')
+    app.register_blueprint(funkwhale_api_bp, url_prefix='/settings/music-services/funkwhale')

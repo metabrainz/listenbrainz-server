@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 from flask import Blueprint, render_template, request, url_for, \
-    redirect, current_app, jsonify
+    redirect, current_app, jsonify, session
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 import requests
@@ -27,7 +27,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-from data.model.external_service import ExternalServiceType
+from listenbrainz.domain.funkwhale import FunkwhaleService
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -154,6 +154,8 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
+        elif service == ExternalServiceType.FUNKWHALE:
+            return FunkwhaleService()
     except KeyError:
         raise NotFound("Service %s is invalid." % (name,))
 
@@ -212,6 +214,11 @@ def music_services_details():
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name, exclude_apple=True)
+
+    # Check for error parameter first
+    error = request.args.get('error')
+    if error:
+        return redirect(url_for('settings.index', path='music-services/details'))
 
     code = request.args.get('code')
     if not code:
@@ -332,6 +339,16 @@ def music_services_disconnect(service_name: str):
         elif service_name == 'apple':
             service.add_new_user(user_id=current_user.id)
             return jsonify({"success": True})
+        elif service_name == 'funkwhale':
+            if action:
+                # For Funkwhale, we need to get the host URL from the request
+                data = json.loads(request.data)
+                host_url = data.get('host_url')
+                if not host_url:
+                    raise BadRequest('Missing host_url for Funkwhale')
+                # Store host URL in session for callback
+                session['funkwhale_host_url'] = host_url
+                return jsonify({"url": service.get_authorize_url(host_url, ['read:listens', 'read:profile'])})
 
     raise BadRequest('Invalid action')
 
