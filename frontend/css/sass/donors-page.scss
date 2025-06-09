@@ -71,7 +71,7 @@
   }
 
   &:hover {
-    background-color: @table-bg-hover;
+    background-color: $table-hover-bg;
   }
 }
 
@@ -80,20 +80,20 @@
   .donations-page-header {
     .donation-header-text {
       position: relative;
-      color: @white;
+      color: $white;
       font-size: 16px;
     }
     a {
-      color: @black;
+      color: $black;
       font-weight: bold;
       margin-left: 2em;
       &.btn {
-        border-radius: @border-radius-base;
+        border-radius: $border-radius;
       }
     }
     opacity: 0.85;
-    border-radius: @border-radius-large;
-    background: @homepage-background;
+    border-radius: $border-radius-lg;
+    background: $homepage-background;
     padding: 3em 2em;
     position: relative;
     text-align: center;

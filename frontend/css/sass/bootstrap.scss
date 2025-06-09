@@ -13,12 +13,14 @@ $turquoise: #36b5b2;
 $yellow: #ea9d11;
 $red: #c64040;
 $asphalt: #46433a;
+$white: #fff;
+$black: #262626;
 $cream: #fffedb;
 $pearl: #f9f6f5;
 $cafe-con-leche: #ede5e2;
 $gray-lighter: color.adjust($cafe-con-leche, $lightness: 6%, $space: hsl);
 $gray-light: color.adjust($gray-lighter, $lightness: -15%, $space: hsl);
-
+$dark-turquoise: #053b47;
 
 // brand colors
 $primary: $orange;
@@ -63,6 +65,7 @@ $input-disabled-bg: $gray-lighter;
 
 /* Nav */
 $nav-link-font-weight: 700;
+$navbar-height: 72px;
 
 /* Dropdowns */
 $dropdown-min-width: 16rem;
@@ -86,6 +89,9 @@ $btn-box-shadow: none;
 $btn-active-box-shadow: none;
 
 @import "lobes5/scss/bootstrap.scss";
+@import "./homepage";
+@import "./donations";
+@import "./donors-page";
 
 /* Buttons */
 .btn {
