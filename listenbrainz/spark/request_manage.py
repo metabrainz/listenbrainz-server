@@ -249,6 +249,12 @@ def request_import_incremental_dump(id_: int, local: bool):
     send_request_to_spark_cluster("import.dump.incremental", dump_id=id_, local=local)
 
 
+@cli.command(name="request_import_sample")
+def request_import_sample_dump():
+    """ Send the cluster a request to import a sample dump """
+    send_request_to_spark_cluster("import.dump.sample")
+
+
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
 @click.option("--job-type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")

@@ -12,6 +12,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.background.background_tasks import add_task
+from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
@@ -26,6 +27,8 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
+from data.model.external_service import ExternalServiceType
+
 
 settings_bp = Blueprint("settings", __name__)
 
@@ -251,19 +254,6 @@ def music_services_connect(service_name: str):
 
     if "external_user_id" not in data:
         raise APIBadRequest("Missing 'external_user_id' in request.")
-    
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
-
-    params = {
-        "method": "user.getinfo",
-        "user": data['external_user_id'],
-        "format": "json",
-        "api_key": current_app.config["LASTFM_API_KEY"],
-    }
-    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
-    if response.status_code == 404:
-        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
 
     latest_listened_at = None
     if data.get("latest_listened_at") is not None:
@@ -271,6 +261,22 @@ def music_services_connect(service_name: str):
             latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
         except (ValueError, TypeError):
             raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
+    
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
+
+    params = {
+        "method": "user.getrecenttracks",
+        "user": data['external_user_id'],
+        "format": "json",
+        "api_key": current_app.config["LASTFM_API_KEY"],
+        "limit": 1,
+    }
+    if latest_listened_at:
+        params["from"] = int(latest_listened_at.timestamp())
+    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
+    if response.status_code == 404:
+        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
 
     # TODO: make last.fm start import timestamp configurable
     service = LastfmService()
@@ -278,7 +284,15 @@ def music_services_connect(service_name: str):
         "external_user_id": data["external_user_id"],
         "latest_listened_at": latest_listened_at,
     })
-    return jsonify({"success": True})
+
+    total_listens = 0
+    try:
+        lfm_data = response.json()
+        total_listens = int(lfm_data["recenttracks"]["@attr"]["total"])
+    except Exception:
+        current_app.logger.error("Unable to fetch last.fm user data:", exc_info=True)
+
+    return jsonify({"success": True, "totalLfmListens": total_listens})
 
 
 @settings_bp.post('/music-services/<service_name>/disconnect/')

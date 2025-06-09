@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 import UserPins from "./components/UserPins";
 import GlobalAppContext from "../../utils/GlobalAppContext";
