@@ -1,141 +1,20 @@
-
-/* Override default values
-before importing bootstrap files */
-@use 'sass:color';
-
-/* Colors */
-$listenbrainz-blue: #353070;
-$orange: #eb743b;
-// $purple: #ba478f;
-$green: #5aa854;
-$blue: $listenbrainz-blue;
-$turquoise: #36b5b2;
-$yellow: #ea9d11;
-$red: #c64040;
-$asphalt: #46433a;
-$white: #fff;
-$black: #262626;
-$cream: #fffedb;
-$pearl: #f9f6f5;
-$cafe-con-leche: #ede5e2;
-$gray-lighter: color.adjust($cafe-con-leche, $lightness: 6%, $space: hsl);
-$gray-light: color.adjust($gray-lighter, $lightness: -15%, $space: hsl);
-$dark-turquoise: #053b47;
-
-// brand colors
-$primary: $orange;
-// $secondary: $gray-600; // <- I don't think this was set in Bootstrap 3 styles
-$success: $green;
-$warning: $yellow;
-$danger: $red;
-$info: $blue;
-$light: $gray-lighter;
-
-$body-color: $asphalt;
-$body-secondary-bg: $gray-light;
-$body-tertiary-bg: $pearl;
-$body-emphasis-color: $body-color;
-$headings-color:  $body-color;
-
-$success-text-emphasis: #3c763d;
-$success-bg-subtle: #dff0d8;
-$info-text-emphasis:                #31708f;
-$info-bg-subtle:                  #d9edf7;
-$warning-text-emphasis:             #8a6d3b;
-$warning-bg-subtle:               #fcf8e3;
-$danger-text-emphasis:              #a94442;
-$danger-bg-subtle:                #f2dede;
-
-/* Pagination */
-$pagination-disabled-bg: $body-tertiary-bg;
-
-/* Tables */
-$table-striped-bg: $pearl;
-$table-cell-padding-y: 0.8rem;
-$table-cell-padding-x: $table-cell-padding-y;
-
-/* Inputs */
-$input-padding-y: .5rem;
-$input-padding-x: 1rem;
-$input-padding-y-lg: 0.7rem;
-$input-padding-x-lg: 1.5rem;
-$input-font-size: 1.4rem;
-$input-font-size-lg: 1.8rem;
-$input-disabled-bg: $gray-lighter;
-
-/* Nav */
-$nav-link-font-weight: 700;
-$navbar-height: 72px;
-
-/* Dropdowns */
-$dropdown-min-width: 16rem;
-$dropdown-font-size: 1.4rem;
-$dropdown-item-padding-x: 2rem;
-
-/* Misc */
-$hr-margin-y: 20px;
-$hr-border-color: $gray-light;
-$hr-opacity: 1;
-$alert-padding-x: 1.5rem;
-$alert-padding-y: $alert-padding-x;
-$alert-margin-bottom: 2rem;
-$progress-bg: $body-tertiary-bg;
-$border-color-translucent:$light;
-$link-decoration: none;
-$accordion-button-active-bg: $gray-lighter;
-/* Buttons */
-$btn-border-radius: 6px;
-$btn-box-shadow: none;
-$btn-active-box-shadow: none;
-
 @import "lobes5/scss/bootstrap.scss";
+
+@import "./variables.scss";
+@import "./buttons.scss";
 @import "./homepage";
 @import "./donations";
 @import "./donors-page";
 @import "./pill";
 
-/* Buttons */
-.btn {
-  white-space: nowrap;
-}
-.btn-warning {
-    --bs-btn-color: #fff;
-    --bs-btn-hover-color: #fff;
-}
-.btn-icon {
-  padding: 0.5em;
-  font-size: 1.5em;
-  height: 2em;
-  line-height: 1em;
-  border-radius: 5px;
-  text-align: center;
-  display: inline-block;
-  
-  & + * {
-    margin-left: 0.4em;
-  }
-}
-
-.btn-rounded {
-  border-radius: 3em;
-}
-
-.btn-link {
-  color: $listenbrainz-blue;
-  border-color: transparent;
-  text-decoration: none;
-  &:hover,
-  &:focus {
-    text-decoration: underline;
-  }
-}
 // pre is used in a tooltip with a different background color
 pre {
-    background-color: inherit;
-    border: none;
+  background-color: inherit;
+  border: none;
 }
 
-b, .strong {
+b,
+.strong {
   font-weight: $font-weight-bold;
 }
 
@@ -160,10 +39,14 @@ body {
   background-color: #fff;
 }
 
-h1, h2, h3{
+h1,
+h2,
+h3 {
   margin-top: $spacer;
 }
-h4, h5, h6{
+h4,
+h5,
+h6 {
   margin-top: $headings-margin-bottom;
 }
 // Unordered and Ordered lists
@@ -171,7 +54,7 @@ ul,
 ol {
   padding-left: revert;
   margin-top: 0;
-  margin-bottom: $spacer * .5;
+  margin-bottom: $spacer * 0.5;
   ul,
   ol {
     margin-bottom: 0;
@@ -191,4 +74,4 @@ ol {
 
 .container-react-main {
   min-height: 70vh;
-}
+}}

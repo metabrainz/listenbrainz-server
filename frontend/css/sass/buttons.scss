@@ -1,0 +1,35 @@
+/* Buttons */
+.btn {
+  white-space: nowrap;
+}
+.btn-warning {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+
+  & + * {
+    margin-left: 0.4em;
+  }
+}
+
+.btn-rounded {
+  border-radius: 3em;
+}
+
+.btn-link {
+  color: $listenbrainz-blue;
+  border-color: transparent;
+  text-decoration: none;
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
