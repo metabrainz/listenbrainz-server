@@ -1,29 +1,29 @@
 .pill {
   display: inline-block;
   background: transparent;
-  color: @light-grey;
-  border: 2px solid @light-grey;
+  color: $gray-600;
+  border: 2px solid $gray-600;
   border-radius: 124px;
   margin: 2px 2px 5px 2px;
   outline: none;
   padding: 3px 12px;
   &.active {
-    background: @orange;
-    color: @white;
+    background: $orange;
+    color: $white;
     border: 2px solid transparent;
   }
   &.secondary {
     &.active {
-      background: @blue;
-      color: @white;
+      background: $blue;
+      color: $white;
     }
   }
   &:visited,
   &:hover,
   &:visited:hover {
-    color: @light-grey;
+    color: $gray-600;
     &.active {
-      color: @white;
+      color: $white;
     }
   }
   button {
