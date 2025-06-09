@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router";
 
 function NavItem({
   label,
@@ -14,9 +14,13 @@ function NavItem({
 }) {
   return (
     <li
-      className={`${isActive ? "active" : ""} ${isDisabled ? "disabled" : ""}`}
+      className={`nav-item ${isActive ? "active" : ""} ${
+        isDisabled ? "disabled" : ""
+      }`}
     >
-      <NavLink to={url}>{label}</NavLink>
+      <NavLink className="nav-link" to={url}>
+        {label}
+      </NavLink>
     </li>
   );
 }

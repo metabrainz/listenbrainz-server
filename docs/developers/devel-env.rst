@@ -75,7 +75,17 @@ configuration.
     cp listenbrainz/config.py.sample listenbrainz/config.py
 
 Now, open the new config.py file (don’t change config.py.sample) with your favorite
-text editor and look for this section.
+text editor.
+
+.. note::
+
+     If you are accessing your development server using a port other than ``8100``,
+     ensure that you update the ``SERVER_ROOT_URL`` to reflect the appropriate port number.
+     If you are accessing your development server using a host other than ``localhost`` (e.g., GitHub Codespaces),
+     ensure that you uncomment and update ``SERVER_NAME``, and ensure ``SERVER_ROOT_URL``is updated
+     accordingly to maintain consistency and support the appropriate host details.
+
+Next look for this section in the file.
 
 .. code-block:: yaml
 

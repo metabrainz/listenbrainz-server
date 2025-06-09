@@ -2,6 +2,8 @@
 """
 import logging
 import os
+import subprocess
+import tarfile
 import tempfile
 from datetime import datetime, timezone
 from typing import Optional
@@ -11,11 +13,11 @@ from pyspark.sql.functions import col
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
+from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader, ListensDump
 from listenbrainz_spark.dump.ftp import ListenBrainzFtpDumpLoader
 from listenbrainz_spark.dump.local import ListenbrainzLocalDumpLoader
 from listenbrainz_spark.exceptions import PathNotFoundException
-from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp
+from listenbrainz_spark.hdfs.upload import upload_archive_to_hdfs_temp, upload_sample_dump
 from listenbrainz_spark.hdfs.utils import path_exists, delete_dir, rename
 from listenbrainz_spark.listens.cache import unpersist_incremental_df
 from listenbrainz_spark.listens.compact import write_partitioned_listens
@@ -122,16 +124,19 @@ def import_incremental_dump_handler(dump_id: int = None, local: bool = False):
         end_id = loader.get_latest_dump_id(DumpType.INCREMENTAL) + 1
 
         for dump_id in range(start_id, end_id, 1):
-            if not search_dump(dump_id, DumpType.INCREMENTAL, imported_at):
-                try:
+            try:
+                if (
+                    not search_dump(dump_id, DumpType.INCREMENTAL, imported_at)
+                    and loader.check_dump_type(dump_id) == DumpType.INCREMENTAL
+                ):
                     imported_dumps.append(import_incremental_dump_to_hdfs(loader, dump_id=dump_id))
-                except Exception as e:
-                    # Skip current dump if any error occurs during import
-                    error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
-                    errors.append(error_msg)
-                    logger.error(error_msg, exc_info=True)
-                    continue
-            dump_id += 1
+            except Exception as e:
+                # Skip current dump if any error occurs during import
+                error_msg = f"Error while importing incremental dump with ID {dump_id}: {e}"
+                errors.append(error_msg)
+                logger.error(error_msg, exc_info=True)
+                continue
+
     loader.close()
     return [{
         "type": "import_incremental_dump",
@@ -255,3 +260,16 @@ def process_incremental_listens_dump(temp_path):
             .sql(query) \
             .collect()[0]
         update_listens_metadata(location, result.max_listened_at, result.max_created)
+
+
+def import_spark_sample_dump_handler():
+    """ Imports metadata cache parquet files from a spark sample dumps. """
+    with tempfile.TemporaryDirectory() as temp_dir:
+        loader = ListenBrainzFtpDumpLoader()
+        local_path = loader.download_sample_dump(temp_dir)
+
+        zstd_command = ["zstd", "--decompress", "--stdout", local_path]
+        zstd = subprocess.Popen(zstd_command, stdout=subprocess.PIPE)
+
+        with tarfile.open(fileobj=zstd.stdout, mode="r|") as tar:
+            upload_sample_dump(tar, temp_dir)

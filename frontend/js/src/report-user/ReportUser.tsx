@@ -18,6 +18,7 @@
 
 import * as React from "react";
 import { toast } from "react-toastify";
+import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import ReportUserModal from "./ReportUserModal";
 
@@ -72,21 +73,19 @@ class ReportUserButton extends React.Component<
       buttonText = "Report User";
     }
     return (
-      <>
-        <button
-          className="btn btn-danger"
-          style={{ float: "right" }}
-          data-toggle="modal"
-          data-target="#reportUserModal"
-          type="button"
-        >
-          {buttonText}
-        </button>
-        <ReportUserModal
-          onSubmit={this.handleSubmit}
-          reportedUserName={user.name}
-        />
-      </>
+      <button
+        className="btn btn-danger"
+        style={{ float: "right" }}
+        onClick={() => {
+          NiceModal.show(ReportUserModal, {
+            onSubmit: this.handleSubmit,
+            reportedUserName: user.name,
+          });
+        }}
+        type="button"
+      >
+        {buttonText}
+      </button>
     );
   }
 }

@@ -83,7 +83,7 @@ class IncrementalStatsEngine:
 
         return existing_aggregate_fresh and existing_aggregate_exists
 
-    def create_partial_aggregate(self) -> DataFrame:
+    def create_partial_aggregate(self) -> DataFrame | None:
         """
         Create a new partial aggregate from full dump listens.
 
@@ -94,12 +94,19 @@ class IncrementalStatsEngine:
         existing_aggregate_path = self.provider.get_existing_aggregate_path()
 
         table = f"{self.provider.get_table_prefix()}_full_listens"
-        get_listens_from_dump(
+        base_listens_df = get_listens_from_dump(
             self.provider.from_date,
             self.provider.to_date,
             include_incremental=False,
             remove_deleted=True
-        ).createOrReplaceTempView(table)
+        )
+
+        # should only happen during development
+        if base_listens_df.isEmpty():
+            logger.info("No full dump listens found to create partial aggregate from.")
+            return None
+
+        base_listens_df.createOrReplaceTempView(table)
 
         logger.info("Creating partial aggregate from full dump listens")
         hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
@@ -166,15 +173,29 @@ class IncrementalStatsEngine:
         else:
             self._only_inc = True
 
-        partial_df = read_files_from_HDFS(self.provider.get_existing_aggregate_path())
-        partial_table = f"{prefix}_existing_aggregate"
-        partial_df.createOrReplaceTempView(partial_table)
+        existing_aggregate_path = self.provider.get_existing_aggregate_path()
+        if hdfs_connection.client.status(existing_aggregate_path, strict=False):
+            partial_df = read_files_from_HDFS(existing_aggregate_path)
+            partial_table = f"{prefix}_existing_aggregate"
+            partial_df.createOrReplaceTempView(partial_table)
+        else:
+            partial_table, partial_df = None, None
 
         if incremental_listens_exist():
             inc_df = self.create_incremental_aggregate()
             inc_table = f"{prefix}_incremental_aggregate"
             inc_df.createOrReplaceTempView(inc_table)
+        else:
+            inc_table, inc_df = None, None
 
+        if inc_df is None and partial_df is None:
+            raise Exception("Neither incremental listens nor partial aggregate found.")
+        elif inc_df is None:
+            final_df = partial_df
+        elif partial_df is None:
+            logger.info("No partial aggregate found.")
+            final_df = inc_df
+        else:
             if self._only_inc:
                 existing_created = self.get_incremental_dumps_existing_created()
 
@@ -201,8 +222,6 @@ class IncrementalStatsEngine:
 
             final_query = self.provider.get_combine_aggregates_query(filtered_existing_table, filtered_incremental_table)
             final_df = run_query(final_query)
-        else:
-            final_df = partial_df
 
         self._final_table = f"{prefix}_final_aggregate"
         final_df.createOrReplaceTempView(self._final_table)

@@ -2,7 +2,7 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import { act } from "react-dom/test-utils";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import SpotifyPlayer from "../../../src/common/brainzplayer/SpotifyPlayer";
 import APIService from "../../../src/utils/APIService";
 import { DataSourceTypes } from "../../../src/common/brainzplayer/BrainzPlayer";
@@ -396,8 +396,8 @@ describe("SpotifyPlayer", () => {
           position: 125,
         });
       });
-      expect(instance.props.onDurationChange).not.toHaveBeenCalled();
       expect(wrapper.state("durationMs")).toEqual(1234);
+      expect(instance.props.onDurationChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
       expect(instance.props.onProgressChange).toHaveBeenCalledWith(125);
     });

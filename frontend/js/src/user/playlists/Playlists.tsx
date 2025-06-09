@@ -4,14 +4,18 @@ import {
   faUsers,
   faFileImport,
 } from "@fortawesome/free-solid-svg-icons";
-import { faSpotify, faItunesNote } from "@fortawesome/free-brands-svg-icons";
+import {
+  faSpotify,
+  faItunesNote,
+  faSoundcloud,
+} from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 
 import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useSearchParams } from "react-router-dom";
+import { useLoaderData, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import Card from "../../components/Card";
@@ -22,6 +26,7 @@ import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPl
 import ImportPlaylistModal from "./components/ImportJSPFPlaylistModal";
 import ImportSpotifyPlaylistModal from "./components/ImportSpotifyPlaylistModal";
 import ImportAppleMusicPlaylistModal from "./components/ImportAppleMusicPlaylistModal";
+import ImportSoundCloudPlaylistModal from "./components/ImportSoundCloudPlaylistModal";
 import PlaylistsList from "./components/PlaylistsList";
 import {
   getPlaylistExtension,
@@ -230,7 +235,7 @@ export default class UserPlaylists extends React.Component<
           } Playlists`}</title>
         </Helmet>
         <div className="tertiary-nav">
-          <div className="playlist-view-options">
+          <div className="playlist-view-options flex-wrap">
             <div className="playlist-view-controls">
               <Pill
                 active={playlistType === PlaylistType.playlists}
@@ -268,15 +273,16 @@ export default class UserPlaylists extends React.Component<
               </Pill>
             </div>
           </div>
-          <div className="playlist-view-options">
+          <div className="playlist-view-options flex-wrap">
             <div className="playlist-sort-controls">
-              <b>Sort by:</b>
+              <label htmlFor="sort-by">Sort by:</label>
               <select
+                id="sort-by"
                 value={sortBy}
                 onChange={(e) =>
                   this.setSortOption(e.target.value as SortOption)
                 }
-                className="form-control"
+                className="form-select"
                 style={{ width: "200px" }}
               >
                 <option value={SortOption.DATE_CREATED}>Date Created</option>
@@ -292,86 +298,90 @@ export default class UserPlaylists extends React.Component<
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="ImportPlaylistDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
                 >
                   <FontAwesomeIcon icon={faPlusCircle} title="Import" />
                   &nbsp;Import&nbsp;
-                  <span className="caret" />
                 </button>
                 <ul
                   className="dropdown-menu dropdown-menu-right"
                   aria-labelledby="ImportPlaylistDropdown"
                 >
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                          ImportSpotifyPlaylistModal
-                        ).then((playlist) => {
-                          if (Array.isArray(playlist)) {
-                            playlist.forEach((p: JSPFPlaylist) => {
-                              this.onPlaylistCreated(p);
-                            });
-                          } else {
-                            this.onPlaylistCreated(playlist);
-                          }
-                        });
-                      }}
-                      data-toggle="modal"
-                      data-target="#ImportMusicServicePlaylistModal"
-                    >
-                      <FontAwesomeIcon icon={faSpotify} />
-                      &nbsp;Spotify
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                          ImportAppleMusicPlaylistModal
-                        ).then((playlist) => {
-                          if (Array.isArray(playlist)) {
-                            playlist.forEach((p: JSPFPlaylist) => {
-                              this.onPlaylistCreated(p);
-                            });
-                          } else {
-                            this.onPlaylistCreated(playlist);
-                          }
-                        });
-                      }}
-                      data-toggle="modal"
-                      data-target="#ImportMusicServicePlaylistModal"
-                    >
-                      <FontAwesomeIcon icon={faItunesNote} />
-                      &nbsp;Apple Music
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
-                          ImportPlaylistModal
-                        ).then((playlist) => {
-                          if (Array.isArray(playlist)) {
-                            playlist.forEach((p: JSPFPlaylist) => {
-                              this.onPlaylistCreated(p);
-                            });
-                          } else {
-                            this.onPlaylistCreated(playlist);
-                          }
-                        });
-                      }}
-                      data-toggle="modal"
-                      data-target="#ImportPlaylistModal"
-                    >
-                      <FontAwesomeIcon icon={faFileImport} />
-                      &nbsp;Upload JSPF file
-                    </button>
-                  </li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportSpotifyPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    className="dropdown-item"
+                  >
+                    <FontAwesomeIcon icon={faSpotify} />
+                    &nbsp;Spotify
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportAppleMusicPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    className="dropdown-item"
+                  >
+                    <FontAwesomeIcon icon={faItunesNote} />
+                    &nbsp;Apple Music
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist[], any>(
+                        ImportSoundCloudPlaylistModal
+                      ).then((newPlaylists) => {
+                        newPlaylists.forEach(this.onPlaylistCreated);
+                      });
+                    }}
+                    className="dropdown-item"
+                  >
+                    <FontAwesomeIcon icon={faSoundcloud} />
+                    &nbsp;SoundCloud
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      NiceModal.show<JSPFPlaylist | JSPFPlaylist[], any>(
+                        ImportPlaylistModal
+                      ).then((playlist) => {
+                        if (Array.isArray(playlist)) {
+                          playlist.forEach((p: JSPFPlaylist) => {
+                            this.onPlaylistCreated(p);
+                          });
+                        } else {
+                          this.onPlaylistCreated(playlist);
+                        }
+                      });
+                    }}
+                    className="dropdown-item"
+                  >
+                    <FontAwesomeIcon icon={faFileImport} />
+                    &nbsp;Upload JSPF file
+                  </button>
                 </ul>
               </div>
             )}
@@ -395,8 +405,6 @@ export default class UserPlaylists extends React.Component<
               className={`new-playlist ${
                 view === PlaylistView.LIST ? "list-view" : ""
               }`}
-              data-toggle="modal"
-              data-target="#CreateOrEditPlaylistModal"
               onClick={() => {
                 NiceModal.show<JSPFPlaylist, any>(
                   CreateOrEditPlaylistModal

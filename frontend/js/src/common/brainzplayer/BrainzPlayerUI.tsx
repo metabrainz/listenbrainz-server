@@ -19,7 +19,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import tinycolor from "tinycolor2";
@@ -331,7 +331,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           disabled={disabled}
         />
       </div>
-      <div className={`queue ${showQueue ? "show" : ""}`}>
+      <div
+        className={`queue ${showQueue ? "show" : ""} ${
+          isMobile ? "mobile" : ""
+        }`}
+      >
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
@@ -434,6 +438,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                   icon={faVolumeUp}
                   style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
+                  className="d-none d-md-block"
                 />
               )}
             </>

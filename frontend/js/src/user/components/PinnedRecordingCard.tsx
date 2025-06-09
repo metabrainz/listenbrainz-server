@@ -171,8 +171,6 @@ export default class PinnedRecordingCard extends React.Component<
                 this.setState({ updatedBlurb: newBlurb });
               });
             }}
-            dataToggle="modal"
-            dataTarget="#PinRecordingModal"
           />
         );
       }

@@ -12,7 +12,7 @@ declare type MusicBrainzArtist = {
   tag?: {
     artist: Array<ArtistTag>;
   };
-  gender: string;
+  gender?: string;
 };
 
 declare type MusicBrainzArtistCredit = {

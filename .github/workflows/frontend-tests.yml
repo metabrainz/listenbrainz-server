@@ -11,6 +11,7 @@ on:
       - '**.tsx?'
       - '**.snap'
       - '**.less'
+      - '**.scss'
       - '**.json'
       - 'docker/Dockerfile'
       - 'docker/docker-compose.test.yml'
