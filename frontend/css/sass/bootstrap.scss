@@ -80,20 +80,48 @@ $progress-bg: $body-tertiary-bg;
 $border-color-translucent:$light;
 $link-decoration: none;
 $accordion-button-active-bg: $gray-lighter;
+/* Buttons */
+$btn-border-radius: 6px;
+$btn-box-shadow: none;
+$btn-active-box-shadow: none;
 
 @import "lobes5/scss/bootstrap.scss";
 
 /* Buttons */
-@each $color, $value in $theme-colors {
-  .btn-outline-#{$color} {
-    --bs-btn-border-radius: 6px;
-  }
+.btn {
+  white-space: nowrap;
 }
 .btn-warning {
     --bs-btn-color: #fff;
     --bs-btn-hover-color: #fff;
 }
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+  
+  & + * {
+    margin-left: 0.4em;
+  }
+}
 
+.btn-rounded {
+  border-radius: 3em;
+}
+
+.btn-link {
+  color: $listenbrainz-blue;
+  border-color: transparent;
+  text-decoration: none;
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
 // pre is used in a tooltip with a different background color
 pre {
     background-color: inherit;
@@ -110,4 +138,50 @@ b, .strong {
 
 .card-header {
   border-color: $border-color-translucent;
+}
+
+html {
+  font-size: 10px;
+  -webkit-tap-highlight-color: black;
+}
+
+body {
+  font-family: Sintony, sans-serif;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: $asphalt;
+  background-color: #fff;
+}
+
+h1, h2, h3{
+  margin-top: $spacer;
+}
+h4, h5, h6{
+  margin-top: $headings-margin-bottom;
+}
+// Unordered and Ordered lists
+ul,
+ol {
+  padding-left: revert;
+  margin-top: 0;
+  margin-bottom: $spacer * .5;
+  ul,
+  ol {
+    margin-bottom: 0;
+  }
+}
+
+.panel {
+  margin-bottom: 2rem;
+  .panel-heading {
+    background-color: #fafafa;
+  }
+}
+
+.form-text {
+  color: #8c8674;
+}
+
+.container-react-main {
+  min-height: 70vh;
 }

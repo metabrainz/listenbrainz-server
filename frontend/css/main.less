@@ -1,6 +1,7 @@
-@import "theme/theme.less";
+// @import (reference) "theme/theme.less";
+@import (reference) "theme/variables.less";
+@import (reference) "theme/bootstrap/variables.less";
 @import "colors.less";
-@import "scaffolding.less";
 @import "homepage.less";
 @import "listens-page.less";
 @import "pinned-recordings.less";
@@ -76,52 +77,6 @@ pre code.hljs {
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
 
-.navbar {
-  .nav {
-    > li {
-      > a {
-        color: @blue;
-      }
-    }
-  }
-
-  .beta {
-    .pull-right;
-    color: @red;
-  }
-
-  @logo-width: 165px + 15px;
-  .navbar-variant(#353070, @logo-width);
-
-  .import-link {
-    > a {
-      color: white !important;
-      font-size: 1.5em !important;
-      background-color: @orange !important;
-
-      &:hover,
-      &:focus {
-        background-color: darken(@orange, 6.5%) !important;
-      }
-    }
-  }
-
-  .navbar-form {
-    padding-right: 0px;
-
-    .btn {
-      background-color: @orange;
-      margin-right: 0px;
-    }
-  }
-}
-
-// Content Wrapper
-.container-react-main {
-  min-height: 70vh;
-  .container-fixed();
-}
-
 /* Footer */
 .footer {
   padding-left: 25px;
@@ -146,9 +101,6 @@ pre code.hljs {
 }
 
 /* Buttons */
-.btn {
-  box-shadow: none;
-}
 
 .btn.dropdown-toggle {
   border-radius: 4px;
@@ -157,39 +109,6 @@ pre code.hljs {
 // Fix button height inside an input group
 .input-group > .btn {
   margin: 0;
-}
-
-.btn-icon {
-  padding: 0.5em;
-  font-size: 1.5em;
-  height: 2em;
-  line-height: 1em;
-  border-radius: 5px;
-  text-align: center;
-  display: inline-block;
-
-  & + * {
-    margin-left: 0.4em;
-  }
-
-  > svg {
-    /* We might forget to set the fixedWidth attribute on FontAwesome icons
-    but we do want to make sure all icons have the same width, so extend the FA class */
-    &:extend(.fa-fw);
-  }
-}
-
-.btn-rounded {
-  border-radius: 3em;
-}
-
-.btn-link {
-  border-color: transparent;
-  text-decoration: none;
-  &:hover,
-  &:focus {
-    text-decoration: underline;
-  }
 }
 
 .center-p {

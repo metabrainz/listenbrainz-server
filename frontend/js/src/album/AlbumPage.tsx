@@ -321,7 +321,7 @@ export default function AlbumPage(): JSX.Element {
             </Link>
             <button
               type="button"
-              className="btn btn-info dropdown-toggle"
+              className="btn btn-info dropdown-toggle px-3"
               data-bs-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
