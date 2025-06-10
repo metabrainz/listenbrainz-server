@@ -44,7 +44,10 @@ export default function MusicServices() {
     soundcloud: loaderData.current_soundcloud_permissions,
     appleMusic: loaderData.current_apple_permissions,
     lastfm: loaderData.current_lastfm_permissions,
+    funkwhale: "disable",
   });
+
+  const [funkwhaleHostUrl, setFunkwhaleHostUrl] = React.useState("");
 
   const [lastfmUserId, setLastfmUserId] = React.useState(
     loaderData.current_lastfm_settings?.external_user_id
@@ -641,6 +644,69 @@ export default function MusicServices() {
                 />
               </form>
             </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Funkwhale</h3>
+          </div>
+          <div className="card-body">
+            <p>
+              Connect to your Funkwhale server to play music on ListenBrainz.
+            </p>
+            <form onSubmit={(e) => e.preventDefault()}>
+              <div className="flex flex-wrap" style={{ gap: "1em" }}>
+                <div>
+                  <label className="form-label" htmlFor="funkwhaleHostUrl">
+                    Your Funkwhale server URL:
+                  </label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    id="funkwhaleHostUrl"
+                    name="funkwhaleHostUrl"
+                    placeholder="http://funkwhale.funkwhale.test/"
+                  />
+                </div>
+              </div>
+              <br />
+              <div className="music-service-selection">
+                <button type="button" className="music-service-option">
+                  <input
+                    readOnly
+                    type="radio"
+                    id="funkwhale_listen"
+                    name="funkwhale"
+                    value="listen"
+                  />
+                  <label htmlFor="funkwhale_listen">
+                    <div className="title">Play music on ListenBrainz</div>
+                    <div className="details">
+                      Connect to your Funkwhale server to play music on
+                      ListenBrainz.
+                    </div>
+                  </label>
+                </button>
+                <button type="button" className="music-service-option">
+                  <input
+                    readOnly
+                    type="radio"
+                    id="funkwhale_disable"
+                    name="funkwhale"
+                    value="disable"
+                    checked={permissions.funkwhale === "disable"}
+                  />
+                  <label htmlFor="funkwhale_disable">
+                    <div className="title">Disable</div>
+                    <div className="details">
+                      You will not be able to listen to music on ListenBrainz
+                      using Funkwhale.
+                    </div>
+                  </label>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 
