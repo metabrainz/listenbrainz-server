@@ -1,3 +1,35 @@
+@use "sass:color";
+
+$scrollbar-background-color: $pearl;
+$scrollbar-thumb-color: color.adjust(
+  $scrollbar-background-color,
+  $lightness: -10%
+);
+$scrollbar-thumb-color-dark: color.adjust(
+  $scrollbar-thumb-color,
+  $lightness: -15%
+);
+
+@mixin small-scrollbar {
+  scrollbar-width: unset;
+  padding-bottom: 1em;
+  &::-webkit-scrollbar {
+    height: 5px;
+    display: block;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: $scrollbar-background-color;
+    border-radius: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $scrollbar-thumb-color;
+    border-radius: 5px;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: $scrollbar-thumb-color-dark;
+  }
+}
+
 .horizontal-scroll-container {
   position: relative;
 
@@ -9,7 +41,7 @@
 
   .horizontal-scroll {
     overflow-x: auto;
-    .small-scrollbar();
+    @include small-scrollbar;
     &.no-scrollbar {
       /* Hide the scrollbar: */
       -ms-overflow-style: none; /* Internet Explorer and Edge */
@@ -28,23 +60,23 @@
     width: 55px;
     border: none;
     font-size: 2em;
-    color: @light-grey;
+    color: $light-grey;
     z-index: 2;
     opacity: 1;
     transition: opacity 300ms linear;
     &.backward {
-      background: linear-gradient(to right, @white 10%, transparent);
+      background: linear-gradient(to right, $white 10%, transparent);
       text-align: left;
       left: -1px;
     }
     &.forward {
-      background: linear-gradient(to left, @white 10%, transparent);
+      background: linear-gradient(to left, $white 10%, transparent);
       right: -1px;
       text-align: right;
     }
   }
   &.scroll-start .nav-button.backward,
-  &.scroll-end& .nav-button.forward {
+  &.scroll-end .nav-button.forward {
     opacity: 0;
     pointer-events: none;
   }
@@ -65,26 +97,7 @@
     display: none;
   }
 }
-@scrollbar-background-color: #f5f5f5;
-@scrollbar-thumb-color: darken(@scrollbar-background-color, 10%);
-@scrollbar-thumb-color-dark: darken(@scrollbar-thumb-color, 15%);
 
 .small-scrollbar {
-  scrollbar-width: unset;
-  padding-bottom: 1em;
-  &::-webkit-scrollbar {
-    height: 5px;
-    display: block;
-  }
-  &::-webkit-scrollbar-track {
-    background-color: @scrollbar-background-color;
-    border-radius: 5px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: @scrollbar-thumb-color;
-    border-radius: 5px;
-  }
-  &:hover::-webkit-scrollbar-thumb {
-    background-color: @scrollbar-thumb-color-dark;
-  }
+  @include small-scrollbar;
 }
