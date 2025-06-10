@@ -12,7 +12,6 @@
       height: 100%;
       width: 1px;
       // Fade the line out at the bottom.
-      // The ~"calc(…  syntax is necessary because we are using different units. See https://github.com/less/less.js/issues/3047
       background: linear-gradient(
         180deg,
         $gray-light calc(100% - 65px),

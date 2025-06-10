@@ -32,7 +32,7 @@
       }
     }
     &.selected {
-      border: 5px solid @blue;
+      border: 5px solid $blue;
       border-radius: 3px;
     }
     .title {
@@ -40,7 +40,7 @@
       font-weight: 900;
       font-size: 2em;
       line-height: 1.1em;
-      color: @blue;
+      color: $blue;
       transition: margin-bottom 300ms ease-out;
       margin-bottom: 0px;
       text-align: left;
@@ -84,25 +84,24 @@
       margin-left: auto;
     }
     // Magic background image cycler
-    /* stylelint-disable */
-    each(range(3), {
-      //We only have three backgrounds available for green (#1 is only used for weekly jams)
-      &.green:nth-of-type(3n+@{value}) {
-        @bgValue: (@value + 1);
-        background-image: url("../img/recommendations/green-@{bgValue}.svg");
+    @for $value from 1 through 3 {
+      &.green:nth-of-type(3n + #{$value}) {
+        $bgValue: ($value + 1);
+        background-image: url("../img/recommendations/green-#{$bgValue}.svg");
       }
-    });
-    each(range(4), {
-      &.red:nth-of-type(4n+@{value}) {
-        background-image: url("../img/recommendations/red-@{value}.svg");
+    }
+
+    @for $value from 1 through 4 {
+      &.red:nth-of-type(4n + #{$value}) {
+        background-image: url("../img/recommendations/red-#{$value}.svg");
       }
-    });
-    each(range(4), {
-      &.blue:nth-of-type(4n+@{value}) {
-        background-image: url("../img/recommendations/blue-@{value}.svg");
+    }
+
+    @for $value from 1 through 4 {
+      &.blue:nth-of-type(4n + #{$value}) {
+        background-image: url("../img/recommendations/blue-#{$value}.svg");
       }
-    });
-    /* stylelint-enable */
+    }
 
     &:nth-child(1 of .weekly-jams) {
       // Make first weekly-jams element bigger and placed at the start
@@ -134,7 +133,7 @@
     }
   }
 
-  @media (max-width: @screen-sm) {
+  @media (max-width: map-get($grid-breakpoints, "sm")) {
     grid-auto-columns: unset;
   }
 }
@@ -145,7 +144,7 @@
   align-items: flex-end;
   gap: 1em;
   margin-top: 2em;
-  border-top: 1px solid @gray-light;
+  border-top: 1px solid $gray-light;
   padding-top: 2em;
 
   .playlist-items {
@@ -160,8 +159,8 @@
     overflow: hidden;
 
     .playlist-settings-header {
-      background: @blue;
-      color: @white;
+      background: $blue;
+      color: $white;
       padding: 1em;
       margin: -1em -1em 0;
       .title {
