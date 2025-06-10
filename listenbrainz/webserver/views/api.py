@@ -896,7 +896,7 @@ def import_files():
     if file.content_length and file.content_length > MAX_FILE_UPLOAD_SIZE:
         APIBadRequest("File size exceeds 100MB")
     
-    file_path = upload_listening_history_files(file, file.name)
+    file_path = upload_listening_history_files(file, file.filename)
 
     if not file_path:
         APIInternalServerError("The file was not able to upload!")
