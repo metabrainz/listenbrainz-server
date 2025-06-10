@@ -9,8 +9,8 @@
   align-items: stretch;
   input,
   button {
-    background-color: @nav-tabs-border-color;
-    color: @nav-link-color;
+    background-color: $nav-tabs-border-color;
+    color: $nav-link-color;
     border: none;
   }
   input {
@@ -18,10 +18,10 @@
     height: auto;
     font-size: 1.8rem;
     &:focus {
-      box-shadow: inset 3px 2px 4px darkgrey;
+      box-shadow: inset 3px 2px 4px $gray-500;
       & ~ button {
         // Adjacent sibling button
-        box-shadow: inset -3px 2px 4px darkgrey;
+        box-shadow: inset -3px 2px 4px $gray-500;
       }
     }
   }
