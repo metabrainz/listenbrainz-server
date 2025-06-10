@@ -5,9 +5,9 @@
     margin-left: 10px;
   }
   font-family: "Sintony", sans-serif;
-  color: @white;
-  border: 2px solid @blue;
-  background: @blue;
+  color: $white;
+  border: 2px solid $blue;
+  background: $blue;
   font-weight: bold;
   padding: 5px 8px;
   border-radius: 4px;
@@ -27,8 +27,8 @@
     &:hover,
     &:focus {
       background: white;
-      color: @blue;
-      border-color: @blue;
+      color: $blue;
+      border-color: $blue;
 
       > .text {
         width: 4.75em;
@@ -43,9 +43,9 @@
     &.following,
     &:hover,
     &:focus {
-      background: white;
-      color: @blue;
-      border-color: @blue;
+      background: $white;
+      color: $blue;
+      border-color: $blue;
     }
 
     svg {
@@ -59,7 +59,7 @@
 
   hr {
     margin: 0px 2em;
-    border-top: 1px solid @gray-light;
+    border-top: 1px solid $gray-light;
   }
 }
 
@@ -77,7 +77,7 @@
   padding: 10px;
   overflow-y: auto;
   border-radius: 2px;
-  box-shadow: inset 0px 11px 8px -10px #ccc;
+  box-shadow: inset 0px 11px 8px -10px $gray-400;
 
   > * {
     display: flex;
@@ -90,7 +90,7 @@
     }
 
     &:not(:first-child) {
-      border-top: 1px solid @gray-light;
+      border-top: 1px solid $gray-light;
       padding-top: 12px;
     }
   }
@@ -102,8 +102,8 @@
 }
 
 .musicbrainz-profile-button {
-  color: #fff;
-  background: @blue;
+  color: $white;
+  background: $blue;
   padding: 5px 8px;
   border-radius: 4px;
   transition: background 0.42s;
