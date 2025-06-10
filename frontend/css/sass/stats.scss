@@ -29,12 +29,12 @@
   }
 }
 
-@bar-height: 4.5em;
+$bar-height: 4.5em;
 .bar-chart {
   position: relative;
   width: 100%;
   margin-bottom: 1em;
-  min-height: calc(25 * @bar-height); // 25 items on the graph
+  min-height: calc(25 * $bar-height); // 25 items on the graph
   > * {
     position: absolute;
     width: 100%;
@@ -49,7 +49,7 @@
   foreignObject {
     //default width and height, they are overwritten in the CustomBarComponent
     width: 95%;
-    height: @bar-height;
+    height: $bar-height;
     padding: 0.5em;
     overflow: visible;
     .graph-bar {
@@ -71,14 +71,14 @@
       }
       .graph-bar-entity {
         font-weight: bold;
-        color: darken(@light-grey, 30%);
+        color: darken($light-grey, 30%);
       }
       .graph-bar-artist {
-        color: @light-grey;
+        color: $light-grey;
         font-size: 0.8em;
       }
     }
-    @media (max-width: @screen-phone) {
+    @media (max-width: map-get($grid-breakpoints, "xs")) {
       // On mobile, show the position to the right of the bar to leave more space for the text
       .graph-bar {
         position: relative;
@@ -90,15 +90,14 @@
       }
     }
   }
-  @media (max-width: @screen-tablet) {
+  @media (max-width: map-get($grid-breakpoints, "sm")) {
     width: calc(100vw - 2em);
   }
 }
-
 .top-entity-listencards {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 @listen-card-margin-bottom;
+  gap: 0 $listen-card-margin-bottom;
   .listen-card {
     flex: 1;
     flex-basis: 360px;

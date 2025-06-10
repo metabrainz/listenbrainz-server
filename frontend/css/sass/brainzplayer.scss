@@ -518,7 +518,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   transition: bottom 0.6s cubic-bezier(0.46, 0.75, 0.55, 0.97);
   transition-property: bottom, background, color;
   padding: 0 1.5em;
-  padding-bottom: $brainzplayer-height / 2;
+  padding-bottom: $brainzplayer-height * 0.5;
 
   &.open {
     bottom: 0;
