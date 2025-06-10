@@ -1,7 +1,7 @@
-@font_family_1: Sintony, sans-serif;
-@font_family_2: "Roboto", sans-serif;
-@mb_blue_light: #413b89;
-@mb_blue_dark: #211e45;
+$font_family_1: Sintony, sans-serif;
+$font_family_2: "Roboto", sans-serif;
+$mb_blue_light: #413b89;
+$mb_blue_dark: #211e45;
 
 .artist-similarity-main-container {
   display: flex;
@@ -14,7 +14,7 @@
     gap: 1em;
     padding: 2vh 0;
 
-    @media screen and (max-width: @screen-sm) {
+    @media screen and (max-width: map-get($grid-breakpoints, "sm")) {
       justify-content: space-between;
     }
 
@@ -31,14 +31,14 @@
     .sidebar {
       width: max(20%, 225px);
       z-index: 2;
-      @media screen and (max-width: @screen-md) {
+      @media screen and (max-width: map-get($grid-breakpoints, "md")) {
         // on mobile, show the sidebar tray above BrainzPlayer; it can be collapsed
         z-index: 6;
       }
 
       .sidebar-header {
-        background: #353070;
-        color: white;
+        background: $blue;
+        color: $white;
         padding-top: 20px;
 
         p:first-of-type {
@@ -67,10 +67,10 @@
 
           #artist-mb-link-button {
             font-size: 14px;
-            background-color: @blue;
+            background-color: $blue;
             border: none;
             border-radius: 4px;
-            color: @white;
+            color: $white;
             padding: 0.5em;
             text-decoration: none;
           }
@@ -93,17 +93,17 @@
             width: 100%;
             margin-right: -100%;
             margin-left: 10px;
-            border-top: 1.75px solid @gray-light;
+            border-top: 1.75px solid $gray-light;
           }
         }
         #artist-top-track,
         #artist-top-album {
           border: none;
-          background-color: @white;
+          background-color: $white;
           border-radius: 0.5em;
           padding: 1em 0 0 0;
           &:hover {
-            background-color: #e0e0e0;
+            background-color: $gray-200;
           }
         }
       }
@@ -113,7 +113,7 @@
 
 .artist-similarity-graph-container {
   flex: 1;
-  height: calc(100vh - @brainzplayer-height);
+  height: calc(100vh - $brainzplayer-height);
   max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
   overflow: auto;
 
