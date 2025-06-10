@@ -1,18 +1,18 @@
 // Converted rc-slider/assets/index.css to .less
 
 // TODO name colors properly
-@color_1: #999;
-@color_2: #666;
-@slider_base_color: #8d8d8d;
-@background_color_2: #abe2fb;
-@background_color_4: #ccc;
-@background_color_5: #6c6c6c;
-@border_color_1: @orange;
-@border_color_2: @orange;
-@border_color_3: #96dbfa;
-@border_color_4: #ccc;
-@border_color_5: transparent;
-@border_top_color_1: #6c6c6c;
+$color_1: $gray-600;
+$color_2: $gray-700;
+$slider_base_color: $gray-600;
+$background_color_2: $blue-200;
+$background_color_4: $gray-400;
+$background_color_5: $gray-700;
+$border_color_1: $orange;
+$border_color_2: $orange;
+$border_color_3: $blue-400;
+$border_color_4: $gray-400;
+$border_color_5: transparent;
+$border_top_color_1: $gray-700;
 
 @keyframes rcSliderTooltipZoomDownIn {
   0% {
@@ -54,13 +54,13 @@
   position: absolute;
   width: 100%;
   height: 6px;
-  background-color: @slider_base_color;
+  background-color: $slider_base_color;
   border-radius: 6px;
 }
 .rc-slider-track {
   position: absolute;
   height: 6px;
-  background-color: @background_color_2;
+  background-color: $background_color_2;
   border-radius: 6px;
 }
 .rc-slider-handle {
@@ -68,7 +68,7 @@
   width: 3rem;
   height: 3rem;
   margin-top: -12px;
-  background-color: @purple;
+  background-color: $purple;
   border-radius: 50%;
   cursor: pointer;
   cursor: -webkit-grab;
@@ -80,23 +80,23 @@
     box-shadow: none;
   }
   &:focus-visible {
-    border-color: lighten(@purple, 10%);
-    box-shadow: 0 0 3px @purple;
+    border-color: lighten($purple, 10%);
+    box-shadow: 0 0 3px $purple;
   }
   &:active {
-    border-color: @purple;
+    border-color: $purple;
     cursor: -webkit-grabbing;
     cursor: grabbing;
   }
 }
 .rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
-  background-color: @purple;
-  border-color: lighten(@purple, 10%);
-  box-shadow: 0 0 7px @purple;
+  background-color: $purple;
+  border-color: lighten($purple, 10%);
+  box-shadow: 0 0 7px $purple;
 }
 .rc-slider-handle-click-focused {
   &:focus {
-    border-color: @orange;
+    border-color: $orange;
     box-shadow: unset;
   }
 }
@@ -110,17 +110,17 @@
 .rc-slider-mark-text {
   position: absolute;
   display: inline-block;
-  color: @slider_base_color;
+  color: $slider_base_color;
   text-align: center;
   vertical-align: middle;
   cursor: pointer;
   &:hover {
-    color: lighten(@blue, 10%);
+    color: lighten($blue, 10%);
     font-weight: 700;
   }
 }
 .rc-slider-mark-text-active {
-  color: @color_2;
+  color: $color_2;
 }
 .rc-slider-step {
   position: absolute;
@@ -136,31 +136,31 @@
   width: 8px;
   height: 8px;
   vertical-align: middle;
-  background-color: @white;
-  border: 2px solid #e9e9e9;
+  background-color: $white;
+  border: 2px solid $gray-200;
   border-radius: 50%;
   cursor: pointer;
 }
 .rc-slider-dot-active {
-  border-color: @border_color_3;
+  border-color: $border_color_3;
 }
 .rc-slider-dot-reverse {
   margin-right: -4px;
 }
 .rc-slider-disabled {
-  background-color: @slider_base_color;
+  background-color: $slider_base_color;
   .rc-slider-track {
-    background-color: @background_color_4;
+    background-color: $background_color_4;
   }
   .rc-slider-handle {
-    background-color: @white;
-    border-color: @border_color_4;
+    background-color: $white;
+    border-color: $border_color_4;
     box-shadow: none;
     cursor: not-allowed;
   }
   .rc-slider-dot {
-    background-color: @white;
-    border-color: @border_color_4;
+    background-color: $white;
+    border-color: $border_color_4;
     box-shadow: none;
     cursor: not-allowed !important;
   }
@@ -265,26 +265,26 @@
     left: 50%;
     margin-left: -4px;
     border-width: 4px 4px 0;
-    border-top-color: @border_top_color_1;
+    border-top-color: $border_top_color_1;
   }
 }
 .rc-slider-tooltip-inner {
   min-width: 24px;
   height: 24px;
   padding: 6px 2px;
-  color: @white;
+  color: $white;
   font-size: 12px;
   line-height: 1;
   text-align: center;
   text-decoration: none;
-  background-color: @background_color_5;
+  background-color: $background_color_5;
   border-radius: 6px;
-  box-shadow: 0 0 4px #d9d9d9;
+  box-shadow: 0 0 4px $gray-300;
 }
 .rc-slider-tooltip-arrow {
   position: absolute;
   width: 0;
   height: 0;
-  border-color: @border_color_5;
+  border-color: $border_color_5;
   border-style: solid;
 }
