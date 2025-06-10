@@ -30,6 +30,7 @@ $danger: $red;
 $info: $blue;
 $light: $gray-lighter;
 
+$link-color: $blue;
 $body-color: $asphalt;
 $body-secondary-bg: $gray-light;
 $body-tertiary-bg: $pearl;
@@ -101,3 +102,6 @@ $listen-card-margin-bottom: 7px;
 
 $screen-phone: map-get($grid-breakpoints, "sm");
 $sidenav-width: 190px;
+
+$badge-border-radius: 10px;
+$badge-font-size: 12px;

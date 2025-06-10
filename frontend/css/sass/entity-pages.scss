@@ -92,7 +92,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
   &.album-page .entity-page-content .tracks .listen-card .track-position {
     flex: 0 3em;
     align-self: center;
-    color: $light-grey;
+    color: $gray-500;
   }
   &.artist-page .entity-page-content .tracks {
     max-height: 500px;
