@@ -9,7 +9,7 @@
   margin-top: 0;
   font-size: 2rem;
   text-align: center;
-  color: lighten(@asphalt, 20%);
+  color: lighten($asphalt, 20%);
   user-select: none;
 }
 
@@ -20,7 +20,7 @@
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 
-  @media screen and (max-width: @screen-md) {
+  @media screen and (max-width: map-get($grid-breakpoints, "md")) {
     justify-content: center;
   }
 }
@@ -71,7 +71,7 @@
             flex-grow: 2;
             &:hover {
               font-weight: bold;
-              color: @orange;
+              color: $orange;
             }
           }
         }
@@ -90,10 +90,10 @@
             padding: 0.25rem 1rem;
             font-weight: normal;
             cursor: pointer;
-            color: @asphalt;
+            color: $asphalt;
             &:hover {
               font-weight: bold;
-              color: @blue;
+              color: $blue;
             }
           }
 
@@ -102,8 +102,8 @@
             padding: 0.25rem 1rem;
             font-weight: bold;
             cursor: pointer;
-            background-color: @orange;
-            color: @white;
+            background-color: $orange;
+            color: $white;
             border-radius: 4px;
           }
         }
@@ -112,7 +112,7 @@
   }
 
   // Mobile responsive filters
-  @media (max-width: @screen-md) {
+  @media (max-width: map-get($grid-breakpoints, "md")) {
     .filters-main {
       display: block;
       padding: 1rem;
@@ -120,7 +120,7 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      background-color: @white;
+      background-color: $white;
 
       #filters-container {
         display: block;
@@ -226,7 +226,7 @@
   // height: 100%;
   max-height: calc(100vh - 8em);
 
-  @media (max-width: @screen-md) {
+  @media (max-width: map-get($grid-breakpoints, "md")) {
     height: unset;
     width: 100%;
     position: fixed;
@@ -234,7 +234,7 @@
     top: calc(100vh - 100px);
     padding: 1rem 2rem 4rem;
     z-index: 50;
-    background-color: @white;
+    background-color: $white;
     padding-right: 120px; // sidebar button on the right
   }
 }
@@ -244,7 +244,7 @@
   position: sticky;
   top: 0;
   z-index: 90;
-  background: white;
+  background: $white;
   display: flex;
   align-items: center;
   text-align: center;
@@ -256,7 +256,7 @@
 .release-card-grid-title::after {
   content: "";
   flex: 1;
-  border-bottom: 1px solid @gray-light;
+  border-bottom: 1px solid $gray-light;
 }
 
 .release-card-grid-title:not(:empty)::before {
@@ -287,8 +287,8 @@
 }
 
 #sidebar-fresh-release {
-  background: #353070;
-  color: white;
+  background: $blue;
+  color: $white;
   padding-top: 20px;
 
   p:first-of-type {
@@ -304,7 +304,7 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
-  @media screen and (min-width: @screen-md) {
+  @media screen and (min-width: map-get($grid-breakpoints, "md")) {
     // make the sidebar flush with the right-hand side on larger sizes
     margin-right: -15px;
   }
@@ -317,8 +317,8 @@
   .sidebar-fresh-releases {
     max-height: 85vh;
 
-    @media screen and (max-width: @screen-md) {
-      max-height: calc(100vh - @brainzplayer-height);
+    @media screen and (max-width: map-get($grid-breakpoints, "md")) {
+      max-height: calc(100vh - $brainzplayer-height);
     }
   }
 }
@@ -333,14 +333,14 @@
   z-index: 9997;
   right: 0;
 
-  @media screen and (max-width: @screen-md) {
+  @media screen and (max-width: map-get($grid-breakpoints, "md")) {
     position: fixed;
     top: 0;
     right: -80%;
     height: 100%;
     width: 80%;
     max-width: 400px;
-    background-color: #fff;
+    background-color: $white;
     overflow-y: auto;
     box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
     transition: right 0.3s ease-in-out;
