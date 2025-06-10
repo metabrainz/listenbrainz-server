@@ -1,51 +1,8 @@
-@primary: #08949b;
-@secondary: #0d696e;
-@controlsHeight: 60px;
-@love: #c62828;
-@hate: @blue;
-@player-min-height: 320px;
-@card-shadow-color: #c0c0c0;
-@listen-small-break: @screen-sm;
-@cover-art-thumbnail-size: 66px;
-@listen-card-margin-bottom: 7px;
-
-#dashboard {
-  .side-column > *:not(:last-child) {
-    margin-bottom: 15px;
-  }
-}
-
-.webSocket-box {
-  max-height: 420px;
-  min-height: 150px;
-  position: relative;
-  overflow: hidden;
-  border-bottom-style: inset;
-  .read-more {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    text-align: center;
-    padding: 100px 0 20px;
-    background-image: linear-gradient(to bottom, transparent, #fff 80%);
-  }
-}
-
-.card {
-  background: white;
-  border: 1px solid rgb(238, 238, 238) !important;
-  box-sizing: border-box;
-  box-shadow: fade(@card-shadow-color, 10%) 0px 1px 1px,
-    fade(@card-shadow-color, 15%) 0px 2px 2px,
-    fade(@card-shadow-color, 20%) 0px 4px 4px;
-  border-radius: 8px;
-  margin-bottom: 0;
-}
 .listen-card {
   &.card {
     height: initial;
   }
-  margin-bottom: @listen-card-margin-bottom;
+  margin-bottom: $listen-card-margin-bottom;
   a:focus,
   a:hover {
     text-decoration: underline;
@@ -61,7 +18,7 @@
 
   > * {
     padding: 10px;
-    @media (min-width: @screen-phone) {
+    @media (min-width: $screen-phone) {
       padding: 15px;
     }
   }
@@ -106,7 +63,7 @@
     }
   }
   .additional-content {
-    border-top: 1px solid @gray-light;
+    border-top: 1px solid $gray-light;
     width: 100%;
     .review {
       font-style: italic;
@@ -134,8 +91,8 @@
       padding: 0;
       margin: -10px;
       margin-right: 1em;
-      width: @cover-art-thumbnail-size;
-      min-width: @cover-art-thumbnail-size;
+      width: $cover-art-thumbnail-size;
+      min-width: $cover-art-thumbnail-size;
       > *:not(.track-position) {
         height: 100%;
         width: inherit;
@@ -148,16 +105,16 @@
       .add-cover-art,
       .not-mapped,
       .cover-art-fallback {
-        background-color: @gray-lighter;
-        min-width: @cover-art-thumbnail-size;
+        background-color: $gray-lighter;
+        min-width: $cover-art-thumbnail-size;
         height: inherit;
         display: flex;
         align-items: center;
         color: #cbcbcb;
         justify-content: center;
         > * {
-          font-size: @cover-art-thumbnail-size / 2;
-          max-width: @cover-art-thumbnail-size / 2;
+          font-size: $cover-art-thumbnail-size / 2;
+          max-width: $cover-art-thumbnail-size / 2;
           aspect-ratio: unset;
           border-radius: unset;
           height: auto;
@@ -169,11 +126,11 @@
         object-fit: cover;
         border-radius: 7px 0 0 7px;
       }
-      @media (min-width: @screen-phone) {
+      @media (min-width: $screen-phone) {
         margin: -15px;
         margin-right: 1em;
       }
-      @media (min-width: @listen-small-break) {
+      @media (min-width: map-get($grid-breakpoints, "sm")) {
         margin: -15px;
         margin-right: 1em;
       }
@@ -186,7 +143,7 @@
     .listen-time {
       font-style: italic;
       font-size: 80%;
-      color: @light-grey;
+      color: $gray-600;
       white-space: nowrap;
       text-align: end;
     }
@@ -222,7 +179,7 @@
       align-items: center;
       padding: 0;
 
-      @media (max-width: @screen-phone) {
+      @media (max-width: $screen-phone) {
         flex: 0;
       }
 
@@ -240,7 +197,7 @@
       justify-content: space-around;
       position: relative; // This is need for dropdown menu positioning
       margin-left: auto; // align flexbox item at flex-end
-      color: @light-grey;
+      color: $gray-600;
 
       > button,
       > .btn {
@@ -262,7 +219,7 @@
       .love,
       .hate {
         color: transparent;
-        stroke: @light-grey;
+        stroke: $gray-600;
         &:hover {
           color: transparent;
         }
@@ -270,21 +227,21 @@
 
       .love {
         &:hover {
-          stroke: @love;
+          stroke: $love;
         }
         &.loved {
           stroke: transparent;
-          color: @love;
+          color: $love;
         }
       }
 
       .hate {
         &:hover {
-          stroke: @hate;
+          stroke: $hate;
         }
         &.hated {
           stroke: transparent;
-          color: @hate;
+          color: $hate;
         }
       }
 
@@ -300,7 +257,7 @@
           text-decoration: none;
           width: 100%;
           background: none;
-          color: @text-color;
+          color: $body-color;
           border: none;
           padding: 5px 20px;
           font: inherit;
@@ -310,7 +267,7 @@
 
           &:hover {
             color: #ffffff;
-            background-color: @orange;
+            background-color: $orange;
           }
         }
       }
@@ -336,11 +293,11 @@
 
       .btn {
         font-size: 1em;
-        color: @blue;
+        color: $blue;
         background-color: white;
 
         &:hover {
-          background-color: @blue;
+          background-color: $blue;
           color: white;
         }
       }
@@ -384,7 +341,7 @@
     }
 
     .listen-controls > .icon-only {
-      color: @light-grey;
+      color: $gray-600;
       width: 2em;
       min-width: 2em;
       margin-left: 0;
@@ -392,9 +349,9 @@
       padding: 0;
     }
     .play-button {
-      color: @light-grey;
+      color: $gray-600;
       &.playing {
-        color: @orange;
+        color: $orange;
       }
     }
   }
@@ -421,141 +378,4 @@
       transform: rotateX(90deg) scale(0.8, 0.4);
     }
   }
-}
-
-#listen-count-card {
-  padding: 15px 50px;
-  text-align: center;
-
-  font-size: 24px;
-
-  hr {
-    margin: 8px 0 16px 0;
-    border-top: 1px solid @gray-light;
-  }
-}
-
-#compatibility-card {
-  padding: 15px 50px;
-  text-align: center;
-  font-size: 16px;
-  position: relative;
-
-  > .info-icon {
-    color: gray;
-    position: absolute;
-    right: 0.75em;
-    top: 0.5em;
-    > a {
-      color: grey;
-    }
-  }
-
-  hr {
-    margin: 8px 0 16px 0;
-    border-top: 1px solid @gray-light;
-  }
-
-  > .similarity-score {
-    display: flex;
-    > .progress {
-      height: 15px;
-      width: 300px;
-      margin: 10px 5px 10px 0;
-    }
-    > p {
-      margin: 10px 0 0 0;
-    }
-  }
-}
-
-#navigation.pagination {
-  display: flex;
-  flex-wrap: wrap;
-  & > .feed-button-and-date-time-picker {
-    order: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    @media (max-width: @screen-phone) {
-      // on phones, put the datepicker below the arrow nav
-      order: 1;
-      margin-top: 10px;
-    }
-  }
-}
-
-#spacer {
-  margin-top: 54px;
-}
-
-.empty-listens {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: @orange;
-
-  .empty-text {
-    text-align: center;
-    margin: 4px 0px 0px;
-    color: @asphalt;
-  }
-
-  .empty-action {
-    margin-top: 12px;
-    padding: 0px 8em;
-    text-align: center;
-    color: @asphalt;
-  }
-
-  @media (max-width: @screen-sm) {
-    .empty-action {
-      padding: 0px 6em;
-    }
-  }
-
-  @media (max-width: @screen-xs) {
-    .empty-action {
-      padding: 0px 3em;
-    }
-  }
-}
-
-.add-listen-btn {
-  margin-left: auto;
-  position: relative;
-  align-self: center;
-}
-
-.listen-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  line-height: 1.5em;
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    margin: 0;
-  }
-  &.pills {
-    justify-content: initial;
-    .pill {
-      margin-bottom: 0;
-    }
-  }
-}
-
-.user-charts-pill {
-  color: unset !important;
-  text-decoration: unset !important;
-}
-
-.link-listens-tooltip {
-  border-bottom: 1px dotted #000;
-  text-decoration: none;
 }

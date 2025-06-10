@@ -6,6 +6,7 @@
 @import "./donations";
 @import "./donors-page";
 @import "./pill";
+@import "./listen-card";
 
 // pre is used in a tooltip with a different background color
 pre {
@@ -74,4 +75,10 @@ ol {
 
 .container-react-main {
   min-height: 70vh;
-}}
+  padding-left: $grid-gutter-width * 0.5;
+  padding-right: $grid-gutter-width * 0.5;
+}
+
+.card {
+  margin-bottom: 0;
+}
