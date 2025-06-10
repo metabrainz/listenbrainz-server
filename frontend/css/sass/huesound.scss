@@ -1,5 +1,7 @@
 .huesound-container {
-  &:extend(.flex-center all);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-flow: wrap;
 
   .colour-picker-container {
@@ -20,20 +22,20 @@
     margin: 1em;
     min-height: 375px;
 
-    @media (max-width: @screen-sm) {
+    @media (max-width: map-get($grid-breakpoints, "sm")) {
       grid-template-columns: repeat(4, 1fr);
       min-height: 580px;
     }
 
-    @media (max-width: @screen-xs) {
+    @media (max-width: map-get($grid-breakpoints, "xs")) {
       grid-template-columns: repeat(3, 1fr);
     }
 
-    @media (min-width: @screen-md) {
+    @media (min-width: map-get($grid-breakpoints, "md")) {
       min-height: 600px;
     }
 
-    @media (min-width: @screen-lg) {
+    @media (min-width: map-get($grid-breakpoints, "lg")) {
       min-height: 794px;
     }
     &.invisible {
@@ -71,5 +73,5 @@
   font-size: 45%;
   font-style: italic;
   vertical-align: 0.8em;
-  color: @orange;
+  color: $orange;
 }
