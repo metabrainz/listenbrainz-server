@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 #timeline {
   > ul {
     padding-left: 1em;
@@ -13,10 +15,10 @@
       // The ~"calc(…  syntax is necessary because we are using different units. See https://github.com/less/less.js/issues/3047
       background: linear-gradient(
         180deg,
-        @gray-light ~"calc(100% - 65px)",
-        fadeout(@gray-light, 100%) 100%
+        $gray-light calc(100% - 65px),
+        transparent 100%
       );
-      background-color: @gray-light;
+      background-color: $gray-light;
       position: absolute;
       top: 10px;
       left: 1.5em;
@@ -30,7 +32,7 @@
         display: flex;
         flex-wrap: wrap;
         .event-time {
-          color: @light-grey;
+          color: $gray-500;
           // position: absolute;
           // right:0;
           font-size: 0.8em;
@@ -50,25 +52,25 @@
           left: -6px;
           top: -6px;
           &.recording_recommendation {
-            color: @orange;
+            color: $orange;
           }
           &.listen {
-            color: @blue;
+            color: $blue;
           }
           &.like {
-            color: @red;
+            color: $red;
           }
           &.follow {
-            color: @green;
+            color: $green;
           }
           &.notification {
-            color: @turquoise;
+            color: $turquoise;
           }
           &.recording_pin {
-            color: @yellow;
+            color: $yellow;
           }
           &.thanks {
-            color: @purple;
+            color: $purple;
           }
         }
 
@@ -90,7 +92,7 @@
           content: "";
           height: 1.25px;
           width: 2em;
-          background-color: @gray-light;
+          background-color: $gray-light;
           position: absolute;
           top: 2em;
           left: -2.3em;
@@ -110,7 +112,7 @@
         details .event-icon:before {
           content: "+";
           font-weight: bold;
-          background-color: @gray;
+          background-color: $gray-500;
           aspect-ratio: 1;
           border-radius: 50%;
           width: 0.65em;
@@ -126,7 +128,7 @@
         }
 
         details[open] .event-icon:before {
-          background-color: lighten(@gray, 25%);
+          background-color: $gray-300;
           content: "-";
         }
       }
