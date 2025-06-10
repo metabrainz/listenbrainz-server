@@ -1,8 +1,8 @@
 // Import Swiper styles
-@import "/node_modules/swiper/swiper.less";
-@import "/node_modules/swiper/modules/navigation.less";
-@import "/node_modules/swiper/modules/effect-coverflow.less";
-@import "/node_modules/swiper/modules/effect-cube.less";
+@import "swiper/scss";
+@import "swiper/scss/navigation";
+@import "swiper/scss/effect-coverflow";
+@import "swiper/scss/effect-cube";
 
 /* latin */
 @font-face {
@@ -10,19 +10,19 @@
   font-style: normal;
   font-weight: 900;
   font-display: swap;
-  src: url("../fonts/Inter.woff2") format("woff2");
+  src: url("../../fonts/Inter.woff2") format("woff2");
 }
 
-@coverflow-image-height: 400px;
-@2022red: #ff0e25;
-@2022yellow: #ffcc49;
+$coverflow-image-height: 400px;
+$red2022: #ff0e25;
+$yellow2022: #ffcc49;
 
 #year-in-music {
   // For coverflow arrow colors
-  --swiper-theme-color: @blue;
+  --swiper-theme-color: $blue;
 
   .accent {
-    color: @orange;
+    color: $orange;
   }
   > .row > * {
     margin-top: 2.5em;
@@ -44,7 +44,7 @@
     .badge {
       line-height: 1.5em;
       margin-right: 1em;
-      background-color: @blue;
+      background-color: $blue;
       align-self: center;
     }
   }
@@ -79,7 +79,7 @@
   }
   #calendar .graph {
     height: 200px;
-    @media (min-width: @screen-desktop) {
+    @media (min-width: map-get($grid-breakpoints,"md")) {
       height: 250px;
     }
   }
@@ -123,14 +123,14 @@
       align-items: center;
     }
     .swiper-slide {
-      max-width: @coverflow-image-height;
+      max-width: $coverflow-image-height;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       > img {
         width: inherit;
-        box-shadow: 0 4px 10px 0 fade(@black, 20%);
+        box-shadow: $card-box-shadow;
       }
       > div {
         // center text in album title + artist name container
@@ -196,7 +196,7 @@
   &.yim-2022,
   &.yim-2024,
   &.yim-2023 {
-    --swiper-theme-color: @2022red;
+    --swiper-theme-color: $red2022;
     /* Main header section at the top with logo */
     #main-header {
       padding: 3em 2em;
@@ -204,7 +204,7 @@
     .header-image {
       padding: 1.5em;
       width: 700px;
-      @media (max-width: @screen-sm) {
+      @media (max-width: map-get($grid-breakpoints,"sm")) {
         min-height: 20vh;
       }
     }
@@ -222,7 +222,7 @@
       font-weight: 700;
       font-size: 48px;
       line-height: 56px;
-      @media (max-width: @screen-sm) {
+      @media (max-width: map-get($grid-breakpoints,"sm")) {
         font-size: 38px;
         .subheader {
           font-size: 20px;
@@ -297,7 +297,7 @@
     .closing-remarks {
       padding: 3em 2em;
       font-size: 1.3em;
-      color: @white;
+      color: $white;
       font-family: "Roboto", sans-serif;
       font-weight: 200;
       text-align: center;
@@ -324,12 +324,12 @@
 
   /* Styles specific to YIM 2022 */
   &.yim-2022 {
-    --swiper-theme-color: @2022red;
+    --swiper-theme-color: $red2022;
     /* Main header section at the top with logo */
     #main-header {
       background: white;
       flex-direction: column;
-      @media (max-width: @screen-sm) {
+      @media (max-width: map-get($grid-breakpoints,"sm")) {
         // 80% of screen height minus menu bar and BrainzPlayer
         height: calc(80vh - 84px - 60px);
         .arrow-down {
@@ -337,7 +337,7 @@
         }
       }
       .arrow-down {
-        @media (min-width: @screen-sm) {
+        @media (min-width: map-get($grid-breakpoints,"sm")) {
           display: none;
         }
         width: 0;
@@ -345,18 +345,18 @@
         border-left: 7px solid transparent;
         border-right: 7px solid transparent;
         border-top: 12px solid;
-        border-top-color: @2022red;
+        border-top-color: $red2022;
       }
     }
     .header-image {
       padding: 1.5em;
       width: 700px;
-      @media (max-width: @screen-sm) {
+      @media (max-width: map-get($grid-breakpoints,"sm")) {
         min-height: 20vh;
       }
     }
     .link-section {
-      color: @2022yellow;
+      color: $yellow2022;
       > div {
         max-width: 500px;
       }
@@ -371,38 +371,38 @@
       width: 100%;
     }
     .red-section {
-      background-color: @2022red;
+      background-color: $red2022;
       &::after,
       &::before {
-        background: @2022red;
+        background: $red2022;
       }
       .header,
       .no-data {
-        color: @2022yellow;
+        color: $yellow2022;
       }
       .yim-share-button {
-        color: @2022red;
-        background-color: @2022yellow;
+        color: $red2022;
+        background-color: $yellow2022;
       }
     }
     .yellow-section {
-      background-color: @2022yellow;
+      background-color: $yellow2022;
       &::after,
       &::before {
-        background: @2022yellow;
+        background: $yellow2022;
       }
       .header,
       .no-data {
-        color: @2022red;
+        color: $red2022;
       }
       .yim-share-button {
-        color: @2022yellow;
-        background-color: @2022red;
+        color: $yellow2022;
+        background-color: $red2022;
       }
     }
     .thanks-kc-green {
       font-weight: 300;
-      color: @white;
+      color: $white;
       font-size: smaller;
       text-align: center;
     }
@@ -414,10 +414,10 @@
   &.yim-2024 {
     --selectedColor: #4c6c52;
     --swiper-navigation-color: var(--selectedColor);
-    @cream: #f0eee2;
-    @text-color: @cream;
-    @content-background-color: #e0e5de;
-    background-color: @cream;
+    $cream: #f0eee2;
+    $text-color: $cream;
+    $content-background-color: #e0e5de;
+    background-color: $cream;
     color: var(--selectedColor);
     .btn {
       border-radius: 5px;
@@ -485,10 +485,10 @@
     }
     .yim-share-button,
     .btn-info {
-      color: @text-color;
-      background-color: fade(@black, 60%);
+      color: $text-color;
+      background-color: $gray-600;
       &:hover {
-        background-color: fade(@black, 40%);
+        background-color: $gray-400;
       }
     }
     .lb-follow-button {
@@ -505,7 +505,7 @@
       font-weight: 900;
       font-family: "Inter", "Roboto", sans-serif;
       text-align: center;
-      @media (max-width: @screen-sm) {
+      @media (max-width: map-get($grid-breakpoints,"sm")) {
         letter-spacing: 1rem;
       }
     }
@@ -528,7 +528,7 @@
       }
     }
     .content-card {
-      color: @cream;
+      color: $cream;
       background-color: var(--selectedColor);
       padding: 1em;
       .heading {
@@ -537,7 +537,7 @@
         font-weight: 700;
         font-size: 48px;
         line-height: 56px;
-        color: @cream;
+        color: $cream;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -552,7 +552,7 @@
           max-width: min(60%, 400px);
           min-width: 200px;
         }
-        @media (max-width: @screen-sm) {
+        @media (max-width: map-get($grid-breakpoints,"sm")) {
           font-size: 38px;
         }
       }
@@ -580,7 +580,7 @@
     .swiper,
     .similar-users-list,
     .graph-container {
-      background-color: @content-background-color;
+      background-color: $content-background-color;
     }
     .masked-image {
       display: inline-block;
@@ -613,7 +613,7 @@
       }
     }
     .small-stat {
-      color: @text-color;
+      color: $text-color;
       font-size: 1.8rem;
       text-align: center;
       font-weight: lighter;
@@ -631,7 +631,7 @@
           left: calc(50% - 1.5em);
           width: 3em;
           height: 1px;
-          border-bottom: 1px solid @cream;
+          border-bottom: 1px solid $cream;
         }
       }
     }
@@ -654,13 +654,13 @@
     --accentColor: #2b9f7a;
     --selectedColor: var(--accentColor);
     --swiper-navigation-color: var(--accentColor);
-    @text-color: var(--accentColor);
-    @content-background-color: var(--cardBackgroundColor);
+    $text-color: var(--accentColor);
+    $content-background-color: var(--cardBackgroundColor);
     background-color: var(--backgroundColor);
-    color: @text-color;
+    color: $text-color;
     .content-card {
-      background: @content-background-color;
-      color: @text-color;
+      background: $content-background-color;
+      color: $text-color;
       .heading,
       .small-stat {
         color: inherit;
