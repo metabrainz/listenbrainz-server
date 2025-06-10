@@ -1,6 +1,8 @@
+@use 'sass:color';
+
 .pinned-recording-card {
   &.currently-pinned {
-    background-color: @blue !important;
+    background-color: $blue !important;
     color: white;
 
     a {
@@ -8,9 +10,9 @@
     }
 
     &.current-listen {
-      background-color: lighten(@blue, 20%) !important;
+      background-color: color.scale($blue, $lightness: 20%) !important;
       .listen-controls .fa-ellipsis-vertical {
-        stroke: lighten(@blue, 20%);
+        stroke: color.scale($blue, $lightness: 20%);
       }
     }
 
@@ -22,23 +24,23 @@
         color: initial;
       }
       .fa-ellipsis-vertical {
-        stroke: @blue;
+        stroke: $blue;
         &:hover {
-          color: @white;
+          color: $white;
         }
       }
       .hate {
         &:hover {
-          stroke: @white;
+          stroke: $white;
         }
 
         &.hated {
-          color: @white;
+          color: $white;
         }
       }
     }
     .additional-content {
-      border-color: lighten(@blue, 35%);
+      border-color: color.scale($blue, $lightness: 35%);
     }
     .listen-time {
       color: darken(white, 10%);
