@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .explore-card-container {
   width: 100%;
   float: left;
@@ -14,7 +16,7 @@
 .explore-card {
   max-width: 600px;
   margin-bottom: 2em;
-  filter: drop-shadow(0px 4px 4px fade(@black, 25%));
+  filter: drop-shadow(0px 4px 4px color.scale($black, $alpha: -75%));
   position: relative;
 }
 
@@ -26,7 +28,7 @@
 
 .explore-card-img {
   width: 100%;
-  border: 1px solid @gray-light;
+  border: 1px solid $gray-light;
   border-radius: 5px;
 }
 
@@ -46,7 +48,7 @@
 }
 
 .explore-card-text {
-  background: #eee;
+  background: $gray-200;
   padding: 0.5em;
 }
 
@@ -58,7 +60,7 @@
     &:visited,
     &:hover,
     &:visited:hover {
-      color: @blue;
+      color: $blue;
     }
   }
 }
@@ -100,7 +102,7 @@
 
 #desc {
   font-size: 13pt;
-  color: #444;
+  color: $gray-700;
   margin-top: 10px;
 }
 
@@ -113,7 +115,7 @@
 }
 
 #examples {
-  color: #444;
+  color: $gray-700;
   margin-top: 8px;
 }
 
