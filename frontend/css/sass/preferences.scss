@@ -28,7 +28,7 @@
       margin-left: 2em;
 
       &::before {
-        background: rgb(0, 0, 0);
+        background: $black;
         box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
         border-radius: 8px;
         content: "";
@@ -40,7 +40,7 @@
         width: 40px;
       }
       &::after {
-        background: rgb(255, 255, 255);
+        background: $white;
         border-radius: 16px;
         box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
         content: "";
