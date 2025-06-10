@@ -1,8 +1,6 @@
-@outer-padding: 0.7em;
-@entity-icon-size: 1.2em;
-@border-radius: 6px;
-@black: #262626;
-@boxes-background-color: #f7f7f7;
+@use "./musicbrainz-entity-icons";
+
+$outer-padding: $grid-gutter-width * 0.5;
 
 #metadata-viewer {
   padding: 0.25em;
@@ -17,7 +15,7 @@
 
   .no-listen {
     height: 100%;
-    font-size: 1.2em;
+    font-size: $font-size-lg;
     padding: 2em;
     display: flex;
     justify-content: center;
@@ -33,13 +31,13 @@
     }
   }
 
-  @media (min-width: @screen-xs) {
+  @media (min-width: map-get($grid-breakpoints, "xs")) {
     // In bigger screen sizes, use flexbox
     display: flex;
     flex-wrap: wrap;
 
     div.left-side {
-      margin-right: @outer-padding;
+      margin-right: $outer-padding;
       resize: horizontal;
       overflow: auto;
       min-width: 340px;
@@ -53,11 +51,11 @@
 
   .left-side {
     resize: none;
-    padding: @outer-padding;
-    background-color: fadein(@black, 30%);
+    padding: $outer-padding;
+    background-color: fadein($black, 30%);
     transition: background-color 0.3s;
-    border-radius: @border-radius;
-    margin-bottom: @outer-padding;
+    border-radius: $border-radius;
+    margin-bottom: $outer-padding;
 
     display: flex;
     flex-direction: column;
@@ -83,7 +81,7 @@
     }
     .track-info {
       display: flex;
-      padding: @outer-padding 0;
+      padding: $outer-padding 0;
       .track-name {
         font-size: 1.4em;
         line-height: 1em;
@@ -101,31 +99,31 @@
       font-size: 0.9em;
       align-items: start;
       .love {
-        stroke: @love;
+        stroke: $love;
         color: transparent;
         stroke-width: 1.3em;
         &:hover,
         &.loved {
           stroke: transparent;
-          color: @love;
+          color: $love;
         }
       }
 
       .hate {
-        stroke: @hate;
+        stroke: $hate;
         color: transparent;
         stroke-width: 1.3em;
         &:hover,
         &.hated {
           stroke: transparent;
-          color: @hate;
+          color: $hate;
         }
       }
     }
     .bottom {
       display: flex;
       align-items: center;
-      padding-top: @outer-padding;
+      padding-top: $outer-padding;
       .logo {
         height: 1.5em;
       }
@@ -145,9 +143,9 @@
 
     .content-box {
       padding: 0.4em;
-      border-radius: @border-radius;
+      border-radius: $border-radius;
       box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1) inset;
-      background-color: @boxes-background-color;
+      background-color: $body-tertiary-bg;
       min-height: 2.8em; // adapt to add-tag component height
       align-items: center;
 
@@ -155,7 +153,7 @@
         background-color: white;
       }
       & + .content-box {
-        margin-top: @outer-padding;
+        margin-top: $outer-padding;
       }
     }
 
