@@ -1,33 +1,33 @@
-@tagBorderRadius: 6px;
+$tag-border-radius: $btn-border-radius;
 .tag {
   flex: none;
   color: currentcolor;
   height: 2.4rem;
-  background-color: rgb(236, 235, 228);
-  border-radius: @tagBorderRadius;
+  background-color: $gray-light;
+  border-radius: $tag-border-radius;
   &.upvoted {
-    color: @btn-success-color;
-    background-color: lighten(@btn-success-bg, 40%);
+    color: $success-text-emphasis;
+    background-color: $success-border-subtle;
   }
   &.downvoted {
-    color: @btn-danger-color;
-    background-color: lighten(@btn-danger-bg, 40%);
+    color: $danger-text-emphasis;
+    background-color: $danger-border-subtle;
   }
   > * {
     height: 100%;
     padding: 3px 7px;
     vertical-align: middle;
     &:first-child {
-      border-top-left-radius: @tagBorderRadius;
-      border-bottom-left-radius: @tagBorderRadius;
+      border-top-left-radius: $tag-border-radius;
+      border-bottom-left-radius: $tag-border-radius;
     }
     &:last-child {
-      border-top-right-radius: @tagBorderRadius;
-      border-bottom-right-radius: @tagBorderRadius;
+      border-top-right-radius: $tag-border-radius;
+      border-bottom-right-radius: $tag-border-radius;
     }
   }
   .tag-vote-button {
-    border-left: 1px dashed #f7f7f7;
+    border-left: 1px dashed $gray-100;
     opacity: 0;
     width: 0px;
     transition-duration: 0.3s;
@@ -39,14 +39,14 @@
     padding: 3px 0;
     &.upvote:hover,
     &.upvote.selected {
-      color: @btn-success-color;
-      background-color: lighten(@btn-success-bg, 30%);
+      color: $success-text-emphasis;
+      background-color: $success-bg-subtle;
     }
     &.downvote:hover,
     &.downvote.selected,
     &.withdraw:hover {
-      color: @btn-danger-color;
-      background-color: lighten(@btn-danger-bg, 30%);
+      color: $danger-text-emphasis;
+      background-color: $danger-bg-subtle;
     }
   }
   &:hover > .tag-vote-button {
@@ -54,7 +54,7 @@
     opacity: 1;
   }
   &:not(:hover) > :first-child {
-    border-radius: @tagBorderRadius;
+    border-radius: $tag-border-radius;
   }
   & + .tag {
     margin-left: 0.3em;
