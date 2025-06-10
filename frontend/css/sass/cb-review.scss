@@ -28,8 +28,8 @@
         text-align: left;
 
         &:hover {
-          color: #ffffff;
-          background-color: @orange;
+          color: $white;
+          background-color: $orange;
         }
       }
     }
