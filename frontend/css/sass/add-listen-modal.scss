@@ -12,14 +12,14 @@
   }
 
   .option-active {
-    background-color: #353070;
-    color: #fff;
+    background-color: $blue;
+    color: $white;
   }
 
   .option-inactive {
-    background-color: #f9f6f5;
-    border: 2px solid rgb(141, 141, 141);
-    color: rgb(141, 141, 141);
+    background-color: $pearl;
+    border: 2px solid $gray-600;
+    color: $gray-600;
   }
   .add-track-field {
     margin-top: 15px;
@@ -28,7 +28,7 @@
 
   .add-track-pill {
     display: inline-block;
-    background-color: #fff;
+    background-color: $white;
     border-radius: 7px;
     margin-top: 10px;
     width: 100%;
@@ -42,7 +42,7 @@
       // Texts are 10px, hence minimum height of 22px here
       min-height: 22px;
       span {
-        color: #000000;
+        color: $black;
         margin-top: auto;
         margin-bottom: auto;
         margin-left: 6px;
@@ -50,8 +50,8 @@
         font-style: normal;
       }
       button {
-        background-color: #fff;
-        color: #000000;
+        background-color: $white;
+        color: $black;
         border: none;
         border-radius: 100px;
       }
@@ -76,15 +76,15 @@
   .cross-details {
     > button {
       border: 0px;
-      background-color: #353070;
-      color: white;
+      background-color: $blue;
+      color: $white;
       margin: 5px;
     }
   }
   .new-details {
     margin: 20px 0px;
     margin-right: 10px;
-    background-color: #353070;
+    background-color: $blue;
     width: 100%;
     border-bottom-right-radius: 12px;
     border-top-right-radius: 12px;
@@ -93,7 +93,7 @@
   .recording-heading {
     margin: 0px 15px;
     > h5 {
-      color: white;
+      color: $white;
       font-weight: 700;
     }
   }
@@ -101,7 +101,7 @@
     display: flex;
     margin: auto 15px;
     > h6 {
-      color: white;
+      color: $white;
     }
   }
   .entity-heading {
@@ -131,13 +131,13 @@
     }
   }
   .timestamp-active {
-    background-color: #353070;
-    color: #fff;
+    background-color: $blue;
+    color: $white;
   }
   .timestamp-inactive {
-    background-color: #fff;
-    border: 2px solid rgb(141, 141, 141);
-    color: #000000;
+    background-color: $white;
+    border: 2px solid $gray-600;
+    color: $black;
   }
 
   .timestamp-entities {
@@ -184,7 +184,7 @@
     position: absolute;
     width: initial;
     right: 0;
-    background-color: oldlace;
+    background-color: $cream;
   }
   // Chevron indicator
   #select-release {

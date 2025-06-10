@@ -132,7 +132,7 @@ $youtube-resize-transition: height 0.25s ease-out;
         color: darken($primary-color, 10%);
       }
       &.disabled {
-        color: #8d8d8d;
+        color: $gray-600;
         pointer-events: none;
       }
     }
@@ -202,7 +202,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       margin: 0 0.7em;
       max-width: 1em;
       cursor: pointer;
-      color: #8d8d8d;
+      color: $gray-600;
       &:hover {
         color: #46433a;
       }
@@ -226,7 +226,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     .love,
     .hate {
       color: transparent;
-      stroke: #8d8d8d;
+      stroke: $gray-600;
     }
 
     .love {
