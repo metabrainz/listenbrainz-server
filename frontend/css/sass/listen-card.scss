@@ -303,7 +303,8 @@
       }
 
       .hate {
-        color: #c62828;
+        // Yes, this says love for the hate class, that is expect4ed
+        color: $love;
       }
 
       .dislike {
