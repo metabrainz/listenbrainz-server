@@ -208,8 +208,8 @@ $youtube-resize-transition: height 0.25s ease-out;
       }
       &.disabled {
         pointer-events: none;
-        stroke: #dedede !important;
-        color: #dedede !important;
+        stroke: $gray-300 !important;
+        color: $gray-300 !important;
       }
       &.music-service-icon {
         max-width: 1.5em;

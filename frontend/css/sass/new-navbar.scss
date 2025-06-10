@@ -1,20 +1,20 @@
 // Height of the BrainzPlayer component (fixed at the bottom of the page)
-@sidenav-width: 190px;
-@brainzplayer-height: 60px;
-@offscreen-sidenav-breakpoint: @grid-float-breakpoint-max;
-@very-wide-screen-breakpoint: 1950px;
-@navbar-height: 72px;
-@max-content-width: 1400px;
-@nav-background-color: #f3f3f3;
+$sidenav-width: 190px;
+$brainzplayer-height: 60px;
+$offscreen-sidenav-breakpoint: breakpoint-max("sm", $grid-breakpoints);
+$very-wide-screen-breakpoint: 1950px;
+$navbar-height: 72px;
+$max-content-width: 1400px;
+$nav-background-color: $gray-100;
 
-@nav-bottom-padding: 1.5em;
-@nav-tabs-link-padding: 1em 1.5em;
-@nav-tabs-link-padding-mobile: 0.8em 1em;
-@nav-tabs-background-color: @nav-background-color;
-@tabs-height: 42px;
-@tabs-height-mobile: 42px;
-@nav-link-color: #1e1e1e;
-@gradient-orange: #ffa500;
+$nav-bottom-padding: 1.5em;
+$nav-tabs-link-padding: 1em 1.5em;
+$nav-tabs-link-padding-mobile: 0.8em 1em;
+$nav-tabs-background-color: $nav-background-color;
+$tabs-height: 42px;
+$tabs-height-mobile: 42px;
+$nav-link-color: #1e1e1e; // Should this use $black instead?
+$gradient-orange: #ffa500;
 
 body {
   #react-container {
@@ -23,10 +23,10 @@ body {
   }
 
   nav[role="navigation"] {
-    max-width: @sidenav-width;
+    max-width: $sidenav-width;
 
     #side-nav {
-      width: @sidenav-width;
+      width: $sidenav-width;
       height: 100vh;
       display: flex;
       position: sticky;
@@ -38,9 +38,9 @@ body {
       flex-direction: column;
       align-items: flex-end;
       border-right: 9px solid;
-      border-image: linear-gradient(to bottom, @blue, @gradient-orange) 1 100%;
+      border-image: linear-gradient(to bottom, $blue, $gradient-orange) 1 100%;
       padding: 1.2em;
-      background-color: @nav-background-color;
+      background-color: $nav-background-color;
       z-index: 115;
 
       a {
@@ -50,7 +50,7 @@ body {
         &:visited,
         &:hover,
         &:visited:hover {
-          color: @blue;
+          color: $blue;
         }
         &.active {
           text-decoration: underline;
@@ -67,7 +67,7 @@ body {
         display: flex;
         flex-direction: column;
         justify-content: space-around;
-        margin-bottom: @nav-bottom-padding;
+        margin-bottom: $nav-bottom-padding;
         font-weight: 500;
       }
       .navbar-bottom {
@@ -96,14 +96,14 @@ body {
     .navbar-logo {
       height: auto;
       width: 40px;
-      margin-bottom: @nav-bottom-padding;
+      margin-bottom: $nav-bottom-padding;
     }
     // header shown on small screens, with button to open drawer menu
     .navbar-header {
       display: none;
-      height: @navbar-height;
+      height: $navbar-height;
       border-bottom: 3px solid;
-      border-image: linear-gradient(to right, @blue, @gradient-orange) 100% 1;
+      border-image: linear-gradient(to right, $blue, $gradient-orange) 100% 1;
 
       .navbar-logo {
         margin: 0;
@@ -118,11 +118,11 @@ body {
       }
       .navbar-toggler {
         z-index: 101; // just above so it can be clicked to close the side-nav
-        margin-left: @navbar-padding-horizontal;
-        border-color: @blue;
+        margin-left: $navbar-padding-horizontal;
+        border-color: $blue;
         position: absolute;
         .icon-bar {
-          background-color: @blue;
+          background-color: $blue;
         }
         .navbar-toggler-icon {
           width: 2.5em;
@@ -141,20 +141,20 @@ body {
   /* main content */
   .container-react {
     // Leave some space for BrainzPlayer
-    padding-bottom: @brainzplayer-height;
+    padding-bottom: $brainzplayer-height;
 
     width: 100%; // fallback
-    width: calc(100% - @sidenav-width);
+    width: calc(100% - $sidenav-width);
 
     [role="main"] {
-      max-width: @max-content-width;
+      max-width: $max-content-width;
       margin-left: auto;
       margin-right: auto;
     }
   }
 
   /* Styles for mobile devices */
-  @media (max-width: @offscreen-sidenav-breakpoint) {
+  @media (max-width: $offscreen-sidenav-breakpoint) {
     nav[role="navigation"] {
       max-width: unset;
       #side-nav {
@@ -167,8 +167,8 @@ body {
         }
         .mobile-nav-fix {
           position: absolute;
-          background-color: @nav-background-color;
-          border-right: 9px solid @gradient-orange;
+          background-color: $nav-background-color;
+          border-right: 9px solid $gradient-orange;
           //sidenav width + border thickness
           width: calc(100% + 9px);
           height: 120px;
@@ -214,30 +214,30 @@ body {
 
 .secondary-nav {
   /* Secondary nav container should be full width and scrollable if there is excess */
-  width: calc(100% + @grid-gutter-width);
-  margin-left: (@grid-gutter-width / -2) - 1;
-  margin-right: (@grid-gutter-width / -2);
-  margin-bottom: @nav-bottom-padding;
+  width: calc(100% + $grid-gutter-width);
+  margin-left: ($grid-gutter-width / -2) - 1;
+  margin-right: ($grid-gutter-width / -2);
+  margin-bottom: $nav-bottom-padding;
   &,
   > * {
-    background-color: @nav-tabs-background-color;
+    background-color: $nav-tabs-background-color;
   }
 
   .nav.nav-tabs {
     display: flex;
-    background-color: @nav-tabs-background-color;
+    background-color: $nav-tabs-background-color;
     white-space: nowrap;
     border-bottom: none;
     flex-wrap: nowrap;
 
     > li {
-      background-color: @nav-tabs-background-color;
-      border-bottom: 1px solid @nav-tabs-border-color;
+      background-color: $nav-tabs-background-color;
+      border-bottom: 1px solid $nav-tabs-border-color;
       float: unset;
       > a {
-        color: @nav-link-color;
-        padding: @nav-tabs-link-padding;
-        border: 1px solid @nav-tabs-border-color;
+        color: $nav-link-color;
+        padding: $nav-tabs-link-padding;
+        border: 1px solid $nav-tabs-border-color;
         border-top: none;
         border-bottom: none;
         margin-right: -1px;
@@ -250,48 +250,48 @@ body {
         }
       }
       &.active > a {
-        color: @nav-link-color;
+        color: $nav-link-color;
         font-weight: 700;
         border-bottom: 1px solid white;
         margin-bottom: -1px;
       }
       &.username {
         font-weight: 700;
-        background: linear-gradient(288deg, #46433a 16.96%, @blue 98.91%);
-        color: @white;
+        background: linear-gradient(288deg, #46433a 16.96%, $blue 98.91%);
+        color: $white;
         > * {
-          padding: @nav-tabs-link-padding;
+          padding: $nav-tabs-link-padding;
         }
         a,
         a:hover,
         a:visited,
         a:visited:hover {
-          color: @white;
+          color: $white;
           background: initial;
         }
       }
       &.disabled {
-        background-color: darken(@nav-tabs-background-color, 15%);
+        background-color: darken($nav-tabs-background-color, 15%);
         > a {
-          color: darken(@nav-tabs-background-color, 35%);
+          color: darken($nav-tabs-background-color, 35%);
         }
       }
     }
   }
 
   .breadcrumb {
-    padding: @nav-tabs-link-padding;
+    padding: $nav-tabs-link-padding;
     list-style: none;
-    border-bottom: 1px solid @nav-tabs-border-color;
+    border-bottom: 1px solid $nav-tabs-border-color;
     > li {
       display: inline-block;
-      color: @text-color;
+      color: $body-color;
       > a {
-        color: @nav-link-color !important;
+        color: $nav-link-color !important;
         font-weight: initial;
       }
       &.active {
-        color: @blue;
+        color: $blue;
         font-weight: 700;
       }
       & + li:before {
@@ -301,7 +301,7 @@ body {
     }
   }
   /* Styles for mobile devices */
-  @media (max-width: @offscreen-sidenav-breakpoint) {
+  @media (max-width: $offscreen-sidenav-breakpoint) {
     /* When not all tabs fit horizontally,
 		hide tabs behind gradient to indicate there's more */
     &::after {
@@ -311,26 +311,26 @@ body {
       position: absolute;
       pointer-events: none;
       right: 0;
-      height: @tabs-height;
-      margin-top: -@tabs-height;
+      height: $tabs-height;
+      margin-top: -$tabs-height;
     }
 
     .nav.nav-tabs > li {
       > a,
       &.username > * {
-        padding: @nav-tabs-link-padding-mobile;
+        padding: $nav-tabs-link-padding-mobile;
       }
     }
     .breadcrumb {
-      padding: @nav-tabs-link-padding-mobile;
+      padding: $nav-tabs-link-padding-mobile;
     }
   }
   /* Special styles for very wide screens */
-  @media (min-width: @very-wide-screen-breakpoint) {
+  @media (min-width: $very-wide-screen-breakpoint) {
     > * {
       /* Align the secondary nav with the centered content */
-      width: calc(100% - @sidenav-width);
-      max-width: @max-content-width;
+      width: calc(100% - $sidenav-width);
+      max-width: $max-content-width;
       margin-left: auto;
       margin-right: auto;
     }
@@ -349,8 +349,8 @@ body {
   flex-wrap: wrap;
   justify-content: space-between;
   padding: 0 1em;
-  margin-left: ceil((@grid-gutter-width / -2));
-  margin-right: floor((@grid-gutter-width / -2));
+  margin-left: ceil(($grid-gutter-width / -2));
+  margin-right: floor(($grid-gutter-width / -2));
   &.dragscroll > * {
     flex-shrink: 0;
   }

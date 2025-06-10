@@ -1,4 +1,4 @@
-@sidebar-gradient: linear-gradient(50deg, #dedede, transparent);
+$sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
 
 .sidebar {
   position: sticky;
@@ -10,21 +10,21 @@
   overflow-y: auto;
   z-index: 109;
   right: 0;
-  background: #f3f3f3;
+  background: $nav-background-color;
 
   > * {
-    background: @sidebar-gradient;
+    background: $sidebar-gradient;
     padding: 12px 20px;
   }
 
-  @media screen and (max-width: @screen-md) {
+  @media screen and (max-width: map-get($grid-breakpoints, "md")) {
     position: fixed;
     top: 0;
     right: -80%;
     height: 100%;
     width: 80%;
     max-width: 400px;
-    background-color: #fff;
+    background-color: $white;
     overflow-y: auto;
     box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
     transition: right 0.3s ease-in-out;
@@ -35,7 +35,7 @@
   }
 
   .sidebar-header {
-    background: #353070;
+    background: $blue;
     color: white;
     padding-top: 20px;
 
@@ -87,24 +87,24 @@
 
 .toggle-sidebar-button {
   position: fixed;
-  bottom: 20px + @brainzplayer-height;
+  bottom: 20px + $brainzplayer-height;
   right: 20px;
   z-index: 9999;
   width: 64px;
   height: 64px;
   padding: 10px;
   border-radius: 50%;
-  border-color: black;
+  border-color: $black;
   cursor: pointer;
-  background-color: #fff;
-  color: #353070;
+  background-color: $white;
+  color: $blue;
 
-  @media screen and (min-width: @screen-md) {
+  @media screen and (min-width: map-get($grid-breakpoints, "md")) {
     display: none;
   }
 }
 
 .toggle-sidebar-button.open {
-  background-color: #353070;
-  color: #fff;
+  background-color: $blue;
+  color: $white;
 }
