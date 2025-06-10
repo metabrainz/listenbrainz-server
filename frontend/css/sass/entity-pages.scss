@@ -1,4 +1,4 @@
-@white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
+$white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
 
 .entity-page-header {
   padding: 2em;
@@ -87,7 +87,24 @@
 }
 
 #entity-page {
-  --bg-color: #e7e4e4; // default color
+  --bg-color: $gray-200; // default color
+
+  &.album-page .entity-page-content .tracks .listen-card .track-position {
+    flex: 0 3em;
+    align-self: center;
+    color: $light-grey;
+  }
+  &.artist-page .entity-page-content .tracks {
+    max-height: 500px;
+    overflow-y: hidden;
+    border-bottom-style: inset;
+    position: relative;
+    &.expanded {
+      max-height: initial;
+      padding-bottom: 4em;
+    }
+  }
+
   .top-listeners {
     max-width: 400px;
     .listener {
@@ -109,7 +126,7 @@
     .separator {
       width: 1px;
       height: 100%;
-      border-left: 1px solid @gray-light;
+      border-left: 1px solid $gray-light;
     }
     .number {
       font-size: 1.5em;
@@ -127,28 +144,13 @@
       flex: 3 400px;
       min-height: 150px;
       min-width: 0;
-      .artist-page& {
-        max-height: 500px;
-        overflow-y: hidden;
-        border-bottom-style: inset;
-        position: relative;
-        &.expanded {
-          max-height: initial;
-          padding-bottom: 4em;
-        }
-      }
 
       .read-more {
         bottom: 0;
         padding: 1em 0;
       }
-
-      .album-page& .listen-card .track-position {
-        flex: 0 3em;
-        align-self: center;
-        color: @light-grey;
-      }
     }
+
     .stats {
       margin-top: 2em;
       display: flex;
@@ -210,7 +212,7 @@
     justify-content: flex-end;
   }
 
-  @media (min-width: @screen-md) {
+  @media (min-width: map-get($grid-breakpoints, "md")) {
     .reviews .review-cards {
       .review:first-of-type {
         margin-top: 0;
@@ -229,7 +231,7 @@
   &::after {
     flex: 1;
     content: " ";
-    border-top: 1px solid @gray-light;
+    border-top: 1px solid $gray-light;
     height: 0;
     align-self: center;
     margin: 0 0.5em;
@@ -237,7 +239,7 @@
 }
 
 .review {
-  border: 1px solid #ddd;
+  border: 1px solid $gray-300;
   border-radius: 8px;
   padding: 16px;
   margin: 16px 0;
@@ -266,7 +268,7 @@
     text-overflow: ellipsis;
     font-size: 14px;
     line-height: 1.6;
-    color: #333;
+    color: $text-muted;
 
     display: -webkit-box;
     line-clamp: 4;
@@ -278,11 +280,11 @@
     justify-content: space-between;
     font-size: 12px;
     font-weight: bold;
-    color: #333;
+    color: $text-muted;
     .read-more-link {
       text-decoration: none;
       transition: color 0.3s ease;
-      color: #353070;
+      color: $blue;
 
       &:hover {
         color: #4a4a8c;
@@ -298,5 +300,5 @@
   width: 100%;
   text-align: center;
   padding: 40px 0 0;
-  background-image: @white-gradient;
+  background-image: $white-gradient;
 }

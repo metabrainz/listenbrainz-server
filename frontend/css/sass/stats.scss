@@ -71,7 +71,7 @@ $bar-height: 4.5em;
       }
       .graph-bar-entity {
         font-weight: bold;
-        color: darken($light-grey, 30%);
+        color: $gray-700;
       }
       .graph-bar-artist {
         color: $light-grey;
