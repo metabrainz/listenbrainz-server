@@ -33,3 +33,12 @@
     text-decoration: underline;
   }
 }
+
+.btn.dropdown-toggle {
+  border-radius: 4px;
+}
+
+// Fix button height inside an input group
+.input-group > .btn {
+  margin: 0;
+}

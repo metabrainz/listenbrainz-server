@@ -680,3 +680,23 @@ $youtube-resize-transition: height 0.25s ease-out;
     left: 100%;
   }
 }
+
+// For cover art in alerts
+$alert-thumbnail-size: 60px;
+
+.brainzplayer-alert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.alert-thumbnail {
+  max-height: $alert-thumbnail-size;
+  margin: -$alert-padding-x;
+  margin-right: $alert-padding-x;
+}
+
+// Show the alert toasts above the player
+.Toastify__toast-container--bottom-left,
+.Toastify__toast-container--bottom-right {
+  bottom: calc(1em + $brainzplayer-height);
+}

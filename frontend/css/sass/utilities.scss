@@ -28,3 +28,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.center-p {
+  color: var(--color);
+  text-align: center;
+  padding-top: 20px;
+}
+
+.text-brand {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .text-brand {
+    font-size: 1.8rem;
+  }
+}
+
+.flex {
+  display: flex;
+
+  > * {
+    flex: 1;
+  }
+}
+
+.flex-center,
+.vertical-align {
+  display: flex;
+  align-items: center;
+}
+
+.flex-center {
+  justify-content: center;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}

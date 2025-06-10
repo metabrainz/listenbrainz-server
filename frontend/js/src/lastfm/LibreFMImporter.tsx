@@ -564,7 +564,7 @@ export default class LibreFmImporter extends React.Component<
   render() {
     const { show, canClose, librefmUsername, msg, service } = this.state;
     return (
-      <div className="Importer">
+      <div className="border border-2 border-dark-subtle p-3 rounded-3">
         <form onSubmit={this.handleSubmit}>
           <dl>
             <dd>Your {service} username:</dd>

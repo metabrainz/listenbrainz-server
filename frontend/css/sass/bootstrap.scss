@@ -1,5 +1,8 @@
 @import "lobes5/scss/bootstrap.scss";
 
+// @import (inline) "react-toastify/dist/ReactToastify.css";
+// @import (inline, css) "highlight.js/styles/github.css";
+
 @import "variables";
 @import "utilities";
 @import "buttons";
@@ -38,11 +41,18 @@
 @import "search";
 @import "scroll-container";
 @import "flairs";
+@import "footer";
+@import "similarity";
 
 // pre is used in a tooltip with a different background color
 pre {
   background-color: inherit;
   border: none;
+}
+// For use with highlight.js
+pre code.hljs {
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
 b,
@@ -112,4 +122,70 @@ ol {
 
 .card {
   margin-bottom: 0;
+}
+
+input[type="range"] {
+  accent-color: $blue;
+}
+
+/* Custom indicator for details/summary expanded indicator */
+details > summary {
+  &::marker {
+    display: none;
+    content: "";
+  }
+  .summary-indicator {
+    transition: rotate 0.2s ease-in-out;
+    rotate: 0deg;
+    margin-right: 0.5em;
+  }
+  &:hover .summary-indicator {
+    rotate: 90deg;
+  }
+}
+details[open] > summary .summary-indicator {
+  rotate: 90deg;
+}
+
+.atom-button {
+  width: 1.4em;
+  height: 1.4em;
+  aspect-ratio: 1;
+  padding: 0.25em;
+  margin: 0;
+  margin-left: 5px;
+}
+
+.pagination {
+  margin: 20px 0;
+  .page-link {
+    padding: 5px 14px;
+    font-size: 14px;
+  }
+}
+
+.modal {
+  .modal-dialog {
+    max-width: 600px;
+  }
+
+  .modal-header {
+    padding: 5px 15px;
+
+    .btn-close {
+      font-size: 1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 20px;
+
+    .form-check {
+      margin: 10px 0;
+    }
+  }
+
+  .modal-footer {
+    padding: 20px;
+  }
 }
