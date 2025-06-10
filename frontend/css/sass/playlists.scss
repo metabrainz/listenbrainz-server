@@ -1,6 +1,6 @@
-@playlistBackgroundColor: #fafafa;
-@descriptionLines: 3;
-@longDescriptionLines: 8;
+$playlist-background-color: $body-tertiary-bg;
+$description-lines: 3;
+$long-description-lines: 8;
 
 #playlists-page .playlist-view-options {
   display: flex;
@@ -39,7 +39,7 @@
       width: 100%;
       display: block;
       color: white;
-      background: @blue;
+      background: $blue;
 
       &::after {
         display: none;
@@ -51,7 +51,7 @@
       padding: 1em;
       height: 100%;
       width: 100%;
-      background-color: @playlistBackgroundColor;
+      background-color: $playlist-background-color;
       > * {
         margin: 0.5em 0;
         &:first-child {
@@ -64,7 +64,7 @@
   .playlist-card-list-view {
     display: flex;
     flex-direction: row;
-    border: 1px solid #e2e8f0;
+    border: 1px solid $border-color;
     padding: 1rem;
     margin: 0.5rem 0;
     min-height: 8rem;
@@ -147,7 +147,7 @@
   cursor: pointer;
   // using !important to overwrite styles from Card component
   // (not classes but DOM element.style
-  background: @blue !important;
+  background: $blue !important;
   height: initial !important;
   color: white;
   text-align: center;
@@ -176,12 +176,12 @@
     .title {
       line-height: 1em;
       padding-bottom: 0.5em;
-      border-bottom: 1px solid @blue;
+      border-bottom: 1px solid $blue;
     }
     .info {
       display: flex;
       flex-wrap: wrap;
-      color: @light-grey;
+      color: $gray-600;
       margin: 0.5em 0;
       > * {
         padding: 0 0.7em;
@@ -190,7 +190,7 @@
   }
 
   #add-track {
-    background-color: @orange !important;
+    background-color: $orange !important;
     > *:first-child {
       display: flex;
       align-items: center;
@@ -266,9 +266,9 @@
   overflow: hidden;
   position: relative;
   line-height: 1.2em;
-  max-height: @descriptionLines * 1.2em;
-  line-clamp: @descriptionLines;
-  -webkit-line-clamp: @descriptionLines;
+  max-height: $description-lines * 1.2em;
+  line-clamp: $description-lines;
+  -webkit-line-clamp: $description-lines;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   padding-right: 2em;
@@ -277,9 +277,9 @@
   -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
 
   &.long {
-    max-height: @longDescriptionLines * 1.2em;
-    line-clamp: @longDescriptionLines;
-    -webkit-line-clamp: @longDescriptionLines;
+    max-height: $long-description-lines * 1.2em;
+    line-clamp: $long-description-lines;
+    -webkit-line-clamp: $long-description-lines;
   }
 
   &.expanded {
