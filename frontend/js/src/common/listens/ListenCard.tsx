@@ -27,7 +27,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import {
   fullLocalizedDateFromTimestampOrISODate,
@@ -395,12 +395,12 @@ export class ListenCard extends React.Component<
               <FontAwesomeIcon icon={faImage} />
               <FontAwesomeIcon
                 icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
+                transform="shrink-10 start-5 up-2.5"
               />
               <FontAwesomeIcon
                 icon={faPlus}
                 inverse
-                transform="shrink-11 left-2.5 up-2.5"
+                transform="shrink-11 start-2.5 up-2.5"
                 style={{ stroke: "white", strokeWidth: "60" }}
               />
             </span>
@@ -450,7 +450,7 @@ export class ListenCard extends React.Component<
                 <FontAwesomeIcon icon={faImage} />
                 <FontAwesomeIcon
                   icon={faSquare}
-                  transform="shrink-10 left-5 up-2.5"
+                  transform="shrink-10 start-5 up-2.5"
                 />
               </span>
             </div>
@@ -468,7 +468,7 @@ export class ListenCard extends React.Component<
                 <FontAwesomeIcon icon={faImage} />
                 <FontAwesomeIcon
                   icon={faSquare}
-                  transform="shrink-10 left-5 up-2.5"
+                  transform="shrink-10 start-5 up-2.5"
                 />
               </span>
             </div>
@@ -484,7 +484,7 @@ export class ListenCard extends React.Component<
               <FontAwesomeIcon icon={faImage} />
               <FontAwesomeIcon
                 icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
+                transform="shrink-10 start-5 up-2.5"
               />
             </span>
           </div>
@@ -550,9 +550,9 @@ export class ListenCard extends React.Component<
                     title="More actions"
                     className="btn btn-transparent dropdown-toggle"
                     id="listenControlsDropdown"
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     aria-haspopup="true"
-                    aria-expanded="true"
+                    aria-expanded="false"
                     type="button"
                   >
                     <FontAwesomeIcon icon={faEllipsisVertical} fixedWidth />
@@ -649,8 +649,6 @@ export class ListenCard extends React.Component<
                             recordingToPin: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
                       />
                     )}
                     {isLoggedIn && hasInfoAndMBID && (
@@ -672,8 +670,6 @@ export class ListenCard extends React.Component<
                             listenToPersonallyRecommend: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#PersonalRecommendationModal"
                       />
                     )}
                     {isLoggedIn && Boolean(recordingMSID) && (
@@ -698,8 +694,6 @@ export class ListenCard extends React.Component<
                             listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#CBReviewModal"
                       />
                     )}
                     {isLoggedIn && (
@@ -712,8 +706,6 @@ export class ListenCard extends React.Component<
                             listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#AddToPlaylistModal"
                       />
                     )}
                     {additionalMenuItems}
@@ -726,8 +718,6 @@ export class ListenCard extends React.Component<
                           listen,
                         });
                       }}
-                      dataToggle="modal"
-                      dataTarget="#ListenPayloadModal"
                     />
                   </ul>
                 </>

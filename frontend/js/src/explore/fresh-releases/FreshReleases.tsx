@@ -4,7 +4,7 @@ import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRss } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
@@ -304,7 +304,7 @@ export default function FreshReleases() {
       </Helmet>
       <div className="releases-page-container" role="main">
         <div className="releases-page">
-          <div className="fresh-releases-pill-row">
+          <div className="align-items-end fresh-releases-pill-row gap-3">
             <div className="fresh-releases-row">
               <Pill
                 id="sitewide-releases"
@@ -334,12 +334,17 @@ export default function FreshReleases() {
                 For You
               </Pill>
             </div>
-            <div className="fresh-releases-row">
-              <span>Sort By:</span>{" "}
-              <div className="input-group">
+            <div className="fresh-releases-row align-items-end">
+              <div>
+                <label
+                  className="text-nowrap"
+                  htmlFor="fresh-releases-sort-select"
+                >
+                  Sort By:
+                </label>
                 <select
                   id="fresh-releases-sort-select"
-                  className="form-control"
+                  className="form-select"
                   value={sort}
                   onChange={(event) => {
                     setSort(event.target.value as SortOption);
@@ -357,11 +362,13 @@ export default function FreshReleases() {
                   ))}
                 </select>
               </div>
-              <span>Direction:</span>{" "}
-              <div className="input-group">
+              <div>
+                <label htmlFor="fresh-releases-sort-direction-select">
+                  Direction:
+                </label>
                 <select
                   id="fresh-releases-sort-direction-select"
-                  className="form-control"
+                  className="form-select"
                   value={sortDirection}
                   onChange={(event) => {
                     setSortDirection(event.target.value as SortDirection);
@@ -377,9 +384,7 @@ export default function FreshReleases() {
               </div>
               <button
                 type="button"
-                className="btn btn-icon btn-info atom-button"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
+                className="btn btn-icon btn-info atom-button ms-auto"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   if (pageType === PAGE_TYPE_SITEWIDE) {

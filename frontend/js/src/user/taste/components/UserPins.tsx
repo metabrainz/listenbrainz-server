@@ -6,7 +6,7 @@ import * as React from "react";
 import * as _ from "lodash";
 
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import Loader from "../../../components/Loader";
 import PinnedRecordingCard from "../../components/PinnedRecordingCard";
@@ -187,8 +187,8 @@ export default class UserPins extends React.Component<
                 );
               })}
               <button
-                className={`mt-15 btn btn-block ${
-                  noMorePins ? "btn-default" : "btn-info"
+                className={`mt-4 btn w-100 ${
+                  noMorePins ? "btn-secondary" : "btn-info"
                 }`}
                 disabled={noMorePins}
                 type="button"

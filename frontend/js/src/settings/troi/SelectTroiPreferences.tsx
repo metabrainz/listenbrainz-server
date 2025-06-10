@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -120,7 +120,7 @@ class SelectTroiPreferences extends React.Component<
               />
               <label htmlFor="export-to-spotify">
                 <b>Auto-export playlists to Spotify</b>
-                <span className="switch label-primary" />
+                <span className="switch bg-primary" />
               </label>
             </div>
             <p>

@@ -7,7 +7,7 @@ import {
   faTrashAlt,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 
@@ -366,45 +366,43 @@ export default function LinkListensPage() {
       )}
       {unlinkedListensProps.length > 0 && (
         <form
-          className="input-group input-group-flex"
+          className="input-group"
           style={{ maxWidth: "400px" }}
           onSubmit={handleSearch}
         >
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="btn btn-info"
+            className="btn btn-info text-start"
           >
             <option value="album">Album</option>
             <option value="artist">Artist</option>
             <option value="track">Track</option>
           </select>
-          <div className="input-group-btn">
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="form-control"
-            />
-            <button
-              type="submit"
-              className="btn btn-info"
-              disabled={!searchQuery.trim()}
-              aria-disabled={!searchQuery.trim()}
-              title="Search"
-            >
-              <FontAwesomeIcon icon={faSearch} />
-            </button>
-            <button
-              type="button"
-              className="btn btn-info"
-              onClick={handleReset}
-              title="Reset"
-            >
-              Reset
-            </button>
-          </div>
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="form-control"
+          />
+          <button
+            type="submit"
+            className="btn btn-info"
+            disabled={!searchQuery.trim()}
+            aria-disabled={!searchQuery.trim()}
+            title="Search"
+          >
+            <FontAwesomeIcon icon={faSearch} />
+          </button>
+          <button
+            type="button"
+            className="btn btn-info"
+            onClick={handleReset}
+            title="Reset"
+          >
+            Reset
+          </button>
         </form>
       )}
       <br />
@@ -429,14 +427,12 @@ export default function LinkListensPage() {
             const releaseName = group.at(0)?.release_name ?? null;
             const multiTrackMappingButton = (
               <button
-                className="btn btn-link btn-icon color-orange"
+                className="btn btn-link btn-icon text-primary"
                 style={{ padding: "0", height: "initial" }}
                 type="button"
                 onClick={() => {
                   openMultiTrackMappingModal(group, releaseName);
                 }}
-                data-toggle="modal"
-                data-target="#MultiTrackMBIDMappingModal"
               >
                 <FontAwesomeIcon icon={faLink} />
               </button>
@@ -473,7 +469,7 @@ export default function LinkListensPage() {
                 if (listen?.track_metadata?.additional_info?.recording_msid) {
                   const linkWithMB = (
                     <ListenControl
-                      buttonClassName="btn btn-link color-orange"
+                      buttonClassName="btn btn-link text-primary"
                       text=""
                       title="Link with MusicBrainz"
                       icon={faLink}

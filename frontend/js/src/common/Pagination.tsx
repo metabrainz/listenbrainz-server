@@ -17,9 +17,9 @@ export default function Pagination(props: PaginationProps) {
   } = props;
   return (
     <nav role="navigation" aria-label="Pagination" style={{ maxWidth: "none" }}>
-      <ul className="pager" style={{ display: "flex" }}>
+      <ul className="pagination" style={{ display: "flex" }}>
         <li
-          className={`previous ${
+          className={`page-item ${
             currentPageNo && currentPageNo <= 1 ? "hidden" : ""
           }`}
         >
@@ -32,12 +32,13 @@ export default function Pagination(props: PaginationProps) {
             tabIndex={0}
             aria-disabled={Boolean(currentPageNo && currentPageNo <= 1)}
             aria-label={`Go to page ${Math.max(currentPageNo - 1, 0)}`}
+            className="page-link"
           >
             &larr; Previous
           </a>
         </li>
         <li
-          className={`next ${
+          className={`page-item ${
             currentPageNo && currentPageNo >= totalPageCount ? "hidden" : ""
           }`}
           style={{ marginLeft: "auto" }}
@@ -56,6 +57,7 @@ export default function Pagination(props: PaginationProps) {
               currentPageNo + 1,
               totalPageCount
             )}`}
+            className="page-link"
           >
             Next &rarr;
           </a>

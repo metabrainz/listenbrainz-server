@@ -1,8 +1,9 @@
 import * as React from "react";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { omit, isEqual } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
   getPlaylistExtension,
@@ -23,11 +24,6 @@ type CreateOrEditPlaylistModalProps = {
 
 export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   const modal = useModal();
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const {
@@ -237,7 +233,7 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
         newPlaylist = await createPlaylist();
       }
       modal.resolve(newPlaylist);
-      closeModal();
+      modal.hide();
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -267,141 +263,136 @@ export default NiceModal.create((props: CreateOrEditPlaylistModalProps) => {
   };
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
-      id="CreateOrEditPlaylistModal"
-      tabIndex={-1}
-      role="dialog"
-      aria-labelledby="playlistModalLabel"
-      data-backdrop="static"
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="CreateOrEditPlaylistModal"
+      aria-labelledby="CreateOrEditPlaylistModalLabel"
+      id=""
     >
-      <div className="modal-dialog" role="document">
-        <form className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4 className="modal-title" id="playlistModalLabel">
-              {isEdit ? "Edit" : "Create"} playlist
-            </h4>
-          </div>
-          <div className="modal-body">
-            <div className="form-group">
-              <label htmlFor="playlistName">Name</label>
-              <input
-                type="text"
-                className="form-control"
-                id="playlistName"
-                placeholder="Name"
-                value={name}
-                name="name"
-                onChange={(event) => setName(event.target.value)}
-              />
-            </div>
+      <Modal.Header closeButton>
+        <Modal.Title id="CreateOrEditPlaylistModalLabel">
+          {isEdit ? "Edit" : "Create"} playlist
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <div className="mb-4">
+          <label className="form-label" htmlFor="playlistName">
+            Name
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="playlistName"
+            placeholder="Name"
+            value={name}
+            name="name"
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
 
-            <div className="form-group">
-              <label htmlFor="playlistdescription">Description</label>
-              <textarea
-                className="form-control"
-                id="playlistdescription"
-                placeholder="Description"
-                value={description}
-                name="description"
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </div>
-            {isEdit && coverArtGridOptions && (
-              <div className="form-group">
-                <label htmlFor="artwork">Cover Art</label>
-                <div className="cover-art-grid">
-                  {coverArtGridOptions?.map((option, index) => (
-                    <label className="cover-art-option">
-                      <input
-                        type="radio"
-                        name="artwork"
-                        value={`artwork-${option.dimension}-${option.layout}`}
-                        key={`artwork-${option.dimension}-${option.layout}`}
-                        className="cover-art-radio"
-                        checked={isEqual(selectedCoverArt, option)}
-                        onChange={() => setSelectedCoverArt(option)}
-                      />
-                      <img
-                        height={80}
-                        width={80}
-                        src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
-                        alt={`Cover art option ${option.dimension}-${option.layout}`}
-                        className="cover-art-image"
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="checkbox">
-              <label>
-                <input
-                  id="isPublic"
-                  type="checkbox"
-                  checked={isPublic}
-                  name="isPublic"
-                  onChange={(event) => setIsPublic(event.target.checked)}
-                />
-                &nbsp;Make playlist public
-              </label>
-            </div>
-
-            <div className="form-group">
-              <div>
-                <label style={{ display: "block" }} htmlFor="collaborators">
-                  Collaborators
+        <div className="mb-4">
+          <label className="form-label" htmlFor="playlistdescription">
+            Description
+          </label>
+          <textarea
+            className="form-control"
+            id="playlistdescription"
+            placeholder="Description"
+            value={description}
+            name="description"
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </div>
+        {isEdit && coverArtGridOptions && (
+          <div className="mb-4">
+            <label className="form-label" htmlFor="artwork">
+              Cover Art
+            </label>
+            <div className="cover-art-grid">
+              {coverArtGridOptions?.map((option, index) => (
+                <label className="cover-art-option">
+                  <input
+                    type="radio"
+                    name="artwork"
+                    value={`artwork-${option.dimension}-${option.layout}`}
+                    key={`artwork-${option.dimension}-${option.layout}`}
+                    className="cover-art-radio"
+                    checked={isEqual(selectedCoverArt, option)}
+                    onChange={() => setSelectedCoverArt(option)}
+                  />
+                  <img
+                    height={80}
+                    width={80}
+                    src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
+                    alt={`Cover art option ${option.dimension}-${option.layout}`}
+                    className="cover-art-image"
+                  />
                 </label>
-                <div id="collaborators">
-                  {collaborators.map((user) => {
-                    return (
-                      <NamePill
-                        key={user}
-                        title={user}
-                        // eslint-disable-next-line react/jsx-no-bind
-                        closeAction={removeCollaborator.bind(this, user)}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              <UserSearch
-                onSelectUser={addCollaborator}
-                placeholder="Add collaborator"
-                clearOnSelect
-              />
+              ))}
             </div>
           </div>
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-default"
-              data-dismiss="modal"
-              onClick={closeModal}
+        )}
+        <div className="form-check checkbox">
+          <input
+            id="isPublic"
+            type="checkbox"
+            className="form-check-input"
+            checked={isPublic}
+            name="isPublic"
+            onChange={(event) => setIsPublic(event.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="isPublic">
+            &nbsp;Make playlist public
+          </label>
+        </div>
+
+        <div className="mb-4">
+          <div>
+            <label
+              className="form-label"
+              style={{ display: "block" }}
+              htmlFor="collaborators"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              data-dismiss="modal"
-              disabled={!currentUser?.auth_token}
-              onClick={onSubmit}
-            >
-              {isEdit ? "Save" : "Create"}
-            </button>
+              Collaborators
+            </label>
+            <div id="collaborators">
+              {collaborators.map((user) => {
+                return (
+                  <NamePill
+                    key={user}
+                    title={user}
+                    // eslint-disable-next-line react/jsx-no-bind
+                    closeAction={removeCollaborator.bind(this, user)}
+                  />
+                );
+              })}
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+
+          <UserSearch
+            onSelectUser={addCollaborator}
+            placeholder="Add collaborator"
+            clearOnSelect
+          />
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={modal.hide}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={!currentUser?.auth_token}
+          onClick={onSubmit}
+        >
+          {isEdit ? "Save" : "Create"}
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });

@@ -104,7 +104,7 @@ export default class FollowerFollowingModal extends React.Component<
     return (
       <>
         <div className="text-center follower-following-pills">
-          <div className="btn-group btn-group-justified" role="group">
+          <div className="btn-group center-block" role="group">
             <Pill
               active={activeMode === "follower"}
               type="secondary"

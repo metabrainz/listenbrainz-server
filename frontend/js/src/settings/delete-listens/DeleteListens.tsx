@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
@@ -108,8 +108,6 @@ export default function DeleteListens() {
         type="button"
         style={{ width: "250px" }}
         onClick={deleteListens}
-        data-toggle="modal"
-        data-target="#ConfirmationModal"
       >
         Delete listens
       </button>

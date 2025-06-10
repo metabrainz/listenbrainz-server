@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { RouteQueryLoader } from "../../utils/Loader";
 
 const getPlayerRoutes = () => {

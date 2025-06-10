@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -63,7 +63,7 @@ export default function Login() {
       <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
         <a
           href={`/login/musicbrainz/${next ? `?next=${next}` : ""}`}
-          className="btn btn-primary btn-lg btn-block"
+          className="btn btn-primary btn-lg w-100"
         >
           Sign in with MusicBrainz
         </a>
