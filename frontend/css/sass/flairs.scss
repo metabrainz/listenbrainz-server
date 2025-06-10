@@ -16,16 +16,16 @@
     on the fly for hovering/visited links instead of having to
     overwrite styles for hover, visited, hover+visited
   */
-  --text-color: @text-color;
-  a& {
-    --text-color: @link-color;
+  --text-color: $body-color;
+  &a {
+    --text-color: $link-color;
     &:hover {
-      --text-color: @link-hover-color;
+      --text-color: $link-hover-color;
     }
     &:visited {
-      --text-color: @link-visited-color;
+      --text-color: $link-visited-color;
       &:hover {
-        --text-color: @link-visited-hover-color;
+        --text-color: $link-visited-hover-color;
       }
     }
   }
@@ -61,7 +61,7 @@
       width: 100%;
       height: 100%;
       animation: shake-text-effect 3s infinite;
-      color: @blue;
+      color: $blue;
     }
   }
   @keyframes shake-text-effect {
@@ -113,12 +113,11 @@
       animation-duration: 2s;
       animation-iteration-count: infinite;
       // delay each letter's animation by 0.1s compared to previous letter
-      /* stylelint-disable-next-line */
-      each(range(20), {
-        &:nth-child(@{index}) {
-          animation-delay: @index * 0.1s;
+      @for $value from 1 through 20 {
+        &:nth-child(#{$value}) {
+          animation-delay: $value * 0.1s;
         }
-      });
+      }
     }
   }
   &.lb-colors-sweep > span {
@@ -131,10 +130,10 @@
       color: var(--text-color, inherit);
     }
     3% {
-      color: @orange;
+      color: $orange;
     }
     6% {
-      color: @blue;
+      color: $blue;
     }
   }
 
@@ -148,7 +147,7 @@
       color: var(--text-color, inherit);
     }
     3% {
-      color: @gray-light;
+      color: $gray-light;
     }
     6% {
       color: var(--text-color, inherit);
@@ -164,12 +163,11 @@
     animation: wave 3s infinite;
     animation-timing-function: ease-in;
     // delay each letter's animation by 0.1s compared to previous letter
-    /* stylelint-disable-next-line */
-    each(range(20), {
-      &:nth-child(@{index}) {
-        animation-delay: @index * 0.05s;
+    @for $value from 1 through 20 {
+      &:nth-child(#{$value}) {
+        animation-delay: $value * 0.05s;
       }
-    });
+    }
   }
   @keyframes wave {
     0%,
@@ -195,12 +193,11 @@
     animation-duration: 4s;
     animation-iteration-count: infinite;
     transform-origin: center 40%;
-    /* stylelint-disable-next-line */
-    each(range(20), {
-      &:nth-child(@{index}) {
-        animation-delay: @index * 0.1s;
+    @for $value from 1 through 20 {
+      &:nth-child(#{$value}) {
+        animation-delay: $value * 0.1s;
       }
-    });
+    }
   }
   &.flip-horizontal > span {
     animation-name: flip-horizontal;
@@ -252,7 +249,7 @@
   */
   &.extruded {
     vertical-align: text-bottom;
-    color: @body-bg;
+    color: $body-bg;
     text-shadow: 0px 0px var(--text-color), -0.5px 0.5px var(--text-color),
       -1px 1px var(--text-color), -1.5px 1.5px var(--text-color),
       -2px 2px var(--text-color), -2.5px 2.5px var(--text-color),
@@ -260,7 +257,7 @@
     // mostly transparent outline for increased legibility
     -webkit-text-stroke: 0.5px rgb(from var(--text-color) r g b / 0.2);
     &:visited {
-      color: @body-bg;
+      color: $body-bg;
     }
   }
 
@@ -277,7 +274,7 @@
       height: 1px;
       bottom: 0;
       left: 0;
-      background: linear-gradient(to right, @blue, @orange);
+      background: linear-gradient(to right, $blue, $orange);
       transform-origin: bottom right;
       animation: underline 4s infinite;
     }
@@ -312,12 +309,11 @@
     position: relative;
     animation: tornado 4s infinite;
     animation-timing-function: ease-in;
-    /* stylelint-disable-next-line */
-    each(range(20), {
-        &:nth-child(@{index}) {
-          animation-delay: @index * 0.1s;
-        }
-      });
+    @for $value from 1 through 20 {
+      &:nth-child(#{$value}) {
+        animation-delay: $value * 0.1s;
+      }
+    }
   }
   @keyframes tornado {
     0%,
@@ -362,7 +358,7 @@
   &.anaglyph {
     transition: text-shadow 0.3s;
     &:hover {
-      text-shadow: 0.06em -1px red, -0.06em 1px cyan;
+      text-shadow: 0.06em -1px $red, -0.06em 1px $cyan;
     }
   }
 
@@ -388,10 +384,10 @@
       color: transparent;
       background: -webkit-linear-gradient(
         178deg,
-        black 53%,
+        $black 53%,
         var(--text-color) 65%
       );
-      background: linear-gradient(178deg, black 50%, var(--text-color) 65%);
+      background: linear-gradient(178deg, $black 50%, var(--text-color) 65%);
       background-clip: text;
       -webkit-background-clip: text;
       // offset the text slightly
