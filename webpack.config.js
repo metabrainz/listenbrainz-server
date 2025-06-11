@@ -52,13 +52,13 @@ module.exports = function (env, argv) {
   ];
   return {
     entry: {
-      // Importing main.less file here so that it gets compiled.
+      // Importing main sass entrypoint file here so that it gets compiled.
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
-      // All the Less/CSS will be exported separately to a main.css file and not appear in the index module
+      // All the Sass/CSS will be exported separately to a main.css/vendor.css files and not appear in the index module
       indexPage: [
         path.resolve(jsDir, "src/index.tsx"),
-        path.resolve(cssDir, "main.less"),
-        path.resolve(sassDir, "bootstrap.scss"),
+        path.resolve(sassDir, "main.scss"),
+        path.resolve(sassDir, "vendors.scss"),
       ],
     },
     output: {
