@@ -80,19 +80,6 @@ module.exports = function (env, argv) {
           use: "babel-loader",
         },
         {
-          test: /\.less$/i,
-          type: "asset/resource",
-          loader: "less-loader",
-          generator: {
-            filename: isProd ? "[name].[contenthash].css" : "[name].css",
-          },
-          options: {
-            lessOptions: {
-              math: "always",
-            },
-          },
-        },
-        {
           test: /\.scss$/i,
           type: "asset/resource",
           loader: "sass-loader",

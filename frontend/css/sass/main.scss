@@ -1,4 +1,5 @@
 @import "variables";
+@import "lobes5/scss/bootstrap";
 @import "utilities";
 @import "buttons";
 @import "homepage";
@@ -38,6 +39,7 @@
 @import "flairs";
 @import "footer";
 @import "similarity";
+@import "dashboard";
 
 // pre is used in a tooltip with a different background color
 pre {

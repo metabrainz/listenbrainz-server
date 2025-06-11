@@ -14,8 +14,8 @@
   <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
 
   {# The css file has a .less extension in the manifest file entry (due to its original name in Webpack entry) #}
-  <link href="{{ get_static_path('bootstrap.scss') }}" rel="stylesheet" media="screen" />
-  <link href="{{ get_static_path('main.less') }}" rel="stylesheet" media="screen" />
+  <link href="{{ get_static_path('vendors.scss') }}" rel="stylesheet" media="screen" />
+  <link href="{{ get_static_path('main.scss') }}" rel="stylesheet" media="screen" />
   {%- endblock -%}
 </head>
 
