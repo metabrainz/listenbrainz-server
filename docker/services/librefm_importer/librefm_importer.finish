@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export service="lastfm-importer"
+export service="librefm-importer"
 
 . /etc/lb-startup-common.sh
 

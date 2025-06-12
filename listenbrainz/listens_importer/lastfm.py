@@ -16,7 +16,6 @@ from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, \
     LISTEN_TYPE_PLAYING_NOW
 
 from listenbrainz.webserver import db_conn
-from data.model.external_service import ExternalServiceType
 
 
 class BaseLastfmImporter(ListensImporter):

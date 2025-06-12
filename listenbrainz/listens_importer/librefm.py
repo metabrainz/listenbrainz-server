@@ -9,8 +9,8 @@ class LibrefmImporter(BaseLastfmImporter):
 
     def __init__(self):
         super().__init__(
-            name="LastfmImporter",
-            user_friendly_name="Last.fm",
+            name="LibreFmImporter",
+            user_friendly_name="Libre.fm",
             service=LibrefmService(),
             api_key=current_app.config["LIBREFM_API_KEY"],
             api_base_url=current_app.config["LIBREFM_API_URL"],
