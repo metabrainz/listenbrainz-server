@@ -193,12 +193,17 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
+    # funkWhale_service = FunkwhaleService()
+    # funkwhale_user = funkWhale_service.get_user(current_user.id)
+    # current_funkwhale_permission = "listen" if funkwhale_user else "disable"
+
     data = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
         "current_apple_permissions": current_apple_permissions,
         "current_lastfm_permissions": current_lastfm_permissions,
+        # "current_funkwhale_permission": current_funkwhale_permission,
     }
 
     if lastfm_user:
@@ -348,7 +353,15 @@ def music_services_disconnect(service_name: str):
                     raise BadRequest('Missing host_url for Funkwhale')
                 # Store host URL in session for callback
                 session['funkwhale_host_url'] = host_url
-                return jsonify({"url": service.get_authorize_url(host_url, ['read:listens', 'read:profile'])})
+                return jsonify({"url": service.get_authorize_url(host_url, [
+                    'read:profile',
+                    'read:libraries',
+                    'read:favorites',
+                    'read:listenings',
+                    'read:follows',
+                    'read:playlists',
+                    'read:radios'
+                ])})
 
     raise BadRequest('Invalid action')
 

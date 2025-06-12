@@ -2,6 +2,7 @@ import time
 import base64
 from typing import Optional, List
 from urllib.parse import urlencode
+from datetime import datetime
 
 import requests
 from requests_oauthlib import OAuth2Session
@@ -12,6 +13,7 @@ from flask import current_app, session
 from data.model.external_service import ExternalServiceType
 from listenbrainz.db import funkwhale
 from listenbrainz.model.funkwhale import FunkwhaleServer
+from listenbrainz.model import db
 
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.webserver import db_conn
@@ -45,6 +47,9 @@ class FunkwhaleService:
             refresh_token = token['refresh_token']
             expires_at = int(time.time()) + token['expires_in']
 
+            # Convert epoch time to datetime object for PostgreSQL timestamp with time zone
+            token_expiry_datetime = datetime.fromtimestamp(expires_at)
+
             # Get user details from Funkwhale API
             headers = {'Authorization': f'Bearer {access_token}'}
             response = requests.get(f"{host_url}/api/v1/users/me", headers=headers)
@@ -53,23 +58,36 @@ class FunkwhaleService:
             details = response.json()
             external_user_id = details["id"]
 
-            # Create new FunkwhaleServer entry
-            server = FunkwhaleServer(
-                user_id=user_id,
-                host_url=host_url,
-                client_id=self.client_id,
-                client_secret=self.client_secret,
-                access_token=access_token,
-                refresh_token=refresh_token,
-                token_expiry=expires_at
-            )
-            db_conn.session.add(server)
-            db_conn.session.commit()
+            # Check if a server entry already exists for this user and host
+            server = FunkwhaleServer.query.filter_by(user_id=user_id, host_url=host_url).first()
+
+            if server:
+                # Update existing entry
+                server.access_token = access_token
+                server.refresh_token = refresh_token
+                server.token_expiry = token_expiry_datetime
+                current_app.logger.info("Updated existing Funkwhale connection for user %s at %s", user_id, host_url)
+            else:
+                # Create new FunkwhaleServer entry
+                server = FunkwhaleServer(
+                    user_id=user_id,
+                    host_url=host_url,
+                    client_id=self.client_id,
+                    client_secret=self.client_secret,
+                    access_token=access_token,
+                    refresh_token=refresh_token,
+                    token_expiry=token_expiry_datetime
+                )
+                db.session.add(server)
+                current_app.logger.info("Created new Funkwhale connection for user %s at %s", user_id, host_url)
+            
+            db.session.commit()
             return True
         except KeyError as e:
             raise ExternalServiceError(f"Invalid token response: missing {str(e)}")
         except Exception as e:
-            raise ExternalServiceError(f"Failed to add user: {str(e)}")
+            current_app.logger.error("Failed to add/update Funkwhale user connection: %s", str(e), exc_info=True)
+            raise ExternalServiceError(f"Failed to add/update user: {str(e)}")
 
     def get_authorize_url(self, host_url: str, scopes: List[str], state: Optional[str] = None) -> str:
         """Get the authorization URL for Funkwhale OAuth.
@@ -89,7 +107,15 @@ class FunkwhaleService:
         oauth = OAuth2Session(
             client_id=self.client_id,
             redirect_uri=self.redirect_url,
-            scope=scopes,
+            scope=[
+                'read:profile',
+                'read:libraries',
+                'read:favorites',
+                'read:listenings',
+                'read:follows',
+                'read:playlists',
+                'read:radios'
+            ],
             state=state
         )
         authorization_url, _ = oauth.authorization_url(auth_url)
@@ -113,8 +139,9 @@ class FunkwhaleService:
                 client_id=self.client_id,
                 redirect_uri=self.redirect_url
             )
+            token_url = f"{host_url}/api/v1/oauth/token/"
             return oauth.fetch_token(
-                f"{host_url}/api/v1/oauth/token/",
+                token_url,
                 client_secret=self.client_secret,
                 code=code,
                 include_client_id=True
@@ -141,8 +168,9 @@ class FunkwhaleService:
                 client_id=self.client_id,
                 redirect_uri=self.redirect_url
             )
+            token_url = f"{host_url}/api/v1/oauth/token/"
             token = oauth.refresh_token(
-                f"{host_url}/api/v1/oauth/token/",
+                token_url,
                 client_secret=self.client_secret,
                 refresh_token=refresh_token,
                 include_client_id=True
@@ -158,13 +186,16 @@ class FunkwhaleService:
                 refresh_token = token['refresh_token']
             expires_at = int(time.time()) + token['expires_in']
 
+            # Convert epoch time to datetime object for PostgreSQL timestamp with time zone
+            token_expiry_datetime = datetime.fromtimestamp(expires_at)
+
             # Update the FunkwhaleServer entry
             server = FunkwhaleServer.query.filter_by(user_id=user_id, host_url=host_url).first()
             if server:
                 server.access_token = access_token
                 server.refresh_token = refresh_token
-                server.token_expiry = expires_at
-                db_conn.session.commit()
+                server.token_expiry = token_expiry_datetime
+                db.session.commit()
 
             return self.get_user(user_id, host_url)
         except (KeyError, ValueError) as e:
@@ -179,8 +210,8 @@ class FunkwhaleService:
         """
         server = FunkwhaleServer.query.filter_by(user_id=user_id, host_url=host_url).first()
         if server:
-            db_conn.session.delete(server)
-            db_conn.session.commit()
+            db.session.delete(server)
+            db.session.commit()
 
     def user_oauth_token_has_expired(self, user: dict) -> bool:
         """ Check if the user's OAuth token has expired.
