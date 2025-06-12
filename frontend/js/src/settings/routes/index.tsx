@@ -47,14 +47,6 @@ const getSettingsRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "import/",
-          loader: RouteLoader,
-          lazy: async () => {
-            const Import = await import("../import/ImportListens");
-            return { Component: Import.default };
-          },
-        },
-        {
           path: "link-listens/",
           loader: RouteQueryLoader("link-listens"),
           lazy: async () => {
