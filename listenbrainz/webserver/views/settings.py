@@ -193,9 +193,13 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
-    # funkWhale_service = FunkwhaleService()
-    # funkwhale_user = funkWhale_service.get_user(current_user.id)
-    # current_funkwhale_permission = "listen" if funkwhale_user else "disable"
+    funkWhale_service = FunkwhaleService()
+    # Get host_url from session if it exists
+    host_url = session.get('funkwhale_host_url')
+    funkwhale_user = None
+    if host_url:
+        funkwhale_user = funkWhale_service.get_user(current_user.id, host_url)
+    current_funkwhale_permission = "listen" if funkwhale_user else "disable"
 
     data = {
         "current_spotify_permissions": current_spotify_permissions,
@@ -203,7 +207,7 @@ def music_services_details():
         "current_soundcloud_permissions": current_soundcloud_permissions,
         "current_apple_permissions": current_apple_permissions,
         "current_lastfm_permissions": current_lastfm_permissions,
-        # "current_funkwhale_permission": current_funkwhale_permission,
+        "current_funkwhale_permission": current_funkwhale_permission,
     }
 
     if lastfm_user:
