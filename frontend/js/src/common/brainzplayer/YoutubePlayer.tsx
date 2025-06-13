@@ -15,6 +15,7 @@ import {
   faArrowsAlt,
   faWindowMaximize,
   faWindowMinimize,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router";
@@ -30,6 +31,8 @@ import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSetting
 export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
   refreshYoutubeToken: () => Promise<string>;
+  onClose?: () => void;
+  onVisibilityChange?: (visible: boolean) => void;
 };
 
 // For some reason Youtube types do not document getVideoData,
@@ -361,7 +364,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
   };
 
   render() {
-    const { show } = this.props;
+    const { show, onClose } = this.props;
     const options: Options = {
       playerVars: {
         controls: 0,
@@ -380,6 +383,14 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
     const leftBound =
       document.body.clientWidth - draggableBoundPadding * 2 - 350;
 
+    // Handle close button click
+    const handleClose = () => {
+      const { onVisibilityChange } = this.props;
+      if (onVisibilityChange) {
+        onVisibilityChange(false);
+      }
+    };
+
     return (
       <Draggable
         handle=".youtube-drag-handle"
@@ -395,6 +406,13 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
         >
           <button className="btn btn-sm youtube-drag-handle" type="button">
             <FontAwesomeIcon icon={faArrowsAlt} />
+          </button>
+          <button
+            className="btn btn-sm youtube-button"
+            type="button"
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faTimes} />
           </button>
           <YouTube
             className="youtube-player"
