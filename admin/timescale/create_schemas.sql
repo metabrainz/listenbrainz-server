@@ -4,6 +4,7 @@ CREATE SCHEMA mapping;
 CREATE SCHEMA spotify_cache;
 CREATE SCHEMA apple_cache;
 CREATE SCHEMA soundcloud_cache;
+CREATE SCHEMA internetarchive_cache;
 CREATE SCHEMA similarity;
 CREATE SCHEMA tags;
 CREATE SCHEMA popularity;
