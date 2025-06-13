@@ -1,3 +1,5 @@
+@use "sass:map";
+
 .playlists-masonry {
   width: 100%;
   display: grid;
@@ -133,7 +135,7 @@
     }
   }
 
-  @media (max-width: map-get($grid-breakpoints, "sm")) {
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
     grid-auto-columns: unset;
   }
 }

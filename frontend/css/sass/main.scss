@@ -70,14 +70,6 @@ html {
   -webkit-tap-highlight-color: black;
 }
 
-body {
-  font-family: Sintony, sans-serif;
-  font-size: 14px;
-  line-height: 1.42857143;
-  color: $asphalt;
-  background-color: #fff;
-}
-
 h1,
 h2,
 h3 {
@@ -115,10 +107,6 @@ ol {
   min-height: 70vh;
   padding-left: $grid-gutter-width * 0.5;
   padding-right: $grid-gutter-width * 0.5;
-}
-
-.card {
-  margin-bottom: 0;
 }
 
 input[type="range"] {

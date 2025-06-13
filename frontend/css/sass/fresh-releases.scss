@@ -1,3 +1,5 @@
+@use "sass:map";
+
 #fr-heading {
   margin-bottom: 0;
   font-size: 3rem;
@@ -20,7 +22,7 @@
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 
-  @media screen and (max-width: map-get($grid-breakpoints, "md")) {
+  @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
     justify-content: center;
   }
 }
@@ -112,7 +114,7 @@
   }
 
   // Mobile responsive filters
-  @media (max-width: map-get($grid-breakpoints, "md")) {
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
     .filters-main {
       display: block;
       padding: 1rem;
@@ -226,7 +228,7 @@
   // height: 100%;
   max-height: calc(100vh - 8em);
 
-  @media (max-width: map-get($grid-breakpoints, "md")) {
+  @media (max-width: map.get($grid-breakpoints, "lg")) {
     height: unset;
     width: 100%;
     position: fixed;
@@ -304,77 +306,18 @@
 .releases-page-container {
   display: flex;
   gap: 1.5em;
-  @media screen and (min-width: map-get($grid-breakpoints, "md")) {
+  @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     // make the sidebar flush with the right-hand side on larger sizes
-    margin-right: -15px;
+    margin-right: -15px !important;
   }
   .releases-page {
     flex: 1;
   }
-  .sidebar {
-    flex: 0 0 250px;
-  }
   .sidebar-fresh-releases {
     max-height: 85vh;
 
-    @media screen and (max-width: map-get($grid-breakpoints, "md")) {
+    @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
       max-height: calc(100vh - $brainzplayer-height);
     }
   }
-}
-
-.sidebar {
-  position: sticky;
-  top: 10px;
-  border-radius: 10px;
-  height: max-content;
-  max-height: 100vh;
-  overflow-y: auto;
-  z-index: 9997;
-  right: 0;
-
-  @media screen and (max-width: map-get($grid-breakpoints, "md")) {
-    position: fixed;
-    top: 0;
-    right: -80%;
-    height: 100%;
-    width: 80%;
-    max-width: 400px;
-    background-color: $white;
-    overflow-y: auto;
-    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
-    transition: right 0.3s ease-in-out;
-    &.open {
-      right: 0;
-    }
-  }
-
-  .release-tags {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-  }
-
-  .tags {
-    display: inline-block;
-    margin: 2px 2px 5px;
-    padding: 3px;
-  }
-
-  .release-tag-name {
-    margin-right: 5px;
-    font-weight: 500;
-    font-size: 13px;
-  }
-}
-
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.8);
-  z-index: 1;
-  border: none;
 }

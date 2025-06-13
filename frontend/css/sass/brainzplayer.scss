@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $primary-color: $listenbrainz-blue;
 $brainzplayer-height: 60px;
 $brainzplayer-padding: 0px;
@@ -17,13 +19,13 @@ $youtube-resize-transition: height 0.25s ease-out;
   bottom: 0;
   right: 0;
   width: calc(100% - $sidenav-width);
-  @media (max-width: breakpoint-max(map-get($grid-breakpoints, "md"))) {
+  @media (max-width: $offscreen-sidenav-breakpoint) {
     width: 100%;
   }
   height: $brainzplayer-height;
   background: $white-background;
   display: flex;
-  box-shadow: 0px -4px 12px fade(black, 20%);
+  box-shadow: 0px -4px 12px rgba(0, 0, 0, 0.2);
 
   padding: $brainzplayer-padding;
   border-top: 1px solid $gray-light;
@@ -42,7 +44,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       flex: 0;
       margin-right: 1em;
       // Show big preview of the cover art when hovering over it
-      @media (min-width: map-get($grid-breakpoints, "md")) {
+      @media (min-width: $offscreen-sidenav-breakpoint) {
         &:hover
           > *:not(.hidden):not(.no-album-art):not(.youtube-wrapper):not(.soundcloud) {
           height: min(80vw, $big-cover-art-size);
@@ -269,7 +271,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   }
 
   /* Mobile device styles */
-  @media (max-width: map-get($grid-breakpoints, "sm")) {
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
     .content .cover-art {
       margin-right: 0.5em;
     }
@@ -398,7 +400,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   &.show {
     bottom: $brainzplayer-height;
   }
-  @media (max-width: map-get($grid-breakpoints, "sm")) {
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
     right: -6em;
     bottom: 6.5em;
     z-index: 112;
@@ -448,7 +450,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     border-top-right-radius: 0;
     background: #dadada;
 
-    @media (max-width: map-get($grid-breakpoints, "md")) {
+    @media (max-width: $offscreen-sidenav-breakpoint) {
       // Bigger touch target on mobile
       padding: 0.3em 1em;
       font-size: 1.6em;

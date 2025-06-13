@@ -1,3 +1,5 @@
+@use "sass:map";
+
 .user-stats-card {
   margin-top: 20px;
   padding: 0 20px;
@@ -78,7 +80,7 @@ $bar-height: 4.5em;
         font-size: 0.8em;
       }
     }
-    @media (max-width: map-get($grid-breakpoints, "xs")) {
+    @media (max-width: map.get($grid-breakpoints, "xs")) {
       // On mobile, show the position to the right of the bar to leave more space for the text
       .graph-bar {
         position: relative;
@@ -90,7 +92,7 @@ $bar-height: 4.5em;
       }
     }
   }
-  @media (max-width: map-get($grid-breakpoints, "sm")) {
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
     width: calc(100vw - 2em);
   }
 }

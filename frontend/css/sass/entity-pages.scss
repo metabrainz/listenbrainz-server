@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
 
 .entity-page-header {
@@ -212,7 +214,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
     justify-content: flex-end;
   }
 
-  @media (min-width: map-get($grid-breakpoints, "md")) {
+  @media (min-width: map.get($grid-breakpoints, "md")) {
     .reviews .review-cards {
       .review:first-of-type {
         margin-top: 0;

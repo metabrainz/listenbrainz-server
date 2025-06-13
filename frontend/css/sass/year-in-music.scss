@@ -1,3 +1,5 @@
+@use "sass:map";
+
 /* latin */
 @font-face {
   font-family: "Inter";
@@ -73,7 +75,7 @@ $yellow2022: #ffcc49;
   }
   #calendar .graph {
     height: 200px;
-    @media (min-width: map-get($grid-breakpoints,"md")) {
+    @media (min-width: map.get($grid-breakpoints,"md")) {
       height: 250px;
     }
   }
@@ -198,7 +200,7 @@ $yellow2022: #ffcc49;
     .header-image {
       padding: 1.5em;
       width: 700px;
-      @media (max-width: map-get($grid-breakpoints,"sm")) {
+      @media (max-width: map.get($grid-breakpoints,"sm")) {
         min-height: 20vh;
       }
     }
@@ -216,7 +218,7 @@ $yellow2022: #ffcc49;
       font-weight: 700;
       font-size: 48px;
       line-height: 56px;
-      @media (max-width: map-get($grid-breakpoints,"sm")) {
+      @media (max-width: map.get($grid-breakpoints,"sm")) {
         font-size: 38px;
         .subheader {
           font-size: 20px;
@@ -323,7 +325,7 @@ $yellow2022: #ffcc49;
     #main-header {
       background: white;
       flex-direction: column;
-      @media (max-width: map-get($grid-breakpoints,"sm")) {
+      @media (max-width: map.get($grid-breakpoints,"sm")) {
         // 80% of screen height minus menu bar and BrainzPlayer
         height: calc(80vh - 84px - 60px);
         .arrow-down {
@@ -331,7 +333,7 @@ $yellow2022: #ffcc49;
         }
       }
       .arrow-down {
-        @media (min-width: map-get($grid-breakpoints,"sm")) {
+        @media (min-width: map.get($grid-breakpoints,"sm")) {
           display: none;
         }
         width: 0;
@@ -345,7 +347,7 @@ $yellow2022: #ffcc49;
     .header-image {
       padding: 1.5em;
       width: 700px;
-      @media (max-width: map-get($grid-breakpoints,"sm")) {
+      @media (max-width: map.get($grid-breakpoints,"sm")) {
         min-height: 20vh;
       }
     }
@@ -499,7 +501,7 @@ $yellow2022: #ffcc49;
       font-weight: 900;
       font-family: "Inter", "Roboto", sans-serif;
       text-align: center;
-      @media (max-width: map-get($grid-breakpoints,"sm")) {
+      @media (max-width: map.get($grid-breakpoints,"sm")) {
         letter-spacing: 1rem;
       }
     }
@@ -546,7 +548,7 @@ $yellow2022: #ffcc49;
           max-width: min(60%, 400px);
           min-width: 200px;
         }
-        @media (max-width: map-get($grid-breakpoints,"sm")) {
+        @media (max-width: map.get($grid-breakpoints,"sm")) {
           font-size: 38px;
         }
       }

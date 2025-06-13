@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
 
 .sidebar {
@@ -17,7 +19,7 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
     padding: 12px 20px;
   }
 
-  @media screen and (max-width: map-get($grid-breakpoints, "md")) {
+  @media screen and (max-width: map.get($grid-breakpoints, "lg")) {
     position: fixed;
     top: 0;
     right: -80%;
@@ -99,7 +101,7 @@ $sidebar-gradient: linear-gradient(50deg, $gray-300, transparent);
   background-color: $white;
   color: $blue;
 
-  @media screen and (min-width: map-get($grid-breakpoints, "md")) {
+  @media screen and (min-width: map.get($grid-breakpoints, "lg")) {
     display: none;
   }
 }

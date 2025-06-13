@@ -1,7 +1,4 @@
 /* Buttons */
-.btn {
-  white-space: nowrap;
-}
 .btn-warning {
   --bs-btn-color: #fff;
   --bs-btn-hover-color: #fff;
@@ -19,9 +16,19 @@
     margin-left: 0.4em;
   }
 }
-
+.btn-transparent {
+  --bs-btn-border-width: 0;
+}
 .btn-rounded {
-  border-radius: 3em;
+  --bs-btn-border-radius: 3em;
+}
+@each $color, $value in $theme-colors {
+  .btn-outline-#{$color} {
+    --bs-btn-border-radius: #{$btn-border-radius-lg};
+  }
+}
+.btn.dropdown-toggle {
+  --bs-btn-border-radius: 4px;
 }
 
 .btn-link {
@@ -32,10 +39,6 @@
   &:focus {
     text-decoration: underline;
   }
-}
-
-.btn.dropdown-toggle {
-  border-radius: 4px;
 }
 
 // Fix button height inside an input group

@@ -94,20 +94,18 @@ export default function Settings() {
           ListenBrainz, you will need the following user token:
         </p>
 
-        <form className="form-text d-flex align-items-center flex-wrap">
+        <form className="input-group">
           <input
             type={showToken ? "text" : "password"}
             className="form-control"
             id="auth-token"
-            style={{ width: "400px", height: "30px" }}
             value={authToken}
             readOnly
           />
           <button
             type="button"
-            className="btn btn-info"
+            className="btn btn-info border border-light"
             id="show-hide-token"
-            style={{ width: "50px", height: "30px", top: "0px" }}
             onClick={toggleTokenVisibility}
             aria-label="Show/hide token"
           >
@@ -115,9 +113,8 @@ export default function Settings() {
           </button>
           <button
             type="button"
-            className="btn btn-info"
+            className="btn btn-info border border-light"
             id="copy-token"
-            style={{ width: "90px", height: "30px" }}
             title="Copy user token"
             onClick={copyToken}
           >

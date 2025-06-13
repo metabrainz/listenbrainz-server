@@ -45,9 +45,9 @@
         .event-icon {
           position: absolute;
           border-radius: 50%;
-          background: white;
+          background: $white;
           z-index: 1;
-          border: 7px solid white;
+          border: 7px solid $white;
           left: -6px;
           top: -6px;
           &.recording_recommendation {
@@ -111,12 +111,12 @@
         details .event-icon:before {
           content: "+";
           font-weight: bold;
-          background-color: $gray-500;
+          background-color: $asphalt;
           aspect-ratio: 1;
           border-radius: 50%;
           width: 0.65em;
           display: block;
-          color: white;
+          color: $white;
           font-size: 2em;
           border: none;
           line-height: 0.65em;
@@ -127,7 +127,11 @@
         }
 
         details[open] .event-icon:before {
-          background-color: $gray-300;
+          background-color: color.adjust(
+            $asphalt,
+            $lightness: 25%,
+            $space: hsl
+          );
           content: "-";
         }
       }

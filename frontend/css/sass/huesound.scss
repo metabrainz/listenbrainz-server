@@ -1,3 +1,5 @@
+@use "sass:map";
+
 .huesound-container {
   display: flex;
   align-items: center;
@@ -22,20 +24,20 @@
     margin: 1em;
     min-height: 375px;
 
-    @media (max-width: map-get($grid-breakpoints, "sm")) {
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
       grid-template-columns: repeat(4, 1fr);
       min-height: 580px;
     }
 
-    @media (max-width: map-get($grid-breakpoints, "xs")) {
+    @media (max-width: map.get($grid-breakpoints, "xs")) {
       grid-template-columns: repeat(3, 1fr);
     }
 
-    @media (min-width: map-get($grid-breakpoints, "md")) {
+    @media (min-width: map.get($grid-breakpoints, "md")) {
       min-height: 600px;
     }
 
-    @media (min-width: map-get($grid-breakpoints, "lg")) {
+    @media (min-width: map.get($grid-breakpoints, "lg")) {
       min-height: 794px;
     }
     &.invisible {

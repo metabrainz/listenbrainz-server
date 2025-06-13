@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $font_family_1: Sintony, sans-serif;
 $font_family_2: "Roboto", sans-serif;
 $mb_blue_light: #413b89;
@@ -14,7 +16,7 @@ $mb_blue_dark: #211e45;
     gap: 1em;
     padding: 2vh 0;
 
-    @media screen and (max-width: map-get($grid-breakpoints, "sm")) {
+    @media screen and (max-width: map.get($grid-breakpoints, "sm")) {
       justify-content: space-between;
     }
 
@@ -31,7 +33,7 @@ $mb_blue_dark: #211e45;
     .sidebar {
       width: max(20%, 225px);
       z-index: 2;
-      @media screen and (max-width: map-get($grid-breakpoints, "md")) {
+      @media screen and (max-width: map.get($grid-breakpoints, "md")) {
         // on mobile, show the sidebar tray above BrainzPlayer; it can be collapsed
         z-index: 6;
       }

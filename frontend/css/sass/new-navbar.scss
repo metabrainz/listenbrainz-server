@@ -1,12 +1,3 @@
-// Height of the BrainzPlayer component (fixed at the bottom of the page)
-$sidenav-width: 190px;
-$brainzplayer-height: 60px;
-$offscreen-sidenav-breakpoint: breakpoint-max("sm", $grid-breakpoints);
-$very-wide-screen-breakpoint: 1950px;
-$navbar-height: 72px;
-$max-content-width: 1400px;
-$nav-background-color: $gray-100;
-
 $nav-bottom-padding: 1.5em;
 $nav-tabs-link-padding: 1em 1.5em;
 $nav-tabs-link-padding-mobile: 0.8em 1em;
@@ -118,7 +109,7 @@ body {
       }
       .navbar-toggler {
         z-index: 101; // just above so it can be clicked to close the side-nav
-        margin-left: $navbar-padding-horizontal;
+        margin-left: 15px;
         border-color: $blue;
         position: absolute;
         .icon-bar {
@@ -215,8 +206,8 @@ body {
 .secondary-nav {
   /* Secondary nav container should be full width and scrollable if there is excess */
   width: calc(100% + $grid-gutter-width);
-  margin-left: ($grid-gutter-width / -2) - 1;
-  margin-right: ($grid-gutter-width / -2);
+  margin-left: calc($grid-gutter-width * -0.5 - 1px);
+  margin-right: $grid-gutter-width * -0.5;
   margin-bottom: $nav-bottom-padding;
   &,
   > * {
@@ -349,8 +340,8 @@ body {
   flex-wrap: wrap;
   justify-content: space-between;
   padding: 0 1em;
-  margin-left: ceil(($grid-gutter-width / -2));
-  margin-right: floor(($grid-gutter-width / -2));
+  margin-left: $grid-gutter-width * -0.5;
+  margin-right: $grid-gutter-width * -0.5;
   &.dragscroll > * {
     flex-shrink: 0;
   }

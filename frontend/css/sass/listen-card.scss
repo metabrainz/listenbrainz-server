@@ -1,3 +1,5 @@
+@use "sass:map";
+
 .listen-card {
   &.card {
     height: initial;
@@ -18,7 +20,7 @@
 
   > * {
     padding: 10px;
-    @media (min-width: $screen-phone) {
+    @media (min-width: map.get($grid-breakpoints, "sm")) {
       padding: 15px;
     }
   }
@@ -126,11 +128,11 @@
         object-fit: cover;
         border-radius: 7px 0 0 7px;
       }
-      @media (min-width: $screen-phone) {
+      @media (min-width: map.get($grid-breakpoints, "sm")) {
         margin: -15px;
         margin-right: 1em;
       }
-      @media (min-width: map-get($grid-breakpoints, "sm")) {
+      @media (min-width: map.get($grid-breakpoints, "sm")) {
         margin: -15px;
         margin-right: 1em;
       }
@@ -143,7 +145,7 @@
     .listen-time {
       font-style: italic;
       font-size: 80%;
-      color: $gray-600;
+      color: $gray-500;
       white-space: nowrap;
       text-align: end;
     }
@@ -179,7 +181,7 @@
       align-items: center;
       padding: 0;
 
-      @media (max-width: $screen-phone) {
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
         flex: 0;
       }
 

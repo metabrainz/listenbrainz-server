@@ -466,7 +466,7 @@ export default function MusicServices() {
               </div>
             )}
             <form onSubmit={handleConnectToLastFM}>
-              <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div className="flex flex-wrap align-items-end gap-3">
                 <div>
                   <label className="form-label" htmlFor="lastfmUsername">
                     Your Last.FM username:

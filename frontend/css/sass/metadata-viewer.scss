@@ -1,3 +1,5 @@
+@use "sass:map";
+
 @import "./musicbrainz-entity-icons";
 
 $outer-padding: $grid-gutter-width * 0.5;
@@ -31,7 +33,7 @@ $outer-padding: $grid-gutter-width * 0.5;
     }
   }
 
-  @media (min-width: map-get($grid-breakpoints, "xs")) {
+  @media (min-width: map.get($grid-breakpoints, "sm")) {
     // In bigger screen sizes, use flexbox
     display: flex;
     flex-wrap: wrap;
