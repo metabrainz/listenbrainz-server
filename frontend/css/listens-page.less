@@ -33,13 +33,13 @@
 
 .card {
   background: white;
-  border: 1px solid rgb(238, 238, 238);
+  border: 1px solid rgb(238, 238, 238) !important;
   box-sizing: border-box;
   box-shadow: fade(@card-shadow-color, 10%) 0px 1px 1px,
     fade(@card-shadow-color, 15%) 0px 2px 2px,
     fade(@card-shadow-color, 20%) 0px 4px 4px;
   border-radius: 8px;
-  height: 100%;
+  margin-bottom: 0;
 }
 .listen-card {
   &.card {
@@ -63,6 +63,12 @@
     padding: 10px;
     @media (min-width: @screen-phone) {
       padding: 15px;
+    }
+  }
+
+  .dropdown-toggle {
+    &::after {
+      display: none !important;
     }
   }
 
@@ -180,7 +186,7 @@
     .listen-time {
       font-style: italic;
       font-size: 80%;
-      &:extend(.text-muted);
+      color: @light-grey;
       white-space: nowrap;
       text-align: end;
     }
@@ -234,7 +240,7 @@
       justify-content: space-around;
       position: relative; // This is need for dropdown menu positioning
       margin-left: auto; // align flexbox item at flex-end
-      color: #8d8d8d;
+      color: @light-grey;
 
       > button,
       > .btn {
@@ -256,7 +262,7 @@
       .love,
       .hate {
         color: transparent;
-        stroke: #8d8d8d;
+        stroke: @light-grey;
         &:hover {
           color: transparent;
         }
@@ -291,6 +297,7 @@
         > a,
         > button {
           display: block; // necessary for <a> tags
+          text-decoration: none;
           width: 100%;
           background: none;
           color: @text-color;
@@ -311,6 +318,7 @@
       .badge {
         flex-shrink: 0;
         align-self: center;
+        border-radius: 10px;
       }
     }
     .recommendation-controls {
@@ -376,7 +384,7 @@
     }
 
     .listen-controls > .icon-only {
-      color: #8d8d8d;
+      color: @light-grey;
       width: 2em;
       min-width: 2em;
       margin-left: 0;
@@ -384,7 +392,7 @@
       padding: 0;
     }
     .play-button {
-      color: #8d8d8d;
+      color: @light-grey;
       &.playing {
         color: @orange;
       }
@@ -413,32 +421,6 @@
       transform: rotateX(90deg) scale(0.8, 0.4);
     }
   }
-}
-
-.input-group-flex {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  width: 100%;
-  > *:not(.form-control) {
-    width: auto;
-    line-height: 1.4;
-  }
-  > .form-control {
-    flex: 1 1 120px;
-  }
-  > .input-group-btn {
-    flex: 1;
-    display: flex;
-    > .btn {
-      flex: 1 1 auto;
-    }
-  }
-}
-
-.input-group > .input-group-btn > .btn {
-  margin-top: 0px;
-  margin-bottom: 0px;
 }
 
 #listen-count-card {
@@ -487,11 +469,10 @@
   }
 }
 
-#navigation.pager {
+#navigation.pagination {
   display: flex;
   flex-wrap: wrap;
   & > .feed-button-and-date-time-picker {
-    flex: 1;
     order: 0;
     display: flex;
     align-items: center;

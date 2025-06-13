@@ -6,8 +6,9 @@ import {
   faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import { Link } from "react-router";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import { ToastMsg } from "../../notifications/Notifications";
 import { PLAYLIST_URI_PREFIX, listenToJSPFTrack } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -29,12 +30,6 @@ function listenOrTrackToJSPFTrack(
 
 export default NiceModal.create((props: AddToPlaylistProps) => {
   const modal = useModal();
-
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { listen } = props;
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
@@ -136,88 +131,64 @@ export default NiceModal.create((props: AddToPlaylistProps) => {
   const createPlaylist = React.useCallback(async () => {
     const trackToSend = listenOrTrackToJSPFTrack(listen);
     NiceModal.show(CreateOrEditPlaylistModal, { initialTracks: [trackToSend] });
-    closeModal();
-  }, [listen, closeModal]);
+    modal.hide();
+  }, [listen, modal]);
 
   const trackName = getTrackName(listen);
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
-      id="AddToPlaylistModal"
-      tabIndex={-1}
-      role="dialog"
+    <Modal
+      {...bootstrapDialog(modal)}
+      title=""
       aria-labelledby="AddToPlaylistLabel"
-      data-backdrop="static"
+      id="AddToPlaylistModal"
     >
-      <div className="modal-dialog" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={closeModal}
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4
-              className="modal-title"
-              id="AddToPlaylistLabel"
-              style={{ textAlign: "center" }}
-            >
-              <FontAwesomeIcon icon={faPlusCircle} /> Add to playlist
-            </h4>
-          </div>
-          <div className="modal-body">
-            <p className="text-muted">
-              Add the track <i>{trackName}</i> to one or more of your playlists
-              below:
-            </p>
-            <div
-              className="list-group"
-              style={{ maxHeight: "50vh", overflow: "scroll" }}
-            >
+      <Modal.Header closeButton>
+        <Modal.Title id="AddToPlaylistLabel">
+          <FontAwesomeIcon icon={faPlusCircle} /> Add to playlist
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p className="text-muted">
+          Add the track <i>{trackName}</i> to one or more of your playlists
+          below:
+        </p>
+        <div
+          className="list-group"
+          style={{ maxHeight: "50vh", overflow: "auto" }}
+        >
+          <button
+            type="button"
+            className="list-group-item list-group-item-info"
+            onClick={createPlaylist}
+          >
+            <FontAwesomeIcon icon={faFileCirclePlus} /> Create new playlist
+          </button>
+          {playlists?.map((jspfObject) => {
+            const { playlist } = jspfObject;
+            return (
               <button
                 type="button"
-                className="list-group-item list-group-item-info"
-                data-dismiss="modal"
-                data-toggle="modal"
-                data-target="#CreateOrEditPlaylistModal"
-                onClick={createPlaylist}
+                key={playlist.identifier}
+                className="list-group-item list-group-item-action"
+                name={playlist.title}
+                data-playlist-identifier={playlist.identifier}
+                onClick={addToPlaylist}
               >
-                <FontAwesomeIcon icon={faFileCirclePlus} /> Create new playlist
+                {playlist.title}
               </button>
-              {playlists?.map((jspfObject) => {
-                const { playlist } = jspfObject;
-                return (
-                  <button
-                    type="button"
-                    key={playlist.identifier}
-                    className="list-group-item"
-                    name={playlist.title}
-                    data-playlist-identifier={playlist.identifier}
-                    onClick={addToPlaylist}
-                  >
-                    {playlist.title}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-default"
-              data-dismiss="modal"
-              onClick={closeModal}
-            >
-              Close
-            </button>
-          </div>
+            );
+          })}
         </div>
-      </div>
-    </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={modal.hide}
+        >
+          Close
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });

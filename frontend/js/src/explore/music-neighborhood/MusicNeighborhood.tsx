@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload } from "@fortawesome/free-solid-svg-icons";
 import { kebabCase } from "lodash";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -235,30 +235,28 @@ export default function MusicNeighborhood() {
         <title>Music Neighborhood</title>
       </Helmet>
       <div className="artist-similarity-main-container" role="main">
-        <div className="artist-similarity-header">
+        <div className="artist-similarity-header align-items-end">
           <SearchBox
             onArtistChange={onArtistChange}
             onSimilarArtistsLimitChange={updateSimilarArtistsLimit}
             currentSimilarArtistsLimit={similarArtistsLimit}
           />
-          <div className="share-buttons">
+          <button
+            type="button"
+            className="ms-5 btn btn-icon btn-info my-0 mx-0"
+            onClick={onClickDownload}
+          >
+            <FontAwesomeIcon icon={faDownload} color="white" />
+          </button>
+          {browserHasClipboardAPI && (
             <button
               type="button"
-              className="btn btn-icon btn-info"
-              onClick={onClickDownload}
+              className="btn btn-icon btn-info my-0 mx-0"
+              onClick={copyImage}
             >
-              <FontAwesomeIcon icon={faDownload} color="white" />
+              <FontAwesomeIcon icon={faCopy} color="white" />
             </button>
-            {browserHasClipboardAPI && (
-              <button
-                type="button"
-                className="btn btn-icon btn-info"
-                onClick={copyImage}
-              >
-                <FontAwesomeIcon icon={faCopy} color="white" />
-              </button>
-            )}
-          </div>
+          )}
         </div>
         <div className="artist-similarity-graph-panel-container">
           <SimilarArtist

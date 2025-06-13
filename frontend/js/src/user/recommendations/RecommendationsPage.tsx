@@ -6,7 +6,7 @@ import * as React from "react";
 import { faInfoCircle, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isUndefined, set } from "lodash";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
@@ -351,8 +351,6 @@ export default function RecommendationsPage() {
             <button
               type="button"
               className="btn btn-link"
-              data-toggle="modal"
-              data-target="#StatsExplanationsModal"
               onClick={() => {
                 NiceModal.show(StatsExplanationsModal);
               }}

@@ -37,9 +37,10 @@ from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import couchdb
 from listenbrainz.db.timescale import SCHEMA_VERSION_TIMESCALE
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT, SCHEMA_VERSION_CORE
+from listenbrainz.dumps.models import DumpTablesCollection
+from listenbrainz.dumps.sample import dump_sample_data
 from listenbrainz.dumps.tables import PUBLIC_TABLES_TIMESCALE_DUMP, PUBLIC_TABLES_DUMP, \
     PRIVATE_TABLES_TIMESCALE, PRIVATE_TABLES
-from listenbrainz.dumps.models import DumpTablesCollection
 from listenbrainz.utils import create_path
 
 
@@ -149,6 +150,36 @@ def dump_statistics(location: str):
             current_app.logger.info(f"Failed to create dump for {stat}:", exc_info=True)
 
 
+def create_sample_dump(location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
+    """ Dump sample data.
+
+        Arguments:
+            location: Directory where the final dump will be stored
+            dump_time: datetime object representing when the dump was started
+            threads: Maximal number of threads to run during compression
+
+        Returns:
+            path to feedback dump
+    """
+    current_app.logger.info('Beginning dump of sample data...')
+    current_app.logger.info('dump path: %s', location)
+    try:
+        sample_dump = _create_dump(
+            location=location,
+            dump_type="sample",
+            tables_collection=None,
+            schema_version=SCHEMA_VERSION_CORE,
+            dump_time=dump_time,
+            threads=threads,
+        )
+        current_app.logger.info('Dump of sample data created at %s!', sample_dump)
+        return sample_dump
+    except Exception:
+        current_app.logger.critical('Unable to create sample dump due to error: ', exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
+        shutil.rmtree(location)
+
+
 def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: datetime,
                  tables_collection: DumpTablesCollection | None = None, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
@@ -174,18 +205,9 @@ def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: 
         archive_tables_dir = os.path.join(temp_dir, "lbdump")
         create_path(archive_tables_dir)
 
-        if dump_type == "statistics":
-            dump_statistics(archive_tables_dir)
-        elif dump_type == "feedback":
-            dump_user_feedback(archive_tables_dir)
-        else:
+        if tables_collection is not None:
             tables_collection.dump_tables(archive_tables_dir)
 
-        if not tables_collection:
-            # order doesn't matter or name of tables can't be determined before dumping so just
-            # add entire directory with all files inside it
-            tar.add(archive_tables_dir, arcname=os.path.join(archive_name, "lbdump"))
-        else:
             # Add the files to the archive in the order that they are defined in the dump definition.
             # This is so that when imported into a db with FK constraints added, we import dependent
             # tables first
@@ -194,6 +216,19 @@ def _create_dump(location: str, dump_type: str, schema_version: int, dump_time: 
                     os.path.join(archive_tables_dir, table.filename),
                     arcname=os.path.join(archive_name, "lbdump", table.filename)
                 )
+        else:
+            if dump_type == "statistics":
+                dump_statistics(archive_tables_dir)
+            elif dump_type == "feedback":
+                dump_user_feedback(archive_tables_dir)
+            elif dump_type == "sample":
+                dump_sample_data(archive_tables_dir)
+            else:
+                raise ValueError(f"Unknown dump type: {dump_type}")
+
+            # order doesn't matter or name of tables can't be determined before dumping so just
+            # add entire directory with all files inside it
+            tar.add(archive_tables_dir, arcname=os.path.join(archive_name, "lbdump"))
 
     return archive_path
 

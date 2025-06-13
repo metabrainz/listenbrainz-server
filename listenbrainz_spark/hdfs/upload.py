@@ -5,9 +5,15 @@ import tarfile
 import tempfile
 import time
 from pathlib import Path
+from tarfile import TarFile
 
 from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs.utils import delete_dir, path_exists, upload_to_HDFS
+from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME, RECORDING_ARTIST_DATAFRAME, \
+    RECORDING_FEEDBACK_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME, ARTIST_CREDIT_MBID_DATAFRAME, \
+    RECORDING_LENGTH_DATAFRAME, RECORDING_RECORDING_TAG_DATAFRAME, RECORDING_ARTIST_TAG_DATAFRAME, \
+    RECORDING_RELEASE_GROUP_TAG_DATAFRAME, RECORDING_RELEASE_GROUP_GENRE_DATAFRAME, RECORDING_ARTIST_GENRE_DATAFRAME, \
+    RECORDING_RECORDING_GENRE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME
 
 logger = logging.getLogger(__name__)
 
@@ -84,3 +90,47 @@ def upload_archive_to_hdfs_temp(archive: str, extension: str) -> str:
     # dump is uploaded to HDFS_TEMP_DIR/archive_name
     archive_name = Path(archive).stem
     return str(Path(HDFS_TEMP_DIR).joinpath(archive_name))
+
+
+def upload_sample_dump(tar: TarFile, local_dir):
+    SAMPLE_TO_HDFS_MAP = {
+        "artist_country_code": ARTIST_COUNTRY_CODE_DATAFRAME,
+        "recording_length": RECORDING_LENGTH_DATAFRAME,
+        "recording_artist": RECORDING_ARTIST_DATAFRAME,
+        "release_group_metadata": RELEASE_GROUP_METADATA_CACHE_DATAFRAME,
+        "release_metadata": RELEASE_METADATA_CACHE_DATAFRAME,
+        "artist_credit": ARTIST_CREDIT_MBID_DATAFRAME,
+        "recording_feedback": RECORDING_FEEDBACK_DATAFRAME,
+        "recording_tag": RECORDING_RECORDING_TAG_DATAFRAME,
+        "artist_tag": RECORDING_ARTIST_TAG_DATAFRAME,
+        "release_group_tag": RECORDING_RELEASE_GROUP_TAG_DATAFRAME,
+        "recording_genre": RECORDING_RECORDING_GENRE_DATAFRAME,
+        "artist_genre": RECORDING_ARTIST_GENRE_DATAFRAME,
+        "release_group_genre": RECORDING_RELEASE_GROUP_GENRE_DATAFRAME,
+    }
+
+    total_files = 0
+    total_time = 0.0
+
+    for member in tar:
+        if member.isfile() and "spark" in member.name and member.name.endswith(".parquet"):
+            logger.info(f"Uploading {member.name}...")
+            t0 = time.monotonic()
+
+            tar.extract(member, path=local_dir)
+            local_path = os.path.join(local_dir, member.name)
+
+            cache_name = member.name.split("/")[-1].split(".")[0]
+            hdfs_path = SAMPLE_TO_HDFS_MAP[cache_name]
+
+            upload_to_HDFS(hdfs_path, local_path)
+
+            time_taken = time.monotonic() - t0
+            total_files += 1
+            total_time += time_taken
+            logger.info(f"Done! Current file processed in {time_taken:.2f} sec")
+
+    if total_files == 0:
+        logger.info("Done! No files processed.")
+    else:
+        logger.info(f"Done! Total files processed {total_files}. Average time taken: {total_time / total_files:.2f}")

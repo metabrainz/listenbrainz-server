@@ -5,7 +5,7 @@ import {
   Outlet,
   ScrollRestoration,
   useLocation,
-} from "react-router-dom";
+} from "react-router";
 
 type Section = {
   title: string;
