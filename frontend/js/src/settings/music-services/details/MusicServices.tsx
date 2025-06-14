@@ -22,6 +22,7 @@ type MusicServicesLoaderData = {
   current_apple_permissions: string;
   current_lastfm_permissions: string;
   current_funkwhale_permission: string;
+  funkwhale_host_urls: string[];
   current_lastfm_settings: {
     external_user_id?: string;
     latest_listened_at?: string;
@@ -49,6 +50,10 @@ export default function MusicServices() {
   });
 
   const [funkwhaleHostUrl, setFunkwhaleHostUrl] = React.useState("");
+  const [
+    connectedFunkwhaleServers,
+    setConnectedFunkwhaleServers,
+  ] = React.useState<string[]>(loaderData.funkwhale_host_urls || []);
 
   const [lastfmUserId, setLastfmUserId] = React.useState(
     loaderData.current_lastfm_settings?.external_user_id
@@ -371,6 +376,7 @@ export default function MusicServices() {
       const hostUrl = sessionStorage.getItem("funkwhale_host_url");
       if (hostUrl) {
         setFunkwhaleHostUrl(hostUrl);
+        setConnectedFunkwhaleServers((prev) => [...prev, hostUrl]);
         sessionStorage.removeItem("funkwhale_host_url"); // Clean up
       }
       toast.success(
@@ -780,7 +786,11 @@ export default function MusicServices() {
                     className="form-control"
                     id="funkwhaleHostUrl"
                     name="funkwhaleHostUrl"
-                    placeholder="https://funkwhale.funkwhale.test/"
+                    placeholder={
+                      permissions.funkwhale === "listen"
+                        ? connectedFunkwhaleServers[0]
+                        : "https://funkwhale.funkwhale.test/"
+                    }
                     value={funkwhaleHostUrl}
                     onChange={(e) => setFunkwhaleHostUrl(e.target.value)}
                     readOnly={permissions.funkwhale === "listen"}

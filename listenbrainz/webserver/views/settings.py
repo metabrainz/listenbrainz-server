@@ -27,7 +27,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.domain.funkwhale import FunkwhaleService
+from listenbrainz.domain.funkwhale import FunkwhaleService, FunkwhaleServer
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -194,12 +194,10 @@ def music_services_details():
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
     funkWhale_service = FunkwhaleService()
-    # Get host_url from session if it exists
-    host_url = session.get('funkwhale_host_url')
-    funkwhale_user = None
-    if host_url:
-        funkwhale_user = funkWhale_service.get_user(current_user.id, host_url)
-    current_funkwhale_permission = "listen" if funkwhale_user else "disable"
+    # Get all connected Funkwhale servers for the user
+    funkwhale_servers = FunkwhaleServer.query.filter_by(user_id=current_user.id).all()
+    current_funkwhale_permission = "listen" if funkwhale_servers else "disable"
+    funkwhale_host_urls = [server.host_url for server in funkwhale_servers] if funkwhale_servers else []
 
     data = {
         "current_spotify_permissions": current_spotify_permissions,
@@ -208,6 +206,7 @@ def music_services_details():
         "current_apple_permissions": current_apple_permissions,
         "current_lastfm_permissions": current_lastfm_permissions,
         "current_funkwhale_permission": current_funkwhale_permission,
+        "funkwhale_host_urls": funkwhale_host_urls,
     }
 
     if lastfm_user:
