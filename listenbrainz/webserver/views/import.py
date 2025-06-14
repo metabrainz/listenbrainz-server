@@ -54,7 +54,7 @@ def create_import_task(file_path, service):
             "external_id": external_oauth_id,
             "user_id": current_user.id,
             "service": service,
-            "progress": "Your data import will start soon."
+            "progress": {"progress", "Your data import will start soon."}
         }).first()
 
         
