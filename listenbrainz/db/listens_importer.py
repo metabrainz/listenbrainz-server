@@ -91,7 +91,7 @@ def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> di
 def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[dict]:
     """ Returns a list of users whose listens should be imported from the external service.
     """
-    filters = ["external_service_oauth.service = :service"]
+    filters = ["external_service_oauth.service = :service", "external_service_oauth.access_token IS NOT NULL"] # Access token not null
     if exclude_error:
         filters.append("error_message IS NULL")
     filter_str = " AND ".join(filters)
