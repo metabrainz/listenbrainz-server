@@ -68,7 +68,10 @@ def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True
     obj = dict(obj)
     user_id = obj['creator_id']
     user = db_user.get(db_conn, user_id)
-    obj['creator'] = user['musicbrainz_id']
+    try:
+        obj['creator'] = user['musicbrainz_id']
+    except TypeError:
+        pass
     if obj['created_for_id']:
         created_for_user = db_user.get(db_conn, obj['created_for_id'])
         if created_for_user:
