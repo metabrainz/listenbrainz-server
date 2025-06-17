@@ -120,19 +120,49 @@ class InternetArchiveIndexer(ConsumerMixin):
         ).fetchone()
 
     def store_in_db(self, conn, audio_url, track):
-        conn.execute(
-            text("""
-                INSERT INTO metadata_cache.internetarchive (id, data, last_updated)
-                VALUES (:id, :data, NOW())
-                ON CONFLICT (id) DO UPDATE 
-                SET data = EXCLUDED.data, last_updated = NOW()
-            """),
-            {'id': audio_url, 'data': track.json()}
-        )
+         conn.execute(
+        text("""
+            INSERT INTO internetarchive_cache.track
+                (track_id, title, creator, artist, album, year, notes, topics, stream_url, duration, artwork_url, date, data, last_updated)
+            VALUES
+                (:track_id, :title, :creator, :artist, :album, :year, :notes, :topics, :stream_url, :duration, :artwork_url, :date, :data, NOW())
+            ON CONFLICT (track_id) DO UPDATE 
+            SET
+                title = EXCLUDED.title,
+                creator = EXCLUDED.creator,
+                artist = EXCLUDED.artist,
+                album = EXCLUDED.album,
+                year = EXCLUDED.year,
+                notes = EXCLUDED.notes,
+                topics = EXCLUDED.topics,
+                stream_url = EXCLUDED.stream_url,
+                duration = EXCLUDED.duration,
+                artwork_url = EXCLUDED.artwork_url,
+                date = EXCLUDED.date,
+                data = EXCLUDED.data,
+                last_updated = NOW()
+        """),
+        {
+            'track_id': track.track_id or track.id,
+            'title': track.title,
+            'creator': track.creator,
+            'artist': track.artist,
+            'album': track.album,
+            'year': track.year,
+            'notes': track.notes,
+            'topics': track.topics,
+            'stream_url': track.stream_url,
+            'duration': track.duration,
+            'artwork_url': track.artwork_url,
+            'date': track.date,
+            'data': track.json()
+        }
+    )
 
     def create_track(self, identifier, filename, audio_url, meta):
         title = self.ensure_str(meta.get('title')) or self.extract_from_filename(filename)
         creator = self.ensure_str(meta.get('creator'))
+        artist = self.ensure_str(meta.get('artist')) or creator
         album = self.ensure_str(meta.get('album')) or self.ensure_str(meta.get('label'))
         year = self.ensure_str(meta.get('year')) or self.ensure_str(meta.get('date'))
         notes = self.ensure_str(meta.get('notes')) or self.ensure_str(meta.get('description'))
@@ -152,6 +182,7 @@ class InternetArchiveIndexer(ConsumerMixin):
 
         return InternetArchiveTrack(
             id=identifier,
+            track_id=audio_url,
             title=title,
             creator=creator,
             album=album,
