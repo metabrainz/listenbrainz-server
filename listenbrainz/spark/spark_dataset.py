@@ -166,7 +166,7 @@ class _UserStatsDataset(_StatsDataset):
 UserEntityStatsDataset = _UserStatsDataset("user_entity")
 DailyActivityStatsDataset = _UserStatsDataset("user_daily_activity")
 ListeningActivityStatsDataset = _UserStatsDataset("user_listening_activity")
-
+GenreActivityStatsDataset = _UserStatsDataset("user_genre_activity")
 
 class _EntityListenerStatsDataset(_StatsDataset):
 
