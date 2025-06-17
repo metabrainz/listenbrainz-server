@@ -16,6 +16,7 @@ TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
 LISTENBRAINZ_USER_ID = 23944
 DELETED_USER_ID = 2615344
+DELETED_USER_NAME = "deleted_lb_user"
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
 RECOMMENDATION_PATCHES = (
@@ -72,7 +73,7 @@ def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True
     try:
         obj['creator'] = user['musicbrainz_id']
     except TypeError:
-        obj['creator'] = DELETED_USER_ID
+        obj['creator'] = DELETED_USER_NAME
 
     if obj['created_for_id']:
         created_for_user = db_user.get(db_conn, obj['created_for_id'])
@@ -588,7 +589,11 @@ def get_recordings_for_playlists(db_conn, ts_conn, playlist_ids: List[int]):
         if added_by_id not in user_id_map:
             # TODO: Do this lookup in bulk
             user_id_map[added_by_id] = db_user.get(db_conn, added_by_id)
-        row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
+        try:
+            row["added_by"] = user_id_map[added_by_id]["musicbrainz_id"]
+        except TypeError:
+            row["added_by"] = DELETED_USER_NAME
+
         playlist_recording = model_playlist.PlaylistRecording.parse_obj(row)
         playlist_recordings_map[playlist_recording.playlist_id].append(playlist_recording)
     for playlist_id in playlist_ids:
