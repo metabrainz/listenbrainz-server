@@ -15,6 +15,7 @@ from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
 LISTENBRAINZ_USER_ID = 23944
+DELETED_USER_ID = 2615344
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
 RECOMMENDATION_PATCHES = (
@@ -71,7 +72,8 @@ def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True
     try:
         obj['creator'] = user['musicbrainz_id']
     except TypeError:
-        pass
+        obj['creator'] = DELETED_USER_ID
+
     if obj['created_for_id']:
         created_for_user = db_user.get(db_conn, obj['created_for_id'])
         if created_for_user:
