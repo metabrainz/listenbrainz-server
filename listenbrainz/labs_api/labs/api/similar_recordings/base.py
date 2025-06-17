@@ -1,4 +1,7 @@
+import abc
+from abc import ABC
 from enum import Enum
+from brainzutils import cache
 from typing import Union, Optional
 from uuid import UUID
 
@@ -12,6 +15,9 @@ from sqlalchemy import text
 
 from listenbrainz.db import similarity, timescale
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+
+
+ALGORITHM_CHOICES_CACHE_TTL = 3600
 
 
 class SimilarRecordingsViewerInput(BaseModel):
@@ -39,24 +45,38 @@ class SimilarRecordingsViewerOutputComment(BaseModel):
 SimilarRecordingsViewerOutput = Union[SimilarRecordingsViewerOutputComment, SimilarRecordingsViewerOutputItem]
 
 
-class SimilarRecordingsViewerQuery(Query):
+class BaseSimilarRecordingsViewerQuery(Query, ABC):
     """ Display similar recordings calculated using a given algorithm """
 
     def setup(self):
         pass
 
-    def names(self):
-        return "similar-recordings", "Similar Recordings Viewer"
+    @abc.abstractmethod
+    def table(self):
+        pass
+
+    @abc.abstractmethod
+    def get_cache_key(self):
+        pass
+
+    def get_algorithm_choices(self):
+        key = self.get_cache_key()
+        if algorithms := cache.get(key):
+            return algorithms
+        with timescale.engine.begin() as conn:
+            table_name = "similarity." + self.table()
+            query = """
+                select distinct jsonb_object_keys(metadata) as algorithm
+                  from """ + table_name
+            result = conn.execute(text(query))
+            algorithms = list(r.algorithm for r in result)
+        cache.set(key, algorithms, expirein=ALGORITHM_CHOICES_CACHE_TTL)
+        return algorithms
+
 
     def inputs(self):
-        with timescale.engine.begin() as conn:
-            result = conn.execute(text("""
-                select distinct jsonb_object_keys(metadata) as algorithm
-                  from similarity.recording_dev
-            """))
-            choices = {r.algorithm: r.algorithm for r in result}
-
-        AlgorithmEnum = Enum("AlgorithmEnum", choices)
+        algorithms = self.get_algorithm_choices()
+        AlgorithmEnum = Enum("AlgorithmEnum", {x: x for x in algorithms})
 
         class SimilarRecordingsViewerInput(BaseModel):
             recording_mbids: list[UUID]
@@ -105,7 +125,7 @@ class SimilarRecordingsViewerQuery(Query):
                 results.append(QueryOutputLine(line=Markup("<p><b>Reference recording</b></p>")))
                 results.extend(references)
 
-            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, "recording_dev", recording_mbids,
+            similar_mbids, score_idx, mbid_idx = similarity.get(ts_curs, self.table(), recording_mbids,
                                                                 algorithm, count)
             if source == RequestSource.web:
                 if len(similar_mbids) == 0:
