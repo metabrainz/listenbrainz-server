@@ -69,9 +69,14 @@ CREATE UNIQUE INDEX soundcloud_cache_artist_soundcloud_id_idx ON soundcloud_cach
 
 
 -- Internet Archive indexes
-CREATE UNIQUE INDEX internetarchive_cache_track_id_idx ON internetarchive_cache.track (track_id);
-CREATE INDEX internetarchive_cache_track_artist_idx ON internetarchive_cache.track (artist);
+CREATE UNIQUE INDEX internetarchive_cache_track_track_id_idx ON internetarchive_cache.track (track_id);
+CREATE INDEX internetarchive_cache_track_creator_idx ON internetarchive_cache.track (creator);
 CREATE INDEX internetarchive_cache_track_title_idx ON internetarchive_cache.track (title);
+CREATE INDEX internetarchive_cache_track_album_idx ON internetarchive_cache.track (album);
+CREATE INDEX internetarchive_cache_track_year_idx ON internetarchive_cache.track (year);
+CREATE INDEX internetarchive_cache_track_notes_idx ON internetarchive_cache.track (notes);
+CREATE INDEX internetarchive_cache_track_topics_idx ON internetarchive_cache.track (topics);
+
 
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);

@@ -275,12 +275,22 @@ CREATE TABLE soundcloud_cache.track (
 CREATE SCHEMA IF NOT EXISTS internetarchive_cache;
 
 CREATE TABLE internetarchive_cache.track (
-    id                      INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
-    track_id                TEXT NOT NULL,
-    title                   TEXT NOT NULL,
-    artist                  TEXT,
-    data                    JSONB NOT NULL
+    id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    track_id      TEXT NOT NULL,              -- corresponds to your model's id or stream_url
+    title         TEXT NOT NULL,
+    creator       TEXT,                       -- corresponds to 'creator' in your model
+    album         TEXT,
+    year          TEXT,
+    notes         TEXT,
+    topics        TEXT,
+    stream_url    TEXT NOT NULL,
+    duration      INTEGER,
+    artwork_url   TEXT,
+    date          TEXT,
+    data          JSONB NOT NULL,             -- (optional) store the full JSON as backup
+    last_updated  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
 
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
