@@ -127,6 +127,17 @@ services:
       - rabbitmq
       - lb_db
 
+  librefm_importer:
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
+    command: python3 -m "listenbrainz.listens_importer.librefm"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - rabbitmq
+      - lb_db
+
   websockets:
     image: web
     volumes:
