@@ -22,12 +22,11 @@ type MusicServicesLoaderData = {
   current_lastfm_permissions: string;
   current_funkwhale_permission: string;
   funkwhale_host_urls: string[];
-  current_lastfm_settings: {
-  current_librefm_permissions: string;
   current_lastfm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
   };
+  current_librefm_permissions: string;
   current_librefm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
@@ -50,6 +49,7 @@ export default function MusicServices() {
     appleMusic: loaderData.current_apple_permissions,
     lastfm: loaderData.current_lastfm_permissions,
     funkwhale: loaderData.current_funkwhale_permission,
+    librefm: loaderData.current_librefm_permissions,
   });
 
   const [funkwhaleHostUrl, setFunkwhaleHostUrl] = React.useState("");
@@ -58,25 +58,6 @@ export default function MusicServices() {
     setConnectedFunkwhaleServers,
   ] = React.useState<string[]>(loaderData.funkwhale_host_urls || []);
 
-  const [lastfmUserId, setLastfmUserId] = React.useState(
-    loaderData.current_lastfm_settings?.external_user_id
-  );
-  const [lastfmLatestListenedAt, setLastfmLatestListenedAt] = React.useState(
-    loaderData.current_lastfm_settings?.latest_listened_at
-      ? format(
-          new Date(loaderData.current_lastfm_settings?.latest_listened_at),
-          "yyyy-MM-dd'T'HH:mm:ss"
-        )
-      : undefined
-  );
-
-  const [lastFMEdit, setLastFMEdit] = React.useState(false);
-  const lastFMEditButtonClass =
-    permissions.lastfm !== "import"
-      ? "btn-default"
-      : (lastFMEdit && "btn-success") || "btn-warning";
-    librefm: loaderData.current_librefm_permissions,
-  });
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -120,13 +101,10 @@ export default function MusicServices() {
           case "critiquebrainz":
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
             break;
-          case "lastfm":
-            setLastFMEdit(false);
-            break;
+          // lastfm and librefm state is now managed in the LFMMusicServicePermissions component
           case "funkwhale":
             setFunkwhaleHostUrl("");
             break;
-          // lastfm and librefm state is now managed in the LFMMusicServicePermissions component
           default:
             break;
         }
