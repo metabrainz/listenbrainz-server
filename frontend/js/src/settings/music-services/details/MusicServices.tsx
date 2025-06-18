@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
 import ServicePermissionButton from "./components/ExternalServiceButton";
-import MusicServicePermissionsBox from "./components/MusicServicePermissionsBox";
+import LFMMusicServicePermissions from "./components/LFMMusicServicePermissions";
 import {
   authorizeWithAppleMusic,
   loadAppleMusicKit,
@@ -92,7 +92,7 @@ export default function MusicServices() {
           case "critiquebrainz":
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
             break;
-          // lastfm and librefm state is now managed in their components
+          // lastfm and librefm state is now managed in the LFMMusicServicePermissions component
           default:
             break;
         }
@@ -175,7 +175,7 @@ export default function MusicServices() {
     }
   };
 
-  // Connection handling is now managed inside the MusicServicePermissionsBox components
+  // Last.FM and Libre.FM connection handling is now managed in c
 
   return (
     <>
@@ -310,7 +310,7 @@ export default function MusicServices() {
           </div>
         </div>
 
-        <MusicServicePermissionsBox
+        <LFMMusicServicePermissions
           serviceName="lastfm"
           serviceDisplayName="Last.FM"
           existingPermissions={permissions.lastfm}
@@ -321,7 +321,7 @@ export default function MusicServices() {
           canImportFeedback
         />
 
-        <MusicServicePermissionsBox
+        <LFMMusicServicePermissions
           serviceName="librefm"
           serviceDisplayName="Libre.FM"
           existingPermissions={permissions.librefm}

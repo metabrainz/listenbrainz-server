@@ -7,7 +7,7 @@ import ImportStatus from "./ImportStatus";
 import { ToastMsg } from "../../../../notifications/Notifications";
 import GlobalAppContext from "../../../../utils/GlobalAppContext";
 
-type MusicServicePermissionsBoxProps = {
+type LFMMusicServicePermissionsProps = {
   serviceName: "lastfm" | "librefm";
   serviceDisplayName: string;
   existingPermissions?: string;
@@ -16,14 +16,14 @@ type MusicServicePermissionsBoxProps = {
   canImportFeedback?: boolean;
 };
 
-export default function MusicServicePermissionsBox({
+export default function LFMMusicServicePermissions({
   serviceName,
   serviceDisplayName,
   existingPermissions,
   externalUserId,
   existingLatestListenedAt,
   canImportFeedback = false,
-}: MusicServicePermissionsBoxProps) {
+}: LFMMusicServicePermissionsProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const { auth_token } = currentUser;
   const [userId, setUserId] = React.useState<string | undefined>(
