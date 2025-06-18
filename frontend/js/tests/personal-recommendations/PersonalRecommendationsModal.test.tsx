@@ -88,7 +88,9 @@ describe("PersonalRecommendationModal", () => {
     // Submit button should be disabled if no recipient is selected
     expect(submitButton).toBeDisabled();
 
-    const usernameTextInput = await screen.findByRole("input");
+    const usernameTextInput = await screen.findByPlaceholderText(
+      "Add followers*"
+    );
     await user.type(usernameTextInput, "fnord");
 
     // Select a recipient
@@ -143,7 +145,9 @@ describe("PersonalRecommendationModal", () => {
     expect(submitButton).toBeDisabled();
 
     // Select a recipient
-    const usernameTextInput = await screen.findByRole("input");
+    const usernameTextInput = await screen.findByPlaceholderText(
+      "Add followers*"
+    );
     await user.type(usernameTextInput, "fnord");
     const userResultButton = await screen.findByRole("menuitem", {
       name: "fnord",
@@ -170,7 +174,9 @@ describe("PersonalRecommendationModal", () => {
     });
 
     // Select a recipient
-    const usernameTextInput = await screen.findByRole("input");
+    const usernameTextInput = await screen.findByPlaceholderText(
+      "Add followers*"
+    );
     await user.type(usernameTextInput, "fnord");
     const userResultButton = await screen.findByRole("menuitem", {
       name: "fnord",
@@ -199,7 +205,9 @@ describe("PersonalRecommendationModal", () => {
         "This string contains \n\n line breaks and multiple   consecutive   spaces.";
 
       // Select a recipient
-      const usernameTextInput = await screen.findByRole("input");
+      const usernameTextInput = await screen.findByPlaceholderText(
+        "Add followers*"
+      );
       await user.type(usernameTextInput, "fnord");
       const userResultButton = await screen.findByRole("menuitem", {
         name: "fnord",
@@ -241,7 +249,9 @@ describe("PersonalRecommendationModal", () => {
       });
 
       // Select a recipient
-      const usernameTextInput = await screen.findByRole("input");
+      const usernameTextInput = await screen.findByPlaceholderText(
+        "Add followers*"
+      );
       await user.type(usernameTextInput, "fnord");
       const userResultButton = await screen.findByRole("menuitem", {
         name: "fnord",

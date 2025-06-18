@@ -169,7 +169,6 @@ export default NiceModal.create(
             );
           })}
           <input
-            role="input"
             type="text"
             className="form-control"
             onChange={searchUsers}
