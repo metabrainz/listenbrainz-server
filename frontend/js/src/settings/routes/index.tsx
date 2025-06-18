@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { RouteObject } from "react-router";
+import { Navigate, type RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 import ErrorBoundary from "../../error/ErrorBoundary";
 
@@ -98,6 +98,12 @@ const getSettingsRoutes = (): RouteObject[] => {
             const DeleteAccount = await import("../delete/DeleteAccount");
             return { Component: DeleteAccount.default };
           },
+        },
+        {
+          path: "import/",
+          // Keep the /settings/import/ route for LastFM/LibreFM historical links,
+          // and redirect to the music services page that replace those manual importers
+          element: <Navigate to="../music-services/details/" replace />,
         },
       ],
     },
