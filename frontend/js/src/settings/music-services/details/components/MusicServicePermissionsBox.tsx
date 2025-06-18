@@ -1,9 +1,11 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
+import { Link } from "react-router";
 import ServicePermissionButton from "./ExternalServiceButton";
 import ImportStatus from "./ImportStatus";
 import { ToastMsg } from "../../../../notifications/Notifications";
+import GlobalAppContext from "../../../../utils/GlobalAppContext";
 
 type MusicServicePermissionsBoxProps = {
   serviceName: "lastfm" | "librefm";
@@ -13,10 +15,7 @@ type MusicServicePermissionsBoxProps = {
   handlePermissionChange: (serviceName: string, newValue: string) => void;
   externalUserId?: string;
   existingLatestListenedAt?: string;
-  handleImportFeedback?: (
-    evt: React.MouseEvent<HTMLButtonElement>,
-    service: ImportService
-  ) => Promise<void>;
+  canImportFeedback?: boolean;
 };
 
 export default function MusicServicePermissionsBox({
@@ -27,8 +26,10 @@ export default function MusicServicePermissionsBox({
   handlePermissionChange,
   externalUserId,
   existingLatestListenedAt,
-  handleImportFeedback,
+  canImportFeedback = false,
 }: MusicServicePermissionsBoxProps) {
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { auth_token } = currentUser;
   const [userId, setUserId] = React.useState<string | undefined>(
     externalUserId
   );
@@ -107,6 +108,58 @@ export default function MusicServicePermissionsBox({
       );
     }
   };
+
+  const handleImportFeedback = React.useCallback(
+    async (evt: React.MouseEvent<HTMLButtonElement>) => {
+      if (!canImportFeedback) {
+        return;
+      }
+      evt.preventDefault();
+      try {
+        const form = evt.currentTarget.closest("form");
+        if (!form) {
+          throw Error(`Could not find a form with ${serviceName}Username`);
+        }
+        const formData = new FormData(form);
+        const username = formData.get(`${serviceName}Username`);
+        if (!auth_token || !username) {
+          throw Error(
+            `You must fill in your ${serviceDisplayName} username above`
+          );
+        }
+        const { importFeedback } = APIService;
+        const response = await importFeedback(
+          auth_token,
+          username.toString(),
+          serviceName
+        );
+        const { inserted, total } = response;
+        toast.success(
+          <div>
+            Succesfully imported {inserted} out of {total} tracks feedback from{" "}
+            {serviceDisplayName}
+            <br />
+            <Link to="/my/taste">
+              Click here to see your newly loved tracks
+            </Link>
+          </div>
+        );
+      } catch (error) {
+        toast.error(
+          <div>
+            We were unable to import your loved tracks from {serviceDisplayName}
+            , please try again later.
+            <br />
+            If the problem persists please{" "}
+            <a href="mailto:support@metabrainz.org">contact us</a>.
+            <pre>{error.toString()}</pre>
+          </div>
+        );
+      }
+    },
+    [auth_token, canImportFeedback]
+  );
+
   return (
     <div className="card">
       <div className="card-header">
@@ -213,7 +266,8 @@ export default function MusicServicePermissionsBox({
               />
               <label htmlFor={`${serviceName}_import`}>
                 <div className="title">
-                  Connect{permissions[serviceName] === "import" ? "ed" : ""} to{" "}
+                  Connect
+                  {permissions[serviceName] === "import" ? "ed" : ""} to{" "}
                   {serviceDisplayName}
                 </div>
                 <div className="details">
@@ -222,11 +276,11 @@ export default function MusicServicePermissionsBox({
                 </div>
               </label>
             </button>
-            {handleImportFeedback && serviceName === "lastfm" && (
+            {canImportFeedback && (
               <button
                 type="button"
                 className="music-service-option"
-                onClick={(e) => handleImportFeedback(e, serviceName)}
+                onClick={handleImportFeedback}
               >
                 <input
                   readOnly

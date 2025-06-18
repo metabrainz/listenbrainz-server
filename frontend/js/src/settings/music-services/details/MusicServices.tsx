@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { capitalize } from "lodash";
-import { Link, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../../notifications/Notifications";
@@ -38,9 +38,7 @@ export default function MusicServices() {
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
-  const { appleAuth, APIService, currentUser } = React.useContext(
-    GlobalAppContext
-  );
+  const { appleAuth } = React.useContext(GlobalAppContext);
 
   const [permissions, setPermissions] = React.useState({
     spotify: loaderData.current_spotify_permissions,
@@ -178,49 +176,6 @@ export default function MusicServices() {
   };
 
   // Connection handling is now managed inside the MusicServicePermissionsBox components
-  const handleImportFeedback = async (
-    evt: React.MouseEvent<HTMLButtonElement>,
-    service: ImportService
-  ) => {
-    evt.preventDefault();
-    try {
-      const form = evt.currentTarget.closest("form");
-      if (!form) {
-        throw Error("Could not find a form with lastfmUsername");
-      }
-      const formData = new FormData(form);
-      const username = formData.get("lastfmUsername");
-      if (!currentUser?.auth_token || !username) {
-        throw Error("You must fill in your LastFM username above");
-      }
-      const { importFeedback } = APIService;
-      const response = await importFeedback(
-        currentUser.auth_token,
-        username.toString(),
-        service
-      );
-      const { inserted, total } = response;
-      toast.success(
-        <div>
-          Succesfully imported {inserted} out of {total} tracks feedback from{" "}
-          {capitalize(service)}
-          <br />
-          <Link to="/my/taste">Click here to see your newly loved tracks</Link>
-        </div>
-      );
-    } catch (error) {
-      toast.error(
-        <div>
-          We were unable to import your loved tracks from {capitalize(service)},
-          please try again later.
-          <br />
-          If the problem persists please{" "}
-          <a href="mailto:support@metabrainz.org">contact us</a>.
-          <pre>{error.toString()}</pre>
-        </div>
-      );
-    }
-  };
 
   return (
     <>
@@ -365,7 +320,7 @@ export default function MusicServices() {
             loaderData.current_lastfm_settings?.latest_listened_at
           }
           handlePermissionChange={handlePermissionChange}
-          handleImportFeedback={handleImportFeedback}
+          canImportFeedback
         />
 
         <MusicServicePermissionsBox
