@@ -10,9 +10,7 @@ import GlobalAppContext from "../../../../utils/GlobalAppContext";
 type MusicServicePermissionsBoxProps = {
   serviceName: "lastfm" | "librefm";
   serviceDisplayName: string;
-  permissions: any;
-  setPermissions: React.Dispatch<React.SetStateAction<any>>;
-  handlePermissionChange: (serviceName: string, newValue: string) => void;
+  existingPermissions?: string;
   externalUserId?: string;
   existingLatestListenedAt?: string;
   canImportFeedback?: boolean;
@@ -21,9 +19,7 @@ type MusicServicePermissionsBoxProps = {
 export default function MusicServicePermissionsBox({
   serviceName,
   serviceDisplayName,
-  permissions,
-  setPermissions,
-  handlePermissionChange,
+  existingPermissions,
   externalUserId,
   existingLatestListenedAt,
   canImportFeedback = false,
@@ -32,6 +28,9 @@ export default function MusicServicePermissionsBox({
   const { auth_token } = currentUser;
   const [userId, setUserId] = React.useState<string | undefined>(
     externalUserId
+  );
+  const [permissions, setPermissions] = React.useState<string | undefined>(
+    existingPermissions
   );
 
   const [latestListenedAt, setLatestListenedAt] = React.useState<
@@ -45,7 +44,7 @@ export default function MusicServicePermissionsBox({
   const [isEditing, setIsEditing] = React.useState(false);
 
   const editButtonClass =
-    permissions[serviceName] !== "import"
+    permissions !== "import"
       ? "btn-default"
       : (isEditing && "btn-success") || "btn-warning";
 
@@ -87,10 +86,7 @@ export default function MusicServicePermissionsBox({
           />
         );
 
-        setPermissions((prevState: any) => ({
-          ...prevState,
-          [serviceName]: "import",
-        }));
+        setPermissions("import");
         setIsEditing(false);
       } else {
         const body = await response.json();
@@ -108,6 +104,40 @@ export default function MusicServicePermissionsBox({
       );
     }
   };
+
+  const handleDisconnect = React.useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/settings/music-services/${serviceName}/disconnect/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        const body = await response.json();
+        throw body;
+      }
+
+      toast.success(
+        <ToastMsg
+          title="Success"
+          message={`${serviceDisplayName} integration has been disabled.`}
+        />
+      );
+
+      setPermissions("disable");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Error"
+          message={`Failed to disconnect from ${serviceDisplayName}`}
+        />
+      );
+    }
+  }, [serviceName, serviceDisplayName]);
 
   const handleImportFeedback = React.useCallback(
     async (evt: React.MouseEvent<HTMLButtonElement>) => {
@@ -171,7 +201,7 @@ export default function MusicServicePermissionsBox({
           listening history and automatically add your new scrobbles to
           ListenBrainz.
         </p>
-        {permissions[serviceName] === "import" ? (
+        {permissions === "import" ? (
           <ImportStatus serviceName={serviceName} />
         ) : (
           serviceName === "lastfm" && (
@@ -216,7 +246,7 @@ export default function MusicServicePermissionsBox({
                 onChange={(e) => {
                   setUserId(e.target.value);
                 }}
-                readOnly={!isEditing && permissions[serviceName] === "import"}
+                readOnly={!isEditing && permissions === "import"}
               />
             </div>
             <div>
@@ -233,12 +263,12 @@ export default function MusicServicePermissionsBox({
                 }}
                 name={`${serviceName}StartDatetime`}
                 title="Date and time to start import at"
-                readOnly={!isEditing && permissions[serviceName] === "import"}
+                readOnly={!isEditing && permissions === "import"}
               />
             </div>
             <div style={{ flex: 0, alignSelf: "end" }}>
               <button
-                disabled={permissions[serviceName] !== "import"}
+                disabled={permissions !== "import"}
                 type={isEditing ? "button" : "submit"}
                 className={`btn ${editButtonClass}`}
                 onClick={() => {
@@ -262,13 +292,12 @@ export default function MusicServicePermissionsBox({
                 id={`${serviceName}_import`}
                 name={serviceName}
                 value="import"
-                checked={permissions[serviceName] === "import"}
+                checked={permissions === "import"}
               />
               <label htmlFor={`${serviceName}_import`}>
                 <div className="title">
                   Connect
-                  {permissions[serviceName] === "import" ? "ed" : ""} to{" "}
-                  {serviceDisplayName}
+                  {permissions === "import" ? "ed" : ""} to {serviceDisplayName}
                 </div>
                 <div className="details">
                   We will periodically check your {serviceDisplayName} account
@@ -302,11 +331,11 @@ export default function MusicServicePermissionsBox({
             )}
             <ServicePermissionButton
               service={serviceName}
-              current={permissions[serviceName] ?? "disable"}
+              current={permissions ?? "disable"}
               value="disable"
               title="Disable"
               details={`New scrobbles won't be imported from ${serviceDisplayName}`}
-              handlePermissionChange={handlePermissionChange}
+              handlePermissionChange={handleDisconnect}
             />
           </div>
         </form>

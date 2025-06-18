@@ -313,26 +313,22 @@ export default function MusicServices() {
         <MusicServicePermissionsBox
           serviceName="lastfm"
           serviceDisplayName="Last.FM"
-          permissions={permissions}
-          setPermissions={setPermissions}
+          existingPermissions={permissions.lastfm}
           externalUserId={loaderData.current_lastfm_settings?.external_user_id}
           existingLatestListenedAt={
             loaderData.current_lastfm_settings?.latest_listened_at
           }
-          handlePermissionChange={handlePermissionChange}
           canImportFeedback
         />
 
         <MusicServicePermissionsBox
           serviceName="librefm"
           serviceDisplayName="Libre.FM"
-          permissions={permissions}
-          setPermissions={setPermissions}
+          existingPermissions={permissions.librefm}
           externalUserId={loaderData.current_librefm_settings?.external_user_id}
           existingLatestListenedAt={
             loaderData.current_librefm_settings?.latest_listened_at
           }
-          handlePermissionChange={handlePermissionChange}
         />
 
         <div className="card">
