@@ -111,6 +111,7 @@ export default function LFMMusicServicePermissions({
         `/settings/music-services/${serviceName}/disconnect/`,
         {
           method: "POST",
+          body: JSON.stringify({ action: "disable" }),
           headers: {
             "Content-Type": "application/json",
           },
