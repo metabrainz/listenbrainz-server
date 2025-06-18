@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from typing import Any
 
 from flask import Blueprint, render_template, request, url_for, \
     redirect, current_app, jsonify, session
@@ -19,6 +20,7 @@ from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
 from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
 from listenbrainz.domain.lastfm import LastfmService
+from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
@@ -150,6 +152,8 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return SoundCloudService()
         elif service == ExternalServiceType.LASTFM:
             return LastfmService()
+        elif service == ExternalServiceType.LIBREFM:
+            return LibrefmService()
         elif not exclude_apple and service == ExternalServiceType.APPLE:
             return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
@@ -199,7 +203,11 @@ def music_services_details():
     current_funkwhale_permission = "listen" if funkwhale_servers else "disable"
     funkwhale_host_urls = [server.host_url for server in funkwhale_servers] if funkwhale_servers else []
 
-    data = {
+    librefm_service = LibrefmService()
+    librefm_user = librefm_service.get_user(current_user.id)
+    current_librefm_permissions = "import" if librefm_user else "disable"
+
+    data: dict[str, Any] = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
         "current_soundcloud_permissions": current_soundcloud_permissions,
@@ -207,12 +215,17 @@ def music_services_details():
         "current_lastfm_permissions": current_lastfm_permissions,
         "current_funkwhale_permission": current_funkwhale_permission,
         "funkwhale_host_urls": funkwhale_host_urls,
+        "current_librefm_permissions": current_librefm_permissions,
     }
-
     if lastfm_user:
         data["current_lastfm_settings"] = {
             "external_user_id": lastfm_user["external_user_id"],
             "latest_listened_at": lastfm_user["latest_listened_at"],
+        }
+    if librefm_user:
+        data["current_librefm_settings"] = {
+            "external_user_id": librefm_user["external_user_id"],
+            "latest_listened_at": librefm_user["latest_listened_at"],
         }
 
     return jsonify(data)
@@ -261,8 +274,7 @@ def refresh_service_token(service_name: str):
 @api_login_required
 def music_services_connect(service_name: str):
     """ Connect last.fm/libre.fm account to ListenBrainz user. """
-    # TODO: add support for libre.fm
-    if service_name.lower() != "lastfm":
+    if service_name.lower() not in {"lastfm", "librefm"}:
         raise APINotFound("Service %s is invalid." % (service_name,))
 
     data = request.json
@@ -276,7 +288,15 @@ def music_services_connect(service_name: str):
             latest_listened_at = datetime.fromisoformat(data["latest_listened_at"])
         except (ValueError, TypeError):
             raise APIBadRequest(f"Value of latest_listened_at '{data['latest_listened_at']} is invalid.")
-    
+
+    service = _get_service_or_raise_404(service_name)
+    if service_name.lower() == "lastfm":
+        api_key = current_app.config["LASTFM_API_KEY"]
+        api_base_url = current_app.config["LASTFM_API_URL"]
+    else:
+        api_key = current_app.config["LIBREFM_API_KEY"]
+        api_base_url = current_app.config["LIBREFM_API_URL"]
+
     session = requests.Session()
     session.mount("https://", HTTPAdapter(max_retries=Retry(total=2, backoff_factor=1, allowed_methods=["GET"])))
 
@@ -284,17 +304,15 @@ def music_services_connect(service_name: str):
         "method": "user.getrecenttracks",
         "user": data['external_user_id'],
         "format": "json",
-        "api_key": current_app.config["LASTFM_API_KEY"],
+        "api_key": api_key,
         "limit": 1,
     }
     if latest_listened_at:
         params["from"] = int(latest_listened_at.timestamp())
-    response = session.get(current_app.config["LASTFM_API_URL"], params=params)
+    response = session.get(api_base_url, params=params)
     if response.status_code == 404:
-        raise APINotFound(f"Last.FM user with username '{data['external_user_id']}' not found")
+        raise APINotFound(f"User with username '{data['external_user_id']}' not found for service {service_name.capitalize()}.")
 
-    # TODO: make last.fm start import timestamp configurable
-    service = LastfmService()
     service.add_new_user(current_user.id, {
         "external_user_id": data["external_user_id"],
         "latest_listened_at": latest_listened_at,
@@ -305,7 +323,7 @@ def music_services_connect(service_name: str):
         lfm_data = response.json()
         total_listens = int(lfm_data["recenttracks"]["@attr"]["total"])
     except Exception:
-        current_app.logger.error("Unable to fetch last.fm user data:", exc_info=True)
+        current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
 
     return jsonify({"success": True, "totalLfmListens": total_listens})
 
