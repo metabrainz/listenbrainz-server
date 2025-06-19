@@ -79,15 +79,8 @@ def import_data():
     else:
         user_has_email = True
 
-    # Return error if LIBREFM_API_KEY is not given in config.py
-    if 'LIBREFM_API_KEY' not in current_app.config or current_app.config['LIBREFM_API_KEY'] == "":
-        return jsonify({"error": "LIBREFM_API_KEY not specified."}), 404
-
     data = {
         "user_has_email": user_has_email,
-        "profile_url": url_for('user.index', path="", user_name=current_user.musicbrainz_id),
-        "librefm_api_url": current_app.config["LIBREFM_API_URL"],
-        "librefm_api_key": current_app.config["LIBREFM_API_KEY"],
     }
 
     return jsonify(data)
