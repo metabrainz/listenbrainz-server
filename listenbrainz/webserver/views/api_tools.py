@@ -1,4 +1,4 @@
-import logging
+import logging, os
 from datetime import datetime
 from typing import Dict, Tuple
 from urllib.parse import urlparse
@@ -18,8 +18,9 @@ import sentry_sdk
 
 from typing import NoReturn
 
-from flask import current_app, request
+from flask import current_app, request, jsonify
 
+from werkzeug.utils import secure_filename
 from listenbrainz.listenstore import LISTEN_MINIMUM_TS
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW, db_conn
 from listenbrainz.webserver.errors import APIServiceUnavailable, APIBadRequest, APIUnauthorized, \
@@ -40,6 +41,9 @@ MAX_LISTENS_PER_REQUEST = 1000
 
 #: The maximum size of a payload in bytes. The same as MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST.
 MAX_LISTEN_PAYLOAD_SIZE = MAX_LISTEN_SIZE * MAX_LISTENS_PER_REQUEST
+
+#: The maximum size of a uploaded listening history files in bytes and some buffer for other parts of the request.
+MAX_FILE_UPLOAD_SIZE = 104857600 + 20
 
 #: The maximum length of a tag
 MAX_TAG_SIZE = 64
@@ -542,3 +546,20 @@ def _allow_metabrainz_domains(tag, name, value):
 def _filter_description_html(description):
     ok_tags = [u"a", u"strong", u"b", u"em", u"i", u"u", u"ul", u"li", u"p", u"br"]
     return bleach.clean(description, tags=ok_tags, attributes={"a": _allow_metabrainz_domains}, strip=True)
+
+
+def upload_listening_history_files(file, file_name):
+    UPLOAD_DIR = 'uploads'
+
+    ext = os.path.splitext(file_name)[1].lower()
+
+    if ext not in ['.zip', '.json', '.jsonl', '.csv']:
+        raise APIBadRequest('Unsupported file type!')
+    
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    filename = f"{uuid.uuid4().hex}{ext}"
+    save_path = os.path.join(UPLOAD_DIR, secure_filename(filename))
+    file.save(save_path)
+
+    return save_path
