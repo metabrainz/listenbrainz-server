@@ -383,6 +383,13 @@ export default function AddData() {
             </Link>
           </em>
         </li>
+        <li>
+          <em>
+            <Link to="/settings/import/">
+              Import your listening history (file uploads)
+            </Link>
+          </em>
+        </li>
       </ul>
 
       <h3>Playlist management</h3>
