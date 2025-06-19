@@ -111,6 +111,16 @@ const getExploreRoutes = (): RouteObject[] => {
             return { Component: AIBrainzComponent.default };
           },
         },
+        {
+          path: "genre-explorer/:genreMBID",
+          lazy: async () => {
+            const GenreExplorer = await import(
+              "../genre-explorer/GenreExplorer"
+            );
+            return { Component: GenreExplorer.default };
+          },
+          loader: RouteQueryLoader("genre-explorer"),
+        },
       ],
     },
   ];
