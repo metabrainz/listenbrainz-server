@@ -34,9 +34,12 @@ type MusicServicesLoaderData = {
 };
 
 export default function MusicServices() {
-  const { spotifyAuth, soundcloudAuth, critiquebrainzAuth } = React.useContext(
-    GlobalAppContext
-  );
+  const {
+    spotifyAuth,
+    soundcloudAuth,
+    critiquebrainzAuth,
+    currentUser,
+  } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
@@ -207,7 +210,6 @@ export default function MusicServices() {
           }),
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Token ${currentUser?.auth_token}`,
           },
         }
       );
