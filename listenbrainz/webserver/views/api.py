@@ -26,6 +26,7 @@ from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, MAX_FILE_UPLOAD_SIZE, \
     LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
     get_non_negative_param, _parse_int_arg, upload_listening_history_files
+from listenbrainz.webserver.views.import_listens import create_import_task
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -900,6 +901,10 @@ def import_files():
 
     if not file_path:
         APIInternalServerError("The file was not able to upload!")
+    try:
+        create_import_task(file_path, file_type)
+    except:
+        raise APIBadRequest(f"Error in creating the import task!")
 
     # For testing
     return jsonify({"file_path":file_path})

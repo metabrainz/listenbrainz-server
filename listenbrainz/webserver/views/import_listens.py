@@ -14,9 +14,6 @@ from listenbrainz.webserver.login import api_login_required
 import_bp = Blueprint("import", __name__)
 
 
-@import_bp.post("/")
-@api_login_required
-@web_listenstore_needed
 def create_import_task(file_path, service):
     """ Add a request to import the listening history data in background. """
     try:
@@ -63,7 +60,7 @@ def create_import_task(file_path, service):
             result = db_conn.execute(text(query), {
                 "user_id": current_user.id,
                 "task": "import_all_user_data",
-                "metadata": json.dumps({"import_id": import_task.id, "file_path": file_path})
+                "metadata": json.dumps({"import_id": import_task.id, "file_path": file_path, "service": import_task.service})
             })
             task = result.first()
             if task is not None:
@@ -89,7 +86,7 @@ def create_import_task(file_path, service):
 def list_export_tasks():
     """ Retrieve the all import tasks for the current user """
     result = db_conn.execute(
-        text("SELECT * FROM listens_importer WHERE user_id = :user_id ORDER BY last_updated DESC"),
+        text("SELECT * FROM background_tasks WHERE user_id = :user_id ORDER BY last_updated DESC"),
         {"user_id": current_user.id}
     )
     rows = result.mappings().all()
