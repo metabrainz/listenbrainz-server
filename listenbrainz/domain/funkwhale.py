@@ -26,10 +26,19 @@ class FunkwhaleService:
         self.client_secret = current_app.config['FUNKWHALE_CLIENT_SECRET']
         self.redirect_url = current_app.config['FUNKWHALE_CALLBACK_URL']
 
-    def get_user(self, user_id: int, host_url: str, refresh: bool = False) -> Optional[dict]:
+    def get_user(self, user_id: int, host_url: str = None, refresh: bool = False) -> Optional[dict]:
         """ If refresh = True, then check whether the access token has expired and refresh it
-        before returning the user."""
-        user = funkwhale.get_user(db_conn, user_id, host_url)
+        before returning the user. If host_url is not provided, returns the first connection for the user."""
+        if host_url:
+            user = funkwhale.get_user(db_conn, user_id, host_url)
+        else:
+            # For compatibility with generic service interface, get the first connection
+            server = FunkwhaleServer.query.filter_by(user_id=user_id).first()
+            if not server:
+                return None
+            # Use the db function to avoid duplication
+            user = funkwhale.get_user(db_conn, user_id, server.host_url)
+        
         if user and refresh and self.user_oauth_token_has_expired(user):
             user = self.refresh_access_token(user['user_id'], user['host_url'], user['refresh_token'])
         return user
@@ -213,6 +222,20 @@ class FunkwhaleService:
             db.session.delete(server)
             db.session.commit()
 
+    def remove_user(self, user_id: int):
+        """ Delete all Funkwhale server connections for a user. This method is called
+        when a user disables Funkwhale integration completely.
+
+        Args:
+            user_id (int): the ListenBrainz row ID of the user
+        """
+        servers = FunkwhaleServer.query.filter_by(user_id=user_id).all()
+        for server in servers:
+            db.session.delete(server)
+        if servers:
+            db.session.commit()
+            current_app.logger.info(f"Removed {len(servers)} Funkwhale server connections for user {user_id}")
+
     def user_oauth_token_has_expired(self, user: dict) -> bool:
         """ Check if the user's OAuth token has expired.
 
@@ -221,4 +244,15 @@ class FunkwhaleService:
         Returns:
             True if the token has expired, False otherwise
         """
-        return int(time.time()) >= user['token_expiry'] 
+        from datetime import timezone
+        
+        token_expiry = user['token_expiry']
+        if isinstance(token_expiry, datetime):
+            # Compare datetime objects using UTC timezone
+            now = datetime.now(timezone.utc)
+            if token_expiry.tzinfo is None:
+                token_expiry = token_expiry.replace(tzinfo=timezone.utc)
+            return now >= token_expiry
+        else:
+            # Fallback: assume it's a timestamp integer
+            return int(time.time()) >= token_expiry

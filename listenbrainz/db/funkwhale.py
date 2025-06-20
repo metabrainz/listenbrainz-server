@@ -19,7 +19,7 @@ def get_user(connection, user_id: int, host_url: str) -> Optional[Dict[str, Any]
         return None
         
     return {
-        'user_id': server.user_id,
+        'user_id': user_id,
         'host_url': server.host_url,
         'client_id': server.client_id,
         'client_secret': server.client_secret,

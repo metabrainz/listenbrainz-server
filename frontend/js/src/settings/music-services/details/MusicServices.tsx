@@ -107,6 +107,7 @@ export default function MusicServices() {
           // lastfm and librefm state is now managed in the LFMMusicServicePermissions component
           case "funkwhale":
             setFunkwhaleHostUrl("");
+            setConnectedFunkwhaleServers([]);
             break;
           default:
             break;
