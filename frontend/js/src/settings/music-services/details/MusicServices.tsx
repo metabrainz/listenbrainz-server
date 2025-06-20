@@ -210,6 +210,7 @@ export default function MusicServices() {
           }),
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Token ${currentUser?.auth_token}`,
           },
         }
       );
