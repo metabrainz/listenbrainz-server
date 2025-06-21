@@ -177,6 +177,43 @@ const searchForSoundcloudTrack = async (
   return responseBody?.[0]?.uri ?? null;
 };
 
+const searchForFunkwhaleTrack = async (
+  funkwhaleToken: string,
+  instanceURL: string,
+  trackName?: string,
+  artistName?: string
+): Promise<FunkwhaleTrack | null> => {
+  let query = trackName ?? "";
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  if (!query) {
+    return null;
+  }
+
+  const response = await fetch(
+    `${instanceURL}/api/v1/tracks/?search=${encodeURIComponent(query)}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${funkwhaleToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const error = new Error(errorBody.detail || response.statusText);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  const responseBody = await response.json();
+  const tracks = responseBody?.results ?? [];
+  return tracks.length > 0 ? tracks[0] : null;
+};
+
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
@@ -544,6 +581,7 @@ type GlobalAppProps = {
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
   appleMusic?: AppleMusicUser;
+  funkwhale?: FunkwhaleUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
 };
@@ -592,6 +630,7 @@ const getPageProps = async (): Promise<{
       critiquebrainz,
       musicbrainz,
       appleMusic,
+      funkwhale,
       sentry_traces_sample_rate,
       sentry_dsn,
       user_preferences,
@@ -623,6 +662,7 @@ const getPageProps = async (): Promise<{
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
       appleAuth: appleMusic,
+      funkwhaleAuth: funkwhale,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {
@@ -1122,6 +1162,7 @@ export function getBaseUrl(): string {
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
+  searchForFunkwhaleTrack,
   getMBIDMappingArtistLink,
   getStatsArtistLink,
   getArtistLink,

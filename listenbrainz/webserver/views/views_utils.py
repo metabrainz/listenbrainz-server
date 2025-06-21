@@ -6,6 +6,8 @@ from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
+from listenbrainz.domain.funkwhale import FunkwhaleService
+from listenbrainz.model.funkwhale import FunkwhaleServer
 
 
 def get_current_spotify_user():
@@ -89,4 +91,23 @@ def get_current_apple_music_user():
     return {
         "developer_token": developer_token,
         "music_user_token": user["refresh_token"]
+    }
+
+
+def get_current_funkwhale_user():
+    """Returns the funkwhale access token and instance URL for the current
+    authenticated user. If the user is unauthenticated or has not
+    linked a Funkwhale account, returns empty dict.
+    For Funkwhale, we return the first connected server if multiple exist."""
+    if not current_user.is_authenticated:
+        return {}
+    # Get the first connected Funkwhale server for this user
+    server = FunkwhaleServer.query.filter_by(user_id=current_user.id).first()
+    if server is None:
+        return {}
+    return {
+        "access_token": server.access_token,
+        "instance_url": server.host_url,
+        "user_id": str(server.user_id),
+        "username": current_user.musicbrainz_id,
     }

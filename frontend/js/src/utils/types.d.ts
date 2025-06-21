@@ -693,9 +693,10 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  funkwhaleEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic"
+    "spotify" | "youtube" | "soundcloud" | "appleMusic" | "funkwhale"
   >;
 };
 

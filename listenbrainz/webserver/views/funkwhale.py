@@ -219,7 +219,7 @@ def get_funkwhale_status():
         host_url = validate_funkwhale_url(host_url)
         
         service = FunkwhaleService()
-        connection = service.get_user(user['id'], host_url)
+        connection = service.get_user(user['id'], host_url, refresh=True)  # Auto-refresh if expired
         
         if not connection:
             raise APINotFound("No Funkwhale connection found")
@@ -229,6 +229,7 @@ def get_funkwhale_status():
             'connection': {
                 'user_id': connection['user_id'],
                 'host_url': connection['host_url'],
+                'access_token': connection['access_token'],
                 'token_expiry': connection['token_expiry']
             }
         })

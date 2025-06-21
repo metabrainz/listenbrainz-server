@@ -30,6 +30,7 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
+import FunkwhalePlayer from "./FunkwhalePlayer";
 import {
   DataSourceKey,
   defaultDataSourcesPriority,
@@ -55,7 +56,8 @@ export type DataSourceTypes =
   | SpotifyPlayer
   | YoutubePlayer
   | SoundcloudPlayer
-  | AppleMusicPlayer;
+  | AppleMusicPlayer
+  | FunkwhalePlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -107,6 +109,9 @@ function isListenFromDatasource(
   if (datasource instanceof AppleMusicPlayer) {
     return AppleMusicPlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof FunkwhalePlayer) {
+    return FunkwhalePlayer.isListenFromThisService(listen);
+  }
   return undefined;
 }
 
@@ -118,6 +123,7 @@ export default function BrainzPlayer() {
     youtubeAuth,
     spotifyAuth,
     soundcloudAuth,
+    funkwhaleAuth,
     appleAuth,
     userPreferences,
     APIService,
@@ -127,8 +133,25 @@ export default function BrainzPlayer() {
     refreshSpotifyToken,
     refreshYoutubeToken,
     refreshSoundcloudToken,
+    refreshFunkwhaleToken: apiRefreshFunkwhaleToken,
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
+
+  // Wrapper for funkwhale token refresh that gets the host URL from context
+  const refreshFunkwhaleToken = React.useCallback(async () => {
+    const hostUrl = funkwhaleAuth?.instance_url;
+    if (!hostUrl) {
+      throw new Error("No Funkwhale instance URL found in context");
+    }
+    if (!currentUser?.auth_token) {
+      throw new Error("No user authentication token available");
+    }
+    return apiRefreshFunkwhaleToken(currentUser.auth_token, hostUrl);
+  }, [
+    apiRefreshFunkwhaleToken,
+    funkwhaleAuth?.instance_url,
+    currentUser?.auth_token,
+  ]);
 
   // Constants
   // By how much should we seek in the track?
@@ -143,6 +166,7 @@ export default function BrainzPlayer() {
     (userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
   // BrainzPlayerContext
@@ -164,6 +188,7 @@ export default function BrainzPlayer() {
   const {
     spotifyEnabled = true,
     appleMusicEnabled = true,
+    funkwhaleEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
     brainzplayerEnabled = true,
@@ -175,6 +200,9 @@ export default function BrainzPlayer() {
     appleMusicEnabled &&
       AppleMusicPlayer.hasPermissions(appleAuth) &&
       "appleMusic",
+    funkwhaleEnabled &&
+      FunkwhalePlayer.hasPermissions(funkwhaleAuth) &&
+      "funkwhale",
     soundcloudEnabled &&
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
@@ -190,6 +218,7 @@ export default function BrainzPlayer() {
   const youtubePlayerRef = React.useRef<YoutubePlayer>(null);
   const soundcloudPlayerRef = React.useRef<SoundcloudPlayer>(null);
   const appleMusicPlayerRef = React.useRef<AppleMusicPlayer>(null);
+  const funkwhalePlayerRef = React.useRef<FunkwhalePlayer>(null);
   const dataSourceRefs: Array<React.RefObject<
     DataSourceTypes
   >> = React.useMemo(() => {
@@ -207,6 +236,9 @@ export default function BrainzPlayer() {
           break;
         case "appleMusic":
           dataSources.push(appleMusicPlayerRef);
+          break;
+        case "funkwhale":
+          dataSources.push(funkwhalePlayerRef);
           break;
         default:
         // do nothing
@@ -1084,6 +1116,30 @@ export default function BrainzPlayer() {
             onInvalidateDataSource={invalidateDataSource}
             ref={soundcloudPlayerRef}
             refreshSoundcloudToken={refreshSoundcloudToken}
+            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            onPlayerPausedChange={playerPauseChange}
+            onProgressChange={progressChange}
+            onDurationChange={durationChange}
+            onTrackInfoChange={throttledTrackInfoChange}
+            onTrackEnd={playNextTrack}
+            onTrackNotFound={failedToPlayTrack}
+            handleError={handleError}
+            handleWarning={handleWarning}
+            handleSuccess={handleSuccess}
+          />
+        )}
+        {userPreferences?.brainzplayer?.funkwhaleEnabled !== false && (
+          <FunkwhalePlayer
+            volume={brainzPlayerContextRef.current.volume}
+            show={
+              brainzPlayerContextRef.current.isActivated &&
+              dataSourceRefs[
+                brainzPlayerContextRef.current.currentDataSourceIndex
+              ]?.current instanceof FunkwhalePlayer
+            }
+            onInvalidateDataSource={invalidateDataSource}
+            ref={funkwhalePlayerRef}
+            refreshFunkwhaleToken={refreshFunkwhaleToken}
             playerPaused={brainzPlayerContextRef.current.playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
