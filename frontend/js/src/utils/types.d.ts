@@ -305,6 +305,19 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare type UserGenreDayActivityResponse = {
+	payload: {
+		time_ranges: Array<{
+			timeOfDay: string;
+			timeRange: string;
+			genres: {
+			  name: string;
+			  listen_count: number;
+			}[];
+		}>;
+	  };
+}
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
