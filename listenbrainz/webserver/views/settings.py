@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from flask import Blueprint, render_template, request, url_for, \
-    redirect, current_app, jsonify
+    redirect, current_app, jsonify, session
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 import requests
@@ -29,7 +29,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-from data.model.external_service import ExternalServiceType
+from listenbrainz.domain.funkwhale import FunkwhaleService, FunkwhaleServer
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -151,6 +151,8 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return AppleService()
         elif include_mb and service == ExternalServiceType.MUSICBRAINZ:
             return MusicBrainzService()
+        elif service == ExternalServiceType.FUNKWHALE:
+            return FunkwhaleService()
     except KeyError:
         raise NotFound("Service %s is invalid." % (name,))
 
@@ -188,6 +190,12 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
+    funkWhale_service = FunkwhaleService()
+    # Get all connected Funkwhale servers for the user
+    funkwhale_servers = FunkwhaleServer.query.filter_by(user_id=current_user.id).all()
+    current_funkwhale_permission = "listen" if funkwhale_servers else "disable"
+    funkwhale_host_urls = [server.host_url for server in funkwhale_servers] if funkwhale_servers else []
+
     librefm_service = LibrefmService()
     librefm_user = librefm_service.get_user(current_user.id)
     current_librefm_permissions = "import" if librefm_user else "disable"
@@ -198,6 +206,8 @@ def music_services_details():
         "current_soundcloud_permissions": current_soundcloud_permissions,
         "current_apple_permissions": current_apple_permissions,
         "current_lastfm_permissions": current_lastfm_permissions,
+        "current_funkwhale_permission": current_funkwhale_permission,
+        "funkwhale_host_urls": funkwhale_host_urls,
         "current_librefm_permissions": current_librefm_permissions,
     }
     if lastfm_user:
@@ -218,6 +228,11 @@ def music_services_details():
 @login_required
 def music_services_callback(service_name: str):
     service = _get_service_or_raise_404(service_name, exclude_apple=True)
+
+    # Check for error parameter first
+    error = request.args.get('error')
+    if error:
+        return redirect(url_for('settings.index', path='music-services/details'))
 
     code = request.args.get('code')
     if not code:
@@ -343,6 +358,24 @@ def music_services_disconnect(service_name: str):
         elif service_name == 'apple':
             service.add_new_user(user_id=current_user.id)
             return jsonify({"success": True})
+        elif service_name == 'funkwhale':
+            if action:
+                # For Funkwhale, we need to get the host URL from the request
+                data = json.loads(request.data)
+                host_url = data.get('host_url')
+                if not host_url:
+                    raise BadRequest('Missing host_url for Funkwhale')
+                # Store host URL in session for callback
+                session['funkwhale_host_url'] = host_url
+                return jsonify({"url": service.get_authorize_url(host_url, [
+                    'read:profile',
+                    'read:libraries',
+                    'read:favorites',
+                    'read:listenings',
+                    'read:follows',
+                    'read:playlists',
+                    'read:radios'
+                ])})
 
     raise BadRequest('Invalid action')
 

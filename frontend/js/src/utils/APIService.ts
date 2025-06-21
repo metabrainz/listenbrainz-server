@@ -258,6 +258,29 @@ export default class APIService {
     return this.refreshAccessToken("musicbrainz");
   };
 
+  refreshFunkwhaleToken = async (
+    userToken: string,
+    hostUrl?: string
+  ): Promise<string> => {
+    if (!hostUrl) {
+      throw new Error("Host URL is required for Funkwhale token refresh");
+    }
+    const response = await fetch(
+      `/settings/music-services/funkwhale/status/?host_url=${encodeURIComponent(
+        hostUrl
+      )}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.connection.access_token;
+  };
+
   refreshAccessToken = async (service: string): Promise<string> => {
     const response = await fetch(
       `/settings/music-services/${service}/refresh/`,
