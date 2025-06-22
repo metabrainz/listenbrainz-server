@@ -3,8 +3,8 @@ from typing import Iterator, Optional, Dict
 
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
-from listenbrainz_spark.stats.incremental.sitewide.genre_activity import GenreTrendSitewideStatsQuery, \
-    GenreTrendSitewideMessageCreator
+from listenbrainz_spark.stats.incremental.sitewide.genre_activity import GenreActivitySitewideStatsQuery, \
+    GenreActivitySitewideMessageCreator
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def get_genre_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     """
     logger.debug(f"Calculating genre_trend_{stats_range}")
     selector = ListenRangeSelector(stats_range)
-    entity_obj = GenreTrendSitewideStatsQuery(selector)
-    message_creator = GenreTrendSitewideMessageCreator(selector)
+    entity_obj = GenreActivitySitewideStatsQuery(selector)
+    message_creator = GenreActivitySitewideMessageCreator(selector)
     engine = IncrementalStatsEngine(entity_obj, message_creator)
     return engine.run()

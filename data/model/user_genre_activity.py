@@ -5,7 +5,7 @@
 from pydantic import BaseModel, NonNegativeInt, constr
 
 
-class GenreTrendRecord(BaseModel):
+class GenreActivityRecord(BaseModel):
     """ Each individual record for user's genre trend contains the genre name,
         time bracket, and listen count for that genre during that time period.
     """
