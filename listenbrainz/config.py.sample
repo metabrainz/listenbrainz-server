@@ -134,6 +134,10 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # Size is in bytes
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
+# MAX file size to be allowed for the listening history files import, default is infinite
+# Size is in bytes
+MAX_IMPORT_CONTENT_LENGTH = 200 * 1024 * 1024 # 200MB
+
 # Specify the upload folder where all the lastfm-backup will be stored
 # The path must be absolute path
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
