@@ -1,4 +1,3 @@
-
 import logging
 import time
 from kombu import Connection, Exchange, Producer
@@ -6,6 +5,7 @@ import internetarchive
 from listenbrainz import config
 
 logger = logging.getLogger(__name__)
+
 def fetch_and_seed_collections(limit_per_collection=1000, sleep_seconds=1):
     """Fetch collection identifiers and seed them to RabbitMQ"""
     logger.info("Starting Internet Archive seeder...")
@@ -25,7 +25,6 @@ def fetch_and_seed_collections(limit_per_collection=1000, sleep_seconds=1):
         virtual_host=config.RABBITMQ_VHOST
     ) as connection:
         producer = Producer(connection)
-        producer.declare()
 
         for collection in collections:
             logger.info("Seeding collection: %s", collection['name'])
@@ -37,19 +36,21 @@ def fetch_and_seed_collections(limit_per_collection=1000, sleep_seconds=1):
                     break
 
                 identifier = item.get('identifier')
+                if not identifier:
+                    continue
+
                 producer.publish(
                     {'identifier': identifier},
                     exchange=exchange,
                     routing_key='ia_metadata_seed',
                     declare=[exchange],
-                    serializer='json' 
+                    serializer='json'
                 )
                 count += 1
                 logger.info("Published identifier %s (%d/%d) to queue", identifier, count, limit_per_collection)
                 time.sleep(sleep_seconds)
 
             logger.info("Seeded %d items from %s", count, collection['name'])
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)

@@ -271,22 +271,17 @@ CREATE TABLE soundcloud_cache.track (
     data                    JSONB NOT NULL
 );
 
+
 CREATE TABLE internetarchive_cache.track (
-    id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
     track_id      TEXT UNIQUE NOT NULL,
-    title         TEXT NOT NULL,
-    creator       TEXT,        -- Main performer/creator (from IA metadata)
-    artist        TEXT,        -- Optionally store a separate artist field
+    name          TEXT NOT NULL,
+    artist        TEXT[] NOT NULL,
     album         TEXT,
-    year          TEXT,
-    notes         TEXT,
-    topics        TEXT,
-    stream_url    TEXT NOT NULL,
-    duration      INTEGER,
+    stream_urls   TEXT[] NOT NULL,
     artwork_url   TEXT,
-    date          TEXT,
     data          JSONB NOT NULL,
-    last_updated  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    last_updated  TIMESTAMPTZ DEFAULT NOW()
 );
 
 
