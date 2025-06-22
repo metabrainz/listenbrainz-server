@@ -1,17 +1,13 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional, Any
 
 class InternetArchiveTrack(BaseModel):
-    id: str
-    track_id: Optional[str] = None  # unique identifier for the track
-    title: str
-    creator: str
-    artist: Optional[str] = None    # optional field to store artist name if different from creator
-    album: str = ""
-    year: str = ""
-    notes: str = ""
-    topics: str = "" 
-    stream_url: str
-    duration: Optional[int] = None
+    id: Optional[int] = None  
+    track_id: str           
+    name: str                 
+    artist: List[str]        
+    album: Optional[str] = None
+    stream_urls: List[str]   
     artwork_url: Optional[str] = None
-    date: Optional[str] = None
+    data: dict               
+    last_updated: Optional[str] = None

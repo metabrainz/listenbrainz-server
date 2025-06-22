@@ -1,23 +1,44 @@
 import logging
-import re
 import json
-from html import unescape
 from kombu.mixins import ConsumerMixin
 from kombu import Connection, Queue, Exchange
 from sqlalchemy import text
 import internetarchive
+from bs4 import BeautifulSoup
 from brainzutils import cache
 from listenbrainz import config
 from listenbrainz.webserver import create_app
 from listenbrainz.db import timescale
-from listenbrainz.metadata_cache.internetarchive.models import InternetArchiveTrack
 from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
 
 logger = logging.getLogger(__name__)
 
+# Comprehensive list of audio format keywords
+AUDIO_KEYWORDS = [
+    "mp3", "ogg", "vorbis", "flac", "wav", "aiff", "apple lossless", "m4a", "opus", "aac",
+    "au", "wma", "alac", "ape", "shn", "tta", "wv", "mpc", "aifc", "m4b", "m4p", "vbr", 
+    "m3u", "cylinder", "78rpm", "lossless", "lossy", "webm", "aif", "mid", "midi", "amr",
+    "ra", "rm", "vox", "dts", "ac3", "atrac", "pcm", "adpcm", "gsm", "mmf", "3ga", "8svx"
+]
+
+def extract_from_description(description, field):
+    """
+    Extracts a field (e.g. 'Artist', 'Album') from the IA description HTML using BeautifulSoup.
+    """
+    if not description:
+        return None
+    try:
+        soup = BeautifulSoup(description, "html.parser")
+        for element in soup.find_all(['div', 'p', 'span']):
+            text = element.get_text(strip=True)
+            if text.startswith(f"{field}:"):
+                return text[len(field)+1:].strip()
+    except Exception as e:
+        logger.error("Error parsing description HTML: %s", str(e))
+    return None
+
 class InternetArchiveIndexer(ConsumerMixin):
     def __init__(self, app):
-        # Initialize RabbitMQ connection pools and exchanges
         init_rabbitmq_connection(app)
         self.database = timescale.engine
         self.redis = cache._r
@@ -25,7 +46,6 @@ class InternetArchiveIndexer(ConsumerMixin):
 
     @property
     def connection(self):
-        # Kombu's ConsumerMixin expects this property to return a valid kombu.Connection
         return Connection(
             hostname=self.app.config["RABBITMQ_HOST"],
             userid=self.app.config["RABBITMQ_USERNAME"],
@@ -85,134 +105,82 @@ class InternetArchiveIndexer(ConsumerMixin):
     def process_identifier(self, identifier, conn):
         try:
             item = internetarchive.get_item(identifier)
-            files = list(item.get_files())
+            item_metadata = item.item_metadata
+            meta = item_metadata.get("metadata", {})
+            files = item_metadata.get("files", [])
         except Exception as e:
             logger.error("Failed to fetch %s: %s", identifier, str(e))
             raise
 
-        count = 0
-        for file in files:
-            if self.process_file(file, identifier, conn):
-                count += 1
+        # Collect all playable audio file URLs for the whole item
+        stream_urls = []
+        artwork_url = None
+        audio_file_count = 0
+        
+        for f in files:
+            fmt = f.get("format", "").lower()
+            
+            # Check if any audio keyword is in the format string
+            if any(keyword in fmt for keyword in AUDIO_KEYWORDS):
+                stream_urls.append(f"https://archive.org/download/{identifier}/{f['name']}")
+                audio_file_count += 1
+                
+            # Check for artwork
+            if not artwork_url and fmt in {"jpeg", "jpg", "png"}:
+                artwork_url = f"https://archive.org/download/{identifier}/{f['name']}"
 
-        logger.info("Processed %d files from %s", count, identifier)
+        # Extract artist with fallback to description parsing
+        artist = meta.get("creator")
+        if not artist:
+            artist = extract_from_description(meta.get("description", ""), "Artist")
+        if isinstance(artist, str):
+            artist = [artist]
+        elif artist is None:
+            artist = []
 
-    def process_file(self, file, identifier, conn):
-        if not self.is_audio_file(file):
-            return False
+        # Extract album with fallback to description parsing
+        album = meta.get("album")
+        if not album:
+            album = extract_from_description(meta.get("description", ""), "Album")
 
-        audio_url = f"https://archive.org/download/{identifier}/{file.name}"
-        if self.exists_in_db(conn, audio_url):
-            return False
-
-        track = self.create_track(identifier, file.name, audio_url, file.item.metadata)
-        self.store_in_db(conn, audio_url, track)
-        return True
-
-    def is_audio_file(self, file):
-        fmt = file.format.lower() if file.format else ''
-        return fmt.endswith(('mp3', 'ogg', 'wav', 'flac'))
-
-    def exists_in_db(self, conn, audio_url):
-        return conn.execute(
-            text("SELECT 1 FROM metadata_cache.internetarchive WHERE id = :id"),
-            {'id': audio_url}
-        ).fetchone()
-
-    def store_in_db(self, conn, audio_url, track):
-         conn.execute(
-        text("""
-            INSERT INTO internetarchive_cache.track
-                (track_id, title, creator, artist, album, year, notes, topics, stream_url, duration, artwork_url, date, data, last_updated)
-            VALUES
-                (:track_id, :title, :creator, :artist, :album, :year, :notes, :topics, :stream_url, :duration, :artwork_url, :date, :data, NOW())
-            ON CONFLICT (track_id) DO UPDATE 
-            SET
-                title = EXCLUDED.title,
-                creator = EXCLUDED.creator,
-                artist = EXCLUDED.artist,
-                album = EXCLUDED.album,
-                year = EXCLUDED.year,
-                notes = EXCLUDED.notes,
-                topics = EXCLUDED.topics,
-                stream_url = EXCLUDED.stream_url,
-                duration = EXCLUDED.duration,
-                artwork_url = EXCLUDED.artwork_url,
-                date = EXCLUDED.date,
-                data = EXCLUDED.data,
-                last_updated = NOW()
-        """),
-        {
-            'track_id': track.track_id or track.id,
-            'title': track.title,
-            'creator': track.creator,
-            'artist': track.artist,
-            'album': track.album,
-            'year': track.year,
-            'notes': track.notes,
-            'topics': track.topics,
-            'stream_url': track.stream_url,
-            'duration': track.duration,
-            'artwork_url': track.artwork_url,
-            'date': track.date,
-            'data': track.json()
+        # Prepare the track object
+        track = {
+            "track_id": f"https://archive.org/details/{identifier}",
+            "name": meta.get("title", ""),
+            "artist": artist,
+            "album": album,
+            "stream_urls": stream_urls,
+            "artwork_url": artwork_url,
+            "data": meta,
         }
-    )
 
-    def create_track(self, identifier, filename, audio_url, meta):
-        title = self.ensure_str(meta.get('title')) or self.extract_from_filename(filename)
-        creator = self.ensure_str(meta.get('creator'))
-        artist = self.ensure_str(meta.get('artist')) or creator
-        album = self.ensure_str(meta.get('album')) or self.ensure_str(meta.get('label'))
-        year = self.ensure_str(meta.get('year')) or self.ensure_str(meta.get('date'))
-        notes = self.ensure_str(meta.get('notes')) or self.ensure_str(meta.get('description'))
-        topics = self.ensure_str(meta.get('subject'))  # 'subject' is the key for topics in IA metadata
-
-        # Fallback extraction from notes if missing
-        if not creator and notes:
-            creator = self.extract_metadata_from_html(notes, "Artist")
-        if not album and notes:
-            album = self.extract_metadata_from_html(notes, "Album")
-        if not year and notes:
-            year = self.extract_metadata_from_html(notes, "Year")
-
-        # Optionally set duration and artwork_url if available in meta
-        duration = meta.get('length') or None  # IA sometimes uses 'length'
-        artwork_url = meta.get('image') if meta.get('image') else None
-
-        return InternetArchiveTrack(
-            id=identifier,
-            track_id=audio_url,
-            title=title,
-            creator=creator,
-            album=album,
-            year=year,
-            notes=notes,
-            topics=topics,
-            stream_url=audio_url,
-            duration=duration,
-            artwork_url=artwork_url,
-            date=year
+        # Upsert into DB
+        conn.execute(
+            text("""
+                INSERT INTO internetarchive_cache.track
+                    (track_id, name, artist, album, stream_urls, artwork_url, data, last_updated)
+                VALUES
+                    (:track_id, :name, :artist, :album, :stream_urls, :artwork_url, :data, NOW())
+                ON CONFLICT (track_id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    artist = EXCLUDED.artist,
+                    album = EXCLUDED.album,
+                    stream_urls = EXCLUDED.stream_urls,
+                    artwork_url = EXCLUDED.artwork_url,
+                    data = EXCLUDED.data,
+                    last_updated = NOW()
+            """),
+            {
+                "track_id": track["track_id"],
+                "name": track["name"],
+                "artist": track["artist"],
+                "album": track["album"],
+                "stream_urls": track["stream_urls"],
+                "artwork_url": track["artwork_url"],
+                "data": json.dumps(track["data"]),
+            }
         )
-
-    @staticmethod
-    def ensure_str(val):
-        if isinstance(val, list):
-            return " ".join(str(x) for x in val)
-        return str(val) if val else ""
-
-    @staticmethod
-    def extract_metadata_from_html(notes, field):
-        pattern = rf"{field}:\s*(.*?)<"
-        match = re.search(pattern, notes, re.IGNORECASE)
-        if match:
-            return unescape(match.group(1)).strip()
-        return ""
-
-    @staticmethod
-    def extract_from_filename(filename):
-        base = filename.rsplit('.', 1)[0]
-        return re.sub(r'^\d+\s*', '', base)
+        logger.info("Processed and stored metadata for %s (%d audio files found)", identifier, audio_file_count)
 
 def main():
     logging.basicConfig(level=logging.INFO)
