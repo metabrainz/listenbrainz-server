@@ -22,6 +22,7 @@ from data.postgres.artist import get_artist_country_cache_query
 from data.postgres.artist_credit import get_artist_credit_cache_query
 from data.postgres.feedback import get_feedback_cache_query
 from data.postgres.recording import get_recording_length_cache_query, get_recording_artist_cache_query
+from data.postgres.release import get_release_metadata_cache_query
 from data.postgres.release_group import get_release_group_metadata_cache_query
 from data.postgres.tag import get_tag_or_genre_cache_query
 from listenbrainz import db
@@ -107,11 +108,13 @@ def dump_sample_data(location: str):
     """
     seed_artist_mbids = get_seed_artist_mbids()
     all_artist_mbids = set(seed_artist_mbids)
+    rel_pop_mbids = set()
     rg_pop_mbids = set()
     rec_pop_mbids = set()
 
-    def collect_artist_and_recording_mbids(row):
+    def collect_artist_release_and_recording_mbids(row):
         all_artist_mbids.update(row["artist_mbids"])
+        rel_pop_mbids.add(row["release_mbid"])
         rec_pop_mbids.add(row["recording_mbid"])
 
     def collect_artist_release_group_mbids(row):
@@ -139,7 +142,7 @@ def dump_sample_data(location: str):
                 text("SELECT * FROM mapping.mb_metadata_cache c WHERE c.artist_mbids && :artist_mbids"),
                 {"artist_mbids": seed_artist_mbids},
                 fp,
-                collect_artist_and_recording_mbids,
+                collect_artist_release_and_recording_mbids,
             )
 
         logger.info("Dumping artists_cache")
@@ -189,7 +192,7 @@ def dump_sample_data(location: str):
 
         transaction.rollback()
 
-    dump_spark_sample_data(location, all_artist_mbids, rg_pop_mbids, rec_pop_mbids)
+    dump_spark_sample_data(location, all_artist_mbids, rel_pop_mbids, rg_pop_mbids, rec_pop_mbids)
 
 
 def execute_sql_to_parquet(curs, query: str, mbids: Iterable[UUID], filepath: str):
@@ -223,6 +226,7 @@ def dump_artist_country_code_cache(curs, mbids: Iterable[UUID], filepath: str):
 def dump_spark_sample_data(
     location: str,
     artist_mbids: Iterable[UUID],
+    release_mbids: Iterable[UUID],
     release_group_mbids: Iterable[UUID],
     recording_mbids: Iterable[UUID]
 ):
@@ -234,9 +238,9 @@ def dump_spark_sample_data(
     try:
         with connection.cursor(cursor_factory=RealDictCursor) as curs:
             curs.execute("SET geqo = off")
-            curs.execute("SET geqo_threshold = 20")
-            curs.execute("SET from_collapse_limit = 15")
-            curs.execute("SET join_collapse_limit = 15")
+            curs.execute("SET geqo_threshold = 30")
+            curs.execute("SET from_collapse_limit = 30")
+            curs.execute("SET join_collapse_limit = 30")
 
             dump_artist_country_code_cache(
                 curs,
@@ -248,6 +252,7 @@ def dump_spark_sample_data(
                 ("recording_length", get_recording_length_cache_query, recording_mbids),
                 ("recording_artist", get_recording_artist_cache_query, recording_mbids),
                 ("artist_credit", get_artist_credit_cache_query, artist_mbids),
+                ("release_metadata", get_release_metadata_cache_query, release_mbids),
                 ("release_group_metadata", get_release_group_metadata_cache_query, release_group_mbids),
             ]
             for entity, mbids in [
