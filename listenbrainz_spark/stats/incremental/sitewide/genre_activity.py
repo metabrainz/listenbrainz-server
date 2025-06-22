@@ -8,7 +8,7 @@ from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelec
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideStatsQueryProvider
 
 
-class GenreTrendSitewideStatsQuery(SitewideStatsQueryProvider):
+class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
     """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector):
@@ -95,7 +95,7 @@ class GenreTrendSitewideStatsQuery(SitewideStatsQueryProvider):
         """
 
 
-class GenreTrendSitewideMessageCreator(SitewideStatsMessageCreator):
+class GenreActivitySitewideMessageCreator(SitewideStatsMessageCreator):
 
     def __init__(self, selector, database=None):
         super().__init__("genre_trend", "sitewide_genre_trend", selector, database)

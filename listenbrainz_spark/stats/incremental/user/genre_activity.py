@@ -6,14 +6,14 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
-from data.model.user_genre_activity import GenreTrendRecord
+from data.model.user_genre_activity import GenreActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class GenreTrendUserStatsQueryEntity(UserStatsQueryProvider):
+class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
     """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector):
@@ -110,7 +110,7 @@ class GenreTrendUserStatsQueryEntity(UserStatsQueryProvider):
         """
 
 
-class GenreTrendUserMessageCreator(UserStatsMessageCreator):
+class GenreActivityUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
         super().__init__("genre_trend", message_type, selector, database)
@@ -121,7 +121,7 @@ class GenreTrendUserMessageCreator(UserStatsMessageCreator):
 
     def parse_row(self, entry: dict):
         try:
-            UserStatRecords[GenreTrendRecord](
+            UserStatRecords[GenreActivityRecord](
                 user_id=entry["user_id"],
                 data=entry["genre_trend"]
             )
