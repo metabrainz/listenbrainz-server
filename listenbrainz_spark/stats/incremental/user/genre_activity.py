@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
-from data.model.user_genre_trend import GenreTrendRecord
+from data.model.user_genre_activity import GenreTrendRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
