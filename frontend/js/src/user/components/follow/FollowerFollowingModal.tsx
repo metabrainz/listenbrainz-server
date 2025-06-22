@@ -102,7 +102,7 @@ export default class FollowerFollowingModal extends React.Component<
     }
 
     return (
-      <>
+      <div data-testid="follower-following-modal">
         <div className="text-center follower-following-pills">
           <div className="btn-group center-block" role="group">
             <Pill
@@ -122,7 +122,7 @@ export default class FollowerFollowingModal extends React.Component<
           </div>
         </div>
         {renderFollowerFollowingList()}
-      </>
+      </div>
     );
   }
 }
