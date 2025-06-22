@@ -247,18 +247,39 @@ def music_services_callback(service_name: str):
 @api_login_required
 def refresh_service_token(service_name: str):
     service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
-    user = service.get_user(current_user.id)
-    if not user:
-        raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
+    
+    # Handle Funkwhale specially as it requires host_url parameter
+    if service_name.lower() == 'funkwhale':
+        data = request.get_json() or {}
+        host_url = data.get('host_url')
+        if not host_url:
+            raise APIBadRequest("host_url is required for Funkwhale token refresh")
+        
+        user = service.get_user(current_user.id, host_url)
+        if not user:
+            raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
+        
+        if service.user_oauth_token_has_expired(user):
+            try:
+                user = service.refresh_access_token(current_user.id, host_url, user["refresh_token"])
+            except ExternalServiceInvalidGrantError:
+                raise APIForbidden("User has revoked authorization to Funkwhale")
+            except Exception:
+                current_app.logger.error("Unable to refresh Funkwhale token:", exc_info=True)
+                raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
+    else:
+        user = service.get_user(current_user.id)
+        if not user:
+            raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
 
-    if service.user_oauth_token_has_expired(user):
-        try:
-            user = service.refresh_access_token(current_user.id, user["refresh_token"])
-        except ExternalServiceInvalidGrantError:
-            raise APIForbidden("User has revoked authorization to %s" % service_name.capitalize())
-        except Exception:
-            current_app.logger.error("Unable to refresh %s token:", exc_info=True)
-            raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
+        if service.user_oauth_token_has_expired(user):
+            try:
+                user = service.refresh_access_token(current_user.id, user["refresh_token"])
+            except ExternalServiceInvalidGrantError:
+                raise APIForbidden("User has revoked authorization to %s" % service_name.capitalize())
+            except Exception:
+                current_app.logger.error("Unable to refresh %s token:", exc_info=True)
+                raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
     return jsonify({"access_token": user["access_token"]})
 

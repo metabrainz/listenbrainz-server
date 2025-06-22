@@ -266,19 +266,19 @@ export default class APIService {
       throw new Error("Host URL is required for Funkwhale token refresh");
     }
     const response = await fetch(
-      `/settings/music-services/funkwhale/status/?host_url=${encodeURIComponent(
-        hostUrl
-      )}`,
+      `/settings/music-services/funkwhale/refresh/`,
       {
-        method: "GET",
+        method: "POST",
         headers: {
           Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ host_url: hostUrl }),
       }
     );
     await this.checkStatus(response);
     const result = await response.json();
-    return result.connection.access_token;
+    return result.access_token;
   };
 
   refreshAccessToken = async (service: string): Promise<string> => {
