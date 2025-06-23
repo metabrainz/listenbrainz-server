@@ -10,6 +10,9 @@ from data.model.user_genre_activity import GenreActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
+from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.path import RECORDING_RECORDING_GENRE_DATAFRAME
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,6 +37,8 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
         time_brackets_df.createOrReplaceTempView("time_brackets")
 
     def get_aggregate_query(self, table):
+        genres_df = read_files_from_HDFS(RECORDING_RECORDING_GENRE_DATAFRAME)
+        genres_df.createOrReplaceTempView("genres")
         return f"""
             WITH genre_listens AS (
                 SELECT l.user_id
@@ -86,30 +91,33 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     def get_stats_query(self, final_aggregate):
         return f"""
-            WITH all_genre_time_combinations AS (
-                SELECT DISTINCT user_id, genre, time_bracket
-                  FROM {final_aggregate}
-                 CROSS JOIN time_brackets
-            )
-            SELECT user_id
-                 , sort_array(
-                      collect_list(
-                           struct(
-                                 genre
-                               , time_bracket
-                               , COALESCE(fa.listen_count, 0) AS listen_count
-                           )
-                       )
-                   ) AS genre_trend
-              FROM all_genre_time_combinations agtc
-         LEFT JOIN {final_aggregate} fa
-                ON agtc.user_id = fa.user_id 
-               AND agtc.genre = fa.genre 
-               AND agtc.time_bracket = fa.time_bracket
-          GROUP BY user_id
-        """
-
-
+			WITH all_genre_time_combinations AS (
+				SELECT DISTINCT 
+					fa.user_id, 
+					fa.genre, 
+					tb.time_bracket
+				FROM {final_aggregate} fa
+				CROSS JOIN time_brackets tb
+			)
+			SELECT 
+				agtc.user_id,
+				sort_array(
+					collect_list(
+						struct(
+							agtc.genre,
+							agtc.time_bracket,
+							COALESCE(fa.listen_count, 0) AS listen_count
+						)
+					)
+				) AS genre_trend
+			FROM all_genre_time_combinations agtc
+			LEFT JOIN {final_aggregate} fa
+				ON agtc.user_id = fa.user_id 
+			AND agtc.genre = fa.genre 
+			AND agtc.time_bracket = fa.time_bracket
+			GROUP BY agtc.user_id
+		"""
+		
 class GenreActivityUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
