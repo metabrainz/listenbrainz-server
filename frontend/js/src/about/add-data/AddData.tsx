@@ -27,6 +27,13 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://chiselapp.com/user/MistressRemilia/repository/benben">Benben</a>
+          </em>
+          , a command line audio player and converter for Unix-like operating
+          systems
+        </li>
+        <li>
+          <em>
             <a href="https://github.com/ciderapp">Cider</a>
           </em>
           , a cross-platform Apple Music player:{" "}
