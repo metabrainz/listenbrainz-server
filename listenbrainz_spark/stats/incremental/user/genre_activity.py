@@ -25,7 +25,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     @property
     def entity(self):
-        return "genre_trend"
+        return "genre_activity"
 
     def setup_time_brackets(self):
         """ Generate a dataframe containing hourly time brackets for genre analysis. """
@@ -120,7 +120,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 							COALESCE(tg.listen_count, 0) AS listen_count
 						)
 					)
-				) AS genre_trend
+				) AS genre_activity
 			FROM all_genre_time_combinations agtc
 			LEFT JOIN top_genres tg
 				ON agtc.user_id = tg.user_id
@@ -132,7 +132,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 class GenreActivityUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
-        super().__init__("genre_trend", message_type, selector, database)
+        super().__init__("genre_activity", message_type, selector, database)
 
     @property
     def default_database_prefix(self):
@@ -142,11 +142,11 @@ class GenreActivityUserMessageCreator(UserStatsMessageCreator):
         try:
             UserStatRecords[GenreActivityRecord](
                 user_id=entry["user_id"],
-                data=entry["genre_trend"]
+                data=entry["genre_activity"]
             )
             return {
                 "user_id": entry["user_id"],
-                "data": entry["genre_trend"]
+                "data": entry["genre_activity"]
             }
         except ValidationError:
             logger.error("Invalid entry in genre trend stats:", exc_info=True)

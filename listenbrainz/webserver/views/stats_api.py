@@ -528,6 +528,17 @@ def get_artist_activity(user_name: str):
 @crossdomain
 @ratelimit()
 def get_genre_activity(user_name: str):
+    # user, stats_range = _validate_stats_user_params(user_name)
+    # offset = get_non_negative_param("offset", default=0)
+    # count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    # stats = db_stats.get(user["id"], "genre_activity", stats_range, EntityRecord)
+    # if stats is None:
+    #     raise APINoContent('')
+    
+    # release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+    # result = _get_genre_activity(release_groups_list)
+    # return jsonify({"result": result})
+
     array = [
     {
       "timeOfDay": "12AM-6AM",
@@ -575,6 +586,7 @@ def get_genre_activity(user_name: str):
     },
   ]
     return jsonify({"result": array})
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
