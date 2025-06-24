@@ -13,7 +13,7 @@ def get_genre_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     """ Compute the genre distribution across different time brackets for a given time range
 
     Given a time range, this computes a histogram of all listens grouped by genre
-    and time bracket (00-06, 06-12, 12-18, 18-24) for that range. The genre trend
+    and hourly time brackets for that range. The genre trend
     shows how different music genres are distributed throughout the day, providing
     insights into listening patterns. These values are used for genre trend reports
     and circular/radial visualizations.

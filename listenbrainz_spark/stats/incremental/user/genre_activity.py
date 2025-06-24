@@ -28,8 +28,8 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
         return "genre_trend"
 
     def setup_time_brackets(self):
-        """ Generate a dataframe containing time brackets for genre analysis. """
-        time_brackets = ['00-06', '06-12', '12-18', '18-24']
+        """ Generate a dataframe containing hourly time brackets for genre analysis. """
+        time_brackets = [f"{hour:02d}" for hour in range(24)]
         time_brackets_df = listenbrainz_spark.session.createDataFrame(
             [(bracket,) for bracket in time_brackets], 
             schema=["time_bracket"]
@@ -43,19 +43,14 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
             WITH genre_listens AS (
                 SELECT l.user_id
                      , g.genre
-                     , CASE
-                           WHEN HOUR(l.listened_at) < 6 THEN '00-06'
-                           WHEN HOUR(l.listened_at) < 12 THEN '06-12'
-                           WHEN HOUR(l.listened_at) < 18 THEN '12-18'
-                           ELSE '18-24'
-                       END AS time_bracket
+                     , LPAD(HOUR(l.listened_at), 2, '0') AS time_bracket
                      , COUNT(*) AS listen_count
                   FROM {table} l
                   LEFT JOIN genres g ON l.recording_mbid = g.recording_mbid
                  WHERE g.genre IS NOT NULL
               GROUP BY l.user_id
                      , g.genre
-                     , time_bracket
+                     , LPAD(HOUR(l.listened_at), 2, '0')
             )
             SELECT user_id
                  , genre
@@ -91,13 +86,29 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     def get_stats_query(self, final_aggregate):
         return f"""
-			WITH all_genre_time_combinations AS (
+			WITH ranked_genres AS (
+				SELECT 
+					user_id,
+					genre,
+					time_bracket,
+					listen_count,
+					ROW_NUMBER() OVER (
+						PARTITION BY user_id, time_bracket
+						ORDER BY listen_count DESC
+					) AS rank
+				FROM {final_aggregate}
+			),
+			top_genres AS (
+				SELECT user_id, genre, time_bracket, listen_count
+				FROM ranked_genres
+				WHERE rank <= 10
+			),
+			all_genre_time_combinations AS (
 				SELECT DISTINCT 
-					fa.user_id, 
-					fa.genre, 
-					tb.time_bracket
-				FROM {final_aggregate} fa
-				CROSS JOIN time_brackets tb
+					tg.user_id, 
+					tg.time_bracket, 
+					tg.genre
+				FROM top_genres tg
 			)
 			SELECT 
 				agtc.user_id,
@@ -106,15 +117,15 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 						struct(
 							agtc.genre,
 							agtc.time_bracket,
-							COALESCE(fa.listen_count, 0) AS listen_count
+							COALESCE(tg.listen_count, 0) AS listen_count
 						)
 					)
 				) AS genre_trend
 			FROM all_genre_time_combinations agtc
-			LEFT JOIN {final_aggregate} fa
-				ON agtc.user_id = fa.user_id 
-			AND agtc.genre = fa.genre 
-			AND agtc.time_bracket = fa.time_bracket
+			LEFT JOIN top_genres tg
+				ON agtc.user_id = tg.user_id
+			AND agtc.genre = tg.genre
+			AND agtc.time_bracket = tg.time_bracket
 			GROUP BY agtc.user_id
 		"""
 		
