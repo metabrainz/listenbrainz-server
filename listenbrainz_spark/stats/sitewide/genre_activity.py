@@ -2,7 +2,7 @@ import logging
 from typing import Iterator, Optional, Dict
 
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
-from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
+from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.sitewide.genre_activity import GenreActivitySitewideStatsQuery, \
     GenreActivitySitewideMessageCreator
 
@@ -18,8 +18,8 @@ def get_genre_activity(stats_range: str) -> Iterator[Optional[Dict]]:
     insights into listening patterns. These values are used for genre trend reports
     and circular/radial visualizations.
     """
-    logger.debug(f"Calculating genre_trend_{stats_range}")
-    selector = ListenRangeSelector(stats_range)
+    logger.debug(f"Calculating genre_activity_{stats_range}")
+    selector = StatsRangeListenRangeSelector(stats_range)
     entity_obj = GenreActivitySitewideStatsQuery(selector)
     message_creator = GenreActivitySitewideMessageCreator(selector)
     engine = IncrementalStatsEngine(entity_obj, message_creator)

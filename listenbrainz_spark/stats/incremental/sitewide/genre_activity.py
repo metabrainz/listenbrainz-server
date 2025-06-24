@@ -7,6 +7,8 @@ from listenbrainz_spark.stats.incremental.message_creator import SitewideStatsMe
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideStatsQueryProvider
 
+from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.path import RECORDING_RECORDING_GENRE_DATAFRAME
 
 class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
     """ See base class QueryProvider for details. """
@@ -17,7 +19,7 @@ class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
 
     @property
     def entity(self):
-        return "genre_trend"
+        return "genre_activity"
 
     def setup_time_brackets(self):
         """ Generate a dataframe containing hourly time brackets for genre analysis. """
@@ -29,6 +31,8 @@ class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
         time_brackets_df.createOrReplaceTempView("time_brackets")
 
     def get_aggregate_query(self, table):
+        genres_df = read_files_from_HDFS(RECORDING_RECORDING_GENRE_DATAFRAME)
+        genres_df.createOrReplaceTempView("genres")
         return f"""
             WITH genre_listens AS (
                 SELECT g.genre
@@ -87,9 +91,10 @@ class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
 				WHERE rank <= 10
 			),
 			all_genre_time_combinations AS (
-				SELECT DISTINCT genre, time_bracket
-				FROM top_genres
-				CROSS JOIN time_brackets
+				SELECT DISTINCT 
+                	tg.genre, 
+                    tg.time_bracket
+				FROM top_genres tg
 			)
 			SELECT sort_array(
 					collect_list(
@@ -99,7 +104,7 @@ class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
 							COALESCE(tg.listen_count, 0) AS listen_count
 						)
 					)
-				) AS genre_trend
+				) AS genre_activity
 			FROM all_genre_time_combinations agtc
 			LEFT JOIN top_genres tg
 			ON agtc.genre = tg.genre
@@ -109,7 +114,7 @@ class GenreActivitySitewideStatsQuery(SitewideStatsQueryProvider):
 class GenreActivitySitewideMessageCreator(SitewideStatsMessageCreator):
 
     def __init__(self, selector, database=None):
-        super().__init__("genre_trend", "sitewide_genre_trend", selector, database)
+        super().__init__("genre_activity", "sitewide_genre_activity", selector, database)
 
     def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         message = {
@@ -120,5 +125,5 @@ class GenreActivitySitewideMessageCreator(SitewideStatsMessageCreator):
         }
         data = results.collect()[0]
         _dict = data.asDict(recursive=True)
-        message["data"] = _dict["genre_trend"]
+        message["data"] = _dict["genre_activity"]
         yield message
