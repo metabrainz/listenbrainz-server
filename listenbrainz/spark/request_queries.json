@@ -39,11 +39,6 @@
     "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
     "params": ["stats_range"]
   },
-  "stats.sitewide.genre_activity": {
-	"name": "stats.sitewide.genre_activity",
-	"description": "Calculate the top genres listened to on the site in the requested stats_range grouped by time of the day",
-	"params": ["stats_range"]
-  },
   "year_in_music.new_releases_of_top_artists": {
     "name": "year_in_music.new_releases_of_top_artists",
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",
