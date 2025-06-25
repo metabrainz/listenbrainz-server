@@ -337,7 +337,7 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {artist &&
               !isEmpty(artist?.rels) &&

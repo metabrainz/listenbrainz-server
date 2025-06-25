@@ -299,7 +299,7 @@ export default function AlbumPage(): JSX.Element {
             </small>
           </div>
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {!isEmpty(artist?.artists?.[0]?.rels) &&
               Object.entries(

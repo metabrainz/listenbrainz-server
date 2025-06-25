@@ -3,11 +3,13 @@
 $scrollbar-background-color: $pearl;
 $scrollbar-thumb-color: color.adjust(
   $scrollbar-background-color,
-  $lightness: -10%
+  $lightness: -10%,
+  $saturation: -100%
 );
 $scrollbar-thumb-color-dark: color.adjust(
   $scrollbar-thumb-color,
-  $lightness: -15%
+  $lightness: -15%,
+  $saturation: -100%
 );
 
 @mixin small-scrollbar {

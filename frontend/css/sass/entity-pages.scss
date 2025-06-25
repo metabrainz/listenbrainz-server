@@ -51,6 +51,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
   }
   .lb-radio-button {
     align-self: flex-end;
+    gap: 0.1em;
     .tags-list {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -73,7 +74,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
     flex-wrap: wrap;
     align-content: flex-end;
     justify-content: flex-end;
-    min-width: 240px;
+    min-width: 230px;
   }
   .details {
     display: flex;
@@ -89,7 +90,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
 }
 
 #entity-page {
-  --bg-color: $gray-200; // default color
+  --bg-color: #e7e4e4; // default color
 
   &.album-page .entity-page-content .tracks .listen-card .track-position {
     flex: 0 3em;
