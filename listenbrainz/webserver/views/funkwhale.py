@@ -10,6 +10,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APIInternalServerError, APIUnauthorized
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, ExternalServiceInvalidGrantError
+from listenbrainz.db import funkwhale as db_funkwhale
 
 funkwhale_api_bp = Blueprint('funkwhale_api_v1', __name__)
 
@@ -278,8 +279,16 @@ def funkwhale_callback():
             service = FunkwhaleService()
             token = service.fetch_access_token(code)
             
+            # Get client_id, client_secret, scopes from server
+            server = db_funkwhale.get_server_by_host_url(host_url)
+            if not server:
+                raise ExternalServiceError("No Funkwhale server found for host_url")
+            client_id = server['client_id']
+            client_secret = server['client_secret']
+            scopes = server['scopes']
+            
             # Create new Funkwhale connection
-            service.add_new_user(user_id, host_url, token)
+            service.add_new_user(user_id, host_url, token, client_id, client_secret, scopes)
             
             # Clear session data
             session.pop('funkwhale_state', None)

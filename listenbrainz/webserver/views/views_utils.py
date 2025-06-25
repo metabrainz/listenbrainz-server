@@ -7,7 +7,7 @@ from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.funkwhale import FunkwhaleService
-from listenbrainz.model.funkwhale import FunkwhaleServer
+from listenbrainz.db import funkwhale as db_funkwhale
 
 
 def get_current_spotify_user():
@@ -95,19 +95,30 @@ def get_current_apple_music_user():
 
 
 def get_current_funkwhale_user():
-    """Returns the funkwhale access token and instance URL for the current
-    authenticated user. If the user is unauthenticated or has not
-    linked a Funkwhale account, returns empty dict.
+    """Returns the funkwhale access token and instance URL for the current user.
+    If the user has not linked a Funkwhale account, returns empty dict.
     For Funkwhale, we return the first connected server if multiple exist."""
-    if not current_user.is_authenticated:
-        return {}
-    # Get the first connected Funkwhale server for this user
-    server = FunkwhaleServer.query.filter_by(user_id=current_user.id).first()
-    if server is None:
+    # Get all tokens for this user, join with servers
+    from sqlalchemy import text
+    from listenbrainz.webserver import db_conn
+    result = db_conn.execute(text('''
+        SELECT t.*, s.host_url, s.client_id, s.client_secret, s.scopes
+        FROM funkwhale_tokens t
+        JOIN funkwhale_servers s ON t.funkwhale_server_id = s.id
+        WHERE t.user_id = :user_id
+        ORDER BY t.id ASC
+        LIMIT 1
+    '''), {'user_id': current_user.id})
+    row = result.mappings().first()
+    if not row:
         return {}
     return {
-        "access_token": server.access_token,
-        "instance_url": server.host_url,
-        "user_id": str(server.user_id),
-        "username": current_user.musicbrainz_id,
+        'access_token': row['access_token'],
+        'instance_url': row['host_url'],
+        'client_id': row['client_id'],
+        'client_secret': row['client_secret'],
+        'scopes': row['scopes'],
+        'token_expiry': row['token_expiry'],
+        'refresh_token': row['refresh_token'],
+        'funkwhale_server_id': row['funkwhale_server_id']
     }

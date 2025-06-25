@@ -29,7 +29,8 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-from listenbrainz.domain.funkwhale import FunkwhaleService, FunkwhaleServer
+from listenbrainz.domain.funkwhale import FunkwhaleService
+from listenbrainz.db import funkwhale as db_funkwhale
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -192,9 +193,9 @@ def music_services_details():
 
     funkWhale_service = FunkwhaleService()
     # Get all connected Funkwhale servers for the user
-    funkwhale_servers = FunkwhaleServer.query.filter_by(user_id=current_user.id).all()
+    funkwhale_servers = get_funkwhale_connections(current_user.id)
     current_funkwhale_permission = "listen" if funkwhale_servers else "disable"
-    funkwhale_host_urls = [server.host_url for server in funkwhale_servers] if funkwhale_servers else []
+    funkwhale_host_urls = [server['host_url'] for server in funkwhale_servers] if funkwhale_servers else []
 
     librefm_service = LibrefmService()
     librefm_user = librefm_service.get_user(current_user.id)
@@ -435,3 +436,15 @@ def link_listens():
 @login_required
 def index(path):
     return render_template("index.html")
+
+
+def get_funkwhale_connections(user_id):
+    # Returns a list of dicts for all Funkwhale connections for a user
+    from sqlalchemy import text
+    from listenbrainz.webserver import db_conn
+    result = db_conn.execute(text('''
+        SELECT s.* FROM funkwhale_tokens t
+        JOIN funkwhale_servers s ON t.funkwhale_server_id = s.id
+        WHERE t.user_id = :user_id
+    '''), {'user_id': user_id})
+    return [dict(row) for row in result.mappings().all()]
