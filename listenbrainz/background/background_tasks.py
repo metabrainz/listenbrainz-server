@@ -38,7 +38,7 @@ class BackgroundTasks:
             delete_user(db_conn, task.user_id, task.created)
         elif task.task == "export_all_user_data":
             export_user(db_conn, ts_conn, task.user_id, task.metadata)
-        elif task.task == "import_all_user_data":
+        elif task.task == "import_listens":
             pass # WIP
         else:
             current_app.logger.error(f"Unknown task type: {task}")

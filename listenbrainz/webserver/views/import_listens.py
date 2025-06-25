@@ -51,14 +51,7 @@ def create_import_task():
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
     
-    # Determine file size
     saved_filename = secure_filename(filename)
-    uploaded_file.seek(0, os.SEEK_END)
-    file_size = uploaded_file.tell()
-    uploaded_file.seek(0)
-
-    if file_size > current_app.config['MAX_IMPORT_CONTENT_LENGTH']:
-        raise APIBadRequest("File size exceeds the maximum allowed size!")
     
     try:
         save_path = os.path.join(UPLOAD_DIR, saved_filename)
@@ -68,7 +61,7 @@ def create_import_task():
 
     try:
         query = """
-            INSERT INTO user_data_import (user_id, type, status, progress)
+            INSERT INTO user_data_import (user_id, type, progress)
                  VALUES (:user_id, :type, 'waiting', :progress)
             ON CONFLICT (user_id, type)
                   WHERE status = 'waiting' OR status = 'in_progress'

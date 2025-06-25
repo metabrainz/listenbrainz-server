@@ -247,10 +247,11 @@ CREATE TABLE user_data_import (
     id                  INTEGER GENERATED ALWAYS AS IDENTITY,
     user_id             INTEGER NOT NULL,
     service             user_data_import_service_type NOT NULL,
-    status              user_data_import_status_type NOT NULL,
     metadata            JSONB,
     uploaded_filename   TEXT,
     file_path           TEXT,
+    from_date           TIMESTAMPTZ NOT NULL DEFAULT '1900-01-01 00:00:00+00',
+    to_date             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
