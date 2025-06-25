@@ -22,9 +22,62 @@ FUNKWHALE_API_RETRIES = 5
 
 class FunkwhaleService:
     def __init__(self):
-        self.client_id = current_app.config['FUNKWHALE_CLIENT_ID']
-        self.client_secret = current_app.config['FUNKWHALE_CLIENT_SECRET']
-        self.redirect_url = current_app.config['FUNKWHALE_CALLBACK_URL']
+        self.redirect_url = current_app.config.get('FUNKWHALE_CALLBACK_URL', 
+                                                   current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/funkwhale/callback/')
+
+    def _create_oauth_app(self, host_url: str) -> dict:
+        """Create an OAuth application on the Funkwhale server.
+        
+        Args:
+            host_url: The Funkwhale server URL
+            
+        Returns:
+            dict: OAuth app credentials with client_id and client_secret
+            
+        Raises:
+            ExternalServiceError: If app creation fails
+        """
+        app_data = {
+            'name': 'ListenBrainz',
+            'website': host_url,
+            'redirect_uris': self.redirect_url,
+            'scopes': 'read:profile read:libraries read:favorites read:listenings read:follows read:playlists read:radios'
+        }
+        
+        try:
+            response = requests.post(f"{host_url}/api/v1/oauth/apps/", json=app_data, timeout=30)
+            if response.status_code == 201:
+                return response.json()
+            else:
+                raise ExternalServiceError(f"Failed to create OAuth app: {response.status_code} - {response.text}")
+        except requests.exceptions.RequestException as e:
+            raise ExternalServiceError(f"Network error creating OAuth app: {str(e)}")
+
+    def _get_or_create_oauth_credentials(self, host_url: str) -> tuple[str, str]:
+        """Get existing OAuth credentials for a server or create new ones.
+        
+        Args:
+            host_url: The Funkwhale server URL
+            
+        Returns:
+            tuple: (client_id, client_secret)
+        """
+        # Check if we already have credentials for any user on this server
+        server = FunkwhaleServer.query.filter_by(host_url=host_url).filter(
+            FunkwhaleServer.client_id.isnot(None),
+            FunkwhaleServer.client_secret.isnot(None)
+        ).first()
+        
+        if server:
+            return server.client_id, server.client_secret
+        
+        # Create new OAuth application
+        app_credentials = self._create_oauth_app(host_url)
+        client_id = app_credentials['client_id']
+        client_secret = app_credentials['client_secret']
+        
+        current_app.logger.info(f"Created OAuth app for Funkwhale server: {host_url}")
+        return client_id, client_secret
 
     def get_user(self, user_id: int, host_url: str = None, refresh: bool = False) -> Optional[dict]:
         """ If refresh = True, then check whether the access token has expired and refresh it
@@ -67,11 +120,16 @@ class FunkwhaleService:
             details = response.json()
             external_user_id = details["id"]
 
+            # Get OAuth credentials for this server
+            client_id, client_secret = self._get_or_create_oauth_credentials(host_url)
+
             # Check if a server entry already exists for this user and host
             server = FunkwhaleServer.query.filter_by(user_id=user_id, host_url=host_url).first()
 
             if server:
                 # Update existing entry
+                server.client_id = client_id
+                server.client_secret = client_secret
                 server.access_token = access_token
                 server.refresh_token = refresh_token
                 server.token_expiry = token_expiry_datetime
@@ -81,8 +139,8 @@ class FunkwhaleService:
                 server = FunkwhaleServer(
                     user_id=user_id,
                     host_url=host_url,
-                    client_id=self.client_id,
-                    client_secret=self.client_secret,
+                    client_id=client_id,
+                    client_secret=client_secret,
                     access_token=access_token,
                     refresh_token=refresh_token,
                     token_expiry=token_expiry_datetime
@@ -111,10 +169,14 @@ class FunkwhaleService:
         """
         # Ensure host_url doesn't end with a slash
         host_url = host_url.rstrip('/')
+        
+        # Get or create OAuth credentials for this server
+        client_id, _ = self._get_or_create_oauth_credentials(host_url)
+        
         auth_url = f"{host_url}/api/v1/oauth/authorize"
         
         oauth = OAuth2Session(
-            client_id=self.client_id,
+            client_id=client_id,
             redirect_uri=self.redirect_url,
             scope=[
                 'read:profile',
@@ -143,15 +205,18 @@ class FunkwhaleService:
             host_url = session.get('funkwhale_host_url')
             if not host_url:
                 raise ExternalServiceError("No host URL found in session")
+            
+            # Get OAuth credentials for this server
+            client_id, client_secret = self._get_or_create_oauth_credentials(host_url)
                 
             oauth = OAuth2Session(
-                client_id=self.client_id,
+                client_id=client_id,
                 redirect_uri=self.redirect_url
             )
             token_url = f"{host_url}/api/v1/oauth/token/"
             return oauth.fetch_token(
                 token_url,
-                client_secret=self.client_secret,
+                client_secret=client_secret,
                 code=code,
                 include_client_id=True
             )
@@ -173,14 +238,22 @@ class FunkwhaleService:
             FunkwhaleInvalidGrantError: if the user has revoked authorization to funkwhale
         """
         try:
+            # Get OAuth credentials for this server
+            server = FunkwhaleServer.query.filter_by(user_id=user_id, host_url=host_url).first()
+            if not server or not server.client_id or not server.client_secret:
+                # Fallback: try to get/create credentials
+                client_id, client_secret = self._get_or_create_oauth_credentials(host_url)
+            else:
+                client_id, client_secret = server.client_id, server.client_secret
+            
             oauth = OAuth2Session(
-                client_id=self.client_id,
+                client_id=client_id,
                 redirect_uri=self.redirect_url
             )
             token_url = f"{host_url}/api/v1/oauth/token/"
             token = oauth.refresh_token(
                 token_url,
-                client_secret=self.client_secret,
+                client_secret=client_secret,
                 refresh_token=refresh_token,
                 include_client_id=True
             )

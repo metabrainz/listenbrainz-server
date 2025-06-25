@@ -93,18 +93,6 @@ def connect_funkwhale():
             }), 400
 
         # Check if Funkwhale configuration is set up
-        if not current_app.config.get('FUNKWHALE_CLIENT_ID'):
-            current_app.logger.error("FUNKWHALE_CLIENT_ID not configured")
-            return jsonify({
-                'status': 'error',
-                'error': 'Funkwhale integration is not properly configured'
-            }), 500
-        if not current_app.config.get('FUNKWHALE_CLIENT_SECRET'):
-            current_app.logger.error("FUNKWHALE_CLIENT_SECRET not configured")
-            return jsonify({
-                'status': 'error',
-                'error': 'Funkwhale integration is not properly configured'
-            }), 500
         if not current_app.config.get('FUNKWHALE_CALLBACK_URL'):
             current_app.logger.error("FUNKWHALE_CALLBACK_URL not configured")
             return jsonify({
