@@ -39,6 +39,8 @@ import {
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
+import { volumeAtom } from "./BrainzPlayerAtoms";
+import { useAtomValue } from "jotai";
 
 export type DataSourceType = {
   name: string;
@@ -129,6 +131,9 @@ export default function BrainzPlayer() {
     refreshSoundcloudToken,
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
+
+  // Atoms
+  const volume = useAtomValue(volumeAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -1025,7 +1030,7 @@ export default function BrainzPlayer() {
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
           <SpotifyPlayer
-            volume={brainzPlayerContextRef.current.volume}
+            volume={volume}
             show={
               brainzPlayerContextRef.current.isActivated &&
               dataSourceRefs[
@@ -1049,7 +1054,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
           <YoutubePlayer
-            volume={brainzPlayerContextRef.current.volume}
+            volume={volume}
             show={
               brainzPlayerContextRef.current.isActivated &&
               dataSourceRefs[
@@ -1074,7 +1079,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
           <SoundcloudPlayer
-            volume={brainzPlayerContextRef.current.volume}
+            volume={volume}
             show={
               brainzPlayerContextRef.current.isActivated &&
               dataSourceRefs[
@@ -1098,7 +1103,7 @@ export default function BrainzPlayer() {
         )}
         {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
           <AppleMusicPlayer
-            volume={brainzPlayerContextRef.current.volume}
+            volume={volume}
             show={
               brainzPlayerContextRef.current.isActivated &&
               dataSourceRefs[

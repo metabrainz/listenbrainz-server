@@ -77,6 +77,7 @@
     "html2canvas": "^1.4.1",
     "humanize-duration": "^3.31.0",
     "jest-mock": "^25.2.3",
+    "jotai": "^2.12.5",
     "less": "^4.1.1",
     "lobes5": "^5.0.0",
     "localforage": "^1.10.0",
