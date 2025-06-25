@@ -248,9 +248,8 @@ CREATE TABLE user_data_import (
     user_id             INTEGER NOT NULL,
     service             user_data_import_service_type NOT NULL,
     metadata            JSONB,
-    uploaded_filename   TEXT,
-    file_path           TEXT,
-    from_date           TIMESTAMPTZ NOT NULL DEFAULT '1900-01-01 00:00:00+00',
+    file_path           TEXT NOT NULL,
+    from_date           TIMESTAMPTZ NOT NULL DEFAULT 'epoch',
     to_date             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

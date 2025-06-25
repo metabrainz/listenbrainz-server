@@ -1,6 +1,5 @@
 ALTER TYPE background_tasks_type ADD VALUE 'import_listens';
 
-CREATE TYPE user_data_import_status_type AS ENUM ('in_progress', 'waiting', 'completed', 'failed');
 CREATE TYPE user_data_import_service_type AS ENUM ('spotify', 'applemusic', 'listenbrainz');
 
 CREATE TABLE user_data_import (
@@ -8,9 +7,8 @@ CREATE TABLE user_data_import (
     user_id             INTEGER NOT NULL,
     service             user_data_import_service_type NOT NULL,
     metadata            JSONB,
-    uploaded_filename   TEXT,
-    file_path           TEXT,
-    from_date           TIMESTAMPTZ NOT NULL DEFAULT '1900-01-01 00:00:00+00',
+    file_path           TEXT NOT NULL,
+    from_date           TIMESTAMPTZ NOT NULL DEFAULT 'epoch',
     to_date             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -24,6 +22,6 @@ ALTER TABLE user_data_import
     ON DELETE CASCADE;
 
 CREATE INDEX user_data_import_user_id_idx ON user_data_import (user_id);
-CREATE UNIQUE INDEX user_data_import_deduplicate_waiting_idx ON user_data_import (user_id, service) WHERE status = 'waiting' OR status = 'in_progress';
+CREATE UNIQUE INDEX user_data_import_deduplicate_waiting_idx ON user_data_import (user_id, service) WHERE metadata->>'status' IN ('waiting', 'in_progress');
 
 COMMIT;

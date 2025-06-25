@@ -23,8 +23,6 @@ CREATE TYPE background_tasks_type AS ENUM ('delete_listens', 'delete_user', 'exp
 
 CREATE TYPE user_data_export_status_type AS ENUM ('in_progress', 'waiting', 'completed', 'failed');
 
-CREATE TYPE user_data_import_status_type AS ENUM ('in_progress', 'waiting', 'completed', 'failed');
-
 CREATE TYPE user_data_export_type_type AS ENUM ('export_all_user_data');
 
 CREATE TYPE user_data_import_service_type AS ENUM ('spotify', 'applemusic', 'listenbrainz');
