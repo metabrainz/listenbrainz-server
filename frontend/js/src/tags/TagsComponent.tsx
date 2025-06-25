@@ -49,7 +49,7 @@ function DropdownIndicator(props: DropdownIndicatorProps<TagOptionType>) {
   }
   return (
     <components.DropdownIndicator {...props}>
-      <button className="btn btn-xs btn-outline-info" type="button">
+      <button className="btn btn-sm btn-outline-info" type="button">
         + tag
       </button>
     </components.DropdownIndicator>

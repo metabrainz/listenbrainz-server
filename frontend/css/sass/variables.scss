@@ -89,14 +89,16 @@ $nav-tabs-border-radius: 0;
 
 /* Buttons */
 $btn-font-size: 1.2rem;
-$btn-font-size-sm: 0.75em;
+$btn-font-size-sm: 1em;
 $btn-border-width: 0;
 $btn-border-radius: 0;
 $btn-box-shadow: none;
 $btn-active-box-shadow: none;
+$btn-white-space: nowrap;
 $btn-padding-y: 0.5rem;
 $btn-padding-x: 2rem;
-$btn-white-space: nowrap;
+$btn-padding-y-sm: 0.15rem;
+$btn-padding-x-sm: 0.5rem;
 $btn-border-radius-lg: 0.5rem;
 
 /* Pagination */
