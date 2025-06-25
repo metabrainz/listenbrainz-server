@@ -174,3 +174,8 @@ details[open] > summary .summary-indicator {
     padding: 20px;
   }
 }
+.badge {
+  // Not sure why we need to do this to
+  // override the --bs-badge-font-size CSS variable value
+  font-size: $badge-font-size;
+}
