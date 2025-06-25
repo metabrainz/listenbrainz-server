@@ -243,6 +243,17 @@ CREATE TABLE user_data_export (
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_data_import (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    service             user_data_import_service_type NOT NULL,
+    status              user_data_import_status_type NOT NULL,
+    metadata            JSONB,
+    uploaded_filename   TEXT,
+    file_path           TEXT,
+    created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
