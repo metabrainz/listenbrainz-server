@@ -258,7 +258,7 @@
 .release-card-grid-title::after {
   content: "";
   flex: 1;
-  border-bottom: 1px solid $gray-light;
+  border-bottom: 1px solid $hr-border-color;
 }
 
 .release-card-grid-title:not(:empty)::before {

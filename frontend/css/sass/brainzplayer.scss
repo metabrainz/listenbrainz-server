@@ -28,7 +28,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   box-shadow: 0px -4px 12px rgba(0, 0, 0, 0.2);
 
   padding: $brainzplayer-padding;
-  border-top: 1px solid $gray-light;
+  border-top: 1px solid $hr-border-color;
   z-index: 110;
 
   > * {
@@ -320,7 +320,7 @@ $youtube-resize-transition: height 0.25s ease-out;
   list-style: none; // In case the elements are <li> items inside a <ul>
   font-size: 14px;
   background-color: $white-background;
-  border: 1px solid $gray-light; // IE8 fallback
+  border: 1px solid $hr-border-color; // IE8 fallback
   border: 1px solid rgba(0, 0, 0, 0.15);
   background-clip: padding-box;
 

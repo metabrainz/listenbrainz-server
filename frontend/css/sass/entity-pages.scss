@@ -128,7 +128,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
     .separator {
       width: 1px;
       height: 100%;
-      border-left: 1px solid $gray-light;
+      border-left: 1px solid $hr-border-color;
     }
     .number {
       font-size: 1.5em;
@@ -233,7 +233,7 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
   &::after {
     flex: 1;
     content: " ";
-    border-top: 1px solid $gray-light;
+    border-top: 1px solid $hr-border-color;
     height: 0;
     align-self: center;
     margin: 0 0.5em;
