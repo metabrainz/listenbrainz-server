@@ -1,3 +1,5 @@
+import time
+
 from flask import current_app
 
 from listenbrainz.domain.librefm import LibrefmService
@@ -15,6 +17,10 @@ class LibrefmImporter(BaseLastfmImporter):
             api_key=current_app.config["LIBREFM_API_KEY"],
             api_base_url=current_app.config["LIBREFM_API_URL"],
         )
+
+    def get_user_recent_tracks(self, session, user, page):
+        time.sleep(1)
+        return super().get_user_recent_tracks(session, user, page)
 
     def get_total_pages(self, session, user):
         response = super().get_user_recent_tracks(session, user, page=1)
