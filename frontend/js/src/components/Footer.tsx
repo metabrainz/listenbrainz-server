@@ -25,7 +25,7 @@ export default function Footer() {
               You can use ListenBrainz to track your listening habits, discover
               new music with personalized recommendations, and share your
               musical taste with others using our visualizations. User listen
-              data and text is is made public under the{" "}
+              data and text is made public under the{" "}
               <a href="https://creativecommons.org/public-domain/cc0/">
                 Creative Commons Zero (CC0)
               </a>{" "}

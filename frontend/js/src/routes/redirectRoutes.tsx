@@ -20,10 +20,6 @@ const getRedirectRoutes = (): RouteObject[] => {
           path: "huesound/",
           element: <Navigate to="/explore/huesound/" replace />,
         },
-        {
-          path: "import/",
-          element: <Navigate to="/settings/import/" replace />,
-        },
       ],
     },
   ];

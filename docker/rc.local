@@ -49,6 +49,11 @@ then
     rm -f /etc/service/lastfm_importer/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-librefm-reader-${DEPLOY_ENV}" ]
+then
+    log Enabling libre.fm importer
+    rm -f /etc/service/librefm_importer/down
+fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-${DEPLOY_ENV}" ]
 then
