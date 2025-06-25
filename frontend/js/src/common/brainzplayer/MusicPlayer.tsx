@@ -48,7 +48,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
   } = props;
   return (
     <button
-      className={`btn-transparent ${className ?? ""} ${
+      className={`btn btn-transparent ${className ?? ""} ${
         disabled ? "disabled" : ""
       }`}
       title={title}
@@ -247,7 +247,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     <>
       <div className="header">
         <FontAwesomeIcon
-          className="btn hide-queue"
+          className="btn btn-transparent hide-queue"
           icon={faChevronDown}
           title="Hide queue"
           style={{

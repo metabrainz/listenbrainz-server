@@ -18,6 +18,10 @@
 }
 .btn-transparent {
   --bs-btn-border-width: 0;
+  --bs-btn-color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
 }
 .btn-rounded {
   --bs-btn-border-radius: 3em;
