@@ -5,6 +5,7 @@ from flask import Blueprint, current_app, jsonify, send_file, request
 from flask_login import current_user
 from psycopg2 import DatabaseError
 from sqlalchemy import text
+from datetime import datetime, date
 
 from werkzeug.utils import secure_filename
 from listenbrainz.webserver import db_conn
@@ -27,6 +28,19 @@ def create_import_task():
 
     uploaded_file = request.files.get('file')
     service = request.form.get('service')
+    from_date = request.form.get('from_date')
+    to_date = request.form.get('to_date')
+
+
+    try:
+        from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
+    except:
+        from_date = date(1970, 1, 1) # Epoch date
+    
+    try:
+        to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
+    except:
+        to_date = date.today()
 
     if not uploaded_file:
         raise APIBadRequest("No file uploaded!")
@@ -60,18 +74,35 @@ def create_import_task():
         raise APIInternalServerError("Failed to upload the file!")
 
     try:
+
         query = """
-            INSERT INTO user_data_import (user_id, type, progress)
-                 VALUES (:user_id, :type, 'waiting', :progress)
-            ON CONFLICT (user_id, type)
-                  WHERE status = 'waiting' OR status = 'in_progress'
-             DO NOTHING
-              RETURNING id, type, file_available_until, created, progress, status, file_path
+            SELECT id FROM user_data_import
+            WHERE user_id = :user_id AND service = :service
+                AND metadata->>'status' IN ('waiting', 'in_progress');
+        """
+
+        result = db_conn.execute(text(query), {
+            "user_id": current_user.id,
+            "service": service,
+        })
+
+        check_existing = result.first()
+
+        if check_existing is not None:
+            raise APIBadRequest("An import task is already in progress!")
+
+        query = """
+            INSERT INTO user_data_import (user_id, service, from_date, to_date, file_path, metadata)
+                 VALUES (:user_id, :service, :from_date, :to_date, :file_path, :metadata)
+              RETURNING id, service, created, progress, status, file_path, metadata
         """
         result = db_conn.execute(text(query), {
             "user_id": current_user.id,
-            "type": "import_user_data",
-            "progress": "Your data import will start soon."
+            "service": service,
+            "from_date": from_date,
+            "to_date": to_date,
+            "file_path": save_path,
+            "metadata": {"status": "waiting", "progress": "Your data import will start soon.", "filename": filename}
         })
         import_task = result.first()
 
@@ -79,7 +110,7 @@ def create_import_task():
             query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
             result = db_conn.execute(text(query), {
                 "user_id": current_user.id,
-                "task": "import_user_data",
+                "task": "import_listens",
                 "metadata": json.dumps({"import_id": import_task.id})
             })
             task = result.first()
@@ -88,10 +119,8 @@ def create_import_task():
                 return jsonify({
                     "import_id": import_task.id,
                     "type": import_task.type,
-                    "file_available_until": import_task.available_until.isoformat() if import_task.available_until is not None else None,
                     "created": import_task.created.isoformat(),
-                    "progress": import_task.progress,
-                    "status": import_task.status,
+                    "metadata": import_task.metadata,
                     "file_path": import_task.filename,
                 })
 
