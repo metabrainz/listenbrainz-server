@@ -154,36 +154,21 @@ def connect_funkwhale():
             'error': f'An unexpected error occurred: {str(e)}'
         }), 500
 
-@funkwhale_api_bp.route('/disable/', methods=['POST'])
+@funkwhale_api_bp.route('/disconnect/', methods=['POST'])
 @crossdomain
 @ratelimit()
 def disconnect_funkwhale():
-    """Disconnect a user's ListenBrainz account from Funkwhale.
-    
-    The request should contain the following JSON data:
-    {
-        "host_url": "https://funkwhale.example.com"
-    }
+    """Disconnect a user's ListenBrainz account from all Funkwhale servers.
+    This will delete all Funkwhale tokens and server associations for the user.
     """
     user = validate_auth_header()
-    
     try:
-        data = request.get_json()
-        if not data or 'host_url' not in data:
-            raise APIBadRequest("Missing host_url in request")
-        
-        # Validate and normalize the host URL
-        host_url = validate_funkwhale_url(data['host_url'])
-        
         service = FunkwhaleService()
-        service.revoke_user(user['id'], host_url)
-        
+        service.remove_user(user['id'])
         return jsonify({
             'status': 'ok',
             'message': 'Successfully disconnected from Funkwhale'
         })
-    except APIBadRequest as e:
-        raise e
     except Exception as e:
         current_app.logger.error("Error in disconnect_funkwhale: %s", str(e), exc_info=True)
         raise APIInternalServerError("An error occurred while disconnecting from Funkwhale")

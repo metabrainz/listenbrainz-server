@@ -14,6 +14,8 @@ from listenbrainz.db import funkwhale as db_funkwhale
 from listenbrainz.webserver import db_conn
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, ExternalServiceInvalidGrantError
 
+import sqlalchemy
+
 FUNKWHALE_API_RETRIES = 5
 
 class FunkwhaleService:
@@ -167,9 +169,11 @@ class FunkwhaleService:
         db_funkwhale.delete_token(user_id, server['id'])
 
     def remove_user(self, user_id: int):
-        # Remove all tokens for this user
-        # (If needed, implement a function to delete all tokens for a user across all servers)
-        pass
+        # Remove all tokens for this user across all servers
+        db_conn.execute(sqlalchemy.text("""
+            DELETE FROM funkwhale_tokens WHERE user_id = :user_id
+        """), {'user_id': user_id})
+        db_conn.commit()
 
     def user_oauth_token_has_expired(self, user: dict) -> bool:
         from datetime import timezone

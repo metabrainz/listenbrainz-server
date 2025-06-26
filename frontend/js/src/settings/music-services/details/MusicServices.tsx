@@ -66,16 +66,24 @@ export default function MusicServices() {
     newValue: string
   ) => {
     try {
-      const response = await fetch(
-        `/settings/music-services/${serviceName}/disconnect/`,
-        {
-          method: "POST",
-          body: JSON.stringify({ action: newValue }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const fetchUrl = `/settings/music-services/${serviceName}/disconnect/`;
+      let fetchBody;
+      const fetchHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (serviceName === "funkwhale" && newValue === "disable") {
+        fetchBody = undefined;
+        fetchHeaders.Authorization = `Token ${currentUser?.auth_token}`;
+      } else {
+        fetchBody = JSON.stringify({ action: newValue });
+      }
+
+      const response = await fetch(fetchUrl, {
+        method: "POST",
+        body: fetchBody,
+        headers: fetchHeaders,
+      });
 
       if (newValue === "disable") {
         toast.success(

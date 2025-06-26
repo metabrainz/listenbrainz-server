@@ -248,7 +248,9 @@ export default class FunkwhalePlayer
       if (trackId) {
         const track = await this.fetchTrackInfo(trackId);
         if (track && track.listen_url) {
-          audioElement.src = track.listen_url;
+          audioElement.src = track.listen_url.startsWith("/")
+            ? this.getFunkwhaleInstanceURL() + track.listen_url
+            : track.listen_url;
           this.setState({ currentTrack: track });
           await audioElement.play();
         }
@@ -331,7 +333,9 @@ export default class FunkwhalePlayer
         this.setState({ currentTrack: track });
         const audioElement = this.audioRef.current;
         if (audioElement) {
-          audioElement.src = track.listen_url;
+          audioElement.src = track.listen_url.startsWith("/")
+            ? this.getFunkwhaleInstanceURL() + track.listen_url
+            : track.listen_url;
           await audioElement.play();
         }
         return;
