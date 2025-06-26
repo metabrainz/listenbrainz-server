@@ -90,17 +90,18 @@ class RecordingSimilarityBase(abc.ABC):
                 SELECT user_id
                      , explode(artist_credit_mbids) AS artist_mbid
                   FROM listens
-            ). grouped_artists AS (
+            ), grouped_artists AS (
                 SELECT user_id
                      , artist_mbid
                      , count(*) AS listen_count
+                  FROM exploded_artists    
               GROUP BY user_id
                      , artist_mbid
             ), ranked_artists AS (
                 SELECT user_id
                      , artist_mbid
                      , rank() OVER (PARTITION BY artist_mbid ORDER BY listen_count DESC) AS rank
-                  FROM exploded_grouped_artists
+                  FROM grouped_artists
             ), top_listeners AS (
                 SELECT user_id
                      , artist_mbid
