@@ -86,11 +86,14 @@ class RecordingSimilarityBase(abc.ABC):
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
                     AND l.recording_mbid != ''
-            ), exploded_grouped_artists AS (
+            ), exploded_artists AS (
                 SELECT user_id
                      , explode(artist_credit_mbids) AS artist_mbid
-                     , count(artist_mbid) AS listen_count
                   FROM listens
+            ). grouped_artists AS (
+                SELECT user_id
+                     , artist_mbid
+                     , count(*) AS listen_count
               GROUP BY user_id
                      , artist_mbid
             ), ranked_artists AS (
