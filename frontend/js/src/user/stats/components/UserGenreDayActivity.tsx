@@ -182,8 +182,13 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
         displayName: genre.name,
         actualValue: genre.listen_count,
         value: (genre.listen_count / total) * 100,
+<<<<<<< HEAD
         color: `hsl(${Math.random() * 360}, 70%, 60%)`,
         timeframe: timeframe.timeRange,
+=======
+        color: getGenreColor(genre.name),
+        timeframe: timeframe.timeOfDay,
+>>>>>>> 50a0628e82f7a89d9215e57ba0dc4670463e62e2
         timeRange: timeframe.timeRange,
       }));
     });
