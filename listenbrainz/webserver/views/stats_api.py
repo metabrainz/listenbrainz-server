@@ -533,7 +533,7 @@ def get_genre_activity(user_name: str):
     stats = db_stats.get(1, "genre_activity", stats_range, GenreActivityRecord)
     if stats is None:
         raise APINoContent('')
-    
+
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"result": genre_activity})
 
