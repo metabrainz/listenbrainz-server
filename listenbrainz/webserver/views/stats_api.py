@@ -536,7 +536,7 @@ def get_genre_activity(user_name: str):
     
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"result": genre_activity})
-	
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
