@@ -606,8 +606,7 @@ export default class APIService {
     userName?: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserGenreDayActivityResponse> => {
-    let url;
-    url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
+    const url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {

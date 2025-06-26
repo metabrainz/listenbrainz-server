@@ -71,7 +71,7 @@ const groupDataByTimePeriod = (
 
   // Group data by time period and genre
   data.forEach((item) => {
-    const hour = parseInt(item.hour);
+    const hour = parseInt(item.hour, 10);
     const { timeRange } = getTimePeriod(hour);
     const { genre } = item;
 
