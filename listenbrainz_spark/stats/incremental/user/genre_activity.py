@@ -21,20 +21,20 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     def __init__(self, selector: ListenRangeSelector):
         super().__init__(selector)
-        self.setup_time_brackets()
+        self.setup_hours()
 
     @property
     def entity(self):
         return "genre_activity"
 
-    def setup_time_brackets(self):
+    def setup_hours(self):
         """ Generate a dataframe containing hourly time brackets for genre analysis. """
-        time_brackets = [f"{hour:02d}" for hour in range(24)]
-        time_brackets_df = listenbrainz_spark.session.createDataFrame(
-            [(bracket,) for bracket in time_brackets], 
-            schema=["time_bracket"]
+        hours = [f"{hour:02d}" for hour in range(24)]
+        hours_df = listenbrainz_spark.session.createDataFrame(
+            [(bracket,) for bracket in hours], 
+            schema=["hour"]
         )
-        time_brackets_df.createOrReplaceTempView("time_brackets")
+        hours_df.createOrReplaceTempView("hours")
 
     def get_aggregate_query(self, table):
         genres_df = read_files_from_HDFS(RECORDING_RECORDING_GENRE_DATAFRAME)
@@ -43,7 +43,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
             WITH genre_listens AS (
                 SELECT l.user_id
                      , g.genre
-                     , LPAD(HOUR(l.listened_at), 2, '0') AS time_bracket
+                     , LPAD(HOUR(l.listened_at), 2, '0') AS hour
                      , COUNT(*) AS listen_count
                   FROM {table} l
                   LEFT JOIN genres g ON l.recording_mbid = g.recording_mbid
@@ -54,7 +54,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
             )
             SELECT user_id
                  , genre
-                 , time_bracket
+                 , hour
                  , listen_count
               FROM genre_listens
         """
@@ -64,24 +64,24 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
             WITH intermediate_table AS (
                 SELECT user_id
                      , genre
-                     , time_bracket
+                     , hour
                      , listen_count
                   FROM {existing_aggregate}
                  UNION ALL
                 SELECT user_id
                      , genre
-                     , time_bracket
+                     , hour
                      , listen_count
                   FROM {incremental_aggregate}
             )
                 SELECT user_id
                      , genre
-                     , time_bracket
+                     , hour
                      , sum(listen_count) as listen_count
                   FROM intermediate_table
               GROUP BY user_id
                      , genre
-                     , time_bracket
+                     , hour
         """
 
     def get_stats_query(self, final_aggregate):
@@ -90,23 +90,23 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 				SELECT 
 					user_id,
 					genre,
-					time_bracket,
+					hour,
 					listen_count,
 					ROW_NUMBER() OVER (
-						PARTITION BY user_id, time_bracket
+						PARTITION BY user_id, hour
 						ORDER BY listen_count DESC
 					) AS rank
 				FROM {final_aggregate}
 			),
 			top_genres AS (
-				SELECT user_id, genre, time_bracket, listen_count
+				SELECT user_id, genre, hour, listen_count
 				FROM ranked_genres
 				WHERE rank <= 10
 			),
 			all_genre_time_combinations AS (
 				SELECT DISTINCT 
 					tg.user_id, 
-					tg.time_bracket, 
+					tg.hour, 
 					tg.genre
 				FROM top_genres tg
 			)
@@ -116,7 +116,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 					collect_list(
 						struct(
 							agtc.genre,
-							agtc.time_bracket,
+							agtc.hour,
 							COALESCE(tg.listen_count, 0) AS listen_count
 						)
 					)
@@ -125,7 +125,7 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 			LEFT JOIN top_genres tg
 				ON agtc.user_id = tg.user_id
 			AND agtc.genre = tg.genre
-			AND agtc.time_bracket = tg.time_bracket
+			AND agtc.hour = tg.hour
 			GROUP BY agtc.user_id
 		"""
 		

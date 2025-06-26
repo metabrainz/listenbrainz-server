@@ -10,5 +10,5 @@ class GenreActivityRecord(BaseModel):
         time bracket, and listen count for that genre during that time period.
     """
     genre: constr(min_length=1)
-    time_bracket: constr(regex=r'^(0[0-9]|1[0-9]|2[0-3])$')
+    hour: constr(regex=r'^(0[0-9]|1[0-9]|2[0-3])$')
     listen_count: NonNegativeInt
