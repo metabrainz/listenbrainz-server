@@ -118,7 +118,7 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
         label: `${genre.name}-${timeframe.timeOfDay}`,
         displayName: genre.name,
         actualValue: genre.listen_count,
-        value: (genre.listen_count / total) * 100, // Percentage for pie sizing
+        value: (genre.listen_count / total) * 100,
         color: getGenreColor(genre.name),
         timeframe: timeframe.timeOfDay,
         timeRange: timeframe.timeRange,
@@ -149,19 +149,7 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
     <Card className="user-stats-card" data-testid="user-genre-day-activity">
       <div className="row">
         <div className="col-xs-10">
-          <h3 className="capitalize-bold">Genre Activity by Time of Day</h3>
-        </div>
-        <div className="col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#genre-day-activity">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
+          <h3 className="capitalize-bold">Genre Activity</h3>
         </div>
       </div>
       <Loader isLoading={loading}>
