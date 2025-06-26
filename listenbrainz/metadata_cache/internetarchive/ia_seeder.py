@@ -15,7 +15,7 @@ def fetch_and_seed_collections(limit_per_collection=1000, sleep_seconds=1):
         {'name': 'cylinder', 'query': 'cylinder mediatype:audio'}
     ]
 
-    exchange = Exchange(config.EXTERNAL_SERVICES_EXCHANGE, 'topic', durable=False)
+    exchange = Exchange(config.EXTERNAL_SERVICES_EXCHANGE, 'topic', durable=True)
 
     with Connection(
         hostname=config.RABBITMQ_HOST,
