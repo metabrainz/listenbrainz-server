@@ -48,6 +48,15 @@ const getTimePeriod = (
   return { timeOfDay: "6PM-12AM", timeRange: "Evening" };
 };
 
+const getTop5GenresWithTies = (
+  genres: Array<{ name: string; listen_count: number }>
+) => {
+  if (genres.length <= 5) return genres;
+  const sorted = [...genres].sort((a, b) => b.listen_count - a.listen_count);
+  const fifthHighestCount = sorted[4].listen_count;
+  return sorted.filter((genre) => genre.listen_count >= fifthHighestCount);
+};
+
 // Function to group hourly data into time periods
 const groupDataByTimePeriod = (
   data: GenreHourData[]
@@ -82,16 +91,20 @@ const groupDataByTimePeriod = (
         Evening: "6PM-12AM",
       };
 
+      const allGenres = Object.entries(genres)
+        .filter(([_, count]) => count > 0)
+        .map(([name, listen_count]) => ({
+          name,
+          listen_count,
+        }))
+        .sort((a, b) => b.listen_count - a.listen_count); // Sort by listen count descending
+
+      const topGenres = getTop5GenresWithTies(allGenres);
+
       return {
         timeOfDay: timeOfDayMap[timeRange],
         timeRange,
-        genres: Object.entries(genres)
-          .filter(([_, count]) => count > 0)
-          .map(([name, listen_count]) => ({
-            name,
-            listen_count,
-          }))
-          .sort((a, b) => b.listen_count - a.listen_count), // Sort by listen count descending
+        genres: topGenres,
       };
     })
     .filter((timeframe) => timeframe.genres.length > 0); // Only include time periods with data
