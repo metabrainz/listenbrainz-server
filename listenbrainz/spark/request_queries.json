@@ -137,7 +137,8 @@
       "limit",
       "skip_threshold",
       "only_stage2",
-      "is_production_dataset"
+      "is_production_dataset",
+      "top_n_listeners"
     ]
   },
   "similarity.artist": {

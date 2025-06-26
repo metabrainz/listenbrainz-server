@@ -20,7 +20,7 @@ RECORDINGS_PER_MESSAGE = 10000
 
 class RecordingSimilarityBase(abc.ABC):
 
-    def __init__(self, name, *, session, max_contribution, skip_threshold, threshold, limit, is_production_dataset, only_stage2):
+    def __init__(self, name, *, session, max_contribution, skip_threshold, threshold, limit, is_production_dataset, only_stage2, top_n_listeners):
         """ Generate similar recordings based on grouping listening activity into user sessions.
 
         Args:
@@ -37,6 +37,7 @@ class RecordingSimilarityBase(abc.ABC):
             only_stage2: use existing processed intermediate chunks. use this option with caution as the code
                 does not check whether the parameters supplied for use in stage 1 are the same as that used to
                 generate the existing intermediate chunks.
+            top_n_listeners: The number of top listeners for an artist to consider for session aggregation.
         """
         self.name = name
         self.entity = "recording"
@@ -47,6 +48,7 @@ class RecordingSimilarityBase(abc.ABC):
         self.skip_threshold = -skip_threshold
         self.threshold = threshold
         self.limit = limit
+        self.top_n_listeners = top_n_listeners
 
         self.only_stage2 = only_stage2
         self.intermediate_dir = f"/similarity/{self.entity}/{self.name}/intermediate-output"
@@ -84,6 +86,23 @@ class RecordingSimilarityBase(abc.ABC):
                   USING (recording_mbid)
                   WHERE l.recording_mbid IS NOT NULL
                     AND l.recording_mbid != ''
+            ), exploded_grouped_artists AS (
+                SELECT user_id
+                     , explode(artist_credit_mbids) AS artist_mbid
+                     , count(artist_mbid) AS listen_count
+                  FROM listens
+              GROUP BY user_id
+                     , artist_mbid
+            ), ranked_artists AS (
+                SELECT user_id
+                     , artist_mbid
+                     , rank() OVER (PARTITION BY artist_mbid ORDER BY listen_count DESC) AS rank
+                  FROM exploded_grouped_artists
+            ), top_listeners AS (
+                SELECT user_id
+                     , artist_mbid
+                  FROM ranked_artists
+                 WHERE rank <= {self.top_n_listeners}
             ), ordered AS (
                 SELECT user_id
                      , listened_at
@@ -102,12 +121,18 @@ class RecordingSimilarityBase(abc.ABC):
                   FROM ordered
                 WINDOW w AS (PARTITION BY user_id ORDER BY listened_at)
             ), sessions_filtered AS (
-                SELECT user_id
-                     , session_id
-                     , recording_id
-                     , artist_credit_mbids
-                  FROM sessions
-                 WHERE NOT skipped
+                SELECT s.user_id
+                     , s.session_id
+                     , s.recording_id
+                     , s.artist_credit_mbids
+                  FROM sessions s
+                 WHERE NOT s.skipped
+                   AND EXISTS (
+                       SELECT 1
+                         FROM top_listeners tl
+                        WHERE tl.user_id = s.user_id
+                          AND array_contains(s.artist_credit_mbids, tl.artist_mbid)
+                   )
             ), user_grouped_mbids AS (
                 SELECT s1.user_id
                      , s1.recording_id AS id0

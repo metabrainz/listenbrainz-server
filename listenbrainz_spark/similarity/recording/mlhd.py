@@ -11,7 +11,7 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 
 class MlhdRecordingSimilarity(RecordingSimilarityBase):
 
-    def __init__(self, session, max_contribution, skip_threshold, threshold, limit, is_production_dataset, only_stage2):
+    def __init__(self, session, max_contribution, skip_threshold, threshold, limit, is_production_dataset, only_stage2, top_n_listeners):
         super().__init__(
             "mlhd",
             session=session,
@@ -21,10 +21,11 @@ class MlhdRecordingSimilarity(RecordingSimilarityBase):
             limit=limit,
             is_production_dataset=is_production_dataset,
             only_stage2=only_stage2,
+            top_n_listeners=top_n_listeners
         )
 
     def get_algorithm(self) -> str:
-        return f"session_based_mlhd_session_{self.session}_contribution_{self.max_contribution}_threshold_{self.threshold}_limit_{self.limit}_skip_{-self.skip_threshold}"
+        return f"session_based_mlhd_session_{self.session}_contribution_{self.max_contribution}_threshold_{self.threshold}_limit_{self.limit}_skip_{-self.skip_threshold}_top_n_listeners_{self.top_n_listeners}"
 
     def get_dataset(self) -> DataFrame:
         return read_files_from_HDFS(MLHD_PLUS_DATA_DIRECTORY)

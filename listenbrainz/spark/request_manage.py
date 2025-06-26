@@ -370,7 +370,10 @@ def request_similar_users(max_num_users):
 @click.option("--production", is_flag=True, default=False,
               help="whether the dataset is being created as a production dataset. affects"
                    " how the resulting dataset is stored in LB.", required=True)
-def request_similar_recordings(days, mlhd, session, max_contribution, threshold, limit, skip_threshold, only_stage2, production):
+@click.option("--top-n-listeners", type=int,
+              help="The number of top listeners per artist to use during recording similarity."
+                                        " the limit).", required=True)
+def request_similar_recordings(days, mlhd, session, max_contribution, threshold, limit, skip_threshold, only_stage2, production, top_n_listeners):
     """ Send the cluster a request to generate similar recordings index. """
     kwargs = {
         "mlhd": mlhd,
@@ -380,7 +383,8 @@ def request_similar_recordings(days, mlhd, session, max_contribution, threshold,
         "limit": limit,
         "skip_threshold": skip_threshold,
         "only_stage2": only_stage2,
-        "is_production_dataset": production
+        "is_production_dataset": production,
+        "top_n_listeners": top_n_listeners
     }
     if days is not None:
         if mlhd:

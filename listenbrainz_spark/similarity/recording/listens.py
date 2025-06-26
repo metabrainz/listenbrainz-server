@@ -9,7 +9,7 @@ from listenbrainz_spark.similarity.recording.common import RecordingSimilarityBa
 
 class ListensRecordingSimilarity(RecordingSimilarityBase):
 
-    def __init__(self, *, days, session, max_contribution, skip_threshold, threshold, limit, is_production_dataset, only_stage2):
+    def __init__(self, *, days, session, max_contribution, skip_threshold, threshold, limit, is_production_dataset, only_stage2, top_n_listeners):
         super().__init__(
             "listens",
             session=session,
@@ -19,13 +19,14 @@ class ListensRecordingSimilarity(RecordingSimilarityBase):
             limit=limit,
             is_production_dataset=is_production_dataset,
             only_stage2=only_stage2,
+            top_n_listeners=top_n_listeners
         )
         self.days = days
         self.to_date = datetime.combine(date.today(), time.min)
         self.from_date = self.to_date + timedelta(days=-days)
 
     def get_algorithm(self) -> str:
-        return f"session_based_days_{self.days}_session_{self.session}_contribution_{self.max_contribution}_threshold_{self.threshold}_limit_{self.limit}_skip_{-self.skip_threshold}"
+        return f"session_based_days_{self.days}_session_{self.session}_contribution_{self.max_contribution}_threshold_{self.threshold}_limit_{self.limit}_skip_{-self.skip_threshold}_top_n_listeners_{self.top_n_listeners}"
 
     def get_dataset(self) -> DataFrame:
         return get_listens_from_dump(self.from_date, self.to_date)
