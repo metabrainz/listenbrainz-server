@@ -530,7 +530,6 @@ def get_artist_activity(user_name: str):
 @ratelimit()
 def get_genre_activity(user_name: str):
     user, stats_range = _validate_stats_user_params(user_name)
-<<<<<<< HEAD
     stats = db_stats.get(1, "genre_activity", stats_range, GenreActivityRecord)
     if stats is None:
         raise APINoContent('')
@@ -538,65 +537,6 @@ def get_genre_activity(user_name: str):
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"result": genre_activity})
 	
-=======
-    offset = get_non_negative_param("offset", default=0)
-    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-    stats = db_stats.get(user["id"], "genre_activity", stats_range, EntityRecord)
-    if stats is None:
-        raise APINoContent('')
-    
-    genre_activity, _ = _process_user_entity(stats, offset, count, entire_range=True)
-    genre_activity = [x.dict() for x in stats.data.__root__]
-	
-    array = [
-    {
-      "timeOfDay": "12AM-6AM",
-      "timeRange": "Night",
-      "genres": [
-        { "name": "Pop", "listen_count": 200 },
-        { "name": "Rock", "listen_count": 150 },
-        { "name": "Jazz", "listen_count": 80 },
-        { "name": "HipHop", "listen_count": 130 },
-        { "name": "Classical", "listen_count": 90 },
-      ],
-    },
-    {
-      "timeOfDay": "6AM-12PM",
-      "timeRange": "Morning",
-      "genres": [
-        { "name": "Pop", "listen_count": 150 },
-        { "name": "Rock", "listen_count": 250 },
-        { "name": "Jazz", "listen_count": 180 },
-        { "name": "HipHop", "listen_count": 260 },
-        { "name": "Classical", "listen_count": 140 },
-      ],
-    },
-    {
-      "timeOfDay": "12PM-6PM",
-      "timeRange": "Afternoon",
-      "genres": [
-        { "name": "Pop", "listen_count": 400 },
-        { "name": "Rock", "listen_count": 320 },
-        { "name": "Jazz", "listen_count": 220 },
-        { "name": "HipHop", "listen_count": 350 },
-        { "name": "Classical", "listen_count": 200 },
-      ],
-    },
-    {
-      "timeOfDay": "6PM-12AM",
-      "timeRange": "Evening",
-      "genres": [
-        { "name": "Pop", "listen_count": 120 },
-        { "name": "Rock", "listen_count": 95 },
-        { "name": "Jazz", "listen_count": 60 },
-        { "name": "HipHop", "listen_count": 80 },
-        { "name": "Classical", "listen_count": 50 },
-      ],
-    },
-  ]
-    return jsonify({"result": array, "stats": genre_activity})
-
->>>>>>> 50a0628e82f7a89d9215e57ba0dc4670463e62e2
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
