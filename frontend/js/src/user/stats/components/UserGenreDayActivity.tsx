@@ -6,7 +6,6 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserGenreDayActivityProps = {

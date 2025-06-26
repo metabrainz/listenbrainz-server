@@ -171,10 +171,12 @@ export default function UserReports() {
         {statsExplanationModalButton}
         <UserArtistActivity range={range} user={user} />
       </section>
-      <section id="artist-activity">
-        {statsExplanationModalButton}
-        <UserGenreDayActivity range={range} user={user} />
-      </section>
+      {user && (
+        <section id="genre-activity">
+          {statsExplanationModalButton}
+          <UserGenreDayActivity range={range} user={user} />
+        </section>
+      )}
       <section id="artist-origin">
         {statsExplanationModalButton}
         <UserArtistMap range={range} user={user} />
