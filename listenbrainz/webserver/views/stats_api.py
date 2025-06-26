@@ -10,6 +10,7 @@ import listenbrainz.db.user as db_user
 from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -528,65 +529,14 @@ def get_artist_activity(user_name: str):
 @crossdomain
 @ratelimit()
 def get_genre_activity(user_name: str):
-    # user, stats_range = _validate_stats_user_params(user_name)
-    # offset = get_non_negative_param("offset", default=0)
-    # count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-    # stats = db_stats.get(user["id"], "genre_activity", stats_range, EntityRecord)
-    # if stats is None:
-    #     raise APINoContent('')
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(1, "genre_activity", stats_range, GenreActivityRecord)
+    if stats is None:
+        raise APINoContent('')
     
-    # release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
-    # result = _get_genre_activity(release_groups_list)
-    # return jsonify({"result": result})
-
-    array = [
-    {
-      "timeOfDay": "12AM-6AM",
-      "timeRange": "Night",
-      "genres": [
-        { "name": "Pop", "listen_count": 200 },
-        { "name": "Rock", "listen_count": 150 },
-        { "name": "Jazz", "listen_count": 80 },
-        { "name": "HipHop", "listen_count": 130 },
-        { "name": "Classical", "listen_count": 90 },
-      ],
-    },
-    {
-      "timeOfDay": "6AM-12PM",
-      "timeRange": "Morning",
-      "genres": [
-        { "name": "Pop", "listen_count": 150 },
-        { "name": "Rock", "listen_count": 250 },
-        { "name": "Jazz", "listen_count": 180 },
-        { "name": "HipHop", "listen_count": 260 },
-        { "name": "Classical", "listen_count": 140 },
-      ],
-    },
-    {
-      "timeOfDay": "12PM-6PM",
-      "timeRange": "Afternoon",
-      "genres": [
-        { "name": "Pop", "listen_count": 400 },
-        { "name": "Rock", "listen_count": 320 },
-        { "name": "Jazz", "listen_count": 220 },
-        { "name": "HipHop", "listen_count": 350 },
-        { "name": "Classical", "listen_count": 200 },
-      ],
-    },
-    {
-      "timeOfDay": "6PM-12AM",
-      "timeRange": "Evening",
-      "genres": [
-        { "name": "Pop", "listen_count": 120 },
-        { "name": "Rock", "listen_count": 95 },
-        { "name": "Jazz", "listen_count": 60 },
-        { "name": "HipHop", "listen_count": 80 },
-        { "name": "Classical", "listen_count": 50 },
-      ],
-    },
-  ]
-    return jsonify({"result": array})
-
+    genre_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"result": genre_activity})
+	
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1331,59 +1281,6 @@ def get_sitewide_artist_activity():
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
-
-
-@stats_api_bp.get("/sitewide/genre-activity")
-@crossdomain
-@ratelimit()
-def get_sitewide_genre_activity(user_name: str):
-    array = [
-    {
-      "timeOfDay": "12AM-6AM",
-      "timeRange": "Night",
-      "genres": [
-        { "name": "Pop", "listen_count": 200 },
-        { "name": "Rock", "listen_count": 150 },
-        { "name": "Jazz", "listen_count": 80 },
-        { "name": "HipHop", "listen_count": 130 },
-        { "name": "Classical", "listen_count": 90 },
-      ],
-    },
-    {
-      "timeOfDay": "6AM-12PM",
-      "timeRange": "Morning",
-      "genres": [
-        { "name": "Pop", "listen_count": 150 },
-        { "name": "Rock", "listen_count": 250 },
-        { "name": "Jazz", "listen_count": 180 },
-        { "name": "HipHop", "listen_count": 260 },
-        { "name": "Classical", "listen_count": 140 },
-      ],
-    },
-    {
-      "timeOfDay": "12PM-6PM",
-      "timeRange": "Afternoon",
-      "genres": [
-        { "name": "Pop", "listen_count": 400 },
-        { "name": "Rock", "listen_count": 320 },
-        { "name": "Jazz", "listen_count": 220 },
-        { "name": "HipHop", "listen_count": 350 },
-        { "name": "Classical", "listen_count": 200 },
-      ],
-    },
-    {
-      "timeOfDay": "6PM-12AM",
-      "timeRange": "Evening",
-      "genres": [
-        { "name": "Pop", "listen_count": 120 },
-        { "name": "Rock", "listen_count": 95 },
-        { "name": "Jazz", "listen_count": 60 },
-        { "name": "HipHop", "listen_count": 80 },
-        { "name": "Classical", "listen_count": 50 },
-      ],
-    },
-  ]
-    return jsonify({"result": array})
 
 
 @stats_api_bp.get("/sitewide/artist-map")

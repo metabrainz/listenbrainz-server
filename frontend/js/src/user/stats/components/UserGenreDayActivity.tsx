@@ -14,7 +14,19 @@ export type UserGenreDayActivityProps = {
   user?: ListenBrainzUser;
 };
 
-export type GenreTimeframeData = {
+// Updated type for the new API response format
+export type GenreHourData = {
+  genre: string;
+  hour: string;
+  listen_count: number;
+};
+
+export type UserGenreDayActivityResponse = {
+  result: GenreHourData[];
+};
+
+// Updated type for processed timeframe data
+export type ProcessedTimeframeData = {
   timeOfDay: string;
   timeRange: string;
   genres: Array<{
@@ -23,29 +35,66 @@ export type GenreTimeframeData = {
   }>;
 };
 
-export type UserGenreDayActivityResponse = {
-  result: GenreTimeframeData[];
+// Function to map hour to time period
+const getTimePeriod = (
+  hour: number
+): { timeOfDay: string; timeRange: string } => {
+  if (hour >= 0 && hour <= 5)
+    return { timeOfDay: "12AM-6AM", timeRange: "Night" };
+  if (hour >= 6 && hour <= 11)
+    return { timeOfDay: "6AM-12PM", timeRange: "Morning" };
+  if (hour >= 12 && hour <= 17)
+    return { timeOfDay: "12PM-6PM", timeRange: "Afternoon" };
+  return { timeOfDay: "6PM-12AM", timeRange: "Evening" };
 };
 
-// Define a color mapping for genres
-const genreColors: Record<string, string> = {
-  Pop: "#f47560",
-  Rock: "#61cdbb",
-  Jazz: "#97e3d5",
-  HipHop: "#e8c1a0",
-  Classical: "#f1e15b",
-  Electronic: "#82ca9d",
-  Metal: "#8884d8",
-  Folk: "#a4de6c",
-  Country: "#d0ed57",
-  RB: "#ffc658",
-  Indie: "#ff8042",
-  Alternative: "#83a6ed",
-};
+// Function to group hourly data into time periods
+const groupDataByTimePeriod = (
+  data: GenreHourData[]
+): ProcessedTimeframeData[] => {
+  const grouped: Record<string, Record<string, number>> = {};
 
-// Get color for a genre, with fallback for unknown genres
-const getGenreColor = (genre: string): string => {
-  return genreColors[genre] || `hsl(${Math.random() * 360}, 70%, 60%)`;
+  // Initialize time periods
+  const timePeriods = ["Night", "Morning", "Afternoon", "Evening"];
+  timePeriods.forEach((period) => {
+    grouped[period] = {};
+  });
+
+  // Group data by time period and genre
+  data.forEach((item) => {
+    const hour = parseInt(item.hour);
+    const { timeRange } = getTimePeriod(hour);
+    const { genre } = item;
+
+    if (!grouped[timeRange][genre]) {
+      grouped[timeRange][genre] = 0;
+    }
+    grouped[timeRange][genre] += item.listen_count;
+  });
+
+  // Convert to the expected format
+  return Object.entries(grouped)
+    .map(([timeRange, genres]) => {
+      const timeOfDayMap: Record<string, string> = {
+        Night: "12AM-6AM",
+        Morning: "6AM-12PM",
+        Afternoon: "12PM-6PM",
+        Evening: "6PM-12AM",
+      };
+
+      return {
+        timeOfDay: timeOfDayMap[timeRange],
+        timeRange,
+        genres: Object.entries(genres)
+          .filter(([_, count]) => count > 0)
+          .map(([name, listen_count]) => ({
+            name,
+            listen_count,
+          }))
+          .sort((a, b) => b.listen_count - a.listen_count), // Sort by listen count descending
+      };
+    })
+    .filter((timeframe) => timeframe.genres.length > 0); // Only include time periods with data
 };
 
 // Custom tooltip component for pie chart
@@ -102,13 +151,14 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
     errorMessage = "",
   } = loaderData || {};
 
-  // Prepare data with correct percentages for pie sizing
   const processData = (data?: UserGenreDayActivityResponse) => {
     if (!data || !data.result || data.result.length === 0) {
       return [];
     }
 
-    return data.result.flatMap((timeframe) => {
+    const groupedData = groupDataByTimePeriod(data.result);
+
+    return groupedData.flatMap((timeframe) => {
       const total = timeframe.genres.reduce(
         (acc, genre) => acc + genre.listen_count,
         0
@@ -118,9 +168,9 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
         label: `${genre.name}-${timeframe.timeOfDay}`,
         displayName: genre.name,
         actualValue: genre.listen_count,
-        value: (genre.listen_count / total) * 100, // Percentage for pie sizing
-        color: getGenreColor(genre.name),
-        timeframe: timeframe.timeOfDay,
+        value: (genre.listen_count / total) * 100,
+        color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+        timeframe: timeframe.timeRange,
         timeRange: timeframe.timeRange,
       }));
     });
@@ -149,19 +199,7 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
     <Card className="user-stats-card" data-testid="user-genre-day-activity">
       <div className="row">
         <div className="col-xs-10">
-          <h3 className="capitalize-bold">Genre Activity by Time of Day</h3>
-        </div>
-        <div className="col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#genre-day-activity">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
+          <h3 className="capitalize-bold">Genre Activity</h3>
         </div>
       </div>
       <Loader isLoading={loading}>
