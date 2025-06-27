@@ -154,7 +154,7 @@ class RecordingSimilarityBase(abc.ABC):
             )
                 SELECT id0
                      , id1
-                     , SUM(LEAST(part_score, {self.max_contribution})) AS score
+                     , SUM(SQRT(part_score)) AS score
                   FROM user_grouped_mbids
               GROUP BY id0
                      , id1
@@ -173,7 +173,7 @@ class RecordingSimilarityBase(abc.ABC):
             WITH thresholded_mbids AS (
                 SELECT id0
                      , id1
-                     , SUM(score) AS total_score
+                     , INT(SUM(score)) AS total_score
                   FROM ${{chunks_table}}
               GROUP BY id0
                      , id1
