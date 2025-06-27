@@ -65,7 +65,9 @@ const groupDataByTimePeriod = (
   timezoneOffset: number
 ): ProcessedTimeframeData[] => {
   const grouped: Record<string, Record<string, number>> = {};
-  TIME_PERIODS.forEach((p) => (grouped[p.timeRange] = {}));
+  TIME_PERIODS.forEach((p) => {
+    grouped[p.timeRange] = {};
+  });
 
   data.forEach((item) => {
     const localHour = convertUTCToLocalHour(item.hour, timezoneOffset);
@@ -252,7 +254,7 @@ export default function UserGenreDayActivity({
               >
                 {timeMarkers.map((marker, index) => (
                   <TimeMarker
-                    key={index}
+                    key={marker.label}
                     position={marker.position}
                     label={marker.label}
                   />
