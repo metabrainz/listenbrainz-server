@@ -1,8 +1,7 @@
 import { ResponsivePie } from "@nivo/pie";
 import * as React from "react";
-import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import { scaleSequential } from "d3-scale";
 import { interpolateRainbow } from "d3-scale-chromatic";
@@ -15,19 +14,7 @@ export type UserGenreDayActivityProps = {
   user?: ListenBrainzUser;
 };
 
-// Updated type for the new API response format
-export type GenreHourData = {
-  genre: string;
-  hour: string;
-  listen_count: number;
-};
-
-export type UserGenreDayActivityResponse = {
-  result: GenreHourData[];
-};
-
-// Updated type for processed timeframe data
-export type ProcessedTimeframeData = {
+type ProcessedTimeframeData = {
   timeOfDay: string;
   timeRange: string;
   genres: Array<{
@@ -36,7 +23,13 @@ export type ProcessedTimeframeData = {
   }>;
 };
 
-// Function to map hour to time period
+const TIME_PERIODS = {
+  Night: { timeOfDay: "12AM-6AM", hour: 3 },
+  Morning: { timeOfDay: "6AM-12PM", hour: 9 },
+  Afternoon: { timeOfDay: "12PM-6PM", hour: 15 },
+  Evening: { timeOfDay: "6PM-12AM", hour: 21 },
+};
+
 const getTimePeriod = (
   hour: number
 ): { timeOfDay: string; timeRange: string } => {
@@ -58,64 +51,45 @@ const getTop5GenresWithTies = (
   return sorted.filter((genre) => genre.listen_count >= fifthHighestCount);
 };
 
-// Function to group hourly data into time periods
 const groupDataByTimePeriod = (
   data: GenreHourData[]
 ): ProcessedTimeframeData[] => {
   const grouped: Record<string, Record<string, number>> = {};
 
   // Initialize time periods
-  const timePeriods = ["Night", "Morning", "Afternoon", "Evening"];
-  timePeriods.forEach((period) => {
+  Object.keys(TIME_PERIODS).forEach((period) => {
     grouped[period] = {};
   });
 
   // Group data by time period and genre
   data.forEach((item) => {
-    const hour = parseInt(item.hour, 10);
-    const { timeRange } = getTimePeriod(hour);
+    const { timeRange } = getTimePeriod(item.hour);
     const { genre } = item;
 
-    if (!grouped[timeRange][genre]) {
-      grouped[timeRange][genre] = 0;
-    }
-    grouped[timeRange][genre] += item.listen_count;
+    grouped[timeRange][genre] =
+      (grouped[timeRange][genre] || 0) + item.listen_count;
   });
 
-  // Ensure all time periods have at least one genre
-  timePeriods.forEach((period) => {
-    if (Object.keys(grouped[period]).length === 0) {
-      grouped[period]["No Listens"] = 0;
-    }
-  });
-
-  // Convert to the expected format
+  // Convert to expected format
   return Object.entries(grouped).map(([timeRange, genres]) => {
-    const timeOfDayMap: Record<string, string> = {
-      Night: "12AM-6AM",
-      Morning: "6AM-12PM",
-      Afternoon: "12PM-6PM",
-      Evening: "6PM-12AM",
-    };
-
     const allGenres = Object.entries(genres)
-      .map(([name, listen_count]) => ({
-        name,
-        listen_count,
-      }))
+      .map(([name, listen_count]) => ({ name, listen_count }))
       .sort((a, b) => b.listen_count - a.listen_count);
 
-    const topGenres = getTop5GenresWithTies(allGenres);
+    // Ensure at least one entry exists
+    const finalGenres =
+      allGenres.length > 0
+        ? getTop5GenresWithTies(allGenres)
+        : [{ name: "No Listens", listen_count: 0 }];
 
     return {
-      timeOfDay: timeOfDayMap[timeRange],
+      timeOfDay: TIME_PERIODS[timeRange as keyof typeof TIME_PERIODS].timeOfDay,
       timeRange,
-      genres: topGenres,
+      genres: finalGenres,
     };
   });
 };
 
-// Custom tooltip component for pie chart
 function CustomTooltip({ datum }: { datum: any }) {
   return (
     <div
@@ -138,11 +112,34 @@ function CustomTooltip({ datum }: { datum: any }) {
   );
 }
 
-export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
-  const { APIService } = React.useContext(GlobalAppContext);
+function TimeMarker({
+  position,
+  label,
+}: {
+  position: React.CSSProperties;
+  label: string;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        fontWeight: "bold",
+        fontSize: 20,
+        zIndex: 10,
+        ...position,
+      }}
+    >
+      {label}
+    </div>
+  );
+}
 
-  // Props
-  const { user, range } = props;
+export default function UserGenreDayActivity({
+  user,
+  range,
+}: UserGenreDayActivityProps) {
+  const { APIService } = React.useContext(GlobalAppContext);
+  const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["userGenreDayActivity", user?.name, range],
@@ -164,85 +161,72 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
   });
 
   const {
-    data: rawData = { result: [] } as UserGenreDayActivityResponse,
+    data: rawData = { result: [] },
     hasError = false,
     errorMessage = "",
   } = loaderData || {};
 
-  const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
+  const processData = React.useCallback(
+    (data?: UserGenreDayActivityResponse) => {
+      if (!data?.result?.length) return [];
 
-  const getTimeRangeHour = (timeRange: string): number => {
-    switch (timeRange) {
-      case "Night":
-        return 3;
-      case "Morning":
-        return 9;
-      case "Afternoon":
-        return 15;
-      case "Evening":
-        return 21;
-      default:
-        return 0;
-    }
-  };
+      const groupedData = groupDataByTimePeriod(data.result);
 
-  const processData = (data?: UserGenreDayActivityResponse) => {
-    if (!data || !data.result || data.result.length === 0) {
-      return [];
-    }
+      return groupedData.flatMap((timeframe) => {
+        const total = timeframe.genres.reduce(
+          (acc, genre) => acc + genre.listen_count,
+          0
+        );
+        const baseHour =
+          TIME_PERIODS[timeframe.timeRange as keyof typeof TIME_PERIODS].hour;
 
-    const groupedData = groupDataByTimePeriod(data.result);
+        return timeframe.genres.map((genre, index) => {
+          const hourVariation = baseHour + ((index * 0.5) % 6);
+          const value =
+            genre.listen_count === 0 ? 100 : (genre.listen_count / total) * 100;
+          const color =
+            genre.listen_count === 0 ? "#f7f7f7" : colorScale(hourVariation);
 
-    return groupedData.flatMap((timeframe) => {
-      const total = timeframe.genres.reduce(
-        (acc, genre) => acc + genre.listen_count,
-        0
-      );
-      const baseHour = getTimeRangeHour(timeframe.timeRange);
-
-      return timeframe.genres.map((genre, index) => {
-        const hourVariation = baseHour + ((index * 0.5) % 6);
-
-        let genre_value = 100;
-        let genre_color = "#f7f7f7";
-        if (genre.listen_count !== 0) {
-          genre_value = (genre.listen_count / total) * 100;
-          genre_color = colorScale(hourVariation);
-        }
-
-        return {
-          id: `${genre.name}-${timeframe.timeOfDay}`,
-          label: `${genre.name}-${timeframe.timeOfDay}`,
-          displayName: genre.name,
-          actualValue: genre.listen_count,
-          value: genre_value,
-          color: genre_color,
-          timeframe: timeframe.timeRange,
-          timeRange: timeframe.timeRange,
-          hour: hourVariation,
-        };
+          return {
+            id: `${genre.name}-${timeframe.timeOfDay}`,
+            label: `${genre.name}-${timeframe.timeOfDay}`,
+            displayName: genre.name,
+            actualValue: genre.listen_count,
+            value,
+            color,
+            timeframe: timeframe.timeRange,
+            timeRange: timeframe.timeRange,
+            hour: hourVariation,
+          };
+        });
       });
-    });
-  };
+    },
+    [colorScale]
+  );
 
-  const [chartData, setChartData] = React.useState<any[]>([]);
+  const chartData = React.useMemo(() => processData(rawData), [
+    rawData,
+    processData,
+  ]);
 
-  React.useEffect(() => {
-    if (rawData && "result" in rawData && rawData.result.length > 0) {
-      if (rawData && "result" in rawData) {
-        const processedData = processData(rawData);
-        setChartData(processedData);
-      }
-    }
-  }, [rawData]);
-
-  // Position markers for clock-like arrangement
-  const timeframePositions = {
-    top: { label: "12AM", value: "Night" },
-    right: { label: "6AM", value: "Morning" },
-    bottom: { label: "12PM", value: "Afternoon" },
-    left: { label: "6PM", value: "Evening" },
-  };
+  const timeMarkers = [
+    {
+      position: { top: "5px", left: "50%", transform: "translateX(-50%)" },
+      label: "12AM",
+    },
+    {
+      position: { top: "50%", right: "25%", transform: "translateY(-50%)" },
+      label: "6AM",
+    },
+    {
+      position: { bottom: "5px", left: "50%", transform: "translateX(-50%)" },
+      label: "12PM",
+    },
+    {
+      position: { top: "50%", left: "25%", transform: "translateY(-50%)" },
+      label: "6PM",
+    },
+  ];
 
   return (
     <Card className="user-stats-card" data-testid="user-genre-day-activity">
@@ -262,8 +246,7 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
             }}
           >
             <span style={{ fontSize: 24 }}>
-              <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-              {errorMessage}
+              <FontAwesomeIcon icon={faExclamationCircle} /> {errorMessage}
             </span>
           </div>
         ) : (
@@ -277,60 +260,13 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
                   margin: "0 auto",
                 }}
               >
-                {/* Time markers positioned around the chart */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "5px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    fontWeight: "bold",
-                    fontSize: 20,
-                    zIndex: 10,
-                  }}
-                >
-                  {timeframePositions.top.label}
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    right: "25%",
-                    transform: "translateY(-50%)",
-                    fontWeight: "bold",
-                    fontSize: 20,
-                    zIndex: 10,
-                  }}
-                >
-                  {timeframePositions.right.label}
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: "5px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    fontWeight: "bold",
-                    fontSize: 20,
-                    zIndex: 10,
-                  }}
-                >
-                  {timeframePositions.bottom.label}
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "25%",
-                    transform: "translateY(-50%)",
-                    fontWeight: "bold",
-                    fontSize: 20,
-                    zIndex: 10,
-                  }}
-                >
-                  {timeframePositions.left.label}
-                </div>
-                {/* Pie Chart */}
+                {timeMarkers.map((marker, index) => (
+                  <TimeMarker
+                    key={index}
+                    position={marker.position}
+                    label={marker.label}
+                  />
+                ))}
                 <ResponsivePie
                   data={chartData}
                   margin={{ top: 75, right: 80, bottom: 75, left: 80 }}
