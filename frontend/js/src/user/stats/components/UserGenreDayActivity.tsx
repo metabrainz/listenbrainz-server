@@ -205,7 +205,7 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
 
         let genre_value = 100;
         let genre_color = "#f7f7f7";
-        if (genre.listen_count != 0) {
+        if (genre.listen_count !== 0) {
           genre_value = (genre.listen_count / total) * 100;
           genre_color = colorScale(hourVariation);
         }
