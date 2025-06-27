@@ -305,17 +305,14 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare type GenreHourData = {
+	genre: string;
+	hour: number;
+	listen_count: number;
+}
+
 declare type UserGenreDayActivityResponse = {
-  payload: {
-    time_ranges: Array<{
-	timeOfDay: string;
-	timeRange: string;
-	genres: {
-	  name: string;
-	  listen_count: number;
-	}[];
-    }>;
-  };
+  result: Array<GenreHourData>;
 }
 
 declare type UserArtistMapArtist = {

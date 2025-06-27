@@ -1,4 +1,3 @@
-import itertools
 import logging
 from typing import List
 
@@ -9,7 +8,6 @@ from data.model.common_stat_spark import UserStatRecords
 from data.model.user_genre_activity import GenreActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
-
 from listenbrainz_spark.utils import read_files_from_HDFS
 from listenbrainz_spark.path import RECORDING_RECORDING_GENRE_DATAFRAME
 
@@ -21,114 +19,76 @@ class GenreActivityUserStatsQueryEntity(UserStatsQueryProvider):
 
     def __init__(self, selector: ListenRangeSelector):
         super().__init__(selector)
-        self.setup_hours()
+        hours_df = listenbrainz_spark.session.createDataFrame(
+            [(hour,) for hour in range(24)], 
+            schema=["hour"]
+        )
+        hours_df.createOrReplaceTempView("hours")
 
     @property
     def entity(self):
         return "genre_activity"
 
-    def setup_hours(self):
-        """ Generate a dataframe containing hourly time brackets for genre analysis. """
-        hours = [f"{hour:02d}" for hour in range(24)]
-        hours_df = listenbrainz_spark.session.createDataFrame(
-            [(bracket,) for bracket in hours], 
-            schema=["hour"]
-        )
-        hours_df.createOrReplaceTempView("hours")
-
     def get_aggregate_query(self, table):
         genres_df = read_files_from_HDFS(RECORDING_RECORDING_GENRE_DATAFRAME)
         genres_df.createOrReplaceTempView("genres")
+        
         return f"""
-            WITH genre_listens AS (
-                SELECT l.user_id
-                     , g.genre
-                     , LPAD(HOUR(l.listened_at), 2, '0') AS hour
-                     , COUNT(*) AS listen_count
-                  FROM {table} l
-                  LEFT JOIN genres g ON l.recording_mbid = g.recording_mbid
-                 WHERE g.genre IS NOT NULL
-              GROUP BY l.user_id
-                     , g.genre
-                     , LPAD(HOUR(l.listened_at), 2, '0')
-            )
-            SELECT user_id
-                 , genre
-                 , hour
-                 , listen_count
-              FROM genre_listens
+            SELECT l.user_id,
+                   g.genre,
+                   HOUR(l.listened_at) AS hour,
+                   COUNT(*) AS listen_count
+              FROM {table} l
+              LEFT JOIN genres g ON l.recording_mbid = g.recording_mbid
+             WHERE g.genre IS NOT NULL
+          GROUP BY l.user_id, g.genre, HOUR(l.listened_at)
         """
 
     def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
         return f"""
-            WITH intermediate_table AS (
-                SELECT user_id
-                     , genre
-                     , hour
-                     , listen_count
-                  FROM {existing_aggregate}
-                 UNION ALL
-                SELECT user_id
-                     , genre
-                     , hour
-                     , listen_count
-                  FROM {incremental_aggregate}
-            )
-                SELECT user_id
-                     , genre
-                     , hour
-                     , sum(listen_count) as listen_count
-                  FROM intermediate_table
-              GROUP BY user_id
-                     , genre
-                     , hour
+            SELECT user_id,
+                   genre,
+                   hour,
+                   SUM(listen_count) AS listen_count
+              FROM (
+                  SELECT user_id, genre, hour, listen_count
+                    FROM {existing_aggregate}
+                   UNION ALL
+                  SELECT user_id, genre, hour, listen_count
+                    FROM {incremental_aggregate}
+              ) combined
+          GROUP BY user_id, genre, hour
         """
 
     def get_stats_query(self, final_aggregate):
         return f"""
-			WITH ranked_genres AS (
-				SELECT 
-					user_id,
-					genre,
-					hour,
-					listen_count,
-					ROW_NUMBER() OVER (
-						PARTITION BY user_id, hour
-						ORDER BY listen_count DESC
-					) AS rank
-				FROM {final_aggregate}
-			),
-			top_genres AS (
-				SELECT user_id, genre, hour, listen_count
-				FROM ranked_genres
-				WHERE rank <= 10
-			),
-			all_genre_time_combinations AS (
-				SELECT DISTINCT 
-					tg.user_id, 
-					tg.hour, 
-					tg.genre
-				FROM top_genres tg
-			)
-			SELECT 
-				agtc.user_id,
-				sort_array(
-					collect_list(
-						struct(
-							agtc.genre,
-							agtc.hour,
-							COALESCE(tg.listen_count, 0) AS listen_count
-						)
-					)
-				) AS genre_activity
-			FROM all_genre_time_combinations agtc
-			LEFT JOIN top_genres tg
-				ON agtc.user_id = tg.user_id
-			AND agtc.genre = tg.genre
-			AND agtc.hour = tg.hour
-			GROUP BY agtc.user_id
-		"""
-		
+            WITH top_genres AS (
+                SELECT user_id,
+                       genre,
+                       hour,
+                       listen_count,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY user_id, hour
+                           ORDER BY listen_count DESC
+                       ) AS rank
+                  FROM {final_aggregate}
+            ),
+            filtered_genres AS (
+                SELECT user_id, genre, hour, listen_count
+                  FROM top_genres
+                 WHERE rank <= 10
+            )
+            SELECT user_id,
+                   SORT_ARRAY(
+                       COLLECT_LIST(
+                           STRUCT(genre, hour, listen_count)
+                       )
+                   ) AS genre_activity
+              FROM filtered_genres
+          GROUP BY user_id
+        """
+
+
 class GenreActivityUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
@@ -149,4 +109,6 @@ class GenreActivityUserMessageCreator(UserStatsMessageCreator):
                 "data": entry["genre_activity"]
             }
         except ValidationError:
-            logger.error("Invalid entry in genre trend stats:", exc_info=True)
+            logger.error("Invalid entry in genre activity stats for user %s", 
+                        entry.get("user_id", "unknown"), exc_info=True)
+            return None
