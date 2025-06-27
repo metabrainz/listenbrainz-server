@@ -23,70 +23,68 @@ type ProcessedTimeframeData = {
   }>;
 };
 
-const TIME_PERIODS = {
-  Night: { timeOfDay: "12AM-6AM", hour: 3 },
-  Morning: { timeOfDay: "6AM-12PM", hour: 9 },
-  Afternoon: { timeOfDay: "12PM-6PM", hour: 15 },
-  Evening: { timeOfDay: "6PM-12AM", hour: 21 },
+const TIME_PERIODS = [
+  { timeRange: "Night", timeOfDay: "12AM-6AM", hour: 3, from: 0, to: 5 },
+  { timeRange: "Morning", timeOfDay: "6AM-12PM", hour: 9, from: 6, to: 11 },
+  { timeRange: "Afternoon", timeOfDay: "12PM-6PM", hour: 15, from: 12, to: 17 },
+  { timeRange: "Evening", timeOfDay: "6PM-12AM", hour: 21, from: 18, to: 23 },
+];
+
+const getRoundedTimezoneOffset = (): number => {
+  const offsetMinutes = -new Date().getTimezoneOffset();
+  const offsetHours = offsetMinutes / 60;
+  return offsetMinutes % 60 <= 30
+    ? Math.floor(offsetHours)
+    : Math.ceil(offsetHours);
 };
 
-const getTimePeriod = (
-  hour: number
-): { timeOfDay: string; timeRange: string } => {
-  if (hour >= 0 && hour <= 5)
-    return { timeOfDay: "12AM-6AM", timeRange: "Night" };
-  if (hour >= 6 && hour <= 11)
-    return { timeOfDay: "6AM-12PM", timeRange: "Morning" };
-  if (hour >= 12 && hour <= 17)
-    return { timeOfDay: "12PM-6PM", timeRange: "Afternoon" };
-  return { timeOfDay: "6PM-12AM", timeRange: "Evening" };
+const convertUTCToLocalHour = (
+  utcHour: number,
+  timezoneOffset: number
+): number => {
+  return (utcHour + timezoneOffset + 24) % 24;
+};
+
+const getTimePeriod = (hour: number) => {
+  return (
+    TIME_PERIODS.find((p) => hour >= p.from && hour <= p.to) ?? TIME_PERIODS[0]
+  );
 };
 
 const getTop5GenresWithTies = (
   genres: Array<{ name: string; listen_count: number }>
 ) => {
-  if (genres.length <= 5) return genres;
   const sorted = [...genres].sort((a, b) => b.listen_count - a.listen_count);
-  const fifthHighestCount = sorted[4].listen_count;
-  return sorted.filter((genre) => genre.listen_count >= fifthHighestCount);
+  const topGenres = sorted.slice(0, 5);
+  const fifthCount = topGenres.at(-1)?.listen_count ?? 0;
+  return sorted.filter((g) => g.listen_count >= fifthCount);
 };
 
 const groupDataByTimePeriod = (
-  data: GenreHourData[]
+  data: GenreHourData[],
+  timezoneOffset: number
 ): ProcessedTimeframeData[] => {
   const grouped: Record<string, Record<string, number>> = {};
+  TIME_PERIODS.forEach((p) => (grouped[p.timeRange] = {}));
 
-  // Initialize time periods
-  Object.keys(TIME_PERIODS).forEach((period) => {
-    grouped[period] = {};
-  });
-
-  // Group data by time period and genre
   data.forEach((item) => {
-    const { timeRange } = getTimePeriod(item.hour);
-    const { genre } = item;
-
-    grouped[timeRange][genre] =
-      (grouped[timeRange][genre] || 0) + item.listen_count;
+    const localHour = convertUTCToLocalHour(item.hour, timezoneOffset);
+    const period = getTimePeriod(localHour);
+    grouped[period.timeRange][item.genre] =
+      (grouped[period.timeRange][item.genre] || 0) + item.listen_count;
   });
 
-  // Convert to expected format
-  return Object.entries(grouped).map(([timeRange, genres]) => {
-    const allGenres = Object.entries(genres)
+  return TIME_PERIODS.map(({ timeRange, timeOfDay }) => {
+    const genres = Object.entries(grouped[timeRange] || {})
       .map(([name, listen_count]) => ({ name, listen_count }))
       .sort((a, b) => b.listen_count - a.listen_count);
 
-    // Ensure at least one entry exists
     const finalGenres =
-      allGenres.length > 0
-        ? getTop5GenresWithTies(allGenres)
+      genres.length > 0
+        ? getTop5GenresWithTies(genres)
         : [{ name: "No Listens", listen_count: 0 }];
 
-    return {
-      timeOfDay: TIME_PERIODS[timeRange as keyof typeof TIME_PERIODS].timeOfDay,
-      timeRange,
-      genres: finalGenres,
-    };
+    return { timeOfDay, timeRange, genres: finalGenres };
   });
 };
 
@@ -107,7 +105,7 @@ function CustomTooltip({ datum }: { datum: any }) {
       <br />
       {datum.data.actualValue} plays
       <br />
-      {datum.data.timeframe}
+      {datum.data.timeRange}
     </div>
   );
 }
@@ -140,6 +138,7 @@ export default function UserGenreDayActivity({
 }: UserGenreDayActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
+  const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["userGenreDayActivity", user?.name, range],
@@ -166,48 +165,39 @@ export default function UserGenreDayActivity({
     errorMessage = "",
   } = loaderData || {};
 
-  const processData = React.useCallback(
-    (data?: UserGenreDayActivityResponse) => {
-      if (!data?.result?.length) return [];
+  const chartData = React.useMemo(() => {
+    if (!rawData?.result?.length) return [];
+    const groupedData = groupDataByTimePeriod(rawData.result, timezoneOffset);
 
-      const groupedData = groupDataByTimePeriod(data.result);
+    return groupedData.flatMap((timeframe) => {
+      const total = timeframe.genres.reduce(
+        (acc, genre) => acc + genre.listen_count,
+        0
+      );
+      const baseHour =
+        TIME_PERIODS.find((p) => p.timeRange === timeframe.timeRange)?.hour ??
+        0;
 
-      return groupedData.flatMap((timeframe) => {
-        const total = timeframe.genres.reduce(
-          (acc, genre) => acc + genre.listen_count,
-          0
-        );
-        const baseHour =
-          TIME_PERIODS[timeframe.timeRange as keyof typeof TIME_PERIODS].hour;
+      return timeframe.genres.map((genre, index) => {
+        const hourVariation = baseHour + ((index * 0.5) % 6);
+        const value =
+          genre.listen_count === 0 ? 100 : (genre.listen_count / total) * 100;
+        const color =
+          genre.listen_count === 0 ? "#f7f7f7" : colorScale(hourVariation);
 
-        return timeframe.genres.map((genre, index) => {
-          const hourVariation = baseHour + ((index * 0.5) % 6);
-          const value =
-            genre.listen_count === 0 ? 100 : (genre.listen_count / total) * 100;
-          const color =
-            genre.listen_count === 0 ? "#f7f7f7" : colorScale(hourVariation);
-
-          return {
-            id: `${genre.name}-${timeframe.timeOfDay}`,
-            label: `${genre.name}-${timeframe.timeOfDay}`,
-            displayName: genre.name,
-            actualValue: genre.listen_count,
-            value,
-            color,
-            timeframe: timeframe.timeRange,
-            timeRange: timeframe.timeRange,
-            hour: hourVariation,
-          };
-        });
+        return {
+          id: `${genre.name}-${timeframe.timeOfDay}`,
+          label: `${genre.name}-${timeframe.timeOfDay}`,
+          displayName: genre.name,
+          actualValue: genre.listen_count,
+          value,
+          color,
+          timeRange: timeframe.timeRange,
+          hour: hourVariation,
+        };
       });
-    },
-    [colorScale]
-  );
-
-  const chartData = React.useMemo(() => processData(rawData), [
-    rawData,
-    processData,
-  ]);
+    });
+  }, [colorScale, rawData, timezoneOffset]);
 
   const timeMarkers = [
     {
