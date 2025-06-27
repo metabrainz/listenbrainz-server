@@ -13,13 +13,30 @@ def get_artist_credit_cache_query(with_filter: bool = False):
     return f"""
         {cte_clause}
         SELECT ac.id AS artist_credit_id
+             , a.id AS artist_id
              , a.gid::text AS artist_mbid
              , acn.position
              , acn.join_phrase
-          FROM musicbrainz.artist_credit ac
+             , false AS is_redirect
+          FROM musicbrainz.artist a
           JOIN musicbrainz.artist_credit_name acn
-            ON acn.artist_credit = ac.id
-          JOIN musicbrainz.artist a
             ON acn.artist = a.id
+          JOIN musicbrainz.artist_credit ac
+            ON acn.artist_credit = ac.id
+        {mbid_filter_clause}
+         UNION ALL
+        SELECT ac.id AS artist_credit_id
+             , a.id AS artist_id
+             , a.gid::text AS artist_mbid
+             , acn.position
+             , acn.join_phrase
+             , true AS is_redirect
+          FROM musicbrainz.artist_gid_redirect agr
+          JOIN musicbrainz.artist a
+            ON agr.new_id = a.id
+          JOIN musicbrainz.artist_credit_name acn
+            ON acn.artist = a.id
+          JOIN musicbrainz.artist_credit ac
+            ON acn.artist_credit = ac.id
         {mbid_filter_clause}
     """

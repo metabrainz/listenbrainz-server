@@ -371,8 +371,7 @@ def request_similar_users(max_num_users):
               help="whether the dataset is being created as a production dataset. affects"
                    " how the resulting dataset is stored in LB.", required=True)
 @click.option("--top-n-listeners", type=int,
-              help="The number of top listeners per artist to use during recording similarity."
-                                        " the limit).", required=True)
+              help="The number of top listeners per artist to use during recording similarity.", required=True)
 def request_similar_recordings(days, mlhd, session, max_contribution, threshold, limit, skip_threshold, only_stage2, production, top_n_listeners):
     """ Send the cluster a request to generate similar recordings index. """
     kwargs = {
@@ -394,33 +393,44 @@ def request_similar_recordings(days, mlhd, session, max_contribution, threshold,
     send_request_to_spark_cluster("similarity.recording", **kwargs)
 
 
-@cli.command(name='request_similar_artists')
-@click.option("--days", type=int, help="The number of days of listens to use.", required=True)
+@cli.command(name="request_similar_artists")
+@click.option("--days", type=int, help="The number of days of listens to use. required if using listens data")
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
 @click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
                                           " session.", required=True)
-@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
+@click.option("--max-contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
                                                " score of a artist pair.", required=True)
-@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
+@click.option("--threshold", type=int, help="The minimum similarity score to include a artist pair in the"
                                             " simlarity index.", required=True)
 @click.option("--limit", type=int, help="The maximum number of similar artists to generate per artist"
                                         " (the limit is instructive. upto 2x artists may be returned than"
                                         " the limit).", required=True)
-@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+@click.option("--skip-threshold", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+@click.option("--only-stage2", is_flag=True, default=False, help="whether to reuse existing outputs of intermediate chunks")
 @click.option("--production", is_flag=True, default=False,
-              help="whether the dataset is being created as a production dataset. affects how the resulting"
-                   " dataset is stored in LB.", required=True)
-def request_similar_artists(days, session, contribution, threshold, limit, skip, production):
+              help="whether the dataset is being created as a production dataset. affects"
+                   " how the resulting dataset is stored in LB.", required=True)
+@click.option("--top-n-listeners", type=int,
+              help="The number of top listeners per artist to use during artist similarity.", required=True)
+def request_similar_artists(days, mlhd, session, max_contribution, threshold, limit, skip_threshold, only_stage2, production, top_n_listeners):
     """ Send the cluster a request to generate similar artists index. """
-    send_request_to_spark_cluster(
-        "similarity.artist",
-        days=days,
-        session=session,
-        contribution=contribution,
-        threshold=threshold,
-        limit=limit,
-        skip=skip,
-        is_production_dataset=production
-    )
+    kwargs = {
+        "mlhd": mlhd,
+        "session": session,
+        "max_contribution": max_contribution,
+        "threshold": threshold,
+        "limit": limit,
+        "skip_threshold": skip_threshold,
+        "only_stage2": only_stage2,
+        "is_production_dataset": production,
+        "top_n_listeners": top_n_listeners
+    }
+    if days is not None:
+        if mlhd:
+            raise UsageError("'days' cannot be specified when using MLHD data.")
+        kwargs["days"] = days
+
+    send_request_to_spark_cluster("similarity.artist", **kwargs)
 
 
 @cli.command(name="request_popularity")

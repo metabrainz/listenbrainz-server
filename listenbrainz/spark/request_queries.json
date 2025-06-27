@@ -146,12 +146,15 @@
     "description": "Generate artist similarity",
     "params": [
       "days",
+      "mlhd",
       "session",
-      "contribution",
+      "max_contribution",
       "threshold",
       "limit",
-      "skip",
-      "is_production_dataset"
+      "skip_threshold",
+      "only_stage2",
+      "is_production_dataset",
+      "top_n_listeners"
     ]
   },
   "year_in_music.similar_users": {

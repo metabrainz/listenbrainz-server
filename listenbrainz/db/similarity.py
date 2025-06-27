@@ -153,6 +153,7 @@ class SimilarityDataset(SparkDataset):
 SimilarRecordingsDataset = SimilarityDataset("recording", False)
 SimilarArtistsDataset = SimilarityDataset("artist", False)
 MlhdSimilarRecordingsDataset = SimilarityDataset("recording", True)
+MlhdSimilarArtistsDataset = SimilarityDataset("artist", True)
 
 
 def get(curs, table, mbids, algorithm, count):
