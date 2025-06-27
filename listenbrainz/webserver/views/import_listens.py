@@ -131,3 +131,43 @@ def create_import_task():
     except DatabaseError:
         current_app.logger.error('Error while importing user data: %s', current_user.musicbrainz_id, exc_info=True)
         raise APIInternalServerError(f'Error while importing user data {current_user.musicbrainz_id}, please try again later.')
+    
+
+@import_bp.get("/<import_id>/")
+@api_login_required
+@web_listenstore_needed
+def get_import_task(import_id):
+    """ Retrieve the requested import's data if it belongs to the specified user """
+    result = db_conn.execute(
+        text("SELECT * FROM user_data_import WHERE user_id = :user_id AND id = :import_id"),
+        {"user_id": current_user.id, "import_id": import_id}
+    )
+    row = result.first()
+    if row is None:
+        raise APINotFound("Import not found")
+    return jsonify({
+        "import_id": row.id,
+        "service": row.type,
+        "created": row.created.isoformat(),
+        "metadata": row.metadata,
+        "file_path": row.file_path,
+    })
+
+
+@import_bp.get("/list/")
+@api_login_required
+@web_listenstore_needed
+def list_import_tasks():
+    """ Retrieve the all import tasks for the current user """
+    result = db_conn.execute(
+        text("SELECT * FROM user_data_import WHERE user_id = :user_id ORDER BY created DESC"),
+        {"user_id": current_user.id}
+    )
+    rows = result.mappings().all()
+    return jsonify([{
+        "import_id": row.id,
+        "service": row.type,
+        "created": row.created.isoformat(),
+        "metadata": row.metadata,
+        "file_path": row.file_path,
+    } for row in rows])
