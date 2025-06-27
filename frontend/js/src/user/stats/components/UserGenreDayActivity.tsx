@@ -4,6 +4,8 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
+import { scaleSequential } from "d3-scale";
+import { interpolateRainbow } from "d3-scale-chromatic";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -80,33 +82,37 @@ const groupDataByTimePeriod = (
     grouped[timeRange][genre] += item.listen_count;
   });
 
+  // Ensure all time periods have at least one genre
+  timePeriods.forEach((period) => {
+    if (Object.keys(grouped[period]).length === 0) {
+      grouped[period]["No Listens"] = 0;
+    }
+  });
+
   // Convert to the expected format
-  return Object.entries(grouped)
-    .map(([timeRange, genres]) => {
-      const timeOfDayMap: Record<string, string> = {
-        Night: "12AM-6AM",
-        Morning: "6AM-12PM",
-        Afternoon: "12PM-6PM",
-        Evening: "6PM-12AM",
-      };
+  return Object.entries(grouped).map(([timeRange, genres]) => {
+    const timeOfDayMap: Record<string, string> = {
+      Night: "12AM-6AM",
+      Morning: "6AM-12PM",
+      Afternoon: "12PM-6PM",
+      Evening: "6PM-12AM",
+    };
 
-      const allGenres = Object.entries(genres)
-        .filter(([_, count]) => count > 0)
-        .map(([name, listen_count]) => ({
-          name,
-          listen_count,
-        }))
-        .sort((a, b) => b.listen_count - a.listen_count); // Sort by listen count descending
+    const allGenres = Object.entries(genres)
+      .map(([name, listen_count]) => ({
+        name,
+        listen_count,
+      }))
+      .sort((a, b) => b.listen_count - a.listen_count);
 
-      const topGenres = getTop5GenresWithTies(allGenres);
+    const topGenres = getTop5GenresWithTies(allGenres);
 
-      return {
-        timeOfDay: timeOfDayMap[timeRange],
-        timeRange,
-        genres: topGenres,
-      };
-    })
-    .filter((timeframe) => timeframe.genres.length > 0); // Only include time periods with data
+    return {
+      timeOfDay: timeOfDayMap[timeRange],
+      timeRange,
+      genres: topGenres,
+    };
+  });
 };
 
 // Custom tooltip component for pie chart
@@ -163,6 +169,23 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
     errorMessage = "",
   } = loaderData || {};
 
+  const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
+
+  const getTimeRangeHour = (timeRange: string): number => {
+    switch (timeRange) {
+      case "Night":
+        return 3;
+      case "Morning":
+        return 9;
+      case "Afternoon":
+        return 15;
+      case "Evening":
+        return 21;
+      default:
+        return 0;
+    }
+  };
+
   const processData = (data?: UserGenreDayActivityResponse) => {
     if (!data || !data.result || data.result.length === 0) {
       return [];
@@ -175,16 +198,30 @@ export default function UserGenreDayActivity(props: UserGenreDayActivityProps) {
         (acc, genre) => acc + genre.listen_count,
         0
       );
-      return timeframe.genres.map((genre) => ({
-        id: `${genre.name}-${timeframe.timeOfDay}`,
-        label: `${genre.name}-${timeframe.timeOfDay}`,
-        displayName: genre.name,
-        actualValue: genre.listen_count,
-        value: (genre.listen_count / total) * 100,
-        color: `hsl(${Math.random() * 360}, 70%, 60%)`,
-        timeframe: timeframe.timeRange,
-        timeRange: timeframe.timeRange,
-      }));
+      const baseHour = getTimeRangeHour(timeframe.timeRange);
+
+      return timeframe.genres.map((genre, index) => {
+        const hourVariation = baseHour + ((index * 0.5) % 6);
+
+        let genre_value = 100;
+        let genre_color = "#f7f7f7";
+        if (genre.listen_count != 0) {
+          genre_value = (genre.listen_count / total) * 100;
+          genre_color = colorScale(hourVariation);
+        }
+
+        return {
+          id: `${genre.name}-${timeframe.timeOfDay}`,
+          label: `${genre.name}-${timeframe.timeOfDay}`,
+          displayName: genre.name,
+          actualValue: genre.listen_count,
+          value: genre_value,
+          color: genre_color,
+          timeframe: timeframe.timeRange,
+          timeRange: timeframe.timeRange,
+          hour: hourVariation,
+        };
+      });
     });
   };
 
