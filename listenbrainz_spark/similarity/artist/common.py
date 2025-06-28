@@ -188,8 +188,9 @@ class ArtistSimilarityBase(abc.ABC):
                      , rank() OVER w AS rank
                   FROM thresholded_mbids
                 WINDOW w AS (PARTITION BY id0 ORDER BY total_score DESC)
-            )   SELECT id0 AS mbid0
-                     , id1 AS mbid1
+            )   SELECT DISTINCT
+                       a0.artist_mbid AS mbid0
+                     , a1.artist_mbid AS mbid1
                      , total_score AS score
                   FROM ranked_mbids
                   JOIN {self.artist_credit_table} a0
