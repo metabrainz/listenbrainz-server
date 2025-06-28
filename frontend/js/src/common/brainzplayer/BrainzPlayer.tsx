@@ -16,6 +16,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import { Link, useLocation } from "react-router";
 import { Helmet } from "react-helmet";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   ToastMsg,
   createNotification,
@@ -39,8 +40,14 @@ import {
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
-import { volumeAtom } from "./BrainzPlayerAtoms";
-import { useAtomValue } from "jotai";
+import {
+  playerPausedAtom,
+  setPlaybackTimerAtom,
+  durationMsAtom,
+  volumeAtom,
+  progressMsAtom,
+  updateTimeAtom,
+} from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
   name: string;
@@ -132,8 +139,16 @@ export default function BrainzPlayer() {
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
 
-  // Atoms
+  // Context Atoms
   const volume = useAtomValue(volumeAtom);
+  const setUpdateTime = useSetAtom(updateTimeAtom);
+
+  const setProgressMs = useSetAtom(progressMsAtom);
+  const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
+  const [durationMs, setDurationMs] = useAtom(durationMsAtom);
+
+  // Action Atoms
+  const setPlaybackTimer = useSetAtom(setPlaybackTimerAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -221,10 +236,11 @@ export default function BrainzPlayer() {
   }, [sortedDataSources]);
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
+  const currentProgressMsRef = React.useRef<number>(0);
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
-    if (!brainzPlayerContextRef.current.playerPaused) {
+    if (!playerPaused) {
       // Some old browsers may allow to set a custom message, but this is deprecated.
       event.preventDefault();
       // eslint-disable-next-line no-param-reassign
@@ -245,7 +261,7 @@ export default function BrainzPlayer() {
       const dataSource =
         dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
           ?.current;
-      if (dataSource && !brainzPlayerContextRef.current.playerPaused) {
+      if (dataSource && !playerPaused) {
         await dataSource.togglePlay();
       }
     }
@@ -365,10 +381,7 @@ export default function BrainzPlayer() {
     assign(newListen.track_metadata, {
       brainzplayer_metadata,
       additional_info: {
-        duration_ms:
-          brainzPlayerContextRef.current.durationMs > 0
-            ? brainzPlayerContextRef.current.durationMs
-            : undefined,
+        duration_ms: durationMs > 0 ? durationMs : undefined,
         media_player: "BrainzPlayer",
         submission_client: "BrainzPlayer",
         // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
@@ -446,11 +459,10 @@ export default function BrainzPlayer() {
       return;
     }
     let playbackTimeRequired = SUBMIT_LISTEN_AFTER_MS;
-    if (brainzPlayerContextRef.current.durationMs > 0) {
+    if (durationMs > 0) {
       playbackTimeRequired = Math.min(
         SUBMIT_LISTEN_AFTER_MS,
-        brainzPlayerContextRef.current.durationMs -
-          SUBMIT_LISTEN_UPDATE_INTERVAL
+        durationMs - SUBMIT_LISTEN_UPDATE_INTERVAL
       );
     }
     if (
@@ -648,7 +660,9 @@ export default function BrainzPlayer() {
   };
 
   const progressChange = (newProgressMs: number): void => {
-    dispatch({ progressMs: newProgressMs, updateTime: performance.now() });
+    setProgressMs(newProgressMs);
+    setUpdateTime(performance.now());
+    currentProgressMsRef.current = newProgressMs;
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
@@ -668,15 +682,11 @@ export default function BrainzPlayer() {
   };
 
   const seekForward = (): void => {
-    seekToPositionMs(
-      brainzPlayerContextRef.current.progressMs + SEEK_TIME_MILLISECONDS
-    );
+    seekToPositionMs(currentProgressMsRef.current + SEEK_TIME_MILLISECONDS);
   };
 
   const seekBackward = (): void => {
-    seekToPositionMs(
-      brainzPlayerContextRef.current.progressMs - SEEK_TIME_MILLISECONDS
-    );
+    seekToPositionMs(currentProgressMsRef.current - SEEK_TIME_MILLISECONDS);
   };
 
   const mediaSessionHandlers = [
@@ -702,7 +712,7 @@ export default function BrainzPlayer() {
         invalidateDataSource();
         return;
       }
-      if (brainzPlayerContextRef.current.playerPaused) {
+      if (playerPaused) {
         stopOtherBrainzPlayers();
       }
       await dataSource.togglePlay();
@@ -713,7 +723,7 @@ export default function BrainzPlayer() {
 
   /* Updating the progress bar without calling any API to check current player state */
   const updatePlayerProgressBar = (): void => {
-    dispatch({ type: "SET_PLAYBACK_TIMER" });
+    setPlaybackTimer();
   };
 
   const startPlayerStateTimer = (): void => {
@@ -759,15 +769,14 @@ export default function BrainzPlayer() {
   };
 
   const playerPauseChange = (paused: boolean): void => {
-    dispatch({ playerPaused: paused }, () => {
-      if (paused) {
-        stopPlayerStateTimer();
-        reinitializeWindowTitle();
-      } else {
-        startPlayerStateTimer();
-        updateWindowTitleWithTrackName();
-      }
-    });
+    setPlayerPaused(paused);
+    if (paused) {
+      stopPlayerStateTimer();
+      reinitializeWindowTitle();
+    } else {
+      startPlayerStateTimer();
+      updateWindowTitleWithTrackName();
+    }
     if (hasMediaSessionSupport()) {
       window.navigator.mediaSession.playbackState = paused
         ? "paused"
@@ -776,6 +785,7 @@ export default function BrainzPlayer() {
   };
 
   const durationChange = (newDurationMs: number): void => {
+    setDurationMs(newDurationMs);
     dispatch({ durationMs: newDurationMs }, () => {
       startPlayerStateTimer();
     });
@@ -803,12 +813,12 @@ export default function BrainzPlayer() {
       },
       () => {
         updateWindowTitleWithTrackName();
-        if (!brainzPlayerContextRef.current.playerPaused) {
+        if (!playerPaused) {
           submitNowPlayingToListenBrainz();
         }
       }
     );
-    if (brainzPlayerContextRef.current.playerPaused) {
+    if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
@@ -999,7 +1009,7 @@ export default function BrainzPlayer() {
       data-testid="brainzplayer"
       className={!brainzplayerEnabled ? "hidden" : ""}
     >
-      {!brainzPlayerContextRef.current.playerPaused && (
+      {!playerPaused && (
         <Helmet
           key={htmlTitle}
           onChangeClientState={(newState) => {
@@ -1040,7 +1050,7 @@ export default function BrainzPlayer() {
             refreshSpotifyToken={refreshSpotifyToken}
             onInvalidateDataSource={invalidateDataSource}
             ref={spotifyPlayerRef}
-            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
             onDurationChange={durationChange}
@@ -1065,7 +1075,7 @@ export default function BrainzPlayer() {
             ref={youtubePlayerRef}
             youtubeUser={youtubeAuth}
             refreshYoutubeToken={refreshYoutubeToken}
-            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
             onDurationChange={durationChange}
@@ -1089,7 +1099,7 @@ export default function BrainzPlayer() {
             onInvalidateDataSource={invalidateDataSource}
             ref={soundcloudPlayerRef}
             refreshSoundcloudToken={refreshSoundcloudToken}
-            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
             onDurationChange={durationChange}
@@ -1112,7 +1122,7 @@ export default function BrainzPlayer() {
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={appleMusicPlayerRef}
-            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            playerPaused={playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
             onDurationChange={durationChange}

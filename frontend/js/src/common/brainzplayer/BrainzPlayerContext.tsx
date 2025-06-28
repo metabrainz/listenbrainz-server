@@ -39,12 +39,7 @@ export type BrainzPlayerContextT = {
   currentTrackAlbum?: string;
   currentTrackURL?: string;
   currentTrackCoverURL?: string;
-  playerPaused: boolean;
   isActivated: boolean;
-  volume: number;
-  durationMs: number;
-  progressMs: number;
-  updateTime: number;
   listenSubmitted: boolean;
   continuousPlaybackTime: number;
   queue: BrainzPlayerQueue;
@@ -57,12 +52,7 @@ export const initialValue: BrainzPlayerContextT = {
   currentDataSourceIndex: 0,
   currentTrackName: "",
   currentTrackArtist: "",
-  playerPaused: true,
   isActivated: false,
-  volume: 100,
-  durationMs: 0,
-  progressMs: 0,
-  updateTime: performance.now(),
   listenSubmitted: false,
   continuousPlaybackTime: 0,
   queue: [],
@@ -73,10 +63,8 @@ export const initialValue: BrainzPlayerContextT = {
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
   type?:
     | "SET_AMBIENT_QUEUE"
-    | "SET_PLAYBACK_TIMER"
     | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
-    | "VOLUME_CHANGE"
     | "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE"
     | "MOVE_AMBIENT_QUEUE_ITEM"
     | "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE"
@@ -113,27 +101,6 @@ function valueReducer(
         };
       }
       break;
-    }
-    case "SET_PLAYBACK_TIMER": {
-      const { playerPaused, progressMs, updateTime, durationMs } = state;
-      let newProgressMs: number;
-      let elapsedTimeSinceLastUpdate: number;
-      if (playerPaused) {
-        newProgressMs = progressMs || 0;
-        elapsedTimeSinceLastUpdate = 0;
-      } else {
-        elapsedTimeSinceLastUpdate = performance.now() - updateTime;
-        const position = progressMs + elapsedTimeSinceLastUpdate;
-        newProgressMs =
-          Boolean(durationMs) && position > durationMs ? durationMs : position;
-      }
-      return {
-        ...state,
-        progressMs: newProgressMs,
-        updateTime: performance.now(),
-        continuousPlaybackTime:
-          state.continuousPlaybackTime + elapsedTimeSinceLastUpdate,
-      };
     }
     case "TOGGLE_REPEAT_MODE": {
       const { queueRepeatMode } = state;
@@ -183,9 +150,6 @@ function valueReducer(
         queue: newQueue,
         currentListenIndex: newCurrentListenIndex,
       };
-    }
-    case "VOLUME_CHANGE": {
-      return { ...state, volume: action.data };
     }
     case "MOVE_AMBIENT_QUEUE_ITEM": {
       const { ambientQueue } = state;
