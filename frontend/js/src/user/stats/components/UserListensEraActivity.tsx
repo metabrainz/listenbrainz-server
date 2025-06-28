@@ -21,6 +21,22 @@ export type UserListensEraActivityProps = {
   user?: ListenBrainzUser;
 };
 
+// Move the tooltip component outside of the render function
+function CustomTooltip({
+  indexValue,
+  value,
+}: {
+  indexValue: string | number;
+  value: number;
+}) {
+  return (
+    <BasicTooltip
+      id={String(indexValue)}
+      value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+    />
+  );
+}
+
 const getDecade = (year: number): string => {
   const decade = Math.floor(year / 10) * 10;
   return `${decade}s`;
@@ -35,7 +51,7 @@ const processDataIntoDecades = (
 
   data.forEach((item) => {
     const year =
-      typeof item.year === "string" ? parseInt(item.year) : item.year;
+      typeof item.year === "string" ? parseInt(item.year, 10) : item.year;
     const decade = getDecade(year);
     const currentCount = decadeMap.get(decade) || 0;
     const itemCount = item.listen_count ?? item.count ?? 0;
@@ -43,7 +59,7 @@ const processDataIntoDecades = (
   });
 
   const years = data.map((item) =>
-    typeof item.year === "string" ? parseInt(item.year) : item.year
+    typeof item.year === "string" ? parseInt(item.year, 10) : item.year
   );
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
@@ -67,13 +83,13 @@ const getExpandedDecadeData = (
   data: Array<{ year: string | number; listen_count?: number; count?: number }>,
   selectedDecade: string
 ) => {
-  const decadeStart = parseInt(selectedDecade.replace("s", ""));
+  const decadeStart = parseInt(selectedDecade.replace("s", ""), 10);
   const decadeEnd = decadeStart + 9;
 
   const yearMap = new Map<number, number>();
   data.forEach((item) => {
     const year =
-      typeof item.year === "string" ? parseInt(item.year) : item.year;
+      typeof item.year === "string" ? parseInt(item.year, 10) : item.year;
     if (year >= decadeStart && year <= decadeEnd) {
       const itemCount = item.listen_count ?? item.count ?? 0;
       yearMap.set(year, itemCount);
@@ -81,7 +97,7 @@ const getExpandedDecadeData = (
   });
 
   const result = [];
-  for (let year = decadeStart; year <= decadeEnd; year++) {
+  for (let year = decadeStart; year <= decadeEnd; year += 1) {
     result.push({
       decade: year.toString(),
       listen_count: yearMap.get(year) || 0,
@@ -132,28 +148,22 @@ export default function UserListensEraActivity({
 
   useEffect(() => {
     const containerElement = scrollContainerRef.current;
-    if (!containerElement) return;
+    if (!containerElement) return undefined;
 
     const updateWidth = () => {
       const parentWidth =
         containerElement.parentElement?.offsetWidth || window.innerWidth;
-      const availableWidth = parentWidth - 40; // Account for padding/margins
+      const availableWidth = parentWidth - 40;
 
-      // Calculate minimum required width based on data length and minimum bar width
       const minRequiredWidth =
         chartData.length * (MIN_BAR_WIDTH / (1 - PADDING));
-
-      // Use the larger of available width or minimum required width
       const finalWidth = Math.max(availableWidth, minRequiredWidth);
-
       setContainerWidth(finalWidth);
     };
 
     updateWidth();
 
-    // Add resize listener
     window.addEventListener("resize", updateWidth);
-
     return () => {
       window.removeEventListener("resize", updateWidth);
     };
@@ -244,14 +254,7 @@ export default function UserListensEraActivity({
                     minValue={0}
                     padding={PADDING}
                     enableLabel={false}
-                    tooltip={({ indexValue, value }) => (
-                      <BasicTooltip
-                        id={String(indexValue)}
-                        value={`${value} ${
-                          Number(value) === 1 ? "listen" : "listens"
-                        }`}
-                      />
-                    )}
+                    tooltip={CustomTooltip}
                     margin={{ left: 60, bottom: 60, top: 30, right: 20 }}
                     enableGridY
                     gridYValues={5}
