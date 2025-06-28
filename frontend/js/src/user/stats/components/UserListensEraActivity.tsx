@@ -9,17 +9,86 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_BLACK } from "../../../utils/constants";
+import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 // Constants
-const BAR_WIDTH = 30;
+const MIN_BAR_WIDTH = 60;
 const PADDING = 0.3;
-const MIN_CHART_WIDTH = 800;
 
 export type UserListensEraActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
+};
+
+const getDecade = (year: number): string => {
+  const decade = Math.floor(year / 10) * 10;
+  return `${decade}s`;
+};
+
+const processDataIntoDecades = (
+  data: Array<{ year: string | number; listen_count?: number; count?: number }>
+) => {
+  if (!data || data.length === 0) return [];
+
+  const decadeMap = new Map<string, number>();
+
+  data.forEach((item) => {
+    const year =
+      typeof item.year === "string" ? parseInt(item.year) : item.year;
+    const decade = getDecade(year);
+    const currentCount = decadeMap.get(decade) || 0;
+    const itemCount = item.listen_count ?? item.count ?? 0;
+    decadeMap.set(decade, currentCount + itemCount);
+  });
+
+  const years = data.map((item) =>
+    typeof item.year === "string" ? parseInt(item.year) : item.year
+  );
+  const minYear = Math.min(...years);
+  const maxYear = Math.max(...years);
+
+  const minDecade = Math.floor(minYear / 10) * 10;
+  const maxDecade = Math.floor(maxYear / 10) * 10;
+
+  const result = [];
+  for (let decade = minDecade; decade <= maxDecade; decade += 10) {
+    const decadeLabel = `${decade}s`;
+    result.push({
+      decade: decadeLabel,
+      listen_count: decadeMap.get(decadeLabel) || 0,
+    });
+  }
+
+  return result;
+};
+
+const getExpandedDecadeData = (
+  data: Array<{ year: string | number; listen_count?: number; count?: number }>,
+  selectedDecade: string
+) => {
+  const decadeStart = parseInt(selectedDecade.replace("s", ""));
+  const decadeEnd = decadeStart + 9;
+
+  const yearMap = new Map<number, number>();
+  data.forEach((item) => {
+    const year =
+      typeof item.year === "string" ? parseInt(item.year) : item.year;
+    if (year >= decadeStart && year <= decadeEnd) {
+      const itemCount = item.listen_count ?? item.count ?? 0;
+      yearMap.set(year, itemCount);
+    }
+  });
+
+  const result = [];
+  for (let year = decadeStart; year <= decadeEnd; year++) {
+    result.push({
+      decade: year.toString(),
+      listen_count: yearMap.get(year) || 0,
+    });
+  }
+
+  return result;
 };
 
 export default function UserListensEraActivity({
@@ -27,8 +96,9 @@ export default function UserListensEraActivity({
   range,
 }: UserListensEraActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
-  const scrollContainerRef = useRef(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [selectedDecade, setSelectedDecade] = useState<string | null>(null);
 
   const { data: loaderData, isLoading } = useQuery({
     queryKey: ["userListensEraActivity", user?.name, range],
@@ -55,46 +125,79 @@ export default function UserListensEraActivity({
     errorMessage = "",
   } = loaderData || {};
 
+  // Process data based on whether a decade is selected
+  const chartData = selectedDecade
+    ? getExpandedDecadeData(rawData?.result || [], selectedDecade)
+    : processDataIntoDecades(rawData?.result || []);
+
   useEffect(() => {
-    const adjustedWidth = BAR_WIDTH / (1 - PADDING);
-    const chartData = rawData?.result || [];
-    const totalWidth = Math.max(
-      MIN_CHART_WIDTH,
-      chartData.length * adjustedWidth
-    );
-    setContainerWidth(totalWidth);
-  }, [rawData?.result]);
+    const containerElement = scrollContainerRef.current;
+    if (!containerElement) return;
 
-  const chartData = rawData?.result || [];
-  const firstYear = chartData.length > 0 ? parseInt(chartData[0]?.year) : 0;
+    const updateWidth = () => {
+      const parentWidth =
+        containerElement.parentElement?.offsetWidth || window.innerWidth;
+      const availableWidth = parentWidth - 40; // Account for padding/margins
 
-  const tickFormatter = (tick: string) => {
-    const year = parseInt(tick);
-    return year === firstYear || year % 5 === 0 ? tick : "";
+      // Calculate minimum required width based on data length and minimum bar width
+      const minRequiredWidth =
+        chartData.length * (MIN_BAR_WIDTH / (1 - PADDING));
+
+      // Use the larger of available width or minimum required width
+      const finalWidth = Math.max(availableWidth, minRequiredWidth);
+
+      setContainerWidth(finalWidth);
+    };
+
+    updateWidth();
+
+    // Add resize listener
+    window.addEventListener("resize", updateWidth);
+
+    return () => {
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [rawData?.result, selectedDecade, chartData.length]);
+
+  const handleBarClick = (data: any) => {
+    const clickedDecade = data.data.decade;
+
+    if (selectedDecade) {
+      setSelectedDecade(null);
+      return;
+    }
+
+    if (clickedDecade.endsWith("s")) {
+      setSelectedDecade(clickedDecade);
+    }
   };
 
   return (
     <Card className="user-stats-card" data-testid="yearly-listening-activity">
       <div className="row">
         <div className="col-xs-10">
-          <h3 className="capitalize-bold">Era Activity</h3>
-        </div>
-        <div className="col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#era-activity">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
+          <h3 className="capitalize-bold">
+            Era Activity
+            {selectedDecade && (
+              <span
+                style={{ marginLeft: 10, fontSize: "0.8em", color: "#666" }}
+              >
+                - {selectedDecade} (click any bar to collapse)
+              </span>
+            )}
+          </h3>
         </div>
       </div>
       <Loader isLoading={isLoading}>
         {hasError ? (
-          <div className="flex-center" style={{ minHeight: "inherit" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "inherit",
+            }}
+          >
             <span style={{ fontSize: 24 }}>
               <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
               {errorMessage}
@@ -110,7 +213,13 @@ export default function UserListensEraActivity({
                 style={{
                   height: "400px",
                   width: "100%",
-                  overflowX: "auto",
+                  overflowX:
+                    containerWidth >
+                    (scrollContainerRef.current?.parentElement?.offsetWidth ||
+                      0) -
+                      40
+                      ? "auto"
+                      : "hidden",
                   overflowY: "hidden",
                   fontSize: "11px",
                 }}
@@ -118,11 +227,11 @@ export default function UserListensEraActivity({
                 <div style={{ width: `${containerWidth}px`, height: "100%" }}>
                   <ResponsiveBar
                     data={chartData}
-                    indexBy="year"
+                    indexBy="decade"
                     keys={["listen_count"]}
+                    onClick={handleBarClick}
                     axisBottom={{
-                      format: tickFormatter,
-                      legend: "Year",
+                      legend: selectedDecade ? "Year" : "Decade",
                       legendPosition: "middle",
                       legendOffset: 40,
                     }}
@@ -146,6 +255,7 @@ export default function UserListensEraActivity({
                     margin={{ left: 60, bottom: 60, top: 30, right: 20 }}
                     enableGridY
                     gridYValues={5}
+                    colors={() => COLOR_LB_ORANGE}
                     theme={{
                       grid: {
                         line: {
