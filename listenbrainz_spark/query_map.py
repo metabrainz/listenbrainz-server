@@ -41,6 +41,7 @@ functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
+    'stats.user.era_activity': listenbrainz_spark.stats.user.daily_activity.get_era_activity,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.sitewide.listening_activity': listenbrainz_spark.stats.sitewide.listening_activity.get_listening_activity,
     'import.dump.full': listenbrainz_spark.listens.dump.import_full_dump_handler,

@@ -171,7 +171,7 @@ export default function UserReports() {
         {statsExplanationModalButton}
         <UserArtistActivity range={range} user={user} />
       </section>
-      <section id="artist-activity">
+      <section id="era-activity">
         {statsExplanationModalButton}
         <UserListensEraActivity range={range} user={user} />
       </section>

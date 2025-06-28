@@ -306,11 +306,11 @@ declare type UserArtistActivityResponse = {
 };
 
 declare type UserListensEraActivityResponse = {
-	result: Array<{
-		year: string;
-		count: number;
-		formattedYear?: string;
-	}>;
+  result: Array<{
+	year: string;
+	count: number;
+	formattedYear?: string;
+  }>;
 }
 
 declare type UserArtistMapArtist = {
