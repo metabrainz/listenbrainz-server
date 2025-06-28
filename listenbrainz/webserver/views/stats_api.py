@@ -526,55 +526,20 @@ def get_artist_activity(user_name: str):
     return jsonify({"result": result})
 
 
-@stats_api_bp.get("/user/<user_name>/listens-era-activity")
+@stats_api_bp.get("/user/<user_name>/era-activity")
 @crossdomain
 @ratelimit()
 def get_listens_era_activity(user_name: str):
-    array = [
-        { "year": "1983", "count": 145 },
-        { "year": "1984", "count": 99 },
-        { "year": "1985", "count": 122 },
-        { "year": "1986", "count": 110 },
-        { "year": "1987", "count": 75 },
-        { "year": "1988", "count": 165 },
-        { "year": "1989", "count": 94 },
-        { "year": "1990", "count": 83 },
-        { "year": "1991", "count": 156 },
-        { "year": "1992", "count": 117 },
-        { "year": "1993", "count": 103 },
-        { "year": "1994", "count": 132 },
-        { "year": "1995", "count": 86 },
-        { "year": "1996", "count": 163 },
-        { "year": "1997", "count": 140 },
-        { "year": "1998", "count": 98 },
-        { "year": "1999", "count": 121 },
-        { "year": "2000", "count": 150 },
-        { "year": "2001", "count": 160 },
-        { "year": "2002", "count": 170 },
-        { "year": "2003", "count": 180 },
-        { "year": "2004", "count": 190 },
-        { "year": "2005", "count": 60 },
-        { "year": "2006", "count": 80 },
-        { "year": "2007", "count": 100 },
-        { "year": "2008", "count": 120 },
-        { "year": "2009", "count": 140 },
-        { "year": "2010", "count": 60 },
-        { "year": "2011", "count": 60 },
-        { "year": "2012", "count": 80 },
-        { "year": "2013", "count": 110 },
-        { "year": "2014", "count": 180 },
-        { "year": "2015", "count": 120 },
-        { "year": "2016", "count": 150 },
-        { "year": "2017", "count": 200 },
-        { "year": "2018", "count": 100 },
-        { "year": "2019", "count": 120 },
-        { "year": "2020", "count": 180 },
-        { "year": "2021", "count": 150 },
-        { "year": "2022", "count": 130 },
-        { "year": "2023", "count": 110 },
-        { "year": "2024", "count": 90 },
-    ]
-    return jsonify({"result": array})
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(10055, "era_activity", stats_range, EntityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    era_activity_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+
+    return jsonify({"result": era_activity_list})
 
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")

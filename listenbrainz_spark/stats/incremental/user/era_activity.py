@@ -5,11 +5,11 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
-from data.model.user_era_activity import EraActivityRecord
+from data.model.user_era_activity import UserEraActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 from listenbrainz_spark.utils import read_files_from_HDFS
-from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE
+from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class EraActivityUserStatsQueryEntity(UserStatsQueryProvider):
         return "era_activity"
 
     def get_aggregate_query(self, table):
-        release_groups_df = read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE)
+        release_groups_df = read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME)
         release_groups_df.createOrReplaceTempView("release_groups")
 
         return f"""
@@ -77,7 +77,7 @@ class EraActivityUserMessageCreator(UserStatsMessageCreator):
 
     def parse_row(self, entry: dict):
         try:
-            UserStatRecords[EraActivityRecord](
+            UserStatRecords[UserEraActivityRecord](
                 user_id=entry["user_id"],
                 data=entry["era_activity"]
             )

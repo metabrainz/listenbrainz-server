@@ -119,7 +119,7 @@ export default function UserListensEraActivity({
                   <ResponsiveBar
                     data={chartData}
                     indexBy="year"
-                    keys={["count"]}
+                    keys={["listen_count"]}
                     axisBottom={{
                       format: tickFormatter,
                       legend: "Year",

@@ -608,9 +608,9 @@ export default class APIService {
   ): Promise<UserListensEraActivityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/listens-era-activity`;
+      url = `${this.APIBaseURI}/stats/user/${userName}/era-activity`;
     } else {
-      url = `${this.APIBaseURI}/stats/sitewide/listens-era-activity`;
+      url = `${this.APIBaseURI}/stats/sitewide/era-activity`;
     }
     url += `?range=${range}`;
     const response = await fetch(url);
