@@ -306,9 +306,9 @@ declare type UserArtistActivityResponse = {
 };
 
 declare type GenreHourData = {
-	genre: string;
-	hour: number;
-	listen_count: number;
+  genre: string;
+  hour: number;
+  listen_count: number;
 }
 
 declare type UserGenreDayActivityResponse = {
