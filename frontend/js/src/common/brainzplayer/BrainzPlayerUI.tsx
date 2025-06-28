@@ -23,6 +23,7 @@ import { Link } from "react-router";
 import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import tinycolor from "tinycolor2";
+import { useAtomValue } from "jotai";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -39,6 +40,8 @@ import { FeedbackValue } from "./utils";
 import VolumeControlButton from "./VolumeControlButton";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 import { DataSourceType } from "./BrainzPlayer";
+import { playerPausedAtom } from "./BrainzPlayerAtoms";
+import BrainzPlayerTimer from "./BrainzPlayerTimer";
 
 type BrainzPlayerUIProps = {
   currentDataSource?: DataSourceType | null;
@@ -97,6 +100,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const brainzPlayerContext = useBrainzPlayerContext();
   const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
   brainzPlayerContextRef.current = brainzPlayerContext;
+
+  const playerPaused = useAtomValue(playerPausedAtom);
 
   const dispatch = useBrainzPlayerDispatch();
 
@@ -374,13 +379,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               </span>
             )}
           </div>
-          {isPlayingATrack && !isMobile && (
-            <div className="elapsed small text-muted">
-              {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
-              &#8239;/&#8239;
-              {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
-            </div>
-          )}
+          {isPlayingATrack && !isMobile && <BrainzPlayerTimer />}
         </div>
         <div
           className="controls"
@@ -398,14 +397,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           <PlaybackControlButton
             className="play"
             action={togglePlay}
-            title={`${
-              brainzPlayerContextRef.current.playerPaused ? "Play" : "Pause"
-            }`}
-            icon={
-              brainzPlayerContextRef.current.playerPaused
-                ? faPlayCircle
-                : faPauseCircle
-            }
+            title={`${playerPaused ? "Play" : "Pause"}`}
+            icon={playerPaused ? faPlayCircle : faPauseCircle}
             size="2x"
             disabled={disabled}
           />

@@ -786,10 +786,14 @@ export default function BrainzPlayer() {
 
   const durationChange = (newDurationMs: number): void => {
     setDurationMs(newDurationMs);
-    dispatch({ durationMs: newDurationMs }, () => {
-      startPlayerStateTimer();
-    });
   };
+
+  // Effect to start the timer when durationMs changes
+  React.useEffect(() => {
+    if (durationMs > 0) {
+      startPlayerStateTimer();
+    }
+  }, [durationMs]);
 
   const submitNowPlayingToListenBrainz = async (): Promise<void> => {
     const newListen = getListenMetadataToSubmit();

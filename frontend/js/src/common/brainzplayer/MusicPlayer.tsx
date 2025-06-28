@@ -19,12 +19,14 @@ import {
   IconProp,
   SizeProp,
 } from "@fortawesome/fontawesome-svg-core";
+import { useAtomValue } from "jotai";
 import ProgressBar from "./ProgressBar";
 import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FeedbackValue } from "./utils";
 import MenuOptions from "./MenuOptions";
+import { playerPausedAtom } from "./BrainzPlayerAtoms";
 
 type PlaybackControlButtonProps = {
   className?: string;
@@ -180,11 +182,12 @@ function MusicPlayer(props: MusicPlayerProps) {
     currentTrackArtist,
     currentTrackAlbum,
     currentTrackCoverURL,
-    playerPaused,
     queueRepeatMode,
     queue,
     ambientQueue,
   } = useBrainzPlayerContext();
+
+  const playerPaused = useAtomValue(playerPausedAtom);
 
   // Global App Context
   const { spotifyAuth, APIService } = React.useContext(GlobalAppContext);
