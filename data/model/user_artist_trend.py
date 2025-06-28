@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, NonNegativeInt, constr
 from typing import List
 
 
 class ArtistTrendEntry(BaseModel):
-    date: str
-    artist_name: str
-    listen_count: int
+    date: constr(min_length=1)
+    artist_name: constr(min_length=1)
+    listen_count: NonNegativeInt
 
 
 class ArtistTrendRecord(BaseModel):
