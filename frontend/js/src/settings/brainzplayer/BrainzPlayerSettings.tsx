@@ -397,8 +397,7 @@ function BrainzPlayerSettings() {
               >
                 <span className={funkwhaleEnabled ? "text-success" : ""}>
                   <FunkwhaleIcon
-                    className="svg-inline--fa"
-                    style={{ fontSize: "1.25em", verticalAlign: "-0.125em" }}
+                    className="svg-inline--fa funkwhale-icon"
                     color={
                       funkwhaleEnabled
                         ? dataSourcesInfo.funkwhale.color
@@ -497,8 +496,7 @@ function BrainzPlayerSettings() {
                 <span>
                   {item.id === "funkwhale" ? (
                     <FunkwhaleIcon
-                      className="svg-inline--fa"
-                      style={{ fontSize: "1.25em", verticalAlign: "-0.125em" }}
+                      className="svg-inline--fa funkwhale-icon"
                       color={dataSourcesInfo.funkwhale.color}
                     />
                   ) : (

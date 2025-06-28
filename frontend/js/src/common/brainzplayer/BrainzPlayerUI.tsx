@@ -431,8 +431,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               >
                 {currentDataSource?.name === "funkwhale" ? (
                   <FunkwhaleIcon
-                    className="svg-inline--fa"
-                    style={{ fontSize: "1.25em", verticalAlign: "-0.125em" }}
+                    className="svg-inline--fa funkwhale-icon"
                     color="#009FE3"
                   />
                 ) : (

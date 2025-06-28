@@ -2,22 +2,16 @@ import * as React from "react";
 
 export interface FunkwhaleIconProps {
   className?: string;
-  style?: React.CSSProperties;
   color?: string;
 }
 
 // The Funkwhale SVG icon inline, matching FontAwesome's svg-inline--fa class for consistent styling.
-function FunkwhaleIcon({
-  className = "",
-  style = {},
-  color,
-}: FunkwhaleIconProps) {
+function FunkwhaleIcon({ className = "", color }: FunkwhaleIconProps) {
   const fillColor = color || "#009FE3"; // Default Funkwhale blue
 
   return (
     <svg
       className={`svg-inline--fa ${className}`}
-      style={style}
       width="1em"
       height="1em"
       viewBox="0 0 252.65424 228.43591"
