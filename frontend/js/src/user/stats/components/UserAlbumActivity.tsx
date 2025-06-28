@@ -32,7 +32,7 @@ export default function ArtistEvolutionStreamGraph(
 
       // Add a negative value field that will create space below the axis
       // This is a visual trick to make the chart extend below the x-axis
-      result._negative_space = -150; // Adjustable value to control space below
+      result.negativeSpace = -150; // Adjustable value to control space below
 
       return result;
     });
@@ -72,6 +72,151 @@ export default function ArtistEvolutionStreamGraph(
   const [chartData, setChartData] = React.useState<StreamDataItem[]>([]);
   const [keys, setKeys] = React.useState<string[]>([]);
   const [maxValue, setMaxValue] = React.useState<number>(0);
+
+  let content;
+  if (hasError) {
+    content = (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "inherit",
+        }}
+      >
+        <span style={{ fontSize: 24 }}>
+          <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+          {errorMessage}
+        </span>
+      </div>
+    );
+  } else if (chartData.length === 0) {
+    content = (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "300px",
+        }}
+      >
+        <span style={{ fontSize: 18 }}>
+          No artist evolution data available for this time period
+        </span>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="row">
+        <div className="col-xs-12">
+          <div style={{ width: "100%", height: "600px" }}>
+            <ResponsiveStream
+              data={chartData}
+              keys={keys}
+              margin={{ top: 20, right: 100, bottom: 60, left: 60 }}
+              axisBottom={{
+                format: (index: number) => {
+                  const days = [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday",
+                  ];
+                  return days[index % 7];
+                },
+                tickSize: 5,
+                tickPadding: 5,
+              }}
+              axisLeft={{
+                tickSize: 5,
+                tickPadding: 5,
+                tickRotation: 0,
+              }}
+              enableGridX
+              enableGridY
+              offsetType="diverging"
+              colors={{ scheme: "nivo" }}
+              fillOpacity={0.85}
+              borderColor={{ theme: "background" }}
+              dotSize={8}
+              dotColor={{ from: "color" }}
+              dotBorderWidth={2}
+              dotBorderColor={{
+                from: "color",
+                modifiers: [["darker", 0.7]],
+              }}
+              theme={{
+                axis: {
+                  ticks: {
+                    text: {
+                      fontSize: 12,
+                      fill: "#333333",
+                    },
+                  },
+                },
+                grid: {
+                  line: {
+                    stroke: "#dddddd",
+                    strokeWidth: 1,
+                  },
+                },
+              }}
+              defs={[
+                // Create a translucent fill pattern for the negative space
+                {
+                  id: "negativeSpace",
+                  type: "patternLines",
+                  background: "transparent",
+                  color: "transparent",
+                  rotation: 0,
+                  lineWidth: 0,
+                  spacing: 0,
+                },
+              ]}
+              fill={[
+                // Apply the transparent pattern to the negative space
+                {
+                  match: { id: "negativeSpace" },
+                  id: "negativeSpace",
+                },
+              ]}
+              legends={[
+                {
+                  anchor: "right",
+                  direction: "column",
+                  translateX: 100,
+                  itemWidth: 80,
+                  itemHeight: 20,
+                  itemTextColor: "#333333",
+                  symbolSize: 12,
+                  symbolShape: "circle",
+                  effects: [
+                    {
+                      on: "hover",
+                      style: {
+                        itemTextColor: "#000000",
+                      },
+                    },
+                  ],
+                  // Don't show the negative space in the legend
+                  data: keys
+                    .filter((key) => key !== "negativeSpace")
+                    .map((key) => ({
+                      id: key,
+                      label: key,
+                      color: "inherit", // This will match the color used in the stream
+                    })),
+                },
+              ]}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   React.useEffect(() => {
     if (rawData?.result && rawData.result.length > 0) {
@@ -123,7 +268,7 @@ export default function ArtistEvolutionStreamGraph(
 
       // Add any missing keys from the data
       Array.from(allArtistKeys).forEach((key) => {
-        if (!sortedKeys.includes(key) && key !== "_negative_space") {
+        if (!sortedKeys.includes(key) && key !== "negativeSpace") {
           sortedKeys.push(key);
         }
       });
@@ -158,150 +303,7 @@ export default function ArtistEvolutionStreamGraph(
           </h4>
         </div>
       </div>
-      <Loader isLoading={loading}>
-        {hasError ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "inherit",
-            }}
-          >
-            <span style={{ fontSize: 24 }}>
-              <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-              {errorMessage}
-            </span>
-          </div>
-        ) : chartData.length === 0 ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "300px",
-            }}
-          >
-            <span style={{ fontSize: 18 }}>
-              No artist evolution data available for this time period
-            </span>
-          </div>
-        ) : (
-          <div className="row">
-            <div className="col-xs-12">
-              <div
-                style={{
-                  width: "100%",
-                  height: "600px",
-                }}
-              >
-                <ResponsiveStream
-                  data={chartData}
-                  keys={keys}
-                  margin={{ top: 20, right: 100, bottom: 60, left: 60 }}
-                  axisBottom={{
-                    format: (index) => {
-                      const days = [
-                        "Monday",
-                        "Tuesday",
-                        "Wednesday",
-                        "Thursday",
-                        "Friday",
-                        "Saturday",
-                        "Sunday",
-                      ];
-                      return days[index % 7];
-                    },
-                    tickSize: 5,
-                    tickPadding: 5,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
-                  enableGridX
-                  enableGridY
-                  offsetType="diverging"
-                  colors={{ scheme: "nivo" }}
-                  fillOpacity={0.85}
-                  borderColor={{ theme: "background" }}
-                  dotSize={8}
-                  dotColor={{ from: "color" }}
-                  dotBorderWidth={2}
-                  dotBorderColor={{
-                    from: "color",
-                    modifiers: [["darker", 0.7]],
-                  }}
-                  theme={{
-                    axis: {
-                      ticks: {
-                        text: {
-                          fontSize: 12,
-                          fill: "#333333",
-                        },
-                      },
-                    },
-                    grid: {
-                      line: {
-                        stroke: "#dddddd",
-                        strokeWidth: 1,
-                      },
-                    },
-                  }}
-                  defs={[
-                    // Create a translucent fill pattern for the negative space
-                    {
-                      id: "negativeSpace",
-                      type: "patternLines",
-                      background: "transparent",
-                      color: "transparent",
-                      rotation: 0,
-                      lineWidth: 0,
-                      spacing: 0,
-                    },
-                  ]}
-                  fill={[
-                    // Apply the transparent pattern to the negative space
-                    {
-                      match: { id: "_negative_space" },
-                      id: "negativeSpace",
-                    },
-                  ]}
-                  legends={[
-                    {
-                      anchor: "right",
-                      direction: "column",
-                      translateX: 100,
-                      itemWidth: 80,
-                      itemHeight: 20,
-                      itemTextColor: "#333333",
-                      symbolSize: 12,
-                      symbolShape: "circle",
-                      effects: [
-                        {
-                          on: "hover",
-                          style: {
-                            itemTextColor: "#000000",
-                          },
-                        },
-                      ],
-                      // Don't show the negative space in the legend
-                      data: keys
-                        .filter((key) => key !== "_negative_space")
-                        .map((key) => ({
-                          id: key,
-                          label: key,
-                          color: "inherit", // This will match the color used in the stream
-                        })),
-                    },
-                  ]}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </Loader>
+      <Loader isLoading={loading}>{content}</Loader>
     </Card>
   );
 }
