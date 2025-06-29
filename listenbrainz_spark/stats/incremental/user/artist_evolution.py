@@ -8,12 +8,14 @@ from data.model.common_stat_spark import UserStatRecords
 from data.model.user_artist_evolution import ArtistEvolutionRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
+from listenbrainz_spark.utils import read_files_from_HDFS
+from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME
 
 logger = logging.getLogger(__name__)
 
 
 class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
-    """Tracks the number of listens per artist per day."""
+    """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector):
         super().__init__(selector)
@@ -22,55 +24,89 @@ class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
     def entity(self):
         return "artist_evolution"
 
+    def __get_time_bucket_expression(self, range_type):
+        """Determine time bucket expression based on range type"""
+        if range_type in ['week', 'last_week']:
+            return "date_format(l.listened_at, 'EEEE')"
+        elif range_type in ['month', 'last_month']:
+            return "date_format(l.listened_at, 'd')"
+        elif range_type in ['year', 'last_year']:
+            return "date_format(l.listened_at, 'MMMM')"
+        elif range_type == 'all_time':
+            return "year(l.listened_at)"
+        else:
+            return "date_format(l.listened_at, 'yyyy-MM-dd')"
+
     def get_aggregate_query(self, table):
+        recording_df = read_files_from_HDFS(RECORDING_ARTIST_DATAFRAME)
+        recording_df.createOrReplaceTempView("recording_artist")
+
+        # Get range type from selector - access through the listen_range_selector
+        range_type = 'all_time'
+        time_bucket_expr = self.__get_time_bucket_expression(range_type)
+
         return f"""
-            WITH exploded_artists AS (
-                SELECT
-                    user_id,
-                    TRIM(artist) AS artist_name,
-                    date_format(listened_at, 'yyyy-MM-dd') AS date
-                FROM {table}
-                LATERAL VIEW explode(split(data->>'artist_name', ',')) AS artist
-            )
-            SELECT
-                user_id,
-                date,
-                artist_name,
-                COUNT(*) AS listen_count
-            FROM exploded_artists
-            GROUP BY user_id, date, artist_name
+            SELECT l.user_id,
+                   artist_element.artist_mbid,
+                   artist_element.artist_credit_name AS artist_name,
+                   {time_bucket_expr} AS time_bucket,
+                   COUNT(*) AS listen_count
+              FROM {table} l
+              JOIN recording_artist ra ON l.recording_mbid = ra.recording_mbid
+             LATERAL VIEW explode(ra.artists) exploded_table AS artist_element
+             WHERE artist_element.artist_mbid IS NOT NULL
+               AND artist_element.artist_credit_name IS NOT NULL
+          GROUP BY l.user_id, artist_element.artist_mbid, artist_element.artist_credit_name, {time_bucket_expr}
         """
 
     def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
         return f"""
-            WITH intermediate_table AS (
-                SELECT * FROM {existing_aggregate}
-                UNION ALL
-                SELECT * FROM {incremental_aggregate}
-            )
-            SELECT
-                user_id,
-                date,
-                artist_name,
-                SUM(listen_count) AS listen_count
-            FROM intermediate_table
-            GROUP BY user_id, date, artist_name
+            SELECT user_id,
+                   artist_mbid,
+                   artist_name,
+                   time_bucket,
+                   SUM(listen_count) AS listen_count
+              FROM (
+                  SELECT user_id, artist_mbid, artist_name, time_bucket, listen_count
+                    FROM {existing_aggregate}
+                   UNION ALL
+                  SELECT user_id, artist_mbid, artist_name, time_bucket, listen_count
+                    FROM {incremental_aggregate}
+              ) combined
+          GROUP BY user_id, artist_mbid, artist_name, time_bucket
         """
 
     def get_stats_query(self, final_aggregate):
         return f"""
+            WITH ranked_artists AS (
+                SELECT user_id,
+                       artist_mbid,
+                       artist_name,
+                       time_bucket,
+                       listen_count,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY user_id, time_bucket
+                           ORDER BY listen_count DESC
+                       ) AS rank
+                  FROM {final_aggregate}
+            ),
+            top_artists AS (
+                SELECT user_id,
+                       artist_mbid,
+                       artist_name,
+                       time_bucket AS date,
+                       listen_count
+                  FROM ranked_artists
+                 WHERE rank <= 50
+            )
             SELECT user_id,
-                   sort_array(
-                       collect_list(
-                           struct(
-                               date,
-                               artist_name,
-                               COALESCE(listen_count, 0) AS listen_count
-                           )
+                   SORT_ARRAY(
+                       COLLECT_LIST(
+                           STRUCT(date, artist_mbid, artist_name, listen_count)
                        )
                    ) AS artist_evolution
-            FROM {final_aggregate}
-            GROUP BY user_id
+              FROM top_artists
+          GROUP BY user_id
         """
 
 
@@ -94,4 +130,6 @@ class ArtistEvolutionUserMessageCreator(UserStatsMessageCreator):
                 "data": entry["artist_evolution"]
             }
         except ValidationError:
-            logger.error("Invalid entry in artist evolution stats:", exc_info=True)
+            logger.error("Invalid entry in artist evolution stats for user %s", 
+                        entry.get("user_id", "unknown"), exc_info=True)
+            return None
