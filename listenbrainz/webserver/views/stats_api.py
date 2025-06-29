@@ -12,6 +12,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
+from data.model.user_artist_evolution import ArtistEvolutionRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -468,22 +469,6 @@ def _get_artist_activity(release_groups_list):
 
     return top_results
 
-def _get_album_activity(releases_list):
-    """
-    Process releases data to generate album activity.
-    This would transform the raw database records into the structured format
-    required for the API response.
-    
-    Args:
-        releases_list: List of release records from the database
-        
-    Returns:
-        List of album activity entries with associated artists
-    """
-    # In the actual implementation, this function would process the real data
-    # For now, this is just a placeholder
-    return []
-
 
 @stats_api_bp.get("/user/<user_name>/artist-activity")
 @crossdomain
@@ -541,7 +526,7 @@ def get_artist_activity(user_name: str):
     return jsonify({"result": result})
     
 
-@stats_api_bp.get("/user/<user_name>/album-activity")
+@stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
 @crossdomain
 @ratelimit()
 def get_album_activity(user_name: str):
@@ -603,82 +588,76 @@ def get_album_activity(user_name: str):
     """
     # Temporary hardcoded data for testing
     hardcoded_result =[
-  {
-    "Raoul": 122,
-    "Josiane": 71,
-    "Marcel": 165,
-    "René": 165,
-    "Paul": 49,
-    "Jacques": 26
-  },
-  {
-    "Raoul": 53,
-    "Josiane": 124,
-    "Marcel": 110,
-    "René": 16,
-    "Paul": 56,
-    "Jacques": 120
-  },
-  {
-    "Raoul": 274,
-    "Josiane": 97,
-    "Marcel": 48,
-    "René": 166,
-    "Paul": 147,
-    "Jacques": 137
-  },
-  {
-    "Raoul": 132,
-    "Josiane": 37,
-    "Marcel": 75,
-    "René": 107,
-    "Paul": 31,
-    "Jacques": 21
-  },
-  {
-    "Raoul": 115,
-    "Josiane": 83,
-    "Marcel": 94,
-    "René": 35,
-    "Paul": 180,
-    "Jacques": 196
-  },
-  {
-    "Raoul": 36,
-    "Josiane": 77,
-    "Marcel": 92,
-    "René": 11,
-    "Paul": 108,
-    "Jacques": 131
-  },
-  {
-    "Raoul": 104,
-    "Josiane": 51,
-    "Marcel": 64,
-    "René": 28,
-    "Paul": 88,
-    "Jacques": 88
-  }
-]
-    
-    return jsonify({"result": hardcoded_result})
-    
+		{
+			"Raoul": 122,
+			"Josiane": 71,
+			"Marcel": 165,
+			"René": 165,
+			"Paul": 49,
+			"Jacques": 26
+		},
+		{
+			"Raoul": 53,
+			"Josiane": 124,
+			"Marcel": 110,
+			"René": 16,
+			"Paul": 56,
+			"Jacques": 120
+		},
+		{
+			"Raoul": 274,
+			"Josiane": 97,
+			"Marcel": 48,
+			"René": 166,
+			"Paul": 147,
+			"Jacques": 137
+		},
+		{
+			"Raoul": 132,
+			"Josiane": 37,
+			"Marcel": 75,
+			"René": 107,
+			"Paul": 31,
+			"Jacques": 21
+		},
+		{
+			"Raoul": 115,
+			"Josiane": 83,
+			"Marcel": 94,
+			"René": 35,
+			"Paul": 180,
+			"Jacques": 196
+		},
+		{
+			"Raoul": 36,
+			"Josiane": 77,
+			"Marcel": 92,
+			"René": 11,
+			"Paul": 108,
+			"Jacques": 131
+		},
+		{
+			"Raoul": 104,
+			"Josiane": 51,
+			"Marcel": 64,
+			"René": 28,
+			"Paul": 88,
+			"Jacques": 88
+		}
+	]
+        
     # The commented code below represents what the actual implementation would look like:
     user, stats_range = _validate_stats_user_params(user_name)
-    
-    stats = db_stats.get(user["id"], "album_activity", stats_range, ListeningActivityRecord)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+
+    stats = db_stats.get(1, "artist_evolution", stats_range, ArtistEvolutionRecord)
     if stats is None:
         raise APINoContent('')
     
-    album_activity = [x.dict() for x in stats.data.__root__]
-    return jsonify({"payload": {
-        "user_id": user_name,
-        "album_activity": album_activity,
-        "from_ts": stats.from_ts,
-        "to_ts": stats.to_ts,
-        "range": stats_range,
-        "last_updated": stats.last_updated
-    }})
+    artist_evolution_activity = [x.dict() for x in stats.data.__root__]
+
+    return jsonify({"result": artist_evolution_activity})
 
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
