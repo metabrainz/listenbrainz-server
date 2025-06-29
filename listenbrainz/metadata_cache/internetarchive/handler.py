@@ -52,14 +52,27 @@ class InternetArchiveHandler(BaseHandler):
         return []
 
     def get_items_from_seeder(self, message):
-        # Seeder publishes: {'identifier': ...}
-        if "identifier" in message:
-            return [JobItem(0, message["identifier"])]
-        return []
+        # Expecting message: {"ia_identifiers": [id1, id2, ...]}
+        return [JobItem(0, identifier) for identifier in message.get("ia_identifiers", [])]
 
-    def get_seed_ids(self):
-        # Not used for IA
-        return []
+    def get_seed_ids(self, limit_per_collection=1000) -> list[str]:
+        """Fetch identifiers for 78rpm and cylinder collections."""
+        collections = [
+            {'name': '78rpm', 'query': 'collection:78rpm AND mediatype:audio'},
+            {'name': 'cylinder', 'query': 'cylinder mediatype:audio'}
+        ]
+        identifiers = []
+        for collection in collections:
+            results = internetarchive.search_items(collection['query'])
+            count = 0
+            for item in results:
+                if count >= limit_per_collection:
+                    break
+                identifier = item.get('identifier')
+                if identifier:
+                    identifiers.append(identifier)
+                    count += 1
+        return identifiers
 
     def process(self, item_ids):
         """Process a list of IA identifiers."""
@@ -88,14 +101,12 @@ class InternetArchiveHandler(BaseHandler):
 
         stream_urls = []
         artwork_url = None
-        audio_file_count = 0
 
         for f in files:
             fmt = f.get("format", "").lower()
             # Check if any audio keyword is in the format string
             if any(keyword in fmt for keyword in AUDIO_KEYWORDS):
                 stream_urls.append(f"https://archive.org/download/{identifier}/{f['name']}")
-                audio_file_count += 1
             # Check for artwork
             if not artwork_url and fmt in {"jpeg", "jpg", "png"}:
                 artwork_url = f"https://archive.org/download/{identifier}/{f['name']}"
@@ -113,16 +124,7 @@ class InternetArchiveHandler(BaseHandler):
         album = meta.get("album")
         if not album:
             album = extract_from_description(meta.get("description", ""), "Album")
-
-        track = {
-            "track_id": f"https://archive.org/details/{identifier}",
-            "name": meta.get("title", ""),
-            "artist": artist,
-            "album": album,
-            "stream_urls": stream_urls,
-            "artwork_url": artwork_url,
-            "data": meta,
-        }
+        # Leave as None if still not found
 
         conn.execute(
             text("""
@@ -140,13 +142,13 @@ class InternetArchiveHandler(BaseHandler):
                     last_updated = NOW()
             """),
             {
-                "track_id": track["track_id"],
-                "name": track["name"],
-                "artist": json.dumps(track["artist"]),
-                "album": track["album"],
-                "stream_urls": json.dumps(track["stream_urls"]),
-                "artwork_url": track["artwork_url"],
-                "data": json.dumps(track["data"]),
+                "track_id": f"https://archive.org/details/{identifier}",
+                "name": meta.get("title", ""),
+                "artist": json.dumps(artist),
+                "album": album,
+                "stream_urls": json.dumps(stream_urls),
+                "artwork_url": artwork_url,
+                "data": json.dumps(meta),
             }
         )
-        logger.info("Processed and stored metadata for %s (%d audio files found)", identifier, audio_file_count)
+        logger.info("Processed and stored metadata for %s", identifier)
