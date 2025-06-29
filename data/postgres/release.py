@@ -8,7 +8,7 @@ def get_release_metadata_cache_query(with_filter: bool = False):
     mbid_filter_clause = ""
     if with_filter:
         cte_clause = "mbids (mbid) AS (VALUES %s), "
-        mbid_filter_clause = "JOIN mbids m ON m.mbid = rg.gid"
+        mbid_filter_clause = "JOIN mbids m ON m.mbid = rel.gid"
 
     return f"""
           WITH {cte_clause} release_group_cover_art AS (
@@ -17,7 +17,6 @@ def get_release_metadata_cache_query(with_filter: bool = False):
                      , caa.id AS caa_id
                      , caa_rel.gid AS caa_release_mbid
                   FROM musicbrainz.release_group rg
-                  {mbid_filter_clause}
                   JOIN musicbrainz.release caa_rel
                     ON rg.id = caa_rel.release_group
              LEFT JOIN (
@@ -48,6 +47,7 @@ def get_release_metadata_cache_query(with_filter: bool = False):
                      , caa.id AS caa_id
                      , rel.gid AS caa_release_mbid
                   FROM musicbrainz.release rel
+                    {mbid_filter_clause}
                   JOIN cover_art_archive.cover_art caa
                     ON caa.release = rel.id
                   JOIN cover_art_archive.cover_art_type cat
@@ -69,9 +69,9 @@ def get_release_metadata_cache_query(with_filter: bool = False):
                      , acn.join_phrase AS ac_joinphrase
                      , acn.position
                   FROM musicbrainz.release rel
+                    {mbid_filter_clause}
                   JOIN musicbrainz.release_group rg
                     ON rel.release_group = rg.id
-                    {mbid_filter_clause}
                   JOIN musicbrainz.artist_credit ac
                     ON rel.artist_credit = ac.id
                   JOIN musicbrainz.artist_credit_name acn

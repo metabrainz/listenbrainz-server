@@ -171,10 +171,7 @@ def import_feedback(user_id: int, lfm_user: str):
     }
 
 
-class LastfmService(ImporterService):
-
-    def __init__(self):
-        super(LastfmService, self).__init__(ExternalServiceType.LASTFM)
+class BaseLastfmService(ImporterService):
 
     def add_new_user(self, user_id: int, token: dict) -> bool:
         external_service_oauth.save_token(
@@ -183,3 +180,9 @@ class LastfmService(ImporterService):
             latest_listened_at=token["latest_listened_at"]
         )
         return True
+
+
+class LastfmService(BaseLastfmService):
+
+    def __init__(self):
+        super().__init__(ExternalServiceType.LASTFM)

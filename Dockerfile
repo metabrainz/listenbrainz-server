@@ -159,6 +159,12 @@ COPY ./docker/services/lastfm_importer/lastfm_importer.service /etc/service/last
 COPY ./docker/services/lastfm_importer/lastfm_importer.finish /etc/service/lastfm_importer/finish
 RUN touch /etc/service/lastfm_importer/down
 
+# Libre.fm importer
+COPY ./docker/services/librefm_importer/consul-template-librefm-importer.conf /etc/consul-template-librefm-importer.conf
+COPY ./docker/services/librefm_importer/librefm_importer.service /etc/service/librefm_importer/run
+COPY ./docker/services/librefm_importer/librefm_importer.finish /etc/service/librefm_importer/finish
+RUN touch /etc/service/librefm_importer/down
+
 # Timescale writer
 COPY ./docker/services/timescale_writer/consul-template-timescale-writer.conf /etc/consul-template-timescale-writer.conf
 COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/timescale_writer/run
