@@ -5,14 +5,14 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
-from data.model.user_artist_evolution import ArtistTrendRecord
+from data.model.user_artist_evolution import ArtistEvolutionRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
 logger = logging.getLogger(__name__)
 
 
-class ArtistTrendUserStatsQueryEntity(UserStatsQueryProvider):
+class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
     """Tracks the number of listens per artist per day."""
 
     def __init__(self, selector: ListenRangeSelector):
@@ -20,7 +20,7 @@ class ArtistTrendUserStatsQueryEntity(UserStatsQueryProvider):
 
     @property
     def entity(self):
-        return "artist_trend"
+        return "artist_evolution"
 
     def get_aggregate_query(self, table):
         return f"""
@@ -68,16 +68,16 @@ class ArtistTrendUserStatsQueryEntity(UserStatsQueryProvider):
                                COALESCE(listen_count, 0) AS listen_count
                            )
                        )
-                   ) AS artist_trend
+                   ) AS artist_evolution
             FROM {final_aggregate}
             GROUP BY user_id
         """
 
 
-class ArtistTrendUserMessageCreator(UserStatsMessageCreator):
+class ArtistEvolutionUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
-        super().__init__("artist_trend", message_type, selector, database)
+        super().__init__("artist_evolution", message_type, selector, database)
 
     @property
     def default_database_prefix(self):
@@ -85,13 +85,13 @@ class ArtistTrendUserMessageCreator(UserStatsMessageCreator):
 
     def parse_row(self, entry: dict):
         try:
-            UserStatRecords[ArtistTrendRecord](
+            UserStatRecords[ArtistEvolutionRecord](
                 user_id=entry["user_id"],
-                data=entry["artist_trend"]
+                data=entry["artist_evolution"]
             )
             return {
                 "user_id": entry["user_id"],
-                "data": entry["artist_trend"]
+                "data": entry["artist_evolution"]
             }
         except ValidationError:
-            logger.error("Invalid entry in artist trend stats:", exc_info=True)
+            logger.error("Invalid entry in artist evolution stats:", exc_info=True)
