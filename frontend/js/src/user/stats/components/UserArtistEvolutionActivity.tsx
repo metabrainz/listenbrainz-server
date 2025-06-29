@@ -48,7 +48,7 @@ export default function ArtistEvolutionStreamGraph(
     queryKey: ["ArtistEvolution", user?.name, range],
     queryFn: async () => {
       try {
-        const queryData = await APIService.getUserAlbumActivity(
+        const queryData = await APIService.getUserArtistEvolutionActivity(
           user?.name,
           range
         );

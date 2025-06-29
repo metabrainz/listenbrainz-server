@@ -602,15 +602,15 @@ export default class APIService {
     return response.json();
   };
 
-  getUserAlbumActivity = async (
+  getUserArtistEvolutionActivity = async (
     userName?: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserAlbumActivityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/album-activity`;
+      url = `${this.APIBaseURI}/stats/user/${userName}/artist-evolution-activity`;
     } else {
-      url = `${this.APIBaseURI}/stats/sitewide/album-activity`;
+      url = `${this.APIBaseURI}/stats/sitewide/artist-evolution-activity`;
     }
     url += `?range=${range}`;
     const response = await fetch(url);
