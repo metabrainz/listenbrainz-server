@@ -9,4 +9,4 @@ class ArtistEvolutionEntry(BaseModel):
 
 
 class ArtistEvolutionRecord(BaseModel):
-    __root__: List[ArtistTrendEntry]
+    __root__: List[ArtistEvolutionEntry]
