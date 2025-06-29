@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
-from data.model.user_artist_trend import ArtistTrendRecord
+from data.model.user_artist_evolution import ArtistTrendRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 
