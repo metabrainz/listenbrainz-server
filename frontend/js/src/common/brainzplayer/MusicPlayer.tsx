@@ -26,7 +26,7 @@ import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FeedbackValue } from "./utils";
 import MenuOptions from "./MenuOptions";
-import { playerPausedAtom } from "./BrainzPlayerAtoms";
+import { playerPausedAtom, queueRepeatModeAtom } from "./BrainzPlayerAtoms";
 
 type PlaybackControlButtonProps = {
   className?: string;
@@ -182,12 +182,12 @@ function MusicPlayer(props: MusicPlayerProps) {
     currentTrackArtist,
     currentTrackAlbum,
     currentTrackCoverURL,
-    queueRepeatMode,
     queue,
     ambientQueue,
   } = useBrainzPlayerContext();
 
   const playerPaused = useAtomValue(playerPausedAtom);
+  const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
 
   // Global App Context
   const { spotifyAuth, APIService } = React.useContext(GlobalAppContext);

@@ -44,7 +44,6 @@ export type BrainzPlayerContextT = {
   continuousPlaybackTime: number;
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
-  queueRepeatMode: QueueRepeatMode;
 };
 
 export const initialValue: BrainzPlayerContextT = {
@@ -57,13 +56,11 @@ export const initialValue: BrainzPlayerContextT = {
   continuousPlaybackTime: 0,
   queue: [],
   ambientQueue: [],
-  queueRepeatMode: QueueRepeatModes.off,
 };
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
   type?:
     | "SET_AMBIENT_QUEUE"
-    | "TOGGLE_REPEAT_MODE"
     | "MOVE_QUEUE_ITEM"
     | "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE"
     | "MOVE_AMBIENT_QUEUE_ITEM"
@@ -101,18 +98,6 @@ function valueReducer(
         };
       }
       break;
-    }
-    case "TOGGLE_REPEAT_MODE": {
-      const { queueRepeatMode } = state;
-      const repeatMode = repeatModes.find((mode) =>
-        isEqual(mode, queueRepeatMode)
-      );
-      const currentIndex = repeatModes.indexOf(repeatMode!);
-      const nextIndex = (currentIndex + 1) % repeatModes.length;
-      return {
-        ...state,
-        queueRepeatMode: repeatModes[nextIndex],
-      };
     }
     case "MOVE_QUEUE_ITEM": {
       const { queue, currentListenIndex } = state;

@@ -23,7 +23,7 @@ import { Link } from "react-router";
 import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import tinycolor from "tinycolor2";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -40,7 +40,11 @@ import { FeedbackValue } from "./utils";
 import VolumeControlButton from "./VolumeControlButton";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 import { DataSourceType } from "./BrainzPlayer";
-import { playerPausedAtom } from "./BrainzPlayerAtoms";
+import {
+  playerPausedAtom,
+  queueRepeatModeAtom,
+  toggleRepeatModeAtom,
+} from "./BrainzPlayerAtoms";
 import BrainzPlayerTimer from "./BrainzPlayerTimer";
 
 type BrainzPlayerUIProps = {
@@ -102,6 +106,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   brainzPlayerContextRef.current = brainzPlayerContext;
 
   const playerPaused = useAtomValue(playerPausedAtom);
+  const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
+
+  const toggleRepeatMode = useSetAtom(toggleRepeatModeAtom);
 
   const dispatch = useBrainzPlayerDispatch();
 
@@ -235,11 +242,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   const toggleMusicPlayer = React.useCallback(() => {
     setShowMusicPlayer((prevShow) => !prevShow);
-  }, []);
-
-  const toggleRepeatMode = React.useCallback(() => {
-    dispatch({ type: "TOGGLE_REPEAT_MODE" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
@@ -444,10 +446,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
           {!isMobile && (
             <FontAwesomeIcon
-              icon={brainzPlayerContextRef.current.queueRepeatMode.icon}
-              title={brainzPlayerContextRef.current.queueRepeatMode.title}
+              icon={queueRepeatMode.icon}
+              title={queueRepeatMode.title}
               style={{
-                color: brainzPlayerContextRef.current.queueRepeatMode.color,
+                color: queueRepeatMode.color,
               }}
               onClick={toggleRepeatMode}
             />

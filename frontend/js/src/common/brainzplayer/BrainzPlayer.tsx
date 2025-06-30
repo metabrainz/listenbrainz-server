@@ -47,6 +47,7 @@ import {
   volumeAtom,
   progressMsAtom,
   updateTimeAtom,
+  queueRepeatModeAtom,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
@@ -139,11 +140,14 @@ export default function BrainzPlayer() {
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
 
-  // Context Atoms
+  // Context Atoms - Values
   const volume = useAtomValue(volumeAtom);
-  const setUpdateTime = useSetAtom(updateTimeAtom);
+  const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
 
+  // Context Atoms - Setters
+  const setUpdateTime = useSetAtom(updateTimeAtom);
   const setProgressMs = useSetAtom(progressMsAtom);
+
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
 
@@ -582,9 +586,7 @@ export default function BrainzPlayer() {
 
     let nextListenIndex: number;
     // If the queue repeat mode is one, then play the same track again
-    if (
-      brainzPlayerContextRef.current.queueRepeatMode === QueueRepeatModes.one
-    ) {
+    if (queueRepeatMode === QueueRepeatModes.one) {
       nextListenIndex =
         currentPlayingListenIndex + (currentPlayingListenIndex < 0 ? 1 : 0);
     } else {
@@ -633,9 +635,7 @@ export default function BrainzPlayer() {
         );
         return;
       }
-    } else if (
-      brainzPlayerContextRef.current.queueRepeatMode === QueueRepeatModes.off
-    ) {
+    } else if (queueRepeatMode === QueueRepeatModes.off) {
       // 3. If there are no listens in the ambient queue and the queue repeat mode is off, then stop the player
       stopPlayerStateTimer();
       reinitializeWindowTitle();
