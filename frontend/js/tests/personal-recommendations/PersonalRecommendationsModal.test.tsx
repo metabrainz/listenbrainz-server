@@ -1,18 +1,15 @@
 import * as React from "react";
-import { mount } from "enzyme";
-
-import { act } from "react-dom/test-utils";
+import { screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import NiceModal, { NiceModalHocProps } from "@ebay/nice-modal-react";
 import PersonalRecommendationModal, {
   maxBlurbContentLength,
 } from "../../src/personal-recommendations/PersonalRecommendationsModal";
 import APIServiceClass from "../../src/utils/APIService";
-import GlobalAppContext, {
-  GlobalAppContextT,
-} from "../../src/utils/GlobalAppContext";
-import { waitForComponentToPaint } from "../test-utils";
-import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import { ReactQueryWrapper } from "../test-react-query";
+import {
+  renderWithProviders,
+  textContentMatcher,
+} from "../test-utils/rtl-test-utils";
 
 const listenToPersonallyRecommend: Listen = {
   listened_at: 1605927742,
@@ -27,38 +24,16 @@ const listenToPersonallyRecommend: Listen = {
   },
 };
 
-const user = {
-  id: 1,
-  name: "name",
-  auth_token: "auth_token",
-};
 const testAPIService = new APIServiceClass("");
-const globalProps: GlobalAppContextT = {
-  APIService: testAPIService,
-  websocketsUrl: "",
-  currentUser: user,
-  spotifyAuth: {},
-  youtubeAuth: {},
-  recordingFeedbackManager: new RecordingFeedbackManager(testAPIService, {
-    name: "Fnord",
-  }),
-};
 
 const niceModalProps: NiceModalHocProps = {
   id: "fnord",
   defaultVisible: true,
 };
 
-// Font Awesome generates a random hash ID for each icon everytime.
-// Mocking Math.random() fixes this
-// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+jest.unmock("react-toastify");
 
-const getFollowersSpy = jest
-  .spyOn(testAPIService, "getFollowersOfUser")
-  .mockResolvedValue({
-    followers: ["bob", "fnord"],
-  });
+const user = userEvent.setup();
 
 const submitPersonalRecommendationSpy = jest
   .spyOn(testAPIService, "submitPersonalRecommendation")
@@ -68,198 +43,237 @@ const submitPersonalRecommendationSpy = jest
 
 describe("PersonalRecommendationModal", () => {
   afterEach(() => {
-    getFollowersSpy.mockClear();
     submitPersonalRecommendationSpy.mockClear();
   });
 
-  describe("submitPersonalRecommendation", () => {
-    it("calls API, and creates new alert on success", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <ReactQueryWrapper>
-              <PersonalRecommendationModal
-                {...niceModalProps}
-                listenToPersonallyRecommend={listenToPersonallyRecommend}
-              />
-            </ReactQueryWrapper>
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
+  it("renders the modal with track details, loads followers", async () => {
+    const getFollowersSpy = jest
+      .spyOn(testAPIService, "getFollowersOfUser")
+      .mockResolvedValue({
+        followers: ["bob", "fnord"],
+      });
+    renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    act(() => {
+      NiceModal.show(PersonalRecommendationModal, {
+        ...niceModalProps,
+        listenToPersonallyRecommend,
+      });
+    });
+
+    // A modal is in the document
+    await screen.findByRole("dialog");
+
+    // Ensure the component loads the current user's followers
+    expect(getFollowersSpy).toHaveBeenCalled();
+
+    screen.getByText(textContentMatcher("Recommend Feel Special"));
+  });
+
+  it("calls API, and creates new alert on success", async () => {
+    renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    act(() => {
+      NiceModal.show(PersonalRecommendationModal, {
+        ...niceModalProps,
+        listenToPersonallyRecommend,
+      });
+    });
+
+    const allButtons = await screen.findAllByRole<HTMLButtonElement>("button");
+    const submitButton = allButtons.filter((el) => el.type === "submit").at(0);
+    expect(submitButton).toBeDefined();
+    // Submit button should be disabled if no recipient is selected
+    expect(submitButton).toBeDisabled();
+
+    const usernameTextInput = await screen.findByPlaceholderText(
+      "Add followers*"
+    );
+    await user.type(usernameTextInput, "fnord");
+
+    // Select a recipient
+    const userResultButton = await screen.findByRole("menuitem", {
+      name: "fnord",
+    });
+    await user.click(userResultButton);
+
+    // Should be able to click send even without a message
+    expect(submitButton).not.toBeDisabled();
+
+    // Add a message anyway for testing
+    const messageTextArea = await screen.findByPlaceholderText(
+      "You will love this song because..."
+    );
+    await user.type(messageTextArea, "Hello this is a message");
+
+    // Click submit button
+    await user.click(submitButton!);
+
+    expect(submitPersonalRecommendationSpy).toHaveBeenCalledTimes(1);
+    expect(submitPersonalRecommendationSpy).toHaveBeenCalledWith(
+      "never_gonna",
+      "FNORD",
+      {
+        recording_mbid: "recording_mbid",
+        recording_msid: "recording_msid",
+        blurb_content: "Hello this is a message",
+        users: ["fnord"],
+      }
+    );
+    screen.getByText(
+      textContentMatcher("You recommended this track to 1 user")
+    );
+    screen.getByText(
+      textContentMatcher("You recommended this track to 1 user")
+    );
+  });
+
+  it("does nothing if userToken not set", async () => {
+    renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+      currentUser: { auth_token: undefined, id: 1, name: "test" },
+    });
+    act(() => {
+      NiceModal.show(PersonalRecommendationModal, {
+        ...niceModalProps,
+        listenToPersonallyRecommend,
+      });
+    });
+    const submitButton = await screen.findByText(/Send Recommendation/i);
+    expect(submitButton).toBeDisabled();
+
+    // Select a recipient
+    const usernameTextInput = await screen.findByPlaceholderText(
+      "Add followers*"
+    );
+    await user.type(usernameTextInput, "fnord");
+    const userResultButton = await screen.findByRole("menuitem", {
+      name: "fnord",
+    });
+    await user.click(userResultButton);
+
+    expect(submitButton).not.toBeDisabled();
+    await user.click(submitButton);
+
+    expect(submitPersonalRecommendationSpy).not.toHaveBeenCalled();
+  });
+
+  it("Shows an error message in case of error", async () => {
+    const error = new Error("error");
+    submitPersonalRecommendationSpy.mockRejectedValueOnce(error);
+    renderWithProviders(<NiceModal.Provider />, {
+      APIService: testAPIService,
+    });
+    act(() => {
+      NiceModal.show(PersonalRecommendationModal, {
+        ...niceModalProps,
+        listenToPersonallyRecommend,
+      });
+    });
+
+    // Select a recipient
+    const usernameTextInput = await screen.findByPlaceholderText(
+      "Add followers*"
+    );
+    await user.type(usernameTextInput, "fnord");
+    const userResultButton = await screen.findByRole("menuitem", {
+      name: "fnord",
+    });
+    await user.click(userResultButton);
+
+    const submitButton = await screen.findByText(/Send Recommendation/i);
+    await user.click(submitButton);
+
+    await screen.findByText("Error while recommending a track");
+  });
+
+  describe("handleBlurbInputChange", () => {
+    it("removes line breaks and excessive spaces from input before setting blurbContent in state ", async () => {
+      renderWithProviders(<NiceModal.Provider />, {
+        APIService: testAPIService,
+      });
+      act(() => {
+        NiceModal.show(PersonalRecommendationModal, {
+          ...niceModalProps,
+          listenToPersonallyRecommend,
+        });
+      });
+
+      const unparsedInput =
+        "This string contains \n\n line breaks and multiple   consecutive   spaces.";
+
+      // Select a recipient
+      const usernameTextInput = await screen.findByPlaceholderText(
+        "Add followers*"
       );
+      await user.type(usernameTextInput, "fnord");
+      const userResultButton = await screen.findByRole("menuitem", {
+        name: "fnord",
+      });
+      await user.click(userResultButton);
 
-      await waitForComponentToPaint(wrapper);
+      // simulate writing in the textArea
+      const messageTextArea = await screen.findByPlaceholderText(
+        "You will love this song because..."
+      );
+      await user.type(messageTextArea, unparsedInput);
 
-      expect(getFollowersSpy).toHaveBeenCalled();
-      await act(async () => {
-        const userNameInput = wrapper.find("input[type='text']").first();
-        userNameInput?.simulate("change", { target: { value: "fnord" } });
-      });
-      await waitForComponentToPaint(wrapper);
-      await act(async () => {
-        const button = wrapper.find("button[title='fnord']").first();
-        button?.simulate("click");
-      });
-      await act(async () => {
-        const blurbTextArea = wrapper
-          .find("textarea[name='blurb-content']")
-          .first();
-        blurbTextArea.simulate("change", { target: { value: "hii" } });
-      });
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
-      });
-      await waitForComponentToPaint(wrapper);
+      const submitButton = await screen.findByText(/Send Recommendation/i);
+      await user.click(submitButton);
 
-      expect(submitPersonalRecommendationSpy).toHaveBeenCalledTimes(1);
+      // the string should have been parsed and cleaned up
       expect(submitPersonalRecommendationSpy).toHaveBeenCalledWith(
-        "auth_token",
-        "name",
+        "never_gonna",
+        "FNORD",
         {
           recording_mbid: "recording_mbid",
           recording_msid: "recording_msid",
-          blurb_content: "hii",
+          blurb_content:
+            "This string contains line breaks and multiple consecutive spaces.",
           users: ["fnord"],
         }
       );
     });
 
-    it("does nothing if userToken not set", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            currentUser: { auth_token: undefined, id: 1, name: "test" },
-          }}
-        >
-          <NiceModal.Provider>
-            <PersonalRecommendationModal
-              {...niceModalProps}
-              listenToPersonallyRecommend={listenToPersonallyRecommend}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
-      });
-      await waitForComponentToPaint(wrapper);
-      expect(submitPersonalRecommendationSpy).not.toHaveBeenCalled();
-    });
-
-    it("calls handleError in case of error", async () => {
-      const error = new Error("error");
-      submitPersonalRecommendationSpy.mockRejectedValueOnce(error);
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PersonalRecommendationModal
-              {...niceModalProps}
-              listenToPersonallyRecommend={listenToPersonallyRecommend}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-
-      await waitForComponentToPaint(wrapper);
-      await act(async () => {
-        const userNameInput = wrapper.find("input[type='text']").first();
-        userNameInput?.simulate("change", { target: { value: "fnord" } });
-      });
-      await waitForComponentToPaint(wrapper);
-      await act(async () => {
-        const button = wrapper.find("button[title='fnord']").first();
-        button?.simulate("click");
-      });
-      await act(async () => {
-        const submitButton = wrapper.find("button[type='submit']").first();
-        submitButton?.simulate("click");
-      });
-      await waitForComponentToPaint(wrapper);
-    });
-  });
-
-  describe("handleBlurbInputChange", () => {
-    it("removes line breaks and excessive spaces from input before setting blurbContent in state ", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <PersonalRecommendationModal
-              {...niceModalProps}
-              listenToPersonallyRecommend={listenToPersonallyRecommend}
-            />
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-
-      const unparsedInput =
-        "This string contains \n\n line breaks and multiple   consecutive   spaces.";
-
-      // simulate writing in the textArea
-      await act(async () => {
-        const blurbTextArea = wrapper
-          .find("textarea[name='blurb-content']")
-          .first();
-        blurbTextArea.simulate("change", { target: { value: unparsedInput } });
-      });
-      await waitForComponentToPaint(wrapper);
-
-      // the string should have been parsed and cleaned up
-      const blurbTextArea = wrapper
-        .find("textarea[name='blurb-content']")
-        .first();
-      expect(blurbTextArea.props().value).toEqual(
-        "This string contains line breaks and multiple consecutive spaces."
-      );
-    });
-
     it("does not set blurbContent in state if input length is greater than MAX_BLURB_CONTENT_LENGTH ", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <NiceModal.Provider>
-            <ReactQueryWrapper>
-              <PersonalRecommendationModal
-                {...niceModalProps}
-                listenToPersonallyRecommend={listenToPersonallyRecommend}
-              />
-            </ReactQueryWrapper>
-          </NiceModal.Provider>
-        </GlobalAppContext.Provider>
-      );
-      await waitForComponentToPaint(wrapper);
-      // simulate writing in the textArea
-      await act(async () => {
-        wrapper
-          .find("textarea[name='blurb-content']")
-          .first()
-          .simulate("change", {
-            target: { value: "This string is valid." },
-          });
+      renderWithProviders(<NiceModal.Provider />, {
+        APIService: testAPIService,
       });
-      await waitForComponentToPaint(wrapper);
+      act(() => {
+        NiceModal.show(PersonalRecommendationModal, {
+          ...niceModalProps,
+          listenToPersonallyRecommend,
+        });
+      });
 
-      const blurbTextArea = wrapper
-        .find("textarea[name='blurb-content']")
-        .first();
-      expect(blurbTextArea.props().value).toEqual("This string is valid.");
+      // Select a recipient
+      const usernameTextInput = await screen.findByPlaceholderText(
+        "Add followers*"
+      );
+      await user.type(usernameTextInput, "fnord");
+      const userResultButton = await screen.findByRole("menuitem", {
+        name: "fnord",
+      });
+      await user.click(userResultButton);
+
+      const messageTextArea = await screen.findByPlaceholderText<
+        HTMLTextAreaElement
+      >("You will love this song because...");
+
+      // simulate pasting  text content in the textArea
+      await user.click(messageTextArea);
+      await user.paste("This string is valid.");
+      expect(messageTextArea.value).toEqual("This string is valid.");
 
       const invalidInputString = "a".repeat(maxBlurbContentLength + 1);
       expect(invalidInputString.length).toBeGreaterThan(maxBlurbContentLength);
-
-      await act(async () => {
-        wrapper
-          .find("textarea[name='blurb-content']")
-          .first()
-          .simulate("change", {
-            target: { value: invalidInputString },
-          });
-      });
-      await waitForComponentToPaint(wrapper);
+      await user.click(messageTextArea);
+      await user.paste(invalidInputString);
 
       // blurbContent should not have changed
-      expect(blurbTextArea.props().value).toEqual("This string is valid.");
+      expect(messageTextArea.value).toEqual("This string is valid.");
     });
   });
 });

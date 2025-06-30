@@ -93,12 +93,6 @@ export default NiceModal.create(
       [followers]
     );
 
-    const closeModal = () => {
-      modal.hide();
-      document?.body?.classList?.remove("modal-open");
-      setTimeout(modal.remove, 200);
-    };
-
     const submitPersonalRecommendation = React.useCallback(
       async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -136,7 +130,7 @@ export default NiceModal.create(
                 />,
                 { toastId: "recommended-track-success" }
               );
-              closeModal();
+              modal.hide();
             }
           } catch (error) {
             handleError(error, "Error while recommending a track");
@@ -167,6 +161,7 @@ export default NiceModal.create(
           {users.map((user) => {
             return (
               <NamePill
+                key={user}
                 title={user}
                 // eslint-disable-next-line react/jsx-no-bind
                 closeAction={removeUser.bind(this, user)}
