@@ -23,11 +23,43 @@ type ProcessedTimeframeData = {
   }>;
 };
 
+// Define the chart data item type for better type safety
+type ChartDataItem = {
+  id: string;
+  label: string;
+  displayName: string;
+  actualValue: number;
+  value: number;
+  color: string;
+  timeRange: string;
+  hour: number;
+};
+
 const TIME_PERIODS = [
   { timeRange: "Night", timeOfDay: "12AM-6AM", hour: 3, from: 0, to: 5 },
   { timeRange: "Morning", timeOfDay: "6AM-12PM", hour: 9, from: 6, to: 11 },
   { timeRange: "Afternoon", timeOfDay: "12PM-6PM", hour: 15, from: 12, to: 17 },
   { timeRange: "Evening", timeOfDay: "6PM-12AM", hour: 21, from: 18, to: 23 },
+];
+
+// Circular time markers placed around the pie chart to indicate major time labels.
+const timeMarkers = [
+  {
+    position: { top: "5px", left: "50%", transform: "translateX(-50%)" },
+    label: "12AM",
+  },
+  {
+    position: { top: "50%", right: "25%", transform: "translateY(-50%)" },
+    label: "6AM",
+  },
+  {
+    position: { bottom: "5px", left: "50%", transform: "translateX(-50%)" },
+    label: "12PM",
+  },
+  {
+    position: { top: "50%", left: "25%", transform: "translateY(-50%)" },
+    label: "6PM",
+  },
 ];
 
 const getRoundedTimezoneOffset = (): number => {
@@ -146,8 +178,13 @@ export default function UserGenreDayActivity({
     queryKey: ["userGenreDayActivity", user?.name, range],
     queryFn: async () => {
       try {
+        // Fix: Handle undefined user name
+        if (!user?.name) {
+          throw new Error("User name is required");
+        }
+
         const queryData = await APIService.getUserGenreDayActivity(
-          user?.name,
+          user.name,
           range
         );
         return { data: queryData, hasError: false, errorMessage: "" };
@@ -159,6 +196,7 @@ export default function UserGenreDayActivity({
         };
       }
     },
+    enabled: !!user?.name, // Only run query if user name exists
   });
 
   const {
@@ -172,16 +210,27 @@ export default function UserGenreDayActivity({
     const groupedData = groupDataByTimePeriod(rawData.result, timezoneOffset);
 
     return groupedData.flatMap((timeframe) => {
+      // Calculate the total number of listens for all genres in this time period.
+      // This is used to compute percentage shares for each genre in the pie chart.
       const total = timeframe.genres.reduce(
         (acc, genre) => acc + genre.listen_count,
         0
       );
+
+      // Get the representative base hour for this time period (e.g., 3AM for "Night").
+      // This is used to map genre slices to specific positions and colors on the circular timeline.
       const baseHour =
         TIME_PERIODS.find((p) => p.timeRange === timeframe.timeRange)?.hour ??
         0;
 
       return timeframe.genres.map((genre, index) => {
         const hourVariation = baseHour + ((index * 0.5) % 6);
+
+        // Calculate the percentage value for the pie chart slice.
+        // - If the genre has 0 listens, use a neutral gray color and a value of 100
+        //   so that it still renders visibly in the pie chart.
+        // - Otherwise, calculate the percentage of listens and use a time-based color.
+
         const value =
           genre.listen_count === 0 ? 100 : (genre.listen_count / total) * 100;
         const color =
@@ -200,25 +249,6 @@ export default function UserGenreDayActivity({
       });
     });
   }, [colorScale, rawData, timezoneOffset]);
-
-  const timeMarkers = [
-    {
-      position: { top: "5px", left: "50%", transform: "translateX(-50%)" },
-      label: "12AM",
-    },
-    {
-      position: { top: "50%", right: "25%", transform: "translateY(-50%)" },
-      label: "6AM",
-    },
-    {
-      position: { bottom: "5px", left: "50%", transform: "translateX(-50%)" },
-      label: "12PM",
-    },
-    {
-      position: { top: "50%", left: "25%", transform: "translateY(-50%)" },
-      label: "6PM",
-    },
-  ];
 
   return (
     <Card className="user-stats-card" data-testid="user-genre-day-activity">

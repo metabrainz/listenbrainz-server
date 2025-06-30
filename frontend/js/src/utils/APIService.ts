@@ -603,7 +603,7 @@ export default class APIService {
   };
 
   getUserGenreDayActivity = async (
-    userName?: string,
+    userName: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserGenreDayActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
