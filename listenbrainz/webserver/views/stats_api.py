@@ -525,18 +525,19 @@ def get_artist_activity(user_name: str):
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
 
+
 @stats_api_bp.get("/user/<user_name>/genre-activity")
 @crossdomain
 @ratelimit()
 def get_genre_activity(user_name: str):
     user, stats_range = _validate_stats_user_params(user_name)
-    stats = db_stats.get(1, "genre_activity", stats_range, GenreActivityRecord)
+    stats = db_stats.get(user['id'], "genre_activity", stats_range, GenreActivityRecord)
     if stats is None:
         raise APINoContent('')
     
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"result": genre_activity})
-	
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
