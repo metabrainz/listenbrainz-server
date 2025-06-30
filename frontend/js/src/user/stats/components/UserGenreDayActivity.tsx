@@ -124,17 +124,7 @@ const groupDataByTimePeriod = (
 
 function CustomTooltip({ datum }: { datum: any }) {
   return (
-    <div
-      style={{
-        background: "white",
-        padding: "12px",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-        textAlign: "center",
-        opacity: 0.9,
-      }}
-    >
+    <div className="custom-tooltip-genre-stats">
       <strong>{datum.data.displayName}</strong>
       <br />
       {datum.data.actualValue} plays
