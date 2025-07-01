@@ -6,6 +6,7 @@ from werkzeug.exceptions import BadRequest
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.utils import number_readable
@@ -19,6 +20,7 @@ artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
 release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
+recording_bp = Blueprint("recording", __name__)
 
 
 def get_release_group_sort_key(release_group):
@@ -338,3 +340,34 @@ def album_entity(release_group_mbid: str):
 @release_group_bp.get('/<path:path>/')
 def release_group_redirect(path):
     return render_template("index.html")
+
+
+@recording_bp.route("/",  defaults={'path': ''})
+def recording_page(path):
+    return render_template("index.html")
+
+
+@recording_bp.route("/<recording_mbid>/", methods=["POST"])
+@web_listenstore_needed
+def recording_entity(recording_mbid):
+    """ Show a recording page with all their relevant information """
+
+    if not is_valid_uuid(recording_mbid):
+        return jsonify({"error": "Provided recording mbid is invalid: %s" % recording_mbid}), 400
+
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
+            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+        recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
+    if recording_data is None:
+        return jsonify({"error": f"Recording {recording_mbid} not found in the metadata cache"}), 404
+    
+    recording_data = recording_data[0]
+
+    data = {
+        "recording_mbid": recording_mbid,
+        "recording": recording_data,
+    }
+
+    return jsonify(data)
