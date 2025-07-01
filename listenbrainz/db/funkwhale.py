@@ -75,27 +75,14 @@ def delete_token(user_id: int, funkwhale_server_id: int) -> None:
     """), {'user_id': user_id, 'funkwhale_server_id': funkwhale_server_id})
     db_conn.commit()
 
-def get_user(connection, user_id: int, host_url: str) -> Optional[Dict[str, Any]]:
-    """Get user's Funkwhale token and connection details
-    
-    Args:
-        connection: Database connection
-        user_id: ListenBrainz user ID
-        host_url: Funkwhale server URL
-        
-    Returns:
-        Dictionary containing user's Funkwhale connection details or None if not found
-    """
-    server = FunkwhaleServer.query.filter_by(user_id=user_id, host_url=host_url).first()
-    if not server:
-        return None
-        
-    return {
-        'user_id': user_id,
-        'host_url': server.host_url,
-        'client_id': server.client_id,
-        'client_secret': server.client_secret,
-        'access_token': server.access_token,
-        'refresh_token': server.refresh_token,
-        'token_expiry': server.token_expiry
-    } 
+def get_all_user_tokens(user_id: int) -> list:
+    """Get all tokens for a user with server information"""
+    result = db_conn.execute(sqlalchemy.text("""
+        SELECT t.*, s.host_url, s.client_id, s.client_secret, s.scopes
+        FROM funkwhale_tokens t
+        JOIN funkwhale_servers s ON t.funkwhale_server_id = s.id
+        WHERE t.user_id = :user_id
+        ORDER BY t.id ASC
+    """), {'user_id': user_id})
+    return [dict(row) for row in result.mappings().fetchall()]
+

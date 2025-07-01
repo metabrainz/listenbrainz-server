@@ -9,7 +9,6 @@ import {
   searchForFunkwhaleTrack,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type FunkwhalePlayerState = {
@@ -29,7 +28,6 @@ export default class FunkwhalePlayer
   };
 
   static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     const musicService = _get(
       listen,
       "track_metadata.additional_info.music_service"
@@ -37,7 +35,6 @@ export default class FunkwhalePlayer
     return (
       (isString(musicService) &&
         musicService.toLowerCase().includes("funkwhale")) ||
-      (!!originURL && /funkwhale/.test(originURL)) ||
       Boolean(FunkwhalePlayer.getURLFromListen(listen))
     );
   }
@@ -67,7 +64,7 @@ export default class FunkwhalePlayer
   audioRef: React.RefObject<HTMLAudioElement>;
   updateProgressInterval?: NodeJS.Timeout;
   accessToken = "";
-  retries = 0;
+  currentBlobUrl?: string;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   debouncedOnTrackEnd: () => void;
@@ -91,12 +88,16 @@ export default class FunkwhalePlayer
       this.accessToken = funkwhaleUser!.access_token;
       this.setupAudioListeners();
     }
+    this.updateVolume();
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show } = this.props;
+    const { show, volume } = this.props;
     if (prevProps.show !== show && show) {
       this.setupAudioListeners();
+    }
+    if (prevProps.volume !== volume) {
+      this.updateVolume();
     }
   }
 
@@ -104,6 +105,9 @@ export default class FunkwhalePlayer
     this.cleanupAudioListeners();
     if (this.updateProgressInterval) {
       clearInterval(this.updateProgressInterval);
+    }
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
     }
   }
 
@@ -118,6 +122,8 @@ export default class FunkwhalePlayer
     audioElement.addEventListener("ended", this.onTrackEnd);
     audioElement.addEventListener("error", this.onError);
     audioElement.addEventListener("canplay", this.onCanPlay);
+
+    this.updateVolume();
   };
 
   cleanupAudioListeners = (): void => {
@@ -167,32 +173,24 @@ export default class FunkwhalePlayer
   onError = (event: Event): void => {
     const { handleError } = this.props;
     const audioElement = event.target as HTMLAudioElement;
-    let errorMessage = "Audio playback error";
 
+    let errorMessage = "Audio playback error";
     if (audioElement.error) {
-      switch (audioElement.error.code) {
-        case audioElement.error.MEDIA_ERR_ABORTED:
-          errorMessage = "Audio playback was aborted";
-          break;
-        case audioElement.error.MEDIA_ERR_NETWORK:
-          errorMessage = "Network error occurred during audio playback";
-          break;
-        case audioElement.error.MEDIA_ERR_DECODE:
-          errorMessage = "Audio decoding error";
-          break;
-        case audioElement.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          errorMessage = "Audio format not supported";
-          break;
-        default:
-          errorMessage = "Unknown audio error";
-      }
+      const errorCode = audioElement.error.code;
+      const errorMessages: Record<number, string> = {
+        [audioElement.error.MEDIA_ERR_ABORTED]: "Audio playback was aborted",
+        [audioElement.error.MEDIA_ERR_NETWORK]: "Network error during playback",
+        [audioElement.error.MEDIA_ERR_DECODE]: "Audio decoding error",
+        [audioElement.error.MEDIA_ERR_SRC_NOT_SUPPORTED]:
+          "Audio format not supported",
+      };
+      errorMessage = errorMessages[errorCode] || "Unknown audio error";
     }
 
     handleError(errorMessage, "Funkwhale playback error");
   };
 
   onCanPlay = (): void => {
-    // Audio is ready to play
     const { currentTrack } = this.state;
     if (currentTrack) {
       this.updateTrackInfo();
@@ -248,16 +246,33 @@ export default class FunkwhalePlayer
       if (trackId) {
         const track = await this.fetchTrackInfo(trackId);
         if (track && track.listen_url) {
-          audioElement.src = track.listen_url.startsWith("/")
-            ? this.getFunkwhaleInstanceURL() + track.listen_url
-            : track.listen_url;
-          this.setState({ currentTrack: track });
-          await audioElement.play();
+          // Get authenticated audio URL
+          const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(
+            track.listen_url
+          );
+          if (authenticatedAudioUrl) {
+            this.setAudioSrc(audioElement, authenticatedAudioUrl);
+            this.setState({ currentTrack: track });
+            await audioElement.play();
+          } else {
+            throw new Error(
+              "Unable to access audio stream from Funkwhale server"
+            );
+          }
+        } else {
+          throw new Error("Track not found on Funkwhale server");
         }
       } else {
-        // Direct audio URL
-        audioElement.src = url;
-        await audioElement.play();
+        // Direct audio URL -> try to authenticate it as well
+        const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(url);
+        if (authenticatedAudioUrl) {
+          this.setAudioSrc(audioElement, authenticatedAudioUrl);
+          await audioElement.play();
+        } else {
+          throw new Error(
+            "Unable to access the audio file from Funkwhale server"
+          );
+        }
       }
     } catch (error) {
       const { handleError } = this.props;
@@ -269,12 +284,8 @@ export default class FunkwhalePlayer
   };
 
   extractTrackIdFromURL = (url: string): string | null => {
-    // Extract track ID from various Funkwhale URL formats
     const trackMatch = url.match(/\/tracks\/(\d+)/);
-    if (trackMatch) {
-      return trackMatch[1];
-    }
-    return null;
+    return trackMatch ? trackMatch[1] : null;
   };
 
   fetchTrackInfo = async (trackId: string): Promise<FunkwhaleTrack | null> => {
@@ -295,14 +306,11 @@ export default class FunkwhalePlayer
 
       return await response.json();
     } catch (error) {
-      // Log the error for debugging
       return null;
     }
   };
 
   getFunkwhaleInstanceURL = (): string => {
-    // This should be configurable per user or globally
-    // For now, return a default or get from context
     const { funkwhaleAuth: funkwhaleUser = undefined } = this.context;
     return funkwhaleUser?.instance_url || "https://demo.funkwhale.audio";
   };
@@ -333,13 +341,29 @@ export default class FunkwhalePlayer
         this.setState({ currentTrack: track });
         const audioElement = this.audioRef.current;
         if (audioElement) {
-          audioElement.src = track.listen_url.startsWith("/")
-            ? this.getFunkwhaleInstanceURL() + track.listen_url
-            : track.listen_url;
-          await audioElement.play();
+          const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(
+            track.listen_url
+          );
+          if (authenticatedAudioUrl) {
+            this.setAudioSrc(audioElement, authenticatedAudioUrl);
+            await audioElement.play();
+          } else {
+            // Audio file not accessible (404 or other error)
+            handleWarning(
+              `"${trackName}" by ${artistName} is not available on your Funkwhale server`,
+              "Audio file not available"
+            );
+            onTrackNotFound();
+          }
         }
         return;
       }
+
+      // Track not found on Funkwhale server
+      handleWarning(
+        `"${trackName}" by ${artistName} was not found on your Funkwhale server`,
+        "Track not found on Funkwhale"
+      );
       onTrackNotFound();
     } catch (errorObject) {
       if (errorObject.status === 401) {
@@ -421,11 +445,61 @@ export default class FunkwhalePlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    return false; // will record listens to ListenBrainz later
+    return false; // will recoed listens later
+  };
+
+  getAuthenticatedAudioUrl = async (
+    listenUrl: string
+  ): Promise<string | null> => {
+    if (!this.accessToken) return null;
+
+    try {
+      const fullUrl = listenUrl.startsWith("/")
+        ? this.getFunkwhaleInstanceURL() + listenUrl
+        : listenUrl;
+
+      const response = await fetch(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(
+          `Funkwhale audio file not accessible: ${response.status} ${response.statusText} for URL: ${fullUrl}`
+        );
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const audioBlob = await response.blob();
+      return URL.createObjectURL(audioBlob);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  setAudioSrc = (audioElement: HTMLAudioElement, src: string): void => {
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = undefined;
+    }
+    audioElement.src = src;
+
+    if (src.startsWith("blob:")) {
+      this.currentBlobUrl = src;
+    }
+  };
+
+  updateVolume = (): void => {
+    const { volume = 100 } = this.props;
+    const audioElement = this.audioRef.current;
+    if (audioElement) {
+      audioElement.volume = volume / 100;
+    }
   };
 
   render() {
-    const { show, volume = 100 } = this.props;
+    const { show } = this.props;
 
     return (
       <div className={`funkwhale-player ${show ? "" : "hidden"}`}>

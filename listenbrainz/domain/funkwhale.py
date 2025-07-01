@@ -2,7 +2,7 @@ import time
 import base64
 from typing import Optional, List
 from urllib.parse import urlencode
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from requests_oauthlib import OAuth2Session
@@ -62,7 +62,8 @@ class FunkwhaleService:
         access_token = token['access_token']
         refresh_token = token['refresh_token']
         expires_at = int(time.time()) + token['expires_in']
-        token_expiry_datetime = datetime.fromtimestamp(expires_at)
+        from datetime import timezone
+        token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
         # Get user details from Funkwhale API
         headers = {'Authorization': f'Bearer {access_token}'}
         response = requests.get(f"{host_url}/api/v1/users/me", headers=headers)
@@ -158,7 +159,8 @@ class FunkwhaleService:
         if "refresh_token" in token:
             refresh_token = token['refresh_token']
         expires_at = int(time.time()) + token['expires_in']
-        token_expiry_datetime = datetime.fromtimestamp(expires_at)
+        from datetime import timezone
+        token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
         db_funkwhale.update_token(user_id, server['id'], access_token, refresh_token, token_expiry_datetime)
         return self.get_user(user_id, host_url)
 
@@ -178,10 +180,20 @@ class FunkwhaleService:
     def user_oauth_token_has_expired(self, user: dict) -> bool:
         from datetime import timezone
         token_expiry = user['token_expiry']
+        current_app.logger.debug(f"Checking token expiry for user {user.get('user_id')}: {token_expiry}")
+        
         if isinstance(token_expiry, datetime):
             now = datetime.now(timezone.utc)
             if token_expiry.tzinfo is None:
+                # Assume stored timestamps are in UTC if no timezone info
                 token_expiry = token_expiry.replace(tzinfo=timezone.utc)
-            return now >= token_expiry
+            # Add a small buffer (30 seconds) to avoid edge cases
+            is_expired = now >= (token_expiry - timedelta(seconds=30))
+            current_app.logger.debug(f"Token expiry check: now={now}, expiry={token_expiry}, expired={is_expired}")
+            return is_expired
         else:
-            return int(time.time()) >= token_expiry
+            # Handle integer timestamps
+            now_ts = int(time.time())
+            is_expired = now_ts >= (token_expiry - 30)
+            current_app.logger.debug(f"Token expiry check (timestamp): now={now_ts}, expiry={token_expiry}, expired={is_expired}")
+            return is_expired

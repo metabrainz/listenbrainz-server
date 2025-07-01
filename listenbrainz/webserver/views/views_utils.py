@@ -97,28 +97,42 @@ def get_current_apple_music_user():
 def get_current_funkwhale_user():
     """Returns the funkwhale access token and instance URL for the current user.
     If the user has not linked a Funkwhale account, returns empty dict.
-    For Funkwhale, we return the first connected server if multiple exist."""
-    # Get all tokens for this user, join with servers
-    from sqlalchemy import text
-    from listenbrainz.webserver import db_conn
-    result = db_conn.execute(text('''
-        SELECT t.*, s.host_url, s.client_id, s.client_secret, s.scopes
-        FROM funkwhale_tokens t
-        JOIN funkwhale_servers s ON t.funkwhale_server_id = s.id
-        WHERE t.user_id = :user_id
-        ORDER BY t.id ASC
-        LIMIT 1
-    '''), {'user_id': current_user.id})
-    row = result.mappings().first()
-    if not row:
+    For Funkwhale, we return the first connected server if multiple exist, and only if the token is not expired."""
+    if not current_user.is_authenticated:
         return {}
-    return {
-        'access_token': row['access_token'],
-        'instance_url': row['host_url'],
-        'client_id': row['client_id'],
-        'client_secret': row['client_secret'],
-        'scopes': row['scopes'],
-        'token_expiry': row['token_expiry'],
-        'refresh_token': row['refresh_token'],
-        'funkwhale_server_id': row['funkwhale_server_id']
-    }
+    try:
+        from datetime import datetime, timezone
+        # Get all tokens for this user to find the first server
+        tokens = db_funkwhale.get_all_user_tokens(current_user.id)
+        if not tokens:
+            return {}
+        # Use the first server (consistent with frontend logic)
+        first_token = tokens[0]
+        host_url = first_token['host_url']
+        # Use the FunkwhaleService to get user with automatic refresh
+        service = FunkwhaleService()
+        user = service.get_user(current_user.id, host_url, refresh=True)
+        if not user:
+            return {}
+        # Check if token is expired
+        token_expiry = user.get('token_expiry')
+        if not token_expiry:
+            return {}
+        if isinstance(token_expiry, str):
+            token_expiry = datetime.fromisoformat(token_expiry)
+        now = datetime.now(timezone.utc)
+        if token_expiry < now:
+            # Token is expired, treat as disconnected
+            return {}
+        return {
+            'access_token': user['access_token'],
+            'instance_url': user['host_url'],
+            'client_id': user['client_id'],
+            'client_secret': user['client_secret'],
+            'token_expiry': user['token_expiry'],
+            'refresh_token': user['refresh_token'],
+            'funkwhale_server_id': user['funkwhale_server_id']
+        }
+    except Exception as e:
+        current_app.logger.error(f"Funkwhale user fetch error: {e}")
+        return {}

@@ -39,6 +39,7 @@ export default function MusicServices() {
     soundcloudAuth,
     critiquebrainzAuth,
     currentUser,
+    funkwhaleAuth,
   } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
