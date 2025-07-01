@@ -24,7 +24,18 @@ def validate_spotify_listen(listen):
 
 def parse_spotify_listen(listen, db_conn, ts_conn):
 
-    spotify_track_id = listen.get('spotify_track_uri').split(':')[2]
+    artist = listen.get('master_metadata_album_artist_name', '')
+    track_name = listen.get('master_metadata_track_name', '')
+    crafted_listen = {
+        "track_metadata": {
+            "artist_name": artist,
+            "track_name": track_name,
+        }
+    }
+    try:
+        spotify_track_id = listen.get('spotify_track_uri').split(':')[2]
+    except:
+        return crafted_listen
 
 
     query = """
@@ -82,12 +93,23 @@ def parse_spotify_listen(listen, db_conn, ts_conn):
         "track_id": spotify_track_id,
     })
     spotify_track_info = result.first()
+    
     if not spotify_track_info:
         spotify_track_info = spotify_web_api_track_info(spotify_track_id)
-        pass # WIP
+        artists = spotify_track_info.get('artists')
+        if artists:
+          if artists[0].get('name'):
+              artist = artists[0].get('name')
     else:
-        pass # WIP
-    pass
+        artists = spotify_track_info.get('track_artist_list')
+        if artists[0].get('name'):
+              artist = artists[0].get('name')
+    
+    crafted_listen['track_metadata']['artist'] = artist
+    return crafted_listen
+    
+    
+
 
 def spotify_web_api_track_info(track_id):
     track = sp.track(track_id)
