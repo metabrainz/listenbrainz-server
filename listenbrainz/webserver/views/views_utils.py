@@ -97,11 +97,11 @@ def get_current_apple_music_user():
 def get_current_funkwhale_user():
     """Returns the funkwhale access token and instance URL for the current user.
     If the user has not linked a Funkwhale account, returns empty dict.
-    For Funkwhale, we return the first connected server if multiple exist, and only if the token is not expired."""
+    For Funkwhale, we return the first connected server if multiple exist.
+    The backend automatically handles token refresh, so tokens returned are always valid."""
     if not current_user.is_authenticated:
         return {}
     try:
-        from datetime import datetime, timezone
         # Get all tokens for this user to find the first server
         tokens = db_funkwhale.get_all_user_tokens(current_user.id)
         if not tokens:
@@ -114,16 +114,7 @@ def get_current_funkwhale_user():
         user = service.get_user(current_user.id, host_url, refresh=True)
         if not user:
             return {}
-        # Check if token is expired
-        token_expiry = user.get('token_expiry')
-        if not token_expiry:
-            return {}
-        if isinstance(token_expiry, str):
-            token_expiry = datetime.fromisoformat(token_expiry)
-        now = datetime.now(timezone.utc)
-        if token_expiry < now:
-            # Token is expired, treat as disconnected
-            return {}
+        # Return user data - backend has already handled token refresh if needed
         return {
             'access_token': user['access_token'],
             'instance_url': user['host_url'],
@@ -134,5 +125,10 @@ def get_current_funkwhale_user():
             'funkwhale_server_id': user['funkwhale_server_id']
         }
     except Exception as e:
+        # If funkwhale tables don't exist (e.g., in test environment), just return empty dict
+        # instead of crashing. This allows the application to run without Funkwhale functionality.
+        if "funkwhale_tokens" in str(e) or "funkwhale_servers" in str(e):
+            current_app.logger.debug(f"Funkwhale tables not available, skipping: {e}")
+            return {}
         current_app.logger.error(f"Funkwhale user fetch error: {e}")
         return {}

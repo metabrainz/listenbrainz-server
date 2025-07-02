@@ -93,8 +93,12 @@ export default class FunkwhalePlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show, volume } = this.props;
-    if (prevProps.show !== show && show) {
-      this.setupAudioListeners();
+    if (prevProps.show !== show) {
+      if (show) {
+        this.setupAudioListeners();
+      } else {
+        this.pauseAudio();
+      }
     }
     if (prevProps.volume !== volume) {
       this.updateVolume();
@@ -197,20 +201,32 @@ export default class FunkwhalePlayer
     }
   };
 
+  getTrackArtworkUrl = (track?: FunkwhaleTrack): string | null => {
+    if (!track?.album?.cover) return null;
+    return (
+      track.album.cover.large ||
+      track.album.cover.medium ||
+      track.album.cover.small ||
+      null
+    );
+  };
+
   updateTrackInfo = (): void => {
     const { onTrackInfoChange } = this.props;
     const { currentTrack } = this.state;
 
     if (!currentTrack) return;
 
-    const artwork: MediaImage[] = [];
-    if (currentTrack.album?.cover?.large) {
-      artwork.push({
-        src: currentTrack.album.cover.large,
-        sizes: "500x500",
-        type: "image/jpeg",
-      });
-    }
+    const artworkUrl = this.getTrackArtworkUrl(currentTrack);
+    const artwork: MediaImage[] = artworkUrl
+      ? [
+          {
+            src: artworkUrl,
+            sizes: "500x500",
+            type: "image/jpeg",
+          },
+        ]
+      : [];
 
     onTrackInfoChange(
       currentTrack.title,
@@ -338,31 +354,28 @@ export default class FunkwhalePlayer
       );
 
       if (track && track.listen_url) {
+        if (track.is_playable === false) {
+          // Track found but not playable - handle silently and try to play anyway
+          // or skip to the "not available" case below
+        }
+
         this.setState({ currentTrack: track });
         const audioElement = this.audioRef.current;
-        if (audioElement) {
+        if (audioElement && track.is_playable !== false) {
           const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(
             track.listen_url
           );
           if (authenticatedAudioUrl) {
             this.setAudioSrc(audioElement, authenticatedAudioUrl);
             await audioElement.play();
-          } else {
-            // Audio file not accessible (404 or other error)
-            handleWarning(
-              `"${trackName}" by ${artistName} is not available on your Funkwhale server`,
-              "Audio file not available"
-            );
-            onTrackNotFound();
+            return;
           }
         }
-        return;
       }
 
-      // Track not found on Funkwhale server
       handleWarning(
-        `"${trackName}" by ${artistName} was not found on your Funkwhale server`,
-        "Track not found on Funkwhale"
+        `"${trackName}" by ${artistName} is not available on your Funkwhale server`,
+        "Track not available on Funkwhale"
       );
       onTrackNotFound();
     } catch (errorObject) {
@@ -465,9 +478,6 @@ export default class FunkwhalePlayer
       });
 
       if (!response.ok) {
-        console.warn(
-          `Funkwhale audio file not accessible: ${response.status} ${response.statusText} for URL: ${fullUrl}`
-        );
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -483,6 +493,7 @@ export default class FunkwhalePlayer
       URL.revokeObjectURL(this.currentBlobUrl);
       this.currentBlobUrl = undefined;
     }
+    // eslint-disable-next-line no-param-reassign
     audioElement.src = src;
 
     if (src.startsWith("blob:")) {
@@ -498,14 +509,28 @@ export default class FunkwhalePlayer
     }
   };
 
+  pauseAudio = (): void => {
+    const audioElement = this.audioRef.current;
+    if (audioElement && !audioElement.paused) {
+      audioElement.pause();
+    }
+  };
+
   render() {
     const { show } = this.props;
+    const { currentTrack } = this.state;
+    const artworkUrl = this.getTrackArtworkUrl(currentTrack);
 
     return (
       <div className={`funkwhale-player ${show ? "" : "hidden"}`}>
         <audio ref={this.audioRef} crossOrigin="anonymous" preload="metadata">
           <track kind="captions" />
         </audio>
+        {artworkUrl && (
+          <div>
+            <img alt="coverart" className="img-fluid" src={artworkUrl} />
+          </div>
+        )}
       </div>
     );
   }

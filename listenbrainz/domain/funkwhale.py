@@ -55,7 +55,15 @@ class FunkwhaleService:
             'funkwhale_server_id': server['id']
         }
         if refresh and self.user_oauth_token_has_expired(user):
-            user = self.refresh_access_token(user_id, host_url, user['refresh_token'])
+            try:
+                current_app.logger.debug(f"Refreshing expired Funkwhale token for user {user_id}")
+                user = self.refresh_access_token(user_id, host_url, user['refresh_token'])
+            except ExternalServiceInvalidGrantError:
+                current_app.logger.warning(f"Funkwhale token refresh failed - user {user_id} revoked access")
+                return None
+            except Exception as e:
+                current_app.logger.error(f"Funkwhale token refresh failed for user {user_id}: {e}")
+                return None
         return user
 
     def add_new_user(self, user_id: int, host_url: str, token: dict, client_id: str, client_secret: str, scopes: str) -> bool:
@@ -145,6 +153,7 @@ class FunkwhaleService:
         )
         token_url = f"{host_url}/api/v1/oauth/token/"
         try:
+            current_app.logger.debug(f"Attempting to refresh Funkwhale token for user {user_id} at {host_url}")
             token = oauth.refresh_token(
                 token_url,
                 client_secret=client_secret,
@@ -152,16 +161,20 @@ class FunkwhaleService:
                 include_client_id=True
             )
         except InvalidGrantError as e:
+            current_app.logger.warning(f"Funkwhale token refresh failed - invalid grant for user {user_id}: {e}")
             raise ExternalServiceInvalidGrantError("User revoked access") from e
         except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"Funkwhale token refresh network error for user {user_id}: {e}")
             raise ExternalServiceAPIError(f"Could not connect to Funkwhale server: {str(e)}")
+        
         access_token = token['access_token']
-        if "refresh_token" in token:
-            refresh_token = token['refresh_token']
+        new_refresh_token = token.get('refresh_token', refresh_token)
         expires_at = int(time.time()) + token['expires_in']
         from datetime import timezone
         token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
-        db_funkwhale.update_token(user_id, server['id'], access_token, refresh_token, token_expiry_datetime)
+        
+        current_app.logger.debug(f"Successfully refreshed Funkwhale token for user {user_id}, expires at {token_expiry_datetime}")
+        db_funkwhale.update_token(user_id, server['id'], access_token, new_refresh_token, token_expiry_datetime)
         return self.get_user(user_id, host_url)
 
     def revoke_user(self, user_id: int, host_url: str):

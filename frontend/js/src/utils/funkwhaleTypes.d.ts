@@ -14,6 +14,13 @@ declare type FunkwhaleTrack = {
     name: string;
     mbid?: string;
   };
+  artist_credit?: Array<{
+    artist: {
+      id: number;
+      name: string;
+      mbid?: string;
+    };
+  }>;
   album?: {
     id: number;
     title: string;
@@ -28,6 +35,7 @@ declare type FunkwhaleTrack = {
   duration: number;
   position?: number;
   mbid?: string;
+  is_playable?: boolean;
   creation_date: string;
   modification_date: string;
 };

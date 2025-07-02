@@ -259,18 +259,15 @@ def refresh_service_token(service_name: str):
         if not host_url:
             raise APIBadRequest("host_url is required for Funkwhale token refresh")
         
-        user = service.get_user(current_user.id, host_url)
-        if not user:
-            raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
-        
-        if service.user_oauth_token_has_expired(user):
-            try:
-                user = service.refresh_access_token(current_user.id, host_url, user["refresh_token"])
-            except ExternalServiceInvalidGrantError:
-                raise APIForbidden("User has revoked authorization to Funkwhale")
-            except Exception:
-                current_app.logger.error("Unable to refresh Funkwhale token:", exc_info=True)
-                raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
+        try:
+            user = service.get_user(current_user.id, host_url, refresh=True)
+            if not user:
+                raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
+        except ExternalServiceInvalidGrantError:
+            raise APIForbidden("User has revoked authorization to Funkwhale")
+        except Exception:
+            current_app.logger.error("Unable to refresh Funkwhale token:", exc_info=True)
+            raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
     else:
         user = service.get_user(current_user.id)
         if not user:
