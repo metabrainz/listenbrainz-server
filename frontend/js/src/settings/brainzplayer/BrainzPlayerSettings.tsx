@@ -6,13 +6,13 @@ import {
   faSoundcloud,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
+import { faArchive, faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
-import { faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -50,6 +50,11 @@ export const dataSourcesInfo = {
     icon: faFunkwhale,
     color: "#009FE3",
   },
+  internetArchive: {
+    name: "Internet Archive",
+    icon: faArchive,
+    color: "#6c757d",
+  },
 } as const;
 
 export type DataSourceKey = keyof typeof dataSourcesInfo;
@@ -61,6 +66,7 @@ export const defaultDataSourcesPriority = [
   "soundcloud",
   "funkwhale",
   "youtube",
+  "internetArchive",
 ] as DataSourceKey[];
 
 function BrainzPlayerSettings() {
@@ -185,6 +191,8 @@ function BrainzPlayerSettings() {
     currentUser?.auth_token,
     userPreferences,
   ]);
+
+  const internetArchivePlayerRef = React.useRef<any>(null);
 
   return (
     <>

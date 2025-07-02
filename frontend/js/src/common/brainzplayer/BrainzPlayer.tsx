@@ -1,5 +1,5 @@
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { faPlayCircle, faArchive } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   has as _has,
@@ -32,7 +32,9 @@ import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
 import FunkwhalePlayer from "./FunkwhalePlayer";
+import InternetArchivePlayer from "./InternetArchivePlayer";
 import {
+  dataSourcesInfo,
   DataSourceKey,
   defaultDataSourcesPriority,
 } from "../../settings/brainzplayer/BrainzPlayerSettings";
@@ -59,6 +61,8 @@ export type DataSourceTypes =
   | SoundcloudPlayer
   | AppleMusicPlayer
   | FunkwhalePlayer;
+  | AppleMusicPlayer
+  | InternetArchivePlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -234,14 +238,18 @@ export default function BrainzPlayer() {
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
     youtubeEnabled && "youtube",
-  ].filter(Boolean) as Array<DataSourceKey>;
+    true && "internetArchive",
+  ].filter(Boolean) as Array<DataSourceKey | "internetArchive">;
 
   // Combine saved priority list and default list to add any new music service at the end
   // then filter out disabled datasources (new ones will be enabled by default)
-  const sortedDataSources = union(
-    dataSourcesPriority,
+  const sortedDataSources = union(dataSourcesPriority
+    ,
     defaultDataSourcesPriority
-  ).filter((key) => enabledDataSources.includes(key));
+  ).filter((key) => enabledDataSources.includes(key))
+    .concat(
+      enabledDataSources.includes("internetArchive") ? ["internetArchive"] : []
+    );
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
@@ -249,6 +257,7 @@ export default function BrainzPlayer() {
   const soundcloudPlayerRef = React.useRef<SoundcloudPlayer>(null);
   const appleMusicPlayerRef = React.useRef<AppleMusicPlayer>(null);
   const funkwhalePlayerRef = React.useRef<FunkwhalePlayer>(null);
+  const internetArchivePlayerRef = React.useRef<InternetArchivePlayer>(null);
   const dataSourceRefs: Array<React.RefObject<
     DataSourceTypes
   >> = React.useMemo(() => {
@@ -266,6 +275,9 @@ export default function BrainzPlayer() {
           break;
         case "appleMusic":
           dataSources.push(appleMusicPlayerRef);
+          break;
+        case "internetArchive":
+          dataSources.push(internetArchivePlayerRef);
           break;
         case "funkwhale":
           dataSources.push(funkwhalePlayerRef);
@@ -1205,6 +1217,28 @@ export default function BrainzPlayer() {
             handleSuccess={handleSuccess}
           />
         )}
+
+        {/* Add this line for Internet Archive */}
+        <InternetArchivePlayer
+          show={
+            brainzPlayerContextRef.current.isActivated &&
+            dataSourceRefs[
+              brainzPlayerContextRef.current.currentDataSourceIndex
+            ]?.current instanceof InternetArchivePlayer
+          }
+          ref={internetArchivePlayerRef}
+          playerPaused={brainzPlayerContextRef.current.playerPaused}
+          onPlayerPausedChange={playerPauseChange}
+          onProgressChange={progressChange}
+          onDurationChange={durationChange}
+          onTrackInfoChange={throttledTrackInfoChange}
+          onTrackEnd={playNextTrack}
+          onTrackNotFound={failedToPlayTrack}
+          handleError={handleError}
+          handleWarning={handleWarning}
+          handleSuccess={handleSuccess}
+          onInvalidateDataSource={invalidateDataSource}
+        />
       </BrainzPlayerUI>
     </div>
   );
