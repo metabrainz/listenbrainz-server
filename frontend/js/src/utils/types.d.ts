@@ -695,7 +695,7 @@ declare type BrainzPlayerSettings = {
   appleMusicEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic"
+    "spotify" | "youtube" | "soundcloud" | "appleMusic" | "internetArchive"
   >;
 };
 
