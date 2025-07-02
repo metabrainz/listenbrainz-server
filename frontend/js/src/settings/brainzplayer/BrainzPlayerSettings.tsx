@@ -101,30 +101,6 @@ function BrainzPlayerSettings() {
     userPreferences?.brainzplayer?.dataSourcesPriority ??
       defaultDataSourcesPriority
   );
-  // >(() => {
-  //   const savedPriority = userPreferences?.brainzplayer?.dataSourcesPriority;
-
-  //   // If no saved preferences, use default
-  //   if (!savedPriority) {
-  //     return defaultDataSourcesPriority;
-  //   }
-
-  //   // Ensure all data sources from defaultDataSourcesPriority are included
-  //   // This handles cases where new data sources (like Funkwhale) were added after user saved preferences
-  //   const migrated = [...savedPriority];
-
-  //   // Add any missing data sources at the end
-  //   defaultDataSourcesPriority.forEach((source) => {
-  //     if (!migrated.includes(source)) {
-  //       migrated.push(source);
-  //     }
-  //   });
-
-  //   // Remove any data sources that no longer exist
-  //   return migrated.filter((source) =>
-  //     defaultDataSourcesPriority.includes(source)
-  //   );
-  // });
 
   const moveDataSource = (evt: any) => {
     const { newIndex, oldIndex } = evt;

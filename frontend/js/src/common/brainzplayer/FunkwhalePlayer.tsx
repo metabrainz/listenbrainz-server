@@ -505,7 +505,7 @@ export default class FunkwhalePlayer
     const { volume = 100 } = this.props;
     const audioElement = this.audioRef.current;
     if (audioElement) {
-      audioElement.volume = volume / 100;
+      audioElement.volume = (volume ?? 100) / 100;
     }
   };
 
