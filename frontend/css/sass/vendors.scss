@@ -1,7 +1,7 @@
 @import "react-toastify/dist/ReactToastify";
 @import "highlight.js/styles/github";
 // Import Swiper styles
-@import "swiper/scss";
-@import "swiper/scss/navigation";
-@import "swiper/scss/effect-coverflow";
-@import "swiper/scss/effect-cube";
+@import "swiper/swiper";
+@import "swiper/modules/navigation";
+@import "swiper/modules/effect-coverflow";
+@import "swiper/modules/effect-cube";
