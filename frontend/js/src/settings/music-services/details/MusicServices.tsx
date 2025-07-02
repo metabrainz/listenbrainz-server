@@ -20,11 +20,13 @@ type MusicServicesLoaderData = {
   current_soundcloud_permissions: string;
   current_apple_permissions: string;
   current_lastfm_permissions: string;
-  current_librefm_permissions: string;
+  current_funkwhale_permission: string;
+  funkwhale_host_urls: string[];
   current_lastfm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
   };
+  current_librefm_permissions: string;
   current_librefm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
@@ -32,9 +34,13 @@ type MusicServicesLoaderData = {
 };
 
 export default function MusicServices() {
-  const { spotifyAuth, soundcloudAuth, critiquebrainzAuth } = React.useContext(
-    GlobalAppContext
-  );
+  const {
+    spotifyAuth,
+    soundcloudAuth,
+    critiquebrainzAuth,
+    currentUser,
+    funkwhaleAuth,
+  } = React.useContext(GlobalAppContext);
 
   const loaderData = useLoaderData() as MusicServicesLoaderData;
 
@@ -46,24 +52,39 @@ export default function MusicServices() {
     soundcloud: loaderData.current_soundcloud_permissions,
     appleMusic: loaderData.current_apple_permissions,
     lastfm: loaderData.current_lastfm_permissions,
+    funkwhale: loaderData.current_funkwhale_permission,
     librefm: loaderData.current_librefm_permissions,
   });
+
+  const [funkwhaleHostUrl, setFunkwhaleHostUrl] = React.useState("");
+  const [
+    connectedFunkwhaleServers,
+    setConnectedFunkwhaleServers,
+  ] = React.useState<string[]>(loaderData.funkwhale_host_urls || []);
 
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
   ) => {
     try {
-      const response = await fetch(
-        `/settings/music-services/${serviceName}/disconnect/`,
-        {
-          method: "POST",
-          body: JSON.stringify({ action: newValue }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const fetchUrl = `/settings/music-services/${serviceName}/disconnect/`;
+      let fetchBody;
+      const fetchHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (serviceName === "funkwhale" && newValue === "disable") {
+        fetchBody = undefined;
+        fetchHeaders.Authorization = `Token ${currentUser?.auth_token}`;
+      } else {
+        fetchBody = JSON.stringify({ action: newValue });
+      }
+
+      const response = await fetch(fetchUrl, {
+        method: "POST",
+        body: fetchBody,
+        headers: fetchHeaders,
+      });
 
       if (newValue === "disable") {
         toast.success(
@@ -93,6 +114,10 @@ export default function MusicServices() {
             if (critiquebrainzAuth) critiquebrainzAuth.access_token = undefined;
             break;
           // lastfm and librefm state is now managed in the LFMMusicServicePermissions component
+          case "funkwhale":
+            setFunkwhaleHostUrl("");
+            setConnectedFunkwhaleServers([]);
+            break;
           default:
             break;
         }
@@ -176,6 +201,104 @@ export default function MusicServices() {
   };
 
   // Last.FM and Libre.FM connection handling is now managed in c
+
+  const handleFunkwhaleConnect = async (
+    evt: React.FormEvent<HTMLFormElement>
+  ) => {
+    evt.preventDefault();
+    try {
+      if (!funkwhaleHostUrl) {
+        throw Error("Funkwhale server URL is required");
+      }
+
+      const response = await fetch(
+        `/settings/music-services/funkwhale/connect/`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            host_url: funkwhaleHostUrl,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${currentUser?.auth_token}`,
+          },
+        }
+      );
+
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        throw Error("Server returned non-JSON response");
+      }
+
+      if (response.ok) {
+        if (data.url) {
+          // Store host URL in session storage before redirect
+          sessionStorage.setItem("funkwhale_host_url", funkwhaleHostUrl);
+          // Redirect to Funkwhale authorization page
+          window.location.href = data.url;
+        } else {
+          throw Error("No authorization URL received from server");
+        }
+      } else if (data?.error) {
+        throw Error(data.error);
+      } else {
+        throw Error(`Server error: ${response.status} ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Funkwhale connection error:", error);
+      toast.error(
+        <ToastMsg
+          title="Failed to connect to Funkwhale"
+          message={error.toString()}
+        />
+      );
+    }
+  };
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const funkwhaleError = params.get("error");
+    const funkwhaleSuccess = params.get("success");
+
+    if (funkwhaleSuccess === "Successfully connected to Funkwhale") {
+      // Get host URL from session storage
+      const hostUrl = sessionStorage.getItem("funkwhale_host_url");
+      if (hostUrl) {
+        setFunkwhaleHostUrl(hostUrl);
+        setConnectedFunkwhaleServers((prev) => [...prev, hostUrl]);
+        sessionStorage.removeItem("funkwhale_host_url"); // Clean up
+      }
+      toast.success(
+        <ToastMsg
+          title="Success"
+          message="Successfully connected to Funkwhale!"
+        />
+      );
+      setPermissions((prev) => ({ ...prev, funkwhale: "listen" }));
+      // Clear the query parameters from the URL
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + window.location.hash
+      );
+    } else if (funkwhaleError) {
+      toast.error(
+        <ToastMsg
+          title="Funkwhale Connection Error"
+          message={decodeURIComponent(funkwhaleError)}
+        />
+      );
+      // Clear the query parameters from the URL
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + window.location.hash
+      );
+    }
+  }, []);
 
   return (
     <>
@@ -398,6 +521,91 @@ export default function MusicServices() {
                 />
               </form>
             </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Funkwhale</h3>
+          </div>
+          <div className="card-body">
+            <p>
+              Connect to your Funkwhale server to play music on ListenBrainz.
+            </p>
+            <div
+              className="alert alert-warning alert-dismissible fade show"
+              role="alert"
+            >
+              <strong>Important:</strong> You must be already logged into your
+              Funkwhale server before connecting it to ListenBrainz.
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close"
+              />
+            </div>
+            <form onSubmit={handleFunkwhaleConnect}>
+              <div className="flex flex-wrap" style={{ gap: "1em" }}>
+                <div>
+                  <label className="form-label" htmlFor="funkwhaleHostUrl">
+                    Your Funkwhale server URL:
+                  </label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    id="funkwhaleHostUrl"
+                    name="funkwhaleHostUrl"
+                    placeholder={
+                      permissions.funkwhale === "listen"
+                        ? connectedFunkwhaleServers[0]
+                        : "https://funkwhale.funkwhale.test/"
+                    }
+                    value={funkwhaleHostUrl}
+                    onChange={(e) => setFunkwhaleHostUrl(e.target.value)}
+                    readOnly={permissions.funkwhale === "listen"}
+                  />
+                </div>
+              </div>
+              <br />
+              <div className="music-service-selection">
+                <button
+                  type="submit"
+                  className="music-service-option"
+                  style={{ width: "100%" }}
+                  disabled={permissions.funkwhale === "listen"}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id="funkwhale_listen"
+                    name="funkwhale"
+                    value="listen"
+                    checked={permissions.funkwhale === "listen"}
+                  />
+                  <label htmlFor="funkwhale_listen">
+                    <div className="title">
+                      {permissions.funkwhale === "listen"
+                        ? "Connected to"
+                        : "Connect to"}{" "}
+                      Funkwhale
+                    </div>
+                    <div className="details">
+                      Connect to your Funkwhale server to play music on
+                      ListenBrainz.
+                    </div>
+                  </label>
+                </button>
+                <ServicePermissionButton
+                  service="funkwhale"
+                  current={permissions.funkwhale}
+                  value="disable"
+                  title="Disable"
+                  details="You will not be able to listen to music on ListenBrainz using Funkwhale."
+                  handlePermissionChange={handlePermissionChange}
+                />
+              </div>
+            </form>
           </div>
         </div>
 
