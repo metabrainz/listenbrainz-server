@@ -481,7 +481,7 @@ export default function UserFeedPage() {
             text=""
             icon={faHandHoldingHeart}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               NiceModal.show(ThanksModal, {
                 original_event_id: event.id!,
@@ -497,7 +497,7 @@ export default function UserFeedPage() {
             text=""
             icon={faEye}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               hideEventMutation(event);
             }}
@@ -510,7 +510,7 @@ export default function UserFeedPage() {
             text=""
             icon={faEyeSlash}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               hideEventMutation(event);
             }}
@@ -523,7 +523,7 @@ export default function UserFeedPage() {
             text=""
             icon={faTrash}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               deleteEventMutation(event);
             }}

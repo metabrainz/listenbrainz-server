@@ -1,0 +1,51 @@
+/* Buttons */
+.btn-warning {
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}
+.btn-icon {
+  padding: 0.5em;
+  font-size: 1.5em;
+  height: 2em;
+  line-height: 1em;
+  border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+
+  & + * {
+    margin-left: 0.4em;
+  }
+}
+.btn-transparent {
+  --bs-btn-border-width: 0;
+  --bs-btn-color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.btn-rounded {
+  --bs-btn-border-radius: 3em;
+}
+@each $color, $value in $theme-colors {
+  .btn-outline-#{$color} {
+    --bs-btn-border-radius: #{$btn-border-radius-lg};
+  }
+}
+.btn.dropdown-toggle {
+  --bs-btn-border-radius: 4px;
+}
+
+.btn-link {
+  color: $listenbrainz-blue;
+  border-color: transparent;
+  text-decoration: none;
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+// Fix button height inside an input group
+.input-group > .btn {
+  margin: 0;
+}

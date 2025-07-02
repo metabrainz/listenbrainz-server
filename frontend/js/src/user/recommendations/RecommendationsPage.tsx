@@ -282,7 +282,7 @@ export default function RecommendationsPage() {
         {isLoggedIn && (
           <button
             type="button"
-            className="btn btn-info btn-rounded btn-sm"
+            className="btn btn-info btn-rounded"
             onClick={copyPlaylist}
           >
             <FontAwesomeIcon icon={faSave} title="Save to my playlists" />

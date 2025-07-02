@@ -39,8 +39,7 @@ module.exports = {
     customExportConditions: [""],
   },
   moduleNameMapper: {
-    "react-markdown":
-      "<rootDir>/node_modules/react-markdown/react-markdown.min.js",
+    "react-markdown": "<rootDir>/frontend/js/tests/__mocks__/react-markdown.tsx",
     "^localforage$": "<rootDir>/frontend/js/tests/__mocks__/localforage.ts",
     "d3-interpolate":
       "<rootDir>/node_modules/d3-interpolate/dist/d3-interpolate.min.js",

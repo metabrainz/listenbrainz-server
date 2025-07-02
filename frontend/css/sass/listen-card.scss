@@ -1,0 +1,384 @@
+@use "sass:map";
+
+.listen-card {
+  &.card {
+    height: initial;
+  }
+  margin-bottom: $listen-card-margin-bottom;
+  a:focus,
+  a:hover {
+    text-decoration: underline;
+  }
+
+  &.playing-now {
+    background-color: rgba(255, 252, 202, 0.3) !important ;
+  }
+
+  &.current-listen {
+    background-color: rgba(217, 237, 247, 0.3) !important ;
+  }
+
+  > * {
+    padding: 10px;
+    @media (min-width: map.get($grid-breakpoints, "sm")) {
+      padding: 15px;
+    }
+  }
+
+  .dropdown-toggle {
+    &::after {
+      display: none !important;
+    }
+  }
+
+  /** Special styles for compact size cards (i.e. charts etc.) **/
+  &.compact {
+    margin: 0;
+    margin-bottom: 3px;
+    > * {
+      padding: 10px;
+    }
+    .main-content {
+      .right-section {
+        flex: 0;
+        .listen-controls {
+          flex-grow: 0;
+          margin: unset;
+        }
+      }
+      .listen-thumbnail {
+        padding: 0;
+        margin: -10px;
+        margin-right: 10px;
+        width: 56px;
+        min-width: 56px;
+        height: 56px;
+        .not-mapped,
+        .add-cover-art,
+        .cover-art-fallback {
+          min-width: 56px;
+        }
+        .add-cover-art > * {
+          height: auto;
+        }
+      }
+    }
+  }
+  .additional-content {
+    border-top: 1px solid $hr-border-color;
+    width: 100%;
+    .review {
+      font-style: italic;
+    }
+    .sent-to {
+      padding-bottom: 10px;
+    }
+  }
+  &.has-additional-content .main-content .listen-thumbnail img {
+    border-bottom-left-radius: 0;
+  }
+
+  .main-content {
+    display: flex;
+    flex-wrap: wrap;
+
+    > div {
+      display: flex;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .listen-thumbnail {
+      flex: 0;
+      padding: 0;
+      margin: -10px;
+      margin-right: 1em;
+      width: $cover-art-thumbnail-size;
+      min-width: $cover-art-thumbnail-size;
+      > *:not(.track-position) {
+        height: 100%;
+        width: inherit;
+        aspect-ratio: 1/1;
+      }
+      > .track-position {
+        padding-left: 1.5em;
+        padding-right: 0.5em;
+      }
+      .add-cover-art,
+      .not-mapped,
+      .cover-art-fallback {
+        background-color: $gray-lighter;
+        min-width: $cover-art-thumbnail-size;
+        height: inherit;
+        display: flex;
+        align-items: center;
+        color: #cbcbcb;
+        justify-content: center;
+        > * {
+          font-size: $cover-art-thumbnail-size / 2;
+          max-width: $cover-art-thumbnail-size / 2;
+          aspect-ratio: unset;
+          border-radius: unset;
+          height: auto;
+        }
+      }
+      img {
+        height: inherit;
+        width: inherit;
+        object-fit: cover;
+        border-radius: 7px 0 0 7px;
+      }
+      @media (min-width: map.get($grid-breakpoints, "sm")) {
+        margin: -15px;
+        margin-right: 1em;
+      }
+      @media (min-width: map.get($grid-breakpoints, "sm")) {
+        margin: -15px;
+        margin-right: 1em;
+      }
+      &:not(:first-child) img {
+        // If there is an element before the image, remove the rounded corners
+        border-radius: 0;
+      }
+    }
+
+    .listen-time {
+      font-style: italic;
+      font-size: 80%;
+      color: $gray-500;
+      white-space: nowrap;
+      text-align: end;
+    }
+    .username-and-timestamp {
+      flex-direction: column;
+      justify-content: center;
+      padding-right: 1em;
+      align-items: flex-end;
+    }
+
+    .listen-details {
+      flex-direction: column;
+      line-height: 1.3em;
+      overflow: hidden;
+
+      .username-and-timestamp {
+        padding-right: initial;
+      }
+    }
+
+    .title-duration {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      > *:not(:first-child) {
+        margin-left: 0.5rem;
+      }
+    }
+
+    .right-section {
+      flex-wrap: wrap-reverse;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0;
+
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
+        flex: 0;
+      }
+
+      .listen-controls {
+        margin-left: 1.5em;
+      }
+      > *:not(.dropdown-menu) {
+        min-width: 1.5em;
+        display: flex;
+      }
+    }
+
+    .listen-controls {
+      flex-wrap: nowrap;
+      justify-content: space-around;
+      position: relative; // This is need for dropdown menu positioning
+      margin-left: auto; // align flexbox item at flex-end
+      color: $gray-600;
+
+      > button,
+      > .btn {
+        align-self: center;
+        stroke-width: 40px;
+        font-size: 18px;
+        margin: 0 6px;
+        width: 1em;
+        padding: 0;
+        &:hover {
+          color: #46433a;
+        }
+      }
+
+      a {
+        word-break: break-all;
+      }
+
+      .love,
+      .hate {
+        color: transparent;
+        stroke: $gray-600;
+        &:hover {
+          color: transparent;
+        }
+      }
+
+      .love {
+        &:hover {
+          stroke: $love;
+        }
+        &.loved {
+          stroke: transparent;
+          color: $love;
+        }
+      }
+
+      .hate {
+        &:hover {
+          stroke: $hate;
+        }
+        &.hated {
+          stroke: transparent;
+          color: $hate;
+        }
+      }
+
+      .dropdown-menu {
+        min-width: 140px;
+        border-radius: 4px;
+        padding: 10px 0px;
+        width: 260px;
+
+        > a,
+        > button {
+          display: block; // necessary for <a> tags
+          text-decoration: none;
+          width: 100%;
+          background: none;
+          color: $body-color;
+          border: none;
+          padding: 5px 20px;
+          font: inherit;
+          cursor: pointer;
+          outline: inherit;
+          text-align: left;
+
+          &:hover {
+            color: #ffffff;
+            background-color: $orange;
+          }
+        }
+      }
+
+      .badge {
+        flex-shrink: 0;
+        align-self: center;
+        border-radius: 10px;
+      }
+    }
+    .recommendation-controls {
+      flex: 0 140px;
+
+      &.open .dropdown-menu {
+        display: flex;
+        justify-content: space-around;
+
+        > * {
+          flex: 1;
+          text-align: center;
+        }
+      }
+
+      .btn {
+        font-size: 1em;
+        color: $blue;
+        background-color: white;
+
+        &:hover {
+          background-color: $blue;
+          color: white;
+        }
+      }
+
+      .hate {
+        // Yes, this says love for the hate class, that is expect4ed
+        color: $love;
+      }
+
+      .dislike {
+        color: #f5873d;
+      }
+
+      .like {
+        color: #b0e111;
+      }
+
+      .love {
+        color: #32cd32;
+      }
+
+      .recommendation-icon {
+        > span {
+          stroke-width: 40px;
+          font-size: 18px;
+          flex: 1;
+          text-align: center;
+          margin: 0 0.4em;
+        }
+
+        &:hover .off,
+        &.selected .off,
+        & .on {
+          display: none;
+        }
+
+        &:hover .on,
+        &.selected .on {
+          display: inline;
+        }
+      }
+    }
+
+    .listen-controls > .icon-only {
+      color: $gray-600;
+      width: 2em;
+      min-width: 2em;
+      margin-left: 0;
+      margin-right: 0.5em;
+      padding: 0;
+    }
+    .play-button {
+      color: $gray-600;
+      &.playing {
+        color: $orange;
+      }
+    }
+  }
+
+  &.deleted {
+    animation: deleted-animation 0.6s ease-in-out forwards;
+    transform-origin: center;
+  }
+
+  @keyframes deleted-animation {
+    0% {
+      opacity: 1;
+      transform: rotateX(0) scale(1);
+    }
+
+    40% {
+      opacity: 0.3;
+      transform: rotateX(40deg) scale(0.8);
+    }
+
+    100% {
+      margin-top: -40px;
+      margin-bottom: -28px;
+      transform: rotateX(90deg) scale(0.8, 0.4);
+    }
+  }
+}

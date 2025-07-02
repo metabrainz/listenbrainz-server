@@ -1,0 +1,44 @@
+.similarity-score {
+  &.regular {
+    .progress {
+      height: 15px;
+      width: 300px;
+    }
+  }
+
+  &.compact {
+    > * {
+      display: -webkit-inline-box;
+      display: inline-box;
+      margin-bottom: 0px;
+    }
+
+    .progress {
+      height: 7px;
+      width: 80px;
+      margin-right: 5px;
+    }
+  }
+
+  .progress {
+    box-shadow: none;
+    border-radius: 16px;
+    background-color: #fafafa;
+  }
+
+  .progress-bar {
+    border-radius: 16px;
+
+    &.red {
+      background-color: $red;
+    }
+
+    &.orange {
+      background-color: $orange;
+    }
+
+    &.purple {
+      background-color: $blue;
+    }
+  }
+}

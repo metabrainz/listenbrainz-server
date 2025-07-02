@@ -1,0 +1,199 @@
+#AddListenModal {
+  .add-listen {
+    border-radius: 15px;
+    height: 30px;
+    margin-right: 15px;
+    outline: none;
+  }
+
+  .add-listen-header {
+    display: flex;
+    margin-bottom: 1em;
+  }
+
+  .option-active {
+    background-color: $blue;
+    color: $white;
+  }
+
+  .option-inactive {
+    background-color: $pearl;
+    border: 2px solid $gray-600;
+    color: $gray-600;
+  }
+  .add-track-field {
+    margin-top: 15px;
+    padding: 5px 20px;
+  }
+
+  .add-track-pill {
+    display: inline-block;
+    background-color: $white;
+    border-radius: 7px;
+    margin-top: 10px;
+    width: 100%;
+    border: 2px solid;
+    outline: none;
+    > div {
+      display: flex;
+      margin: 5px;
+      justify-content: space-between;
+      // We want pills to be always 32px height or more
+      // Texts are 10px, hence minimum height of 22px here
+      min-height: 22px;
+      span {
+        color: $black;
+        margin-top: auto;
+        margin-bottom: auto;
+        margin-left: 6px;
+        margin-right: 6px;
+        font-style: normal;
+      }
+      button {
+        background-color: $white;
+        color: $black;
+        border: none;
+        border-radius: 100px;
+      }
+    }
+  }
+  .track-info {
+    > * {
+      width: 100%;
+      margin: 10px 0px;
+      &.content {
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+    }
+    .header-with-line {
+      gap: 5px;
+      margin-bottom: 0.5em;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+  }
+  .cross-details {
+    > button {
+      border: 0px;
+      background-color: $blue;
+      color: $white;
+      margin: 5px;
+    }
+  }
+  .new-details {
+    margin: 20px 0px;
+    margin-right: 10px;
+    background-color: $blue;
+    width: 100%;
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
+    display: flex;
+  }
+  .recording-heading {
+    margin: 0px 15px;
+    > h5 {
+      color: $white;
+      font-weight: 700;
+    }
+  }
+  .single-entity {
+    display: flex;
+    margin: auto 15px;
+    > h6 {
+      color: $white;
+    }
+  }
+  .entity-heading {
+    font-weight: 700;
+    margin: 0px;
+  }
+  .entity-details {
+    font-size: 12px;
+    margin: 0px 18px;
+  }
+  .cover-art-img {
+    margin: 20px 10px;
+    margin-right: 0px;
+    > img {
+      width: 98px;
+      height: 98px;
+      border-bottom-left-radius: 12px;
+      border-top-left-radius: 12px;
+    }
+  }
+
+  .timestamp {
+    margin-top: 1em;
+    > h5 {
+      font-weight: 700;
+      font-size: 16px;
+    }
+  }
+  .timestamp-active {
+    background-color: $blue;
+    color: $white;
+  }
+  .timestamp-inactive {
+    background-color: $white;
+    border: 2px solid $gray-600;
+    color: $black;
+  }
+
+  .timestamp-entities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    align-items: flex-end;
+    .timestamp-date-picker {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .pill {
+      min-width: 7em;
+      margin: 0;
+    }
+    label + label {
+      margin-left: 1.3em;
+    }
+  }
+  .add-album-track {
+    display: flex;
+    gap: 1em;
+    position: relative;
+    .track-number {
+      align-self: end;
+    }
+    input[type="checkbox"] {
+      margin: 0;
+    }
+    .duration {
+      margin-left: auto;
+      padding: 0 0.4em;
+    }
+  }
+  .release-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, max-content));
+  }
+  .default-duration {
+    &.heading {
+      right: 1.7em;
+      z-index: 1;
+    }
+    margin: 0;
+    position: absolute;
+    width: initial;
+    right: 0;
+    background-color: $cream;
+  }
+  // Chevron indicator
+  #select-release {
+    > svg {
+      transition: rotate 0.4s ease-in-out;
+      rotate: -180deg;
+    }
+    &.collapsed > svg {
+      rotate: 0deg;
+    }
+  }
+}

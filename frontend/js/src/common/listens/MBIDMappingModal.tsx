@@ -189,7 +189,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
               compact
               additionalActions={
                 <ListenControl
-                  buttonClassName="btn-transparent"
+                  buttonClassName="btn btn-transparent"
                   text=""
                   title="Reset"
                   icon={faTimesCircle}

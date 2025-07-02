@@ -1,0 +1,80 @@
+.search-bar {
+  position: relative;
+  margin-top: 1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  max-width: 400px;
+  align-items: stretch;
+  input,
+  button {
+    background-color: $nav-tabs-border-color;
+    color: $nav-link-color;
+    border: none;
+  }
+  input {
+    border-radius: 33px 0 0 33px;
+    height: auto;
+    font-size: 1.8rem;
+    &:focus {
+      box-shadow: inset 3px 2px 4px $gray-500;
+      & ~ button {
+        // Adjacent sibling button
+        box-shadow: inset -3px 2px 4px $gray-500;
+      }
+    }
+  }
+  button {
+    font-size: 1.2em;
+    border-radius: 0 33px 33px 0;
+    padding-right: 0.5em;
+  }
+}
+
+.search-result-header {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.table-strong-header {
+  thead {
+    border-bottom: 2px solid;
+  }
+}
+
+.search-dropdown {
+  display: block;
+  position: absolute;
+  right: 0;
+  max-width: 100%;
+  z-index: 6;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
+  list-style: none;
+  border: 1px solid $hr-border-color; // IE8 fallback
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: $white;
+  max-height: 102px;
+  overflow-y: auto;
+
+  // Links within the dropdown menu
+  > a,
+  > button {
+    display: block; // necessary for <a> tags
+    width: 100%;
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 5px 20px;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+    text-align: left;
+
+    &:hover {
+      color: $white;
+      background-color: $orange;
+    }
+  }
+}

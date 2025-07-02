@@ -1,0 +1,52 @@
+.track-search-dropdown,
+.album-search-dropdown,
+.dropdown-search-suggestions {
+  display: none; // hidden by default
+  position: absolute;
+  width: calc(100% - 55px);
+  left: 0;
+  top: 33px;
+  z-index: 6;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
+  list-style: none;
+  border: 1px solid $hr-border-color; // IE8 fallback
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: $white;
+  overflow-y: auto;
+  border-radius: 0;
+  padding: 0;
+  cursor: pointer;
+
+  // Options within the dropdown menu
+  > option {
+    display: block;
+    width: 100%;
+    outline: inherit;
+    padding: 5px 20px;
+    font: inherit;
+    text-align: left;
+    background: none;
+    color: inherit;
+    border: none;
+    cursor: pointer;
+
+    &::after {
+      content: attr(data-release-info);
+      display: inline-block;
+      margin-left: 0.5em;
+      color: $gray-500;
+      font-size: small;
+    }
+
+    &:hover,
+    &:focus {
+      color: $white;
+      background-color: $blue;
+    }
+  }
+}
+.track-search:focus-within .track-search-dropdown,
+.album-search:focus-within .album-search-dropdown,
+.dropdown-search:focus-within .dropdown-search-suggestions {
+  display: block; // show when parent container is focused
+}
