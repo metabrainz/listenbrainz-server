@@ -131,7 +131,7 @@ $youtube-resize-transition: height 0.25s ease-out;
       transition: all 0.5s ease;
       background: none;
       &:hover {
-        color: darken($primary-color, 10%);
+        color: color.adjust($primary-color, $lightness: -10%);
       }
       &.disabled {
         color: $gray-600;
@@ -164,7 +164,7 @@ $youtube-resize-transition: height 0.25s ease-out;
     .artist-name {
       font-size: 0.8em;
       letter-spacing: 1.5px;
-      color: lighten($dark-turquoise, 15%);
+      color: color.adjust($dark-turquoise, $lightness: 15%);
       margin: 5px 0;
     }
 

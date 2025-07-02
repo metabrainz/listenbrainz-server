@@ -11,7 +11,7 @@
   margin-top: 0;
   font-size: 2rem;
   text-align: center;
-  color: lighten($asphalt, 20%);
+  color: color.adjust($asphalt, $lightness: 20%);
   user-select: none;
 }
 

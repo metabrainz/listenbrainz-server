@@ -43,10 +43,10 @@
       border-color: color.scale($blue, $lightness: 35%);
     }
     .listen-time {
-      color: darken(white, 10%);
+      color: color.adjust($white, $lightness: -10%);
     }
     .play-button {
-      color: darken(white, 10%);
+      color: color.adjust($white, $lightness: -10%);
     }
   }
 

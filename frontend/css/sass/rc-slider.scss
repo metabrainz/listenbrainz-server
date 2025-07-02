@@ -80,7 +80,7 @@ $border_top_color_1: $gray-700;
     box-shadow: none;
   }
   &:focus-visible {
-    border-color: lighten($purple, 10%);
+    border-color: color.adjust($purple, $lightness: 10%);
     box-shadow: 0 0 3px $purple;
   }
   &:active {
@@ -91,7 +91,7 @@ $border_top_color_1: $gray-700;
 }
 .rc-slider-handle-dragging.rc-slider-handle-dragging.rc-slider-handle-dragging {
   background-color: $purple;
-  border-color: lighten($purple, 10%);
+  border-color: color.adjust($purple, $lightness: 10%);
   box-shadow: 0 0 7px $purple;
 }
 .rc-slider-handle-click-focused {
@@ -115,7 +115,7 @@ $border_top_color_1: $gray-700;
   vertical-align: middle;
   cursor: pointer;
   &:hover {
-    color: lighten($blue, 10%);
+    color: color.adjust($blue, $lightness: 10%);
     font-weight: 700;
   }
 }

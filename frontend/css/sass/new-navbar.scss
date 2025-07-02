@@ -262,9 +262,12 @@ body {
         }
       }
       &.disabled {
-        background-color: darken($nav-tabs-background-color, 15%);
+        background-color: color.adjust(
+          $nav-tabs-background-color,
+          $lightness: -15%
+        );
         > a {
-          color: darken($nav-tabs-background-color, 35%);
+          color: color.adjust($nav-tabs-background-color, $lightness: -35%);
         }
       }
     }
