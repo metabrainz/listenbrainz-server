@@ -9,7 +9,7 @@
   "scripts": {
     "build:dev": "webpack --mode=development --watch --progress --color",
     "build:prod": "webpack --mode=production --no-watch --color",
-    "build:sass": "sass ./frontend/css/sass/main.scss > ./frontend/css/main.css ./frontend/css/sass/vendors.scss > ./frontend/css/vendors.css",
+    "build:sass": "sass --load-path=node_modules --no-error-css ./frontend/css/sass/main.scss:./frontend/dist/main.css ./frontend/css/sass/vendors.scss:./frontend/dist/vendors.css",
     "build:types": "tsc --emitDeclarationOnly",
     "build": "npm run build:dev",
     "lint:js": "eslint ./frontend/js/src --ext .js,.jsx,.ts,.tsx --fix --quiet",
