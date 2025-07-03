@@ -1,5 +1,4 @@
 import * as React from "react";
-import { mount } from "enzyme";
 
 import GlobalAppContext, {
   GlobalAppContextT,
@@ -7,6 +6,8 @@ import GlobalAppContext, {
 import ListenCountCard from "../../../src/common/listens/ListenCountCard";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import { render, screen } from "@testing-library/react";
+import { textContentMatcher } from "../../test-utils/rtl-test-utils";
 
 const user = {
   id: 1,
@@ -29,40 +30,78 @@ const globalContext: GlobalAppContextT = {
 };
 
 describe("ListenCountCard", () => {
+  const originalToLocaleString = Number.prototype.toLocaleString;
+  afterEach(() => {
+    // Restore toLocaleString after each test to avoid test pollution
+    Number.prototype.toLocaleString = originalToLocaleString;
+  });
   it("renders correctly when listen count is not zero", () => {
-    const wrapper = mount(<ListenCountCard user={user} listenCount={100} />);
-    expect(wrapper.getDOMNode()).toHaveTextContent(
-      "track_listener has listened to100songs so far"
-    );
+    render(<ListenCountCard user={user} listenCount={100} />);
+
+    expect(
+      screen.getByText(/track_listener has listened to/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(textContentMatcher(/100/))).toBeInTheDocument();
+    expect(screen.getByText(/songs so far/i)).toBeInTheDocument();
   });
+
   it("renders correctly when listen count is zero or undefined", () => {
-    const wrapper = mount(<ListenCountCard user={user} />);
-    expect(wrapper.getDOMNode()).toHaveTextContent(
-      "track_listener's listens counttrack_listener hasn't listened to any songs yet."
-    );
+    render(<ListenCountCard user={user} />);
+
+    // Check for the specific text displayed when no listens are present
+    expect(
+      screen.getByText(/track_listener's listens count/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/track_listener hasn't listened to any songs yet./i)
+    ).toBeInTheDocument();
   });
+
+  it("renders large numbers formatted with locale", () => {
+    // Force english locale
+    Number.prototype.toLocaleString = jest.fn(function (this: Number) {
+      const res = originalToLocaleString.call(this, "en");
+      console.log("res", res);
+      return res;
+    });
+    const { rerender } = render(
+      <ListenCountCard user={user} listenCount={100000} />
+    );
+    expect(screen.getByText(/100,000/)).toBeInTheDocument();
+
+    // Force Spanish locale and render again
+    Number.prototype.toLocaleString = jest.fn(function (this: Number) {
+      return originalToLocaleString.call(this, "es");
+    });
+    rerender(<ListenCountCard user={user} listenCount={100000} />);
+    expect(screen.getByText(/100\.000/)).toBeInTheDocument();
+  });
+
   it("renders user's name instead of 'You' when visiting another user's page", () => {
-    const wrapper = mount(
+    render(
       <GlobalAppContext.Provider value={globalContext}>
         <ListenCountCard user={user} listenCount={100} />
       </GlobalAppContext.Provider>
     );
-    const countCard = wrapper.find("#listen-count-card").first().children();
-    const cardDiv = countCard.children().first();
-    expect(cardDiv.html()).toEqual(
-      '<div data-testid="listen-count-card-content">track_listener has listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
-    );
+
+    // Assert that the user's name is present and "You" is not
+    expect(
+      screen.getByText(/track_listener has listened to/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/You have listened to/i)).not.toBeInTheDocument();
   });
+
   it("renders 'You' when on current user's page", () => {
-    const wrapper = mount(
+    render(
       <GlobalAppContext.Provider value={globalContext}>
         <ListenCountCard user={loggedInUser} listenCount={100} />
       </GlobalAppContext.Provider>
     );
-    const countCard = wrapper.find("#listen-count-card").first().children();
-    const cardDiv = countCard.children().first();
-    expect(cardDiv.html()).toEqual(
-      '<div data-testid="listen-count-card-content">You have listened to<hr>100<br><small class="text-muted">songs so far</small></div>'
-    );
+
+    // Assert that "You" is present and the user's name is not
+    expect(screen.getByText(/You have listened to/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/iliekcomputers has listened to/i)
+    ).not.toBeInTheDocument();
   });
 });
