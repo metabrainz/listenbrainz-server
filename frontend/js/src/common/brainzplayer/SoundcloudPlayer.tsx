@@ -414,7 +414,7 @@ export default class SoundcloudPlayer
     return (
       <div
         className={`soundcloud ${!show ? "hidden" : ""}`}
-        data-testid={`soundcloud ${!show ? "hidden" : ""}`}
+        data-testid="soundcloud"
       >
         <iframe
           id="soundcloud-iframe"
