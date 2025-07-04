@@ -13,16 +13,15 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 BATCH_SIZE = 100
 
-client_credentials_manager = SpotifyClientCredentials(
-        client_id=current_app.config['SPOTIFY_CLIENT_ID'],
-        client_secret=current_app.config['SPOTIFY_CLIENT_SECRET']
-)
-sp = spotipy.Spotify(auth_manager=client_credentials_manager)
+def initialize_spotify():
+    client_credentials_manager = SpotifyClientCredentials( client_id = current_app.config['SPOTIFY_CLIENT_ID'], client_secret = current_app.config['SPOTIFY_CLIENT_SECRET'])
+    sp = spotipy.Spotify(auth_manager = client_credentials_manager)
+    return sp
 
 def validate_spotify_listen(listen):
     return True # WIP
 
-def parse_spotify_listen(listen, db_conn, ts_conn):
+def parse_spotify_listen(listen, db_conn, ts_conn, sp):
 
     artist = listen.get('master_metadata_album_artist_name', '')
     track_name = listen.get('master_metadata_track_name', '')
@@ -95,7 +94,10 @@ def parse_spotify_listen(listen, db_conn, ts_conn):
     spotify_track_info = result.first()
     
     if not spotify_track_info:
-        spotify_track_info = spotify_web_api_track_info(spotify_track_id)
+        if not sp:
+            current_app.logger.error(f"Can't retrieve metadata for the track {track_name}")
+            return
+        spotify_track_info = spotify_web_api_track_info(sp, spotify_track_id)
         artists = spotify_track_info.get('artists')
         if artists:
           if artists[0].get('name'):
@@ -111,7 +113,7 @@ def parse_spotify_listen(listen, db_conn, ts_conn):
     
 
 
-def spotify_web_api_track_info(track_id):
+def spotify_web_api_track_info(sp, track_id):
     track = sp.track(track_id)
     return track
 
@@ -156,7 +158,7 @@ def process_spotify_zip_file(file_path):
 
 
 
-def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
+def import_listens(db_conn, ts_conn, sp, user_id: int, bg_task_metadata):
     user = db_user.get(db_conn, user_id)
     if user is None:
         current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
@@ -187,7 +189,7 @@ def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
                 return
             for listen in batch:
                 if validate_spotify_listen(listen):
-                    parsed_listen = parse_spotify_listen(listen, db_conn, ts_conn)
+                    parsed_listen = parse_spotify_listen(listen, db_conn, ts_conn, sp)
                     if not parsed_listen:
                         current_app.logger.error("Failed to parse the listen: ", listen)
                         continue
