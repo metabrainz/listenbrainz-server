@@ -10,6 +10,8 @@ type ImportListensLoaderData = {
   user_has_email: boolean;
 };
 
+function handleListensSubmit() {}
+
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
   const { user_has_email: userHasEmail } = data;
@@ -73,14 +75,76 @@ export default function ImportListens() {
         avoid duplicates, be sure to set the appropriate limit date and time.
       </p>
 
-      <h3>
-        Coming soon
-        <FontAwesomeIcon icon={faPersonDigging} size="sm" className="ms-2" />
-      </h3>
+      <h3 className="card-title">Import from Listening History Files</h3>
+      <br />
       <p>
-        We are currently working on this feature as a matter of high priority,
-        please stay tuned.
+        Migrate your listens from different streaming services to Listenbrainz!
       </p>
+      <div className="card">
+        <div className="card-body">
+          <form onSubmit={handleListensSubmit}>
+            <div
+              className="flex flex-wrap justify-content-center"
+              style={{ gap: "1em" }}
+            >
+              <div>
+                <label className="form-label" htmlFor="datetime">
+                  Choose a File:
+                </label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="filename"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label" htmlFor="datetime">
+                  Select Service:
+                </label>
+                <select className="form-select w-100">
+                  <option value="spotify">Spotify</option>
+                  <option value="listenbrainz">Listenbrainz</option>
+                  <option value="applemusic">Apple Music</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label" htmlFor="start-datetime">
+                  Start import from (optional):
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  name="ImportStartDatetime"
+                  title="Date and time to start import at"
+                />
+              </div>
+
+              <div>
+                <label className="form-label" htmlFor="end-datetime">
+                  End date for import (optional):
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  name="ImportStartDatetime"
+                  title="Date and time to end import at"
+                />
+              </div>
+
+              <div style={{ flex: 0, alignSelf: "end" }}>
+                <button type="submit" className="btn btn-success">
+                  Import Listens
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </>
   );
 }
