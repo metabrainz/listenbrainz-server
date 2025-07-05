@@ -566,43 +566,27 @@ def transform_artist_evolution_data(raw_data, stats_range):
     top_artists = sorted(artist_totals.items(), key=lambda x: x[1], reverse=True)[:5]
     top_artist_names = [artist[0] for artist in top_artists]
     
-    # Create ordered time units based on stats range
-    def get_ordered_time_units(time_units, stats_range):
-        unique_units = list(set(time_units))
-        
-        if stats_range == 'week':
-            # Order days of week
-            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            return [day for day in day_order if day in unique_units]
-        
-        elif stats_range == 'month':
-            # Order by day numbers (1-31)
-            return sorted(unique_units, key=lambda x: int(x))
-        
-        elif stats_range == 'year':
-            # Order by month names
-            month_order = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ]
-            return [month for month in month_order if month in unique_units]
-        
-        elif stats_range == 'all_time':
-            # Order by year numbers
-            return sorted(unique_units, key=lambda x: int(x))
-        
+    # Get all possible time units based on stats range
+    def get_all_time_units(stats_range):
+        if 'week' in stats_range:
+            return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        elif 'month' in stats_range:
+            return [str(i) for i in range(1, 32)]  # Days 1-31
+        elif 'year' in stats_range:
+            return ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December']
         else:
-            return sorted(unique_units)
+            existing_years = [item['time_unit'] for item in raw_data]
+            unique_years = sorted(list(set(existing_years)), key=lambda x: int(x))
+            return unique_years
+
+    all_time_units = get_all_time_units(stats_range)
     
-    ordered_time_units = get_ordered_time_units(list(grouped_by_time.keys()), stats_range)
-    
-    # Create the result list with only top 5 artists
     result = []
-    for time_unit in ordered_time_units:
+    for time_unit in all_time_units:
         time_data = grouped_by_time.get(time_unit, {})
         result_item = {}
         
-        # Only include top 5 artists
         for artist in top_artist_names:
             result_item[artist] = time_data.get(artist, 0)
         
@@ -611,7 +595,6 @@ def transform_artist_evolution_data(raw_data, stats_range):
     return result
 
 
-# Updated API endpoint
 @stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
 @crossdomain
 @ratelimit()
@@ -658,204 +641,15 @@ def get_artist_evolution_activity(user_name: str):
     
     # Validate user and get stats range
     user, stats_range = _validate_stats_user_params(user_name)
-    
-    # For now, using hardcoded data - replace with actual database call
-    # In the real implementation, this would be:
-    # raw_data = db_stats.get_artist_evolution_data(user.id, stats_range)
-    
-    # Sample data for all 7 days of the week
-    raw_data_example = [
-        # Monday
-        {"time_unit": "Monday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 145},
-        {"time_unit": "Monday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 120},
-        {"time_unit": "Monday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 98},
-        {"time_unit": "Monday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 85},
-        {"time_unit": "Monday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 72},
-        {"time_unit": "Monday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 45},
-        {"time_unit": "Monday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 38},
-        
-        # Tuesday
-        {"time_unit": "Tuesday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 132},
-        {"time_unit": "Tuesday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 158},
-        {"time_unit": "Tuesday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 104},
-        {"time_unit": "Tuesday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 92},
-        {"time_unit": "Tuesday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 68},
-        {"time_unit": "Tuesday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 52},
-        {"time_unit": "Tuesday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 41},
-        
-        # Wednesday
-        {"time_unit": "Wednesday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 167},
-        {"time_unit": "Wednesday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 143},
-        {"time_unit": "Wednesday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 87},
-        {"time_unit": "Wednesday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 76},
-        {"time_unit": "Wednesday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 89},
-        {"time_unit": "Wednesday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 48},
-        {"time_unit": "Wednesday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 55},
-        
-        # Thursday
-        {"time_unit": "Thursday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 124},
-        {"time_unit": "Thursday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 111},
-        {"time_unit": "Thursday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 115},
-        {"time_unit": "Thursday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 103},
-        {"time_unit": "Thursday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 94},
-        {"time_unit": "Thursday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 61},
-        {"time_unit": "Thursday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 43},
-        
-        # Friday
-        {"time_unit": "Friday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 189},
-        {"time_unit": "Friday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 176},
-        {"time_unit": "Friday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 156},
-        {"time_unit": "Friday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 134},
-        {"time_unit": "Friday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 118},
-        {"time_unit": "Friday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 73},
-        {"time_unit": "Friday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 67},
-        
-        # Saturday
-        {"time_unit": "Saturday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 198},
-        {"time_unit": "Saturday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 185},
-        {"time_unit": "Saturday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 172},
-        {"time_unit": "Saturday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 149},
-        {"time_unit": "Saturday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 126},
-        {"time_unit": "Saturday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 82},
-        {"time_unit": "Saturday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 71},
-        
-        # Sunday
-        {"time_unit": "Sunday", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 176},
-        {"time_unit": "Sunday", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 154},
-        {"time_unit": "Sunday", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 143},
-        {"time_unit": "Sunday", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 128},
-        {"time_unit": "Sunday", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 107},
-        {"time_unit": "Sunday", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 69},
-        {"time_unit": "Sunday", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 58},
-    ]
-    
-    raw_data_example = [
-    # January
-    {"time_unit": "January", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2145},
-    {"time_unit": "January", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 1987},
-    {"time_unit": "January", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 1834},
-    {"time_unit": "January", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1672},
-    {"time_unit": "January", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1523},
-    {"time_unit": "January", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1298},
-    {"time_unit": "January", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1156},
-    {"time_unit": "January", "artist_mbid": "164f0d73-1234-4e2c-b6d1-e7f3a9b5c8d9", "artist_name": "Queen", "listen_count": 1089},
-    
-    # February
-    {"time_unit": "February", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 1987},
-    {"time_unit": "February", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2156},
-    {"time_unit": "February", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 1743},
-    {"time_unit": "February", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1589},
-    {"time_unit": "February", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1445},
-    {"time_unit": "February", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1367},
-    {"time_unit": "February", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1234},
-    {"time_unit": "February", "artist_mbid": "f37b3f31-b1b9-4b9b-9f9f-9f9f9f9f9f9f", "artist_name": "David Bowie", "listen_count": 1198},
-    
-    # March
-    {"time_unit": "March", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2267},
-    {"time_unit": "March", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2089},
-    {"time_unit": "March", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 1923},
-    {"time_unit": "March", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1756},
-    {"time_unit": "March", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1634},
-    {"time_unit": "March", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1498},
-    {"time_unit": "March", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1367},
-    {"time_unit": "March", "artist_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da", "artist_name": "Eminem", "listen_count": 1289},
-    
-    # April
-    {"time_unit": "April", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2134},
-    {"time_unit": "April", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 1998},
-    {"time_unit": "April", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 1876},
-    {"time_unit": "April", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1723},
-    {"time_unit": "April", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1589},
-    {"time_unit": "April", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1456},
-    {"time_unit": "April", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1334},
-    {"time_unit": "April", "artist_mbid": "f2fb0ff0-5679-42ec-a55c-15109ce6e320", "artist_name": "Beyoncé", "listen_count": 1267},
-    
-    # May
-    {"time_unit": "May", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2345},
-    {"time_unit": "May", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2198},
-    {"time_unit": "May", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2034},
-    {"time_unit": "May", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1887},
-    {"time_unit": "May", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1743},
-    {"time_unit": "May", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1623},
-    {"time_unit": "May", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1498},
-    {"time_unit": "May", "artist_mbid": "e21857d5-3256-4547-afb3-4b6ded592596", "artist_name": "Adele", "listen_count": 1423},
-    
-    # June
-    {"time_unit": "June", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2456},
-    {"time_unit": "June", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2278},
-    {"time_unit": "June", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2123},
-    {"time_unit": "June", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1967},
-    {"time_unit": "June", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1834},
-    {"time_unit": "June", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1712},
-    {"time_unit": "June", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1589},
-    {"time_unit": "June", "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11", "artist_name": "Kanye West", "listen_count": 1534},
-    
-    # July
-    {"time_unit": "July", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2567},
-    {"time_unit": "July", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2389},
-    {"time_unit": "July", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2234},
-    {"time_unit": "July", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 2078},
-    {"time_unit": "July", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1923},
-    {"time_unit": "July", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1798},
-    {"time_unit": "July", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1676},
-    {"time_unit": "July", "artist_mbid": "381086ea-f511-4aba-bdf9-71c753dc5077", "artist_name": "Metallica", "listen_count": 1612},
-    
-    # August
-    {"time_unit": "August", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2678},
-    {"time_unit": "August", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2456},
-    {"time_unit": "August", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2298},
-    {"time_unit": "August", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 2134},
-    {"time_unit": "August", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1987},
-    {"time_unit": "August", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1856},
-    {"time_unit": "August", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1734},
-    {"time_unit": "August", "artist_mbid": "b7ffd2af-418f-4be2-bdd1-22f8b48613da", "artist_name": "Nine Inch Nails", "listen_count": 1678},
-    
-    # September
-    {"time_unit": "September", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2534},
-    {"time_unit": "September", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2378},
-    {"time_unit": "September", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2198},
-    {"time_unit": "September", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 2034},
-    {"time_unit": "September", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1887},
-    {"time_unit": "September", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1756},
-    {"time_unit": "September", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1634},
-    {"time_unit": "September", "artist_mbid": "a3cb23fc-acd3-4ce0-8f36-1e5aa6a18432", "artist_name": "U2", "listen_count": 1589},
-    
-    # October
-    {"time_unit": "October", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2423},
-    {"time_unit": "October", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2267},
-    {"time_unit": "October", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2123},
-    {"time_unit": "October", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1967},
-    {"time_unit": "October", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1834},
-    {"time_unit": "October", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1712},
-    {"time_unit": "October", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1589},
-    {"time_unit": "October", "artist_mbid": "f54ba2e2-50bb-4c79-b58e-b9fcd62b40c0", "artist_name": "The Rolling Stones", "listen_count": 1523},
-    
-    # November
-    {"time_unit": "November", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2298},
-    {"time_unit": "November", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2156},
-    {"time_unit": "November", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 2034},
-    {"time_unit": "November", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1887},
-    {"time_unit": "November", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1756},
-    {"time_unit": "November", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1634},
-    {"time_unit": "November", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1523},
-    {"time_unit": "November", "artist_mbid": "c14b4180-dc87-481e-b17a-64e4150f90f6", "artist_name": "Jay-Z", "listen_count": 1456},
-    
-    # December
-    {"time_unit": "December", "artist_mbid": "79239441-bfd5-4981-a70c-55c3f15c1287", "artist_name": "Madonna", "listen_count": 2189},
-    {"time_unit": "December", "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711", "artist_name": "Radiohead", "listen_count": 2067},
-    {"time_unit": "December", "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d", "artist_name": "The Beatles", "listen_count": 1967},
-    {"time_unit": "December", "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47", "artist_name": "Pink Floyd", "listen_count": 1834},
-    {"time_unit": "December", "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3", "artist_name": "Led Zeppelin", "listen_count": 1723},
-    {"time_unit": "December", "artist_mbid": "66c662b6-6e2f-4930-8610-912e24c63ed1", "artist_name": "AC/DC", "listen_count": 1589},
-    {"time_unit": "December", "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234", "artist_name": "Nirvana", "listen_count": 1478},
-    {"time_unit": "December", "artist_mbid": "1f038502-670c-4acf-9ecf-a50ba6250c6d", "artist_name": "Taylor Swift", "listen_count": 1398},
-]
-    # Transform the raw data to the format expected by frontend
-    transformed_data = transform_artist_evolution_data(raw_data_example, stats_range)
-    
-    if not transformed_data:
+    stats = db_stats.get(user['id'], "artist_evolution", stats_range, ArtistEvolutionRecord)
+    if stats is None:
         raise APINoContent('')
-    
+
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+
+    # Transform the raw data to the format expected by frontend
+    transformed_data = transform_artist_evolution_data(stats_unprocessed, stats_range)
+
     return jsonify({"result": transformed_data})
 
 
