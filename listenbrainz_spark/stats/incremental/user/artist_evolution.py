@@ -20,22 +20,23 @@ logger = logging.getLogger(__name__)
 class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
     """ See base class QueryProvider for details. """
 
-    def __init__(self, selector: ListenRangeSelector, unit: str):
+    def __init__(self, selector: ListenRangeSelector):
         super().__init__(selector)
-        self.unit = unit
+        self.stats_range = selector.stats_range
 
     @property
     def entity(self):
         return "artist_evolution_activity"
 
     def _get_time_field_expression(self):
-        time_field_map = {
-            "day": "date_format(listened_at, 'EEEE')",
-            "date": "day(listened_at)",
-            "month": "date_format(listened_at, 'MMMM')",
-            "year": "year(listened_at)"
-        }
-        return time_field_map.get(self.unit)
+        if "week" in self.stats_range:
+            return "date_format(listened_at, 'EEEE')"
+        elif "month" in self.stats_range:
+            return "day(listened_at)"
+        elif "year" in self.stats_range:
+            return "date_format(listened_at, 'MMMM')"
+        else:
+            return "year(listened_at)"
 
     def get_aggregate_query(self, table):
         recording_df = read_files_from_HDFS(RECORDING_ARTIST_DATAFRAME)
@@ -101,7 +102,6 @@ class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
                FROM {final_aggregate}
            GROUP BY user_id
         """
-
 
 class ArtistEvolutionUserMessageCreator(UserStatsMessageCreator):
 
