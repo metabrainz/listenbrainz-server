@@ -535,10 +535,10 @@ def transform_artist_evolution_data(raw_data, stats_range):
         stats_range: The stats range (week, month, year, all_time)
     
     Returns:
-        List of dicts ready for frontend consumption
+        Tuple of (transformed_data, offset_year) where offset_year is the starting year for all_time range
     """
     if not raw_data:
-        return []
+        return [], None
     
     # Group data by time_unit
     grouped_by_time = {}
@@ -567,36 +567,39 @@ def transform_artist_evolution_data(raw_data, stats_range):
     top_artist_names = [artist[0] for artist in top_artists]
     
     # Get all possible time units based on stats range
-    def get_all_time_units(stats_range):
+    def get_all_time_units_and_offset(stats_range):
         if 'week' in stats_range:
-            return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], None
         elif 'month' in stats_range:
-            return [str(i) for i in range(1, 32)]  # Days 1-31
+            return [str(i) for i in range(1, 32)], None  # Days 1-31
         elif 'year' in stats_range:
             return ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December']
+                   'July', 'August', 'September', 'October', 'November', 'December'], None
         else:  # all_time
             from datetime import datetime
             current_year = datetime.now().year
             
-            # Get existing years from raw data and filter out years before 2020
-            existing_years = []
+            # Get years with non-zero counts
+            years_with_data = []
             for item in raw_data:
                 try:
                     year = int(item['time_unit'])
-                    if year >= 2020:  # Only include years 2020 and onwards
-                        existing_years.append(year)
+                    listen_count = item['listen_count']
+                    if listen_count > 0:
+                        years_with_data.append(year)
                 except (ValueError, TypeError):
-                    # Skip invalid year values
                     continue
             
-            # Create range from 2020 to current year (inclusive)
-            all_years = list(range(2020, current_year + 1))
+            first_year_with_data = min(years_with_data)
+            offset_year = first_year_with_data - 1
+            
+            # Create range from offset_year to current year (inclusive)
+            all_years = list(range(offset_year, current_year + 1))
             
             # Convert to strings and return sorted
-            return [str(year) for year in sorted(all_years)]
+            return [str(year) for year in sorted(all_years)], offset_year
 
-    all_time_units = get_all_time_units(stats_range)
+    all_time_units, offset_year = get_all_time_units_and_offset(stats_range)
     
     result = []
     for time_unit in all_time_units:
@@ -608,7 +611,7 @@ def transform_artist_evolution_data(raw_data, stats_range):
         
         result.append(result_item)
     
-    return result
+    return result, offset_year
 
 
 @stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
@@ -639,7 +642,8 @@ def get_artist_evolution_activity(user_name: str):
                     "Pink Floyd": 85,
                     "Led Zeppelin": 65
                 }
-            ]
+            ],
+            "offset_year": 2020
         }
 
     .. note::
@@ -647,6 +651,7 @@ def get_artist_evolution_activity(user_name: str):
         - The response contains the top 5 artists by total listen count across the time range
         - Each object in the result array represents a time unit (day, month, year, etc.)
         - The time units are ordered chronologically based on the stats range
+        - For all_time range, offset_year indicates the starting year of the data
 
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -664,9 +669,13 @@ def get_artist_evolution_activity(user_name: str):
     stats_unprocessed = [x.dict() for x in stats.data.__root__]
 
     # Transform the raw data to the format expected by frontend
-    transformed_data = transform_artist_evolution_data(stats_unprocessed, stats_range)
+    transformed_data, offset_year = transform_artist_evolution_data(stats_unprocessed, stats_range)
 
-    return jsonify({"result": transformed_data})
+    response = {"result": transformed_data}
+    if offset_year is not None:
+        response["offset_year"] = offset_year
+
+    return jsonify(response)
 
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
