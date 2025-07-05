@@ -28,10 +28,12 @@ const getAboutRoutes = (): RouteObject[] => {
         },
         {
           path: "current-status/",
-          loader: RouteQueryLoader("current-status"),
           lazy: {
             Component: async () => {
               return (await import("../current-status/CurrentStatus")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("current-status");
             },
           },
         },

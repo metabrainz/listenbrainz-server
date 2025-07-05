@@ -32,19 +32,23 @@ const getSettingsRoutes = (): RouteObject[] => {
         },
         {
           path: "music-services/details/",
-          loader: RouteLoader,
           lazy: {
             Component: async () => {
               return (await import("../music-services/details/MusicServices")).default;
+            },
+            loader: async () => {
+              return RouteLoader;
             },
           },
         },
         {
           path: "import/",
-          loader: RouteLoader,
           lazy: {
             Component: async () => {
               return (await import("../import/ImportListens")).default;
+            },
+            loader: async () => {
+              return RouteLoader;
             },
           },
         },
@@ -58,28 +62,34 @@ const getSettingsRoutes = (): RouteObject[] => {
         },
         {
           path: "link-listens/",
-          loader: RouteQueryLoader("link-listens"),
           lazy: {
             Component: async () => {
               return (await import("../link-listens/LinkListens")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("link-listens");
             },
           },
         },
         {
           path: "select_timezone/",
-          loader: RouteLoader,
           lazy: {
             Component: async () => {
               return (await import("../select_timezone/SelectTimezone")).SelectTimezoneWrapper;
+            },
+            loader: async () => {
+              return RouteLoader;
             },
           },
         },
         {
           path: "troi/",
-          loader: RouteLoader,
           lazy: {
             Component: async () => {
               return (await import("../troi/SelectTroiPreferences")).SelectTroiPreferencesWrapper;
+            },
+            loader: async () => {
+              return RouteLoader;
             },
           },
         },
