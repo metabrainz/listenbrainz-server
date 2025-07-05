@@ -114,14 +114,17 @@ export default function ArtistEvolutionStreamGraph(
     queryKey: ["ArtistEvolution", user?.name, range],
     queryFn: async () => {
       try {
-        const queryData = await APIService.getUserArtistEvolutionActivity(
+        const queryData = (await APIService.getUserArtistEvolutionActivity(
           user?.name,
           range
-        );
+        )) as UserArtistEvolutionActivityResponse;
         return { data: queryData, hasError: false, errorMessage: "" };
       } catch (error) {
         return {
-          data: { result: [] },
+          data: {
+            result: [],
+            offset_year: 2020,
+          } as UserArtistEvolutionActivityResponse,
           hasError: true,
           errorMessage: error.message,
         };
@@ -130,7 +133,10 @@ export default function ArtistEvolutionStreamGraph(
   });
 
   const {
-    data: rawData = { result: [] },
+    data: rawData = {
+      result: [],
+      offset_year: 2020,
+    } as UserArtistEvolutionActivityResponse,
     hasError = false,
     errorMessage = "",
   } = loaderData || {};
@@ -155,43 +161,51 @@ export default function ArtistEvolutionStreamGraph(
       setKeys(transformedKeys);
 
       // Create ordered time units for axis formatting
-      const getOrderedTimeUnits = (range: UserStatsAPIRange) => {
-        switch (range) {
-          case "week":
-            return [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-              "Sunday",
-            ];
-          case "month":
-            return Array.from({ length: 30 }, (_, i) => (i + 1).toString());
-          case "year":
-            return [
-              "January",
-              "February",
-              "March",
-              "April",
-              "May",
-              "June",
-              "July",
-              "August",
-              "September",
-              "October",
-              "November",
-              "December",
-            ];
-          case "all_time":
-            return Array.from({ length: 5 }, (_, i) => (2020 + i).toString());
-          default:
-            return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
+      const getOrderedTimeUnits = (
+        range: UserStatsAPIRange,
+        offsetYear: number
+      ) => {
+        if (range.includes("week")) {
+          return [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+          ];
         }
+        if (range.includes("month")) {
+          return Array.from({ length: 30 }, (_, i) => (i + 1).toString());
+        }
+        if (range.includes("year")) {
+          return [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+        }
+        if (range.includes("all_time")) {
+          const currentYear = new Date().getFullYear();
+          const yearRange = currentYear - offsetYear + 1;
+          return Array.from({ length: yearRange }, (_, i) =>
+            (offsetYear + i).toString()
+          );
+        }
+        return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
       };
 
-      setOrderedTimeUnits(getOrderedTimeUnits(range));
+      setOrderedTimeUnits(getOrderedTimeUnits(range, rawData.offset_year));
     } else {
       setChartData([]);
       setKeys([]);
