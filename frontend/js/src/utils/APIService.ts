@@ -605,7 +605,7 @@ export default class APIService {
   getUserArtistEvolutionActivity = async (
     userName?: string,
     range: UserStatsAPIRange = "all_time"
-  ): Promise<UserAlbumActivityResponse> => {
+  ): Promise<UserArtistEvolutionActivityResponse> => {
     let url;
     if (userName) {
       url = `${this.APIBaseURI}/stats/user/${userName}/artist-evolution-activity`;

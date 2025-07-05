@@ -305,18 +305,11 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
-declare type UserAlbumActivityResponse = {
-	result: Array<{
-	  name: string;
-	  listen_count: number;
-	  release_group_mbid: string | null;
-	  artists: Array<{
-		name: string;
-		listen_count: number;
-		artist_mbid: string | null;
-	  }>;
-	}>;
-  };
+declare type UserArtistEvolutionActivityResponse = {
+  result: Array<{
+	[artistName: string]: number;
+  }>;
+};
 
 declare type UserArtistMapArtist = {
   artist_name: string;
