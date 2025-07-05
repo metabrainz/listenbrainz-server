@@ -103,7 +103,7 @@ export default function ImportListens() {
                 <label className="form-label" htmlFor="datetime">
                   Select Service:
                 </label>
-                <select className="form-select w-100">
+                <select className="form-select">
                   <option value="spotify">Spotify</option>
                   <option value="listenbrainz">Listenbrainz</option>
                   <option value="applemusic">Apple Music</option>
