@@ -64,4 +64,3 @@ class UserStatsTestCase(StatsTestCase):
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
         time_range_received = run_query("SELECT * FROM time_range").toLocalIterator()
         self.assertListEqual(list(time_range_expected), list(time_range_received))
-
