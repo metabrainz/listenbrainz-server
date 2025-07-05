@@ -12,6 +12,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
+from data.model.user_artist_evolution import ArtistEvolutionRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -524,6 +525,158 @@ def get_artist_activity(user_name: str):
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
     
+
+def transform_artist_evolution_data(raw_data, stats_range):
+    """
+    Transform raw artist evolution data from database format to frontend format.
+    
+    Args:
+        raw_data: List of dicts with keys: time_unit, artist_mbid, artist_name, listen_count
+        stats_range: The stats range (week, month, year, all_time)
+    
+    Returns:
+        Tuple of (transformed_data, offset_year) where offset_year is the starting year for all_time range
+    """
+    if not raw_data:
+        return [], None
+    
+    # Group data by time_unit
+    grouped_by_time = {}
+    for item in raw_data:
+        time_unit = item['time_unit']
+        artist_name = item['artist_name']
+        listen_count = item['listen_count']
+        
+        if time_unit not in grouped_by_time:
+            grouped_by_time[time_unit] = {}
+        
+        grouped_by_time[time_unit][artist_name] = listen_count
+    
+    # Calculate total listens per artist across all time units
+    artist_totals = {}
+    for item in raw_data:
+        artist_name = item['artist_name']
+        listen_count = item['listen_count']
+        
+        if artist_name not in artist_totals:
+            artist_totals[artist_name] = 0
+        artist_totals[artist_name] += listen_count
+    
+    # Get top 5 artists by total listens
+    top_artists = sorted(artist_totals.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_artist_names = [artist[0] for artist in top_artists]
+    
+    # Get all possible time units based on stats range
+    def get_all_time_units_and_offset(stats_range):
+        if 'week' in stats_range:
+            return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], None
+        elif 'month' in stats_range:
+            return [str(i) for i in range(1, 32)], None  # Days 1-31
+        elif 'year' in stats_range:
+            return ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'], None
+        else:  # all_time
+            from datetime import datetime
+            current_year = datetime.now().year
+            
+            # Get years with non-zero counts
+            years_with_data = []
+            for item in raw_data:
+                try:
+                    year = int(item['time_unit'])
+                    listen_count = item['listen_count']
+                    if listen_count > 0:
+                        years_with_data.append(year)
+                except (ValueError, TypeError):
+                    continue
+            
+            first_year_with_data = min(years_with_data)
+            offset_year = first_year_with_data - 1
+            
+            # Create range from offset_year to current year (inclusive)
+            all_years = list(range(offset_year, current_year + 1))
+            
+            # Convert to strings and return sorted
+            return [str(year) for year in sorted(all_years)], offset_year
+
+    all_time_units, offset_year = get_all_time_units_and_offset(stats_range)
+    
+    result = []
+    for time_unit in all_time_units:
+        time_data = grouped_by_time.get(time_unit, {})
+        result_item = {}
+        
+        for artist in top_artist_names:
+            result_item[artist] = time_data.get(artist, 0)
+        
+        result.append(result_item)
+    
+    return result, offset_year
+
+
+@stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_artist_evolution_activity(user_name: str):
+    """
+    Get the artist evolution activity for user ``user_name``. The artist evolution shows 
+    the listening trends of top artists over time periods.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "Madonna": 150,
+                    "Radiohead": 120,
+                    "The Beatles": 100,
+                    "Pink Floyd": 80,
+                    "Led Zeppelin": 60
+                },
+                {
+                    "Madonna": 170,
+                    "Radiohead": 110,
+                    "The Beatles": 90,
+                    "Pink Floyd": 85,
+                    "Led Zeppelin": 65
+                }
+            ],
+            "offset_year": 2020
+        }
+
+    .. note::
+
+        - The response contains the top 5 artists by total listen count across the time range
+        - Each object in the result array represents a time unit (day, month, year, etc.)
+        - The time units are ordered chronologically based on the stats range
+        - For all_time range, offset_year indicates the starting year of the data
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    
+    # Validate user and get stats range
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+
+    # Transform the raw data to the format expected by frontend
+    transformed_data, offset_year = transform_artist_evolution_data(stats_unprocessed, stats_range)
+
+    response = {"result": transformed_data}
+    if offset_year is not None:
+        response["offset_year"] = offset_year
+
+    return jsonify(response)
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1268,6 +1421,100 @@ def get_sitewide_artist_activity():
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
+
+@stats_api_bp.get("/sitewide/album-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_album_activity():
+    """
+    Get the sitewide album activity. This shows the most popular albums across all ListenBrainz users
+    and the artists who contributed to them.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "name": "OK Computer",
+                    "listen_count": 12450,
+                    "release_group_mbid": "12345-abcde",
+                    "artists": [
+                        {"name": "Radiohead", "listen_count": 12450, "artist_mbid": "a1234-xyz"}
+                    ]
+                },
+                {
+                    "name": "Abbey Road",
+                    "listen_count": 10320,
+                    "release_group_mbid": "67890-fghij",
+                    "artists": [
+                        {"name": "The Beatles", "listen_count": 10320, "artist_mbid": "b5678-abc"}
+                    ]
+                }
+            ]
+        }
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are
+        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    # Temporary hardcoded data for testing
+    hardcoded_result = [
+        {
+            "name": "OK Computer",
+            "listen_count": 12450,
+            "release_group_mbid": "12345-abcde",
+            "artists": [
+                {"name": "Radiohead", "listen_count": 12450, "artist_mbid": "a1234-xyz"}
+            ]
+        },
+        {
+            "name": "Abbey Road",
+            "listen_count": 10320,
+            "release_group_mbid": "67890-fghij",
+            "artists": [
+                {"name": "The Beatles", "listen_count": 10320, "artist_mbid": "b5678-abc"}
+            ]
+        },
+        {
+            "name": "In Rainbows",
+            "listen_count": 9875,
+            "release_group_mbid": "54321-vwxyz",
+            "artists": [
+                {"name": "Radiohead", "listen_count": 9875, "artist_mbid": "a1234-xyz"}
+            ]
+        },
+        {
+            "name": "Dark Side of the Moon",
+            "listen_count": 8960,
+            "release_group_mbid": "abcde-12345",
+            "artists": [
+                {"name": "Pink Floyd", "listen_count": 8960, "artist_mbid": "c9012-def"}
+            ]
+        }
+    ]
+    
+    return jsonify({"result": hardcoded_result})
+    
+    # The commented code below represents what the actual implementation would look like:
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    
+    stats = db_stats.get_sitewide_stats("releases", stats_range)
+    if stats is None:
+        raise APINoContent('')
+    
+    releases_list = stats["data"]
+    result = _get_album_activity(releases_list)
+    return jsonify({"result": result})
+    """
 
 
 @stats_api_bp.get("/sitewide/artist-map")

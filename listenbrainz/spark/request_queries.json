@@ -24,6 +24,11 @@
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
     "params": ["stats_range", "database"]
   },
+  "stats.user.artist_evolution_activity": {
+    "name": "stats.user.artist_evolution_activity",
+    "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
+    "params": ["stats_range", "database"]
+  },
   "stats.sitewide.entity": {
     "name": "stats.sitewide.entity",
     "description": "Calculate top entites listened to on the website in the requested stats_range",
