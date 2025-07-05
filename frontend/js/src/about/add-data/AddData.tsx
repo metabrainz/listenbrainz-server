@@ -27,9 +27,7 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://chiselapp.com/user/MistressRemilia/repository/benben">
-              Benben
-            </a>
+            <a href="https://chiselapp.com/user/MistressRemilia/repository/benben">Benben</a>
           </em>
           , a command line music player and converter for Unix-like operating
           systems
