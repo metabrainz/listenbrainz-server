@@ -7,23 +7,26 @@ const getExploreRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/explore",
-      lazy: async () => {
-        const ExploreLayout = await import("../layout");
-        return { Component: ExploreLayout.default };
+      lazy: {
+        Component: async () => {
+          return (await import("../layout")).default;
+        },
       },
       children: [
         {
           index: true,
-          lazy: async () => {
-            const ExplorePage = await import("../Explore");
-            return { Component: ExplorePage.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../Explore")).default;
+            },
           },
         },
         {
           path: "art-creator/",
-          lazy: async () => {
-            const ArtCreator = await import("../art-creator/ArtCreator");
-            return { Component: ArtCreator.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../art-creator/ArtCreator")).default;
+            },
           },
         },
         {
@@ -32,83 +35,92 @@ const getExploreRoutes = (): RouteObject[] => {
           children: [
             {
               index: true,
-              lazy: async () => {
-                const CoverArtComposite2023 = await import(
-                  "../cover-art-collage/2023/CoverArtComposite"
-                );
-
-                return { Component: CoverArtComposite2023.default };
+              lazy: {
+                Component: async () => {
+                  return (
+                    await import("../cover-art-collage/2023/CoverArtComposite")
+                  ).default;
+                },
               },
             },
             {
               path: "2023/",
-              lazy: async () => {
-                const CoverArtComposite2023 = await import(
-                  "../cover-art-collage/2023/CoverArtComposite"
-                );
-
-                return { Component: CoverArtComposite2023.default };
+              lazy: {
+                Component: async () => {
+                  return (
+                    await import("../cover-art-collage/2023/CoverArtComposite")
+                  ).default;
+                },
               },
             },
             {
               path: "2022/",
-              lazy: async () => {
-                const CoverArtComposite2022 = await import(
-                  "../cover-art-collage/2022/CoverArtComposite"
-                );
-
-                return { Component: CoverArtComposite2022.default };
+              lazy: {
+                Component: async () => {
+                  return (
+                    await import("../cover-art-collage/2022/CoverArtComposite")
+                  ).default;
+                },
               },
             },
           ],
         },
         {
           path: "fresh-releases/",
-          lazy: async () => {
-            const FreshReleases = await import(
-              "../fresh-releases/FreshReleases"
-            );
-            return { Component: FreshReleases.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../fresh-releases/FreshReleases")).default;
+            },
           },
         },
         {
           path: "huesound/:colorURLParam?",
-          lazy: async () => {
-            const HueSound = await import("../huesound/HueSound");
-            return { Component: HueSound.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../huesound/HueSound")).default;
+            },
           },
         },
         {
           path: "lb-radio/",
-          lazy: async () => {
-            const LBRadio = await import("../lb-radio/LBRadio");
-            return { Component: LBRadio.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../lb-radio/LBRadio")).default;
+            },
+            loader: async () => {
+              return RouteLoader;
+            },
           },
-          loader: RouteLoader,
         },
         {
           path: "similar-users/",
-          lazy: async () => {
-            const SimilarUsers = await import("../similar-users/SimilarUsers");
-            return { Component: SimilarUsers.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../similar-users/SimilarUsers")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("similar-users");
+            },
           },
-          loader: RouteQueryLoader("similar-users"),
         },
         {
           path: "music-neighborhood/",
-          lazy: async () => {
-            const MusicNeighborhood = await import(
-              "../music-neighborhood/MusicNeighborhood"
-            );
-            return { Component: MusicNeighborhood.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../music-neighborhood/MusicNeighborhood"))
+                .default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("music-neighborhood");
+            },
           },
-          loader: RouteQueryLoader("music-neighborhood"),
         },
         {
           path: "ai-brainz/",
-          lazy: async () => {
-            const AIBrainzComponent = await import("../ai-brainz/AIBrainz");
-            return { Component: AIBrainzComponent.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../ai-brainz/AIBrainz")).default;
+            },
           },
         },
       ],

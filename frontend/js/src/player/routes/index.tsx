@@ -10,17 +10,21 @@ const getPlayerRoutes = () => {
       children: [
         {
           index: true,
-          lazy: async () => {
-            const PlayerPage = await import("../PlayerPage");
-            return { Component: PlayerPage.PlayerPageWrapper };
+          lazy: {
+            Component: async () => {
+              return (await import("../PlayerPage")).PlayerPageWrapper;
+            },
+            loader: async () => {
+              return RouteQueryLoader("player", true);
+            },
           },
-          loader: RouteQueryLoader("player", true),
         },
         {
           path: "release/:releaseMBID",
-          lazy: async () => {
-            const PlayerPage = await import("../PlayerPage");
-            return { Component: PlayerPage.PlayerPageRedirectToAlbum };
+          lazy: {
+            Component: async () => {
+              return (await import("../PlayerPage")).PlayerPageRedirectToAlbum;
+            },
           },
         },
       ],
