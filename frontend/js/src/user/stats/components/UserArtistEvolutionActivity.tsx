@@ -18,26 +18,92 @@ export type StreamDataItem = {
   [key: string]: string | number;
 };
 
+// Transform function to convert API response to stream chart format
+const transformArtistEvolutionData = (
+  rawData: any[] | null | undefined,
+  range: UserStatsAPIRange
+) => {
+  if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+    return { chartData: [], keys: [] };
+  }
+
+  // First, extract all unique artist names across all time units
+  const allArtistNames = new Set<string>();
+  rawData.forEach((timeUnit) => {
+    if (timeUnit && typeof timeUnit === "object") {
+      Object.keys(timeUnit).forEach((key) => {
+        allArtistNames.add(key);
+      });
+    }
+  });
+
+  // Calculate total listens per artist to get top 5
+  const artistTotals: Record<string, number> = {};
+  rawData.forEach((timeUnit) => {
+    if (timeUnit && typeof timeUnit === "object") {
+      Object.entries(timeUnit).forEach(([artist, count]) => {
+        if (typeof count === "number") {
+          if (!artistTotals[artist]) {
+            artistTotals[artist] = 0;
+          }
+          artistTotals[artist] += count;
+        }
+      });
+    }
+  });
+
+  // Get top 5 artists by total listens
+  const topArtists = Object.entries(artistTotals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name]) => name);
+
+  // Transform the data for the stream chart
+  const chartData = rawData.map((timeUnit, index) => {
+    const result: StreamDataItem = {
+      // Add an id field for better identification
+      id: index.toString(),
+    };
+
+    // Add each top artist's data for this time unit
+    topArtists.forEach((artist) => {
+      result[artist] =
+        (timeUnit && typeof timeUnit === "object" && timeUnit[artist]) || 0;
+    });
+
+    return result;
+  });
+
+  return { chartData, keys: topArtists };
+};
+
+// Format function for axis labels based on range
+const getAxisFormatter = (
+  range: UserStatsAPIRange,
+  orderedTimeUnits: string[]
+) => {
+  return (index: number) => {
+    const timeUnit = orderedTimeUnits[index];
+    if (!timeUnit) return "";
+
+    switch (range) {
+      case "week":
+        return timeUnit.substring(0, 3);
+      case "month":
+        return timeUnit;
+      case "year":
+        return timeUnit.substring(0, 3);
+      case "all_time":
+        return timeUnit;
+      default:
+        return timeUnit;
+    }
+  };
+};
+
 export default function ArtistEvolutionStreamGraph(
   props: UserArtistEvolutionProps
 ) {
-  // This will manipulate the original data to inject negative values
-  // which can be used to create space below the x-axis
-  const processDataWithNegatives = (data: StreamDataItem[]) => {
-    if (!data || data.length === 0) return [];
-
-    // Create a deep copy to avoid mutating the original data
-    return data.map((dayData) => {
-      const result = { ...dayData };
-
-      // Add a negative value field that will create space below the axis
-      // This is a visual trick to make the chart extend below the x-axis
-      result.negativeSpace = -150; // Adjustable value to control space below
-
-      return result;
-    });
-  };
-
   const { APIService } = React.useContext(GlobalAppContext);
 
   // Props
@@ -71,7 +137,67 @@ export default function ArtistEvolutionStreamGraph(
 
   const [chartData, setChartData] = React.useState<StreamDataItem[]>([]);
   const [keys, setKeys] = React.useState<string[]>([]);
-  const [maxValue, setMaxValue] = React.useState<number>(0);
+  const [orderedTimeUnits, setOrderedTimeUnits] = React.useState<string[]>([]);
+
+  // Transform data when raw data changes
+  React.useEffect(() => {
+    if (
+      rawData?.result &&
+      Array.isArray(rawData.result) &&
+      rawData.result.length > 0
+    ) {
+      const {
+        chartData: transformedData,
+        keys: transformedKeys,
+      } = transformArtistEvolutionData(rawData.result, range);
+
+      setChartData(transformedData);
+      setKeys(transformedKeys);
+
+      // Create ordered time units for axis formatting
+      const getOrderedTimeUnits = (range: UserStatsAPIRange) => {
+        switch (range) {
+          case "week":
+            return [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ];
+          case "month":
+            return Array.from({ length: 30 }, (_, i) => (i + 1).toString());
+          case "year":
+            return [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December",
+            ];
+          case "all_time":
+            return Array.from({ length: 5 }, (_, i) => (2020 + i).toString());
+          default:
+            return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
+        }
+      };
+
+      setOrderedTimeUnits(getOrderedTimeUnits(range));
+    } else {
+      setChartData([]);
+      setKeys([]);
+      setOrderedTimeUnits([]);
+    }
+  }, [rawData, range]);
 
   let content;
   if (hasError) {
@@ -115,20 +241,19 @@ export default function ArtistEvolutionStreamGraph(
               keys={keys}
               margin={{ top: 20, right: 100, bottom: 60, left: 60 }}
               axisBottom={{
-                format: (index: number) => {
-                  const days = [
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                    "Saturday",
-                    "Sunday",
-                  ];
-                  return days[index % 7];
-                },
+                format: getAxisFormatter(range, orderedTimeUnits),
                 tickSize: 5,
                 tickPadding: 5,
+                legend:
+                  range === "week"
+                    ? "Days of Week"
+                    : range === "month"
+                    ? "Days of Month"
+                    : range === "year"
+                    ? "Months"
+                    : "Years",
+                legendOffset: 40,
+                legendPosition: "middle",
               }}
               axisLeft={{
                 tickSize: 5,
@@ -164,25 +289,6 @@ export default function ArtistEvolutionStreamGraph(
                   },
                 },
               }}
-              defs={[
-                // Create a translucent fill pattern for the negative space
-                {
-                  id: "negativeSpace",
-                  type: "patternLines",
-                  background: "transparent",
-                  color: "transparent",
-                  rotation: 0,
-                  lineWidth: 0,
-                  spacing: 0,
-                },
-              ]}
-              fill={[
-                // Apply the transparent pattern to the negative space
-                {
-                  match: { id: "negativeSpace" },
-                  id: "negativeSpace",
-                },
-              ]}
               legends={[
                 {
                   anchor: "right",
@@ -201,16 +307,69 @@ export default function ArtistEvolutionStreamGraph(
                       },
                     },
                   ],
-                  // Don't show the negative space in the legend
-                  data: keys
-                    .filter((key) => key !== "negativeSpace")
-                    .map((key) => ({
-                      id: key,
-                      label: key,
-                      color: "inherit", // This will match the color used in the stream
-                    })),
                 },
               ]}
+              tooltip={({ slice }: any) => {
+                if (!slice || typeof slice.index === "undefined") {
+                  return (
+                    <div
+                      style={{
+                        background: "white",
+                        padding: "9px 12px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        maxWidth: "200px",
+                      }}
+                    >
+                      <div>No data available</div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    style={{
+                      background: "white",
+                      padding: "9px 12px",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                      maxWidth: "200px",
+                    }}
+                  >
+                    <div style={{ marginBottom: "4px", fontWeight: "bold" }}>
+                      {orderedTimeUnits[slice.index] ||
+                        `Time Unit ${slice.index + 1}`}
+                    </div>
+                    {slice.stack &&
+                      slice.stack
+                        .filter(
+                          (point: any) => point.data && point.data.value > 0
+                        )
+                        .map((point: any, index: number) => (
+                          <div key={index} style={{ marginBottom: "2px" }}>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: "12px",
+                                height: "12px",
+                                backgroundColor: point.color,
+                                marginRight: "6px",
+                                borderRadius: "2px",
+                              }}
+                            />
+                            <span style={{ fontWeight: "bold" }}>
+                              {point.id}:
+                            </span>{" "}
+                            {point.data.value} listens
+                          </div>
+                        ))}
+                  </div>
+                );
+              }}
             />
           </div>
         </div>
@@ -218,89 +377,11 @@ export default function ArtistEvolutionStreamGraph(
     );
   }
 
-  React.useEffect(() => {
-    if (rawData?.result && rawData.result.length > 0) {
-      // Process the data and exclude metadata fields
-      const processedData = rawData.result.map((item: any, index: number) => {
-        // Create a new object without the metadata field
-        const { release_group_mbid, day, ...artistData } = item;
-
-        // Add numeric index for proper x-axis labeling
-        return {
-          ...artistData,
-          index, // Use numeric index instead of day
-        };
-      });
-
-      // Extract all unique artist keys across all days
-      const allArtistKeys = new Set<string>();
-      let dayMax = 0;
-
-      processedData.forEach((dayData: any) => {
-        let dailyTotal = 0;
-
-        Object.keys(dayData).forEach((key) => {
-          if (key !== "index") {
-            allArtistKeys.add(key);
-            dailyTotal += Number(dayData[key]) || 0;
-          }
-        });
-
-        if (dailyTotal > dayMax) {
-          dayMax = dailyTotal;
-        }
-      });
-
-      setMaxValue(dayMax);
-
-      // Sort keys to match the order in the second image
-      const preferredKeyOrder = [
-        "Jacques",
-        "Paul",
-        "René",
-        "Marcel",
-        "Josiane",
-        "Raoul",
-      ];
-      const sortedKeys = [...preferredKeyOrder].filter((key) =>
-        allArtistKeys.has(key)
-      );
-
-      // Add any missing keys from the data
-      Array.from(allArtistKeys).forEach((key) => {
-        if (!sortedKeys.includes(key) && key !== "negativeSpace") {
-          sortedKeys.push(key);
-        }
-      });
-
-      // Add the negative space key at the bottom of the stack
-      setKeys(sortedKeys);
-
-      // Apply the negative space transformation to create room below x-axis
-      const dataWithNegatives = processDataWithNegatives(processedData);
-      setChartData(dataWithNegatives);
-    }
-  }, [rawData]);
-
-  // Define the tooltip function
-
   return (
     <Card className="user-stats-card" data-testid="artist-evolution">
       <div className="row">
         <div className="col-xs-10">
           <h3 className="capitalize-bold">Artist Evolution</h3>
-        </div>
-        <div className="col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#artist-evolution">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
         </div>
       </div>
       <Loader isLoading={loading}>{content}</Loader>
