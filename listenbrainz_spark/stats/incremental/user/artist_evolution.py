@@ -42,7 +42,7 @@ class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
         recording_df.createOrReplaceTempView("recording_artist")
 
         # Get range type from selector - access through the listen_range_selector
-        range_type = 'all_time'
+        range_type = 'week'
         time_bucket_expr = self.__get_time_bucket_expression(range_type)
 
         return f"""

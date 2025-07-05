@@ -647,17 +647,17 @@ def get_album_activity(user_name: str):
 	]
         
     # The commented code below represents what the actual implementation would look like:
-    user, stats_range = _validate_stats_user_params(user_name)
-    offset = get_non_negative_param("offset", default=0)
-    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    # user, stats_range = _validate_stats_user_params(user_name)
+    # offset = get_non_negative_param("offset", default=0)
+    # count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
 
-    stats = db_stats.get(1, "artist_evolution", stats_range, ArtistEvolutionRecord)
-    if stats is None:
-        raise APINoContent('')
+    # stats = db_stats.get(1, "artist_evolution", stats_range, ArtistEvolutionRecord)
+    # if stats is None:
+    #     raise APINoContent('')
     
-    artist_evolution_activity = [x.dict() for x in stats.data.__root__]
+    # artist_evolution_activity = [x.dict() for x in stats.data.__root__]
 
-    return jsonify({"result": artist_evolution_activity})
+    return jsonify({"result": hardcoded_result})
 
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
