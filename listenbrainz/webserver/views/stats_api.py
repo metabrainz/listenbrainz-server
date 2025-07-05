@@ -575,10 +575,26 @@ def transform_artist_evolution_data(raw_data, stats_range):
         elif 'year' in stats_range:
             return ['January', 'February', 'March', 'April', 'May', 'June',
                    'July', 'August', 'September', 'October', 'November', 'December']
-        else:
-            existing_years = [item['time_unit'] for item in raw_data]
-            unique_years = sorted(list(set(existing_years)), key=lambda x: int(x))
-            return unique_years
+        else:  # all_time
+            from datetime import datetime
+            current_year = datetime.now().year
+            
+            # Get existing years from raw data and filter out years before 2020
+            existing_years = []
+            for item in raw_data:
+                try:
+                    year = int(item['time_unit'])
+                    if year >= 2020:  # Only include years 2020 and onwards
+                        existing_years.append(year)
+                except (ValueError, TypeError):
+                    # Skip invalid year values
+                    continue
+            
+            # Create range from 2020 to current year (inclusive)
+            all_years = list(range(2020, current_year + 1))
+            
+            # Convert to strings and return sorted
+            return [str(year) for year in sorted(all_years)]
 
     all_time_units = get_all_time_units(stats_range)
     
@@ -641,7 +657,7 @@ def get_artist_evolution_activity(user_name: str):
     
     # Validate user and get stats range
     user, stats_range = _validate_stats_user_params(user_name)
-    stats = db_stats.get(user['id'], "artist_evolution", stats_range, ArtistEvolutionRecord)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionRecord)
     if stats is None:
         raise APINoContent('')
 
