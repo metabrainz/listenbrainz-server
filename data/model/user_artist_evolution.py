@@ -3,7 +3,7 @@ from typing import List
 
 
 class ArtistEvolutionRecord(BaseModel):
-    date: constr(min_length=1)
+    time_unit: constr(min_length=1)
     artist_mbid: constr(min_length=1)
     artist_name: constr(min_length=1)
     listen_count: NonNegativeInt
