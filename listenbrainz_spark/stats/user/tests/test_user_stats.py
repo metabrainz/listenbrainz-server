@@ -4,7 +4,6 @@ import json
 
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.user.daily_activity import get_daily_activity
-from listenbrainz_spark.stats.user.genre_activity import get_genre_activity
 from listenbrainz_spark.stats.user.entity import get_entity_stats
 from listenbrainz_spark.stats.user.listening_activity import get_listening_activity
 from listenbrainz_spark.stats.user.tests import StatsTestCase
