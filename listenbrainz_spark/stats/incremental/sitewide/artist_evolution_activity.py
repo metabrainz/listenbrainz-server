@@ -123,6 +123,4 @@ class ArtistEvolutionSitewideMessageCreator(SitewideStatsMessageCreator):
         logger.info("Created sitewide artist evolution message for range %s with %d artist-time entries", 
                    self.stats_range, len(message["data"]))
         
-        logger.info(message)
-        
         yield message
