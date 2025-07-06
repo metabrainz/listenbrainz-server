@@ -582,12 +582,9 @@ def _transform_artist_evolution_data(raw_data, stats_range):
             
             first_year_with_data = min(years_with_data)
             offset_year = first_year_with_data - 1
-            
-            # Create range from offset_year to current year (inclusive)
             all_years = list(range(offset_year, current_year + 1))
             
-            # Convert to strings and return sorted
-            return [str(year) for year in sorted(all_years)], offset_year
+            return sorted(all_years), offset_year
 
     all_time_units, offset_year = get_all_time_units_and_offset(stats_range)
     
@@ -1382,7 +1379,7 @@ def get_sitewide_album_activity():
     if stats is None:
         raise APINoContent("")
     
-    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+    stats_unprocessed = stats["data"]
     transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
     
     response = {"result": transformed_data}
