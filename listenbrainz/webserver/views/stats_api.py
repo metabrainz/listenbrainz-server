@@ -533,7 +533,7 @@ def get_listens_era_activity(user_name: str):
     user, stats_range = _validate_stats_user_params(user_name)
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-    stats = db_stats.get(10055, "era_activity", stats_range, EntityRecord)
+    stats = db_stats.get(user["id"], "era_activity", stats_range, UserEraActivityRecord)
     if stats is None:
         raise APINoContent('')
 

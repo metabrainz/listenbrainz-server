@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
@@ -13,8 +13,8 @@ import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 // Constants
-const MIN_BAR_WIDTH = 60;
-const PADDING = 0.3;
+const MIN_BAR_WIDTH_PX = 60;
+const BAR_PADDING_RATIO = 0.3;
 
 export type UserListensEraActivityProps = {
   range: UserStatsAPIRange;
@@ -37,9 +37,8 @@ function CustomTooltip({
   );
 }
 
-const getDecade = (year: number): string => {
-  const decade = Math.floor(year / 10) * 10;
-  return `${decade}s`;
+const getDecade = (year: number): number => {
+  return Math.floor(year / 10) * 10;
 };
 
 const processDataIntoDecades = (
@@ -47,7 +46,7 @@ const processDataIntoDecades = (
 ) => {
   if (!data || data.length === 0) return [];
 
-  const decadeMap = new Map<string, number>();
+  const decadeMap = new Map<number, number>();
 
   data.forEach((item) => {
     const decade = getDecade(item.year);
@@ -60,15 +59,14 @@ const processDataIntoDecades = (
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
 
-  const minDecade = Math.floor(minYear / 10) * 10;
-  const maxDecade = Math.floor(maxYear / 10) * 10;
+  const minDecade = getDecade(minYear);
+  const maxDecade = getDecade(maxYear);
 
   const result = [];
   for (let decade = minDecade; decade <= maxDecade; decade += 10) {
-    const decadeLabel = `${decade}s`;
     result.push({
-      decade: decadeLabel,
-      listen_count: decadeMap.get(decadeLabel) || 0,
+      decade,
+      listen_count: decadeMap.get(decade) || 0,
     });
   }
 
@@ -77,23 +75,22 @@ const processDataIntoDecades = (
 
 const getExpandedDecadeData = (
   data: Array<{ year: number; listen_count?: number; count?: number }>,
-  selectedDecade: string
+  selectedDecade: number
 ) => {
-  const decadeStart = parseInt(selectedDecade.replace("s", ""), 10);
-  const decadeEnd = decadeStart + 9;
+  const decadeEnd = selectedDecade + 9;
 
   const yearMap = new Map<number, number>();
   data.forEach((item) => {
-    if (item.year >= decadeStart && item.year <= decadeEnd) {
+    if (item.year >= selectedDecade && item.year <= decadeEnd) {
       const itemCount = item.listen_count ?? item.count ?? 0;
       yearMap.set(item.year, itemCount);
     }
   });
 
   const result = [];
-  for (let year = decadeStart; year <= decadeEnd; year += 1) {
+  for (let year = selectedDecade; year <= decadeEnd; year += 1) {
     result.push({
-      decade: year.toString(),
+      decade: year,
       listen_count: yearMap.get(year) || 0,
     });
   }
@@ -108,7 +105,7 @@ export default function UserListensEraActivity({
   const { APIService } = React.useContext(GlobalAppContext);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [selectedDecade, setSelectedDecade] = useState<string | null>(null);
+  const [selectedDecade, setSelectedDecade] = useState<number | null>(null);
 
   const { data: loaderData, isLoading } = useQuery({
     queryKey: ["userListensEraActivity", user?.name, range],
@@ -136,9 +133,12 @@ export default function UserListensEraActivity({
   } = loaderData || {};
 
   // Process data based on whether a decade is selected
-  const chartData = selectedDecade
-    ? getExpandedDecadeData(rawData?.result || [], selectedDecade)
-    : processDataIntoDecades(rawData?.result || []);
+  const chartData = useMemo(() => {
+    const dataResult = rawData?.result || [];
+    return selectedDecade
+      ? getExpandedDecadeData(dataResult, selectedDecade)
+      : processDataIntoDecades(dataResult);
+  }, [rawData?.result, selectedDecade]);
 
   useEffect(() => {
     const containerElement = scrollContainerRef.current;
@@ -150,7 +150,7 @@ export default function UserListensEraActivity({
       const availableWidth = parentWidth - 40;
 
       const minRequiredWidth =
-        chartData.length * (MIN_BAR_WIDTH / (1 - PADDING));
+        chartData.length * (MIN_BAR_WIDTH_PX / (1 - BAR_PADDING_RATIO));
       const finalWidth = Math.max(availableWidth, minRequiredWidth);
       setContainerWidth(finalWidth);
     };
@@ -168,7 +168,7 @@ export default function UserListensEraActivity({
     value: number | null;
     indexValue: string | number;
     data: {
-      decade: string;
+      decade: number;
       listen_count: number;
     };
     color: string;
@@ -179,9 +179,15 @@ export default function UserListensEraActivity({
       return;
     }
 
-    if (clickedDecade.endsWith("s")) {
+    // Only allow expansion for decades (multiples of 10)
+    if (clickedDecade % 10 === 0 && clickedDecade !== clickedDecade % 10) {
       setSelectedDecade(clickedDecade);
     }
+  };
+
+  // Format function for display
+  const formatDecadeLabel = (decade: number): string => {
+    return selectedDecade ? decade.toString() : `${decade}s`;
   };
 
   return (
@@ -194,7 +200,7 @@ export default function UserListensEraActivity({
               <span
                 style={{ marginLeft: 10, fontSize: "0.8em", color: "#666" }}
               >
-                - {selectedDecade} (click any bar to collapse)
+                - {selectedDecade}s (click any bar to collapse)
               </span>
             )}
           </h3>
@@ -246,6 +252,7 @@ export default function UserListensEraActivity({
                       legend: selectedDecade ? "Year" : "Decade",
                       legendPosition: "middle",
                       legendOffset: 40,
+                      format: formatDecadeLabel,
                     }}
                     axisLeft={{
                       legend: "Number of listens",
@@ -254,9 +261,14 @@ export default function UserListensEraActivity({
                       format: ".2~s",
                     }}
                     minValue={0}
-                    padding={PADDING}
+                    padding={BAR_PADDING_RATIO}
                     enableLabel={false}
-                    tooltip={CustomTooltip}
+                    tooltip={({ indexValue, value }) => (
+                      <CustomTooltip
+                        indexValue={formatDecadeLabel(Number(indexValue))}
+                        value={Number(value)}
+                      />
+                    )}
                     margin={{ left: 60, bottom: 60, top: 30, right: 20 }}
                     enableGridY
                     gridYValues={5}
