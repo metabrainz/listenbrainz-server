@@ -25,13 +25,15 @@ export type UserListensEraActivityProps = {
 function CustomTooltip({
   indexValue,
   value,
+  formatLabel,
 }: {
   indexValue: string | number;
   value: number;
+  formatLabel: (decade: number) => string;
 }) {
   return (
     <BasicTooltip
-      id={String(indexValue)}
+      id={formatLabel(Number(indexValue))}
       value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
     />
   );
@@ -263,10 +265,11 @@ export default function UserListensEraActivity({
                     minValue={0}
                     padding={BAR_PADDING_RATIO}
                     enableLabel={false}
-                    tooltip={({ indexValue, value }) => (
+                    tooltip={(props) => (
                       <CustomTooltip
-                        indexValue={formatDecadeLabel(Number(indexValue))}
-                        value={Number(value)}
+                        indexValue={props.indexValue}
+                        value={Number(props.value)}
+                        formatLabel={formatDecadeLabel}
                       />
                     )}
                     margin={{ left: 60, bottom: 60, top: 30, right: 20 }}
