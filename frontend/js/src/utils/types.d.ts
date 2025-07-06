@@ -307,9 +307,8 @@ declare type UserArtistActivityResponse = {
 
 declare type UserListensEraActivityResponse = {
   result: Array<{
-	year: string;
-	count: number;
-	formattedYear?: string;
+    year: number;
+    count: number;
   }>;
 }
 

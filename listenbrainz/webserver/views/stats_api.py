@@ -1287,7 +1287,7 @@ def get_sitewide_artist_activity():
     return jsonify({"result": result})
 
 
-@stats_api_bp.get("/sitewide/listens-era-activity")
+@stats_api_bp.get("/sitewide/era-activity")
 @crossdomain
 @ratelimit()
 def get_sitewide_listens_era_activity():

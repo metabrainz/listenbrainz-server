@@ -43,24 +43,20 @@ const getDecade = (year: number): string => {
 };
 
 const processDataIntoDecades = (
-  data: Array<{ year: string | number; listen_count?: number; count?: number }>
+  data: Array<{ year: number; listen_count?: number; count?: number }>
 ) => {
   if (!data || data.length === 0) return [];
 
   const decadeMap = new Map<string, number>();
 
   data.forEach((item) => {
-    const year =
-      typeof item.year === "string" ? parseInt(item.year, 10) : item.year;
-    const decade = getDecade(year);
+    const decade = getDecade(item.year);
     const currentCount = decadeMap.get(decade) || 0;
     const itemCount = item.listen_count ?? item.count ?? 0;
     decadeMap.set(decade, currentCount + itemCount);
   });
 
-  const years = data.map((item) =>
-    typeof item.year === "string" ? parseInt(item.year, 10) : item.year
-  );
+  const years = data.map((item) => item.year);
   const minYear = Math.min(...years);
   const maxYear = Math.max(...years);
 
@@ -80,7 +76,7 @@ const processDataIntoDecades = (
 };
 
 const getExpandedDecadeData = (
-  data: Array<{ year: string | number; listen_count?: number; count?: number }>,
+  data: Array<{ year: number; listen_count?: number; count?: number }>,
   selectedDecade: string
 ) => {
   const decadeStart = parseInt(selectedDecade.replace("s", ""), 10);
@@ -88,11 +84,9 @@ const getExpandedDecadeData = (
 
   const yearMap = new Map<number, number>();
   data.forEach((item) => {
-    const year =
-      typeof item.year === "string" ? parseInt(item.year, 10) : item.year;
-    if (year >= decadeStart && year <= decadeEnd) {
+    if (item.year >= decadeStart && item.year <= decadeEnd) {
       const itemCount = item.listen_count ?? item.count ?? 0;
-      yearMap.set(year, itemCount);
+      yearMap.set(item.year, itemCount);
     }
   });
 
@@ -169,9 +163,17 @@ export default function UserListensEraActivity({
     };
   }, [rawData?.result, selectedDecade, chartData.length]);
 
-  const handleBarClick = (data: any) => {
+  const handleBarClick = (data: {
+    id: string | number;
+    value: number | null;
+    indexValue: string | number;
+    data: {
+      decade: string;
+      listen_count: number;
+    };
+    color: string;
+  }) => {
     const clickedDecade = data.data.decade;
-
     if (selectedDecade) {
       setSelectedDecade(null);
       return;
