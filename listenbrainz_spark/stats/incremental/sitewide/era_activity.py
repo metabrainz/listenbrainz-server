@@ -87,6 +87,5 @@ class EraActivitySitewideMessageCreator(SitewideStatsMessageCreator):
         
         logger.info("Created sitewide era activity message for range %s with %d year entries", 
                    self.stats_range, len(message["data"]))
-        logger.info(message)
         
         yield message
