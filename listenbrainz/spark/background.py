@@ -39,7 +39,7 @@ from listenbrainz.spark.handlers import (
     handle_sitewide_artist_map
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
-    ListeningActivityStatsDataset, EraDataset, EntityListenerStatsDataset
+    ListeningActivityStatsDataset, EraStatsDataset, EntityListenerStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
 from listenbrainz.db.tags import TagsDataset
@@ -81,7 +81,7 @@ class BackgroundJobProcessor:
             UserEntityStatsDataset,
             DailyActivityStatsDataset,
             ListeningActivityStatsDataset,
-            EraDataset,
+            EraStatsDataset,
             EntityListenerStatsDataset,
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
