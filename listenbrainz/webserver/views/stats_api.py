@@ -526,17 +526,7 @@ def get_artist_activity(user_name: str):
     return jsonify({"result": result})
     
 
-def transform_artist_evolution_data(raw_data, stats_range):
-    """
-    Transform raw artist evolution data from database format to frontend format.
-    
-    Args:
-        raw_data: List of dicts with keys: time_unit, artist_mbid, artist_name, listen_count
-        stats_range: The stats range (week, month, year, all_time)
-    
-    Returns:
-        Tuple of (transformed_data, offset_year) where offset_year is the starting year for all_time range
-    """
+def _transform_artist_evolution_data(raw_data, stats_range):
     if not raw_data:
         return [], None
     
@@ -618,49 +608,6 @@ def transform_artist_evolution_data(raw_data, stats_range):
 @crossdomain
 @ratelimit()
 def get_artist_evolution_activity(user_name: str):
-    """
-    Get the artist evolution activity for user ``user_name``. The artist evolution shows 
-    the listening trends of top artists over time periods.
-
-    A sample response from the endpoint may look like:
-
-    .. code-block:: json
-
-        {
-            "result": [
-                {
-                    "Madonna": 150,
-                    "Radiohead": 120,
-                    "The Beatles": 100,
-                    "Pink Floyd": 80,
-                    "Led Zeppelin": 60
-                },
-                {
-                    "Madonna": 170,
-                    "Radiohead": 110,
-                    "The Beatles": 90,
-                    "Pink Floyd": 85,
-                    "Led Zeppelin": 65
-                }
-            ],
-            "offset_year": 2020
-        }
-
-    .. note::
-
-        - The response contains the top 5 artists by total listen count across the time range
-        - Each object in the result array represents a time unit (day, month, year, etc.)
-        - The time units are ordered chronologically based on the stats range
-        - For all_time range, offset_year indicates the starting year of the data
-
-    :statuscode 200: Successful query, you have data!
-    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
-    :statuscode 400: Bad request, check ``response['error']`` for more details
-    :statuscode 404: User not found
-    :resheader Content-Type: *application/json*
-    """
-    
-    # Validate user and get stats range
     user, stats_range = _validate_stats_user_params(user_name)
     stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionRecord)
     if stats is None:
@@ -669,7 +616,7 @@ def get_artist_evolution_activity(user_name: str):
     stats_unprocessed = [x.dict() for x in stats.data.__root__]
 
     # Transform the raw data to the format expected by frontend
-    transformed_data, offset_year = transform_artist_evolution_data(stats_unprocessed, stats_range)
+    transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
 
     response = {"result": transformed_data}
     if offset_year is not None:
@@ -1422,99 +1369,27 @@ def get_sitewide_artist_activity():
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
 
+
 @stats_api_bp.get("/sitewide/artist-evolution-activity")
 @crossdomain
 @ratelimit()
 def get_sitewide_album_activity():
-    """
-    Get the sitewide album activity. This shows the most popular albums across all ListenBrainz users
-    and the artists who contributed to them.
-
-    A sample response from the endpoint may look like:
-
-    .. code-block:: json
-
-        {
-            "result": [
-                {
-                    "name": "OK Computer",
-                    "listen_count": 12450,
-                    "release_group_mbid": "12345-abcde",
-                    "artists": [
-                        {"name": "Radiohead", "listen_count": 12450, "artist_mbid": "a1234-xyz"}
-                    ]
-                },
-                {
-                    "name": "Abbey Road",
-                    "listen_count": 10320,
-                    "release_group_mbid": "67890-fghij",
-                    "artists": [
-                        {"name": "The Beatles", "listen_count": 10320, "artist_mbid": "b5678-abc"}
-                    ]
-                }
-            ]
-        }
-
-    :param range: Optional, time interval for which statistics should be returned, possible values are
-        :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
-    :type range: ``str``
-    :statuscode 200: Successful query, you have data!
-    :statuscode 204: Statistics haven't been calculated, empty response will be returned
-    :statuscode 400: Bad request, check ``response['error']`` for more details
-    :resheader Content-Type: *application/json*
-    """
-    # Temporary hardcoded data for testing
-    hardcoded_result = [
-        {
-            "name": "OK Computer",
-            "listen_count": 12450,
-            "release_group_mbid": "12345-abcde",
-            "artists": [
-                {"name": "Radiohead", "listen_count": 12450, "artist_mbid": "a1234-xyz"}
-            ]
-        },
-        {
-            "name": "Abbey Road",
-            "listen_count": 10320,
-            "release_group_mbid": "67890-fghij",
-            "artists": [
-                {"name": "The Beatles", "listen_count": 10320, "artist_mbid": "b5678-abc"}
-            ]
-        },
-        {
-            "name": "In Rainbows",
-            "listen_count": 9875,
-            "release_group_mbid": "54321-vwxyz",
-            "artists": [
-                {"name": "Radiohead", "listen_count": 9875, "artist_mbid": "a1234-xyz"}
-            ]
-        },
-        {
-            "name": "Dark Side of the Moon",
-            "listen_count": 8960,
-            "release_group_mbid": "abcde-12345",
-            "artists": [
-                {"name": "Pink Floyd", "listen_count": 8960, "artist_mbid": "c9012-def"}
-            ]
-        }
-    ]
-    
-    return jsonify({"result": hardcoded_result})
-    
-    # The commented code below represents what the actual implementation would look like:
-    """
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
     
-    stats = db_stats.get_sitewide_stats("releases", stats_range)
+    stats = db_stats.get_sitewide_stats("artist_evolution_activity", stats_range)
     if stats is None:
-        raise APINoContent('')
+        raise APINoContent("")
     
-    releases_list = stats["data"]
-    result = _get_album_activity(releases_list)
-    return jsonify({"result": result})
-    """
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+    transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
+    
+    response = {"result": transformed_data}
+    if offset_year is not None:
+        response["offset_year"] = offset_year
+
+    return jsonify(response)
 
 
 @stats_api_bp.get("/sitewide/artist-map")
