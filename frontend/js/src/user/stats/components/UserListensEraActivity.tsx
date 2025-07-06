@@ -161,7 +161,7 @@ export default function UserListensEraActivity({
     return () => {
       window.removeEventListener("resize", updateWidth);
     };
-  }, [rawData?.result, selectedDecade, chartData.length]);
+  }, [chartData.length]);
 
   const handleBarClick = (data: {
     id: string | number;
