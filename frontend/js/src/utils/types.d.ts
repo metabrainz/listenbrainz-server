@@ -307,9 +307,9 @@ declare type UserArtistActivityResponse = {
 
 export interface UserArtistEvolutionActivityResponse {
   result: Array<{
-	[artistName: string]: number;
+	  [artistName: string]: number;
   }>;
-  offset_year?: number; // Add this optional property
+  offset_year?: number;
 }
 
 declare type UserArtistMapArtist = {
