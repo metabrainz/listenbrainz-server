@@ -1291,51 +1291,17 @@ def get_sitewide_artist_activity():
 @crossdomain
 @ratelimit()
 def get_sitewide_listens_era_activity():
-    array = [
-    { "year": "1983", "count": 145, "formattedYear": "1983" },
-    { "year": "1984", "count": 99, "formattedYear": "1984" },
-    { "year": "1985", "count": 122, "formattedYear": "1985" },
-    { "year": "1986", "count": 110, "formattedYear": "1986" },
-    { "year": "1987", "count": 75, "formattedYear": "1987" },
-    { "year": "1988", "count": 165, "formattedYear": "1988" },
-    { "year": "1989", "count": 94, "formattedYear": "1989" },
-    { "year": "1990", "count": 83, "formattedYear": "1990" },
-    { "year": "1991", "count": 156, "formattedYear": "1991" },
-    { "year": "1992", "count": 117, "formattedYear": "1992" },
-    { "year": "1993", "count": 103, "formattedYear": "1993" },
-    { "year": "1994", "count": 132, "formattedYear": "1994" },
-    { "year": "1995", "count": 86, "formattedYear": "1995" },
-    { "year": "1996", "count": 163, "formattedYear": "1996" },
-    { "year": "1997", "count": 140, "formattedYear": "1997" },
-    { "year": "1998", "count": 98, "formattedYear": "1998" },
-    { "year": "1999", "count": 121, "formattedYear": "1999" },
-    { "year": "2000", "count": 150, "formattedYear": "2000" },
-    { "year": "2001", "count": 160, "formattedYear": "2001" },
-    { "year": "2002", "count": 170, "formattedYear": "2002" },
-    { "year": "2003", "count": 180, "formattedYear": "2003" },
-    { "year": "2004", "count": 190, "formattedYear": "2004" },
-    { "year": "2005", "count": 60, "formattedYear": "2005" },
-    { "year": "2006", "count": 80, "formattedYear": "2006" },
-    { "year": "2007", "count": 100, "formattedYear": "2007" },
-    { "year": "2008", "count": 120, "formattedYear": "2008" },
-    { "year": "2009", "count": 140, "formattedYear": "2009" },
-    { "year": "2010", "count": 60, "formattedYear": "2010" },
-    { "year": "2011", "count": 60, "formattedYear": "2011" },
-    { "year": "2012", "count": 80, "formattedYear": "2012" },
-    { "year": "2013", "count": 110, "formattedYear": "2013" },
-    { "year": "2014", "count": 180, "formattedYear": "2014" },
-    { "year": "2015", "count": 120, "formattedYear": "2015" },
-    { "year": "2016", "count": 150, "formattedYear": "2016" },
-    { "year": "2017", "count": 200, "formattedYear": "2017" },
-    { "year": "2018", "count": 100, "formattedYear": "2018" },
-    { "year": "2019", "count": 120, "formattedYear": "2019" },
-    { "year": "2020", "count": 180, "formattedYear": "2020" },
-    { "year": "2021", "count": 150, "formattedYear": "2021" },
-    { "year": "2022", "count": 130, "formattedYear": "2022" },
-    { "year": "2023", "count": 110, "formattedYear": "2023" },
-    { "year": "2024", "count": 90, "formattedYear": "2024" },
-  ]
-    return jsonify({"result": array})
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    
+    stats = db_stats.get_sitewide_stats("era_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+    
+    result = stats["data"]
+    
+    return jsonify({"result": result})
 
 
 @stats_api_bp.get("/sitewide/artist-map")

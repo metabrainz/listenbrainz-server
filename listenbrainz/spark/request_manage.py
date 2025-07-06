@@ -108,7 +108,7 @@ def request_user_stats(type_, range_, entity, database):
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'era_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)

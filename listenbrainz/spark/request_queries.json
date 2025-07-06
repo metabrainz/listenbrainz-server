@@ -39,6 +39,11 @@
     "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
     "params": ["stats_range"]
   },
+  "stats.sitewide.era_activity": {
+    "name": "stats.sitewide.era_activity",
+    "description": "Calculate number of listens per year of release on each day of the requested stats_range.",
+    "params": ["stats_range", "database"]
+  },
   "year_in_music.new_releases_of_top_artists": {
     "name": "year_in_music.new_releases_of_top_artists",
     "description": "Calculate list of releases released this year by top 50 artists of this year for each user",

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
@@ -117,6 +117,7 @@ export default function UserListensEraActivity({
           user?.name,
           range
         );
+        console.log(queryData);
         return { data: queryData, hasError: false, errorMessage: "" };
       } catch (error) {
         return {
@@ -165,32 +166,50 @@ export default function UserListensEraActivity({
     };
   }, [chartData.length]);
 
-  const handleBarClick = (data: {
-    id: string | number;
-    value: number | null;
-    indexValue: string | number;
-    data: {
-      decade: number;
-      listen_count: number;
-    };
-    color: string;
-  }) => {
-    const clickedDecade = data.data.decade;
-    if (selectedDecade) {
-      setSelectedDecade(null);
-      return;
-    }
+  const handleBarClick = useCallback(
+    (data: {
+      id: string | number;
+      value: number | null;
+      indexValue: string | number;
+      data: {
+        decade: number;
+        listen_count: number;
+      };
+      color: string;
+    }) => {
+      const clickedDecade = data.data.decade;
+      if (selectedDecade) {
+        setSelectedDecade(null);
+        return;
+      }
 
-    // Only allow expansion for decades (multiples of 10)
-    if (clickedDecade % 10 === 0 && clickedDecade !== clickedDecade % 10) {
-      setSelectedDecade(clickedDecade);
-    }
-  };
+      // Only allow expansion for decades (multiples of 10)
+      if (clickedDecade % 10 === 0 && clickedDecade !== clickedDecade % 10) {
+        setSelectedDecade(clickedDecade);
+      }
+    },
+    [selectedDecade]
+  );
 
   // Format function for display
-  const formatDecadeLabel = (decade: number): string => {
-    return selectedDecade ? decade.toString() : `${decade}s`;
-  };
+  const formatDecadeLabel = useCallback(
+    (decade: number): string => {
+      return selectedDecade ? decade.toString() : `${decade}s`;
+    },
+    [selectedDecade]
+  );
+
+  // Memoize tooltip component to prevent recreation on every render
+  const renderTooltip = useCallback(
+    (props: any) => (
+      <CustomTooltip
+        indexValue={props.indexValue}
+        value={Number(props.value)}
+        formatLabel={formatDecadeLabel}
+      />
+    ),
+    [formatDecadeLabel]
+  );
 
   return (
     <Card className="user-stats-card" data-testid="yearly-listening-activity">
@@ -265,13 +284,7 @@ export default function UserListensEraActivity({
                     minValue={0}
                     padding={BAR_PADDING_RATIO}
                     enableLabel={false}
-                    tooltip={(props) => (
-                      <CustomTooltip
-                        indexValue={props.indexValue}
-                        value={Number(props.value)}
-                        formatLabel={formatDecadeLabel}
-                      />
-                    )}
+                    tooltip={renderTooltip}
                     margin={{ left: 60, bottom: 60, top: 30, right: 20 }}
                     enableGridY
                     gridYValues={5}
