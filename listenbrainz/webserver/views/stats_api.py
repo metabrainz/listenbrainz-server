@@ -1422,7 +1422,7 @@ def get_sitewide_artist_activity():
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
 
-@stats_api_bp.get("/sitewide/album-activity")
+@stats_api_bp.get("/sitewide/artist-evolution-activity")
 @crossdomain
 @ratelimit()
 def get_sitewide_album_activity():

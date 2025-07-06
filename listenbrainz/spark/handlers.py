@@ -101,6 +101,10 @@ def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
 
 
+def handle_sitewide_artist_evolution_activity(message):
+    _handle_sitewide_stats(message, "artist_evolution_activity")
+
+
 def handle_dump_imported(data):
     """ Process the response that the cluster sends after importing a new dump
 
