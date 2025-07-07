@@ -54,7 +54,7 @@ $font-size-base: 1.4rem;
 // $font-size-lg: 1.5rem;
 
 $body-secondary-bg: $gray-light;
-$body-tertiary-bg: $pearl;
+$body-tertiary-bg: #fafafa;
 $body-emphasis-color: $body-color;
 
 $success-text-emphasis: #3c763d;
@@ -131,7 +131,7 @@ $dropdown-font-size: 1.4rem;
 $dropdown-item-padding-x: 2rem;
 
 /* Cards */
-$card-border-color: $gray-300;
+$card-border-color: #eee;
 $card-border-radius: 8px;
 $card-box-shadow: 0px 1px 1px color.scale($gray-500, $alpha: -90%),
   0px 2px 2px color.scale($gray-500, $alpha: -85%),
