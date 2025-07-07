@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.views.api_tools import validate_auth_header
-from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APIInternalServerError, APIUnauthorized
+from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APIInternalServerError, APIUnauthorized, APIForbidden, APIServiceUnavailable
 from listenbrainz.domain.external_service import ExternalServiceError, ExternalServiceAPIError, ExternalServiceInvalidGrantError
 from listenbrainz.db import funkwhale as db_funkwhale
 
@@ -291,4 +291,76 @@ def funkwhale_callback():
 
     except Exception as e:
         current_app.logger.error("Error in funkwhale_callback: %s", str(e), exc_info=True)
-        return redirect(url_for('settings.music_services_details', _anchor='funkwhale', error="An unexpected error occurred")) 
+        return redirect(url_for('settings.music_services_details', _anchor='funkwhale', error="An unexpected error occurred"))
+
+@funkwhale_api_bp.route('/refresh/', methods=['POST'])
+@crossdomain
+@ratelimit()
+def refresh_funkwhale_token():
+    """Refresh a user's Funkwhale access token.
+    
+    The request should contain the following JSON data:
+    {
+        "host_url": "https://funkwhale.example.com"
+    }
+    
+    Returns:
+        A JSON response with the new access token.
+    """
+    user = validate_auth_header()
+    if not user:
+        raise APIUnauthorized("You must be logged in to refresh Funkwhale tokens")
+
+    try:
+        data = request.get_json()
+        if not data or 'host_url' not in data:
+            raise APIBadRequest("Missing host_url in request")
+        
+        host_url = validate_funkwhale_url(data['host_url'])
+        
+        current_app.logger.info(f"Refresh token request for user {user['id']} at {host_url}")
+        
+        service = FunkwhaleService()
+        user_data = service.get_user(user['id'], host_url)
+        if not user_data:
+            current_app.logger.warning(f"No Funkwhale connection found for user {user['id']} at {host_url}")
+            raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
+        
+        if not user_data.get('refresh_token'):
+            current_app.logger.warning(f"No refresh token available for user {user['id']} at {host_url}")
+            raise APIBadRequest("No refresh token available for this connection")
+        
+        # Check if token has expired and refresh if needed
+        if service.user_oauth_token_has_expired(user_data):
+            current_app.logger.debug(f"Token expired for user {user['id']} at {host_url}, refreshing...")
+            try:
+                refreshed_user = service.refresh_access_token(
+                    user['id'], 
+                    host_url, 
+                    user_data['refresh_token']
+                )
+                current_app.logger.info(f"Successfully refreshed Funkwhale token for user {user['id']} at {host_url}")
+                user_data = refreshed_user
+            except ExternalServiceInvalidGrantError:
+                current_app.logger.warning(f"User {user['id']} has revoked authorization to Funkwhale at {host_url}")
+                raise APIForbidden("User has revoked authorization to Funkwhale")
+            except ExternalServiceError as e:
+                # Check if this is an invalid_client error (OAuth app deleted)
+                if "invalid_client" in str(e).lower():
+                    current_app.logger.warning(f"Invalid client error for user {user['id']} at {host_url} - OAuth app likely deleted")
+                    raise APIForbidden("Funkwhale connection is no longer valid - please reconnect to this server")
+                current_app.logger.error(f"Funkwhale service error for user {user['id']} at {host_url}: {e}")
+                raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
+            except Exception as e:
+                current_app.logger.error(f"Unable to refresh Funkwhale token for user {user['id']} at {host_url}: {e}", exc_info=True)
+                raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
+        else:
+            current_app.logger.debug(f"Token for user {user['id']} at {host_url} is still valid, no refresh needed")
+        
+        return jsonify({"access_token": user_data["access_token"]})
+        
+    except (APIBadRequest, APINotFound, APIUnauthorized, APIForbidden, APIServiceUnavailable) as e:
+        raise e
+    except Exception as e:
+        current_app.logger.error("Unexpected error in refresh_funkwhale_token: %s", str(e), exc_info=True)
+        raise APIInternalServerError("An error occurred while refreshing Funkwhale token")

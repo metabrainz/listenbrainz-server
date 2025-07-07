@@ -146,7 +146,33 @@ export default function BrainzPlayer() {
     if (!currentUser?.auth_token) {
       throw new Error("No user authentication token available");
     }
-    return apiRefreshFunkwhaleToken(currentUser.auth_token, hostUrl);
+
+    try {
+      return await apiRefreshFunkwhaleToken(currentUser.auth_token, hostUrl);
+    } catch (error) {
+      // Check if this is an authentication error that requires reconnection
+      if (error.status === 401 || error.status === 403) {
+        const errorMessage = error.message || "";
+        if (
+          errorMessage.includes("no longer valid") ||
+          errorMessage.includes("reconnect") ||
+          errorMessage.includes("revoked authorization")
+        ) {
+          throw new Error(
+            "Funkwhale connection is no longer valid. Please reconnect to this server in your music service settings."
+          );
+        }
+        throw new Error(
+          "Funkwhale authentication failed. Please re-authenticate in your music service settings."
+        );
+      }
+      if (error.status === 503) {
+        throw new Error(
+          "Funkwhale service is temporarily unavailable. Please try again later."
+        );
+      }
+      throw new Error(`Token refresh failed: ${error.message}`);
+    }
   }, [
     apiRefreshFunkwhaleToken,
     funkwhaleAuth?.instance_url,

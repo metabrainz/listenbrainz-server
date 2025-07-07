@@ -62,11 +62,34 @@ export default function MusicServices() {
     setConnectedFunkwhaleServers,
   ] = React.useState<string[]>(loaderData.funkwhale_host_urls || []);
 
+  // Track if this is the initial load to prevent automatic disable calls
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const [userInteractionStarted, setUserInteractionStarted] = React.useState(
+    false
+  );
+
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
   ) => {
     try {
+      setUserInteractionStarted(true);
+
+      // For Funkwhale disable action during initial load, don't call backend
+      // This prevents automatic disconnection when component loads with "disable" state
+      if (
+        serviceName === "funkwhale" &&
+        newValue === "disable" &&
+        !userInteractionStarted
+      ) {
+        // Just update the UI state without calling the backend
+        setPermissions((prevState) => ({
+          ...prevState,
+          [serviceName]: newValue,
+        }));
+        return;
+      }
+      // For other services or user-initiated actions, proceed normally
       const fetchUrl = `/settings/music-services/${serviceName}/disconnect/`;
       let fetchBody;
       const fetchHeaders: Record<string, string> = {
@@ -298,6 +321,15 @@ export default function MusicServices() {
         window.location.pathname + window.location.hash
       );
     }
+  }, []);
+
+  React.useEffect(() => {
+    // Use a small timeout to ensure this runs after any initial renders
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (

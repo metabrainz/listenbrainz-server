@@ -86,12 +86,14 @@ class FunkwhaleService:
     def get_authorize_url(self, host_url: str, scopes: List[str], state: Optional[str] = None) -> str:
         # Ensure host_url doesn't end with a slash
         host_url = host_url.rstrip('/')
-        # Check if server exists
+        # Check if server exists with valid credentials
         server = db_funkwhale.get_server_by_host_url(host_url)
         if server and server.get('client_id') and server.get('client_secret'):
             client_id = server['client_id']
+            current_app.logger.debug(f"Using existing OAuth app for {host_url} with client_id {client_id[:8]}...")
         else:
-            # Create OAuth app on Funkwhale
+            # Create OAuth app on Funkwhale only if none exists
+            current_app.logger.debug(f"Creating new OAuth app for {host_url}")
             app_data = {
                 'name': 'ListenBrainz',
                 'website': host_url,
@@ -104,6 +106,7 @@ class FunkwhaleService:
             app_credentials = response.json()
             client_id = app_credentials['client_id']
             client_secret = app_credentials['client_secret']
+            current_app.logger.debug(f"Created new OAuth app with client_id {client_id[:8]}...")
             db_funkwhale.get_or_create_server(host_url, client_id, client_secret, ' '.join(scopes))
         auth_url = f"{host_url}/api/v1/oauth/authorize"
         oauth = OAuth2Session(
@@ -147,6 +150,11 @@ class FunkwhaleService:
             raise ExternalServiceError("No Funkwhale server found for host_url")
         client_id = server['client_id']
         client_secret = server['client_secret']
+        
+        # Log client_id for debugging (but not client_secret for security)
+        current_app.logger.debug(f"Using client_id {client_id[:8]}... for user {user_id} at {host_url}")
+        current_app.logger.debug(f"Server record ID: {server['id']}, scopes: {server.get('scopes', 'unknown')}")
+        
         oauth = OAuth2Session(
             client_id=client_id,
             redirect_uri=self.redirect_url
@@ -154,6 +162,9 @@ class FunkwhaleService:
         token_url = f"{host_url}/api/v1/oauth/token/"
         try:
             current_app.logger.debug(f"Attempting to refresh Funkwhale token for user {user_id} at {host_url}")
+            current_app.logger.debug(f"Token URL: {token_url}")
+            current_app.logger.debug(f"Refresh token length: {len(refresh_token) if refresh_token else 0}")
+            
             token = oauth.refresh_token(
                 token_url,
                 client_secret=client_secret,
@@ -162,10 +173,26 @@ class FunkwhaleService:
             )
         except InvalidGrantError as e:
             current_app.logger.warning(f"Funkwhale token refresh failed - invalid grant for user {user_id}: {e}")
+            # Log more details for debugging
+            current_app.logger.warning(f"Failed refresh details: client_id={client_id[:8]}..., host_url={host_url}")
             raise ExternalServiceInvalidGrantError("User revoked access") from e
         except requests.exceptions.RequestException as e:
             current_app.logger.error(f"Funkwhale token refresh network error for user {user_id}: {e}")
             raise ExternalServiceAPIError(f"Could not connect to Funkwhale server: {str(e)}")
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error during Funkwhale token refresh for user {user_id}: {e}")
+            # Log more details for debugging client issues
+            current_app.logger.error(f"Error details: client_id={client_id[:8]}..., host_url={host_url}, error_type={type(e).__name__}")
+            
+            # If it's an invalid_client error, the OAuth app might have been deleted on Funkwhale
+            # In this case, we should invalidate the user's token to force re-authentication
+            if "invalid_client" in str(e).lower():
+                current_app.logger.warning(f"Invalid client error suggests OAuth app was deleted on Funkwhale server {host_url}")
+                current_app.logger.warning(f"Clearing user {user_id}'s token for server {server['id']} to force re-authentication")
+                # Delete only this user's token, not the entire server record
+                db_funkwhale.delete_token(user_id, server['id'])
+            
+            raise ExternalServiceError(f"Token refresh failed: {str(e)}")
         
         access_token = token['access_token']
         new_refresh_token = token.get('refresh_token', refresh_token)

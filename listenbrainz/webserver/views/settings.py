@@ -31,7 +31,6 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, AP
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.db import funkwhale as db_funkwhale
-from listenbrainz.webserver.views.views_utils import get_current_funkwhale_user
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -192,13 +191,14 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
-    # Use the existing function that already handles token expiry logic
-    current_funkwhale_user = get_current_funkwhale_user()
-    current_funkwhale_permission = "listen" if current_funkwhale_user else "disable"
-    
-    # Get all connected servers for display
+    # For Funkwhale, check if user has any tokens (regardless of expiry)
+    # This ensures we don't auto-disable when tokens are expired - let frontend handle reconnection
     funkwhale_servers = get_funkwhale_connections(current_user.id)
     funkwhale_host_urls = [server['host_url'] for server in funkwhale_servers] if funkwhale_servers else []
+    
+    # Check if user has any Funkwhale tokens (like other services do)
+    funkwhale_tokens = db_funkwhale.get_all_user_tokens(current_user.id)
+    current_funkwhale_permission = "listen" if funkwhale_tokens else "disable"
 
     librefm_service = LibrefmService()
     librefm_user = librefm_service.get_user(current_user.id)

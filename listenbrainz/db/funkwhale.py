@@ -3,12 +3,28 @@ from listenbrainz.webserver import db_conn
 from typing import Optional, Dict, Any
 
 def get_or_create_server(host_url: str, client_id: str, client_secret: str, scopes: str) -> int:
+    # First, try to get existing server
+    existing_server = get_server_by_host_url(host_url)
+    if existing_server:
+        # If server exists with valid credentials, return its ID without updating
+        if existing_server.get('client_id') and existing_server.get('client_secret'):
+            return existing_server['id']
+    
+    # If no server exists or it has missing credentials, create/update it
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO funkwhale_servers (host_url, client_id, client_secret, scopes)
         VALUES (:host_url, :client_id, :client_secret, :scopes)
         ON CONFLICT (host_url) DO UPDATE SET
-            client_id = EXCLUDED.client_id,
-            client_secret = EXCLUDED.client_secret,
+            client_id = CASE 
+                WHEN funkwhale_servers.client_id IS NULL OR funkwhale_servers.client_id = ''
+                THEN EXCLUDED.client_id 
+                ELSE funkwhale_servers.client_id 
+            END,
+            client_secret = CASE 
+                WHEN funkwhale_servers.client_secret IS NULL OR funkwhale_servers.client_secret = ''
+                THEN EXCLUDED.client_secret 
+                ELSE funkwhale_servers.client_secret 
+            END,
             scopes = EXCLUDED.scopes
         RETURNING id
     """), {
