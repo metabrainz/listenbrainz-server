@@ -179,3 +179,8 @@ details[open] > summary .summary-indicator {
   // override the --bs-badge-font-size CSS variable value
   font-size: $badge-font-size;
 }
+
+.capitalize-bold {
+  font-weight: 700;
+  text-transform: capitalize;
+}
