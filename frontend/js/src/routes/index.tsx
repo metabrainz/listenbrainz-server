@@ -11,167 +11,195 @@ const getIndexRoutes = (): RouteObject[] => {
       children: [
         {
           index: true,
-          lazy: async () => {
-            const HomePage = await import("../home/Homepage");
-            return { Component: HomePage.HomePageWrapper };
+          lazy: {
+            Component: async () => {
+              return (await import("../home/Homepage")).HomePageWrapper;
+            },
+            loader: async () => {
+              return RouteQueryLoader("home");
+            },
           },
-          loader: RouteQueryLoader("home"),
         },
         {
           path: "login/",
-          lazy: async () => {
-            const Login = await import("../login/Login");
-            return { Component: Login.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../login/Login")).default;
+            },
           },
         },
         {
           path: "agree-to-terms/",
-          lazy: async () => {
-            const GDPR = await import("../gdpr/GDPR");
-            return { Component: GDPR.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../gdpr/GDPR")).default;
+            },
           },
         },
         {
           path: "import-data/",
-          lazy: async () => {
-            const ImportData = await import("../import-data/ImportData");
-            return { Component: ImportData.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../import-data/ImportData")).default;
+            },
+          },
+        },
+        {
+          path: "messybrainz/",
+          lazy: {
+            Component: async () => {
+              return (await import("../messybrainz/MessyBrainz")).default;
+            },
           },
         },
         {
           path: "lastfm-proxy/",
-          lazy: async () => {
-            const LastfmProxy = await import("../lastfm-proxy/LastfmProxy");
-            return { Component: LastfmProxy.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../lastfm-proxy/LastfmProxy")).default;
+            },
           },
         },
         {
           path: "listens-offline/",
-          lazy: async () => {
-            const ListensOffline = await import(
-              "../listens-offline/ListensOffline"
-            );
-            return { Component: ListensOffline.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../listens-offline/ListensOffline"))
+                .default;
+            },
           },
         },
         {
           path: "musicbrainz-offline/",
-          lazy: async () => {
-            const MusicBrainzOffline = await import(
-              "../musicbrainz-offline/MusicBrainzOffline"
-            );
-            return { Component: MusicBrainzOffline.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../musicbrainz-offline/MusicBrainzOffline"))
+                .default;
+            },
           },
         },
         {
           path: "search/",
-          lazy: async () => {
-            const SearchResults = await import("../search/Search");
-            return { Component: SearchResults.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../search/Search")).default;
+            },
           },
         },
         {
           path: "playlist/",
-          lazy: async () => {
-            const LayoutWithBackButton = await import(
-              "../layout/LayoutWithBackButton"
-            );
-            return { Component: LayoutWithBackButton.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../layout/LayoutWithBackButton")).default;
+            },
           },
           children: [
             {
               path: ":playlistID/",
-              lazy: async () => {
-                const PlaylistPage = await import("../playlists/Playlist");
-                return { Component: PlaylistPage.default };
+              lazy: {
+                Component: async () => {
+                  return (await import("../playlists/Playlist")).default;
+                },
+                loader: async () => {
+                  return RouteLoader;
+                },
               },
-              loader: RouteLoader,
             },
           ],
         },
         {
           path: "/statistics/",
-          lazy: async () => {
-            const UserDashboardLayout = await import("../user/layout");
-            return { Component: UserDashboardLayout.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../user/layout")).default;
+            },
           },
           children: [
             {
               index: true,
-              lazy: async () => {
-                const UserReports = await import("../user/stats/UserReports");
-                return { Component: UserReports.default };
+              lazy: {
+                Component: async () => {
+                  return (await import("../user/stats/UserReports")).default;
+                },
               },
             },
             {
               path: "top-artists/",
-              lazy: async () => {
-                const UserEntityChart = await import(
-                  "../user/charts/UserEntityChart"
-                );
-                return {
-                  Component: UserEntityChart.default,
-                  loader: UserEntityChart.StatisticsChartLoader,
-                };
+              lazy: {
+                Component: async () => {
+                  return (await import("../user/charts/UserEntityChart"))
+                    .default;
+                },
+                loader: async () => {
+                  return (await import("../user/charts/UserEntityChart"))
+                    .StatisticsChartLoader;
+                },
               },
             },
             {
               path: "top-albums/",
-              lazy: async () => {
-                const UserEntityChart = await import(
-                  "../user/charts/UserEntityChart"
-                );
-                return {
-                  Component: UserEntityChart.default,
-                  loader: UserEntityChart.StatisticsChartLoader,
-                };
+              lazy: {
+                Component: async () => {
+                  return (await import("../user/charts/UserEntityChart"))
+                    .default;
+                },
+                loader: async () => {
+                  return (await import("../user/charts/UserEntityChart"))
+                    .StatisticsChartLoader;
+                },
               },
             },
             {
               path: "top-tracks/",
-              lazy: async () => {
-                const UserEntityChart = await import(
-                  "../user/charts/UserEntityChart"
-                );
-                return {
-                  Component: UserEntityChart.default,
-                  loader: UserEntityChart.StatisticsChartLoader,
-                };
+              lazy: {
+                Component: async () => {
+                  return (await import("../user/charts/UserEntityChart"))
+                    .default;
+                },
+                loader: async () => {
+                  return (await import("../user/charts/UserEntityChart"))
+                    .StatisticsChartLoader;
+                },
               },
             },
           ],
         },
         {
           path: "recent/",
-          lazy: async () => {
-            const UserFeedLayout = await import("../user-feed/UserFeedLayout");
-            return { Component: UserFeedLayout.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../user-feed/UserFeedLayout")).default;
+            },
           },
           children: [
             {
               index: true,
-              lazy: async () => {
-                const RecentListens = await import("../recent/RecentListens");
-                return {
-                  Component: RecentListens.RecentListensWrapper,
-                };
+              lazy: {
+                Component: async () => {
+                  return (await import("../recent/RecentListens"))
+                    .RecentListensWrapper;
+                },
+                loader: async () => {
+                  return RouteLoader;
+                },
               },
-              loader: RouteLoader,
             },
           ],
         },
         {
           path: "api/auth/",
-          lazy: async () => {
-            const APIAuth = await import("../api/auth/AuthPage");
-            return { Component: APIAuth.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../api/auth/AuthPage")).default;
+            },
           },
         },
         {
           path: "donors/",
-          lazy: async () => {
-            const Donors = await import("../donors/Donors");
-            return { Component: Donors.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../donors/Donors")).default;
+            },
           },
         },
       ],
