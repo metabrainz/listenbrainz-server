@@ -12,51 +12,56 @@ const getAboutRoutes = (): RouteObject[] => {
       children: [
         {
           path: "about/",
-          lazy: async () => {
-            const About = await import("../About");
-            return { Component: About.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../About")).default;
+            },
           },
         },
         {
           path: "add-data/",
-          lazy: async () => {
-            const AddData = await import("../add-data/AddData");
-            return { Component: AddData.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../add-data/AddData")).default;
+            },
           },
         },
         {
           path: "current-status/",
-          loader: RouteQueryLoader("current-status"),
-          lazy: async () => {
-            const CurrentStatus = await import(
-              "../current-status/CurrentStatus"
-            );
-            return { Component: CurrentStatus.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../current-status/CurrentStatus")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("current-status");
+            },
           },
         },
         {
           path: "data/",
-          lazy: async () => {
-            const Data = await import("../data/Data");
-            return { Component: Data.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../data/Data")).default;
+            },
           },
         },
         {
           path: "terms-of-service/",
-          lazy: async () => {
-            const TermsOfService = await import(
-              "../terms-of-service/TermsOfService"
-            );
-            return { Component: TermsOfService.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../terms-of-service/TermsOfService"))
+                .default;
+            },
           },
         },
       ],
     },
     {
       path: "donate/",
-      lazy: async () => {
-        const Donate = await import("../donations/Donate");
-        return { Component: Donate.default };
+      lazy: {
+        Component: async () => {
+          return (await import("../donations/Donate")).default;
+        },
       },
     },
   ];
