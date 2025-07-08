@@ -45,14 +45,6 @@ const getIndexRoutes = (): RouteObject[] => {
           },
         },
         {
-          path: "messybrainz/",
-          lazy: {
-            Component: async () => {
-              return (await import("../messybrainz/MessyBrainz")).default;
-            },
-          },
-        },
-        {
           path: "lastfm-proxy/",
           lazy: {
             Component: async () => {
