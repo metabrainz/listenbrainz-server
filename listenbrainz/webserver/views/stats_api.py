@@ -10,6 +10,7 @@ import listenbrainz.db.user as db_user
 from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
@@ -523,7 +524,20 @@ def get_artist_activity(user_name: str):
     release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
+
+
+@stats_api_bp.get("/user/<user_name>/genre-activity")
+@crossdomain
+@ratelimit()
+def get_genre_activity(user_name: str):
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "genre_activity", stats_range, GenreActivityRecord)
+    if stats is None:
+        raise APINoContent('')
     
+    genre_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"result": genre_activity})
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
