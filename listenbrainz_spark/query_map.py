@@ -5,8 +5,10 @@ import listenbrainz_spark.recommendations.recording.discovery
 import listenbrainz_spark.recommendations.recording.train_models
 import listenbrainz_spark.stats.sitewide.entity
 import listenbrainz_spark.stats.sitewide.listening_activity
+import listenbrainz_spark.stats.sitewide.era_activity
 import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
+import listenbrainz_spark.stats.user.era_activity
 import listenbrainz_spark.stats.user.listening_activity
 import listenbrainz_spark.stats.listener.entity
 import listenbrainz_spark.year_in_music.new_releases_of_top_artists
@@ -41,8 +43,10 @@ functions = {
     'stats.user.entity': listenbrainz_spark.stats.user.entity.get_entity_stats,
     'stats.user.listening_activity': listenbrainz_spark.stats.user.listening_activity.get_listening_activity,
     'stats.user.daily_activity': listenbrainz_spark.stats.user.daily_activity.get_daily_activity,
+    'stats.user.era_activity': listenbrainz_spark.stats.user.era_activity.get_era_activity,
     'stats.sitewide.entity': listenbrainz_spark.stats.sitewide.entity.get_entity_stats,
     'stats.sitewide.listening_activity': listenbrainz_spark.stats.sitewide.listening_activity.get_listening_activity,
+    'stats.sitewide.era_activity': listenbrainz_spark.stats.sitewide.era_activity.get_era_activity,
     'import.dump.full': listenbrainz_spark.listens.dump.import_full_dump_handler,
     'import.dump.mlhd': listenbrainz_spark.mlhd.download.import_mlhd_dump_to_hdfs,
     'import.dump.incremental': listenbrainz_spark.listens.dump.import_incremental_dump_handler,
