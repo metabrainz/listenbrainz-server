@@ -305,7 +305,7 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
-export interface UserArtistEvolutionActivityResponse {
+declare interface UserArtistEvolutionActivityResponse {
   result: Array<{
 	  [artistName: string]: number;
   }>;
