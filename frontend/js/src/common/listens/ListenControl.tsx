@@ -6,7 +6,7 @@ import {
   IconProp,
   SizeProp,
 } from "@fortawesome/fontawesome-svg-core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export type ListenControlProps = {
   buttonClassName?: string;
