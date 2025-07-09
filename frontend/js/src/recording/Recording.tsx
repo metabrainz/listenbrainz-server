@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
@@ -7,12 +7,13 @@ import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { chain } from "lodash";
+import { Vibrant } from "node-vibrant/browser";
+import type { Palette } from "@vibrant/color";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
 import {
   generateAlbumArtThumbnailLink,
-  getAverageRGBOfImage,
   getReviewEventContent,
 } from "../utils/utils";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -73,30 +74,19 @@ export default function RecordingPage(): JSX.Element {
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
 
   const albumArtRef = React.useRef<HTMLImageElement>(null);
-  const [albumArtColor, setAlbumArtColor] = React.useState({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
+  const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
   React.useEffect(() => {
-    const setAverageColor = () => {
-      const averageColor = getAverageRGBOfImage(albumArtRef?.current);
-      setAlbumArtColor(averageColor);
-    };
-    const currentAlbumArtRef = albumArtRef.current;
-    if (currentAlbumArtRef) {
-      currentAlbumArtRef.addEventListener("load", setAverageColor);
+    if (!albumArtRef.current) {
+      return;
     }
-    return () => {
-      if (currentAlbumArtRef) {
-        currentAlbumArtRef.removeEventListener("load", setAverageColor);
-      }
-    };
-  }, [setAlbumArtColor]);
-
-  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
-  adjustedAlbumColor.saturate(20);
-  adjustedAlbumColor.setAlpha(0.6);
+    Vibrant.from(albumArtRef.current)
+      .getPalette()
+      .then((palette) => {
+        setAlbumArtPalette(palette);
+      })
+      // eslint-disable-next-line no-console
+      .catch(console.error);
+  }, []);
 
   React.useEffect(() => {
     async function fetchReviews() {
@@ -144,7 +134,7 @@ export default function RecordingPage(): JSX.Element {
       </Helmet>
       <div
         className="entity-page-header flex"
-        style={{ ["--bg-color" as string]: adjustedAlbumColor }}
+        style={{ ["--bg-color" as string]: albumArtPalette?.Vibrant?.hex }}
       >
         <div className="cover-art">
           <img
