@@ -1,0 +1,164 @@
+@use 'sass:color';
+@use 'sass:map';
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+
+/* Colors */
+$listenbrainz-blue: #353070;
+$orange: #eb743b;
+$purple: #ba478f;
+$green: #5aa854;
+$blue: $listenbrainz-blue;
+$turquoise: #36b5b2;
+$yellow: #ea9d11;
+$red: #c64040;
+$asphalt: #46433a;
+$white: #fff;
+$black: #262626;
+$cream: #fffedb;
+$pearl: #f9f6f5;
+$cafe-con-leche: #ede5e2;
+$gray-lighter: color.adjust($cafe-con-leche, $lightness: 6%, $space: hsl);
+$gray-light: color.adjust($gray-lighter, $lightness: -15%, $space: hsl);
+$dark-turquoise: #053b47;
+$love: $red;
+$hate: $blue;
+
+// brand colors
+$primary: $orange;
+$secondary: $asphalt; // <- I don't think this was set in Bootstrap 3 styles
+$success: $green;
+$warning: $yellow;
+$danger: $red;
+$info: $blue;
+$light: $gray-lighter;
+$dark: $black;
+
+$theme-colors: (
+  "primary": $primary,
+  "secondary": $secondary,
+  "success": $success,
+  "info": $info,
+  "warning": $warning,
+  "danger": $danger,
+  "light": $light,
+  "dark": $dark,
+);
+
+$link-color: $blue;
+$link-hover-color: color.adjust($link-color, $lightness: 12%);
+$body-color: $asphalt;
+$font-family-sans-serif: Sintony, sans-serif;
+$font-size-base: 1.4rem;
+// $font-size-sm: 1rem;
+// $font-size-lg: 1.5rem;
+
+$body-secondary-bg: $gray-light;
+$body-tertiary-bg: #fafafa;
+$body-emphasis-color: $body-color;
+
+$success-text-emphasis: #3c763d;
+$success-bg-subtle: #dff0d8;
+$info-text-emphasis: #31708f;
+$info-bg-subtle: #d9edf7;
+$warning-text-emphasis: #8a6d3b;
+$warning-bg-subtle: #fcf8e3;
+$danger-text-emphasis: #a94442;
+$danger-bg-subtle: #f2dede;
+
+/* Headings */
+$headings-color: $body-color;
+$headings-font-weight: 300;
+$h1-font-size: $font-size-base * 2.6;
+$h2-font-size: $font-size-base * 2.15;
+$h3-font-size: $font-size-base * 1.7;
+$h4-font-size: $font-size-base * 1.25;
+$h5-font-size: $font-size-base;
+$h6-font-size: $font-size-base * 0.85;
+
+/* Navigation */
+// Height of the BrainzPlayer component (fixed at the bottom of the page)
+$brainzplayer-height: 60px;
+$sidenav-width: 190px;
+$offscreen-sidenav-breakpoint: map.get($grid-breakpoints, "lg");
+$very-wide-screen-breakpoint: 1950px;
+$navbar-height: 72px;
+$max-content-width: 1400px;
+$nav-background-color: #f3f3f3;
+$nav-tabs-border-radius: 0;
+
+/* Buttons */
+$btn-font-size: 1.2rem;
+$btn-font-size-sm: 1em;
+$btn-border-width: 0;
+$btn-border-radius: 0;
+$btn-box-shadow: none;
+$btn-active-box-shadow: none;
+$btn-white-space: nowrap;
+$btn-padding-y: 0.5rem;
+$btn-padding-x: 2rem;
+$btn-padding-y-sm: 0.15rem;
+$btn-padding-x-sm: 0.5rem;
+$btn-border-radius-lg: 0.5rem;
+
+/* Pagination */
+$pagination-disabled-bg: $body-tertiary-bg;
+
+/* Tables */
+$table-striped-bg: $pearl;
+$table-cell-padding-y: 0.8rem;
+$table-cell-padding-x: $table-cell-padding-y;
+
+/* Inputs */
+$input-btn-font-size: $btn-font-size;
+$input-btn-font-size-sm: $btn-font-size-sm;
+$input-padding-y: 0.5rem;
+$input-padding-x: 1rem;
+$input-padding-y-lg: 0.7rem;
+$input-padding-x-lg: 1.5rem;
+$input-font-size: 1.4rem;
+$input-font-size-lg: 1.8rem;
+$input-disabled-bg: $gray-lighter;
+$form-select-font-size: 1em;
+
+/* Nav */
+$nav-link-font-weight: 700;
+$navbar-height: 72px;
+
+/* Dropdowns */
+$dropdown-min-width: 16rem;
+$dropdown-font-size: 1.4rem;
+$dropdown-item-padding-x: 2rem;
+
+/* Cards */
+$card-border-color: #eee;
+$card-border-radius: 8px;
+$card-box-shadow: 0px 1px 1px color.scale($gray-500, $alpha: -90%),
+  0px 2px 2px color.scale($gray-500, $alpha: -85%),
+  0px 4px 4px color.scale($gray-500, $alpha: -80%);
+
+/* Misc */
+$enable-shadows: true;
+$hr-margin-y: 20px;
+$hr-border-color: $gray-light;
+$hr-opacity: 1;
+$alert-padding-x: 1.5rem;
+$alert-padding-y: $alert-padding-x;
+$alert-margin-bottom: 2rem;
+$progress-bg: $body-tertiary-bg;
+$border-color-translucent: $light;
+$link-decoration: none;
+$accordion-button-active-bg: $gray-lighter;
+$entity-icon-size: $input-font-size-lg;
+
+$cover-art-thumbnail-size: 66px;
+$listen-card-margin-bottom: 7px;
+
+$sidenav-width: 190px;
+
+$badge-border-radius: 10px;
+$badge-font-size: 1.2rem;
+// $navbar-padding-x: $spacer * 0.5;
+$grid-gutter-width: 3rem;
+$base-border-radius: 6px;
+$navbar-toggler-border-radius: $base-border-radius;
