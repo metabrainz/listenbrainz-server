@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Helmet } from "react-helmet";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { toast } from "react-toastify";
 
 export default function GDPR() {
@@ -97,7 +97,7 @@ export default function GDPR() {
         </div>
         <br />
         <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <button type="submit" className="btn btn-primary btn-lg btn-block">
+          <button type="submit" className="btn btn-primary btn-lg w-100">
             Submit choice!
           </button>
         </div>

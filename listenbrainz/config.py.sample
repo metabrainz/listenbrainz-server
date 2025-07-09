@@ -22,6 +22,9 @@ SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@lb_db/l
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@lb_db/postgres"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@lb_db/listenbrainz_ts"
 
+# Server address
+# SERVER_NAME = "localhost:8100"
+
 # MetaBrainz - used for retrieving donation info from metabrainz.org
 SQLALCHEMY_METABRAINZ_URI = ""
 
@@ -121,6 +124,8 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #     'traces_sample_rate': 1.0,
 # }
 
+# CRON_SENTRY_DSN = ''
+
 
 # MISCELLANEOUS
 
@@ -157,7 +162,7 @@ WHITELISTED_AUTH_TOKENS = []
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SPOTIFY_CALLBACK_URL = 'http://localhost:8100/settings/music-services/spotify/callback/'
+SPOTIFY_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/spotify/callback/'
 
 # SPOTIFY-CACHE
 SPOTIFY_CACHE_CLIENT_ID = 'needs a non empty default value for tests, change this'
@@ -166,12 +171,12 @@ SPOTIFY_CACHE_CLIENT_SECRET = 'needs a non empty default value for tests, change
 # SOUNDCLOUD
 SOUNDCLOUD_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SOUNDCLOUD_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SOUNDCLOUD_REDIRECT_URI = 'http://localhost:8100/settings/music-services/soundcloud/callback/'
+SOUNDCLOUD_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/soundcloud/callback/'
 
 # CRITIQUEBRAINZ
 CRITIQUEBRAINZ_CLIENT_ID = 'needs a non empty default value for tests, change this'
 CRITIQUEBRAINZ_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
+CRITIQUEBRAINZ_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/critiquebrainz/callback/'
 
 # APPLE MUSIC
 APPLE_MUSIC_TEAM_ID = 'needs a non empty default value for tests, change this'

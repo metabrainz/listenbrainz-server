@@ -3,7 +3,9 @@ from typing import Optional
 from pyspark import StorageLevel
 from pyspark.sql import DataFrame
 
-from listenbrainz_spark.path import RECORDING_LENGTH_DATAFRAME, RECORDING_ARTIST_DATAFRAME
+from data.postgres.recording import get_recording_length_cache_query, get_recording_artist_cache_query
+from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME, \
+    RECORDING_LENGTH_DATAFRAME
 from listenbrainz_spark.postgres.utils import save_pg_table_to_hdfs
 from listenbrainz_spark.utils import read_files_from_HDFS
 
@@ -13,36 +15,13 @@ _recording_artist_df: Optional[DataFrame] = None
 
 def create_recording_length_cache():
     """ Import recording lengths from postgres to HDFS for use in year in music and similar entity calculation. """
-    query = """
-        SELECT r.gid AS recording_mbid
-             , r.length
-          FROM musicbrainz.recording r   
-    """
-
+    query = get_recording_length_cache_query()
     save_pg_table_to_hdfs(query, RECORDING_LENGTH_DATAFRAME)
 
 
 def create_recording_artist_cache():
     """ Import recording artists from postgres to HDFS for use in periodic jams calculation. """
-    query = """
-        SELECT r.gid AS recording_mbid
-             , array_agg(a.gid ORDER BY acn.position) AS artist_mbids
-             , jsonb_agg(
-                    jsonb_build_object(
-                        'artist_credit_name', acn.name,
-                        'join_phrase', acn.join_phrase,
-                        'artist_mbid', a.gid::TEXT
-                    )
-                    ORDER BY acn.position
-               ) AS artists
-          FROM musicbrainz.recording r
-          JOIN musicbrainz.artist_credit_name acn
-            ON acn.artist_credit = r.artist_credit
-          JOIN musicbrainz.artist a
-            ON a.id = acn.artist
-      GROUP BY r.gid
-    """
-
+    query = get_recording_artist_cache_query()
     save_pg_table_to_hdfs(query, RECORDING_ARTIST_DATAFRAME, process_artists_column=True)
 
     unpersist_recording_artist_cache()

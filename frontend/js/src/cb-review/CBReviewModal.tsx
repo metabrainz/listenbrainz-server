@@ -5,8 +5,9 @@ import { toast } from "react-toastify";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
-import { Link, useNavigate } from "react-router-dom";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
+import { Link, useNavigate } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
@@ -47,13 +48,6 @@ export default NiceModal.create((props: CBReviewModalProps) => {
 
   const modal = useModal();
   const navigate = useNavigate();
-
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    document?.body?.getElementsByClassName("modal-backdrop")[0]?.remove();
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { APIService, currentUser, critiquebrainzAuth } = React.useContext(
     GlobalAppContext
@@ -318,7 +312,7 @@ export default NiceModal.create((props: CBReviewModalProps) => {
               />,
               { toastId: "review-submit-success" }
             );
-            closeModal();
+            modal.hide();
           }
         } catch (error) {
           if (maxRetries > 0 && error.message === "invalid_token") {
@@ -337,19 +331,18 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       }
     },
     [
-      critiquebrainzAuth,
+      critiquebrainzAuth?.access_token,
+      reviewValid,
+      currentUser,
       entityToReview,
       acceptLicense,
-      currentUser,
-      reviewValid,
-      APIService,
+      rating,
       blurbContent,
       language,
+      APIService,
       listen,
-      rating,
-      setLoading,
+      modal,
       refreshCritiquebrainzToken,
-      closeModal,
       handleError,
     ]
   );
@@ -359,9 +352,9 @@ export default NiceModal.create((props: CBReviewModalProps) => {
         <span
           className="CBInfoButton"
           data-tip={`CritiqueBrainz is a <a href='${MBBaseUrl}/projects'>
-          MetaBrainz project</a> aimed at providing an open platform for music critics
+          MetaBrainz project</a> aimed at providing an open platform </br>for music critics
           and hosting Creative Commons licensed music reviews. </br></br>
-          Your reviews will be independently visible on CritiqueBrainz and appear publicly
+          Your reviews will be independently visible on CritiqueBrainz and appear publicly</br>
           on your CritiqueBrainz profile. To view or delete your reviews, visit your
           <a href='${CBBaseUrl}'>CritiqueBrainz</a>  profile.`}
           data-event="click focus"
@@ -397,9 +390,9 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           <Link
             to={`${window.location.origin}/settings/music-services/details/`}
             onClick={() => {
+              modal.hide();
               navigate("/settings/music-services/details/");
             }}
-            data-dismiss="modal"
           >
             {" "}
             music services page.
@@ -458,20 +451,20 @@ export default NiceModal.create((props: CBReviewModalProps) => {
       />
     );
   }, [
-    CBInfoButton,
     hasPermissions,
     entityToReview,
     recordingEntity,
+    listen,
+    blurbContent,
+    rating,
+    language,
+    acceptLicense,
     artistEntity,
     releaseGroupEntity,
-    blurbContent,
-    language,
-    listen,
-    rating,
-    acceptLicense,
+    CBInfoButton,
     reviewValid,
-
-    setEntityToReview,
+    hideForm,
+    modal,
     navigate,
   ]);
 
@@ -484,9 +477,9 @@ export default NiceModal.create((props: CBReviewModalProps) => {
           className="btn btn-success"
           role="button"
           onClick={() => {
+            modal.hide();
             navigate("/settings/music-services/details/");
           }}
-          data-dismiss="modal"
         >
           {" "}
           Connect To CritiqueBrainz{" "}
@@ -509,81 +502,51 @@ export default NiceModal.create((props: CBReviewModalProps) => {
 
     /* default: close modal button */
     return (
-      <button
-        type="button"
-        className="btn btn-default"
-        data-dismiss="modal"
-        onClick={closeModal}
-      >
+      <button type="button" className="btn btn-secondary" onClick={modal.hide}>
         Cancel
       </button>
     );
   }, [
     hasPermissions,
     entityToReview,
+    modal,
+    navigate,
     reviewValid,
     acceptLicense,
-    closeModal,
-    navigate,
   ]);
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Review on CritiqueBrainz"
       id="CBReviewModal"
-      tabIndex={-1}
-      role="dialog"
-      aria-labelledby="CBReviewModalLabel"
-      data-backdrop="true"
     >
-      <div className="modal-dialog" role="document">
-        <form className="modal-content" onSubmit={submitReviewToCB}>
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={closeModal}
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4
-              className="modal-title"
-              id="CBReviewModalLabel"
-              style={{ textAlign: "center" }}
-            >
-              <img
-                src="/static/img/critiquebrainz-logo.svg"
-                height="30"
-                className="cb-img-responsive"
-                alt="CritiqueBrainz Logo"
-                style={{ margin: "8px" }}
-              />
-            </h4>
-          </div>
-
-          <div
-            style={{
-              height: 0,
-              position: "sticky",
-              top: "30%",
-              zIndex: 1,
-            }}
-          >
-            <Loader isLoading={loading} />
-          </div>
-
-          <div
-            className="modal-body"
-            style={{ opacity: loading ? "0.2" : "1" }}
-          >
-            {modalBody}
-          </div>
-
-          <div className="modal-footer">{modalFooter}</div>
-        </form>
+      <Modal.Header closeButton>
+        <Modal.Title style={{ marginLeft: "auto" }}>
+          <img
+            src="/static/img/critiquebrainz-logo.svg"
+            height="30"
+            alt="CritiqueBrainz Logo"
+            style={{ margin: "8px" }}
+          />
+        </Modal.Title>
+      </Modal.Header>
+      <div
+        style={{
+          height: 0,
+          position: "sticky",
+          top: "30%",
+          zIndex: 1,
+        }}
+      >
+        <Loader isLoading={loading} />
       </div>
-    </div>
+      <form onSubmit={submitReviewToCB}>
+        <Modal.Body style={{ opacity: loading ? "0.2" : "1" }}>
+          {modalBody}
+        </Modal.Body>
+        <Modal.Footer>{modalFooter}</Modal.Footer>
+      </form>
+    </Modal>
   );
 });

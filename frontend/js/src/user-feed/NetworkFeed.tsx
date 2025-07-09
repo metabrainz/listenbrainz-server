@@ -2,7 +2,7 @@ import * as React from "react";
 import { Helmet } from "react-helmet";
 
 import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPeopleArrows,
@@ -138,7 +138,7 @@ export default function NetworkFeedPage() {
         <title>My Network Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-sm-8 col-xs-12">
+        <div className="col-sm-8 col-12">
           <div className="listen-header pills">
             <h3 className="header-with-line">
               What are{" "}
@@ -191,7 +191,7 @@ export default function NetworkFeedPage() {
           ) : (
             <>
               <div
-                className="mb-15"
+                className="mb-4"
                 style={{
                   display: "flex",
                   justifyContent: "center",
@@ -200,7 +200,7 @@ export default function NetworkFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -246,7 +246,7 @@ export default function NetworkFeedPage() {
                 </div>
               )}
               <div
-                className="text-center mb-15"
+                className="text-center mb-4"
                 style={{
                   width: "50%",
                   marginLeft: "auto",
@@ -255,7 +255,7 @@ export default function NetworkFeedPage() {
               >
                 <button
                   type="button"
-                  className="btn btn-outline btn-block"
+                  className="btn btn-outline-info w-100"
                   onClick={() => fetchNextPage()}
                   disabled={!hasNextPage || isFetchingNextPage}
                 >

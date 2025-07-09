@@ -6,7 +6,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 
 import Tooltip from "react-tooltip";
@@ -69,8 +69,6 @@ export default function UserReports() {
     <button
       type="button"
       className="btn btn-link"
-      data-toggle="modal"
-      data-target="#StatsExplanationsModal"
       onClick={() => {
         NiceModal.show(StatsExplanationsModal);
       }}

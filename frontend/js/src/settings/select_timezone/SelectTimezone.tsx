@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -114,6 +114,7 @@ export default class SelectTimezone extends React.Component<
             <label>
               Select your local timezone:{" "}
               <select
+                className="form-select"
                 defaultValue={userTimezone}
                 onChange={(e) => this.zoneSelection(e.target.value)}
               >

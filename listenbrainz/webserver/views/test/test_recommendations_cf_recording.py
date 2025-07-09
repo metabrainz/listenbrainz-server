@@ -3,7 +3,7 @@ from unittest import mock
 
 import orjson
 import listenbrainz.db.user as db_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 from unittest.mock import patch
 from flask import render_template, url_for
@@ -96,7 +96,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
                     'score': 0.4
                 }]
             },
-            'created': datetime.utcnow(),
+            'created': datetime.now(tz=timezone.utc),
             'user_id': self.user["id"]
         })
         mock_get_recommendations.return_value = []
@@ -112,7 +112,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
     def test_get_props(self, mock_get_recommendations, mock_get_rec):
         # active_section = 'raw'
         user = User.from_dbrow(self.user2)
-        created = datetime.utcnow()
+        created = datetime.now(tz=timezone.utc)
 
         mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
@@ -121,7 +121,7 @@ class CFRecommendationsViewsTestCase(NonAPIIntegrationTestCase):
                     'score': 0.9
                 }]
             },
-            'created': datetime.utcnow(),
+            'created': datetime.now(tz=timezone.utc),
             'user_id': self.user["id"]
         })
 

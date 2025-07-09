@@ -4,6 +4,7 @@ from datetime import date
 
 import click
 import orjson
+from click import UsageError
 from dateutil.relativedelta import relativedelta, MO
 from kombu import Connection
 from kombu.entity import PERSISTENT_DELIVERY_MODE, Exchange
@@ -53,8 +54,8 @@ def _prepare_query_message(query, **params):
     message = {'query': possible_queries[query]['name']}
     required_params = set(possible_queries[query]['params'])
     given_params = set(params.keys())
-    if required_params != given_params:
-        raise InvalidSparkRequestError
+    if not given_params.issubset(required_params):
+        raise InvalidSparkRequestError()
 
     if params:
         message['params'] = {}
@@ -248,6 +249,12 @@ def request_import_incremental_dump(id_: int, local: bool):
     send_request_to_spark_cluster("import.dump.incremental", dump_id=id_, local=local)
 
 
+@cli.command(name="request_import_sample")
+def request_import_sample_dump():
+    """ Send the cluster a request to import a sample dump """
+    send_request_to_spark_cluster("import.dump.sample")
+
+
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
 @click.option("--job-type", default="recommendation_recording", help="The type of dataframes to request. 'recommendation_recording' or 'similar_users' are allowed.")
@@ -346,56 +353,41 @@ def request_similar_users(max_num_users):
     send_request_to_spark_cluster('similarity.similar_users', max_num_users=max_num_users)
 
 
-@cli.command(name="request_similar_recordings_mlhd")
-@click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
-                                          " session.", required=True)
-@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
-                                               " score of a recording pair.", required=True)
-@click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
-                                            " simlarity index.", required=True)
-@click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
-                                        " (the limit is instructive. upto 2x recordings may be returned than"
-                                        " the limit).", required=True)
-@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
-def request_similar_recordings_mlhd(session, contribution, threshold, limit, skip):
-    """ Send the cluster a request to generate similar recordings index. """
-    send_request_to_spark_cluster(
-        "similarity.recording.mlhd",
-        session=session,
-        contribution=contribution,
-        threshold=threshold,
-        limit=limit,
-        skip=skip
-    )
-
-
 @cli.command(name="request_similar_recordings")
-@click.option("--days", type=int, help="The number of days of listens to use.", required=True)
+@click.option("--days", type=int, help="The number of days of listens to use. required if using listens data")
+@click.option("--use-mlhd", "mlhd", is_flag=True, help="Use MLHD+ data or ListenBrainz listens data")
 @click.option("--session", type=int, help="The maximum duration in seconds between two listens in a listening"
                                           " session.", required=True)
-@click.option("--contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
+@click.option("--max-contribution", type=int, help="The maximum contribution a user's listens can make to the similarity"
                                                " score of a recording pair.", required=True)
 @click.option("--threshold", type=int, help="The minimum similarity score to include a recording pair in the"
                                             " simlarity index.", required=True)
 @click.option("--limit", type=int, help="The maximum number of similar recordings to generate per recording"
                                         " (the limit is instructive. upto 2x recordings may be returned than"
                                         " the limit).", required=True)
-@click.option("--skip", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+@click.option("--skip-threshold", type=int, help="the minimum difference threshold to mark track as skipped", required=True)
+@click.option("--only-stage2", is_flag=True, default=False, help="whether to reuse existing outputs of intermediate chunks")
 @click.option("--production", is_flag=True, default=False,
               help="whether the dataset is being created as a production dataset. affects"
                    " how the resulting dataset is stored in LB.", required=True)
-def request_similar_recordings(days, session, contribution, threshold, limit, skip, production):
+def request_similar_recordings(days, mlhd, session, max_contribution, threshold, limit, skip_threshold, only_stage2, production):
     """ Send the cluster a request to generate similar recordings index. """
-    send_request_to_spark_cluster(
-        "similarity.recording",
-        days=days,
-        session=session,
-        contribution=contribution,
-        threshold=threshold,
-        limit=limit,
-        skip=skip,
-        is_production_dataset=production
-    )
+    kwargs = {
+        "mlhd": mlhd,
+        "session": session,
+        "max_contribution": max_contribution,
+        "threshold": threshold,
+        "limit": limit,
+        "skip_threshold": skip_threshold,
+        "only_stage2": only_stage2,
+        "is_production_dataset": production
+    }
+    if days is not None:
+        if mlhd:
+            raise UsageError("'days' cannot be specified when using MLHD data.")
+        kwargs["days"] = days
+
+    send_request_to_spark_cluster("similarity.recording", **kwargs)
 
 
 @cli.command(name='request_similar_artists')
@@ -565,8 +557,8 @@ def cron_request_recommendations(ctx):
 @cli.command(name='cron_request_similarity_datasets')
 @click.pass_context
 def cron_request_similarity_datasets(ctx):
-    ctx.invoke(request_similar_recordings, days=7500, session=300, contribution=5,
-               threshold=10, limit=100, skip=30, production=True)
+    ctx.invoke(request_similar_recordings, days=7500, session=300, max_contribution=5,
+               threshold=10, limit=100, skip_threshold=30, production=True)
     ctx.invoke(request_similar_artists, days=7500, session=300, contribution=5,
                threshold=10, limit=100, skip=30, production=True)
 

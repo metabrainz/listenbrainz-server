@@ -9,7 +9,6 @@ import _ from "lodash";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import Choropleth from "./Choropleth";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistMapProps = {
@@ -88,61 +87,51 @@ export default function UserArtistMap(props: UserArtistMapProps) {
 
   return (
     <Card className="user-stats-card" data-testid="user-stats-map">
-      <div className="row">
-        <div className="col-md-9 col-xs-6">
-          <h3 style={{ marginLeft: 20 }}>
-            <span className="capitalize-bold">Artist Origins</span>
-            <small>&nbsp;Click on a country to see more details</small>
-          </h3>
+      <div className="d-flex align-items-baseline">
+        <div className="d-flex align-items-baseline flex-shrink-1 flex-wrap gap-1">
+          <h3 className="capitalize-bold">Artist Origins</h3>
+          <small className="hidden-xs">&nbsp;(top 1,000 artists)</small>
         </div>
-        <div className="col-md-2 col-xs-4 text-right" style={{ marginTop: 20 }}>
+        <div className="ms-auto">
           <span>Rank by</span>
           <span className="dropdown">
             <button
               className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               {selectedMetric}s
-              <span className="caret" />
             </button>
-            <ul className="dropdown-menu" role="menu">
-              <li
-                className={selectedMetric === "listen" ? "active" : undefined}
+            <div className="dropdown-menu" role="menu">
+              <button
+                type="button"
+                onClick={() => setSelectedMetric("listen")}
+                className={`dropdown-item ${
+                  selectedMetric === "listen" ? "active" : undefined
+                }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedMetric("listen")}
-                >
-                  Listens
-                </button>
-              </li>
-              <li
-                className={selectedMetric === "artist" ? "active" : undefined}
+                Listens
+              </button>
+              <button
+                className={`dropdown-item ${
+                  selectedMetric === "artist" ? "active" : undefined
+                }`}
+                type="button"
+                onClick={() => setSelectedMetric("artist")}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedMetric("artist")}
-                >
-                  Artists
-                </button>
-              </li>
-            </ul>
+                Artists
+              </button>
+            </div>
           </span>
         </div>
-        <div className="col-md-1 col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#artist-origin">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
-        </div>
+        <a
+          href="#artist-origin"
+          className="btn btn-icon btn-link text-body fs-3"
+        >
+          <FontAwesomeIcon icon={faLink as IconProp} />
+        </a>
       </div>
+      <p>Click on a country to see more details</p>
       <Loader isLoading={loading}>
         {hasError ? (
           <div

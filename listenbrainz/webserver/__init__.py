@@ -9,6 +9,7 @@ from brainzutils.flask import CustomFlask
 from flask import request, url_for, redirect, g
 from flask_login import current_user
 from werkzeug.local import LocalProxy
+from flask_htmx import HTMX
 
 from listenbrainz import db
 from listenbrainz.db import create_test_database_connect_strings, timescale, donation
@@ -95,10 +96,7 @@ def create_app(debug=None):
     In the Flask app returned, blueprints are not registered.
     """
 
-    app = CustomFlask(
-        import_name=__name__,
-        use_flask_uuid=True,
-    )
+    app = CustomFlask(import_name=__name__)
 
     load_config(app)
     if debug is not None:
@@ -241,6 +239,7 @@ def init_admin(app):
 def create_web_app(debug=None):
     """ Generate a Flask app for LB with all configurations done, connections established and endpoints added."""
     app = create_app(debug=debug)
+    htmx = HTMX(app)
 
     # Static files
     import listenbrainz.webserver.static_manager
@@ -313,10 +312,7 @@ def create_app_rtfd():
     packages (like MessyBrainz), so we have to ignore these initialization
     steps. Only blueprints/views are needed to render documentation.
     """
-    app = CustomFlask(
-        import_name=__name__,
-        use_flask_uuid=True,
-    )
+    app = CustomFlask(import_name=__name__)
 
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),

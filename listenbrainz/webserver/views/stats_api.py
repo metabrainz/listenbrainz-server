@@ -1,34 +1,27 @@
 import calendar
-from collections import defaultdict
-from datetime import datetime
-from typing import Dict, List, Tuple, Iterable
+import heapq
+from typing import Dict, Tuple, Optional
 
-from requests import HTTPError
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import pycountry
-import requests
-import heapq
-
-from data.model.common_stat import StatApi, StatisticsRange, StatRecordList
-from data.model.user_artist_map import UserArtistMapRecord, UserArtistMapArtist
-from flask import Blueprint, current_app, jsonify, request
-
+from data.model.common_stat import StatApi, StatisticsRange
+from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
-from listenbrainz.webserver import db_conn
+from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError,
                                            APINoContent, APINotFound)
-from brainzutils.ratelimit import ratelimit
+from listenbrainz.webserver.models import ArtistActivityArtistEntry, ArtistActivityReleaseGroupData
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     get_non_negative_param, is_valid_uuid)
-
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -408,33 +401,73 @@ def get_listening_activity(user_name: str):
         "last_updated": stats.last_updated
     }})
 
-def _get_artist_activity(release_groups_list):
-    result = defaultdict(lambda: {"listen_count": 0, "albums": {}})
- 
-    for release_group in release_groups_list:
-        artist_names = release_group["artist_name"].split(",")
-        listen_count = release_group["listen_count"]
-        release_group_name = release_group["release_group_name"]
-        release_group_mbid = release_group.get("release_group_mbid")
- 
-        for artist_name in artist_names:
-            artist_entry = result[artist_name]
-            artist_entry["listen_count"] += listen_count
- 
-            if release_group_name in artist_entry["albums"]:
-                artist_entry["albums"][release_group_name]["listen_count"] += listen_count
-            else:
-                artist_entry["albums"][release_group_name] = {
-                    "name": release_group_name,
-                    "listen_count": listen_count,
-                    "release_group_mbid": release_group_mbid,
-                }
- 
-    for artist_name, artist_data in result.items():
-        artist_data["name"] = artist_name
-        artist_data["albums"] = list(artist_data["albums"].values())
 
-    return heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
+def _build_artist_activity_entries(
+    result: Dict[str, ArtistActivityArtistEntry],
+    artist_name: str,
+    artist_mbid: Optional[str],
+    release_group: ArtistActivityReleaseGroupData
+) -> None:
+    listen_count = release_group["listen_count"]
+    release_group_name = release_group["release_group_name"]
+    release_group_mbid = release_group.get("release_group_mbid")
+
+    artist_key = artist_mbid if artist_mbid else artist_name
+    release_group_key = release_group_mbid if release_group_mbid else release_group_name
+
+    if artist_key in result:
+        artist_entry = result[artist_key]
+        artist_entry["listen_count"] += listen_count
+    else:
+        artist_entry = {
+            "name": artist_name,
+            "artist_mbid": artist_mbid,
+            "listen_count": listen_count,
+            "albums": {}
+        }
+        result[artist_key] = artist_entry
+
+    if release_group_key in artist_entry["albums"]:
+        artist_entry["albums"][release_group_key]["listen_count"] += listen_count
+    else:
+        artist_entry["albums"][release_group_key] = {
+            "name": release_group_name,
+            "listen_count": listen_count,
+            "release_group_mbid": release_group_mbid,
+        }
+
+
+def _get_artist_activity(release_groups_list):
+    result: dict = {}
+    for release_group in release_groups_list:
+        if artists := release_group.get("artists"):
+            for artist in artists:
+                artist_name = artist["artist_credit_name"]
+                artist_mbid = artist["artist_mbid"]
+                _build_artist_activity_entries(result, artist_name, artist_mbid, release_group)
+        else:
+            _build_artist_activity_entries(result, release_group["artist_name"], None, release_group)
+
+    for item in result.values():
+        item["albums"] = list(item["albums"].values())
+
+    top_results = heapq.nlargest(15, result.values(), key=lambda x: x["listen_count"])
+
+    artist_mbids = [x["artist_mbid"] for x in top_results if x["artist_mbid"] is not None]
+    if artist_mbids:
+        metadata = get_metadata_for_artist(ts_conn, artist_mbids)
+        # replace credited artist name on release group with artist name where possible
+        artist_mbid_name_map: dict[str, str] = {
+            str(item.artist_mbid): item.artist_data["name"]
+            for item in metadata
+        }
+        for result in top_results:
+            artist_mbid = result["artist_mbid"]
+            if artist_mbid in artist_mbid_name_map:
+                result["artist_name"] = artist_mbid_name_map[artist_mbid]
+
+    return top_results
+
 
 @stats_api_bp.get("/user/<user_name>/artist-activity")
 @crossdomain
@@ -1228,7 +1261,7 @@ def get_sitewide_artist_activity():
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
     
-    stats = db_stats.get_sitewide_stats("artists", stats_range)
+    stats = db_stats.get_sitewide_stats("release_groups", stats_range)
     if stats is None:
         raise APINoContent('')
     

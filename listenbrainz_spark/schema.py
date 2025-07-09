@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
     IntegerType, LongType
@@ -145,7 +145,7 @@ def convert_model_metadata_to_row(meta):
     """
     return Row(
         dataframe_id=meta.get('dataframe_id'),
-        model_created=datetime.utcnow(),
+        model_created=datetime.now(tz=timezone.utc),
         model_html_file=meta.get('model_html_file'),
         model_id=meta.get('model_id'),
         model_param=Row(
@@ -169,7 +169,7 @@ def convert_dataframe_metadata_to_row(meta):
             pyspark.sql.Row object - a Spark SQL Row based on the defined dataframe metadata schema.
     """
     return Row(
-        dataframe_created=datetime.utcnow(),
+        dataframe_created=datetime.now(tz=timezone.utc),
         dataframe_id=meta.get('dataframe_id'),
         from_date=meta.get('from_date'),
         listens_count=meta.get('listens_count'),

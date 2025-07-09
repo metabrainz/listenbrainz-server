@@ -9,7 +9,6 @@ from listenbrainz.webserver.views.api_tools import _parse_int_arg
 
 donor_api_bp = Blueprint('donor_api_v1', __name__)
 
-
 DEFAULT_DONOR_COUNT = 25
 
 
@@ -17,14 +16,12 @@ DEFAULT_DONOR_COUNT = 25
 @crossdomain
 @ratelimit()
 def recent_donors():
-    """ Get a list of most recent MeB donors with flairs.
-
-    """
+    """ Get a list of most recent MeB donors with flairs. """
     count = _parse_int_arg("count", DEFAULT_DONOR_COUNT)
     offset = _parse_int_arg("offset", 0)
 
     if not current_app.config["SQLALCHEMY_METABRAINZ_URI"]:
-        return []
+        return jsonify([])
 
     donors, _ = get_recent_donors(meb_conn, db_conn, count, offset)
     return jsonify(donors)
@@ -34,14 +31,12 @@ def recent_donors():
 @crossdomain
 @ratelimit()
 def biggest_donors():
-    """ Get a list of the biggest MeB donors with flairs.
-
-    """
+    """ Get a list of the biggest MeB donors with flairs. """
     count = _parse_int_arg("count", DEFAULT_DONOR_COUNT)
     offset = _parse_int_arg("offset", 0)
 
     if not current_app.config["SQLALCHEMY_METABRAINZ_URI"]:
-        return []
+        return jsonify([])
 
     donors, _ = get_biggest_donors(meb_conn, db_conn, count, offset)
     return jsonify(donors)
@@ -68,6 +63,9 @@ def all_flairs():
     """
     users_with_flair = get_all_flairs(db_conn)
     eligible_donors = are_users_eligible_donors(meb_conn, [u.musicbrainz_row_id for u in users_with_flair])
+
+    if not current_app.config["SQLALCHEMY_METABRAINZ_URI"]:
+        return jsonify({})
 
     result = {
         r.musicbrainz_id: r.flair

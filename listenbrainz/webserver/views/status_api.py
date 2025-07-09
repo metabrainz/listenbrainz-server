@@ -1,18 +1,18 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify, current_app
 from time import time
 
+from brainzutils import cache
+from brainzutils.ratelimit import ratelimit
+from flask import Blueprint, request, jsonify, current_app
 from kombu import Connection, Queue, Exchange
 from kombu.exceptions import KombuError
 
+import listenbrainz.db.stats as db_stats
+from listenbrainz.db.dump_entry import get_dump_entries, get_dump_entry
+from listenbrainz.db.playlist import get_recommendation_playlists_for_user
+from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound
-from brainzutils.ratelimit import ratelimit
-from brainzutils import cache
-from listenbrainz.webserver import db_conn, ts_conn
-from listenbrainz.db.playlist import get_recommendation_playlists_for_user
-import listenbrainz.db.dump as db_dump
-import listenbrainz.db.stats as db_stats
 from listenbrainz.webserver.views.stats_api import get_entity_stats_last_updated
 
 STATUS_PREFIX = 'listenbrainz.status'  # prefix used in key to cache status
@@ -53,7 +53,7 @@ def get_dump_info():
     dump_id = request.args.get("id")
     if dump_id is None:
         try:
-            dump = db_dump.get_dump_entries()[0]  # return the latest dump
+            dump = get_dump_entries()[0]  # return the latest dump
         except IndexError:
             raise APINotFound("No dump entry exists.")
     else:
@@ -61,7 +61,7 @@ def get_dump_info():
             dump_id = int(dump_id)
         except ValueError:
             raise APIBadRequest("The `id` parameter needs to be an integer.")
-        dump = db_dump.get_dump_entry(dump_id)
+        dump = get_dump_entry(dump_id)
         if dump is None:
             raise APINotFound("No dump exists with ID: %d" % dump_id)
 
@@ -189,7 +189,7 @@ def get_dump_timestamp():
     dump_timestamp = cache.get(cache_key)
     if dump_timestamp is None:
         try:
-            dump = db_dump.get_dump_entries()[0]  # return the latest dump
+            dump = get_dump_entries()[0]  # return the latest dump
             dump_timestamp = int(dump["created"].timestamp())
             cache.set(cache_key, dump_timestamp, DUMP_CACHE_TIME)
         except IndexError:

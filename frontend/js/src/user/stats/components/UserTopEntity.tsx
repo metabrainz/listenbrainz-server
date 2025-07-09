@@ -2,7 +2,7 @@ import * as React from "react";
 import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
@@ -74,7 +74,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   const entityTextOnCard = `${terminology}s`;
   if (hasError) {
     return (
-      <Card className="mt-15" data-testid="error-message">
+      <Card className="mt-4" data-testid="error-message">
         <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
         <div className="text-center">
           <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
@@ -85,7 +85,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   }
 
   return (
-    <Card className="mt-15" data-testid={`top-${entity}`}>
+    <Card className="mt-4" data-testid={`top-${entity}`}>
       <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
       <Loader isLoading={loading}>
         <div style={{ padding: "1em" }} data-testid={`top-${entity}-list`}>
@@ -111,7 +111,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {artist.listen_count}
                       </span>
                     }
@@ -156,7 +156,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {release.listen_count}
                       </span>
                     }
@@ -211,7 +211,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">{listen_count}</span>
+                      <span className="badge bg-info">{listen_count}</span>
                     }
                     // Disabling the feedback component here because of display issues with the badge
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -248,7 +248,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {releaseGroup.listen_count}
                       </span>
                     }
@@ -260,8 +260,8 @@ export default function UserTopEntity(props: UserTopEntityProps) {
               }
             )}
         </div>
-        <div className="mb-15 text-center">
-          <Link to={statsUrl} className="btn btn-outline">
+        <div className="mb-4 text-center">
+          <Link to={statsUrl} className="btn btn-outline-info">
             View more…
           </Link>
         </div>

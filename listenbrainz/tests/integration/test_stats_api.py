@@ -1,30 +1,14 @@
 import json
-from copy import deepcopy
-from datetime import datetime
-from unittest.mock import patch
 
-import requests
 import orjson
+import requests
 from brainzutils.ratelimit import set_rate_limits
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import requests_mock
-
-from data.model.user_artist_map import UserArtistMapRecord
-
-from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db import couchdb
 from listenbrainz.spark.handlers import handle_entity_listener
 from listenbrainz.tests.integration import IntegrationTestCase
-
-
-class MockDate(datetime):
-    """ Mock class for datetime which returns epoch """
-
-    @classmethod
-    def now(cls, tzinfo=None):
-        return cls.fromtimestamp(0)
 
 
 class StatsAPITestCase(IntegrationTestCase):
@@ -366,7 +350,6 @@ class StatsAPITestCase(IntegrationTestCase):
                     expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
 
-    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_stat(self):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
         with self.subTest(f"test valid response is received for artist_map stats"):

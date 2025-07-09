@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router";
 import GlobalAppContext from "./GlobalAppContext";
 
 function ProtectedRoutes() {

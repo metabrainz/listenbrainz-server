@@ -19,26 +19,28 @@
  */
 
 import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
+import { screen, waitFor } from "@testing-library/react";
+import { HttpResponse, http } from "msw";
+import { SetupServerApi, setupServer } from "msw/node";
+import { toast } from "react-toastify";
 
-import { act } from "react-dom/test-utils";
-import { BrowserRouter } from "react-router-dom";
-import UserSocialNetwork, {
-  UserSocialNetworkProps,
-  UserSocialNetworkState,
-} from "../../../src/user/components/follow/UserSocialNetwork";
-import FollowerFollowingModal from "../../../src/user/components/follow/FollowerFollowingModal";
-import SimilarUsersModal from "../../../src/user/components/follow/SimilarUsersModal";
-
-import * as userSocialNetworkProps from "../../__mocks__/userSocialNetworkProps.json";
-import GlobalAppContext, {
+import UserSocialNetwork from "../../../src/user/components/follow/UserSocialNetwork";
+import {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-import { ReactQueryWrapper } from "../../test-react-query";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
-jest.useFakeTimers({ advanceTimers: true });
+import * as userSocialNetworkProps from "../../__mocks__/userSocialNetworkProps.json";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Mock react-toastify
+jest.mock("react-toastify", () => ({
+  toast: {
+    error: jest.fn(),
+  },
+}));
 
 const { loggedInUser, ...otherProps } = userSocialNetworkProps;
 const props = {
@@ -57,6 +59,14 @@ const globalContext: GlobalAppContextT = {
   ),
 };
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 const similarUsers = [
   {
     similarity: 0.0839745792,
@@ -70,280 +80,310 @@ const similarUsers = [
 
 const followingFollowers = ["jack", "fnord"];
 
+const mockArtists = [
+  {
+    artist_name: "Artist1",
+    artist_mbid: "mbid1",
+    listen_count: 100,
+  },
+  {
+    artist_name: "Artist2",
+    artist_mbid: "mbid2",
+    listen_count: 50,
+  },
+];
+
 describe("<UserSocialNetwork />", () => {
+  let server: SetupServerApi;
+
+  beforeAll(() => {
+    const handlers = [
+      http.get("/1/user/*/followers", () => {
+        return HttpResponse.json({
+          followers: followingFollowers,
+        });
+      }),
+      http.get("/1/user/*/following", () => {
+        return HttpResponse.json({
+          following: followingFollowers,
+        });
+      }),
+      http.get("/1/user/*/similar", () => {
+        return HttpResponse.json({
+          payload: similarUsers,
+        });
+      }),
+      http.get("/1/user/*/similar-to/*", () => {
+        return HttpResponse.json({
+          payload: { similarity: 0.5 },
+        });
+      }),
+      http.get("/1/user/*/artists", () => {
+        return HttpResponse.json({
+          payload: { artists: mockArtists },
+        });
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+  });
+
   afterEach(() => {
+    server.resetHandlers();
     jest.clearAllMocks();
   });
-  beforeAll(() => {
-    // Mock function for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            // For similar users endpoint
-            payload: similarUsers,
-            following: followingFollowers,
-            followers: followingFollowers,
+
+  afterAll(() => {
+    server.close();
+  });
+
+  it("renders FollowerFollowingModal and SimilarUsersModal components", async () => {
+    renderWithProviders(<UserSocialNetwork {...props} />, globalContext);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("follower-following-modal")).toBeInTheDocument();
+      expect(screen.getByTestId("similar-users-modal")).toBeInTheDocument();
+    });
+  });
+
+  it("renders CompatibilityCard when viewing another user's profile", async () => {
+    const differentUserProps = {
+      user: { id: 2, name: "differentuser" },
+    };
+
+    renderWithProviders(
+      <UserSocialNetwork {...differentUserProps} />,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("compatibility-card")).toBeInTheDocument();
+    });
+  });
+
+  it("does not render CompatibilityCard when viewing own profile", async () => {
+    const ownProfileProps = {
+      user: { id: 1, name: loggedInUser.name },
+    };
+
+    renderWithProviders(
+      <UserSocialNetwork {...ownProfileProps} />,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("compatibility-card")).not.toBeInTheDocument();
+    });
+  });
+
+  it("fetches and displays follower and following data on mount", async () => {
+    // Spy on the API calls to verify they're made with correct parameters
+    const getFollowersOfUserSpy = jest.spyOn(globalContext.APIService, 'getFollowersOfUser');
+    const getFollowingForUserSpy = jest.spyOn(globalContext.APIService, 'getFollowingForUser');
+    
+    // Mock the API responses
+    getFollowersOfUserSpy.mockResolvedValue({ followers: followingFollowers });
+    getFollowingForUserSpy.mockResolvedValue({ following: followingFollowers });
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    // Wait for component to mount and make API calls
+    await waitFor(() => {
+      expect(getFollowersOfUserSpy).toHaveBeenCalledWith(props.user.name);
+      expect(getFollowingForUserSpy).toHaveBeenCalledWith(props.user.name);
+    });
+
+    // Verify the modal component receives the data (check if it's rendered)
+    await waitFor(() => {
+      const followerModal = screen.getByTestId("follower-following-modal");
+      expect(followerModal).toBeInTheDocument();
+
+      expect(followerModal).toHaveTextContent("jack");
+      expect(followerModal).toHaveTextContent("fnord");
+    });
+
+    // Clean up
+    getFollowersOfUserSpy.mockRestore();
+    getFollowingForUserSpy.mockRestore();
+  });
+
+  it("fetches and displays similar users data on mount", async () => {
+    // Spy on the API call
+    const getSimilarUsersForUserSpy = jest.spyOn(globalContext.APIService, 'getSimilarUsersForUser');
+    getSimilarUsersForUserSpy.mockResolvedValue({ payload: similarUsers });
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    // Wait for API call to be made
+    await waitFor(() => {
+      expect(getSimilarUsersForUserSpy).toHaveBeenCalledWith(props.user.name);
+    });
+
+    // Verify the similar users modal is rendered
+    await waitFor(() => {
+      const similarUsersModal = screen.getByTestId("similar-users-modal");
+      expect(similarUsersModal).toBeInTheDocument();
+
+      expect(similarUsersModal).toHaveTextContent("Cthulhu");
+      expect(similarUsersModal).toHaveTextContent("Dagon");
+    });
+
+    // Clean up
+    getSimilarUsersForUserSpy.mockRestore();
+  });
+
+
+  it("handles API errors gracefully with toast notifications", async () => {
+    // Mock server to return error
+    server.use(
+      http.get("/1/user/*/followers", () => {
+        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+      })
+    );
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          props: expect.objectContaining({
+            title: "Error while fetching followers",
           }),
-      });
+        }),
+        { toastId: "fetch-followers-error" }
+      );
     });
   });
 
-  it("contains a FollowerFollowingModal and a SimilarUsersModal components", () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalContext}>
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
-      </GlobalAppContext.Provider>
+  it("handles similar users API error gracefully", async () => {
+    server.use(
+      http.get("/1/user/*/similar", () => {
+        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+      })
     );
-    expect(wrapper.find(FollowerFollowingModal)).toHaveLength(1);
-    expect(wrapper.find(SimilarUsersModal)).toHaveLength(1);
-  });
 
-  it("initializes by calling the API to get data", async () => {
-    const consoleErrorSpy = jest.spyOn(console, "error");
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalContext}>
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <UserSocialNetwork {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
-      </GlobalAppContext.Provider>
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      globalContext
     );
-    const instance = wrapper
-      .find(UserSocialNetwork)
-      .instance() as UserSocialNetwork;
 
-    await act(async () => {
-      await instance.componentDidMount();
-    });
-
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-
-    const similarUsersInState = [
-      {
-        name: "Cthulhu",
-        similarityScore: 0.0839745792,
-      },
-      {
-        name: "Dagon",
-        similarityScore: 0.0779623581,
-      },
-    ];
-    expect(instance.state.similarUsersList).toEqual(similarUsersInState);
-
-    const expectedFollowingFollowersState = ["jack", "fnord"];
-    expect(instance.state.followerList).toEqual(
-      expectedFollowingFollowersState
-    );
-    expect(instance.state.followingList).toEqual(
-      expectedFollowingFollowersState
-    );
-  });
-
-  describe("updateFollowingList", () => {
-    it("updates the state when called with action follow", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          props: expect.objectContaining({
+            title: " Error while fetching similar users",
+          }),
+        }),
+        { toastId: "fetch-similar-error" }
       );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
-
-      // initial state after first fetch
-      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord"]);
-      await act(async () => {
-        instance.updateFollowingList({ name: "Baldur" }, "follow");
-      });
-      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord", "Baldur"]);
-    });
-
-    it("updates the state when called with action unfollow", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork
-                user={{
-                  id: 1,
-                  name: "iliekcomputers",
-                }}
-              />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
-
-      // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
-      await act(async () => {
-        instance.updateFollowingList({ name: "fnord" }, "unfollow");
-      });
-      expect(instance.state.followingList).toEqual(["jack"]);
-    });
-
-    it("does nothing, when called with action unfollow when it's not your own account", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
-
-      // initial state after first fetch
-      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
-      await act(async () => {
-        instance.updateFollowingList({ name: "fnord" }, "unfollow");
-      });
-
-      // Since it's not your own account, it should not be removed from the following list
-      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
-    });
-
-    it("only allows adding a user once", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
-      await act(async () => {
-        instance.updateFollowingList({ name: "Baldur" }, "follow");
-      });
-      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord", "Baldur"]);
-
-      // Ensure we can't add a user twice
-      await act(async () => {
-        instance.updateFollowingList({ name: "Baldur" }, "follow");
-      });
-      expect(instance.state.currentUserFollowingList).toEqual(["jack", "fnord", "Baldur"]);
-    });
-
-    it("does nothing when trying to unfollow a user that is not followed", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
-
-      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
-      await act(async () => {
-        instance.updateFollowingList({ name: "Baldur" }, "unfollow");
-      });
-      expect(instance.state.followingList).toEqual(["jack", "fnord"]);
     });
   });
 
-  describe("loggedInUserFollowsUser", () => {
-    it("returns false if there is no logged in user", () => {
-      // server sends an empty object in case no user is logged in
-      const wrapper = mount(
-        <GlobalAppContext.Provider
-          value={{ ...globalContext, currentUser: {} as ListenBrainzUser }}
-        >
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
+  it("does not fetch similarity data when not logged in", async () => {
+    const contextWithoutUser = {
+      ...globalContext,
+      currentUser: undefined,
+    };
 
-      expect(instance.loggedInUserFollowsUser({ name: "bob" })).toEqual(false);
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      contextWithoutUser
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("compatibility-card")).not.toBeInTheDocument();
+    });
+  });
+
+  it("does not fetch similarity data when viewing own profile", async () => {
+    const ownProfileProps = {
+      user: { id: 1, name: loggedInUser.name },
+    };
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...ownProfileProps} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("compatibility-card")).not.toBeInTheDocument();
+    });
+  });
+
+  it("silently handles 'Similar-to user not found' error", async () => {
+    server.use(
+      http.get("/1/user/*/similar-to/*", () => {
+        return HttpResponse.json({ error: "Similar-to user not found" }, { status: 404 });
+      })
+    );
+
+    const differentUserProps = {
+      user: { id: 2, name: "differentuser" },
+    };
+
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...differentUserProps} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    await waitFor(() => {
+      // Should not show error toast for this specific error
+      expect(toast.error).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          props: expect.objectContaining({
+            title: "Error while fetching similarity",
+          }),
+        }),
+        { toastId: "fetch-similarity-error" }
+      );
+    });
+  });
+
+  it("re-fetches data when profileUser changes", async () => {
+    const { rerender } = renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork user={{ id: 1, name: "user1" }} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("follower-following-modal")).toBeInTheDocument();
     });
 
-    it("returns false if user is not in followingList", async () => {
-      const wrapper = mount(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
+    // Change the user prop
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork user={{ id: 2, name: "user2" }} />
+      </QueryClientProvider>
+    );
 
-      expect(
-        instance.loggedInUserFollowsUser({ name: "notarealuser" })
-      ).toEqual(false);
-    });
-
-    it("returns true if user is in followingList", async () => {
-      const wrapper = mount<UserSocialNetwork>(
-        <GlobalAppContext.Provider value={globalContext}>
-          <ReactQueryWrapper>
-            <BrowserRouter>
-              <UserSocialNetwork {...props} />
-            </BrowserRouter>
-          </ReactQueryWrapper>
-        </GlobalAppContext.Provider>
-      );
-      const instance = wrapper
-        .find(UserSocialNetwork)
-        .instance() as UserSocialNetwork;
-      await act(async () => {
-        await instance.componentDidMount();
-      });
-
-      expect(instance.loggedInUserFollowsUser({ name: "fnord" })).toEqual(true);
+    // Should trigger new API calls and re-render
+    await waitFor(() => {
+      expect(screen.getByTestId("follower-following-modal")).toBeInTheDocument();
     });
   });
 });

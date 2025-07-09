@@ -138,9 +138,10 @@ function ProgressBar(props: ProgressBarProps) {
         data-tip={tipContent}
         ref={progressBarRef}
       >
-        <div className="progress-bar" style={progressBarStyle} />
+        <div className="progress-bar bg-info" style={progressBarStyle} />
         <ReactTooltip
           className="progress-tooltip"
+          arrowColor="inherit"
           getContent={() => tipContent}
           globalEventOff="click"
           overridePosition={({ left, top }) => {

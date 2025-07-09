@@ -1,7 +1,7 @@
 const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const LessPluginCleanCSS = require("less-plugin-clean-css");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const StylelintPlugin = require("stylelint-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
 
@@ -25,6 +25,7 @@ module.exports = function (env, argv) {
   const jsDir = path.join(baseDir, "js");
   const distDir = path.join(baseDir, "dist");
   const cssDir = path.join(baseDir, "css");
+  const sassDir = path.join(cssDir, "sass");
   const plugins = [
     new WebpackManifestPlugin(),
     new ForkTsCheckerWebpackPlugin({
@@ -40,7 +41,7 @@ module.exports = function (env, argv) {
     new StylelintPlugin({
       configFile: ".stylelintrc.js",
       failOnError: isProd,
-      files: "**/static/css/**/*.less",
+      files: "**/static/css/**/*.{less,scss}",
       fix: !isProd,
       threads: true,
     }),
@@ -51,12 +52,13 @@ module.exports = function (env, argv) {
   ];
   return {
     entry: {
-      // Importing main.less file here so that it gets compiled.
+      // Importing main sass entrypoint file here so that it gets compiled.
       // Otherwise with a standalone entrypoint Webpack would generate a superfluous js file.
-      // All the Less/CSS will be exported separately to a main.css file and not appear in the index module
+      // All the Sass/CSS will be exported separately to a main.css/vendor.css files and not appear in the index module
       indexPage: [
         path.resolve(jsDir, "src/index.tsx"),
-        path.resolve(cssDir, "main.less"),
+        path.resolve(sassDir, "main.scss"),
+        path.resolve(sassDir, "vendors.scss"),
       ],
     },
     output: {
@@ -78,17 +80,11 @@ module.exports = function (env, argv) {
           use: "babel-loader",
         },
         {
-          test: /\.less$/i,
+          test: /\.scss$/i,
           type: "asset/resource",
-          loader: "less-loader",
+          loader: "sass-loader",
           generator: {
             filename: isProd ? "[name].[contenthash].css" : "[name].css",
-          },
-          options: {
-            lessOptions: {
-              math: "always",
-              plugins: [new LessPluginCleanCSS({ advanced: true })],
-            },
           },
         },
         {
@@ -105,6 +101,10 @@ module.exports = function (env, argv) {
           ],
         },
       ],
+    },
+    optimization: {
+      minimize: isProd,
+      minimizer: [new CssMinimizerPlugin()],
     },
     resolve: {
       modules: [

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import text
 from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
@@ -53,7 +53,7 @@ def exclude_playlists_from_deleted_users(slug, jam_name, description, all_playli
             "algorithm_metadata": {
                 "source_patch": slug
             },
-            "expires_at": (datetime.utcnow() + timedelta(weeks=PERIODIC_PLAYLIST_LIFESPAN)).isoformat()
+            "expires_at": (datetime.now(tz=timezone.utc) + timedelta(weeks=PERIODIC_PLAYLIST_LIFESPAN)).isoformat()
         }
 
         playlists.append(playlist)

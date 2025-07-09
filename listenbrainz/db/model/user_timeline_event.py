@@ -19,7 +19,7 @@
 from pydantic import BaseModel, NonNegativeInt, constr, conlist
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Union, Optional, List
 
 from data.model.listen import APIListen, TrackMetadata
@@ -27,7 +27,7 @@ from listenbrainz.db.model.review import CBReviewTimelineMetadata
 from listenbrainz.db.msid_mbid_mapping import MsidMbidModel
 
 
-class UserTimelineEventType(Enum):
+class UserTimelineEventType(StrEnum):
     RECORDING_RECOMMENDATION = 'recording_recommendation'
     FOLLOW = 'follow'
     LISTEN = 'listen'

@@ -15,7 +15,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -310,7 +310,7 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="help-block">
+            <small className="form-text">
               {artist?.begin_year}
               {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
@@ -337,7 +337,7 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {artist &&
               !isEmpty(artist?.rels) &&
@@ -360,42 +360,37 @@ export default function ArtistPage(): JSX.Element {
               </Link>
               <button
                 type="button"
-                className="btn btn-info dropdown-toggle"
-                data-toggle="dropdown"
+                className="btn btn-info dropdown-toggle px-3"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
-              >
-                <span className="caret" />
-                <span className="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul className="dropdown-menu">
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
-                  >
-                    Artist radio
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
-                  >
-                    This artist only
-                  </Link>
-                </li>
+                aria-label="Toggle dropdown"
+              />
+              <div className="dropdown-menu">
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Artist radio
+                </Link>
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
+                  className="dropdown-item"
+                >
+                  This artist only
+                </Link>
                 {Boolean(filteredTags?.length) && (
-                  <li>
-                    <Link
-                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                        filteredTagsAsString
-                      )})::or&mode=easy`}
-                    >
-                      Tags (
-                      <span className="tags-list">{filteredTagsAsString}</span>)
-                    </Link>
-                  </li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                      filteredTagsAsString
+                    )})::or&mode=easy`}
+                    className="dropdown-item"
+                  >
+                    Tags (
+                    <span className="tags-list">{filteredTagsAsString}</span>)
+                  </Link>
                 )}
-              </ul>
+              </div>
             </div>
           )}
         </div>
@@ -437,7 +432,7 @@ export default function ArtistPage(): JSX.Element {
             let listenCountComponent;
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   {bigNumberFormatter.format(recording.total_listen_count)}
                   &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
@@ -458,7 +453,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() =>
                   setExpandPopularTracks((prevValue) => !prevValue)
                 }
@@ -502,7 +497,7 @@ export default function ArtistPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -537,10 +532,10 @@ export default function ArtistPage(): JSX.Element {
             </div>
           ))}
           {showFullDiscographyButton && (
-            <div className="read-more mb-10">
+            <div className="read-more mb-3">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() => setExpandDiscography((prevValue) => !prevValue)}
               >
                 See {expandDiscography ? "less" : "full discography"}

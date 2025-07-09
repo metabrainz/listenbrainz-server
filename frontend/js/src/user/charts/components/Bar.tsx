@@ -22,7 +22,7 @@ export default function Bar(props: BarProps) {
     return (
       <TooltipWrapper anchor="center" position={[0, 0]}>
         <div className="graph-tooltip" id={datum.entity.toString()}>
-          <span className="badge badge-info">#{datum.idx}</span> {datum.entity}
+          <span className="badge bg-info">#{datum.idx}</span> {datum.entity}
           :&nbsp;
           <b>
             {value} {Number(value) === 1 ? "listen" : "listens"}

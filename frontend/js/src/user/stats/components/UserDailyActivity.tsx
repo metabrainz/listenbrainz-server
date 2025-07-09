@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import HeatMap from "./HeatMap";
 import Loader from "../../../components/Loader";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserDailyActivityProps = {
@@ -129,24 +128,14 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
 
   return (
     <Card className="user-stats-card" data-testid="user-daily-activity">
-      <div className="row">
-        <div className="col-xs-10">
-          <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-            Daily Activity
-          </h3>
-        </div>
-        <div className="col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#daily-activity">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
-        </div>
+      <div className="d-flex align-items-baseline">
+        <h3 className="capitalize-bold">Daily Activity</h3>
+        <a
+          href="#daily-activity"
+          className="btn btn-icon btn-link ms-auto text-body fs-3"
+        >
+          <FontAwesomeIcon icon={faLink as IconProp} />
+        </a>
       </div>
       <Loader isLoading={loading}>
         {hasError ? (
@@ -164,10 +153,8 @@ export default function UserDailyActivity(props: UserDailyActivityProps) {
             </span>
           </div>
         ) : (
-          <div className="row">
-            <div className="col-xs-12">
-              <HeatMap data={data} />
-            </div>
+          <div className="col-12">
+            <HeatMap data={data} />
           </div>
         )}
       </Loader>

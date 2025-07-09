@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
 import * as React from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 
 import ListenCard from "../common/listens/ListenCard";
@@ -50,7 +50,7 @@ export default class RecentListens extends React.Component<
           <h3 className="header-with-line">Global listens</h3>
         </div>
         <div className="row">
-          <div className="col-md-4 col-md-push-8">
+          <div className="col-lg-4 order-lg-2">
             <Card id="listen-count-card">
               <div>
                 {globalListenCount?.toLocaleString() ?? "-"}
@@ -65,12 +65,12 @@ export default class RecentListens extends React.Component<
                 <small className="text-muted">users</small>
               </div>
             </Card>
-            <Card className="hidden-xs">
+            <Card className="d-none d-md-block">
               <RecentDonorsCard donors={recentDonors} />
             </Card>
-            <FlairsExplanationButton className="hidden-xs" />
+            <FlairsExplanationButton className="d-none d-md-block" />
           </div>
-          <div className="col-md-8 col-md-pull-4">
+          <div className="col-lg-8 order-lg-1">
             {!listens.length && (
               <h5 className="text-center">No listens to show</h5>
             )}

@@ -12,8 +12,8 @@ DEFAULT_DONOR_COUNT = 25
 donors_bp = Blueprint("donors", __name__)
 
 
-@donors_bp.get("/",  defaults={'path': ''})
-@donors_bp.get('/<path:path>/')
+@donors_bp.get("/",  defaults={"path": ""})
+@donors_bp.get("/<path:path>/")
 def donors(path):
     return render_template("index.html")
 
@@ -31,7 +31,7 @@ def donors_post():
 
     donation_count_pages = ceil(donation_count / DEFAULT_DONOR_COUNT)
 
-    musicbrainz_ids = [donor["musicbrainz_id"] for donor in donors if donor['is_listenbrainz_user']]
+    musicbrainz_ids = [donor["musicbrainz_id"] for donor in donors if donor["is_listenbrainz_user"]]
     donors_info = db_user.get_many_users_by_mb_id(db_conn, musicbrainz_ids) if musicbrainz_ids else {}
     donor_ids = [donor_info.id for _, donor_info in donors_info.items()]
 
@@ -41,11 +41,11 @@ def donors_post():
     for donor in donors:
         donor_info = donors_info.get(donor["musicbrainz_id"].lower())
         if not donor_info:
-            donor['listenCount'] = None
-            donor['playlistCount'] = None
+            donor["listenCount"] = None
+            donor["playlistCount"] = None
         else:
-            donor['listenCount'] = user_listen_count.get(donor_info.id, 0)
-            donor['playlistCount'] = user_playlist_count.get(donor_info.id, 0)
+            donor["listenCount"] = user_listen_count.get(donor_info.id, 0)
+            donor["playlistCount"] = user_playlist_count.get(donor_info.id, 0)
 
     return jsonify({
         "data": donors,
