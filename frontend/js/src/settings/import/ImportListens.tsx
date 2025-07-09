@@ -5,16 +5,39 @@ import { Helmet } from "react-helmet";
 import ReactTooltip from "react-tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPersonDigging } from "@fortawesome/free-solid-svg-icons";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
 };
 
-function handleListensSubmit() {}
-
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
   const { user_has_email: userHasEmail } = data;
+
+  const handleListensSubmit = async (
+    event?: React.FormEvent<HTMLFormElement>
+  ) => {
+    const { currentUser, APIService } = React.useContext(GlobalAppContext);
+    if (event) event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const file = formData.get("file") as File;
+    const service = formData.get("service") as string;
+    const from_date = formData.get("ImportStartDate") as string | null;
+    const to_date = formData.get("ImportEndDate") as string | null;
+
+    try {
+      const status = await APIService.importListens(
+        currentUser?.auth_token,
+        formData
+      );
+
+      console.log("Import req sent. Status:", status);
+    } catch (err) {
+      console.error("Import req failed:", err);
+    }
+  };
 
   return (
     <>
@@ -83,34 +106,32 @@ export default function ImportListens() {
       <div className="card">
         <div className="card-body">
           <form onSubmit={handleListensSubmit}>
-            <div
-              className="flex flex-wrap justify-content-center"
-              style={{ gap: "1em" }}
-            >
-              <div>
+            <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="datetime">
                   Choose a File:
                 </label>
                 <input
                   type="file"
                   className="form-control"
-                  name="filename"
+                  name="file"
+                  accept=".zip,.csv,.json,.jsonl"
                   required
                 />
               </div>
 
-              <div>
+              <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="datetime">
                   Select Service:
                 </label>
-                <select className="form-select">
+                <select className="form-select" required>
                   <option value="spotify">Spotify</option>
                   <option value="listenbrainz">Listenbrainz</option>
                   <option value="applemusic">Apple Music</option>
                 </select>
               </div>
 
-              <div>
+              <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="start-datetime">
                   Start import from (optional):
                 </label>
@@ -118,12 +139,12 @@ export default function ImportListens() {
                   type="date"
                   className="form-control"
                   max={new Date().toISOString()}
-                  name="ImportStartDatetime"
+                  name="ImportStartDate"
                   title="Date and time to start import at"
                 />
               </div>
 
-              <div>
+              <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="end-datetime">
                   End date for import (optional):
                 </label>
@@ -131,12 +152,12 @@ export default function ImportListens() {
                   type="date"
                   className="form-control"
                   max={new Date().toISOString()}
-                  name="ImportStartDatetime"
+                  name="ImportEndDate"
                   title="Date and time to end import at"
                 />
               </div>
 
-              <div style={{ flex: 0, alignSelf: "end" }}>
+              <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
                 <button type="submit" className="btn btn-success">
                   Import Listens
                 </button>

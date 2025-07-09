@@ -2070,4 +2070,19 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   }
+
+  importListens = async (userToken: string, formData: FormData) => {
+    const url = `${this.APIBaseURI}/import`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+      body: formData,
+    });
+
+    await this.checkStatus(response);
+    return response.status;
+  };
 }
