@@ -198,6 +198,7 @@ export default function BrainzPlayer() {
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
       userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
+      userPreferences?.brainzplayer?.internetArchiveEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
   // BrainzPlayerContext
@@ -222,6 +223,7 @@ export default function BrainzPlayer() {
     funkwhaleEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
+    internetArchiveEnabled = true,
     brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
@@ -238,9 +240,13 @@ export default function BrainzPlayer() {
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
     youtubeEnabled && "youtube",
-    true && "internetArchive",
-  ].filter(Boolean) as Array<DataSourceKey | "internetArchive">;
+    internetArchiveEnabled && "internetArchive",
+  ].filter(Boolean) as DataSourceKey[];
 
+  // Use the enabled sources to filter the priority list
+  const sortedDataSources = dataSourcesPriority.filter((key) =>
+    enabledDataSources.includes(key)
+  );
   // Combine saved priority list and default list to add any new music service at the end
   // then filter out disabled datasources (new ones will be enabled by default)
   const sortedDataSources = union(dataSourcesPriority
@@ -1218,7 +1224,7 @@ export default function BrainzPlayer() {
           />
         )}
 
-        {/* Add this line for Internet Archive */}
+        {}
         <InternetArchivePlayer
           show={
             brainzPlayerContextRef.current.isActivated &&
