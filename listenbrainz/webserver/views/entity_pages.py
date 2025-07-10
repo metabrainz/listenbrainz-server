@@ -365,9 +365,27 @@ def recording_entity(recording_mbid):
     
     recording_data = recording_data[0]
 
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+
+            similar_recordings = similarity.get_recordings(
+                mb_curs,
+                ts_curs,
+                [recording_mbid],
+                "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000",
+                18
+            )
+    except IndexError:
+        similar_recordings = []
+
     data = {
         "recording_mbid": recording_mbid,
         "recording": recording_data,
+        "similarRecordings": {
+            "recordings": similar_recordings,
+        },
     }
 
     return jsonify(data)

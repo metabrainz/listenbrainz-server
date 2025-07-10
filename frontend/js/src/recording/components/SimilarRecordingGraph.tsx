@@ -5,8 +5,8 @@ import { debounce, noop } from "lodash";
 import tinycolor from "tinycolor2";
 
 interface GraphProps {
-  data: GraphDataType;
-  onArtistChange: (artist_mbid: string) => void;
+  data: RecordingGraphDataType;
+  onRecordingChange: (recording_mbid: string) => void;
   background: string;
   graphParentElementRef: React.RefObject<HTMLDivElement>;
 }
@@ -18,7 +18,7 @@ function CustomNodeComponent({
   onMouseEnter,
   onMouseMove,
   onMouseLeave,
-}: NodeProps<NodeType>) {
+}: NodeProps<RecordingNodeType>) {
   return (
     <animated.g
       className="entity-similarity-graph-node"
@@ -60,17 +60,17 @@ function CustomNodeComponent({
         x={to([animatedProps.size], (size) => -size / 2)}
         y={to([animatedProps.size], (size) => -size / 2)}
       >
-        <div className="centered-text" title={node.data.artist_name}>
-          <div className="centered-text-inner">{node.data.artist_name}</div>
+        <div className="centered-text" title={node.data.recording_name}>
+          <div className="centered-text-inner">{node.data.recording_name}</div>
         </div>
       </animated.foreignObject>
     </animated.g>
   );
 }
 
-function SimilarArtistsGraph({
+function SimilarRecordingGraph({
   data,
-  onArtistChange,
+  onRecordingChange,
   background,
   graphParentElementRef,
 }: GraphProps) {
@@ -109,7 +109,7 @@ function SimilarArtistsGraph({
     return () => originalRef && observer.unobserve(originalRef);
   }, [graphParentElementRef]);
 
-  const chartProperties: NetworkSvgProps<NodeType, LinkType> = {
+  const chartProperties: NetworkSvgProps<RecordingNodeType, LinkType> = {
     data,
     repulsivity: Math.min(width, height) / 2,
     iterations: 40,
@@ -133,7 +133,7 @@ function SimilarArtistsGraph({
     activeNodeSize: (node) => node.size * 1.2,
     inactiveNodeSize: (node) => node.size,
     isInteractive: true,
-    onClick: (node) => onArtistChange(node.data.artist_mbid),
+    onClick: (node) => onRecordingChange(node.data.recording_mbid),
     motionConfig: "default",
     margin: { top: 50 },
   };
@@ -161,4 +161,4 @@ function SimilarArtistsGraph({
   );
 }
 
-export default SimilarArtistsGraph;
+export default SimilarRecordingGraph;

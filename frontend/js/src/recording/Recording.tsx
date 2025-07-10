@@ -1,7 +1,6 @@
 import * as React from "react";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,7 +8,6 @@ import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { chain } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
-import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
 import {
@@ -18,43 +16,50 @@ import {
 } from "../utils/utils";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
-import CBReviewModal from "../cb-review/CBReviewModal";
+import CBReview from "../cb-review/CBReview";
+import SimilarRecording from "./components/SimilarRecording";
+
+type Recording = {
+  artist_credit_id: number;
+  artist_credit_mbids: string[];
+  artist_credit_name: string;
+  artists: {
+    artist_credit_name: string;
+    artist_mbid: string;
+    join_phrase: string;
+  }[];
+  caa_id: number;
+  caa_release_mbid: string;
+  length: number;
+  recording_mbid: string;
+  recording_name: string;
+  release_mbid: string;
+  release_name: string;
+  tags: {
+    count: number;
+    tag: string;
+    genre_mbid?: string;
+  }[];
+};
 
 export type RecordingPageProps = {
-  recording: {
-    artist_credit_id: number;
-    artist_credit_mbids: string[];
-    artist_credit_name: string;
-    artists: {
-      artist_credit_name: string;
-      artist_mbid: string;
-      join_phrase: string;
-    }[];
-    caa_id: number;
-    caa_release_mbid: string;
-    length: number;
-    recording_mbid: string;
-    recording_name: string;
-    release_mbid: string;
-    release_name: string;
-    tags: {
-      count: number;
-      tag: string;
-      genre_mbid?: string;
-    }[];
-  };
+  recording: Recording;
   recording_mbid: string;
+  similarRecordings: {
+    recordings: Recording[];
+  };
 };
 
 export default function RecordingPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
+  const navigate = useNavigate();
   const location = useLocation();
   const params = useParams() as { recordingMBID: string };
   const { data } = useQuery<RecordingPageProps>(
     RouteQuery(["recording", params], location.pathname)
   );
 
-  const { recording } = data || {};
+  const { recording, similarRecordings } = data || ({} as RecordingPageProps);
 
   const {
     artist_credit_id,
@@ -69,9 +74,10 @@ export default function RecordingPage(): JSX.Element {
     release_mbid,
     release_name,
     tags,
-  } = recording || ({} as RecordingPageProps["recording"]);
+  } = recording || {};
 
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const graphParentElementRef = React.useRef<HTMLDivElement>(null);
 
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
@@ -86,7 +92,7 @@ export default function RecordingPage(): JSX.Element {
       })
       // eslint-disable-next-line no-console
       .catch(console.error);
-  }, []);
+  }, [recording_mbid]);
 
   React.useEffect(() => {
     async function fetchReviews() {
@@ -126,6 +132,15 @@ export default function RecordingPage(): JSX.Element {
     caa_id && caa_release_mbid
       ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
       : "/static/img/cover-art-placeholder.jpg";
+
+  const onRecordingChange = (new_recording_mbid: string) => {
+    navigate(`/recording/${new_recording_mbid}`);
+  };
+
+  const recordingGraphNodeInfo = {
+    recording_mbid,
+    recording_name,
+  } as RecordingNodeInfo;
 
   return (
     <div id="entity-page" role="main" className="recording-page">
@@ -221,48 +236,58 @@ export default function RecordingPage(): JSX.Element {
           entityMBID={recording_mbid}
         />
       </div>
+
+      {similarRecordings && similarRecordings.recordings.length > 0 ? (
+        <>
+          <h3 className="header-with-line">Similar Recordings</h3>
+          <div className="similarity">
+            <SimilarRecording
+              onRecordingChange={onRecordingChange}
+              recordingGraphNodeInfo={recordingGraphNodeInfo}
+              similarRecordingsList={
+                similarRecordings.recordings as RecordingNodeInfo[]
+              }
+              topAlbumReleaseColor={undefined}
+              topRecordingReleaseColor={undefined}
+              similarRecordingsLimit={18}
+              graphParentElementRef={graphParentElementRef}
+            />
+          </div>
+        </>
+      ) : null}
+
       <div className="entity-page-content">
         <div className="reviews">
           <h3 className="header-with-line">Reviews</h3>
-          {reviews?.length ? (
-            <>
-              {reviews.slice(0, 3).map(getReviewEventContent)}
-              <a
-                href={`https://critiquebrainz.org/recording/${recording_mbid}`}
-                className="critiquebrainz-button btn btn-link"
-              >
-                More on CritiqueBrainz…
-              </a>
-            </>
-          ) : (
-            <>
-              <p>Be the first to review this recording on CritiqueBrainz</p>
-              <button
-                type="button"
-                className="btn btn-info"
-                data-toggle="modal"
-                data-target="#CBReviewModal"
-                onClick={() => {
-                  NiceModal.show(CBReviewModal, {
-                    entityToReview: [
-                      {
-                        type: "recording",
-                        mbid: recording_mbid,
-                        name: recording_name,
-                      },
-                      {
-                        type: "artist",
-                        mbid: artists[0].artist_mbid,
-                        name: artists[0].artist_credit_name,
-                      },
-                    ],
-                  });
+          <div className="row">
+            <div className="col-md-6">
+              <CBReview
+                artistEntity={{
+                  type: "artist",
+                  mbid: artists?.[0]?.artist_mbid,
+                  name: artists?.[0]?.artist_credit_name,
                 }}
-              >
-                Add my review
-              </button>
-            </>
-          )}
+                recordingEntity={{
+                  type: "recording",
+                  mbid: recording_mbid,
+                  name: recording_name,
+                }}
+              />
+            </div>
+            {reviews?.length && (
+              <div className="col-md-6">
+                <div className="review-cards">
+                  {reviews.slice(0, 3).map(getReviewEventContent)}
+                </div>
+                <a
+                  href={`https://critiquebrainz.org/release-group/${release_mbid}`}
+                  className="critiquebrainz-button btn btn-link"
+                >
+                  More on CritiqueBrainz…
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
