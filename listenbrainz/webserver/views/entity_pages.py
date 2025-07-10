@@ -6,7 +6,7 @@ from werkzeug.exceptions import BadRequest
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
-from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.utils import number_readable
@@ -380,12 +380,37 @@ def recording_entity(recording_mbid):
     except IndexError:
         similar_recordings = []
 
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+            release_groups_data = load_release_groups_for_recordings(mb_curs, [recording_mbid])
+            release_groups_data = list(release_groups_data.values())
+    except Exception:
+        current_app.logger.error("Error loading release groups for recording:", exc_info=True)
+        release_groups_data = []
+
+    release_group_mbids = [rg["mbid"] for rg in release_groups_data]
+    try:
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            popularity_data, _ = popularity.get_counts(ts_curs, "release_group", release_group_mbids)
+    except Exception:
+        current_app.logger.error("Error loading popularity data for release groups:", exc_info=True)
+        popularity_data = []
+    
+    release_groups = []
+    for release_group, pop in zip(release_groups_data, popularity_data):
+        release_group["total_listen_count"] = pop["total_listen_count"]
+        release_group["total_user_count"] = pop["total_user_count"]
+        release_groups.append(release_group)
+        
     data = {
         "recording_mbid": recording_mbid,
         "recording": recording_data,
         "similarRecordings": {
             "recordings": similar_recordings,
         },
+        "releaseGroups": release_groups,
     }
 
     return jsonify(data)

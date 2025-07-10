@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
-import { chain } from "lodash";
+import { chain, groupBy, sortBy } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import type { Palette } from "@vibrant/color";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -18,6 +18,15 @@ import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
 import CBReview from "../cb-review/CBReview";
 import SimilarRecording from "./components/SimilarRecording";
+import {
+  COVER_ART_SINGLE_ROW_COUNT,
+  getReleaseCard,
+  ReleaseGroupWithSecondaryTypesAndListenCount,
+  SortingButtons,
+  sortReleaseGroups,
+  typeOrder,
+} from "../artist/ArtistPage";
+import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 
 type Recording = {
   artist_credit_id: number;
@@ -48,6 +57,7 @@ export type RecordingPageProps = {
   similarRecordings: {
     recordings: Recording[];
   };
+  releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
 };
 
 export default function RecordingPage(): JSX.Element {
@@ -59,7 +69,8 @@ export default function RecordingPage(): JSX.Element {
     RouteQuery(["recording", params], location.pathname)
   );
 
-  const { recording, similarRecordings } = data || ({} as RecordingPageProps);
+  const { recording, similarRecordings, releaseGroups } =
+    data || ({} as RecordingPageProps);
 
   const {
     artist_credit_id,
@@ -78,6 +89,12 @@ export default function RecordingPage(): JSX.Element {
 
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
+  const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
+    false
+  );
+  const [sort, setSort] = React.useState<"release_date" | "total_listen_count">(
+    "release_date"
+  );
 
   const albumArtRef = React.useRef<HTMLImageElement>(null);
   const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
@@ -141,6 +158,38 @@ export default function RecordingPage(): JSX.Element {
     recording_mbid,
     recording_name,
   } as RecordingNodeInfo;
+
+  // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
+  // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
+  const rgGroups = groupBy(
+    releaseGroups,
+    (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
+  );
+
+  const last = Object.keys(rgGroups).length;
+  const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
+    typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
+  );
+
+  const groupedReleaseGroups: Record<
+    string,
+    ReleaseGroupWithSecondaryTypesAndListenCount[]
+  > = {};
+  sortedRgGroupsKeys.forEach((type) => {
+    groupedReleaseGroups[type] = sortReleaseGroups(sort, rgGroups[type]);
+  });
+
+  const releaseGroupTypesNames = Object.entries(groupedReleaseGroups);
+
+  // Only show "full discography" button if there are more than 4 rows
+  // in total across categories, after which we crop the container
+  const showFullDiscographyButton =
+    releaseGroupTypesNames.reduce(
+      (rows, curr) =>
+        // add up the number of rows (max of 2 rows in the css grid)
+        rows + (curr[1].length > COVER_ART_SINGLE_ROW_COUNT ? 2 : 1),
+      0
+    ) > 4;
 
   return (
     <div id="entity-page" role="main" className="recording-page">
@@ -235,6 +284,43 @@ export default function RecordingPage(): JSX.Element {
           entityType="recording"
           entityMBID={recording_mbid}
         />
+      </div>
+
+      <div className="entity-page-content">
+        <div
+          className={`discography ${
+            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+          }`}
+        >
+          {releaseGroupTypesNames.map(([type, rgGroup]) => (
+            <div className="albums">
+              <div className="listen-header">
+                <h3 className="header-with-line">{type}</h3>
+                <SortingButtons sort={sort} setSort={setSort} />
+              </div>
+              <HorizontalScrollContainer
+                className={`cover-art-container ${
+                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                    ? "single-row"
+                    : ""
+                }`}
+              >
+                {rgGroup.map(getReleaseCard)}
+              </HorizontalScrollContainer>
+            </div>
+          ))}
+          {showFullDiscographyButton && (
+            <div className="read-more mb-3">
+              <button
+                type="button"
+                className="btn btn-outline-info"
+                onClick={() => setExpandDiscography((prevValue) => !prevValue)}
+              >
+                See {expandDiscography ? "less" : "full discography"}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {similarRecordings && similarRecordings.recordings.length > 0 ? (
