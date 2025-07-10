@@ -174,7 +174,7 @@ export default function RecordingPage(): JSX.Element {
                 );
               })}
             </div>
-            <small className="help-block">{formattedDate}</small>
+            <small className="form-text">{formattedDate}</small>
           </div>
         </div>
         <div className="right-side">
