@@ -299,7 +299,7 @@ export default function AlbumPage(): JSX.Element {
             </small>
           </div>
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {!isEmpty(artist?.artists?.[0]?.rels) &&
               Object.entries(
@@ -321,7 +321,7 @@ export default function AlbumPage(): JSX.Element {
             </Link>
             <button
               type="button"
-              className="btn btn-info dropdown-toggle"
+              className="btn btn-info dropdown-toggle px-3"
               data-bs-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
