@@ -175,7 +175,7 @@ export default NiceModal.create(
             placeholder="Add followers*"
           />
           <SearchDropDown suggestions={suggestions} action={addUser} />
-          <p>Leave a message (optional)</p>
+          <p className="my-4">Leave a message (optional)</p>
           <div className="mb-4">
             <textarea
               className="form-control"
@@ -188,7 +188,7 @@ export default NiceModal.create(
               onChange={handleBlurbInputChange}
             />
           </div>
-          <small className="character-count">
+          <small className="character-count d-block texty-end">
             {blurbContent.length} / {maxBlurbContentLength}
             <br />
             *Can’t find a user? Make sure they are following you, and then try

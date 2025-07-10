@@ -144,18 +144,17 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
         <label className="form-label" htmlFor="feedLink">
           Subscription URL
         </label>
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="btn-group d-flex">
           <input
             type="text"
             className="form-control"
             id="feedLink"
             value={buildLink()}
             readOnly
-            style={{ marginRight: "10px", flexGrow: 1 }}
           />
           <button
             type="button"
-            className="btn btn-info btn-sm"
+            className="btn btn-info"
             onClick={handleCopyClick}
             style={{ minWidth: "100px" }}
           >
