@@ -15,16 +15,6 @@ def get_or_create_server(host_url: str, client_id: str, client_secret: str, scop
         INSERT INTO funkwhale_servers (host_url, client_id, client_secret, scopes)
         VALUES (:host_url, :client_id, :client_secret, :scopes)
         ON CONFLICT (host_url) DO UPDATE SET
-            client_id = CASE 
-                WHEN funkwhale_servers.client_id IS NULL OR funkwhale_servers.client_id = ''
-                THEN EXCLUDED.client_id 
-                ELSE funkwhale_servers.client_id 
-            END,
-            client_secret = CASE 
-                WHEN funkwhale_servers.client_secret IS NULL OR funkwhale_servers.client_secret = ''
-                THEN EXCLUDED.client_secret 
-                ELSE funkwhale_servers.client_secret 
-            END,
             scopes = EXCLUDED.scopes
         RETURNING id
     """), {

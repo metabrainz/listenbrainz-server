@@ -1,3 +1,4 @@
+
 import time
 import base64
 from typing import Optional, List
@@ -20,8 +21,7 @@ FUNKWHALE_API_RETRIES = 5
 
 class FunkwhaleService:
     def __init__(self):
-        self.redirect_url = current_app.config.get('FUNKWHALE_CALLBACK_URL', 
-                                                   current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/funkwhale/callback/')
+        self.redirect_url = current_app.config['FUNKWHALE_CALLBACK_URL']
 
     def _get_or_create_oauth_credentials(self, host_url: str, client_id: str = None, client_secret: str = None, scopes: str = None) -> tuple:
         # Try to get server by host_url
@@ -60,10 +60,14 @@ class FunkwhaleService:
                 user = self.refresh_access_token(user_id, host_url, user['refresh_token'])
             except ExternalServiceInvalidGrantError:
                 current_app.logger.warning(f"Funkwhale token refresh failed - user {user_id} revoked access")
-                return None
+                # Don't return None - return the user with expired token so frontend can handle
+                # The frontend will get an error when trying to use the expired token and can prompt for reconnection
+                pass  # Keep the existing user object with expired token
             except Exception as e:
                 current_app.logger.error(f"Funkwhale token refresh failed for user {user_id}: {e}")
-                return None
+                # Don't return None - return the user with expired token so frontend can handle
+                # The frontend will get an error when trying to use the expired token and can prompt for reconnection
+                pass  # Keep the existing user object with expired token
         return user
 
     def add_new_user(self, user_id: int, host_url: str, token: dict, client_id: str, client_secret: str, scopes: str) -> bool:
@@ -72,11 +76,6 @@ class FunkwhaleService:
         expires_at = int(time.time()) + token['expires_in']
         from datetime import timezone
         token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
-        # Get user details from Funkwhale API
-        headers = {'Authorization': f'Bearer {access_token}'}
-        response = requests.get(f"{host_url}/api/v1/users/me", headers=headers)
-        if response.status_code != 200:
-            raise ExternalServiceError(f"Could not get user details from Funkwhale: {response.text}")
         # Register or get server
         client_id, client_secret, server_id = self._get_or_create_oauth_credentials(host_url, client_id, client_secret, scopes)
         # Save token
@@ -156,7 +155,6 @@ class FunkwhaleService:
         current_app.logger.debug(f"Server record ID: {server['id']}, scopes: {server.get('scopes', 'unknown')}")
         
         oauth = OAuth2Session(
-            client_id=client_id,
             redirect_uri=self.redirect_url
         )
         token_url = f"{host_url}/api/v1/oauth/token/"
@@ -167,6 +165,7 @@ class FunkwhaleService:
             
             token = oauth.refresh_token(
                 token_url,
+                client_id=client_id,
                 client_secret=client_secret,
                 refresh_token=refresh_token,
                 include_client_id=True
@@ -185,12 +184,11 @@ class FunkwhaleService:
             current_app.logger.error(f"Error details: client_id={client_id[:8]}..., host_url={host_url}, error_type={type(e).__name__}")
             
             # If it's an invalid_client error, the OAuth app might have been deleted on Funkwhale
-            # In this case, we should invalidate the user's token to force re-authentication
+            # Log the issue but DON'T delete the token - let the frontend handle reconnection
             if "invalid_client" in str(e).lower():
                 current_app.logger.warning(f"Invalid client error suggests OAuth app was deleted on Funkwhale server {host_url}")
-                current_app.logger.warning(f"Clearing user {user_id}'s token for server {server['id']} to force re-authentication")
-                # Delete only this user's token, not the entire server record
-                db_funkwhale.delete_token(user_id, server['id'])
+                current_app.logger.warning(f"User {user_id} will need to manually reconnect to fix this issue")
+                # Keep the token so user remains "connected" - frontend can show reconnection prompt
             
             raise ExternalServiceError(f"Token refresh failed: {str(e)}")
         
