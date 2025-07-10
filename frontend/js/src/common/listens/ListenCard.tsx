@@ -441,8 +441,6 @@ export class ListenCard extends React.Component<
           <Link
             to={`/recording/${recordingMBID}`}
             title="Could not load cover art"
-            target="_blank"
-            rel="noopener noreferrer"
             className="listen-thumbnail"
           >
             <div className="cover-art-fallback">
