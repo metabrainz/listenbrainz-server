@@ -84,6 +84,9 @@ function BrainzPlayerSettings() {
     userPreferences?.brainzplayer?.appleMusicEnabled ??
       AppleMusicPlayer.hasPermissions(appleAuth)
   );
+  const [internetArchiveEnabled, setInternetArchiveEnabled] = React.useState(
+    userPreferences?.brainzplayer?.internetArchiveEnabled ?? true
+  );
   const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
   );
@@ -129,6 +132,7 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        internetArchiveEnabled,
         brainzplayerEnabled,
         dataSourcesPriority,
       });
@@ -142,6 +146,7 @@ function BrainzPlayerSettings() {
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          internetArchiveEnabled,
           brainzplayerEnabled,
           dataSourcesPriority,
         };
@@ -165,6 +170,7 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    internetArchiveEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
     APIService,
@@ -387,6 +393,37 @@ function BrainzPlayerSettings() {
                 </a>
               </li>
             </ul>
+          </small>
+        </div>
+        <div className="mb-4">
+          <Switch
+            id="enable-internet-archive"
+            value="internetArchive"
+            checked={internetArchiveEnabled}
+            onChange={() => setInternetArchiveEnabled(!internetArchiveEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !internetArchiveEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faArchive}
+                    color={
+                      internetArchiveEnabled
+                        ? dataSourcesInfo.internetArchive.color
+                        : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Internet Archive</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Internet Archive is a free, public domain audio archive.
           </small>
         </div>
         <h3 className="mt-4">Music services priority</h3>

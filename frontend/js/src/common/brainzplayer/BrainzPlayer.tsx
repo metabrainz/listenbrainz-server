@@ -146,6 +146,7 @@ export default function BrainzPlayer() {
     (userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.internetArchiveEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
   // BrainzPlayerContext
@@ -169,6 +170,7 @@ export default function BrainzPlayer() {
     appleMusicEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
+    internetArchiveEnabled = true,
     brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
@@ -182,14 +184,13 @@ export default function BrainzPlayer() {
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
     youtubeEnabled && "youtube",
-    true && "internetArchive",
-  ].filter(Boolean) as Array<DataSourceKey | "internetArchive">;
+    internetArchiveEnabled && "internetArchive",
+  ].filter(Boolean) as DataSourceKey[];
 
-  const sortedDataSources = dataSourcesPriority
-    .filter((key) => enabledDataSources.includes(key))
-    .concat(
-      enabledDataSources.includes("internetArchive") ? ["internetArchive"] : []
-    );
+  // Use the enabled sources to filter the priority list
+  const sortedDataSources = dataSourcesPriority.filter((key) =>
+    enabledDataSources.includes(key)
+  );
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
@@ -1130,7 +1131,7 @@ export default function BrainzPlayer() {
           />
         )}
 
-        {/* Add this line for Internet Archive */}
+        {}
         <InternetArchivePlayer
           show={
             brainzPlayerContextRef.current.isActivated &&
