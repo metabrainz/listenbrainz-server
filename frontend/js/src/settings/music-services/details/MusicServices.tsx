@@ -21,7 +21,6 @@ type MusicServicesLoaderData = {
   current_apple_permissions: string;
   current_lastfm_permissions: string;
   current_funkwhale_permission: string;
-  funkwhale_host_urls: string[];
   current_lastfm_settings?: {
     external_user_id?: string;
     latest_listened_at?: string;
@@ -56,40 +55,11 @@ export default function MusicServices() {
     librefm: loaderData.current_librefm_permissions,
   });
 
-  const [funkwhaleHostUrl, setFunkwhaleHostUrl] = React.useState("");
-  const [
-    connectedFunkwhaleServers,
-    setConnectedFunkwhaleServers,
-  ] = React.useState<string[]>(loaderData.funkwhale_host_urls || []);
-
-  // Track if this is the initial load to prevent automatic disable calls
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
-  const [userInteractionStarted, setUserInteractionStarted] = React.useState(
-    false
-  );
-
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
   ) => {
     try {
-      setUserInteractionStarted(true);
-
-      // For Funkwhale disable action during initial load, don't call backend
-      // This prevents automatic disconnection when component loads with "disable" state
-      if (
-        serviceName === "funkwhale" &&
-        newValue === "disable" &&
-        !userInteractionStarted
-      ) {
-        // Just update the UI state without calling the backend
-        setPermissions((prevState) => ({
-          ...prevState,
-          [serviceName]: newValue,
-        }));
-        return;
-      }
-      // For other services or user-initiated actions, proceed normally
       const fetchUrl = `/settings/music-services/${serviceName}/disconnect/`;
       let fetchBody;
       const fetchHeaders: Record<string, string> = {
@@ -138,8 +108,9 @@ export default function MusicServices() {
             break;
           // lastfm and librefm state is now managed in the LFMMusicServicePermissions component
           case "funkwhale":
-            setFunkwhaleHostUrl("");
-            setConnectedFunkwhaleServers([]);
+            if (funkwhaleAuth) {
+              funkwhaleAuth.access_token = undefined;
+            }
             break;
           default:
             break;
@@ -230,7 +201,10 @@ export default function MusicServices() {
   ) => {
     evt.preventDefault();
     try {
-      if (!funkwhaleHostUrl) {
+      const formData = new FormData(evt.currentTarget);
+      const hostUrl = formData.get("funkwhaleHostUrl") as string;
+
+      if (!hostUrl) {
         throw Error("Funkwhale server URL is required");
       }
 
@@ -239,7 +213,7 @@ export default function MusicServices() {
         {
           method: "POST",
           body: JSON.stringify({
-            host_url: funkwhaleHostUrl,
+            host_url: hostUrl,
           }),
           headers: {
             "Content-Type": "application/json",
@@ -258,8 +232,10 @@ export default function MusicServices() {
 
       if (response.ok) {
         if (data.url) {
-          // Store host URL in session storage before redirect
-          sessionStorage.setItem("funkwhale_host_url", funkwhaleHostUrl);
+          // Store host URL in global context before redirect
+          if (funkwhaleAuth) {
+            funkwhaleAuth.instance_url = hostUrl;
+          }
           // Redirect to Funkwhale authorization page
           window.location.href = data.url;
         } else {
@@ -287,13 +263,6 @@ export default function MusicServices() {
     const funkwhaleSuccess = params.get("success");
 
     if (funkwhaleSuccess === "Successfully connected to Funkwhale") {
-      // Get host URL from session storage
-      const hostUrl = sessionStorage.getItem("funkwhale_host_url");
-      if (hostUrl) {
-        setFunkwhaleHostUrl(hostUrl);
-        setConnectedFunkwhaleServers((prev) => [...prev, hostUrl]);
-        sessionStorage.removeItem("funkwhale_host_url"); // Clean up
-      }
       toast.success(
         <ToastMsg
           title="Success"
@@ -301,12 +270,6 @@ export default function MusicServices() {
         />
       );
       setPermissions((prev) => ({ ...prev, funkwhale: "listen" }));
-      // Clear the query parameters from the URL
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname + window.location.hash
-      );
     } else if (funkwhaleError) {
       toast.error(
         <ToastMsg
@@ -314,23 +277,17 @@ export default function MusicServices() {
           message={decodeURIComponent(funkwhaleError)}
         />
       );
-      // Clear the query parameters from the URL
+    }
+
+    // Clear the query parameters from the URL for both success and error cases
+    if (funkwhaleSuccess || funkwhaleError) {
       window.history.replaceState(
         {},
         document.title,
         window.location.pathname + window.location.hash
       );
     }
-  }, []);
-
-  React.useEffect(() => {
-    // Use a small timeout to ensure this runs after any initial renders
-    const timer = setTimeout(() => {
-      setIsInitialLoad(false);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
+  }, [funkwhaleAuth?.instance_url]);
 
   return (
     <>
@@ -564,19 +521,21 @@ export default function MusicServices() {
             <p>
               Connect to your Funkwhale server to play music on ListenBrainz.
             </p>
-            <div
-              className="alert alert-warning alert-dismissible fade show"
-              role="alert"
-            >
-              <strong>Important:</strong> You must be already logged into your
-              Funkwhale server before connecting it to ListenBrainz.
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="alert"
-                aria-label="Close"
-              />
-            </div>
+            {permissions.funkwhale !== "listen" && (
+              <div
+                className="alert alert-warning alert-dismissible fade show"
+                role="alert"
+              >
+                <strong>Important:</strong> You must be already logged into your
+                Funkwhale server before connecting it to ListenBrainz.
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                />
+              </div>
+            )}
             <form onSubmit={handleFunkwhaleConnect}>
               <div className="flex flex-wrap" style={{ gap: "1em" }}>
                 <div>
@@ -590,11 +549,11 @@ export default function MusicServices() {
                     name="funkwhaleHostUrl"
                     placeholder={
                       permissions.funkwhale === "listen"
-                        ? connectedFunkwhaleServers[0]
+                        ? funkwhaleAuth?.instance_url ||
+                          "Connected Funkwhale server"
                         : "https://funkwhale.funkwhale.test/"
                     }
-                    value={funkwhaleHostUrl}
-                    onChange={(e) => setFunkwhaleHostUrl(e.target.value)}
+                    defaultValue={funkwhaleAuth?.instance_url || ""}
                     readOnly={permissions.funkwhale === "listen"}
                   />
                 </div>
