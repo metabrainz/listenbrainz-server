@@ -274,7 +274,7 @@ export default function RecordingPage(): JSX.Element {
                 }}
               />
             </div>
-            {reviews?.length && (
+            {reviews?.length ? (
               <div className="col-md-6">
                 <div className="review-cards">
                   {reviews.slice(0, 3).map(getReviewEventContent)}
@@ -286,7 +286,7 @@ export default function RecordingPage(): JSX.Element {
                   More on CritiqueBrainz…
                 </a>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
