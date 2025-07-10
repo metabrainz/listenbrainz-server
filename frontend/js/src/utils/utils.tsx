@@ -177,6 +177,131 @@ const searchForSoundcloudTrack = async (
   return responseBody?.[0]?.uri ?? null;
 };
 
+// Helper function to select the best track from search results
+// Funkwhale is self hosted platform so unlike other services it won't available all songs,
+// so we need to be more strict in our matching criteria,
+// there is 50-50 chance that the track we are looking for is not available on Funkwhale
+const selectBestTrack = (
+  tracks: any[],
+  trackName?: string,
+  artistName?: string
+): FunkwhaleTrack | null => {
+  const playableTracks = tracks.filter(
+    (track: any) => track.is_playable === true
+  );
+
+  if (playableTracks.length === 0) {
+    return null;
+  }
+
+  // Only return a track if we have a match for both track and artist
+  if (trackName && artistName) {
+    const goodMatches = playableTracks.filter((track: any) => {
+      const trackTitle = track.title?.toLowerCase() || "";
+      const artistCredit =
+        track.artist_credit?.[0]?.artist?.name?.toLowerCase() ||
+        track.artist?.name?.toLowerCase() ||
+        "";
+
+      // We require BOTH track name and artist name to have good similarity
+      const trackMatch =
+        trackTitle.includes(trackName.toLowerCase()) ||
+        trackName.toLowerCase().includes(trackTitle);
+      const artistMatch =
+        artistCredit.includes(artistName.toLowerCase()) ||
+        artistName.toLowerCase().includes(artistCredit);
+
+      return trackMatch && artistMatch;
+    });
+
+    return goodMatches.length > 0 ? goodMatches[0] : null;
+  }
+
+  // If we only have track name or artist name, be even more strict
+  if (trackName) {
+    const trackMatches = playableTracks.filter((track: any) => {
+      const trackTitle = track.title?.toLowerCase() || "";
+      return (
+        trackTitle.includes(trackName.toLowerCase()) ||
+        trackName.toLowerCase().includes(trackTitle)
+      );
+    });
+    return trackMatches.length > 0 ? trackMatches[0] : null;
+  }
+  return null;
+};
+
+const searchForFunkwhaleTrack = async (
+  funkwhaleToken: string,
+  instanceURL: string,
+  trackName?: string,
+  artistName?: string
+): Promise<FunkwhaleTrack | null> => {
+  let query = trackName ?? "";
+  if (artistName) {
+    query += ` ${artistName}`;
+  }
+  if (!query) {
+    return null;
+  }
+
+  // first try the enhanced search endpoint first (Funkwhale v1.3+)
+  try {
+    const enhancedResponse = await fetch(
+      `${instanceURL}/api/v1/search?q=${encodeURIComponent(query)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${funkwhaleToken}`,
+        },
+      }
+    );
+
+    if (enhancedResponse.ok) {
+      const enhancedData = await enhancedResponse.json();
+      const tracks = enhancedData?.tracks || [];
+
+      if (tracks.length > 0) {
+        return selectBestTrack(tracks, trackName, artistName);
+      }
+    }
+  } catch (error) {
+    // Fallback to old search if enhanced search fails -> silent fallback for compatibility
+  }
+
+  // Fallback to the original tracks only search
+  // This is the old search endpoint that returns tracks only
+  // Cross verify to ensure the availablity of tracks
+  const response = await fetch(
+    `${instanceURL}/api/v1/tracks/?search=${encodeURIComponent(query)} 
+     &limit=10`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${funkwhaleToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const error = new Error(errorBody.detail || response.statusText);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  const responseBody = await response.json();
+  const tracks = responseBody?.results ?? [];
+
+  if (tracks.length === 0) {
+    return null;
+  }
+
+  return selectBestTrack(tracks, trackName, artistName);
+};
+
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
@@ -544,6 +669,7 @@ type GlobalAppProps = {
   critiquebrainz?: MetaBrainzProjectUser;
   musicbrainz?: MetaBrainzProjectUser;
   appleMusic?: AppleMusicUser;
+  funkwhale?: FunkwhaleUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
 };
@@ -592,6 +718,7 @@ const getPageProps = async (): Promise<{
       critiquebrainz,
       musicbrainz,
       appleMusic,
+      funkwhale,
       sentry_traces_sample_rate,
       sentry_dsn,
       user_preferences,
@@ -623,6 +750,7 @@ const getPageProps = async (): Promise<{
       soundcloudAuth: soundcloud,
       critiquebrainzAuth: critiquebrainz,
       appleAuth: appleMusic,
+      funkwhaleAuth: funkwhale,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {
@@ -1122,6 +1250,7 @@ export function getBaseUrl(): string {
 export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
+  searchForFunkwhaleTrack,
   getMBIDMappingArtistLink,
   getStatsArtistLink,
   getArtistLink,
