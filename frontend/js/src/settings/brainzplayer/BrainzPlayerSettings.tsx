@@ -5,13 +5,13 @@ import {
   faSoundcloud,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
+import { faArchive, faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
-import { faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -42,6 +42,11 @@ export const dataSourcesInfo = {
     icon: faApple,
     color: "#000000",
   },
+  internetArchive: {
+    name: "Internet Archive",
+    icon: faArchive,
+    color: "#6c757d",
+  },
 } as const;
 
 export type DataSourceKey = keyof typeof dataSourcesInfo;
@@ -52,6 +57,7 @@ export const defaultDataSourcesPriority = [
   "appleMusic",
   "soundcloud",
   "youtube",
+  "internetArchive",
 ] as DataSourceKey[];
 
 function BrainzPlayerSettings() {
@@ -77,6 +83,9 @@ function BrainzPlayerSettings() {
   const [appleMusicEnabled, setAppleMusicEnabled] = React.useState(
     userPreferences?.brainzplayer?.appleMusicEnabled ??
       AppleMusicPlayer.hasPermissions(appleAuth)
+  );
+  const [internetArchiveEnabled, setInternetArchiveEnabled] = React.useState(
+    userPreferences?.brainzplayer?.internetArchiveEnabled ?? true
   );
   const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
@@ -123,6 +132,7 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        internetArchiveEnabled,
         brainzplayerEnabled,
         dataSourcesPriority,
       });
@@ -136,6 +146,7 @@ function BrainzPlayerSettings() {
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          internetArchiveEnabled,
           brainzplayerEnabled,
           dataSourcesPriority,
         };
@@ -159,12 +170,15 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    internetArchiveEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
     APIService,
     currentUser?.auth_token,
     userPreferences,
   ]);
+
+  const internetArchivePlayerRef = React.useRef<any>(null);
 
   return (
     <>
@@ -379,6 +393,37 @@ function BrainzPlayerSettings() {
                 </a>
               </li>
             </ul>
+          </small>
+        </div>
+        <div className="mb-4">
+          <Switch
+            id="enable-internet-archive"
+            value="internetArchive"
+            checked={internetArchiveEnabled}
+            onChange={() => setInternetArchiveEnabled(!internetArchiveEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !internetArchiveEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faArchive}
+                    color={
+                      internetArchiveEnabled
+                        ? dataSourcesInfo.internetArchive.color
+                        : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Internet Archive</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Internet Archive is a free, public domain audio archive.
           </small>
         </div>
         <h3 className="mt-4">Music services priority</h3>
