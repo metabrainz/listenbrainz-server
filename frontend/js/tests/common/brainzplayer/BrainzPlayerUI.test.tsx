@@ -1,14 +1,9 @@
 import * as React from "react";
-import { mount } from "enzyme";
 
 import { BrowserRouter } from "react-router";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
 import IntersectionObserver from "../../__mocks__/intersection-observer";
-
-// Font Awesome generates a random hash ID for each icon everytime.
-// Mocking Math.random() fixes this
-// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
+import { render, screen } from "@testing-library/react";
 
 const props = {
   playPreviousTrack: () => {},
@@ -29,11 +24,20 @@ describe("BrainzPlayerUI", () => {
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
   });
   it("renders", () => {
-    const wrapper = mount(
+    render(
       <BrowserRouter>
         <BrainzPlayerUI {...props} />
       </BrowserRouter>
     );
-    expect(wrapper.find("#brainz-player")).toHaveLength(1);
+    expect(screen.getByTestId("brainzplayer-ui")).toBeInTheDocument();
+    expect(screen.getByTestId("queue")).toBeInTheDocument();
+    // Main player bar buttons
+    expect(screen.getByTestId("bp-previous-button")).toBeInTheDocument();
+    expect(screen.getByTestId("bp-next-button")).toBeInTheDocument();
+    expect(screen.getByTestId("bp-play-button")).toBeInTheDocument();
+    // Mobile player UI buttons
+    expect(screen.getByTestId("bp-mp-previous-button")).toBeInTheDocument();
+    expect(screen.getByTestId("bp-mp-next-button")).toBeInTheDocument();
+    expect(screen.getByTestId("bp-mp-play-button")).toBeInTheDocument();
   });
 });

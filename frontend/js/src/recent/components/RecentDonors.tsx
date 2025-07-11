@@ -55,8 +55,9 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                       </Link>
                     ))}
                   <p>
-                    {donor.currency === "usd" ? "$" : "€"}
+                    {donor.currency === "usd" && "$"}
                     {donor.donation}
+                    {donor.currency === "eur" && "€"}
                   </p>
                 </div>
                 {pinnedRecordingListen && (

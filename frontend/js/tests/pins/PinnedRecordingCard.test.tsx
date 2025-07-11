@@ -1,33 +1,14 @@
 import * as React from "react";
-import { mount, ReactWrapper, shallow } from "enzyme";
-
-import { act } from "react-dom/test-utils";
+import { render, screen, waitFor } from "@testing-library/react";
 import PinnedRecordingCard, {
   PinnedRecordingCardProps,
-  PinnedRecordingCardState,
 } from "../../src/user/components/PinnedRecordingCard";
-import * as utils from "../../src/utils/utils";
 import APIServiceClass from "../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
-import { waitForComponentToPaint } from "../test-utils";
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import ListenCard from "../../src/common/listens/ListenCard";
 import { ReactQueryWrapper } from "../test-react-query";
-
-// Font Awesome generates a random hash ID for each icon everytime.
-// Mocking Math.random() fixes this
-// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
-
-function PinnedRecordingCardWithWrapper(props: PinnedRecordingCardProps) {
-  return (
-    <ReactQueryWrapper>
-      <PinnedRecordingCard {...props} />
-    </ReactQueryWrapper>
-  );
-}
 
 const user = {
   id: 1,
@@ -50,6 +31,7 @@ const globalProps: GlobalAppContextT = {
 const pinnedRecording: PinnedRecording = {
   blurb_content: "I LOVE",
   created: 1111111111,
+  // In the future, so not expired
   pinned_until: 9999999999,
   row_id: 1,
   recording_mbid: "98255a8c-017a-4bc7-8dd6-1fa36124572b",
@@ -61,323 +43,307 @@ const pinnedRecording: PinnedRecording = {
 
 const expiredPinnedRecording: PinnedRecording = {
   ...pinnedRecording,
+  // In the past, so expired
   pinned_until: 1111122222,
 };
 
 const props: PinnedRecordingCardProps = {
   pinnedRecording,
   isCurrentUser: true,
-
-  removePinFromPinsList: () => {},
+  removePinFromPinsList: jest.fn(),
 };
 
 describe("PinnedRecordingCard", () => {
+  // Helper to render and get a ref to the component instance
+  const setupComponent = (
+    propsOverride?: Partial<PinnedRecordingCardProps>,
+    globalPropsOverride?: Partial<GlobalAppContextT>
+  ) => {
+    let pinnedRecordingCardInstance: PinnedRecordingCard | null;
+    render(
+      <GlobalAppContext.Provider
+        value={{ ...globalProps, ...globalPropsOverride }}
+      >
+        <ReactQueryWrapper>
+          <PinnedRecordingCard
+            {...props}
+            {...propsOverride}
+            ref={(ref) => {
+              pinnedRecordingCardInstance = ref;
+            }}
+          />
+        </ReactQueryWrapper>
+      </GlobalAppContext.Provider>
+    );
+    // Wait for the ref to be available
+    return waitFor(() =>
+      expect(pinnedRecordingCardInstance).not.toBeNull()
+    ).then(() => pinnedRecordingCardInstance!);
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("renders correctly", () => {
-    const wrapper = mount(<PinnedRecordingCardWithWrapper {...props} />);
-    expect(wrapper.find(ListenCard)).toHaveLength(1);
+    setupComponent();
+
+    // Check for the presence of the main component class
+    const cardElement = screen
+      .getByText(/I LOVE/)
+      .closest(".pinned-recording-card");
+    expect(cardElement).toBeInTheDocument();
+    expect(
+      screen.getByText(pinnedRecording.track_metadata.track_name)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(pinnedRecording.track_metadata.artist_name)
+    ).toBeInTheDocument();
   });
 
   describe("determineIfCurrentlyPinned", () => {
-    it("returns true when pinned_until > now", async () => {
-      const componentWrapper = mount(
-        <PinnedRecordingCardWithWrapper {...props} />
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
-
-      let isPlaying;
-      await act(() => {
-        isPlaying = instance.determineIfCurrentlyPinned();
-      });
-      expect(isPlaying).toBe(true);
+    it("renders as currently pinned when pinned_until > now", () => {
+      setupComponent();
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      expect(cardElement).toHaveClass("currently-pinned");
     });
 
-    it("returns false when pinned_until < now", async () => {
-      const componentWrapper = mount(
-        <PinnedRecordingCardWithWrapper
-          {...{ ...props, pinnedRecording: expiredPinnedRecording }}
-        />
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
-      let isPlaying;
-      await act(() => {
-        isPlaying = instance.determineIfCurrentlyPinned();
-      });
-      expect(isPlaying).toBe(false);
+    it("renders as not currently pinned when pinned_until < now", () => {
+      setupComponent({ pinnedRecording: expiredPinnedRecording });
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      expect(cardElement).not.toHaveClass("currently-pinned");
     });
   });
 
   describe("unpinRecording", () => {
-    it("calls API, updates currentlyPinned in state", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
+    let unpinRecordingSpy = jest
+      .spyOn(globalProps.APIService, "unpinRecording")
+      .mockImplementation(() => Promise.resolve(200));
 
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "unpinRecording");
-      spy.mockImplementation(() => Promise.resolve(200));
+    it("calls API and updates currentlyPinned class in DOM", async () => {
+      const instance = await setupComponent();
 
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Initially pinned
+      expect(cardElement).toHaveClass("currently-pinned");
 
-      await act(async () => {
-        await instance.unpinRecording();
+      await instance.unpinRecording();
+
+      await waitFor(() => {
+        expect(unpinRecordingSpy).toHaveBeenCalledTimes(1);
+        expect(unpinRecordingSpy).toHaveBeenCalledWith(
+          globalProps.currentUser?.auth_token
+        );
       });
-      await waitForComponentToPaint(wrapper);
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("auth_token");
-
-      expect(wrapper.state("currentlyPinned")).toBeFalsy();
+      // Verify DOM update reflects state change
+      expect(cardElement).not.toHaveClass("currently-pinned");
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper
-            {...{ ...props, isCurrentUser: false }}
-          />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
+      const instance = await setupComponent({ isCurrentUser: false });
 
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "unpinRecording");
-      spy.mockImplementation(() => Promise.resolve(200));
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Should remain pinned
+      expect(cardElement).toHaveClass("currently-pinned");
 
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
-      await act(async () => {
-        await instance.unpinRecording();
-      });
-      await waitForComponentToPaint(wrapper);
+      await instance.unpinRecording();
 
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
+      expect(unpinRecordingSpy).toHaveBeenCalledTimes(0);
+      expect(cardElement).toHaveClass("currently-pinned");
     });
 
     it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            currentUser: { auth_token: undefined, name: "test" },
-          }}
-        >
-          <PinnedRecordingCardWithWrapper {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "unpinRecording");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
-      await act(async () => {
-        await instance.unpinRecording();
+      const instance = await setupComponent(undefined, {
+        currentUser: { auth_token: undefined, name: "test" },
       });
-      await waitForComponentToPaint(wrapper);
 
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Should remain pinned
+      expect(cardElement).toHaveClass("currently-pinned");
+
+      await instance.unpinRecording();
+
+      expect(unpinRecordingSpy).toHaveBeenCalledTimes(0);
+      expect(cardElement).toHaveClass("currently-pinned");
     });
 
-    it("doesn't update currentlyPinned in state if status code is not 200", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper {...{ ...props }} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
+    it("doesn't update currentlyPinned if status code is not 200", async () => {
+      const instance = await setupComponent();
 
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "unpinRecording");
-      spy.mockImplementation(() => Promise.resolve(201));
+      // Non-200 status
+      unpinRecordingSpy.mockImplementation(() => Promise.resolve(201));
 
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
-      await act(async () => {
-        await instance.unpinRecording();
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Should remain pinned
+      expect(cardElement).toHaveClass("currently-pinned");
+
+      await instance.unpinRecording();
+
+      await waitFor(() => {
+        // API call should still happen
+        expect(unpinRecordingSpy).toHaveBeenCalled();
       });
-      await waitForComponentToPaint(wrapper);
-
-      expect(spy).toHaveBeenCalled();
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
+      // State should not change
+      expect(cardElement).toHaveClass("currently-pinned");
     });
 
     it("calls handleError if error is returned", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper {...{ ...props }} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
-      instance.handleError = jest.fn();
+      const instance = await setupComponent();
+      const instanceHandleErrorSpy = jest.spyOn(instance, "handleError");
 
       const error = new Error("error");
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "unpinRecording");
-      spy.mockImplementation(() => {
+      unpinRecordingSpy.mockImplementation(() => {
         throw error;
       });
 
-      await act(async () => {
-        await instance.unpinRecording();
+      await instance.unpinRecording();
+
+      await waitFor(() => {
+        expect(instanceHandleErrorSpy).toHaveBeenCalledTimes(1);
+        expect(instanceHandleErrorSpy).toHaveBeenCalledWith(
+          error,
+          "Error while unpinning track"
+        );
       });
-      await waitForComponentToPaint(wrapper);
-      expect(instance.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.handleError).toHaveBeenCalledWith(
-        error,
-        "Error while unpinning track"
-      );
     });
   });
 
   describe("deletePin", () => {
-    it("calls API and updates isDeleted and currentlyPinned in state", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
+    let deletePinSpy = jest
+      .spyOn(globalProps.APIService, "deletePin")
+      .mockImplementation(() => Promise.resolve(200));
 
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deletePin");
-      spy.mockImplementation(() => Promise.resolve(200));
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
 
-      expect(wrapper.state("isDeleted")).toBeFalsy();
-      expect(wrapper.state("currentlyPinned")).toBeTruthy();
+    it("calls API and updates isDeleted and currentlyPinned classes in DOM", async () => {
+      // Use fake timers for setTimeout tests
+      jest.useFakeTimers();
 
-      await act(async () => {
-        await instance.deletePin(pinnedRecording);
-      });
-      await waitForComponentToPaint(wrapper);
+      const instance = await setupComponent();
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith("auth_token", pinnedRecording.row_id);
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Initially not deleted
+      expect(cardElement).not.toHaveClass("deleted");
+      // Initially pinned
+      expect(cardElement).toHaveClass("currently-pinned");
 
-      expect(wrapper.state("isDeleted")).toBeTruthy();
-      expect(wrapper.state("currentlyPinned")).toBeFalsy();
+      await instance.deletePin(pinnedRecording);
 
-      setTimeout(() => {
-        expect(instance.props.removePinFromPinsList).toHaveBeenCalledTimes(1);
-        expect(instance.props.removePinFromPinsList).toHaveBeenCalledWith(
-          instance.props.pinnedRecording
+      await waitFor(() => {
+        expect(deletePinSpy).toHaveBeenCalledTimes(1);
+        expect(deletePinSpy).toHaveBeenCalledWith(
+          globalProps.currentUser?.auth_token,
+          pinnedRecording.row_id
         );
-      }, 1000);
+      });
+
+      await waitFor(() => {
+        // Verify DOM updates
+        expect(cardElement).toHaveClass("deleted");
+        expect(cardElement).not.toHaveClass("currently-pinned");
+      });
+
+      // Advance timers for setTimeout related to removePinFromPinsList
+      jest.advanceTimersByTime(1000);
+
+      await waitFor(() => {
+        expect(props.removePinFromPinsList).toHaveBeenCalledTimes(1);
+        expect(props.removePinFromPinsList).toHaveBeenCalledWith(
+          props.pinnedRecording
+        );
+      });
+
+      // Restore real timers
+      jest.useRealTimers();
     });
 
     it("does nothing if isCurrentUser is false", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper
-            {...{ ...props, isCurrentUser: false }}
-          />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
+      const instance = await setupComponent({ isCurrentUser: false });
 
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deletePin");
-      spy.mockImplementation(() => Promise.resolve(200));
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Should remain not deleted
+      expect(cardElement).not.toHaveClass("deleted");
 
-      expect(wrapper.state("isDeleted")).toBeFalsy();
-      await act(async () => {
-        await instance.deletePin(pinnedRecording);
-      });
-      await waitForComponentToPaint(wrapper);
+      await instance.deletePin(pinnedRecording);
 
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("isDeleted")).toBeFalsy();
+      expect(deletePinSpy).toHaveBeenCalledTimes(0);
+      expect(cardElement).not.toHaveClass("deleted");
     });
 
-    it("does nothing if CurrentUser.authtoken is not set", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider
-          value={{
-            ...globalProps,
-            currentUser: { auth_token: undefined, name: "test" },
-          }}
-        >
-          <PinnedRecordingCardWithWrapper {...props} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
-
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deletePin");
-      spy.mockImplementation(() => Promise.resolve(200));
-
-      expect(wrapper.state("isDeleted")).toBeFalsy();
-      await act(async () => {
-        await instance.deletePin(pinnedRecording);
+    it("does nothing if currentUser.authtoken is not set", async () => {
+      const instance = await setupComponent(undefined, {
+        currentUser: undefined,
       });
-      await waitForComponentToPaint(wrapper);
 
-      expect(spy).toHaveBeenCalledTimes(0);
-      expect(wrapper.state("isDeleted")).toBeFalsy();
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Should remain not deleted
+      expect(cardElement).not.toHaveClass("deleted");
+
+      await instance.deletePin(pinnedRecording);
+
+      expect(deletePinSpy).toHaveBeenCalledTimes(0);
+      expect(cardElement).not.toHaveClass("deleted");
     });
 
-    it("doesn't update currentlyPinned in state if status code is not 200", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper {...{ ...props }} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
+    it("doesn't update state if response status code is not 200", async () => {
+      const instance = await setupComponent();
 
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deletePin");
-      spy.mockImplementation(() => Promise.resolve(201));
+      // Non-200 status
+      deletePinSpy.mockImplementationOnce(() => Promise.resolve(201));
 
-      expect(wrapper.state("isDeleted")).toBeFalsy();
-      await act(async () => {
-        await instance.deletePin(pinnedRecording);
+      const cardElement = screen
+        .getByText(/I LOVE/)
+        .closest(".pinned-recording-card");
+      // Should remain not deleted
+      expect(cardElement).not.toHaveClass("deleted");
+
+      await instance.deletePin(pinnedRecording);
+
+      await waitFor(() => {
+        expect(deletePinSpy).toHaveBeenCalled();
       });
-      await waitForComponentToPaint(wrapper);
-
-      expect(spy).toHaveBeenCalled();
-      expect(wrapper.state("isDeleted")).toBeFalsy();
+      expect(cardElement).not.toHaveClass("deleted");
     });
 
     it("calls handleError if error is returned", async () => {
-      const componentWrapper = mount(
-        <GlobalAppContext.Provider value={globalProps}>
-          <PinnedRecordingCardWithWrapper {...{ ...props }} />
-        </GlobalAppContext.Provider>
-      );
-      const wrapper = componentWrapper.find(PinnedRecordingCard);
-      const instance = wrapper.instance() as PinnedRecordingCard;
-      instance.handleError = jest.fn();
+      const instance = await setupComponent();
+      const instanceHandleErrorSpy = jest.spyOn(instance, "handleError");
 
       const error = new Error("error");
-      const { APIService } = instance.context;
-      const spy = jest.spyOn(APIService, "deletePin");
-      spy.mockImplementation(() => {
+      deletePinSpy.mockImplementation(() => {
         throw error;
       });
 
-      await act(async () => {
-        await instance.deletePin(pinnedRecording);
+      await instance.deletePin(pinnedRecording);
+
+      await waitFor(() => {
+        expect(instanceHandleErrorSpy).toHaveBeenCalledTimes(1);
+        expect(instanceHandleErrorSpy).toHaveBeenCalledWith(
+          error,
+          "Error while deleting pin"
+        );
       });
-      await waitForComponentToPaint(wrapper);
-      expect(instance.handleError).toHaveBeenCalledTimes(1);
-      expect(instance.handleError).toHaveBeenCalledWith(
-        error,
-        "Error while deleting pin"
-      );
     });
   });
 });
