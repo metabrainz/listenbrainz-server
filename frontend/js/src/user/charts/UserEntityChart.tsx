@@ -279,7 +279,6 @@ export default function UserEntityChart() {
                           className="dropdown-item"
                           key={`${stat_type}-${stat_name}`}
                           to={{
-                            pathname: window.location.pathname,
                             search: `?page=1&range=${stat_type}`,
                           }}
                           role="button"
@@ -374,7 +373,7 @@ export default function UserEntityChart() {
               <div
                 className="row bar-chart"
                 style={{
-                  minHeight: `calc(${Math.min(data.length, 25)} * 4.5em)`,
+                  minHeight: `calc(${Math.min(data?.length, 25)} * 4.5em)`,
                 }}
               >
                 <Bar
@@ -426,7 +425,6 @@ export default function UserEntityChart() {
                       <Link
                         className="page-link"
                         to={{
-                          pathname: window.location.pathname,
                           search: `?page=1&range=${range}`,
                         }}
                         role="button"
@@ -447,10 +445,10 @@ export default function UserEntityChart() {
                       <Link
                         className="page-link"
                         to={{
-                          pathname: window.location.pathname,
                           search: `?page=${prevPage}&range=${range}`,
                         }}
                         role="button"
+                        aria-disabled={prevPage <= 0}
                       >
                         <FontAwesomeIcon
                           icon={faAngleLeft}
@@ -470,7 +468,6 @@ export default function UserEntityChart() {
                         <Link
                           className="page-link"
                           to={{
-                            pathname: window.location.pathname,
                             search: `?page=${currPage - 2}&range=${range}`,
                           }}
                           role="button"
@@ -484,7 +481,6 @@ export default function UserEntityChart() {
                         <Link
                           className="page-link"
                           to={{
-                            pathname: window.location.pathname,
                             search: `?page=${currPage - 1}&range=${range}`,
                           }}
                           role="button"
@@ -501,7 +497,6 @@ export default function UserEntityChart() {
                         <Link
                           className="page-link"
                           to={{
-                            pathname: window.location.pathname,
                             search: `?page=${currPage + 1}&range=${range}`,
                           }}
                           role="button"
@@ -515,7 +510,6 @@ export default function UserEntityChart() {
                         <Link
                           className="page-link"
                           to={{
-                            pathname: window.location.pathname,
                             search: `?page=${currPage + 2}&range=${range}`,
                           }}
                           role="button"
@@ -538,10 +532,10 @@ export default function UserEntityChart() {
                       <Link
                         className="page-link"
                         to={{
-                          pathname: window.location.pathname,
                           search: `?page=${nextPage}&range=${range}`,
                         }}
                         role="button"
+                        aria-disabled={!(nextPage <= totalPages)}
                       >
                         Next{" "}
                         <FontAwesomeIcon
@@ -560,7 +554,6 @@ export default function UserEntityChart() {
                       <Link
                         className="page-link"
                         to={{
-                          pathname: window.location.pathname,
                           search: `?page=${totalPages}&range=${range}`,
                         }}
                         role="button"
