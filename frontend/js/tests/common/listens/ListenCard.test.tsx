@@ -139,9 +139,7 @@ describe("ListenCard", () => {
     const wrapper = mount(
       <ListenCardWithWrappers {...{ ...props, listen: differentListen }} />
     );
-    expect(
-      wrapper.find('[href="https://musicbrainz.org/recording/bar"]')
-    ).toHaveLength(2);
+    expect(wrapper.find('[href="/recording/bar"]')).toHaveLength(2);
     const links = wrapper.find(Link);
     // Loop through each link and check if any have the correct "to" prop
     let foundMatchingLink = 0;

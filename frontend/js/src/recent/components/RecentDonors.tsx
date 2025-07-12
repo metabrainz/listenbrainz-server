@@ -62,9 +62,7 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                 {pinnedRecordingListen && (
                   <Link
                     className="donor-pinned-recording btn btn-sm"
-                    to={`https://musicbrainz.org/recording/${getRecordingMBID(
-                      pinnedRecordingListen
-                    )}`}
+                    to={`/recording/${getRecordingMBID(pinnedRecordingListen)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     tabIndex={0}
