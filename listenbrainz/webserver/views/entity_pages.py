@@ -12,7 +12,7 @@ from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
+from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata, fetch_metadata
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -343,8 +343,35 @@ def release_group_redirect(path):
 
 
 @recording_bp.route("/",  defaults={'path': ''})
-def recording_page(path):
-    return render_template("index.html")
+@recording_bp.get('/<recording_mbid>/')
+def recording_page(recording_mbid: str):
+    og_meta_tags = None
+    if is_valid_uuid(recording_mbid):
+        metadata = fetch_metadata(
+            [recording_mbid],
+            ["artist", "release"]
+        )
+        if len(metadata) == 0:
+            pass
+        else:
+            recording = metadata[recording_mbid]
+            recording_name = recording.get("recording").get("name")
+            artist_name = recording.get("artist").get("name")
+            release_group_mbid = recording.get("release").get("release_group_mbid")
+
+            og_meta_tags = {
+                "title": f'{recording_name} — {artist_name}',
+                "description": f'Recording — ListenBrainz',
+                "type": "music.song",
+                "music:musician": artist_name,
+                "music:release_date": recording.get("release").get("date"),
+                "image": f'https://coverartarchive.org/release-group/{release_group_mbid}/front-500',
+                "image:width": "500",
+                "image:alt": f"Cover art for {recording_name}",
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/recording/{recording_mbid}',
+            }
+
+    return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
 @recording_bp.route("/<recording_mbid>/", methods=["POST"])
