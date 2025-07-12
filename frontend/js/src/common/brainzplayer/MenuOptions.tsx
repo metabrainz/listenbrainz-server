@@ -87,10 +87,6 @@ function MenuOptions(props: MenuOptionsProps) {
               icon={faExternalLinkAlt}
               text="Open in MusicBrainz"
               link={`/recording/${recordingMBID}`}
-              anchorTagAttributes={{
-                target: "_blank",
-                rel: "noopener noreferrer",
-              }}
             />
           )}
           {spotifyURL && (
