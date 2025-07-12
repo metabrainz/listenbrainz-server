@@ -191,6 +191,19 @@ export default function RecordingPage(): JSX.Element {
       0
     ) > 4;
 
+  const filteredTagsAsString = filteredTags
+    .map((filteredTag) => filteredTag.tag)
+    .join(",");
+
+  const artistsRadioPrompt: string =
+    artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.artist_credit_name})`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist_credit_name)})`;
+  const artistsRadioPromptNoSim: string =
+    artists
+      ?.map((a) => `artist:(${a.artist_mbid ?? a.artist_credit_name})::nosim`)
+      .join(" ") ?? `artist:(${encodeURIComponent(artist_credit_name)})::nosim`;
+
   return (
     <div id="entity-page" role="main" className="recording-page">
       <Helmet>
@@ -233,48 +246,50 @@ export default function RecordingPage(): JSX.Element {
               entityMBID={recording_mbid}
             />
           </div>
-          <div className="btn-group lb-radio-button">
-            <Link
-              type="button"
-              className="btn btn-info"
-              to={`/explore/lb-radio/?prompt=artist:(${encodeURIComponent(
-                artist_credit_name
-              )})&mode=easy`}
-            >
-              <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
-            </Link>
-            <button
-              type="button"
-              className="btn btn-info dropdown-toggle"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <span className="caret" />
-              <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-              {Boolean(filteredTags?.length) && (
-                <li>
+          {artist_credit_name && (
+            <div className="btn-group lb-radio-button">
+              <Link
+                type="button"
+                className="btn btn-info"
+                to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
+              >
+                <FontAwesomeIcon icon={faPlayCircle} /> Artist Radio
+              </Link>
+              <button
+                type="button"
+                className="btn btn-info dropdown-toggle px-3"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="Toggle dropdown"
+              />
+              <div className="dropdown-menu">
+                <Link
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Artist{artists.length > 1 && "s"} radio
+                </Link>
+                <Link
+                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
+                  className="dropdown-item"
+                >
+                  {artists.length > 1 ? "These artists" : "This artist"} only
+                </Link>
+                {Boolean(filteredTags?.length) && (
                   <Link
                     to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")
+                      filteredTagsAsString
                     )})::or&mode=easy`}
+                    className="dropdown-item"
                   >
                     Tags (
-                    <span className="tags-list">
-                      {filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")}
-                    </span>
-                    )
+                    <span className="tags-list">{filteredTagsAsString}</span>)
                   </Link>
-                </li>
-              )}
-            </ul>
-          </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="tags">
@@ -286,42 +301,46 @@ export default function RecordingPage(): JSX.Element {
         />
       </div>
 
-      <div className="entity-page-content">
-        <div
-          className={`discography ${
-            expandDiscography || !showFullDiscographyButton ? "expanded" : ""
-          }`}
-        >
-          {releaseGroupTypesNames.map(([type, rgGroup]) => (
-            <div className="albums">
-              <div className="listen-header">
-                <h3 className="header-with-line">{type}</h3>
-                <SortingButtons sort={sort} setSort={setSort} />
+      {releaseGroupTypesNames.length > 0 && (
+        <div className="entity-page-content" style={{ marginTop: "20px" }}>
+          <div
+            className={`discography ${
+              expandDiscography || !showFullDiscographyButton ? "expanded" : ""
+            }`}
+          >
+            {releaseGroupTypesNames.map(([type, rgGroup]) => (
+              <div className="albums">
+                <div className="listen-header">
+                  <h3 className="header-with-line">{type}</h3>
+                  <SortingButtons sort={sort} setSort={setSort} />
+                </div>
+                <HorizontalScrollContainer
+                  className={`cover-art-container ${
+                    rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
+                      ? "single-row"
+                      : ""
+                  }`}
+                >
+                  {rgGroup.map(getReleaseCard)}
+                </HorizontalScrollContainer>
               </div>
-              <HorizontalScrollContainer
-                className={`cover-art-container ${
-                  rgGroup.length <= COVER_ART_SINGLE_ROW_COUNT
-                    ? "single-row"
-                    : ""
-                }`}
-              >
-                {rgGroup.map(getReleaseCard)}
-              </HorizontalScrollContainer>
-            </div>
-          ))}
-          {showFullDiscographyButton && (
-            <div className="read-more mb-3">
-              <button
-                type="button"
-                className="btn btn-outline-info"
-                onClick={() => setExpandDiscography((prevValue) => !prevValue)}
-              >
-                See {expandDiscography ? "less" : "full discography"}
-              </button>
-            </div>
-          )}
+            ))}
+            {showFullDiscographyButton && (
+              <div className="read-more mb-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-info"
+                  onClick={() =>
+                    setExpandDiscography((prevValue) => !prevValue)
+                  }
+                >
+                  See {expandDiscography ? "less" : "full discography"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {similarRecordings && similarRecordings.recordings.length > 0 ? (
         <>
