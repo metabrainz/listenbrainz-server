@@ -387,9 +387,9 @@ def recording_entity(recording_mbid):
             mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
             ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
         recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
-    if recording_data is None:
+    if recording_data is None or len(recording_data) == 0 or recording_data[0].get("recording_mbid") is None:
         return jsonify({"error": f"Recording {recording_mbid} not found in the metadata cache"}), 404
-    
+
     recording_data = recording_data[0]
 
     try:
@@ -424,13 +424,13 @@ def recording_entity(recording_mbid):
     except Exception:
         current_app.logger.error("Error loading popularity data for release groups:", exc_info=True)
         popularity_data = []
-    
+
     release_groups = []
     for release_group, pop in zip(release_groups_data, popularity_data):
         release_group["total_listen_count"] = pop["total_listen_count"]
         release_group["total_user_count"] = pop["total_user_count"]
         release_groups.append(release_group)
-        
+
     data = {
         "recording_mbid": recording_mbid,
         "recording": recording_data,
