@@ -17,7 +17,7 @@ import {
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
 import CBReview from "../cb-review/CBReview";
-import SimilarRecording from "./components/SimilarTracks";
+import SimilarTracks from "./components/SimilarTracks";
 import {
   COVER_ART_SINGLE_ROW_COUNT,
   getReleaseCard,
@@ -52,10 +52,10 @@ type Recording = {
 };
 
 export type TrackPageProps = {
-  recording: Recording;
-  recording_mbid: string;
-  similarRecordings: {
-    recordings: Recording[];
+  track: Recording;
+  track_mbid: string;
+  similarTracks: {
+    tracks: Recording[];
   };
   releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
 };
@@ -69,7 +69,7 @@ export default function TrackPage(): JSX.Element {
     RouteQuery(["track", params], location.pathname)
   );
 
-  const { recording, similarRecordings, releaseGroups } =
+  const { track, similarTracks, releaseGroups } =
     data || ({} as TrackPageProps);
 
   const {
@@ -85,7 +85,7 @@ export default function TrackPage(): JSX.Element {
     release_mbid,
     release_name,
     tags,
-  } = recording || {};
+  } = track || {};
 
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
@@ -131,7 +131,7 @@ export default function TrackPage(): JSX.Element {
 
   const recordingName = recording_name || "";
 
-  if (!recording) {
+  if (!track) {
     return <div>Loading...</div>;
   }
 
@@ -150,11 +150,11 @@ export default function TrackPage(): JSX.Element {
       ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
       : "/static/img/cover-art-placeholder.jpg";
 
-  const onRecordingChange = (new_recording_mbid: string) => {
+  const onTrackChange = (new_recording_mbid: string) => {
     navigate(`/track/${new_recording_mbid}`);
   };
 
-  const recordingGraphNodeInfo = {
+  const trackGraphNodeInfo = {
     recording_mbid,
     recording_name,
   } as TrackNodeInfo;
@@ -205,7 +205,7 @@ export default function TrackPage(): JSX.Element {
       .join(" ") ?? `artist:(${encodeURIComponent(artist_credit_name)})::nosim`;
 
   return (
-    <div id="entity-page" role="main" className="recording-page">
+    <div id="entity-page" role="main" className="track-page">
       <Helmet>
         <title>{recordingName}</title>
       </Helmet>
@@ -342,19 +342,17 @@ export default function TrackPage(): JSX.Element {
         </div>
       )}
 
-      {similarRecordings && similarRecordings.recordings.length > 0 ? (
+      {similarTracks && similarTracks.tracks.length > 0 ? (
         <>
-          <h3 className="header-with-line">Similar Recordings</h3>
+          <h3 className="header-with-line">Similar Tracks</h3>
           <div className="similarity">
-            <SimilarRecording
-              onRecordingChange={onRecordingChange}
-              recordingGraphNodeInfo={recordingGraphNodeInfo}
-              similarRecordingsList={
-                similarRecordings.recordings as TrackNodeInfo[]
-              }
+            <SimilarTracks
+              onTrackChange={onTrackChange}
+              trackGraphNodeInfo={trackGraphNodeInfo}
+              similarTracksList={similarTracks.tracks as TrackNodeInfo[]}
               topAlbumReleaseColor={undefined}
-              topRecordingReleaseColor={undefined}
-              similarRecordingsLimit={18}
+              topTrackReleaseColor={undefined}
+              similarTracksLimit={18}
               graphParentElementRef={graphParentElementRef}
             />
           </div>

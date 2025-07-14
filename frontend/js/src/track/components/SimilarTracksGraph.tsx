@@ -6,7 +6,7 @@ import tinycolor from "tinycolor2";
 
 interface GraphProps {
   data: TrackGraphDataType;
-  onRecordingChange: (recording_mbid: string) => void;
+  onTrackChange: (track_mbid: string) => void;
   background: string;
   graphParentElementRef: React.RefObject<HTMLDivElement>;
 }
@@ -68,9 +68,9 @@ function CustomNodeComponent({
   );
 }
 
-function SimilarRecordingGraph({
+function SimilarTracksGraph({
   data,
-  onRecordingChange,
+  onTrackChange,
   background,
   graphParentElementRef,
 }: GraphProps) {
@@ -133,7 +133,7 @@ function SimilarRecordingGraph({
     activeNodeSize: (node) => node.size * 1.2,
     inactiveNodeSize: (node) => node.size,
     isInteractive: true,
-    onClick: (node) => onRecordingChange(node.data.recording_mbid),
+    onClick: (node) => onTrackChange(node.data.recording_mbid),
     motionConfig: "default",
     margin: { top: 50 },
   };
@@ -161,4 +161,4 @@ function SimilarRecordingGraph({
   );
 }
 
-export default SimilarRecordingGraph;
+export default SimilarTracksGraph;

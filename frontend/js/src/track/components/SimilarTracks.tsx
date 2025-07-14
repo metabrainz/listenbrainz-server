@@ -1,16 +1,16 @@
 import * as React from "react";
 import tinycolor from "tinycolor2";
 import { isEmpty, isEqual } from "lodash";
-import SimilarRecordingGraph from "./SimilarTracksGraph";
-import generateTransformedRecordings from "../utils/generateTransformedTracks";
+import SimilarTracksGraph from "./SimilarTracksGraph";
+import generateTransformedTracks from "../utils/generateTransformedTracks";
 
-type SimilarRecordingProps = {
-  onRecordingChange: (recording_mbid: string) => void;
-  recordingGraphNodeInfo: TrackNodeInfo | undefined;
-  similarRecordingsList: TrackNodeInfo[];
+type SimilarTracksProps = {
+  onTrackChange: (track_mbid: string) => void;
+  trackGraphNodeInfo: TrackNodeInfo | undefined;
+  similarTracksList: TrackNodeInfo[];
   topAlbumReleaseColor: ReleaseColor | undefined;
-  topRecordingReleaseColor: ReleaseColor | undefined;
-  similarRecordingsLimit: number;
+  topTrackReleaseColor: ReleaseColor | undefined;
+  similarTracksLimit: number;
   graphParentElementRef: React.RefObject<HTMLDivElement>;
 };
 
@@ -30,21 +30,21 @@ const isColorTooDark = (color: tinycolor.Instance): boolean => {
   return color.getLuminance() < MINIMUM_LUMINANCE;
 };
 
-function SimilarRecording(props: SimilarRecordingProps) {
+function SimilarTracks(props: SimilarTracksProps) {
   const {
-    onRecordingChange,
-    recordingGraphNodeInfo,
-    similarRecordingsList,
+    onTrackChange,
+    trackGraphNodeInfo,
+    similarTracksList,
     topAlbumReleaseColor,
-    topRecordingReleaseColor,
-    similarRecordingsLimit,
+    topTrackReleaseColor,
+    similarTracksLimit,
     graphParentElementRef,
   } = props;
 
   const DEFAULT_COLORS = colorGenerator();
-  const [recordingColors, setRecordingColors] = React.useState(DEFAULT_COLORS);
+  const [trackColors, setTrackColors] = React.useState(DEFAULT_COLORS);
 
-  const calculateNewRecordingColors = React.useMemo(() => {
+  const calculateNewTrackColors = React.useMemo(() => {
     let firstColor;
     let secondColor;
     if (topAlbumReleaseColor && !isEmpty(topAlbumReleaseColor)) {
@@ -55,11 +55,11 @@ function SimilarRecording(props: SimilarRecordingProps) {
       firstColor = tinycolor.random();
     }
     if (
-      topRecordingReleaseColor &&
-      !isEmpty(topRecordingReleaseColor) &&
-      !isEqual(topAlbumReleaseColor, topRecordingReleaseColor)
+      topTrackReleaseColor &&
+      !isEmpty(topTrackReleaseColor) &&
+      !isEqual(topAlbumReleaseColor, topTrackReleaseColor)
     ) {
-      const { red, green, blue } = topRecordingReleaseColor;
+      const { red, green, blue } = topTrackReleaseColor;
       secondColor = tinycolor({ r: red, g: green, b: blue });
       // We should consider using another color library that allows us to calculate color distance
       // better using deltaE algorithms. Looks into color.js and chroma.js for example.
@@ -90,56 +90,51 @@ function SimilarRecording(props: SimilarRecordingProps) {
       }
     });
 
-    setRecordingColors([firstColor, secondColor]);
+    setTrackColors([firstColor, secondColor]);
   }, [
     topAlbumReleaseColor,
-    topRecordingReleaseColor,
-    recordingGraphNodeInfo?.recording_mbid,
+    topTrackReleaseColor,
+    trackGraphNodeInfo?.recording_mbid,
   ]);
 
-  const transformedRecordings = React.useMemo(
+  const transformedTracks = React.useMemo(
     () =>
-      recordingGraphNodeInfo
-        ? generateTransformedRecordings(
-            recordingGraphNodeInfo,
-            similarRecordingsList,
-            recordingColors[0],
-            recordingColors[1],
-            similarRecordingsLimit
+      trackGraphNodeInfo
+        ? generateTransformedTracks(
+            trackGraphNodeInfo,
+            similarTracksList,
+            trackColors[0],
+            trackColors[1],
+            similarTracksLimit
           )
         : {
             nodes: [],
             links: [],
           },
-    [
-      recordingGraphNodeInfo,
-      similarRecordingsList,
-      recordingColors,
-      similarRecordingsLimit,
-    ]
+    [trackGraphNodeInfo, similarTracksList, trackColors, similarTracksLimit]
   );
 
   const backgroundGradient = React.useMemo(() => {
-    const releaseHue = recordingColors[0]
+    const releaseHue = trackColors[0]
       .clone()
       .setAlpha(BACKGROUND_ALPHA)
       .toRgbString();
-    const recordingHue = recordingColors[1]
+    const trackHue = trackColors[1]
       .clone()
       .setAlpha(BACKGROUND_ALPHA)
       .toRgbString();
 
-    return `linear-gradient(180deg, ${releaseHue} 0%, ${recordingHue} 100%)`;
-  }, [recordingColors]);
+    return `linear-gradient(180deg, ${releaseHue} 0%, ${trackHue} 100%)`;
+  }, [trackColors]);
 
   return (
-    <SimilarRecordingGraph
-      onRecordingChange={onRecordingChange}
-      data={transformedRecordings}
+    <SimilarTracksGraph
+      onTrackChange={onTrackChange}
+      data={transformedTracks}
       background={backgroundGradient}
       graphParentElementRef={graphParentElementRef}
     />
   );
 }
 
-export default React.memo(SimilarRecording);
+export default React.memo(SimilarTracks);

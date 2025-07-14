@@ -70,6 +70,14 @@ const getEntityPages = (): RouteObject[] => {
             },
           },
         },
+        {
+          path: "recording/:recordingMBID/",
+          lazy: {
+            Component: async () => {
+              return (await import("../recording/Recording")).default;
+            },
+          },
+        },
       ],
     },
   ];

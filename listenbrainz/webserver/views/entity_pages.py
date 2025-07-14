@@ -439,10 +439,10 @@ def recording_entity(recording_mbid):
         release_groups.append(release_group)
 
     data = {
-        "recording_mbid": recording_mbid,
-        "recording": recording_data,
-        "similarRecordings": {
-            "recordings": similar_recordings,
+        "track_mbid": recording_mbid,
+        "track": recording_data,
+        "similarTracks": {
+            "tracks": similar_recordings,
         },
         "releaseGroups": release_groups,
     }
