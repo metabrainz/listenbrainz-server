@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
+import { union } from "lodash";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
@@ -197,8 +198,6 @@ function BrainzPlayerSettings() {
     currentUser?.auth_token,
     userPreferences,
   ]);
-
-  const internetArchivePlayerRef = React.useRef<any>(null);
 
   return (
     <>

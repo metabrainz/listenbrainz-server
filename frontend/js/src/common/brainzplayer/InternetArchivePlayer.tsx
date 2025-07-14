@@ -35,6 +35,15 @@ export default class InternetArchivePlayer
     };
   }
 
+
+  componentDidUpdate(prevProps: DataSourceProps, prevState: State) {
+    const { currentTrack } = this.state;
+    const { currentTrack: prevCurrentTrack } = prevState;
+    if (currentTrack && currentTrack !== prevCurrentTrack) {
+      this.playCurrentTrack();
+    }
+  }
+
   handleAudioEnded = () => {
     const { onTrackEnd } = this.props;
     onTrackEnd();
@@ -77,9 +86,7 @@ export default class InternetArchivePlayer
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
-        this.setState({ currentTrack: data.results[0], loading: false }, () => {
-          this.playCurrentTrack();
-        });
+        this.setState({ currentTrack: data.results[0], loading: false });
       } else {
         this.setState({ loading: false, currentTrack: null });
         onTrackNotFound();
