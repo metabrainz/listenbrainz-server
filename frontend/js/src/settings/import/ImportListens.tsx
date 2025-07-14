@@ -15,18 +15,24 @@ export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
   const { user_has_email: userHasEmail } = data;
 
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+
   const handleListensSubmit = async (
-    event?: React.FormEvent<HTMLFormElement>
+    event: React.FormEvent<HTMLFormElement>
   ) => {
-    const { currentUser, APIService } = React.useContext(GlobalAppContext);
     if (event) event.preventDefault();
 
-    const formData = new FormData(event.target);
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
     const file = formData.get("file") as File;
     const service = formData.get("service") as string;
     const from_date = formData.get("ImportStartDate") as string | null;
     const to_date = formData.get("ImportEndDate") as string | null;
 
+    if (!currentUser?.auth_token) {
+      console.error("No auth token available");
+      return;
+    }
     try {
       const status = await APIService.importListens(
         currentUser?.auth_token,
