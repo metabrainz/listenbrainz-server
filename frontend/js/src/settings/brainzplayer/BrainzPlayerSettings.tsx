@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
+import { union } from "lodash";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
@@ -91,11 +92,14 @@ function BrainzPlayerSettings() {
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
   );
 
+  // Combine saved priority list and default list to add any new music service at the end
   const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
     DataSourceKey[]
   >(
-    userPreferences?.brainzplayer?.dataSourcesPriority ??
+    union(
+      userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
+    )
   );
 
   const moveDataSource = (evt: any) => {
@@ -177,8 +181,6 @@ function BrainzPlayerSettings() {
     currentUser?.auth_token,
     userPreferences,
   ]);
-
-  const internetArchivePlayerRef = React.useRef<any>(null);
 
   return (
     <>
