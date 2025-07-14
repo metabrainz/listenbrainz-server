@@ -6,7 +6,7 @@ import tinycolor from "tinycolor2";
 
 interface GraphProps {
   data: TrackGraphDataType;
-  onTrackChange: (track_mbid: string) => void;
+  onTrackChange: (recording_mbid: string) => void;
   background: string;
   graphParentElementRef: React.RefObject<HTMLDivElement>;
 }

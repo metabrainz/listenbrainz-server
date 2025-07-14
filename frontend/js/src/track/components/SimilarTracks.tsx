@@ -5,7 +5,7 @@ import SimilarTracksGraph from "./SimilarTracksGraph";
 import generateTransformedTracks from "../utils/generateTransformedTracks";
 
 type SimilarTracksProps = {
-  onTrackChange: (track_mbid: string) => void;
+  onTrackChange: (recording_mbid: string) => void;
   trackGraphNodeInfo: TrackNodeInfo | undefined;
   similarTracksList: TrackNodeInfo[];
   topAlbumReleaseColor: ReleaseColor | undefined;
