@@ -61,6 +61,7 @@ metadata_db_response = {
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "caa_id": None,
         "caa_release_mbid": None
     },
@@ -82,6 +83,7 @@ metadata_db_response = {
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "caa_id": None,
         "caa_release_mbid": None
     },
@@ -103,6 +105,7 @@ metadata_db_response = {
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "caa_id": None,
         "caa_release_mbid": None
     }
@@ -128,6 +131,7 @@ json_response = [
                 "join_phrase": ""
             }
         ],
+        "tags": [],
         "original_recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e"
     },
     {
@@ -149,6 +153,7 @@ json_response = [
             }
         ],
         "release_name": "Erna 20: Swing und Blues",
+        "tags": [],
         "original_recording_mbid": "8fa0023e-1268-4d32-8341-83bb7506086e"
     },
     {
@@ -170,6 +175,7 @@ json_response = [
             }
         ],
         "release_name": "Madvillainy",
+        "tags": [],
         "original_recording_mbid": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f"
     },
     {
@@ -183,6 +189,7 @@ json_response = [
         "release_mbid": None,
         "release_name": None,
         "artists": [],
+        "tags": [],
         "original_recording_mbid": "a1e97901-7ddf-4a0d-87ff-7f601ad3ccd3"
     }
 ]
