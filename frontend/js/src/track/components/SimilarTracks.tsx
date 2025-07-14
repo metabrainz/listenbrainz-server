@@ -1,8 +1,8 @@
 import * as React from "react";
 import tinycolor from "tinycolor2";
 import { isEmpty, isEqual } from "lodash";
-import SimilarRecordingGraph from "./SimilarRecordingGraph";
-import generateTransformedRecordings from "../utils/generateTransformedRecordings";
+import SimilarRecordingGraph from "./SimilarTracksGraph";
+import generateTransformedRecordings from "../utils/generateTransformedTracks";
 
 type SimilarRecordingProps = {
   onRecordingChange: (recording_mbid: string) => void;

@@ -439,7 +439,7 @@ export class ListenCard extends React.Component<
       if (recordingMBID) {
         thumbnail = (
           <Link
-            to={`/recording/${recordingMBID}`}
+            to={`/track/${recordingMBID}`}
             title="Could not load cover art"
             className="listen-thumbnail"
           >
@@ -571,7 +571,7 @@ export class ListenCard extends React.Component<
                         title="Open in MusicBrainz"
                         text="Open in MusicBrainz"
                         key="Open in MusicBrainz"
-                        link={`/recording/${recordingMBID}`}
+                        link={`/track/${recordingMBID}`}
                       />
                     )}
                     {renderBrainzplayer && (

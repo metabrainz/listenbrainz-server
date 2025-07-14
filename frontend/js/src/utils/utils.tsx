@@ -302,15 +302,7 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   const recordingMbid = getRecordingMBID(listen);
 
   if (recordingMbid) {
-    return (
-      <Link
-        to={`/recording/${recordingMbid}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {trackName}
-      </Link>
-    );
+    return <Link to={`/track/${recordingMbid}`}>{trackName}</Link>;
   }
   return trackName;
 };

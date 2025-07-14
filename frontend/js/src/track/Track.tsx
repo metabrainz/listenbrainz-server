@@ -17,7 +17,7 @@ import {
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
 import CBReview from "../cb-review/CBReview";
-import SimilarRecording from "./components/SimilarRecording";
+import SimilarRecording from "./components/SimilarTracks";
 import {
   COVER_ART_SINGLE_ROW_COUNT,
   getReleaseCard,
@@ -64,7 +64,7 @@ export default function TrackPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams() as { recordingMBID: string };
+  const params = useParams() as { trackMBID: string };
   const { data } = useQuery<TrackPageProps>(
     RouteQuery(["track", params], location.pathname)
   );
