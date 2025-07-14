@@ -51,7 +51,7 @@ type Recording = {
   }[];
 };
 
-export type RecordingPageProps = {
+export type TrackPageProps = {
   recording: Recording;
   recording_mbid: string;
   similarRecordings: {
@@ -60,17 +60,17 @@ export type RecordingPageProps = {
   releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
 };
 
-export default function RecordingPage(): JSX.Element {
+export default function TrackPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams() as { recordingMBID: string };
-  const { data } = useQuery<RecordingPageProps>(
-    RouteQuery(["recording", params], location.pathname)
+  const { data } = useQuery<TrackPageProps>(
+    RouteQuery(["track", params], location.pathname)
   );
 
   const { recording, similarRecordings, releaseGroups } =
-    data || ({} as RecordingPageProps);
+    data || ({} as TrackPageProps);
 
   const {
     artist_credit_id,
@@ -151,13 +151,13 @@ export default function RecordingPage(): JSX.Element {
       : "/static/img/cover-art-placeholder.jpg";
 
   const onRecordingChange = (new_recording_mbid: string) => {
-    navigate(`/recording/${new_recording_mbid}`);
+    navigate(`/track/${new_recording_mbid}`);
   };
 
   const recordingGraphNodeInfo = {
     recording_mbid,
     recording_name,
-  } as RecordingNodeInfo;
+  } as TrackNodeInfo;
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -350,7 +350,7 @@ export default function RecordingPage(): JSX.Element {
               onRecordingChange={onRecordingChange}
               recordingGraphNodeInfo={recordingGraphNodeInfo}
               similarRecordingsList={
-                similarRecordings.recordings as RecordingNodeInfo[]
+                similarRecordings.recordings as TrackNodeInfo[]
               }
               topAlbumReleaseColor={undefined}
               topRecordingReleaseColor={undefined}

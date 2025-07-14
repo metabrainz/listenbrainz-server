@@ -20,6 +20,7 @@ artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
 release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
+track_bp = Blueprint("track", __name__)
 recording_bp = Blueprint("recording", __name__)
 
 
@@ -342,8 +343,14 @@ def release_group_redirect(path):
     return render_template("index.html")
 
 
-@recording_bp.route("/",  defaults={'path': ''})
-@recording_bp.get('/<recording_mbid>/')
+@recording_bp.get("/",  defaults={'path': ''})
+@recording_bp.get('/<path:path>/')
+def recording_redirect(path):
+    return render_template("index.html")
+
+
+@track_bp.route("/",  defaults={'path': ''})
+@track_bp.get('/<recording_mbid>/')
 def recording_page(recording_mbid: str):
     og_meta_tags = None
     if is_valid_uuid(recording_mbid):
@@ -368,13 +375,13 @@ def recording_page(recording_mbid: str):
                 "image": f'https://coverartarchive.org/release-group/{release_group_mbid}/front-500',
                 "image:width": "500",
                 "image:alt": f"Cover art for {recording_name}",
-                "url": f'{current_app.config["SERVER_ROOT_URL"]}/recording/{recording_mbid}',
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/track/{recording_mbid}',
             }
 
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
-@recording_bp.route("/<recording_mbid>/", methods=["POST"])
+@track_bp.route("/<recording_mbid>/", methods=["POST"])
 @web_listenstore_needed
 def recording_entity(recording_mbid):
     """ Show a recording page with all their relevant information """

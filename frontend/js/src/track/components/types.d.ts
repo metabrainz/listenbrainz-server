@@ -1,4 +1,4 @@
-type RecordingNodeInfo = {
+type TrackNodeInfo = {
   recording_mbid: string;
   recording_name: string;
   comment?: string;
@@ -8,7 +8,7 @@ type RecordingNodeInfo = {
   reference_mbid?: string;
 };
 
-type RecordingNodeType = {
+type TrackNodeType = {
   id: string;
   recording_mbid: string;
   recording_name: string;
@@ -18,7 +18,7 @@ type RecordingNodeType = {
 };
 
 
-type RecordingGraphDataType = {
-  nodes: Array<RecordingNodeType>;
+type TrackGraphDataType = {
+  nodes: Array<TrackNodeType>;
   links: Array<LinkType>;
 };

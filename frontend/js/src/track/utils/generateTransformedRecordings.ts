@@ -13,18 +13,18 @@ const NULL_SCORE = Infinity;
 const MAIN_NODE_COLOR = "rgba(53, 48, 112, 1)";
 
 function generateTransformedRecordings(
-  mainRecording: RecordingNodeInfo,
-  similarRecordingsList: RecordingNodeInfo[],
+  mainRecording: TrackNodeInfo,
+  similarRecordingsList: TrackNodeInfo[],
   releaseHueSoundColor: tinycolor.Instance,
   recordingHueSoundColor: tinycolor.Instance,
   similarRecordingsLimit: number
-): RecordingGraphDataType {
+): TrackGraphDataType {
   const minScore = Math.sqrt(
     similarRecordingsList?.[similarRecordingsLimit - 1]?.score ?? 0
   );
 
   const scoreList = similarRecordingsList.map(
-    (similarRecording: RecordingNodeInfo, index: number) =>
+    (similarRecording: TrackNodeInfo, index: number) =>
       minScore / Math.sqrt(similarRecording?.score ?? NULL_SCORE)
   );
 
@@ -64,7 +64,7 @@ function generateTransformedRecordings(
   return {
     nodes: [mainRecordingNode, ...similarRecordingNodes],
     links: similarRecordingsList.map(
-      (similarRecording: RecordingNodeInfo, index: number): LinkType => {
+      (similarRecording: TrackNodeInfo, index: number): LinkType => {
         return {
           source: mainRecording.recording_mbid,
           target:

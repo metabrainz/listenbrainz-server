@@ -6,8 +6,8 @@ import generateTransformedRecordings from "../utils/generateTransformedRecording
 
 type SimilarRecordingProps = {
   onRecordingChange: (recording_mbid: string) => void;
-  recordingGraphNodeInfo: RecordingNodeInfo | undefined;
-  similarRecordingsList: RecordingNodeInfo[];
+  recordingGraphNodeInfo: TrackNodeInfo | undefined;
+  similarRecordingsList: TrackNodeInfo[];
   topAlbumReleaseColor: ReleaseColor | undefined;
   topRecordingReleaseColor: ReleaseColor | undefined;
   similarRecordingsLimit: number;

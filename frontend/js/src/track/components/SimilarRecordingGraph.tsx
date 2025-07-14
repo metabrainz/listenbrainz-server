@@ -5,7 +5,7 @@ import { debounce, noop } from "lodash";
 import tinycolor from "tinycolor2";
 
 interface GraphProps {
-  data: RecordingGraphDataType;
+  data: TrackGraphDataType;
   onRecordingChange: (recording_mbid: string) => void;
   background: string;
   graphParentElementRef: React.RefObject<HTMLDivElement>;
@@ -18,7 +18,7 @@ function CustomNodeComponent({
   onMouseEnter,
   onMouseMove,
   onMouseLeave,
-}: NodeProps<RecordingNodeType>) {
+}: NodeProps<TrackNodeType>) {
   return (
     <animated.g
       className="entity-similarity-graph-node"
@@ -109,7 +109,7 @@ function SimilarRecordingGraph({
     return () => originalRef && observer.unobserve(originalRef);
   }, [graphParentElementRef]);
 
-  const chartProperties: NetworkSvgProps<RecordingNodeType, LinkType> = {
+  const chartProperties: NetworkSvgProps<TrackNodeType, LinkType> = {
     data,
     repulsivity: Math.min(width, height) / 2,
     iterations: 40,

@@ -427,12 +427,13 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.donor_api import donor_api_bp
     app.register_blueprint(donor_api_bp, url_prefix=API_PREFIX+"/donors")
 
-    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp, recording_bp
+    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp, recording_bp, track_bp
     app.register_blueprint(artist_bp, url_prefix='/artist')
     app.register_blueprint(album_bp, url_prefix='/album')
     app.register_blueprint(release_bp, url_prefix='/release')
     app.register_blueprint(release_group_bp, url_prefix='/release-group')
     app.register_blueprint(recording_bp, url_prefix='/recording')
+    app.register_blueprint(track_bp, url_prefix='/track')
 
     from listenbrainz.webserver.views.atom import atom_bp
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
