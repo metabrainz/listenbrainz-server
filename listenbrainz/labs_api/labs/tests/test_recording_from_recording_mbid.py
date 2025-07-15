@@ -238,7 +238,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertCountEqual(q.outputs().__fields__.keys(), [
             'recording_mbid', 'recording_name', 'length', 'artist_credit_id', 'artist_credit_name',
             'artist_credit_mbids', 'canonical_recording_mbid', 'original_recording_mbid', 'release_name',
-            'release_mbid', 'artists'])
+            'release_mbid', 'artists', 'tags'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
