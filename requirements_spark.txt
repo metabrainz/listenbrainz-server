@@ -10,7 +10,7 @@ sentry-sdk==2.22.0
 more-itertools==10.6.0
 pycountry==24.6.1
 pycurl==7.45.6
-requests==2.32.3
+requests==2.32.4
 pandas==2.2.3
 zstandard==0.23.0
 pyarrow==19.0.1

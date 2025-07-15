@@ -21,10 +21,6 @@ const getRedirectRoutes = (): RouteObject[] => {
           element: <Navigate to="/settings/music-services/details/" replace />,
         },
         {
-          path: "import/",
-          element: <Navigate to="/settings/import/" replace />,
-        },
-        {
           path: "link-listens/",
           element: <Navigate to="/settings/link-listens/" replace />,
         },

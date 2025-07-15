@@ -14,6 +14,7 @@ function SearchDropDown(props: SearchDropDownProps) {
       {suggestions?.map((name) => {
         return (
           <ListenControl
+            key={name}
             text={name}
             action={() => {
               action(name);

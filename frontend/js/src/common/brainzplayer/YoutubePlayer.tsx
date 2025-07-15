@@ -402,6 +402,7 @@ export default class YoutubePlayer extends React.Component<YoutubePlayerProps>
             onError={this.onError}
             onStateChange={this.handlePlayerStateChanged}
             onReady={this.onReady}
+            videoId=""
           />
         </div>
       </Draggable>
