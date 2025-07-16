@@ -337,7 +337,7 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {artist &&
               !isEmpty(artist?.rels) &&
@@ -360,7 +360,7 @@ export default function ArtistPage(): JSX.Element {
               </Link>
               <button
                 type="button"
-                className="btn btn-info dropdown-toggle"
+                className="btn btn-info dropdown-toggle px-3"
                 data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"

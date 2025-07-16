@@ -5,23 +5,26 @@ const getFeedRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "feed/",
-      lazy: async () => {
-        const UserFeedLayout = await import("../UserFeedLayout");
-        return { Component: UserFeedLayout.default };
+      lazy: {
+        Component: async () => {
+          return (await import("../UserFeedLayout")).default;
+        },
       },
       children: [
         {
           index: true,
-          lazy: async () => {
-            const UserFeed = await import("../UserFeed");
-            return { Component: UserFeed.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../UserFeed")).default;
+            },
           },
         },
         {
           path: ":mode/",
-          lazy: async () => {
-            const NetworkFeed = await import("../NetworkFeed");
-            return { Component: NetworkFeed.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../NetworkFeed")).default;
+            },
           },
         },
       ],
