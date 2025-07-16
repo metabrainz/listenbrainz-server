@@ -5,7 +5,11 @@ import io
 from datetime import datetime
 
 from listenbrainz.db import user as db_user
-from listenbrainz.webserver.views.api_tools import insert_payload
+from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, insert_payload
+from listenbrainz.webserver.models import SubmitListenUserMetadata
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable
+from listenbrainz.domain.external_service import ExternalServiceError
+
 from flask import current_app
 from sqlalchemy import text
 
@@ -171,8 +175,29 @@ def process_spotify_zip_file(file_path, from_date, to_date):
                     except Exception as e:
                         current_app.logger.error(f"Error reading {filename}: {e}")
                         return
+                    
 
-def import_spotify_listens(file_path, from_date, to_date, db_conn, ts_conn):
+def submit_listens(listens, user_id, db_conn):
+    query = "SELECT musicbrainz_id FROM user WHERE id = :user_id"
+    result = db_conn.execute(text(query), {"user_id": user_id,})
+    username = result.first()["musicbrainz_id"]
+
+    user_metadata = SubmitListenUserMetadata(user_id=user_id, musicbrainz_id=username)
+    retries = 10
+    while retries >= 0:
+        try:
+            current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
+            insert_payload(listens, user_metadata, listen_type=LISTEN_TYPE_IMPORT)
+            current_app.logger.debug('Submitted!')
+            break
+        except (InternalServerError, ServiceUnavailable) as e:
+            retries -= 1
+            current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
+            if retries == 0:
+                raise ExternalServiceError('ISE while trying to import listens: %s', str(e))
+
+
+def import_spotify_listens(file_path, from_date, to_date, user_id, db_conn, ts_conn):
     sp = initialize_spotify()
     for batch in process_spotify_zip_file(file_path, from_date, to_date):
         parsed_listens = []
@@ -182,7 +207,7 @@ def import_spotify_listens(file_path, from_date, to_date, db_conn, ts_conn):
         
         parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
         
-        #submit_listens(parsed_listens)
+        submit_listens(parsed_listens, user_id, db_conn)
 
 
 
@@ -198,6 +223,7 @@ def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
          WHERE id = :import_id
     """), {"import_id": bg_task_metadata["import_id"]})
     import_task = result.first()
+    user_id = import_task["user_id"]
     if import_task is None:
         current_app.logger.error("No import with import_id: %s, skipping.", bg_task_metadata["import_id"])
         return
@@ -212,5 +238,5 @@ def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
     import_task_metadata = import_task.metadata
 
     if service == "spotify":
-        import_spotify_listens(file_path, from_date, to_date, db_conn, ts_conn)
+        import_spotify_listens(file_path, from_date, to_date, user_id, db_conn, ts_conn)
             
