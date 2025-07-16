@@ -22,94 +22,107 @@ def initialize_spotify():
 def validate_spotify_listen(listen):
     return True # WIP
 
-def parse_spotify_listen(listen, db_conn, ts_conn, sp):
+def parse_spotify_listen(batch, db_conn, ts_conn, sp):
 
-    artist = listen.get('master_metadata_album_artist_name', '')
-    track_name = listen.get('master_metadata_track_name', '')
-    crafted_listen = {
-        "track_metadata": {
-            "artist_name": artist,
-            "track_name": track_name,
-        }
-    }
-    try:
-        spotify_track_id = listen.get('spotify_track_uri').split(':')[2]
-    except:
-        return crafted_listen
+    parsed_listens = []
+
+    for listen in batch:
+        if validate_spotify_listen(listen):
+            artist = listen.get('master_metadata_album_artist_name', '')
+            track_name = listen.get('master_metadata_track_name', '')
+            crafted_listen = {
+                "track_metadata": {
+                    "artist_name": artist,
+                    "track_name": track_name,
+                }
+            }
+            try:
+                spotify_track_id = listen.get('spotify_track_uri').split(':')[2]
+            except:
+                return crafted_listen
 
 
-    query = """
-            WITH
-                album_artists AS (
-                    SELECT
-                    raa.album_id,
-                    json_agg(json_build_object(
-                        'artist_id', a.artist_id,
-                        'name', a.name,
-                        'position', raa.position
-                    ) ORDER BY raa.position) AS album_artist_list
-                    FROM spotify_cache.rel_album_artist raa
-                    JOIN spotify_cache.artist a ON raa.artist_id = a.artist_id
-                    GROUP BY raa.album_id
-                ),
+            query = """
+                    WITH
+                        album_artists AS (
+                            SELECT
+                            raa.album_id,
+                            json_agg(json_build_object(
+                                'artist_id', a.artist_id,
+                                'name', a.name,
+                                'position', raa.position
+                            ) ORDER BY raa.position) AS album_artist_list
+                            FROM spotify_cache.rel_album_artist raa
+                            JOIN spotify_cache.artist a ON raa.artist_id = a.artist_id
+                            GROUP BY raa.album_id
+                        ),
 
-                track_artists AS (
-                    SELECT
-                    rta.track_id,
-                    json_agg(json_build_object(
-                        'artist_id', a.artist_id,
-                        'name', a.name,
-                        'position', rta.position
-                    ) ORDER BY rta.position) AS track_artist_list
-                    FROM spotify_cache.rel_track_artist rta
-                    JOIN spotify_cache.artist a ON rta.artist_id = a.artist_id
-                    GROUP BY rta.track_id
-                )
+                        track_artists AS (
+                            SELECT
+                            rta.track_id,
+                            json_agg(json_build_object(
+                                'artist_id', a.artist_id,
+                                'name', a.name,
+                                'position', rta.position
+                            ) ORDER BY rta.position) AS track_artist_list
+                            FROM spotify_cache.rel_track_artist rta
+                            JOIN spotify_cache.artist a ON rta.artist_id = a.artist_id
+                            GROUP BY rta.track_id
+                        )
 
-                SELECT
-                t.track_id,
-                t.name AS track_name,
-                t.track_number,
-                t.data AS track_data,
+                        SELECT
+                        t.track_id,
+                        t.name AS track_name,
+                        t.track_number,
+                        t.data AS track_data,
 
-                al.album_id,
-                al.name AS album_name,
-                al.type AS album_type,
-                al.release_date,
-                al.data AS album_data,
+                        al.album_id,
+                        al.name AS album_name,
+                        al.type AS album_type,
+                        al.release_date,
+                        al.data AS album_data,
 
-                aa.album_artist_list,
-                ta.track_artist_list
+                        aa.album_artist_list,
+                        ta.track_artist_list
 
-                FROM spotify_cache.track t
-                JOIN spotify_cache.album al ON t.album_id = al.album_id
-                LEFT JOIN album_artists aa ON al.album_id = aa.album_id
-                LEFT JOIN track_artists ta ON t.track_id = ta.track_id
+                        FROM spotify_cache.track t
+                        JOIN spotify_cache.album al ON t.album_id = al.album_id
+                        LEFT JOIN album_artists aa ON al.album_id = aa.album_id
+                        LEFT JOIN track_artists ta ON t.track_id = ta.track_id
 
-                WHERE t.track_id = :track_id;
+                        WHERE t.track_id = :track_id;
 
-        """
-    result = ts_conn.execute(text(query), {
-        "track_id": spotify_track_id,
-    })
-    spotify_track_info = result.first()
+                """
+            result = ts_conn.execute(text(query), {
+                "track_id": spotify_track_id,
+            })
+            spotify_track_info = result.first()
+            
+            if not spotify_track_info:
+                if not sp:
+                    current_app.logger.error(f"Can't retrieve metadata for the track {track_name}")
+                    return
+                spotify_track_info = spotify_web_api_track_info(sp, spotify_track_id)
+                artists = spotify_track_info.get('artists')
+                if artists:
+                    if artists[0].get('name'):
+                        artist = artists[0].get('name')
+            else:
+                artists = spotify_track_info.get('track_artist_list')
+                if artists[0].get('name'):
+                    artist = artists[0].get('name')
+            
+            crafted_listen['track_metadata']['artist'] = artist
+
+            if not crafted_listen:
+                current_app.logger.error("Failed to parse the listen: ", listen)
+                continue
+            parsed_listens.append(crafted_listen)
+        else:
+            current_app.logger.error("Failed to validate the listen: ", listen)
+            continue
     
-    if not spotify_track_info:
-        if not sp:
-            current_app.logger.error(f"Can't retrieve metadata for the track {track_name}")
-            return
-        spotify_track_info = spotify_web_api_track_info(sp, spotify_track_id)
-        artists = spotify_track_info.get('artists')
-        if artists:
-          if artists[0].get('name'):
-              artist = artists[0].get('name')
-    else:
-        artists = spotify_track_info.get('track_artist_list')
-        if artists[0].get('name'):
-              artist = artists[0].get('name')
-    
-    crafted_listen['track_metadata']['artist'] = artist
-    return crafted_listen
+    return parsed_listens
     
     
 
@@ -166,16 +179,9 @@ def import_spotify_listens(file_path, from_date, to_date, db_conn, ts_conn):
         if batch is None:
             current_app.logger.error("Error in processing the uploaded spotify listening history files!")
             return
-        for listen in batch:
-            if validate_spotify_listen(listen):
-                parsed_listen = parse_spotify_listen(listen, db_conn, ts_conn, sp)
-                if not parsed_listen:
-                    current_app.logger.error("Failed to parse the listen: ", listen)
-                    continue
-                parsed_listens.append(parsed_listen)
-            else:
-                current_app.logger.error("Failed to validate the listen: ", listen)
-                continue
+        
+        parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
+        
         #submit_listens(parsed_listens)
 
 
