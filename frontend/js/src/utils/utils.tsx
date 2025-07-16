@@ -325,7 +325,7 @@ const getAlbumLink = (listen: Listen): JSX.Element | string => {
     return <Link to={`/album/${releaseGroupMBID}`}>{releaseName}</Link>;
   }
   if (releaseMBID) {
-    return <Link to={`/release/${releaseGroupMBID}`}>{releaseName}</Link>;
+    return <Link to={`/release/${releaseMBID}`}>{releaseName}</Link>;
   }
   return releaseName;
 };
