@@ -103,15 +103,17 @@ export default class InternetArchivePlayer
       onPlayerPausedChange,
       onTrackInfoChange,
       onDurationChange,
+      handleError,
     } = this.props;
     const { currentTrack } = this.state;
     if (this.audioRef.current && currentTrack) {
-      this.audioRef.current.src = currentTrack.stream_urls[0];
-      this.audioRef.current.currentTime = 0;
+      const [firstUrl] = currentTrack.stream_urls;
+      this.audioRef.current.src = firstUrl;
       try {
         await this.audioRef.current.play();
       } catch (error) {
-        console.error("InternetArchive playback error:", error);
+        handleError(error, "Internet Archive playback error");
+        return;
       }
       onPlayerPausedChange(false);
       onTrackInfoChange(
@@ -128,7 +130,7 @@ export default class InternetArchivePlayer
   };
 
   togglePlay = async () => {
-    const { playerPaused, onPlayerPausedChange } = this.props;
+    const { playerPaused, onPlayerPausedChange, handleError } = this.props;
     if (!this.audioRef.current) return;
     try {
       if (playerPaused) {
@@ -139,7 +141,7 @@ export default class InternetArchivePlayer
         onPlayerPausedChange(true);
       }
     } catch (error) {
-      console.error("InternetArchive playback error:", error);
+      handleError(error, "Internet Archive playback error");
     }
   };
 
@@ -177,7 +179,7 @@ export default class InternetArchivePlayer
               ref={this.audioRef}
               onEnded={this.handleAudioEnded}
               onTimeUpdate={this.handleTimeUpdate}
-              onLoadedMetadata={this.handleLoadedMetadata}
+              onDurationChange={this.handleLoadedMetadata}
               autoPlay
               controls={false}
             >
