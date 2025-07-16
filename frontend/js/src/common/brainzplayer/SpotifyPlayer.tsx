@@ -579,6 +579,7 @@ export default class SpotifyPlayer
         durationMs: duration,
         currentSpotifyTrack: current_track ?? undefined,
       });
+      onDurationChange(duration);
       return;
     }
 

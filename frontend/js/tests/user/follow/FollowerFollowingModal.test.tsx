@@ -1,37 +1,19 @@
-/*
- * listenbrainz-server - Server for the ListenBrainz project.
- *
- * Copyright (C) 2020 Param Singh <iliekcomputers@gmail.com>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- */
-
-import * as React from "react";
-import { mount } from "enzyme";
-import { act } from "react-dom/test-utils";
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router";
-import FollowerFollowingModal from "../../../src/user/components/follow/FollowerFollowingModal";
+import FollowerFollowingModal, {
+  FollowerFollowingModalProps,
+} from "../../../src/user/components/follow/FollowerFollowingModal";
 import APIService from "../../../src/utils/APIService";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-import UserListModalEntry from "../../../src/user/components/follow/UserListModalEntry";
 import { ReactQueryWrapper } from "../../test-react-query";
+import { textContentMatcher } from "../../test-utils/rtl-test-utils";
 
-const props = {
+const defaultProps: FollowerFollowingModalProps = {
   user: { name: "foobar" },
   followerList: ["foo"],
   followingList: ["bar"],
@@ -39,7 +21,7 @@ const props = {
   updateFollowingList: () => {},
 };
 
-const globalContext: GlobalAppContextT = {
+const defaultContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
   websocketsUrl: "",
   youtubeAuth: {},
@@ -50,47 +32,126 @@ const globalContext: GlobalAppContextT = {
     { name: "Fnord" }
   ),
 };
+// Helper function to render the component with all necessary providers.
+const renderComponent = (
+  props: Partial<FollowerFollowingModalProps> = {},
+  context: Partial<GlobalAppContextT> = {}
+) => {
+  return render(
+    <GlobalAppContext.Provider value={{ ...defaultContext, ...context }}>
+      <ReactQueryWrapper>
+        <BrowserRouter>
+          <FollowerFollowingModal {...defaultProps} {...props} />
+        </BrowserRouter>
+      </ReactQueryWrapper>
+    </GlobalAppContext.Provider>
+  );
+};
 
 describe("<FollowerFollowingModal />", () => {
-  it("renders", () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalContext}>
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <FollowerFollowingModal {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
-      </GlobalAppContext.Provider>
-    );
-    expect(wrapper.find(UserListModalEntry)).toHaveLength(1);
+  it("renders with initial following list", () => {
+    renderComponent();
+
+    // Check if the "Following" pill is active and the user from followingList is present
+    expect(
+      screen.getByRole("button", { name: /Following \(1\)/i })
+    ).toHaveClass("active");
+    expect(screen.getByText("bar")).toBeInTheDocument();
+    // Ensure follower is not present in this view
+    expect(screen.queryByText("foo")).not.toBeInTheDocument();
   });
-  it("updates the mode correctly", async () => {
-    const wrapper = mount(
-      <GlobalAppContext.Provider value={globalContext}>
-        <ReactQueryWrapper>
-          <BrowserRouter>
-            <FollowerFollowingModal {...props} />
-          </BrowserRouter>
-        </ReactQueryWrapper>
-      </GlobalAppContext.Provider>
+
+  it("updates the mode correctly when clicking on pills", async () => {
+    renderComponent();
+
+    // Initial state: "following" is active
+    expect(
+      screen.getByRole("button", { name: /Following \(1\)/i })
+    ).toHaveClass("active");
+    expect(screen.getByText("bar")).toBeInTheDocument();
+
+    // Click on "Followers" pill
+    await userEvent.click(
+      screen.getByRole("button", { name: /Followers \(1\)/i })
     );
-    const instance = wrapper
-      .find(FollowerFollowingModal)
-      .instance() as FollowerFollowingModal;
 
-    // initial state after first fetch
-    expect(instance.state.activeMode).toEqual("following");
-
-    // does nothing if the same mode as the current mode is passed
-    await act(() => {
-      instance.updateMode("following");
+    // Wait for the state to update and the component to re-render
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Followers \(1\)/i })
+      ).toHaveClass("active");
+      expect(screen.getByText("foo")).toBeInTheDocument();
+      expect(screen.queryByText("bar")).not.toBeInTheDocument();
     });
-    expect(instance.state.activeMode).toEqual("following");
 
-    // updates the mode correctly
-    await act(() => {
-      instance.updateMode("follower");
+    // Click on "Following" pill again
+    await userEvent.click(
+      screen.getByRole("button", { name: /Following \(1\)/i })
+    );
+
+    // Wait for the state to update and the component to re-render
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Following \(1\)/i })
+      ).toHaveClass("active");
+      expect(screen.getByText("bar")).toBeInTheDocument();
+      expect(screen.queryByText("foo")).not.toBeInTheDocument();
     });
-    expect(instance.state.activeMode).toEqual("follower");
+  });
+
+  it("displays correct message when follower list is empty", async () => {
+    renderComponent({ followerList: [] });
+
+    // Click on "Followers" pill
+    await userEvent.click(
+      screen.getByRole("button", { name: /Followers \(0\)/i })
+    );
+
+    expect(
+      screen.getByText(
+        textContentMatcher(/foobar doesn't have any followers\./i)
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct message when following list is empty", () => {
+    renderComponent({ followingList: [] });
+
+    // "Following" is active by default
+    expect(
+      screen.getByText(/foobar isn't following anyone\./i)
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct message for current user when follower list is empty", async () => {
+    renderComponent(
+      { followerList: [] },
+      {
+        currentUser: { name: "foobar" },
+      }
+    );
+
+    // Click on "Followers" pill
+    await userEvent.click(
+      screen.getByRole("button", { name: /Followers \(0\)/i })
+    );
+
+    expect(
+      screen.getByText(/You don't have any followers\./i)
+    ).toBeInTheDocument();
+  });
+
+  it("displays correct message for current user when following list is empty", () => {
+    renderComponent(
+      { followingList: [] },
+      {
+        currentUser: { name: "foobar" },
+      }
+    );
+
+    // "Following" is active by default
+    expect(
+      screen.getByText(/You aren't following anyone\./i)
+    ).toBeInTheDocument();
   });
 });
