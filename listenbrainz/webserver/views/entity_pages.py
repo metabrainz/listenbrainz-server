@@ -349,7 +349,7 @@ def recording_redirect(path):
     return render_template("index.html")
 
 
-@track_bp.route("/",  defaults={'path': ''})
+@track_bp.get("/",  defaults={'path': ''})
 @track_bp.get('/<recording_mbid>/')
 def recording_page(recording_mbid: str):
     og_meta_tags = None
@@ -381,9 +381,9 @@ def recording_page(recording_mbid: str):
     return render_template("index.html", og_meta_tags=og_meta_tags)
 
 
-@track_bp.route("/<recording_mbid>/", methods=["POST"])
+@track_bp.post("/<recording_mbid>/")
 @web_listenstore_needed
-def recording_entity(recording_mbid):
+def recording_entity(recording_mbid: str):
     """ Show a recording page with all their relevant information """
 
     if not is_valid_uuid(recording_mbid):

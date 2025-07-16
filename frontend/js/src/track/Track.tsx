@@ -135,13 +135,13 @@ export default function TrackPage(): JSX.Element {
     return <div>Loading...</div>;
   }
 
-  const formattedDateWithHours = new Date(length)
+  const formattedDurationWithHours = new Date(length)
     .toISOString()
     .substring(11, 19);
   // Hide the hours if it's 0
-  const formattedDate = formattedDateWithHours.startsWith("00:")
-    ? formattedDateWithHours.substring(3)
-    : formattedDateWithHours;
+  const formattedDuration = formattedDurationWithHours.startsWith("00:")
+    ? formattedDurationWithHours.substring(3)
+    : formattedDurationWithHours;
 
   const filteredTags = chain(tags).sortBy("count").value().reverse();
 
@@ -236,7 +236,7 @@ export default function TrackPage(): JSX.Element {
                 );
               })}
             </div>
-            <small className="form-text">{formattedDate}</small>
+            <small className="form-text">{formattedDuration}</small>
           </div>
         </div>
         <div className="right-side">
