@@ -35,15 +35,6 @@ export default class InternetArchivePlayer
     };
   }
 
-
-  componentDidUpdate(prevProps: DataSourceProps, prevState: State) {
-    const { currentTrack } = this.state;
-    const { currentTrack: prevCurrentTrack } = prevState;
-    if (currentTrack && currentTrack !== prevCurrentTrack) {
-      this.playCurrentTrack();
-    }
-  }
-
   handleAudioEnded = () => {
     const { onTrackEnd } = this.props;
     onTrackEnd();
@@ -86,7 +77,12 @@ export default class InternetArchivePlayer
       const data = await response.json();
 
       if (data.results && data.results.length > 0) {
-        this.setState({ currentTrack: data.results[0], loading: false });
+        // TODO: It might make sense to sanity-check the results to see if the first one is indeed the best match
+        // We do something like this in the AppleMusicPlayer with the fuzzysort library
+        this.setState(
+          { currentTrack: data.results[0], loading: false },
+          this.playCurrentTrack
+        );
       } else {
         this.setState({ loading: false, currentTrack: null });
         onTrackNotFound();
@@ -102,7 +98,7 @@ export default class InternetArchivePlayer
     this.searchAndPlayTrack(listen);
   };
 
-  playCurrentTrack = () => {
+  playCurrentTrack = async () => {
     const {
       onPlayerPausedChange,
       onTrackInfoChange,
@@ -110,8 +106,13 @@ export default class InternetArchivePlayer
     } = this.props;
     const { currentTrack } = this.state;
     if (this.audioRef.current && currentTrack) {
+      this.audioRef.current.src = currentTrack.stream_urls[0];
       this.audioRef.current.currentTime = 0;
-      this.audioRef.current.play();
+      try {
+        await this.audioRef.current.play();
+      } catch (error) {
+        console.error("InternetArchive playback error:", error);
+      }
       onPlayerPausedChange(false);
       onTrackInfoChange(
         currentTrack.name,
@@ -126,15 +127,19 @@ export default class InternetArchivePlayer
     }
   };
 
-  togglePlay = () => {
+  togglePlay = async () => {
     const { playerPaused, onPlayerPausedChange } = this.props;
     if (!this.audioRef.current) return;
-    if (playerPaused) {
-      this.audioRef.current.play();
-      onPlayerPausedChange(false);
-    } else {
-      this.audioRef.current.pause();
-      onPlayerPausedChange(true);
+    try {
+      if (playerPaused) {
+        await this.audioRef.current.play();
+        onPlayerPausedChange(false);
+      } else {
+        await this.audioRef.current.pause();
+        onPlayerPausedChange(true);
+      }
+    } catch (error) {
+      console.error("InternetArchive playback error:", error);
     }
   };
 
@@ -170,11 +175,11 @@ export default class InternetArchivePlayer
             )}
             <audio
               ref={this.audioRef}
-              src={currentTrack.stream_urls[0]}
               onEnded={this.handleAudioEnded}
               onTimeUpdate={this.handleTimeUpdate}
               onLoadedMetadata={this.handleLoadedMetadata}
-              autoPlay={!playerPaused}
+              autoPlay
+              controls={false}
             >
               <track kind="captions" />
             </audio>
