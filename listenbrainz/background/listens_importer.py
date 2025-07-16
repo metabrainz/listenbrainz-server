@@ -2,6 +2,7 @@ import zipfile
 import ijson
 import os
 import io
+from datetime import datetime
 
 from listenbrainz.db import user as db_user
 from listenbrainz.webserver.views.api_tools import insert_payload
@@ -118,7 +119,7 @@ def spotify_web_api_track_info(sp, track_id):
     return track
 
 
-def process_spotify_zip_file(file_path):
+def process_spotify_zip_file(file_path, from_date, to_date):
 
     # Check for zip bomb attack
     with zipfile.ZipFile(file_path, 'r') as zip_file:
@@ -139,26 +140,47 @@ def process_spotify_zip_file(file_path):
                 return
 
         
-        with zip_file.open(file_path) as file_handler:
-            for filename in audio_files:
-                with zip_file.open(filename) as file:
-                    with io.TextIOWrapper(file, encoding='utf-8') as contents:
-                        try:
-                            batch = []
-                            for entry in ijson.items(contents, 'item'):
+        for filename in audio_files:
+            with zip_file.open(filename) as file:
+                with io.TextIOWrapper(file, encoding='utf-8') as contents:
+                    try:
+                        batch = []
+                        for entry in ijson.items(contents, 'item'):
+                            timestamp = entry.get("ts")
+                            timestamp_date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").date()
+                            if from_date <= timestamp_date <= to_date:
                                 batch.append(entry)
-                                if len(batch) == BATCH_SIZE:
-                                    batch = []
-                                    yield batch
-                                if batch:
-                                    yield batch
-                        except Exception as e:
-                            current_app.logger.error(f"Error reading {filename}: {e}")
-                            return
+                            if len(batch) == BATCH_SIZE:
+                                batch = []
+                                yield batch
+                            if batch:
+                                yield batch
+                    except Exception as e:
+                        current_app.logger.error(f"Error reading {filename}: {e}")
+                        return
+
+def import_spotify_listens(file_path, from_date, to_date, db_conn, ts_conn):
+    sp = initialize_spotify()
+    for batch in process_spotify_zip_file(file_path, from_date, to_date):
+        parsed_listens = []
+        if batch is None:
+            current_app.logger.error("Error in processing the uploaded spotify listening history files!")
+            return
+        for listen in batch:
+            if validate_spotify_listen(listen):
+                parsed_listen = parse_spotify_listen(listen, db_conn, ts_conn, sp)
+                if not parsed_listen:
+                    current_app.logger.error("Failed to parse the listen: ", listen)
+                    continue
+                parsed_listens.append(parsed_listen)
+            else:
+                current_app.logger.error("Failed to validate the listen: ", listen)
+                continue
+        #submit_listens(parsed_listens)
 
 
 
-def import_listens(db_conn, ts_conn, sp, user_id: int, bg_task_metadata):
+def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
     user = db_user.get(db_conn, user_id)
     if user is None:
         current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
@@ -178,24 +200,11 @@ def import_listens(db_conn, ts_conn, sp, user_id: int, bg_task_metadata):
     file_path = import_task.file_path
     service = import_task.service
     from_date = import_task.from_date
+    from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
     to_date = import_task.to_date
+    to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
     import_task_metadata = import_task.metadata
 
     if service == "spotify":
-        for batch in process_spotify_zip_file(file_path):
-            parsed_listens = []
-            if batch is None:
-                current_app.logger.error("Error in processing the uploaded spotify listening history files!")
-                return
-            for listen in batch:
-                if validate_spotify_listen(listen):
-                    parsed_listen = parse_spotify_listen(listen, db_conn, ts_conn, sp)
-                    if not parsed_listen:
-                        current_app.logger.error("Failed to parse the listen: ", listen)
-                        continue
-                    parsed_listens.append(parsed_listen)
-                else:
-                    current_app.logger.error("Failed to validate the listen: ", listen)
-                    continue
-            #submit_listens(parsed_listens)
+        import_spotify_listens(file_path, from_date, to_date, db_conn, ts_conn)
             

@@ -6,7 +6,7 @@ from sqlalchemy import text
 from listenbrainz.background.delete import delete_listens_history, delete_user
 from listenbrainz.background.export import export_user
 from listenbrainz.webserver import create_app, db_conn, ts_conn
-from listenbrainz.background.listens_importer import initialize_spotify, import_listens
+from listenbrainz.background.listens_importer import import_listens
 
 def add_task(user_id, task):
     """ Add a task to the background tasks """
@@ -39,8 +39,7 @@ class BackgroundTasks:
         elif task.task == "export_all_user_data":
             export_user(db_conn, ts_conn, task.user_id, task.metadata)
         elif task.task == "import_listens":
-            sp = initialize_spotify()
-            import_listens(db_conn, ts_conn, sp, task.user_id, task.metadata)
+            import_listens(db_conn, ts_conn, task.user_id, task.metadata)
         else:
             current_app.logger.error(f"Unknown task type: {task}")
         return True
