@@ -1,4 +1,5 @@
 import * as React from "react";
+import { union } from "lodash";
 import {
   faSpotify,
   faApple,
@@ -21,7 +22,7 @@ import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
-import FunkwhaleIcon from "../../common/icons/FunkwhaleIcon";
+import faFunkwhale from "../../common/icons/faFunkwhale";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -46,7 +47,7 @@ export const dataSourcesInfo = {
   },
   funkwhale: {
     name: "Funkwhale",
-    icon: <FunkwhaleIcon className="svg-inline--fa" color="#009FE3" />,
+    icon: faFunkwhale,
     color: "#009FE3",
   },
 } as const;
@@ -95,11 +96,14 @@ function BrainzPlayerSettings() {
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
   );
 
+  // Combine saved priority list and default list to add any new music service at the end
   const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
     DataSourceKey[]
   >(
-    userPreferences?.brainzplayer?.dataSourcesPriority ??
+    union(
+      userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
+    )
   );
 
   const moveDataSource = (evt: any) => {
@@ -371,13 +375,11 @@ function BrainzPlayerSettings() {
                   !funkwhaleEnabled ? "text-muted" : ""
                 }`}
               >
-                <span className={funkwhaleEnabled ? "text-success" : ""}>
-                  <FunkwhaleIcon
-                    className="svg-inline--fa funkwhale-icon"
+                <span>
+                  <FontAwesomeIcon
+                    icon={faFunkwhale as IconProp}
                     color={
-                      funkwhaleEnabled
-                        ? dataSourcesInfo.funkwhale.color
-                        : "#888"
+                      funkwhaleEnabled ? dataSourcesInfo.funkwhale.color : ""
                     }
                   />
                 </span>
@@ -470,17 +472,10 @@ function BrainzPlayerSettings() {
                   <FontAwesomeIcon icon={faGripLines as IconProp} />
                 </span>
                 <span>
-                  {item.id === "funkwhale" ? (
-                    <FunkwhaleIcon
-                      className="svg-inline--fa funkwhale-icon"
-                      color={dataSourcesInfo.funkwhale.color}
-                    />
-                  ) : (
-                    <FontAwesomeIcon
-                      icon={item.info.icon as IconProp}
-                      style={{ color: item.info.color }}
-                    />
-                  )}
+                  <FontAwesomeIcon
+                    icon={item.info.icon}
+                    color={item.info.color}
+                  />
                 </span>
                 <span>&nbsp;{item.info.name}</span>
               </div>

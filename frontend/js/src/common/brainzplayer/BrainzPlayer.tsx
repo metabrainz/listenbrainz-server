@@ -11,6 +11,7 @@ import {
   cloneDeep,
   debounce,
   omit,
+  union,
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
@@ -235,9 +236,12 @@ export default function BrainzPlayer() {
     youtubeEnabled && "youtube",
   ].filter(Boolean) as Array<DataSourceKey>;
 
-  const sortedDataSources = dataSourcesPriority.filter((key) =>
-    enabledDataSources.includes(key)
-  );
+  // Combine saved priority list and default list to add any new music service at the end
+  // then filter out disabled datasources (new ones will be enabled by default)
+  const sortedDataSources = union(
+    dataSourcesPriority,
+    defaultDataSourcesPriority
+  ).filter((key) => enabledDataSources.includes(key));
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);

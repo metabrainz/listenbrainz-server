@@ -1,5 +1,5 @@
 declare type FunkwhaleUser = {
-  access_token: string;
+  access_token?: string;
   refresh_token?: string;
   instance_url: string;
   user_id: string;

@@ -39,7 +39,7 @@ import { FeedbackValue } from "./utils";
 import VolumeControlButton from "./VolumeControlButton";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 import { DataSourceType } from "./BrainzPlayer";
-import FunkwhaleIcon from "../icons/FunkwhaleIcon";
+import faFunkwhale from "../icons/faFunkwhale";
 
 type BrainzPlayerUIProps = {
   currentDataSource?: DataSourceType | null;
@@ -429,17 +429,10 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {currentDataSource?.name === "funkwhale" ? (
-                  <FunkwhaleIcon
-                    className="svg-inline--fa funkwhale-icon"
-                    color="#009FE3"
-                  />
-                ) : (
-                  <FontAwesomeIcon
-                    icon={currentDataSource.icon}
-                    color={currentDataSource.iconColor}
-                  />
-                )}
+                <FontAwesomeIcon
+                  icon={currentDataSource.icon}
+                  color={currentDataSource.iconColor}
+                />
               </a>
               {!isMobile && (
                 <FontAwesomeIcon

@@ -2,6 +2,7 @@ import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { Link } from "react-router";
 import { faMusic } from "@fortawesome/free-solid-svg-icons";
+import faFunkwhale from "../icons/faFunkwhale";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import {
   getArtistName,
@@ -58,7 +59,7 @@ export default class FunkwhalePlayer
 
   public name = "funkwhale";
   public domainName = "funkwhale";
-  public icon = faMusic; // FontAwesome fallback for player interface
+  public icon = faFunkwhale; // Custom Funkwhale FontAwesome icon
   public iconColor = dataSourcesInfo.funkwhale.color;
 
   audioRef: React.RefObject<HTMLAudioElement>;
@@ -85,7 +86,7 @@ export default class FunkwhalePlayer
   async componentDidMount(): Promise<void> {
     const { funkwhaleAuth: funkwhaleUser = undefined } = this.context;
     if (FunkwhalePlayer.hasPermissions(funkwhaleUser)) {
-      this.accessToken = funkwhaleUser!.access_token;
+      this.accessToken = funkwhaleUser!.access_token!;
       this.setupAudioListeners();
     }
     this.updateVolume();
