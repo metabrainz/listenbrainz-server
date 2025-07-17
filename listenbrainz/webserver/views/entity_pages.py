@@ -411,8 +411,11 @@ def recording_entity(recording_mbid: str):
                 "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000",
                 18
             )
-    except IndexError:
-        similar_recordings = []
+            similar_recording_mbids = [recording["recording_mbid"] for recording in similar_recordings]
+            similar_recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_recording_mbids)
+    except Exception:
+        current_app.logger.error("Error loading similar recordings:", exc_info=True)
+        similar_recordings_data = []
 
     try:
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
@@ -441,9 +444,7 @@ def recording_entity(recording_mbid: str):
     data = {
         "track_mbid": recording_mbid,
         "track": recording_data,
-        "similarTracks": {
-            "tracks": similar_recordings,
-        },
+        "similarTracks": similar_recordings_data,
         "releaseGroups": release_groups,
     }
 

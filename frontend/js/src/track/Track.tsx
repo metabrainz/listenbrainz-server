@@ -17,7 +17,6 @@ import {
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
 import TagsComponent from "../tags/TagsComponent";
 import CBReview from "../cb-review/CBReview";
-import SimilarTracks from "./components/SimilarTracks";
 import {
   COVER_ART_SINGLE_ROW_COUNT,
   getReleaseCard,
@@ -27,6 +26,7 @@ import {
   typeOrder,
 } from "../artist/ArtistPage";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
+import ListenCard from "../common/listens/ListenCard";
 
 type Recording = {
   artist_credit_id: number;
@@ -54,11 +54,35 @@ type Recording = {
 export type TrackPageProps = {
   track: Recording;
   track_mbid: string;
-  similarTracks: {
-    tracks: Recording[];
-  };
+  similarTracks: Recording[];
   releaseGroups: ReleaseGroupWithSecondaryTypesAndListenCount[];
 };
+
+export function recordingToListen(recording: Recording): Listen {
+  return {
+    listened_at: 0,
+    track_metadata: {
+      artist_name: recording.artist_credit_name,
+      track_name: recording.recording_name,
+      release_name: recording.release_name,
+      additional_info: {
+        artist_mbids: recording.artist_credit_mbids,
+        recording_mbid: recording.recording_mbid,
+        duration_ms: recording.length,
+        release_mbid: recording.release_mbid,
+        tracknumber: null,
+      },
+      mbid_mapping: {
+        caa_id: recording.caa_id,
+        caa_release_mbid: recording.caa_release_mbid,
+        recording_mbid: recording.recording_mbid,
+        release_mbid: recording.release_mbid,
+        artist_mbids: recording.artist_credit_mbids,
+        artists: recording.artists,
+      },
+    },
+  };
+}
 
 export default function TrackPage(): JSX.Element {
   const { APIService } = React.useContext(GlobalAppContext);
@@ -88,7 +112,6 @@ export default function TrackPage(): JSX.Element {
   } = track || {};
 
   const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
-  const graphParentElementRef = React.useRef<HTMLDivElement>(null);
   const [expandDiscography, setExpandDiscography] = React.useState<boolean>(
     false
   );
@@ -149,15 +172,6 @@ export default function TrackPage(): JSX.Element {
     caa_id && caa_release_mbid
       ? generateAlbumArtThumbnailLink(caa_id, caa_release_mbid, 500)
       : "/static/img/cover-art-placeholder.jpg";
-
-  const onTrackChange = (new_recording_mbid: string) => {
-    navigate(`/track/${new_recording_mbid}`);
-  };
-
-  const trackGraphNodeInfo = {
-    recording_mbid,
-    recording_name,
-  } as TrackNodeInfo;
 
   // Sort by the more precise secondary type first to create categories like "Live", "Compilation" and "Remix" instead of
   // "Album + Live", "Single + Live", "EP + Live", "Broadcast + Live" and "Album + Remix", etc.
@@ -342,19 +356,24 @@ export default function TrackPage(): JSX.Element {
         </div>
       )}
 
-      {similarTracks && similarTracks.tracks.length > 0 ? (
+      {similarTracks && similarTracks.length > 0 ? (
         <>
           <h3 className="header-with-line">Similar Tracks</h3>
-          <div className="similarity">
-            <SimilarTracks
-              onTrackChange={onTrackChange}
-              trackGraphNodeInfo={trackGraphNodeInfo}
-              similarTracksList={similarTracks.tracks as TrackNodeInfo[]}
-              topAlbumReleaseColor={undefined}
-              topTrackReleaseColor={undefined}
-              similarTracksLimit={18}
-              graphParentElementRef={graphParentElementRef}
-            />
+          <div className="top-entity-listencards">
+            {similarTracks.map((similarTrack) => {
+              if (!similarTrack.recording_name) {
+                return null;
+              }
+              const listen = recordingToListen(similarTrack);
+              return (
+                <ListenCard
+                  key={`${similarTrack.recording_mbid}`}
+                  listen={listen}
+                  showTimestamp={false}
+                  showUsername={false}
+                />
+              );
+            })}
           </div>
         </>
       ) : null}
