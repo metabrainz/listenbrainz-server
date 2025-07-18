@@ -21,16 +21,6 @@ class MlhdStatsEngine:
     def __init__(self, provider: QueryProvider, message_creator: MessageCreator):
         self.provider = provider
         self.message_creator = message_creator
-        self._cache_tables = []
-
-    def _setup_cache_tables(self):
-        """ Set up metadata cache tables by reading data from HDFS and creating temporary views. """
-        cache_tables = []
-        for idx, df_path in enumerate(self.provider.get_cache_tables()):
-            df_name = f"entity_data_cache_{idx}"
-            cache_tables.append(df_name)
-            read_files_from_HDFS(df_path).createOrReplaceTempView(df_name)
-        self._cache_tables = cache_tables
 
     def create_partial_aggregate(self) -> DataFrame:
         metadata_path = self.provider.get_bookkeeping_path()
@@ -41,7 +31,7 @@ class MlhdStatsEngine:
 
         logger.info("Creating partial aggregate from full dump listens")
         hdfs_connection.client.makedirs(Path(existing_aggregate_path).parent)
-        full_query = self.provider.get_aggregate_query(table, self._cache_tables)
+        full_query = self.provider.get_aggregate_query(table)
         full_df = run_query(full_query)
         full_df.write.mode("overwrite").parquet(existing_aggregate_path)
 
@@ -56,7 +46,6 @@ class MlhdStatsEngine:
         return full_df
 
     def generate_stats(self) -> DataFrame:
-        self._setup_cache_tables()
         prefix = self.provider.get_table_prefix()
         self.create_partial_aggregate()
 
@@ -68,9 +57,9 @@ class MlhdStatsEngine:
         results_df = run_query(results_query)
         return results_df
 
-    def main(self):
+    def run(self):
         results = self.generate_stats()
         yield self.message_creator.create_start_message()
-        for message in self.message_creator.create_messages(results):
+        for message in self.message_creator.create_messages(results, False):
             yield message
         yield self.message_creator.create_end_message()

@@ -5,11 +5,8 @@ from datetime import datetime, time
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db.lastfm_user import User
-from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.tests.utils import generate_data
 from listenbrainz.webserver import timescale_connection
 
 

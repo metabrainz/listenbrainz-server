@@ -1,0 +1,8 @@
+Hi {{ username }}!
+
+We have paused your ListenBrainz account {{ username }} because of a problem with your account.
+Our community manager will reach out to you with the details as to why we took this step.
+Feel free to contact Us {{ url }} if you have any questions about this.
+
+Best,
+The ListenBrainz Team

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { RouteObject } from "react-router-dom";
+import type { RouteObject } from "react-router";
 import getExploreRoutes from "../explore/routes";
 import getUserRedirectRoutes from "../user/routes/redirectRoutes";
 import getUserRoutes from "../user/routes/userRoutes";
@@ -17,7 +17,10 @@ import getPlayerRoutes from "../player/routes";
 import getRecommendationsRoutes from "../recommended/tracks/routes";
 import getPlayingNowRoutes from "../player/routes/listening-now-routes";
 
-const getRoutes = (musicbrainzID?: string): RouteObject[] => {
+const getRoutes = (
+  musicbrainzID?: string,
+  withBrainzPlayer?: boolean
+): RouteObject[] => {
   const exploreRoutes = getExploreRoutes();
   const userRoutes = getUserRoutes();
   const redirectRoutes = getUserRedirectRoutes(musicbrainzID);
@@ -35,7 +38,7 @@ const getRoutes = (musicbrainzID?: string): RouteObject[] => {
   const routes = [
     {
       path: "/",
-      element: <Layout />,
+      element: <Layout withBrainzPlayer={withBrainzPlayer} />,
       errorElement: (
         <Layout>
           <ErrorBoundary />
@@ -54,7 +57,9 @@ const getRoutes = (musicbrainzID?: string): RouteObject[] => {
       ],
     },
     {
-      element: <Layout withProtectedRoutes />,
+      element: (
+        <Layout withProtectedRoutes withBrainzPlayer={withBrainzPlayer} />
+      ),
       errorElement: (
         <Layout>
           <ErrorBoundary />

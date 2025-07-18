@@ -17,6 +17,7 @@ import {
 } from "../../../src/common/brainzplayer/BrainzPlayerContext";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
+import IntersectionObserver from "../../__mocks__/intersection-observer";
 import { ReactQueryWrapper } from "../../test-react-query";
 
 // Font Awesome generates a random hash ID for each icon everytime.
@@ -94,8 +95,8 @@ function BrainzPlayerWithWrapper(brainzPlayerProps: {
 
 const mockDispatch = jest.fn();
 
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useLocation: () => ({
     pathname: "/user/foobar/",
   }),
@@ -120,9 +121,11 @@ describe("BrainzPlayer", () => {
     });
   });
   beforeAll(() => {
-    window.location = {
-      href: "http://nevergonnagiveyouup.com",
-    } as Window["location"];
+    window.location.href = "http://nevergonnagiveyouup.com";
+
+    global.IntersectionObserver = IntersectionObserver;
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+
     fetchMock.enableMocks();
   });
 

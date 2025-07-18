@@ -17,6 +17,11 @@ REJECT_LISTENS_WITHOUT_EMAIL_ERROR = \
     'Read the blog post at https://blog.metabrainz.org/?p=8915 to understand why ' \
     'we need your email.'
 
+REJECT_LISTENS_FROM_PAUSED_USER_ERROR = \
+    'User account is paused and is currently not accepting listens. ' \
+    'Feel free to contact us if you have any questions about this. ' \
+    'https://metabrainz.org/contact'
+
 
 def generate_string(length):
     """Generates random string with a specified length."""

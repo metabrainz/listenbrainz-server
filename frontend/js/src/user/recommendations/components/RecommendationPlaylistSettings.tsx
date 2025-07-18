@@ -8,9 +8,9 @@ import {
   faRss,
   faSave,
 } from "@fortawesome/free-solid-svg-icons";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import NiceModal from "@ebay/nice-modal-react";
-import { Link, useLoaderData } from "react-router-dom";
+import { Link, useLoaderData } from "react-router";
 import { getPlaylistExtension, getPlaylistId } from "../../../playlists/utils";
 import { getBaseUrl, preciseTimestamp } from "../../../utils/utils";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -117,8 +117,6 @@ export default function RecommendationPlaylistSettings({
                 listen: playlist,
               });
             }}
-            data-toggle="modal"
-            data-target="#ListenPayloadModal"
             type="button"
           >
             <FontAwesomeIcon
@@ -132,9 +130,9 @@ export default function RecommendationPlaylistSettings({
               className="dropdown-toggle btn btn-icon btn-info"
               type="button"
               id="playlistOptionsDropdown"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               aria-haspopup="true"
-              aria-expanded="true"
+              aria-expanded="false"
             >
               <FontAwesomeIcon icon={faCog} title="More options" fixedWidth />
             </button>
@@ -147,8 +145,6 @@ export default function RecommendationPlaylistSettings({
               <button
                 type="button"
                 className="btn btn-icon btn-info"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {
@@ -178,7 +174,7 @@ export default function RecommendationPlaylistSettings({
               // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
               // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{
-                __html: sanitize(playlist.annotation),
+                __html: DOMPurify.sanitize(playlist.annotation),
               }}
             />
             {/* <hr /> */}

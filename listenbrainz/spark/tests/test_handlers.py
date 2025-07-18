@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import mock
 from unittest.mock import call
 
@@ -20,7 +20,6 @@ from listenbrainz.spark.handlers import (
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity,
     handle_user_listening_activity,
-    notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -398,7 +397,7 @@ class HandlersTestCase(DatabaseTestCase):
     def test_handle_dump_imported(self, mock_send_mail):
         with self.app.app_context():
             time = datetime.now()
-            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.xz'
+            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.zst'
             errors = ["Could not download dump!"]
 
             # testing, should not send a mail
@@ -424,7 +423,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_dataframes(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_dataframes({
@@ -449,7 +448,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_model(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_model({
@@ -470,7 +469,7 @@ class HandlersTestCase(DatabaseTestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_candidate_sets(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.utcnow()
+            time = datetime.now(tz=timezone.utc)
 
             self.app.config['TESTING'] = True
             handle_candidate_sets({
@@ -512,31 +511,6 @@ class HandlersTestCase(DatabaseTestCase):
             self.app.config['TESTING'] = False
             notify_mapping_import({
                 'imported_mapping': mapping_name,
-                'import_time': str(import_time),
-                'time_taken_to_import': str(time_taken_to_import),
-            })
-            mock_send_mail.assert_called_once()
-
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_notify_artist_relation_import(self, mock_send_mail):
-        with self.app.app_context():
-            import_time = datetime.now()
-            time_taken_to_import = 11
-            artist_relation_name = 'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2'
-
-            # testing, should not send a mail
-            self.app.config['TESTING'] = True
-            notify_artist_relation_import({
-                'imported_artist_relation': artist_relation_name,
-                'import_time': str(import_time),
-                'time_taken_to_import': str(time_taken_to_import),
-            })
-            mock_send_mail.assert_not_called()
-
-            # in prod now, should send it
-            self.app.config['TESTING'] = False
-            notify_artist_relation_import({
-                'imported_artist_relation': artist_relation_name,
                 'import_time': str(import_time),
                 'time_taken_to_import': str(time_taken_to_import),
             })

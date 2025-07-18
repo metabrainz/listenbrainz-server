@@ -5,6 +5,8 @@ import React, {
   useMemo,
   useRef,
   useState,
+  forwardRef,
+  useImperativeHandle,
 } from "react";
 import { toast } from "react-toastify";
 import {
@@ -31,6 +33,8 @@ import {
 
 interface AddAlbumListensProps {
   onPayloadChange: (listens: Listen[]) => void;
+  switchMode: (text: string) => void;
+  initialText?: string;
 }
 
 export type MBReleaseWithMetadata = MusicBrainzRelease &
@@ -93,9 +97,10 @@ export function TrackRow({ track, isChecked, onClickCheckbox }: TrackRowProps) {
   );
 }
 
-export default function AddAlbumListens({
-  onPayloadChange,
-}: AddAlbumListensProps) {
+const AddAlbumListens = forwardRef(function AddAlbumListens(
+  { onPayloadChange, switchMode, initialText }: AddAlbumListensProps,
+  ref
+) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBRelease } = APIService;
   const [selectedAlbumMBID, setSelectedAlbumMBID] = useState<string>();
@@ -103,6 +108,19 @@ export default function AddAlbumListens({
   const [selectedTracks, setSelectedTracks] = useState<Array<MBTrackWithAC>>(
     []
   );
+  const searchInputRef = useRef<SearchInputImperativeHandle>(null);
+
+  const initialTextRef = useRef(initialText);
+  React.useEffect(() => {
+    // Trigger search manually if auto-switching from album to recording search
+    if (initialText && initialTextRef.current !== initialText) {
+      searchInputRef.current?.triggerSearch(initialText);
+      initialTextRef.current = initialText;
+    }
+    return () => {
+      initialTextRef.current = undefined;
+    };
+  }, [initialText]);
 
   // No need to store that one in the state
   const lastChecked = useRef<MBTrackWithAC>();
@@ -224,12 +242,24 @@ export default function AddAlbumListens({
     { format: ["minutes", "seconds"] }
   );
 
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setSelectedAlbumMBID(undefined);
+      setSelectedAlbum(undefined);
+      setSelectedTracks([]);
+      searchInputRef.current?.reset();
+    },
+  }));
+
   return (
     <div>
       <SearchAlbumOrMBID
         onSelectAlbum={(newSelectedAlbumId?: string) => {
           setSelectedAlbumMBID(newSelectedAlbumId);
         }}
+        switchMode={switchMode}
+        ref={searchInputRef}
+        requiredInput={selectedAlbumMBID === undefined}
       />
       <div className="track-info">
         {selectedAlbum && (
@@ -292,7 +322,7 @@ export default function AddAlbumListens({
                             title="select/deselect all tracks from this medium"
                             checked={allMediumTracksSelected}
                           />
-                          <span className="badge badge-info">
+                          <span className="badge bg-info">
                             {medium.format}&nbsp;
                             {medium.position}
                             {medium.title && ` - ${medium.title}`}
@@ -326,4 +356,6 @@ export default function AddAlbumListens({
       </div>
     </div>
   );
-}
+});
+
+export default AddAlbumListens;

@@ -3,6 +3,11 @@ import { TagActionType } from "../tags/TagComponent";
 import type { SortOption } from "../explore/fresh-releases/FreshReleases";
 import APIError from "./APIError";
 import type { Flair } from "./constants";
+import { Modes } from "../explore/lb-radio/components/Prompt";
+
+export interface LBRadioResponse {
+  payload: { jspf: JSPFObject; feedback: string[] };
+}
 
 export default class APIService {
   APIBaseURI: string;
@@ -467,7 +472,7 @@ export default class APIService {
   getLatestImport = async (
     userName: string,
     service: ImportService
-  ): Promise<number> => {
+  ): Promise<LatestImportResponse> => {
     const url = encodeURI(
       `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
@@ -475,8 +480,7 @@ export default class APIService {
       method: "GET",
     });
     await this.checkStatus(response);
-    const result = await response.json();
-    return parseInt(result.latest_import, 10);
+    return response.json();
   };
 
   /*
@@ -561,6 +565,30 @@ export default class APIService {
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserDailyActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserArtistActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-activity`;
+    }
+    url += `?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
@@ -1269,6 +1297,19 @@ export default class APIService {
     return response.json();
   };
 
+  importPlaylistFromSoundCloud = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/soundcloud`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   importSpotifyPlaylistTracks = async (
     userToken: string,
     playlistID: string
@@ -1290,6 +1331,22 @@ export default class APIService {
     playlistID: string
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/playlist/apple_music/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importSoundCloudPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/soundcloud/${playlistID}/tracks`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -1361,6 +1418,26 @@ export default class APIService {
     return response.json();
   };
 
+  getFeedEvent = async (
+    eventId: number,
+    username: string,
+    userToken: string
+  ): Promise<TimelineEvent<EventMetadata>> => {
+    if (!eventId) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/feed/events/${eventId}`;
+    const response = await fetch(query, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.payload.events?.[0];
+  };
+
   deleteFeedEvent = async (
     eventType: string,
     username: string,
@@ -1422,6 +1499,35 @@ export default class APIService {
         "Content-Type": "application/json;charset=UTF-8",
       },
       body: JSON.stringify({ event_type: eventType, event_id }),
+    });
+    await this.checkStatus(response);
+    return response.status;
+  };
+
+  thankFeedEvent = async (
+    event_id: number | undefined,
+    eventType: EventTypeT,
+    userToken: string,
+    username: string,
+    blurb_content: string
+  ): Promise<any> => {
+    if (!event_id) {
+      throw new SyntaxError("Event ID not present");
+    }
+    const query = `${this.APIBaseURI}/user/${username}/timeline-event/create/thanks`;
+    const response = await fetch(query, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        metadata: {
+          original_event_type: eventType,
+          original_event_id: event_id,
+          blurb_content,
+        },
+      }),
     });
     await this.checkStatus(response);
     return response.status;
@@ -1623,6 +1729,42 @@ export default class APIService {
       throw new Error("Expected a playlist");
     }
     const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/soundcloud`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    if (!playlist) {
+      throw new Error("Expected a playlist");
+    }
+    const url = `${this.APIBaseURI}/playlist/export-jspf/soundcloud`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1935,4 +2077,16 @@ export default class APIService {
     await this.checkStatus(response);
     return response.json();
   };
+
+  async getLBRadioPlaylist(
+    prompt: string,
+    mode: Modes = Modes.easy
+  ): Promise<LBRadioResponse> {
+    const url = `${
+      this.APIBaseURI
+    }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    return response.json();
+  }
 }

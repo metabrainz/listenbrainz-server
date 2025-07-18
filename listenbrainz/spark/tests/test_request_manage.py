@@ -56,10 +56,6 @@ class RequestManageTestCase(unittest.TestCase):
         with self.assertRaises(request_manage.InvalidSparkRequestError):
             request_manage._prepare_query_message('stats.user.entity', entity='recordings', param2='bbq')
 
-        # expected parameter not passed
-        with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.entity')
-
     def test_prepare_query_message_happy_path(self):
         expected_message = orjson.dumps({'query': 'stats.user.entity', 'params': {'entity': 'test', 'stats_range': 'week', 'database': 'test_week_20220718'}})
         received_message = request_manage._prepare_query_message('stats.user.entity', entity='test', stats_range='week', database='test_week_20220718')
@@ -163,10 +159,6 @@ class RequestManageTestCase(unittest.TestCase):
         expected_message = orjson.dumps(message)
         received_message = request_manage._prepare_query_message('cf.recommendations.recording.recommendations',
                                                                  **message['params'])
-        self.assertEqual(expected_message, received_message)
-
-        expected_message = orjson.dumps({'query': 'import.artist_relation'})
-        received_message = request_manage._prepare_query_message('import.artist_relation')
         self.assertEqual(expected_message, received_message)
 
         message = {

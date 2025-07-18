@@ -1,0 +1,106 @@
+{%- extends 'widgets/pin.html' -%} {%- block content -%}
+<div
+  class="card pinned-recording-card {{ 'currently-pinned' if pin_is_current else ''}}"
+>
+  <div class="main-content">
+    {% if release_cover_art_src %}
+    <div class="listen-thumbnail">
+      <a
+        title="{{ release_name }}"
+        href="https://listenbrainz.org/release/{{ release_mbid }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        ><img src="{{ release_cover_art_src }}" alt="{{ release_name }}"
+      /></a>
+    </div>
+    {% endif %}
+    <div class="listen-details">
+      {% if no_pin %}
+      <div class="text-muted">
+        <a
+          title="{{ user_name | safe }}"
+          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ user_name | safe }}</a
+        >&nbsp;has no pinned tracks at the moment
+      </div>
+      {% else %}
+      <div class="title-duration">
+        <div title="{{ recording_name }}" class="ellipsis-2-lines">
+          <a
+            href="https://musicbrainz.org/recording/{{ recording_mbid }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            >{{ recording_name }}</a
+          >
+        </div>
+        {% if duration %}
+        <div class="small text-muted" title="Duration">{{ duration }}</div>
+        {% endif %}
+      </div>
+      <div class="small text-muted ellipsis" title="{{ artist_name }}">
+        {% if artist_mbid %}
+        <a
+          title="{{ artist_name }}"
+          href="https://listenbrainz.org/artist/{{ artist_mbid }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {{ artist_name }}
+        </a>
+        {# Fallback to plain text if we don't have an MBID available #} {% else
+        %} {{ artist_name }} {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% if no_pin %}
+    <a
+      class="profile-link"
+      href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+      target="_blank"
+      rel="noopener noreferrer"
+      >See profile on ListenBrainz
+    </a>
+    {% else %}
+    <div class="right-section">
+      <div class="username-and-timestamp">
+        <a
+          title="{{ user_name | safe }}"
+          href="https://listenbrainz.org/user/{{  user_name  | safe }}/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ user_name | safe }}</a
+        >
+        <span class="listen-time">pinned on ListenBrainz</span>
+      </div>
+    </div>
+    <div class="pinned-recording-icon">
+      <span class="icon">
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          style="height: 1em; vertical-align: -0.125em;"
+          role="img"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 384 512"
+        >
+          <path
+            fill="currentColor"
+            d="M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z"
+          ></path>
+        </svg>
+      </span>
+      <span class="listen-time">{{ pin_date }}</span>
+    </div>
+    {% endif %}
+  </div>
+  {% if blurb_content %}
+  <div class="additional-content">
+    <div class="blurb-content">
+      {{ blurb_content }}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{%- endblock -%}

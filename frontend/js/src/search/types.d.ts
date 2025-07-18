@@ -19,6 +19,8 @@ type TrackTypeSearchResult = {
   recordings: {
     id: string;
     title: string;
+    length: number;
+    disambiguation: string;
     "artist-credit": {
       name: string;
       joinphrase?: string;

@@ -1,4 +1,5 @@
 import abc
+from abc import ABC
 from datetime import date
 from typing import Iterator, Dict, Optional
 
@@ -63,3 +64,16 @@ class StatsMessageCreator(MessageCreator, abc.ABC):
 
     def parse_row(self, row):
         return row
+
+
+class SitewideStatsMessageCreator(StatsMessageCreator, ABC):
+
+    @property
+    def default_database_prefix(self):
+        return ""
+
+    def create_start_message(self):
+        return None
+
+    def create_end_message(self):
+        return None

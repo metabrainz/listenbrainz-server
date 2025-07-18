@@ -115,8 +115,6 @@ function Queue(props: BrainzPlayerQueueProps) {
             <div className="queue-buttons">
               <button
                 className="btn btn-info btn-sm"
-                data-toggle="modal"
-                data-target="#CreateOrEditPlaylistModal"
                 onClick={addQueueToPlaylist}
                 type="button"
               >
@@ -156,7 +154,7 @@ function Queue(props: BrainzPlayerQueueProps) {
                 if (!queueItem) return null;
                 return (
                   <QueueItemCard
-                    key={queueItem?.id}
+                    key={`${queueItem?.id}-${index.toString()}`}
                     track={queueItem}
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem

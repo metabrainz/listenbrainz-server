@@ -74,8 +74,6 @@ class _CouchDbDataset(SparkDataset):
             return
         try:
             couchdb.create_database(match[1] + "_" + match[2] + "_" + match[3])
-            if match[1] == "artists":
-                couchdb.create_database("artistmap" + "_" + match[2] + "_" + match[3])
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 
@@ -96,14 +94,6 @@ class _CouchDbDataset(SparkDataset):
             if retained:
                 current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
                                         f" _LOCK file existed")
-
-            # when new artist stats received, also invalidate old artist map stats
-            if match[1] == "artists":
-                _, retained = couchdb.delete_database("artistmap" + "_" + match[2])
-                if retained:
-                    current_app.logger.info(f"Databases: {retained} matched but weren't deleted because"
-                                            f" _LOCK file existed")
-
         except HTTPError as e:
             current_app.logger.error(f"{e}. Response: %s", e.response.json(), exc_info=True)
 

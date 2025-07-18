@@ -16,12 +16,9 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import listenbrainz.utils as utils
-import time
 import unittest
 import uuid
 
-from datetime import datetime
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
@@ -30,12 +27,6 @@ class ListenBrainzUtilsTestCase(unittest.TestCase):
 
     def setUp(self):
         self.app = create_app(debug=True) # create an app for config value access
-
-    def test_unix_timestamp_to_datetime(self):
-        t = int(time.time())
-        x = utils.unix_timestamp_to_datetime(t)
-        self.assertIsInstance(x, datetime)
-        self.assertEqual(int(x.strftime('%s')), t)
 
     def test_valid_uuid(self):
         self.assertTrue(is_valid_uuid(str(uuid.uuid4())))

@@ -1,18 +1,16 @@
-/* eslint-disable react/button-has-type */
-/* eslint-disable react/jsx-no-comment-textnodes */
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import { faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 import {
   faExchangeAlt,
   faInfoCircle,
-  faQuestionCircle,
   faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import ListenCard from "./ListenCard";
 import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -50,23 +48,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     TrackMetadata
   >();
 
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
-
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
-
-  React.useEffect(() => {
-    const closeOnEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        closeModal();
-      }
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [closeModal]);
+  const searchInputRef = React.useRef<SearchInputImperativeHandle>(null);
 
   const handleError = React.useCallback(
     (error: string | Error, title?: string): void => {
@@ -126,13 +108,13 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
           />,
           { toastId: "linked-track" }
         );
-        closeModal();
+        modal.hide();
       }
     },
     [
       listenToMap,
       auth_token,
-      closeModal,
+      modal,
       resolve,
       APIService,
       selectedRecording,
@@ -157,175 +139,164 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
     return null;
   }
   return (
-    <>
-      <div
-        className={`modal fade ${visible ? "in" : ""}`}
-        style={visible ? { display: "block" } : {}}
-        id="MBIDMappingModal"
-        role="dialog"
-        aria-labelledby="MBIDMappingModalLabel"
-      >
-        <div className="modal-dialog" role="document">
-          <form className="modal-content" onSubmit={submitMBIDMapping}>
-            <div className="modal-header">
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Link listen"
+      aria-labelledby="MBIDMappingModalLabel"
+      id="MBIDMappingModal"
+    >
+      <Modal.Header closeButton>
+        <Modal.Title id="MBIDMappingModalLabel">
+          Link this listen with{" "}
+          <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>
+        </Modal.Title>
+      </Modal.Header>
+      <form className="modal-content" onSubmit={submitMBIDMapping}>
+        <Modal.Body>
+          <ListenCard
+            listen={listenToMap}
+            showTimestamp={false}
+            showUsername={false}
+            // eslint-disable-next-line react/jsx-no-useless-fragment
+            feedbackComponent={<></>}
+            // eslint-disable-next-line react/jsx-no-useless-fragment
+            customThumbnail={<></>}
+            compact
+          />
+
+          <div className="text-center mb-3 mt-3">
+            <button
+              type="button"
+              className="btn btn-transparent btn-rounded"
+              disabled={Boolean(selectedRecording)}
+              onClick={copyTextToSearchField}
+            >
+              <FontAwesomeIcon
+                icon={faExchangeAlt}
+                rotation={90}
+                size="lg"
+                color={selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY}
+              />
+              <div className="text-muted">copy text</div>
+            </button>
+          </div>
+
+          {listenFromSelectedRecording ? (
+            <ListenCard
+              listen={listenFromSelectedRecording}
+              showTimestamp={false}
+              showUsername={false}
+              compact
+              additionalActions={
+                <ListenControl
+                  buttonClassName="btn btn-transparent"
+                  text=""
+                  title="Reset"
+                  icon={faTimesCircle}
+                  iconSize="lg"
+                  action={() => setSelectedRecording(undefined)}
+                />
+              }
+            />
+          ) : (
+            <div className="card listen-card">
+              <SearchTrackOrMBID
+                ref={searchInputRef}
+                expectedPayload="trackmetadata"
+                key={`${defaultValue}-${copyTextClickCounter}`}
+                onSelectRecording={(trackMetadata) => {
+                  setSelectedRecording(trackMetadata);
+                }}
+                defaultValue={defaultValue}
+              />
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer
+          style={{
+            textAlign: "left",
+            width: "100%",
+            display: "inline-block",
+          }}
+        >
+          <div
+            className="mb-3"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <Link
+              type="button"
+              className="btn btn-info"
+              to="/settings/link-listens"
+              onClick={modal.hide}
+            >
+              <span
+                className="fa-layers fa-fw"
+                style={{ marginRight: "0.5em" }}
+              >
+                <FontAwesomeIcon icon={faLink} />
+                <FontAwesomeIcon
+                  icon={faLink}
+                  color="#FFFFFFA1"
+                  transform="end-5"
+                />
+                <FontAwesomeIcon
+                  icon={faLink}
+                  color="#ffffff42"
+                  transform="end-10"
+                />
+              </span>
+              &nbsp; Mass-link listens tool
+            </Link>
+            <div style={{ textAlign: "right" }}>
               <button
                 type="button"
-                className="close"
-                onClick={closeModal}
-                aria-label="Close"
+                className="btn btn-secondary"
+                onClick={modal.hide}
               >
-                <span aria-hidden="true">&times;</span>
+                Cancel
               </button>
-              <h4 className="modal-title" id="MBIDMappingModalLabel">
-                Link this listen with{" "}
-                <a href="https://musicbrainz.org/doc/About">MusicBrainz</a>
-              </h4>
-            </div>
-            <div className="modal-body">
-              <ListenCard
-                listen={listenToMap}
-                showTimestamp={false}
-                showUsername={false}
-                // eslint-disable-next-line react/jsx-no-useless-fragment
-                feedbackComponent={<></>}
-                // eslint-disable-next-line react/jsx-no-useless-fragment
-                customThumbnail={<></>}
-                compact
-              />
-
-              <div className="text-center mb-10 mt-10">
-                <button
-                  className="btn btn-transparent btn-rounded"
-                  disabled={Boolean(selectedRecording)}
-                  onClick={copyTextToSearchField}
-                >
-                  <FontAwesomeIcon
-                    icon={faExchangeAlt}
-                    rotation={90}
-                    size="lg"
-                    color={
-                      selectedRecording ? COLOR_LB_GREEN : COLOR_LB_LIGHT_GRAY
-                    }
-                  />
-                  <div className="text-muted">copy text</div>
-                </button>
-              </div>
-
-              {listenFromSelectedRecording ? (
-                <ListenCard
-                  listen={listenFromSelectedRecording}
-                  showTimestamp={false}
-                  showUsername={false}
-                  compact
-                  additionalActions={
-                    <ListenControl
-                      buttonClassName="btn-transparent"
-                      text=""
-                      title="Reset"
-                      icon={faTimesCircle}
-                      iconSize="lg"
-                      action={() => setSelectedRecording(undefined)}
-                    />
-                  }
-                />
-              ) : (
-                <div className="card listen-card">
-                  <SearchTrackOrMBID
-                    ref={searchInputRef}
-                    expectedPayload="trackmetadata"
-                    key={`${defaultValue}-${copyTextClickCounter}`}
-                    onSelectRecording={(trackMetadata) => {
-                      setSelectedRecording(trackMetadata);
-                    }}
-                    defaultValue={defaultValue}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="modal-footer" style={{ textAlign: "left" }}>
-              <div
-                className="mb-10"
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
+              <button
+                type="submit"
+                className="btn btn-success"
+                disabled={!selectedRecording}
               >
-                <div>
-                  <Link
-                    type="button"
-                    className="btn btn-info"
-                    to="/settings/link-listens"
-                    onClick={closeModal}
-                  >
-                    <span
-                      className="fa-layers fa-fw"
-                      style={{ marginRight: "0.5em" }}
-                    >
-                      <FontAwesomeIcon icon={faLink} />
-                      <FontAwesomeIcon
-                        icon={faLink}
-                        color="#FFFFFFA1"
-                        transform="right-5"
-                      />
-                      <FontAwesomeIcon
-                        icon={faLink}
-                        color="#ffffff42"
-                        transform="right-10"
-                      />
-                    </span>
-                    &nbsp; Mass-link listens tool
-                  </Link>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <button
-                    type="button"
-                    className="btn btn-default"
-                    onClick={closeModal}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={!selectedRecording}
-                  >
-                    Add mapping
-                  </button>
-                </div>
-              </div>
-              <div className="small">
-                <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;This will also link your other listens with the same
-                metadata.
-              </div>
-              <div className="small">
-                <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;
-                <a
-                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  How long until my stats reflect the change?
-                </a>
-              </div>
-              <div className="small">
-                <FontAwesomeIcon icon={faInfoCircle} />
-                &nbsp;
-                <a
-                  href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Recordings added within the last 4 hours may temporarily look
-                  incomplete.
-                </a>
-              </div>
+                Add mapping
+              </button>
             </div>
-          </form>
-        </div>
-      </div>
-      <div className={`modal-backdrop fade ${visible ? "in" : ""}`} />
-    </>
+          </div>
+          <div className="small">
+            <FontAwesomeIcon icon={faInfoCircle} />
+            &nbsp;This will also link your other listens with the same metadata.
+          </div>
+          <div className="small">
+            <FontAwesomeIcon icon={faInfoCircle} />
+            &nbsp;
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              How long until my stats reflect the change?
+            </a>
+          </div>
+          <div className="small">
+            <FontAwesomeIcon icon={faInfoCircle} />
+            &nbsp;
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Recordings added within the last 4 hours may temporarily look
+              incomplete.
+            </a>
+          </div>
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 });

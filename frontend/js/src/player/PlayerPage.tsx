@@ -6,20 +6,19 @@ import { faCog, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import {
   Link,
   Navigate,
   useLocation,
   useParams,
   useSearchParams,
-} from "react-router-dom";
+} from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import {
   MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION,
-  PLAYLIST_TRACK_URI_PREFIX,
   getRecordingMBIDFromJSPFTrack,
   JSPFTrackToListen,
 } from "../playlists/utils";
@@ -140,9 +139,9 @@ export default class PlayerPage extends React.Component<
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="playlistOptionsDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
-                  aria-expanded="true"
+                  aria-expanded="false"
                 >
                   <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                   &nbsp;Options
@@ -152,7 +151,7 @@ export default class PlayerPage extends React.Component<
                   aria-labelledby="playlistOptionsDropdown"
                 >
                   {releaseLink && (
-                    <li>
+                    <li className="dropdown-item">
                       See on MusicBrainz
                       <ListenControl
                         icon={faExternalLinkAlt}
@@ -167,16 +166,14 @@ export default class PlayerPage extends React.Component<
                     </li>
                   )}
                   {currentUser?.auth_token && (
-                    <li>
-                      <a
-                        id="exportPlaylistToSpotify"
-                        role="button"
-                        href="#"
-                        onClick={this.savePlaylist}
-                      >
-                        Save Playlist
-                      </a>
-                    </li>
+                    <button
+                      className="dropdown-item"
+                      id="exportPlaylistToSpotify"
+                      type="button"
+                      onClick={this.savePlaylist}
+                    >
+                      Save Playlist
+                    </button>
                   )}
                 </ul>
               </span>
@@ -208,7 +205,7 @@ export default class PlayerPage extends React.Component<
             // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{
-              __html: sanitize(playlist.annotation),
+              __html: DOMPurify.sanitize(playlist.annotation),
             }}
           />
         )}

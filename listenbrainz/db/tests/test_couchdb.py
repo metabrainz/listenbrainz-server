@@ -8,12 +8,16 @@ import requests
 from listenbrainz import config
 from listenbrainz.db import couchdb
 from listenbrainz.db.couchdb import get_base_url, DATABASE_LOCK_FILE
+from listenbrainz.db.tests.utils import delete_all_couch_databases
 
 
 class CouchdbTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         couchdb.init(config.COUCHDB_USER, config.COUCHDB_ADMIN_KEY, config.COUCHDB_HOST, config.COUCHDB_PORT)
+
+    def tearDown(self) -> None:
+        delete_all_couch_databases()
 
     def test_lock_unlock_delete(self):
         # delete ignore the latest database thus creating 1 extra here
@@ -106,3 +110,20 @@ class CouchdbTestCase(unittest.TestCase):
         self.assertEqual(response["data"], "bar")
         response = couchdb.fetch_data(database, 3)
         self.assertEqual(response["data"], "foobar")
+
+    def test_dump_pagination(self):
+        database = "couchdb_dump_pagination_test_db_20250505"
+        couchdb.create_database(database)
+
+        numbers = list(range(1000))
+        docs = []
+        for i in numbers:
+            docs.append({"_id": str(i), "key": str(i), "data": i})
+        couchdb.insert_data(database, docs)
+
+        dumped = BytesIO()
+        couchdb.dump_database("couchdb_dump_pagination_test_db", dumped)
+        dumped.seek(0)
+        received = dumped.read().splitlines()
+        received_numbers = {json.loads(x)["data"] for x in received}
+        self.assertEqual(set(numbers), received_numbers)

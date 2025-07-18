@@ -15,9 +15,8 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
@@ -92,6 +91,10 @@ def _handle_sitewide_stats(message, stat_type, has_count=False):
 def handle_sitewide_entity(message):
     """ Take sitewide entity stats and save it in the database. """
     _handle_sitewide_stats(message, message["entity"], has_count=True)
+
+
+def handle_sitewide_artist_map(message):
+    _handle_sitewide_stats(message, "artist_map")
 
 
 def handle_sitewide_listening_activity(message):
@@ -260,27 +263,6 @@ def notify_mapping_import(data):
     )
 
 
-def notify_artist_relation_import(data):
-    """ Send an email after artist relation has been sucessfully imported into the cluster.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    artist_relation_name = data['imported_artist_relation']
-    import_time = data['import_time']
-    time_taken_to_import = data['time_taken_to_import']
-
-    send_mail(
-        subject='Artist relation has been imported into the Spark cluster',
-        text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, import_time=import_time,
-                             time_taken_to_import=time_taken_to_import),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-    )
-
-
 def cf_recording_recommendations_complete(data):
     """
     Run any troi scripts necessary now that recommendations have been generated and
@@ -379,15 +361,6 @@ def handle_yim_playlists(message):
 
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
-
-
-def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
-
-
-def handle_similar_artists(message):
-    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
-
 
 def handle_troi_playlists(message):
     process_weekly_playlists(message["slug"], message["data"])

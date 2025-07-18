@@ -3,7 +3,7 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 import { faPlay, faHourglass } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isArray, isString, isUndefined } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { isValid } from "date-fns";
 import { formatListenCount, formatReleaseDate } from "../utils";
 import {
@@ -122,13 +122,11 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   React.useEffect(() => {
     async function getCoverArt() {
       let coverartURL;
-      if (releaseMBID) {
+      if (releaseMBID || releaseGroupMBID) {
         coverartURL = await getAlbumArtFromReleaseMBID(
           releaseMBID,
-          releaseGroupMBID ?? true
+          releaseGroupMBID
         );
-      } else if (releaseGroupMBID) {
-        coverartURL = await getAlbumArtFromReleaseGroupMBID(releaseGroupMBID);
       }
       if (coverartURL) {
         setCoverartSrc(coverartURL);

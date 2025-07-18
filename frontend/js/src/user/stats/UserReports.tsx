@@ -6,7 +6,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 
 import Tooltip from "react-tooltip";
@@ -16,6 +16,7 @@ import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
+import UserArtistActivity from "./components/UserArtistActivity";
 import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
@@ -68,8 +69,6 @@ export default function UserReports() {
     <button
       type="button"
       className="btn btn-link"
-      data-toggle="modal"
-      data-target="#StatsExplanationsModal"
       onClick={() => {
         NiceModal.show(StatsExplanationsModal);
       }}
@@ -167,6 +166,10 @@ export default function UserReports() {
           <UserDailyActivity range={range} user={user} />
         </section>
       )}
+      <section id="artist-activity">
+        {statsExplanationModalButton}
+        <UserArtistActivity range={range} user={user} />
+      </section>
       <section id="artist-origin">
         {statsExplanationModalButton}
         <UserArtistMap range={range} user={user} />

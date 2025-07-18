@@ -178,6 +178,12 @@ def send_mail(subject, to_name, to_email, content, html, logo, logo_cid):
     current_app.logger.info("Email sent to %s", to_name)
 
 
+def sanitize_username(username):
+    username.replace('\\','\\\\')
+    username.replace('"','\\"')
+    return f'"{username}"'
+
+
 def notify_yim_users(db_conn, ts_conn, year):
     logo_cid = make_msgid()
     with open("/static/img/year-in-music-24/yim24-header-all-email.png", "rb") as img:
@@ -198,7 +204,7 @@ def notify_yim_users(db_conn, ts_conn, year):
     rows = result.fetchall()
 
     for row in rows:
-        user_name = row.musicbrainz_id
+        user_name = sanitize_username(row.musicbrainz_id)
 
         # cannot use url_for because we do not set SERVER_NAME and
         # a request_context will not be available in this script.

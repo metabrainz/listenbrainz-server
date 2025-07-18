@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import psycopg2
 import orjson
@@ -21,7 +21,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIServiceUnavailable, \
     APIUnauthorized, ListenValidationError, APIForbidden
 from listenbrainz.webserver.models import SubmitListenUserMetadata
-from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR
+from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, \
     is_valid_uuid, MAX_LISTEN_PAYLOAD_SIZE, MAX_LISTENS_PER_REQUEST, MAX_LISTEN_SIZE, LISTEN_TYPE_SINGLE, \
     LISTEN_TYPE_IMPORT, _validate_get_endpoint_params, LISTEN_TYPE_PLAYING_NOW, validate_auth_header, \
@@ -75,6 +75,9 @@ def submit_listen():
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+
+    if user['is_paused']:
+        raise APIUnauthorized(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
 
     raw_data = request.get_data()
 
@@ -164,8 +167,8 @@ def get_listens(user_name):
     listens, min_ts_per_user, max_ts_per_user = timescale_connection._ts.fetch_listens(
         user,
         limit=count,
-        from_ts=datetime.utcfromtimestamp(min_ts) if min_ts else None,
-        to_ts=datetime.utcfromtimestamp(max_ts) if max_ts else None
+        from_ts=datetime.fromtimestamp(min_ts, timezone.utc) if min_ts else None,
+        to_ts=datetime.fromtimestamp(max_ts, timezone.utc) if max_ts else None
     )
     listen_data = []
     for listen in listens:
@@ -334,7 +337,11 @@ def latest_import():
 
         {
             "musicbrainz_id": "the MusicBrainz ID of the user",
-            "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
+            "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0",
+            "status: {
+                "state": "a short string denoting the state of the import",
+                "count": "the number of listens that have been imported for the user by the importer",
+            },
         }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
@@ -364,10 +371,11 @@ def latest_import():
         user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
-        latest_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
+        status = listens_importer.get_import_status(db_conn, user["id"], service)
         return jsonify({
-            'musicbrainz_id': user['musicbrainz_id'],
-            'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
+            "musicbrainz_id": user["musicbrainz_id"],
+            "latest_import": status["latest_listened_at"],
+            "status": status["status"]
         })
     elif request.method == 'POST':
         user = validate_auth_header()
@@ -381,15 +389,15 @@ def latest_import():
             raise APIBadRequest('Invalid data sent')
 
         try:
-            last_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
-            last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
-            if ts > last_import_ts:
+            status = listens_importer.get_import_status(db_conn, user["id"], service)
+            if ts > status["latest_listened_at"]:
                 listens_importer.update_latest_listened_at(db_conn, user["id"], service, ts)
         except DatabaseException:
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
         return jsonify({'status': 'ok'})
+    return None
 
 
 @api_bp.get("/validate-token")
@@ -496,7 +504,7 @@ def delete_listen():
     if "listened_at" not in data:
         log_raise_400("Listen timestamp missing.")
     try:
-        listened_at = datetime.utcfromtimestamp(int(data["listened_at"]))
+        listened_at = datetime.fromtimestamp(int(data["listened_at"]), timezone.utc)
     except ValueError:
         log_raise_400("%s: Listen timestamp invalid." % data["listened_at"])
 

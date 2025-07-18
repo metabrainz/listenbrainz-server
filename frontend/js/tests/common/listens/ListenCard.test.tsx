@@ -1,10 +1,10 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import { omit, set } from "lodash";
+import { omit, set, merge } from "lodash";
 import { act } from "react-dom/test-utils";
 import NiceModal from "@ebay/nice-modal-react";
-import { BrowserRouter, Link } from "react-router-dom";
+import { BrowserRouter, Link } from "react-router";
 import ListenCard, {
   ListenCardProps,
   ListenCardState,
@@ -155,14 +155,50 @@ describe("ListenCard", () => {
     expect(foundMatchingLink).toEqual(1);
   });
 
-  it("should render a play button", () => {
-    const wrapper = mount(<ListenCardWithWrappers {...props} />);
+  it("should render a play button by default", () => {
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider value={globalProps}>
+        <ListenCardWithWrappers {...props} />
+      </GlobalAppContext.Provider>
+    );
     const instance = wrapper
       .find(ListenCardClass)
       .instance() as ListenCardClass;
     const playButton = wrapper.find(".play-button");
     expect(playButton).toHaveLength(1);
     expect(playButton.props().onClick).toEqual(instance.playListen);
+  });
+
+  it("should render a play button if BrainzPlayer is explicitly enabled", () => {
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider
+        value={merge(globalProps, {
+          userPreferences: { brainzplayer: { brainzplayerEnabled: true } },
+        })}
+      >
+        <ListenCardWithWrappers {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const instance = wrapper
+      .find(ListenCardClass)
+      .instance() as ListenCardClass;
+    const playButton = wrapper.find(".play-button");
+    expect(playButton).toHaveLength(1);
+    expect(playButton.props().onClick).toEqual(instance.playListen);
+  });
+
+  it("should not render play buttons when brainzplayer is hidden", () => {
+    const wrapper = mount<ListenCardClass>(
+      <GlobalAppContext.Provider
+        value={merge(globalProps, {
+          userPreferences: { brainzplayer: { brainzplayerEnabled: false } },
+        })}
+      >
+        <ListenCardWithWrappers {...props} />
+      </GlobalAppContext.Provider>
+    );
+    const playButton = wrapper.find(".play-button");
+    expect(playButton).toHaveLength(0);
   });
 
   it("should send an event to BrainzPlayer when playListen is called", async () => {

@@ -7,7 +7,7 @@ from listenbrainz_spark.popularity.listens import PopularityProvider, TopPerArti
 from listenbrainz_spark.popularity.mlhd import MlhdStatsEngine
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import FromToRangeListenRangeSelector
-from listenbrainz_spark.utils import get_latest_listen_ts
+from listenbrainz_spark.listens.data import get_latest_listen_ts
 
 logger = logging.getLogger(__name__)
 
@@ -30,4 +30,4 @@ def main(type, entity, mlhd):
         engine = MlhdStatsEngine(provider, message_creator)
     else:
         engine = IncrementalStatsEngine(provider, message_creator)
-    return engine.main()
+    return engine.run()

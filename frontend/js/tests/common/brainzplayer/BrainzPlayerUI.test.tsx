@@ -1,8 +1,9 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import BrainzPlayerUI from "../../../src/common/brainzplayer/BrainzPlayerUI";
+import IntersectionObserver from "../../__mocks__/intersection-observer";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -23,6 +24,10 @@ const props = {
   clearQueue: () => {},
 };
 describe("BrainzPlayerUI", () => {
+  beforeAll(() => {
+    global.IntersectionObserver = IntersectionObserver;
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+  });
   it("renders", () => {
     const wrapper = mount(
       <BrowserRouter>

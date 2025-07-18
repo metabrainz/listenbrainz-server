@@ -55,9 +55,9 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
 
         val = int(time.time())
         listens_importer.update_latest_listened_at(self.db_conn, user['id'], ExternalServiceType.LASTFM, val)
-        ts = listens_importer.get_latest_listened_at(self.db_conn, user['id'], ExternalServiceType.LASTFM)
-        self.assertEqual(int(ts.strftime('%s')), val)
+        status = listens_importer.get_import_status(self.db_conn, user['id'], ExternalServiceType.LASTFM)
+        self.assertEqual(status["latest_listened_at"], val)
 
         listens_importer.update_latest_listened_at(self.db_conn, user['id'], ExternalServiceType.LASTFM, 0)
-        ts = listens_importer.get_latest_listened_at(self.db_conn, user['id'], ExternalServiceType.LASTFM)
-        self.assertEqual(int(ts.strftime('%s')), 0)
+        status = listens_importer.get_import_status(self.db_conn, user['id'], ExternalServiceType.LASTFM)
+        self.assertEqual(status["latest_listened_at"], 0)

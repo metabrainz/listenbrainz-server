@@ -13,7 +13,6 @@ from listenbrainz.spark.handlers import (
     handle_model,
     handle_recommendations,
     handle_sitewide_entity,
-    notify_artist_relation_import,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete,
@@ -34,12 +33,14 @@ from listenbrainz.spark.handlers import (
     handle_troi_playlists_end,
     handle_yim_top_genres,
     handle_yim_playlists,
-    handle_yim_playlists_end, handle_echo
+    handle_yim_playlists_end,
+    handle_echo,
+    handle_sitewide_artist_map
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
     ListeningActivityStatsDataset, EntityListenerStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
-from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset
+from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
 from listenbrainz.db.tags import TagsDataset
 from listenbrainz.webserver import ts_conn, db_conn
 
@@ -82,6 +83,7 @@ class BackgroundJobProcessor:
             EntityListenerStatsDataset,
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
+            MlhdSimilarRecordingsDataset,
             TagsDataset,
             *get_all_popularity_datasets()
         ]
@@ -123,7 +125,6 @@ class BackgroundJobProcessor:
 
             self.stop()
 
-
     def stop(self):
         """ Stop running spark reader and associated handlers """
         for dataset in self.datasets:
@@ -143,6 +144,7 @@ class BackgroundJobProcessor:
             "echo": handle_echo,
             "sitewide_entity": handle_sitewide_entity,
             "sitewide_listening_activity": handle_sitewide_listening_activity,
+            "sitewide_artist_map": handle_sitewide_artist_map,
             "fresh_releases": handle_fresh_releases,
             "import_full_dump": handle_dump_imported,
             "import_incremental_dump": handle_dump_imported,
@@ -151,7 +153,6 @@ class BackgroundJobProcessor:
             "cf_recommendations_recording_candidate_sets": handle_candidate_sets,
             "cf_recommendations_recording_recommendations": handle_recommendations,
             "import_mapping": notify_mapping_import,
-            "import_artist_relation": notify_artist_relation_import,
             "missing_musicbrainz_data": handle_missing_musicbrainz_data,
             "cf_recommendations_recording_mail": cf_recording_recommendations_complete,
             "similar_users": handle_similar_users,

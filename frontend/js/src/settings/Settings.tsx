@@ -1,8 +1,10 @@
 import * as React from "react";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
@@ -69,7 +71,7 @@ export default function Settings() {
             href={`https://musicbrainz.org/user/${name}`}
             aria-label="Edit Profile on MusicBrainz"
             title="Edit Profile on MusicBrainz"
-            className="btn btn-outline"
+            className="btn btn-outline-info"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -92,28 +94,27 @@ export default function Settings() {
           ListenBrainz, you will need the following user token:
         </p>
 
-        <form className="form-inline">
+        <form className="input-group">
           <input
             type={showToken ? "text" : "password"}
             className="form-control"
             id="auth-token"
-            style={{ width: "400px", height: "30px" }}
             value={authToken}
             readOnly
           />
           <button
             type="button"
-            className="btn btn-info glyphicon glyphicon-eye-open"
+            className="btn btn-info border border-light"
             id="show-hide-token"
-            style={{ width: "50px", height: "30px", top: "0px" }}
             onClick={toggleTokenVisibility}
             aria-label="Show/hide token"
-          />
+          >
+            <FontAwesomeIcon icon={showToken ? faEyeSlash : faEye} />
+          </button>
           <button
             type="button"
-            className="btn btn-info"
+            className="btn btn-info border border-light"
             id="copy-token"
-            style={{ width: "90px", height: "30px" }}
             title="Copy user token"
             onClick={copyToken}
           >

@@ -4,7 +4,7 @@ import { isFinite, isUndefined } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
@@ -18,6 +18,8 @@ import { getCoverArtCache, setCoverArtCache } from "./coverArtCache";
 
 const originalFetch = window.fetch;
 const fetchWithRetry = require("fetch-retry")(originalFetch);
+
+let APIServiceInstance = new APIServiceClass(`${window.location.origin}/1`);
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -220,7 +222,8 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
 
 const getReleaseName = (listen: Listen): string =>
   _.get(listen, "track_metadata.mbid_mapping.release_name", "") ||
-  _.get(listen, "track_metadata.release_name", "");
+  _.get(listen, "track_metadata.release_name", "") ||
+  _.get(listen, "track_metadata.mbid_mapping.release_group_name", "");
 
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
@@ -311,6 +314,20 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
     );
   }
   return trackName;
+};
+
+const getAlbumLink = (listen: Listen): JSX.Element | string => {
+  const releaseName = getReleaseName(listen);
+  const releaseGroupMBID = getReleaseGroupMBID(listen);
+  const releaseMBID = getReleaseMBID(listen);
+
+  if (releaseGroupMBID) {
+    return <Link to={`/album/${releaseGroupMBID}`}>{releaseName}</Link>;
+  }
+  if (releaseMBID) {
+    return <Link to={`/release/${releaseMBID}`}>{releaseName}</Link>;
+  }
+  return releaseName;
 };
 
 const getListenCardKey = (listen: Listen): string =>
@@ -611,6 +628,7 @@ const getPageProps = async (): Promise<{
     const apiService = new APIServiceClass(
       api_url || `${window.location.origin}/1`
     );
+    APIServiceInstance = apiService;
     globalAppContext = {
       APIService: apiService,
       websocketsUrl: websockets_url,
@@ -799,44 +817,53 @@ const getAlbumArtFromReleaseGroupMBID = async (
 };
 
 const getAlbumArtFromReleaseMBID = async (
-  userSubmittedReleaseMBID: string,
-  useReleaseGroupFallback: boolean | string = false,
-  APIService?: APIServiceClass,
+  userSubmittedReleaseMBID: string | undefined | null,
+  userSubmittedReleaseGroupMBID: string | undefined | null,
   optionalSize?: CAAThumbnailSizes,
   frontOnly?: boolean
 ): Promise<string | undefined> => {
   try {
     // Check cache first
-    const cacheKey = `ca:${userSubmittedReleaseMBID}-${optionalSize}-${useReleaseGroupFallback}`;
+    const cacheKey = `ca:${userSubmittedReleaseMBID}-${optionalSize}-${userSubmittedReleaseGroupMBID}`;
     const cachedCoverArt = await getCoverArtCache(cacheKey);
     if (cachedCoverArt) {
       return cachedCoverArt;
     }
-
-    const CAAResponse = await fetchWithRetry(
-      `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
-      retryParams
-    );
-    if (CAAResponse.ok) {
-      const body: CoverArtArchiveResponse = await CAAResponse.json();
-      const coverArt = getThumbnailFromCAAResponse(
-        body,
-        optionalSize,
-        frontOnly
+    if (userSubmittedReleaseMBID) {
+      const CAAResponse = await fetchWithRetry(
+        `https://coverartarchive.org/release/${userSubmittedReleaseMBID}`,
+        retryParams
       );
-      // Here, make sure there is a front image, otherwise discard the hit.
-      if (coverArt) {
-        // Cache the successful result
-        await setCoverArtCache(cacheKey, coverArt);
+      if (CAAResponse.ok) {
+        const body: CoverArtArchiveResponse = await CAAResponse.json();
+        const coverArt = getThumbnailFromCAAResponse(
+          body,
+          optionalSize,
+          frontOnly
+        );
+        // Here, make sure there is a front image, otherwise discard the hit.
+        if (coverArt) {
+          // Cache the successful result
+          await setCoverArtCache(cacheKey, coverArt);
+        }
+        return coverArt;
       }
-      return coverArt;
     }
 
-    if (useReleaseGroupFallback) {
-      let releaseGroupMBID = useReleaseGroupFallback;
-      if (!_.isString(useReleaseGroupFallback) && APIService) {
-        const releaseGroupResponse = (await APIService.lookupMBRelease(
-          userSubmittedReleaseMBID
+    /*
+      Fallback to fetching cover art for the Release Group.
+      If no RG MBID is available, first hit the MusicBrainz API
+      with the release MBID to get the RG MBID
+    */
+    if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
+      let releaseGroupMBID = userSubmittedReleaseGroupMBID;
+      if (
+        !_.isString(userSubmittedReleaseGroupMBID) &&
+        _.isString(userSubmittedReleaseMBID)
+      ) {
+        const releaseGroupResponse = (await APIServiceInstance.lookupMBRelease(
+          userSubmittedReleaseMBID,
+          "release-groups"
         )) as MusicBrainzRelease & WithReleaseGroup;
         releaseGroupMBID = releaseGroupResponse["release-group"].id;
       }
@@ -914,8 +941,7 @@ const getAlbumArtFromListenMetadataKey = (
 
 const getAlbumArtFromListenMetadata = async (
   listen: BaseListenFormat,
-  spotifyUser?: SpotifyUser,
-  APIService?: APIServiceClass
+  spotifyUser?: SpotifyUser
 ): Promise<string | undefined> => {
   if (!listen) {
     return undefined;
@@ -928,27 +954,23 @@ const getAlbumArtFromListenMetadata = async (
     const trackID = SpotifyPlayer.getSpotifyTrackIDFromListen(listen);
     return getAlbumArtFromSpotifyTrackID(trackID, spotifyUser);
   }
-  if (YoutubePlayer.isListenFromThisService(listen)) {
-    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
-    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
-    return images?.[0].src;
-  }
   /** Could not load image from music service, fetching from CoverArtArchive if MBID is available */
   // directly access additional_info.release_mbid instead of using getReleaseMBID because we only want
   // to query CAA for user submitted mbids.
   const userSubmittedReleaseMBID =
     listen.track_metadata?.release_mbid ??
     listen.track_metadata?.additional_info?.release_mbid;
+  const userSubmittedReleaseGroupMBID =
+    listen.track_metadata?.additional_info?.release_group_mbid;
   const caaId = listen.track_metadata?.mbid_mapping?.caa_id;
   const caaReleaseMbid = listen.track_metadata?.mbid_mapping?.caa_release_mbid;
-  if (userSubmittedReleaseMBID) {
+  if (userSubmittedReleaseMBID || userSubmittedReleaseGroupMBID) {
     // try getting the cover art using user submitted release mbid. if user submitted release mbid
     // does not have a cover art and the mapper matched to a different release, try to fallback to
     // release group cover art of the user submitted release mbid next
     const userSubmittedReleaseAlbumArt = await getAlbumArtFromReleaseMBID(
       userSubmittedReleaseMBID,
-      Boolean(caaReleaseMbid) && userSubmittedReleaseMBID !== caaReleaseMbid,
-      APIService,
+      userSubmittedReleaseGroupMBID,
       undefined,
       true // we only want front images, otherwise skip
     );
@@ -960,63 +982,15 @@ const getAlbumArtFromListenMetadata = async (
   if (caaId && caaReleaseMbid) {
     return generateAlbumArtThumbnailLink(caaId, caaReleaseMbid);
   }
+  /* We are putting Youtube thumbnails as last resort fallback as the quality
+  and format is usually not very good, user preferring proper cover art. */
+  if (YoutubePlayer.isListenFromThisService(listen)) {
+    const videoId = YoutubePlayer.getVideoIDFromListen(listen);
+    const images = YoutubePlayer.getThumbnailsFromVideoid(videoId);
+    return images?.[0].src;
+  }
   return undefined;
 };
-
-/** Courtesy of Matt Zimmerman
- * https://codepen.io/influxweb/pen/LpoXba
- */
-/* eslint-disable no-bitwise */
-function getAverageRGBOfImage(
-  imgEl: HTMLImageElement | null
-): { r: number; g: number; b: number } {
-  const defaultRGB = { r: 0, g: 0, b: 0 }; // for non-supporting envs
-  if (!imgEl) {
-    return defaultRGB;
-  }
-  const blockSize = 5; // only visit every 5 pixels
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext && canvas.getContext("2d");
-  let data;
-  let i = -4;
-  const rgb = { r: 0, g: 0, b: 0 };
-  let count = 0;
-
-  if (!context) {
-    return defaultRGB;
-  }
-
-  const height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
-  const width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
-  canvas.height = height;
-  canvas.width = width;
-  context.drawImage(imgEl, 0, 0);
-
-  try {
-    data = context.getImageData(0, 0, width, height);
-  } catch (e) {
-    /* security error, img on diff domain */
-    return defaultRGB;
-  }
-
-  const { length } = data.data;
-
-  // eslint-disable-next-line no-cond-assign
-  while ((i += blockSize * 4) < length) {
-    count += 1;
-    rgb.r += data.data[i];
-    rgb.g += data.data[i + 1];
-    rgb.b += data.data[i + 2];
-  }
-
-  // ~~ used to floor values
-  rgb.r = ~~(rgb.r / count);
-  rgb.g = ~~(rgb.g / count);
-  rgb.b = ~~(rgb.b / count);
-
-  return rgb;
-}
-/* eslint-enable no-bitwise */
 
 export function feedReviewEventToListen(
   eventMetadata: CritiqueBrainzReview
@@ -1034,10 +1008,6 @@ export function feedReviewEventToListen(
     artist_mbids = [entity_id] as string[];
   }
   if (entity_type === "release_group" && entity_id) {
-    // currently releaseGroupName isn't displayed by the ListenCard
-    // so also assign trackName and recording_mbid
-    trackName = entity_name;
-    recording_mbid = entity_id;
     releaseGroupName = entity_name;
     release_group_mbid = entity_id;
   }
@@ -1167,6 +1137,7 @@ export {
   getStatsArtistLink,
   getArtistLink,
   getTrackLink,
+  getAlbumLink,
   formatWSMessageToListen,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,
@@ -1191,7 +1162,6 @@ export {
   getAlbumArtFromReleaseGroupMBID,
   getAlbumArtFromListenMetadataKey,
   getAlbumArtFromListenMetadata,
-  getAverageRGBOfImage,
   getAdditionalContent,
   generateAlbumArtThumbnailLink,
 };

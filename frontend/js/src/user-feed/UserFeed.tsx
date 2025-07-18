@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faBell,
@@ -6,6 +5,7 @@ import {
   faComments,
   faEye,
   faEyeSlash,
+  faHandHoldingHeart,
   faHeadphones,
   faHeart,
   faPaperPlane,
@@ -21,7 +21,7 @@ import {
   faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { reject as _reject } from "lodash";
 import * as React from "react";
 import { Helmet } from "react-helmet";
@@ -34,7 +34,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
@@ -51,7 +51,16 @@ import {
   personalRecommendationEventToListen,
   preciseTimestamp,
 } from "../utils/utils";
-import { EventType, type FeedFetchParams } from "./types";
+import ThanksModal from "./ThanksModal";
+import type { FeedFetchParams } from "./types";
+import { EventType } from "./types";
+import Card from "../components/Card";
+
+enum EventTypeinMessage {
+  personal_recording_recommendation = "personally recommending a track",
+  recording_recommendation = "recommending a track",
+  recording_pin = "pinning a track",
+}
 
 type UserFeedPageProps = {
   events: TimelineEvent<EventMetadata>[];
@@ -94,6 +103,8 @@ function getEventTypeIcon(eventType: EventTypeT) {
       return faComments;
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return faPaperPlane;
+    case EventType.THANKS:
+      return faHandHoldingHeart;
     default:
       return faQuestion;
   }
@@ -130,6 +141,8 @@ function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
     }
     case EventType.PERSONAL_RECORDING_RECOMMENDATION:
       return "personally recommended a track";
+    case EventType.THANKS:
+      return `thanked a ${event.event_type}`;
     default:
       return "";
   }
@@ -194,7 +207,55 @@ export default function UserFeedPage() {
 
   const { pages } = data || {}; // safe destructuring of possibly undefined data object
   // Flatten the pages of events from the infite query
-  const events = pages?.map((page) => page.events).flat();
+  const events = pages?.map((page) => page.events).flat() ?? [];
+
+  // Events mentioned in thank you events but not part of current cache, fetched separately as needed
+  const [separatelyLoadedEvents, setSeparatelyLoadedEvents] = React.useState<
+    TimelineEvent<EventMetadata>[]
+  >([]);
+
+  React.useEffect(() => {
+    async function fetchThankedEvents(missingEventsIDs: number[]) {
+      // Prefetch each missing original event missing from thank you events
+      // separately from fetching the feed pages
+      const promises = missingEventsIDs.map((eventId) => {
+        return queryClient.ensureQueryData({
+          queryKey: ["feed-event", eventId],
+          queryFn: () =>
+            APIService.getFeedEvent(
+              eventId,
+              currentUser.name,
+              currentUser.auth_token as string
+            ),
+        });
+      });
+      const resultsArray: TimelineEvent<EventMetadata>[] = [];
+      const promiseResults = await Promise.allSettled(promises);
+      promiseResults.forEach((res, idx) => {
+        if (res.status === "fulfilled") {
+          resultsArray.push(res.value);
+        } else {
+          // eslint-disable-next-line no-console
+          console.error(res.reason);
+        }
+      });
+      setSeparatelyLoadedEvents(resultsArray);
+    }
+    const feedEvents = data?.pages.map((page) => page.events).flat();
+    // Extract IDs of events referenced in thank you events currently in cache
+    const thankYouOriginalEventIds = feedEvents
+      ?.filter((ev) => ev.event_type === EventType.THANKS)
+      .map((ev) => {
+        const metadata = ev.metadata as ThanksMetadata;
+        return metadata.original_event_id;
+      });
+    const missingEventsIDs = thankYouOriginalEventIds?.filter(
+      (originalEventId) => !feedEvents?.some((ev) => ev.id === originalEventId)
+    );
+    if (missingEventsIDs?.length) {
+      fetchThankedEvents(missingEventsIDs);
+    }
+  }, [data, APIService, currentUser, queryClient]);
 
   const listens = events
     ?.filter(isEventListenable)
@@ -253,6 +314,7 @@ export default function UserFeedPage() {
     },
     [APIService, currentUser]
   );
+
   // When this mutation succeeds, modify the query cache accordingly to avoid refetching all the content
   const { mutate: hideEventMutation } = useMutation({
     mutationFn: changeEventVisibility,
@@ -360,79 +422,116 @@ export default function UserFeedPage() {
   const { mutate: deleteEventMutation } = useMutation({
     mutationFn: deleteFeedEvent,
     onSuccess: (deletedEvent) => {
-      queryClient.setQueryData(
+      queryClient.setQueryData<InfiniteData<UserFeedLoaderData>>(
         queryKey,
-        (oldData: { pages: UserFeedPageProps[] }) => {
-          const newPagesArray =
-            oldData?.pages?.map((page) =>
-              _reject(page.events, (traversedEvent) => {
-                return (
-                  traversedEvent.event_type === deletedEvent?.event_type &&
-                  traversedEvent.id === deletedEvent?.id
-                );
-              })
-            ) ?? [];
-          return { pages: newPagesArray };
+        (oldData) => {
+          if (!oldData) return oldData;
+          const newPagesArray = oldData?.pages.map((page) => ({
+            events: _reject(page.events, (traversedEvent) => {
+              return (
+                traversedEvent.event_type === deletedEvent?.event_type &&
+                traversedEvent.id === deletedEvent?.id
+              );
+            }),
+          }));
+          return { pages: newPagesArray, pageParams: queryKey };
         }
       );
     },
   });
 
-  const renderEventActionButton = (event: TimelineEvent<EventMetadata>) => {
-    if (
-      ((event.event_type === EventType.RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_PIN) &&
-        event.user_name === currentUser.name) ||
-      event.event_type === EventType.NOTIFICATION
-    ) {
-      return (
-        <ListenControl
-          title="Delete Event"
-          text=""
-          icon={faTrash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            deleteEventMutation(event);
-          }}
-        />
-      );
-    }
-    if (
-      (event.event_type === EventType.RECORDING_PIN ||
-        event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-        event.event_type === EventType.RECORDING_RECOMMENDATION) &&
-      event.user_name !== currentUser.name
-    ) {
-      if (event.hidden) {
-        return (
+  const renderEventActionButton = (
+    event: TimelineEvent<EventMetadata>,
+    isSubEvent = false
+  ) => {
+    const { event_type, hidden } = event;
+    const isOwnEvent = event.user_name === currentUser.name;
+    const isDeletable =
+      isOwnEvent &&
+      [
+        EventType.NOTIFICATION,
+        EventType.RECORDING_RECOMMENDATION,
+        EventType.PERSONAL_RECORDING_RECOMMENDATION,
+        EventType.RECORDING_PIN,
+        EventType.THANKS,
+      ].includes(event_type as EventType);
+    const isThankable =
+      !isSubEvent &&
+      !isOwnEvent &&
+      [
+        EventType.RECORDING_RECOMMENDATION,
+        EventType.PERSONAL_RECORDING_RECOMMENDATION,
+        EventType.RECORDING_PIN,
+        EventType.REVIEW,
+      ].includes(event_type as EventType);
+    const isHidable =
+      !isSubEvent &&
+      !isOwnEvent &&
+      ![
+        EventType.FOLLOW,
+        EventType.BLOCK_FOLLOW,
+        EventType.STOP_FOLLOW,
+      ].includes(event_type as EventType);
+
+    return (
+      <>
+        {isThankable && (
+          <ListenControl
+            title="Say thanks"
+            text=""
+            icon={faHandHoldingHeart}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              NiceModal.show(ThanksModal, {
+                original_event_id: event.id!,
+                original_event_type: event.event_type,
+              });
+            }}
+            isDropdown={false}
+          />
+        )}
+        {hidden && (
           <ListenControl
             title="Unhide Event"
             text=""
             icon={faEye}
-            buttonClassName="btn btn-link btn-xs"
-            // eslint-disable-next-line react/jsx-no-bind
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               hideEventMutation(event);
             }}
+            isDropdown={false}
           />
-        );
-      }
-      return (
-        <ListenControl
-          title="Hide Event"
-          text=""
-          icon={faEyeSlash}
-          buttonClassName="btn btn-link btn-xs"
-          // eslint-disable-next-line react/jsx-no-bind
-          action={() => {
-            hideEventMutation(event);
-          }}
-        />
-      );
-    }
-    return null;
+        )}
+        {!hidden && isHidable && (
+          <ListenControl
+            title="Hide Event"
+            text=""
+            icon={faEyeSlash}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              hideEventMutation(event);
+            }}
+            isDropdown={false}
+          />
+        )}
+        {isDeletable && (
+          <ListenControl
+            title="Delete Event"
+            text=""
+            icon={faTrash}
+            iconSize="lg"
+            buttonClassName="btn btn-link btn-sm"
+            action={() => {
+              deleteEventMutation(event);
+            }}
+            isDropdown={false}
+          />
+        )}
+      </>
+    );
   };
 
   const renderEventContent = (event: TimelineEvent<EventMetadata>) => {
@@ -460,7 +559,8 @@ export default function UserFeedPage() {
       if (
         (event.event_type === EventType.RECORDING_RECOMMENDATION ||
           event.event_type === EventType.PERSONAL_RECORDING_RECOMMENDATION ||
-          event.event_type === EventType.RECORDING_PIN) &&
+          event.event_type === EventType.RECORDING_PIN ||
+          event.event_type === EventType.THANKS) &&
         event.user_name === currentUser.name
       ) {
         additionalMenuItems = [
@@ -484,6 +584,19 @@ export default function UserFeedPage() {
             additionalContent={additionalContent}
             additionalMenuItems={additionalMenuItems}
           />
+        </div>
+      );
+    }
+    if (event.event_type === EventType.THANKS && !event.hidden) {
+      const { metadata } = event as TimelineEvent<ThanksMetadata>;
+      if (!metadata?.blurb_content?.length) {
+        return null;
+      }
+      return (
+        <div className="event-content">
+          <Card className="listen-card">
+            <div className="main-content">{metadata?.blurb_content}</div>
+          </Card>
         </div>
       );
     }
@@ -535,10 +648,42 @@ export default function UserFeedPage() {
           // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(message),
+            __html: DOMPurify.sanitize(message),
           }}
         />
       );
+    }
+    if (event_type === EventType.THANKS) {
+      const {
+        original_event_type,
+        thanker_username,
+        thankee_username,
+      } = metadata as ThanksMetadata;
+
+      if (thanker_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            You thanked <Username username={thankee_username} /> for{" "}
+            {
+              EventTypeinMessage[
+                original_event_type as keyof typeof EventTypeinMessage
+              ]
+            }
+          </span>
+        );
+      }
+      if (thankee_username === currentUser.name) {
+        return (
+          <span className="event-description-text">
+            <Username username={thanker_username} /> thanked you for{" "}
+            {
+              EventTypeinMessage[
+                original_event_type as keyof typeof EventTypeinMessage
+              ]
+            }
+          </span>
+        );
+      }
     }
 
     const userLinkOrYou =
@@ -554,21 +699,45 @@ export default function UserFeedPage() {
     );
   };
 
+  const renderSubEvent = (
+    subEvent: TimelineEvent<EventMetadata> | undefined
+  ) => {
+    if (!subEvent)
+      return (
+        <div className="muted">This event was deleted or cannot be loaded</div>
+      );
+
+    return (
+      <div>
+        <details>
+          <summary className="event-description">
+            <span className={`event-icon ${subEvent.event_type}`} />
+            {renderEventText(subEvent)}
+
+            <span className="event-time">
+              {preciseTimestamp(subEvent.created * 1000)}
+              {renderEventActionButton(subEvent, true)}
+            </span>
+          </summary>
+          {renderEventContent(subEvent)}
+        </details>
+      </div>
+    );
+  };
+
   return (
     <>
       <Helmet>
         <title>Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-lg-9">
           <div className="listen-header">
             <h3 className="header-with-line">Latest activity</h3>
             {/* Commented out as new OAuth is not merged yet. */}
             {/* <button
               type="button"
               className="btn btn-icon btn-info atom-button"
-              data-toggle="modal"
-              data-target="#SyndicationFeedModal"
               title="Subscribe to syndication feed (Atom)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {
@@ -624,7 +793,7 @@ export default function UserFeedPage() {
             </button> */}
             <button
               type="button"
-              className="btn btn-info btn-rounded play-tracks-button"
+              className="btn btn-info btn-rounded play-tracks-button text-nowrap"
               title="Play album"
               onClick={() => {
                 window.postMessage(
@@ -659,10 +828,10 @@ export default function UserFeedPage() {
             </>
           ) : (
             <>
-              <div className="text-center mb-15">
+              <div className="text-center mb-4">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -680,7 +849,24 @@ export default function UserFeedPage() {
               >
                 <ul>
                   {events?.map((event) => {
-                    const { created, event_type, user_name } = event;
+                    const { created, event_type, user_name, metadata } = event;
+                    let subEventElement;
+                    if (event_type === EventType.THANKS && !event.hidden) {
+                      const {
+                        original_event_id,
+                        original_event_type,
+                      } = metadata as ThanksMetadata;
+                      const filterMethod = (
+                        evt: TimelineEvent<EventMetadata> | undefined
+                      ) =>
+                        evt?.id === original_event_id &&
+                        evt?.event_type === original_event_type;
+                      const subEvent =
+                        events?.find(filterMethod) ||
+                        separatelyLoadedEvents?.find(filterMethod);
+                      subEventElement = renderSubEvent(subEvent);
+                    }
+
                     return (
                       <li
                         className="timeline-event"
@@ -692,11 +878,13 @@ export default function UserFeedPage() {
                               <FontAwesomeIcon
                                 icon={faCircle as IconProp}
                                 transform="grow-8"
+                                fixedWidth
                               />
                               <FontAwesomeIcon
                                 icon={getEventTypeIcon(event_type) as IconProp}
                                 inverse
-                                transform="shrink-4"
+                                transform="shrink-3"
+                                fixedWidth
                               />
                             </span>
                           </span>
@@ -709,6 +897,14 @@ export default function UserFeedPage() {
                         </div>
 
                         {renderEventContent(event)}
+
+                        {subEventElement && (
+                          <ul>
+                            <li className="timeline-event timeline-sub-event">
+                              {subEventElement}
+                            </li>
+                          </ul>
+                        )}
                       </li>
                     );
                   })}
@@ -716,7 +912,7 @@ export default function UserFeedPage() {
               </div>
               {Boolean(events?.length) && (
                 <div
-                  className="text-center mb-15"
+                  className="text-center mb-4"
                   style={{
                     width: "50%",
                     marginLeft: "auto",
@@ -725,7 +921,7 @@ export default function UserFeedPage() {
                 >
                   <button
                     type="button"
-                    className="btn btn-outline btn-block"
+                    className="btn btn-outline-info w-100"
                     onClick={() => fetchNextPage()}
                     disabled={!hasNextPage || isFetchingNextPage}
                   >

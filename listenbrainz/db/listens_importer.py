@@ -1,11 +1,11 @@
-import datetime
+from datetime import datetime, timezone
 from typing import Optional, Union
 
 from sqlalchemy import text
 
 from data.model.external_service import ExternalServiceType
-from listenbrainz import utils
 import sqlalchemy
+import json
 
 
 def update_import_status(db_conn, user_id: int, service: ExternalServiceType, error_message: str = None):
@@ -51,12 +51,12 @@ def update_latest_listened_at(db_conn, user_id: int, service: ExternalServiceTyp
         """), {
             'user_id': user_id,
             'service': service.value,
-            'timestamp': utils.unix_timestamp_to_datetime(timestamp),
+            'timestamp': datetime.fromtimestamp(timestamp, timezone.utc),
         })
     db_conn.commit()
 
 
-def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) -> Optional[datetime.datetime]:
+def get_import_status(db_conn, user_id: int, service: ExternalServiceType) -> dict:
     """ Returns the timestamp of the last listen imported for the user with
     specified LB user ID from the given service.
 
@@ -65,19 +65,27 @@ def get_latest_listened_at(db_conn, user_id: int, service: ExternalServiceType) 
         user_id: the ListenBrainz row ID of the user
         service: service to update latest listen timestamp for
     Returns:
-        timestamp: the unix timestamp of the latest listen imported for the user
+        a dict containing the latest listen unix timestamp and status information for
+        the user, if any, otherwise None.
     """
     result = db_conn.execute(sqlalchemy.text("""
         SELECT latest_listened_at
+             , status
           FROM listens_importer
          WHERE user_id = :user_id
            AND service = :service
         """), {
-            'user_id': user_id,
-            'service': service.value,
+            "user_id": user_id,
+            "service": service.value,
         })
     row = result.fetchone()
-    return row.latest_listened_at if row else None
+    if row is None:
+        return {"status": None, "latest_listened_at": 0}
+
+    return {
+        "status": row.status,
+        "latest_listened_at": int(row.latest_listened_at.timestamp()) if row.latest_listened_at is not None else 0,
+    }
 
 
 def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[dict]:
@@ -98,8 +106,10 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
              , token_expires
              , scopes
              , latest_listened_at
+             , status
              , external_service_oauth.external_user_id
              , error_message
+             , is_paused
           FROM external_service_oauth
           JOIN "user"
             ON "user".id = external_service_oauth.user_id
@@ -111,3 +121,37 @@ def get_active_users_to_process(db_conn, service, exclude_error=False) -> list[d
     users = [row for row in result.mappings()]
     db_conn.rollback()
     return users
+
+
+def update_status(db_conn, user_id: int, service: ExternalServiceType, state: str, listens_count: int):
+    """ 
+        Update status information for a user's import.
+
+    Args:
+        db_conn: database connection
+        user_id: ListenBrainz row ID of the user
+        service: ExternalServiceType enum of the service
+        state: Import status of that service
+        listens_count: Number of listens imported
+    """
+
+    params = {
+        "status": json.dumps({
+            "state": state,
+            "count": listens_count
+        }),
+        "service": service.value,
+        "user_id": user_id,
+    }
+
+    query = """
+        UPDATE listens_importer
+           SET status = :status
+         WHERE user_id = :user_id
+           AND service = :service
+    """
+
+    db_conn.execute(text(query), params)
+    db_conn.commit()
+
+

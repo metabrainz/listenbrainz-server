@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE_VERSION=3.11-20231006
+ARG PYTHON_BASE_IMAGE_VERSION=3.13-20250313
 ARG NODE_VERSION=20-alpine
 FROM metabrainz/python:$PYTHON_BASE_IMAGE_VERSION AS listenbrainz-base
 
@@ -159,6 +159,12 @@ COPY ./docker/services/lastfm_importer/lastfm_importer.service /etc/service/last
 COPY ./docker/services/lastfm_importer/lastfm_importer.finish /etc/service/lastfm_importer/finish
 RUN touch /etc/service/lastfm_importer/down
 
+# Libre.fm importer
+COPY ./docker/services/librefm_importer/consul-template-librefm-importer.conf /etc/consul-template-librefm-importer.conf
+COPY ./docker/services/librefm_importer/librefm_importer.service /etc/service/librefm_importer/run
+COPY ./docker/services/librefm_importer/librefm_importer.finish /etc/service/librefm_importer/finish
+RUN touch /etc/service/librefm_importer/down
+
 # Timescale writer
 COPY ./docker/services/timescale_writer/consul-template-timescale-writer.conf /etc/consul-template-timescale-writer.conf
 COPY ./docker/services/timescale_writer/timescale_writer.service /etc/service/timescale_writer/run
@@ -214,6 +220,7 @@ COPY --from=listenbrainz-frontend-prod /code/frontend/sound /static/sound
 COPY --from=listenbrainz-frontend-prod /code/frontend/fonts /static/fonts
 COPY --from=listenbrainz-frontend-prod /code/frontend/img /static/img
 COPY --from=listenbrainz-frontend-prod /code/frontend/js/lib /static/js/lib
+COPY --from=listenbrainz-frontend-prod /code/frontend/css/static /static/css/static
 COPY --from=listenbrainz-frontend-prod /code/frontend/dist /static/dist
 
 # Now install our code, which may change frequently

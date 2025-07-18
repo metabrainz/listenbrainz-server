@@ -203,21 +203,41 @@ def create_metadata_cache(cache_cls, cache_key, required_tables, use_lb_conn: bo
         mb_uri = config.MBID_MAPPING_DATABASE_URI
         unlogged = True
 
+    success = False
+    try:
+        with psycopg2.connect(mb_uri) as mb_conn:
+            # I think sqlalchemy captures tracebacks and obscures where the real problem is
+            try:
+                lb_conn = None
+                if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
+                    lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
+
+                for table_cls in required_tables:
+                    table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
+
+                    if not table.table_exists():
+                        log(f"{table.table_name} table does not exist, first create the table normally")
+                        return
+
+                new_timestamp = datetime.now()
+                cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
+                cache.run()
+                success = True
+            except Exception:
+                log(format_exc())
+
+    except psycopg2.OperationalError:
+        if not success:
+            raise()
+
+        # Otherwise ignore the connection error, makde a new connection
+
+    # the connection times out after the long process above, so start with a fresh connection
     with psycopg2.connect(mb_uri) as mb_conn:
         lb_conn = None
         if use_lb_conn and config.SQLALCHEMY_TIMESCALE_URI:
             lb_conn = psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI)
 
-        for table_cls in required_tables:
-            table = table_cls(mb_conn, lb_conn, unlogged=unlogged)
-
-            if not table.table_exists():
-                log(f"{table.table_name} table does not exist, first create the table normally")
-                return
-
-        new_timestamp = datetime.now()
-        cache = cache_cls(mb_conn, lb_conn, unlogged=unlogged)
-        cache.run()
         update_metadata_cache_timestamp(lb_conn or mb_conn, new_timestamp, cache_key)
 
 

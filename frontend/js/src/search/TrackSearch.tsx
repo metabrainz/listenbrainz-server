@@ -1,12 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import _ from "lodash";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Loader from "../components/Loader";
 import ListenCard from "../common/listens/ListenCard";
-import { getObjectForURLSearchParams } from "../utils/utils";
+import {
+  getArtistLink,
+  getObjectForURLSearchParams,
+  getTrackLink,
+} from "../utils/utils";
 import Pagination from "../common/Pagination";
+import { millisecondsToStr } from "../playlists/utils";
 
 const RECORDING_COUNT_PER_PAGE = 50;
 
@@ -85,7 +90,11 @@ export default function TrackSearch(props: TrackSearchProps) {
       return null;
     });
 
-    const listen = {
+    const artistName = artistCredit
+      .map((ac) => ac.name + (ac?.joinphrase ?? ""))
+      .join("");
+
+    const listen: Listen = {
       listened_at: 0,
       track_metadata: {
         mbid_mapping: {
@@ -95,20 +104,45 @@ export default function TrackSearch(props: TrackSearchProps) {
             recording.releases?.length > 0 ? recording.releases[0].id : "",
           recording_mbid: recording.id,
         },
-        artist_name: artistCredit
-          .map((ac) => ac.name + (ac?.joinphrase ?? ""))
-          .join(""),
+        artist_name: artistName,
         track_name: recording.title,
         release_name:
           recording.releases?.length > 0 ? recording.releases[0].title : "",
         additional_info: {
           artist_mbids: artistMBIDs,
           recording_mbid: recording.id,
+          duration_ms: recording.length,
           release_mbid:
             recording.releases?.length > 0 ? recording.releases[0].id : "",
         },
       },
     };
+
+    /* Copied over from ListenCard component. Required to show disambiguation as there is
+    no such field in the Listen type to implement it directly in ListenCard component */
+    const listenDetails = (
+      <>
+        <div className="title-duration">
+          <div title={recording.title} className="ellipsis-2-lines">
+            {getTrackLink(listen)}
+            {recording.disambiguation?.length && (
+              <span className="small text-muted">
+                {" "}
+                ({recording.disambiguation})
+              </span>
+            )}
+          </div>
+          {recording.length && (
+            <div className="small text-muted" title="Duration">
+              {millisecondsToStr(recording.length)}
+            </div>
+          )}
+        </div>
+        <div className="small text-muted ellipsis" title={artistName}>
+          {getArtistLink(listen)}
+        </div>
+      </>
+    );
 
     return (
       <ListenCard
@@ -116,6 +150,7 @@ export default function TrackSearch(props: TrackSearchProps) {
         listen={listen}
         showTimestamp={false}
         showUsername={false}
+        listenDetails={listenDetails}
       />
     );
   };

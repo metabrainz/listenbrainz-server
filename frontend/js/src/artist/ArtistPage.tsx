@@ -8,17 +8,16 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { chain, isEmpty, isUndefined, orderBy, groupBy, sortBy } from "lodash";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import {
   Link,
   useLoaderData,
   useLocation,
   useNavigate,
   useParams,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import NiceModal from "@ebay/nice-modal-react";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
@@ -38,10 +37,10 @@ import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
-import CBReviewModal from "../cb-review/CBReviewModal";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
+import CBReview from "../cb-review/CBReview";
 
 function SortingButtons({
   sort,
@@ -301,7 +300,7 @@ export default function ArtistPage(): JSX.Element {
           className="cover-art"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(
+            __html: DOMPurify.sanitize(
               coverArtSVG ??
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
@@ -311,7 +310,7 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="help-block">
+            <small className="form-text">
               {artist?.begin_year}
               {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
@@ -324,7 +323,7 @@ export default function ArtistPage(): JSX.Element {
                 className="content"
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: sanitize(wikipediaExtract.content),
+                  __html: DOMPurify.sanitize(wikipediaExtract.content),
                 }}
               />
               <a
@@ -338,7 +337,7 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {artist &&
               !isEmpty(artist?.rels) &&
@@ -361,42 +360,37 @@ export default function ArtistPage(): JSX.Element {
               </Link>
               <button
                 type="button"
-                className="btn btn-info dropdown-toggle"
-                data-toggle="dropdown"
+                className="btn btn-info dropdown-toggle px-3"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
-              >
-                <span className="caret" />
-                <span className="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul className="dropdown-menu">
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
-                  >
-                    Artist radio
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
-                  >
-                    This artist only
-                  </Link>
-                </li>
+                aria-label="Toggle dropdown"
+              />
+              <div className="dropdown-menu">
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Artist radio
+                </Link>
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
+                  className="dropdown-item"
+                >
+                  This artist only
+                </Link>
                 {Boolean(filteredTags?.length) && (
-                  <li>
-                    <Link
-                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                        filteredTagsAsString
-                      )})::or&mode=easy`}
-                    >
-                      Tags (
-                      <span className="tags-list">{filteredTagsAsString}</span>)
-                    </Link>
-                  </li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                      filteredTagsAsString
+                    )})::or&mode=easy`}
+                    className="dropdown-item"
+                  >
+                    Tags (
+                    <span className="tags-list">{filteredTagsAsString}</span>)
+                  </Link>
                 )}
-              </ul>
+              </div>
             </div>
           )}
         </div>
@@ -438,7 +432,7 @@ export default function ArtistPage(): JSX.Element {
             let listenCountComponent;
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   {bigNumberFormatter.format(recording.total_listen_count)}
                   &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
@@ -459,7 +453,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() =>
                   setExpandPopularTracks((prevValue) => !prevValue)
                 }
@@ -503,7 +497,7 @@ export default function ArtistPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -538,10 +532,10 @@ export default function ArtistPage(): JSX.Element {
             </div>
           ))}
           {showFullDiscographyButton && (
-            <div className="read-more mb-10">
+            <div className="read-more mb-3">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() => setExpandDiscography((prevValue) => !prevValue)}
               >
                 See {expandDiscography ? "less" : "full discography"}
@@ -569,42 +563,32 @@ export default function ArtistPage(): JSX.Element {
       ) : null}
       <div className="reviews">
         <h3 className="header-with-line">Reviews</h3>
-        {reviews?.length ? (
-          <>
-            <div className="review-cards">
-              {reviews.slice(0, 3).map(getReviewEventContent)}
+        <div className="row">
+          <div className="col-md-6">
+            <CBReview
+              artistEntity={{
+                type: "artist",
+                mbid: artistMBID,
+                name: artist?.name,
+              }}
+            />
+          </div>
+          {reviews?.length ? (
+            <div className="col-md-6">
+              <div className="review-cards">
+                {reviews.slice(0, 3).map(getReviewEventContent)}
+              </div>
+              <a
+                href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
+                className="critiquebrainz-button btn btn-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                More on CritiqueBrainz…
+              </a>
             </div>
-            <a
-              href={`https://critiquebrainz.org/artist/${artist?.artist_mbid}`}
-              className="critiquebrainz-button btn btn-link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              More on CritiqueBrainz…
-            </a>
-          </>
-        ) : (
-          <p>Be the first to review this artist on CritiqueBrainz</p>
-        )}
-        <button
-          type="button"
-          className="btn btn-info"
-          data-toggle="modal"
-          data-target="#CBReviewModal"
-          onClick={() => {
-            NiceModal.show(CBReviewModal, {
-              entityToReview: [
-                {
-                  type: "artist",
-                  mbid: artistMBID,
-                  name: artist?.name,
-                },
-              ],
-            });
-          }}
-        >
-          Add my review
-        </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );

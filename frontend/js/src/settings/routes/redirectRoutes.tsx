@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import type { RouteObject } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
+import type { RouteObject } from "react-router";
 
 const getRedirectRoutes = (): RouteObject[] => {
   const routes = [
@@ -19,10 +19,6 @@ const getRedirectRoutes = (): RouteObject[] => {
         {
           path: "music-services/details/",
           element: <Navigate to="/settings/music-services/details/" replace />,
-        },
-        {
-          path: "import/",
-          element: <Navigate to="/settings/import/" replace />,
         },
         {
           path: "link-listens/",

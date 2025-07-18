@@ -4,7 +4,7 @@ import * as React from "react";
 
 import { get, isInteger } from "lodash";
 import { toast } from "react-toastify";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router";
 
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";

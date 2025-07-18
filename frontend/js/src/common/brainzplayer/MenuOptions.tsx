@@ -18,11 +18,12 @@ import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSetting
 
 type MenuOptionsProps = {
   currentListen?: Listen | JSPFTrack;
+  iconElement?: JSX.Element;
 };
 
 function MenuOptions(props: MenuOptionsProps) {
   const [dropdownActionsOpen, setDropdownActionsOpen] = React.useState(false);
-  const { currentListen } = props;
+  const { currentListen, iconElement } = props;
   let recordingMBID;
   let spotifyURL;
   let youtubeURL;
@@ -68,11 +69,13 @@ function MenuOptions(props: MenuOptionsProps) {
       role="button"
       tabIndex={0}
     >
-      <FontAwesomeIcon
-        icon={faEllipsisVertical}
-        title="More actions"
-        aria-hidden="true"
-      />
+      {iconElement ?? (
+        <FontAwesomeIcon
+          icon={faEllipsisVertical}
+          title="More actions"
+          aria-hidden="true"
+        />
+      )}
       {currentListen && (
         <ul
           className={`dropup-content ${dropdownActionsOpen ? " open" : ""}`}

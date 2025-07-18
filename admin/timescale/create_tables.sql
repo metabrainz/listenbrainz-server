@@ -12,7 +12,10 @@ CREATE TABLE listen_delete_metadata (
     id                  SERIAL                      NOT NULL,
     user_id             INTEGER                     NOT NULL,
     listened_at         TIMESTAMP WITH TIME ZONE    NOT NULL,
-    recording_msid      UUID                        NOT NULL
+    recording_msid      UUID                        NOT NULL,
+    status              listen_delete_metadata_status_enum NOT NULL DEFAULT 'pending',
+    listen_created      TIMESTAMP WITH TIME ZONE
+    CHECK ( status = 'invalid' OR status = 'pending' OR (status = 'complete' AND listen_created IS NOT NULL) )
 );
 
 CREATE TABLE listen_user_metadata (
@@ -24,6 +27,12 @@ CREATE TABLE listen_user_metadata (
 );
 
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => INTERVAL '30 days');
+
+CREATE TABLE deleted_user_listen_history (
+    id                          INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    user_id                     INTEGER NOT NULL,
+    max_created                 TIMESTAMP WITH TIME ZONE NOT NULL
+);
 
 -- Playlists
 
@@ -108,6 +117,26 @@ CREATE TABLE mapping.mb_metadata_cache (
 ALTER TABLE mapping.mb_metadata_cache
     ADD CONSTRAINT mb_metadata_cache_artist_mbids_check
     CHECK ( array_ndims(artist_mbids) = 1 );
+
+CREATE TABLE mapping.mb_release_group_cache (
+    dirty                   BOOLEAN DEFAULT FALSE,
+    last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    release_group_mbid      UUID NOT NULL,
+    artist_mbids            UUID[] NOT NULL,
+    artist_data             JSONB NOT NULL,
+    tag_data                JSONB NOT NULL,
+    release_group_data      JSONB NOT NULL,
+    recording_data          JSONB NOT NULL
+);
+
+CREATE TABLE mapping.mb_artist_metadata_cache (
+    dirty                   BOOLEAN DEFAULT FALSE,
+    last_updated            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    artist_mbid             UUID NOT NULL,
+    artist_data             JSONB NOT NULL,
+    tag_data                JSONB NOT NULL,
+    release_group_data      JSONB NOT NULL
+);
 
 -- the various mapping columns should only be null if the match_type is no_match, otherwise the columns should be
 -- non null. we have had bugs where we completely forgot to insert values for a column and it went unchecked because
@@ -294,7 +323,19 @@ CREATE TABLE popularity.recording (
     total_user_count        INTEGER NOT NULL
 );
 
+CREATE TABLE popularity.mlhd_recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
 CREATE TABLE popularity.artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_artist (
     artist_mbid             UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
     total_user_count        INTEGER NOT NULL
@@ -306,7 +347,32 @@ CREATE TABLE popularity.release (
     total_user_count        INTEGER NOT NULL
 );
 
+CREATE TABLE popularity.mlhd_release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
 CREATE TABLE popularity.top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_recording (
     artist_mbid             UUID NOT NULL,
     recording_mbid          UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
@@ -316,6 +382,28 @@ CREATE TABLE popularity.top_recording (
 CREATE TABLE popularity.top_release (
     artist_mbid             UUID NOT NULL,
     release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+
+CREATE TABLE popularity.top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
     total_user_count        INTEGER NOT NULL
 );

@@ -17,8 +17,9 @@ class PlaylistTestCase(IntegrationTestCase):
         self.ts_conn = timescale.engine.connect()
 
     def tearDown(self):
-        timescale.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
+        super(PlaylistTestCase, self).tearDown()
         self.ts_conn.close()
+        timescale.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'reset_tables.sql'))
 
     def test_create(self):
         playlist_1 = WritablePlaylist(

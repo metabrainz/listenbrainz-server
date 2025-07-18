@@ -34,6 +34,8 @@ services:
     volumes:
       - ./couchdb_test.ini:/opt/couchdb/etc/local.ini
       - couchdb:/var/lib/couchdb
+    ports:
+      - "127.0.0.1:5984:5984"
 
   rabbitmq:
     image: rabbitmq:3.8.16-management
@@ -64,6 +66,7 @@ services:
       - redis
       - lb_db
       - rabbitmq
+      - couchdb
 
   api_compat:
     image: web
@@ -118,6 +121,17 @@ services:
     volumes:
       - ..:/code/listenbrainz:z
     command: python3 -m "listenbrainz.listens_importer.lastfm"
+    user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
+    depends_on:
+      - redis
+      - rabbitmq
+      - lb_db
+
+  librefm_importer:
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
+    command: python3 -m "listenbrainz.listens_importer.librefm"
     user: "${LB_DOCKER_USER:-root}:${LB_DOCKER_GROUP:-root}"
     depends_on:
       - redis

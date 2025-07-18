@@ -10,6 +10,7 @@ import {
   faPlayCircle,
   faSlash,
   faVolumeUp,
+  faMaximize,
 } from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 
@@ -18,7 +19,10 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import { noop } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
+import { Vibrant as VibrantLibrary } from "node-vibrant/browser";
+import type { Palette } from "@vibrant/color";
+import tinycolor from "tinycolor2";
 import { ToastMsg } from "../../notifications/Notifications";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -30,23 +34,19 @@ import {
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
 import Queue from "./Queue";
+import MusicPlayer from "./MusicPlayer";
+import { FeedbackValue } from "./utils";
 import VolumeControlButton from "./VolumeControlButton";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
+import { DataSourceType } from "./BrainzPlayer";
 
 type BrainzPlayerUIProps = {
-  currentDataSourceName?: string;
-  currentDataSourceIcon?: IconProp;
-  currentDataSourceIconColor?: string;
+  currentDataSource?: DataSourceType | null;
   playPreviousTrack: () => void;
   playNextTrack: (invert?: boolean) => void;
   togglePlay: (invert?: boolean) => void;
-  playerPaused: boolean;
-  trackName?: string;
-  artistName?: string;
-  trackUrl?: string;
-  progressMs: number;
-  durationMs: number;
+
   seekToPositionMs: (msTimeCode: number) => void;
-  currentListen?: Listen | JSPFTrack;
   listenBrainzAPIBaseURI: string;
   disabled?: boolean;
   clearQueue: () => void;
@@ -79,30 +79,40 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
 
 function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const {
-    currentDataSourceName,
-    currentDataSourceIcon,
-    currentDataSourceIconColor,
     listenBrainzAPIBaseURI,
-    currentListen,
-    trackUrl,
+    children: dataSources,
+    playPreviousTrack,
+    togglePlay,
+    playNextTrack,
+    seekToPositionMs,
+    disabled,
+    clearQueue,
+    currentDataSource,
   } = props;
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
+  const [isMobile, setIsMobile] = React.useState(false);
   const { currentUser } = React.useContext(GlobalAppContext);
 
   // BrainzPlayerContext
-  const { queueRepeatMode, volume } = useBrainzPlayerContext();
+  const brainzPlayerContext = useBrainzPlayerContext();
+  const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
+  brainzPlayerContextRef.current = brainzPlayerContext;
+
   const dispatch = useBrainzPlayerDispatch();
 
-  // const { currentListenFeedback } = this.state;
   React.useEffect(() => {
     async function getFeedback() {
       // Get feedback for currentListen
 
-      if (!currentUser?.name || !currentListen) {
+      if (!currentUser?.name || !brainzPlayerContextRef.current.currentListen) {
         return;
       }
-      const recordingMBID = getRecordingMBID(currentListen as Listen);
-      const recordingMSID = getRecordingMSID(currentListen as Listen);
+      const recordingMBID = getRecordingMBID(
+        brainzPlayerContextRef.current.currentListen as Listen
+      );
+      const recordingMSID = getRecordingMSID(
+        brainzPlayerContextRef.current.currentListen as Listen
+      );
 
       if (!recordingMBID && !recordingMSID) {
         return;
@@ -130,115 +140,245 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       }
     }
     getFeedback();
-  }, [currentListen]);
+  }, [
+    brainzPlayerContextRef.current.currentListen,
+    currentUser.name,
+    listenBrainzAPIBaseURI,
+  ]);
 
-  async function submitFeedback(score: ListenFeedBack) {
-    if (currentUser?.auth_token) {
-      setCurrentListenFeedback(score);
+  React.useEffect(() => {
+    // Also check the width on first render
+    setIsMobile(/Mobi/.test(navigator.userAgent));
 
-      const recordingMSID = getRecordingMSID(currentListen as Listen);
-      const recordingMBID = getRecordingMBID(currentListen as Listen);
+    const handleResize = () => {
+      setIsMobile(/Mobi/.test(navigator.userAgent));
+    };
+    window.addEventListener("resize", handleResize);
+  }, []);
 
-      try {
-        const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${currentUser.auth_token}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify({
-            recording_msid: recordingMSID,
-            recording_mbid: recordingMBID,
-            score,
-          }),
-        });
-        if (!response.ok) {
-          // Revert the feedback UI in case of failure
-          setCurrentListenFeedback(0);
-          throw response.statusText;
-        }
-      } catch (error) {
-        toast.error(
-          <ToastMsg
-            title="Error while submitting feedback"
-            message={error?.message ?? error.toString()}
-          />,
-          { toastId: "submit-feedback-error" }
+  const submitFeedback = React.useCallback(
+    async (score: ListenFeedBack) => {
+      if (currentUser?.auth_token) {
+        setCurrentListenFeedback(score);
+
+        const recordingMSID = getRecordingMSID(
+          brainzPlayerContextRef.current.currentListen as Listen
         );
+        const recordingMBID = getRecordingMBID(
+          brainzPlayerContextRef.current.currentListen as Listen
+        );
+
+        try {
+          const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${currentUser.auth_token}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify({
+              recording_msid: recordingMSID,
+              recording_mbid: recordingMBID,
+              score,
+            }),
+          });
+          if (!response.ok) {
+            // Revert the feedback UI in case of failure
+            setCurrentListenFeedback(0);
+            throw response.statusText;
+          }
+        } catch (error) {
+          toast.error(
+            <ToastMsg
+              title="Error while submitting feedback"
+              message={error?.message ?? error.toString()}
+            />,
+            { toastId: "submit-feedback-error" }
+          );
+        }
       }
-    }
-  }
+    },
+    [currentUser.auth_token, listenBrainzAPIBaseURI]
+  );
 
-  const {
-    children: dataSources,
-    playerPaused,
-    trackName,
-    artistName,
-    progressMs,
-    durationMs,
-    playPreviousTrack,
-    togglePlay,
-    playNextTrack,
-    seekToPositionMs,
-    disabled,
-    clearQueue,
-  } = props;
-
-  const isPlayingATrack = Boolean(currentListen);
-  const recordingMSID = getRecordingMSID(currentListen as Listen);
-  const recordingMBID = getRecordingMBID(currentListen as Listen);
+  const isPlayingATrack = Boolean(brainzPlayerContextRef.current.currentListen);
+  const recordingMSID = getRecordingMSID(
+    brainzPlayerContextRef.current.currentListen as Listen
+  );
+  const recordingMBID = getRecordingMBID(
+    brainzPlayerContextRef.current.currentListen as Listen
+  );
   const showFeedback =
     (Boolean(recordingMSID) || Boolean(recordingMBID)) && isPlayingATrack;
   const playbackDisabledText = "Playback disabled in preferences";
 
   const [showQueue, setShowQueue] = React.useState(false);
   const [showVolume, setShowVolume] = React.useState(false);
+  const [showMusicPlayer, setShowMusicPlayer] = React.useState(false);
 
-  const toggleRepeatMode = () => {
-    dispatch({ type: "TOGGLE_REPEAT_MODE" });
+  const toggleShowVolume = () => {
+    setShowVolume((prevValue) => !prevValue);
   };
+
+  const [musicPlayerColorPalette, setMusicPlayerColorPalette] = React.useState<
+    Palette
+  >();
+
+  const toggleQueue = React.useCallback(() => {
+    setShowQueue((prevShowQueue) => !prevShowQueue);
+  }, []);
+
+  const toggleMusicPlayer = React.useCallback(() => {
+    setShowMusicPlayer((prevShow) => !prevShow);
+  }, []);
+
+  const toggleRepeatMode = React.useCallback(() => {
+    dispatch({ type: "TOGGLE_REPEAT_MODE" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
+
+  React.useEffect(() => {
+    if (!brainzPlayerContextRef.current.currentTrackCoverURL) {
+      return;
+    }
+    VibrantLibrary.from(brainzPlayerContextRef.current.currentTrackCoverURL)
+      .getPalette()
+      .then((palette) => {
+        setMusicPlayerColorPalette(palette);
+      });
+  }, [brainzPlayerContextRef.current.currentTrackCoverURL]);
+
+  let musicPlayerBackground = `linear-gradient(to bottom, ${COLOR_LB_BLUE} 30%, ${COLOR_LB_ORANGE})`;
+  let musicPlayerTextColor1 = "white";
+  let musicPlayerTextColor2 = "white";
+  let musicPlayerTextColor3 = "white";
+
+  if (musicPlayerColorPalette) {
+    const {
+      Vibrant,
+      DarkVibrant,
+      LightVibrant,
+      Muted,
+      DarkMuted,
+      LightMuted,
+    } = musicPlayerColorPalette;
+
+    musicPlayerBackground = `linear-gradient(to bottom, ${Vibrant?.hex} 60%, ${DarkVibrant?.hex})`;
+
+    musicPlayerTextColor1 = tinycolor
+      .mostReadable(Vibrant!.hex, [
+        Muted!.hex,
+        LightMuted!.hex,
+        LightVibrant!.hex,
+        DarkMuted!.hex,
+      ])
+      .toHexString();
+
+    musicPlayerTextColor2 = tinycolor
+      .mostReadable(DarkVibrant!.hex, [
+        Muted!.hex,
+        LightMuted!.hex,
+        LightVibrant!.hex,
+        DarkMuted!.hex,
+      ])
+      .toHexString();
+
+    musicPlayerTextColor3 = DarkMuted!.hex;
+
+    // Ensure the choice of colours was reasonable, use black or white instead if not readable
+    if (!tinycolor.isReadable(musicPlayerTextColor1, Vibrant!.hex)) {
+      musicPlayerTextColor1 = Vibrant!.bodyTextColor;
+    }
+    if (
+      !tinycolor.isReadable(musicPlayerTextColor2, DarkVibrant!.hex, {
+        size: "large",
+      })
+    ) {
+      musicPlayerTextColor2 = DarkVibrant!.bodyTextColor;
+    }
+  }
 
   return (
     <>
       <div className={`volume ${showVolume ? "show" : ""}`}>
         <VolumeControlButton />
       </div>
-
-      <div className={`queue ${showQueue ? "show" : ""}`}>
+      <div
+        className={`music-player ${showMusicPlayer ? "open" : ""}`}
+        style={
+          {
+            "--music-player-background": musicPlayerBackground,
+            "--music-player-text-color-1": musicPlayerTextColor1,
+            "--music-player-text-color-2": musicPlayerTextColor2,
+            "--music-player-accent-color": musicPlayerTextColor3,
+          } as React.CSSProperties
+        }
+      >
+        <MusicPlayer
+          onHide={toggleMusicPlayer}
+          toggleQueue={toggleQueue}
+          playPreviousTrack={playPreviousTrack}
+          playNextTrack={playNextTrack}
+          togglePlay={togglePlay}
+          toggleShowVolume={toggleShowVolume}
+          seekToPositionMs={seekToPositionMs}
+          toggleRepeatMode={toggleRepeatMode}
+          submitFeedback={submitFeedback}
+          currentListenFeedback={currentListenFeedback}
+          musicPlayerCoverArtRef={musicPlayerCoverArtRef}
+          disabled={disabled}
+        />
+      </div>
+      <div
+        className={`queue ${showQueue ? "show" : ""} ${
+          isMobile ? "mobile" : ""
+        }`}
+      >
         <Queue clearQueue={clearQueue} onHide={() => setShowQueue(false)} />
       </div>
       <div
         id="brainz-player"
+        className={isPlayingATrack ? "playing" : ""}
         aria-label="Playback control"
         data-testid="brainzplayer-ui"
       >
-        <ProgressBar
-          progressMs={progressMs}
-          durationMs={durationMs}
-          seekToPositionMs={seekToPositionMs}
-        />
+        {!showMusicPlayer && (
+          <ProgressBar seekToPositionMs={seekToPositionMs} />
+        )}
         <div className="content">
-          <div className="cover-art">
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+          <div
+            className="cover-art"
+            onClick={isMobile ? toggleMusicPlayer : noop}
+          >
             <div className="no-album-art" />
             {dataSources}
           </div>
           <div className={isPlayingATrack ? "currently-playing" : ""}>
-            {trackName && (
-              <div title={trackName} className="ellipsis-2-lines">
-                {trackName}
+            {brainzPlayerContextRef.current.currentTrackName && (
+              <div
+                title={brainzPlayerContextRef.current.currentTrackName}
+                className="ellipsis-2-lines"
+              >
+                {brainzPlayerContextRef.current.currentTrackName}
               </div>
             )}
-            {artistName && (
-              <span className="small text-muted ellipsis" title={artistName}>
-                {artistName}
+            {brainzPlayerContextRef.current.currentTrackArtist && (
+              <span
+                className="small text-muted ellipsis"
+                title={brainzPlayerContextRef.current.currentTrackArtist}
+              >
+                {brainzPlayerContextRef.current.currentTrackArtist}
               </span>
             )}
           </div>
-          {isPlayingATrack && (
+          {isPlayingATrack && !isMobile && (
             <div className="elapsed small text-muted">
-              {millisecondsToStr(progressMs)}&#8239;/&#8239;
-              {millisecondsToStr(durationMs)}
+              {millisecondsToStr(brainzPlayerContextRef.current.progressMs)}
+              &#8239;/&#8239;
+              {millisecondsToStr(brainzPlayerContextRef.current.durationMs)}
             </div>
           )}
         </div>
@@ -246,18 +386,26 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           className="controls"
           title={disabled ? playbackDisabledText : undefined}
         >
-          <PlaybackControlButton
-            className="previous"
-            title="Previous"
-            action={playPreviousTrack}
-            icon={faFastBackward}
-            disabled={disabled}
-          />
+          {!isMobile && (
+            <PlaybackControlButton
+              className="previous"
+              title="Previous"
+              action={playPreviousTrack}
+              icon={faFastBackward}
+              disabled={disabled}
+            />
+          )}
           <PlaybackControlButton
             className="play"
             action={togglePlay}
-            title={`${playerPaused ? "Play" : "Pause"}`}
-            icon={playerPaused ? faPlayCircle : faPauseCircle}
+            title={`${
+              brainzPlayerContextRef.current.playerPaused ? "Play" : "Pause"
+            }`}
+            icon={
+              brainzPlayerContextRef.current.playerPaused
+                ? faPlayCircle
+                : faPauseCircle
+            }
             size="2x"
             disabled={disabled}
           />
@@ -270,53 +418,64 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           />
         </div>
         <div className="actions">
-          {isPlayingATrack && currentDataSourceName && (
+          {isPlayingATrack && currentDataSource?.name && (
             <>
               <a
-                href={trackUrl || "#"}
+                href={brainzPlayerContextRef.current.currentTrackURL || "#"}
                 className="music-service-icon"
-                aria-label={`Open in ${currentDataSourceName}`}
-                title={`Open in ${currentDataSourceName}`}
+                aria-label={`Open in ${currentDataSource.name}`}
+                title={`Open in ${currentDataSource.name}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <FontAwesomeIcon
-                  icon={currentDataSourceIcon!}
-                  color={currentDataSourceIconColor}
+                  icon={currentDataSource.icon}
+                  color={currentDataSource.iconColor}
                 />
               </a>
-              <FontAwesomeIcon
-                icon={faVolumeUp}
-                style={{ color: showVolume ? "green" : "" }}
-                onClick={() => setShowVolume(!showVolume)}
-                className="hidden-xs"
-              />
+              {!isMobile && (
+                <FontAwesomeIcon
+                  icon={faVolumeUp}
+                  style={{ color: showVolume ? "green" : "" }}
+                  onClick={() => setShowVolume(!showVolume)}
+                  className="d-none d-md-block"
+                />
+              )}
             </>
           )}
+          {isMobile ? (
+            <FontAwesomeIcon icon={faMaximize} onClick={toggleMusicPlayer} />
+          ) : (
+            <FontAwesomeIcon icon={faBarsStaggered} onClick={toggleQueue} />
+          )}
 
-          <FontAwesomeIcon
-            icon={faBarsStaggered}
-            style={{ color: showQueue ? "green" : "" }}
-            onClick={() => setShowQueue((prevShowQueue) => !prevShowQueue)}
-          />
-          <FontAwesomeIcon
-            icon={queueRepeatMode.icon}
-            title={queueRepeatMode.title}
-            style={{ color: queueRepeatMode.color }}
-            onClick={toggleRepeatMode}
-          />
-          {showFeedback && (
+          {!isMobile && (
+            <FontAwesomeIcon
+              icon={brainzPlayerContextRef.current.queueRepeatMode.icon}
+              title={brainzPlayerContextRef.current.queueRepeatMode.title}
+              style={{
+                color: brainzPlayerContextRef.current.queueRepeatMode.color,
+              }}
+              onClick={toggleRepeatMode}
+            />
+          )}
+          {showFeedback && !isMobile && (
             <>
               <FontAwesomeIcon
                 icon={faHeart}
                 title="Love"
                 onClick={
                   isPlayingATrack
-                    ? () => submitFeedback(currentListenFeedback === 1 ? 0 : 1)
+                    ? () =>
+                        submitFeedback(
+                          currentListenFeedback === FeedbackValue.LIKE
+                            ? FeedbackValue.NEUTRAL
+                            : FeedbackValue.LIKE
+                        )
                     : undefined
                 }
                 className={`love ${
-                  currentListenFeedback === 1 ? " loved" : ""
+                  currentListenFeedback === FeedbackValue.LIKE ? " loved" : ""
                 }${!isPlayingATrack ? " disabled" : ""}`}
               />
               <FontAwesomeIcon
@@ -325,11 +484,17 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                 onClick={
                   isPlayingATrack
                     ? () =>
-                        submitFeedback(currentListenFeedback === -1 ? 0 : -1)
+                        submitFeedback(
+                          currentListenFeedback === FeedbackValue.DISLIKE
+                            ? FeedbackValue.NEUTRAL
+                            : FeedbackValue.DISLIKE
+                        )
                     : undefined
                 }
                 className={`hate ${
-                  currentListenFeedback === -1 ? " hated" : ""
+                  currentListenFeedback === FeedbackValue.DISLIKE
+                    ? " hated"
+                    : ""
                 }${!isPlayingATrack ? " disabled" : ""}`}
               />
             </>
@@ -340,11 +505,17 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               <FontAwesomeIcon icon={faSlash} />
             </span>
           ) : (
-            <MenuOptions currentListen={currentListen} />
+            !isMobile && (
+              <MenuOptions
+                currentListen={brainzPlayerContextRef.current.currentListen}
+              />
+            )
           )}
-          <Link to="/settings/brainzplayer/">
-            <FontAwesomeIcon icon={faCog} title="Player preferences" />
-          </Link>
+          {!isMobile && (
+            <Link to="/settings/brainzplayer/">
+              <FontAwesomeIcon icon={faCog} title="Player preferences" />
+            </Link>
+          )}
         </div>
       </div>
     </>

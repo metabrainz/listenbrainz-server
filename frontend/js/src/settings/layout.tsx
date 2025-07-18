@@ -5,7 +5,7 @@ import {
   Outlet,
   ScrollRestoration,
   useLocation,
-} from "react-router-dom";
+} from "react-router";
 
 type Section = {
   title: string;
@@ -20,6 +20,7 @@ const sections: Section[] = [
       { to: "brainzplayer/", label: "Music player" },
       { to: "import/", label: "Import listens" },
       { to: "link-listens/", label: "Link listens" },
+      { to: "../add-data/", label: "Submitting data" },
     ],
   },
   {

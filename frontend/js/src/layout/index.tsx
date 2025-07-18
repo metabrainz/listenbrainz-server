@@ -1,19 +1,24 @@
 import * as React from "react";
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import { Outlet, ScrollRestoration } from "react-router";
 import { ToastContainer } from "react-toastify";
 
 import { Provider as NiceModalProvider } from "@ebay/nice-modal-react";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import BrainzPlayer from "../common/brainzplayer/BrainzPlayer";
 import ProtectedRoutes from "../utils/ProtectedRoutes";
+
+const BrainzPlayer = React.lazy(() =>
+  import("../common/brainzplayer/BrainzPlayer")
+);
 
 export default function Layout({
   children,
   withProtectedRoutes,
+  withBrainzPlayer = true,
 }: {
   children?: React.ReactNode;
   withProtectedRoutes?: boolean;
+  withBrainzPlayer?: boolean;
 }) {
   return (
     <NiceModalProvider>
@@ -34,7 +39,11 @@ export default function Layout({
           {!withProtectedRoutes && <Outlet />}
           {children}
           {withProtectedRoutes && <ProtectedRoutes />}
-          <BrainzPlayer />
+          {withBrainzPlayer ? (
+            <React.Suspense>
+              <BrainzPlayer />
+            </React.Suspense>
+          ) : null}
         </div>
         <Footer />
       </div>

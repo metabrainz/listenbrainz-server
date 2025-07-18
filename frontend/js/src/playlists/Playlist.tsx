@@ -13,17 +13,12 @@ import {
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
-import {
-  Link,
-  useLoaderData,
-  useNavigate,
-  useRevalidator,
-} from "react-router-dom";
+import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";
@@ -44,6 +39,7 @@ import {
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
+import DuplicateTrackModal from "./components/DuplicateTrackModal";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -97,13 +93,14 @@ export default function PlaylistPage() {
 
   // Ref
   const socketRef = React.useRef<Socket | null>(null);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputRef = React.useRef<SearchInputImperativeHandle>(null);
 
   // States
   const [playlist, setPlaylist] = React.useState<JSPFPlaylist>(
     playlistProps?.playlist || {}
   );
   const { track: tracks } = playlist;
+  const [dontAskAgain, setDontAskAgain] = React.useState(false);
 
   React.useEffect(() => {
     setPlaylist(playlistProps?.playlist || {});
@@ -220,6 +217,28 @@ export default function PlaylistPage() {
     }
     try {
       const jspfTrack = makeJSPFTrack(selectedTrackMetadata);
+
+      // check if the track is already in the playlist
+      const trackMBID = getRecordingMBIDFromJSPFTrack(jspfTrack);
+      const isDuplicate = playlist.track.some((track) => {
+        const existingMBID = getRecordingMBIDFromJSPFTrack(track);
+        return existingMBID === trackMBID;
+      });
+      if (isDuplicate && !dontAskAgain) {
+        const [confirmed, dontAskAgainValue] = await NiceModal.show<
+          [boolean, boolean],
+          any
+        >(DuplicateTrackModal, {
+          message:
+            "This track is already in the playlist. Do you want to add it anyway?",
+          dontAskAgain,
+        });
+        setDontAskAgain(dontAskAgainValue);
+        if (!confirmed) {
+          return;
+        }
+      }
+
       await APIService.addPlaylistItems(
         currentUser.auth_token,
         getPlaylistId(playlist),
@@ -344,6 +363,9 @@ export default function PlaylistPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
 
+  const [showMore, setShowMore] = React.useState(false);
+  const isLongDescription =
+    playlist?.annotation && playlist.annotation.length > 400;
   return (
     <div role="main">
       <Helmet>
@@ -375,14 +397,17 @@ export default function PlaylistPage() {
           className="cover-art"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: sanitize(
+            __html: DOMPurify.sanitize(
               coverArt ??
                 "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
           title={`Cover art for ${playlist.title}`}
         />
-        <div className="playlist-info">
+        <div
+          className="playlist-info"
+          style={showMore ? { maxHeight: "fit-content" } : {}}
+        >
           <h1>{playlist.title}</h1>
           <div className="details h4">
             <div>
@@ -418,39 +443,44 @@ export default function PlaylistPage() {
                 <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
               )}
             </div>
-            <small className="help-block">
-              <div>Created: {new Date(playlist.date).toLocaleString()}</div>
+            <small className="form-text">
+              Created: {new Date(playlist.date).toLocaleString()}
             </small>
             {customFields?.last_modified_at && (
-              <small className="help-block">
-                <div>
-                  Last modified:{" "}
-                  {new Date(customFields.last_modified_at).toLocaleString()}
-                </div>
+              <small className="form-text">
+                Last modified:{" "}
+                {new Date(customFields.last_modified_at).toLocaleString()}
               </small>
             )}
             {customFields?.copied_from && (
-              <small className="help-block">
-                <div>
-                  Copied from:
-                  <a href={sanitizeUrl(customFields.copied_from)}>
-                    {customFields.copied_from.substr(
-                      PLAYLIST_URI_PREFIX.length
-                    )}
-                  </a>
-                </div>
+              <small className="form-text">
+                Copied from:
+                <a href={sanitizeUrl(customFields.copied_from)}>
+                  {customFields.copied_from.substr(PLAYLIST_URI_PREFIX.length)}
+                </a>
               </small>
             )}
           </div>
           {playlist.annotation && (
-            <div className="wikipedia-extract">
+            <div>
               <div
-                className="content"
+                className={`${isLongDescription ? "text-summary long" : ""} ${
+                  showMore ? "expanded" : ""
+                }`}
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: sanitize(playlist.annotation),
+                  __html: DOMPurify.sanitize(playlist.annotation),
                 }}
               />
+              {isLongDescription && (
+                <button
+                  className="btn btn-link pull-right"
+                  type="button"
+                  onClick={() => setShowMore(!showMore)}
+                >
+                  {showMore ? "Show Less" : "Show More"}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -461,9 +491,9 @@ export default function PlaylistPage() {
                 className="btn btn-info dropdown-toggle"
                 type="button"
                 id="playlistOptionsDropdown"
-                data-toggle="dropdown"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
-                aria-expanded="true"
+                aria-expanded="false"
               >
                 <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                 &nbsp;Options
@@ -481,8 +511,6 @@ export default function PlaylistPage() {
               <button
                 type="button"
                 className="btn btn-icon btn-info btn-sm atom-button"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {
@@ -503,7 +531,7 @@ export default function PlaylistPage() {
       <div
         id="playlist"
         data-testid="playlist"
-        className="col-md-8 col-md-offset-2"
+        className="col-md-8 offset-md-2"
       >
         <div className="header">
           <h3 className="header-with-line">

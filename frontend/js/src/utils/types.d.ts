@@ -90,10 +90,6 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
-declare type SoundCloudUser = {
-  access_token?: string;
-};
-
 declare type MetaBrainzProjectUser = {
   access_token?: string;
 };
@@ -106,6 +102,14 @@ declare type BrainzPlayerError =
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
+  };
+};
+
+declare type LatestImportResponse = {
+  latest_import: number;
+  status?: {
+    state: ImportStatusT;
+    count: number;
   };
 };
 
@@ -288,6 +292,19 @@ declare type UserDailyActivityResponse = {
   };
 };
 
+declare type UserArtistActivityResponse = {
+  result: Array<{
+    name: string;
+    listen_count: number;
+    artist_mbid: string | null;
+    albums: Array<{
+      name: string;
+      listen_count: number;
+      release_group_mbid: string;
+    }>;
+  }>;
+};
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
@@ -307,6 +324,12 @@ declare type UserArtistMapResponse = {
       listen_count: number;
       artists: Array<UserArtistMapArtist>;
     }>;
+  };
+};
+
+declare type CountryFeature = ChoroplethBoundFeature & {
+  properties: {
+    name: string;
   };
 };
 
@@ -483,13 +506,24 @@ type EventTypeT =
   | "block_follow"
   | "notification"
   | "personal_recording_recommendation"
-  | "critiquebrainz_review";
+  | "critiquebrainz_review"
+  | "thanks";
 
 type UserRelationshipEventMetadata = {
   user_name_0: string;
   user_name_1: string;
   relationship_type: "follow";
   created: number;
+};
+
+type ThanksMetadata = {
+  original_event_id: number;
+  original_event_type: EventTypeT;
+  blurb_content: string;
+  thanker_id: number;
+  thanker_username: string;
+  thankee_id: number;
+  thankee_username: string;
 };
 
 type NotificationEventMetadata = {
@@ -502,7 +536,8 @@ type EventMetadata =
   | PinEventMetadata
   | NotificationEventMetadata
   | UserTrackPersonalRecommendationMetadata
-  | CritiqueBrainzReview;
+  | CritiqueBrainzReview
+  | ThanksMetadata;
 
 type TimelineEvent<T extends EventMetadata> = {
   event_type: EventTypeT;
@@ -658,11 +693,11 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
     "spotify" | "youtube" | "soundcloud" | "appleMusic"
   >;
 };
-
 
 declare type UserPreferences = {
   saveData?: boolean;
@@ -679,3 +714,9 @@ declare type BrainzPlayerQueueItem = Listen & {
 };
 
 declare type BrainzPlayerQueue = BrainzPlayerQueueItem[];
+
+type SearchInputImperativeHandle = {
+  focus(): void;
+  triggerSearch(newText: string): void;
+  reset(): void;
+};

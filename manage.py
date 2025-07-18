@@ -1,6 +1,6 @@
-from listenbrainz.manage import cli
-import listenbrainz.db.dump_manager as dump_manager
 import listenbrainz.spark.request_manage as spark_request_manage
+from listenbrainz.dumps import manager as dump_manager
+from listenbrainz.manage import cli
 
 # Add other commands here
 cli.add_command(spark_request_manage.cli, name="spark")

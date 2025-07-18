@@ -1,11 +1,12 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useContext, useState, useRef } from "react";
 import DateTimePicker from "react-datetime-picker/dist/entry.nostyle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { add } from "date-fns";
 import { get } from "lodash";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -101,12 +102,11 @@ export default NiceModal.create(() => {
   const [customTimestamp, setCustomTimestamp] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invertOrder, setInvertOrder] = useState(false);
-
-  const closeModal = useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
+  const [keepModalOpen, setKeepModalOpen] = useState(false);
+  // Used for the automatic switching and search trigger if pasting URL for another entity type
+  const [textToSearch, setTextToSearch] = useState<string>();
+  const addSingleListenRef = useRef<{ reset: () => void }>(null);
+  const addAlbumListensRef = useRef<{ reset: () => void }>(null);
 
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
@@ -124,243 +124,285 @@ export default NiceModal.create(() => {
     []
   );
 
-  const submitListens = useCallback(async () => {
-    if (auth_token) {
-      let payload: Listen[] = [];
-      const listenType: ListenType =
-        selectedListens?.length <= 1 ? "single" : "import";
-      // Use the user-selected date, default to "now"
-      const date = customTimestamp ? selectedDate : new Date();
-      if (selectedListens?.length) {
-        let orderedSelectedListens = [...selectedListens];
-        if (invertOrder) {
-          orderedSelectedListens = orderedSelectedListens.reverse();
-        }
-        let cumulativeDateTime = date;
-        payload = orderedSelectedListens.map((listen) => {
-          // Now we need to set the listening time for each listen
-          const modifiedListen = { ...listen };
-          const durationMS = get(
-            modifiedListen,
-            "track_metadata.additional_info.duration_ms"
-          );
-          const timeToAdd =
-            (durationMS && durationMS / 1000) ??
-            modifiedListen.track_metadata.additional_info?.duration ??
-            DEFAULT_TRACK_LENGTH_SECONDS;
-          // We either use the previous value of cumulativeDateTime,
-          // or if inverting listening order directly use the new value newTime
-          const newTime = add(cumulativeDateTime, {
-            seconds: invertOrder ? -timeToAdd : timeToAdd,
-          });
+  const submitListens = useCallback(
+    async (e?: React.FormEvent<HTMLFormElement>) => {
+      if (e) e.preventDefault();
+      if (auth_token) {
+        let payload: Listen[] = [];
+        const listenType: ListenType =
+          selectedListens?.length <= 1 ? "single" : "import";
+        // Use the user-selected date, default to "now"
+        const date = customTimestamp ? selectedDate : new Date();
+        if (selectedListens?.length) {
+          let orderedSelectedListens = [...selectedListens];
           if (invertOrder) {
-            modifiedListen.listened_at = convertDateToUnixTimestamp(newTime);
-          } else {
-            modifiedListen.listened_at = convertDateToUnixTimestamp(
-              cumulativeDateTime
-            );
+            orderedSelectedListens = orderedSelectedListens.reverse();
           }
-          // Then we assign the new time value for the next iteration
-          cumulativeDateTime = newTime;
-          return modifiedListen;
-        });
-      }
-      if (!payload?.length) {
-        return;
-      }
-      const listenOrListens = payload.length > 1 ? "listens" : "listen";
-      try {
-        const response = await APIService.submitListens(
-          auth_token,
-          listenType,
-          payload
-        );
-        await APIService.checkStatus(response);
+          let cumulativeDateTime = date;
 
-        toast.success(
+          payload = orderedSelectedListens.map((listen) => {
+            // Now we need to set the listening time for each listen
+            const modifiedListen = { ...listen };
+            const durationMS = get(
+              modifiedListen,
+              "track_metadata.additional_info.duration_ms"
+            );
+            const timeToAdd =
+              (durationMS && durationMS / 1000) ??
+              modifiedListen.track_metadata.additional_info?.duration ??
+              DEFAULT_TRACK_LENGTH_SECONDS;
+            // We either use the previous value of cumulativeDateTime,
+            // or if inverting listening order directly use the new value newTime
+            const newTime = add(cumulativeDateTime, {
+              seconds: invertOrder ? -timeToAdd : timeToAdd,
+            });
+            if (invertOrder) {
+              modifiedListen.listened_at = convertDateToUnixTimestamp(newTime);
+            } else {
+              modifiedListen.listened_at = convertDateToUnixTimestamp(
+                cumulativeDateTime
+              );
+            }
+            // Then we assign the new time value for the next iteration
+            cumulativeDateTime = newTime;
+            return modifiedListen;
+          });
+        }
+        if (!payload?.length) {
+          return;
+        }
+        const listenOrListens = payload.length > 1 ? "listens" : "listen";
+        try {
+          const response = await APIService.submitListens(
+            auth_token,
+            listenType,
+            payload
+          );
+          await APIService.checkStatus(response);
+
+          toast.success(
+            <ToastMsg
+              title="Success"
+              message={`You added ${payload.length} ${listenOrListens}`}
+            />,
+            { toastId: "added-listens-success" }
+          );
+
+          if (!keepModalOpen) {
+            modal.hide();
+          } else {
+            // Reset the form state but keep the modal open
+            setSelectedListens([]);
+            setTextToSearch("");
+            if (listenOption === SubmitListenType.track) {
+              addSingleListenRef.current?.reset();
+            } else if (listenOption === SubmitListenType.album) {
+              addAlbumListensRef.current?.reset();
+            }
+          }
+        } catch (error) {
+          handleError(
+            error,
+            `Error while submitting ${payload.length} ${listenOrListens}`
+          );
+        }
+      } else {
+        toast.error(
           <ToastMsg
-            title="Success"
-            message={`You added ${payload.length} ${listenOrListens}`}
+            title="You need to be logged in to submit listens"
+            message={<Link to="/login/">Log in here</Link>}
           />,
-          { toastId: "added-listens-success" }
-        );
-        closeModal();
-      } catch (error) {
-        handleError(
-          error,
-          `Error while submitting ${payload.length} ${listenOrListens}`
+          { toastId: "auth-error" }
         );
       }
-    } else {
-      toast.error(
-        <ToastMsg
-          title="You need to be logged in to submit listens"
-          message={<Link to="/login/">Log in here</Link>}
-        />,
-        { toastId: "auth-error" }
-      );
-    }
-  }, [
-    auth_token,
-    selectedListens,
-    customTimestamp,
-    selectedDate,
-    invertOrder,
-    APIService,
-    closeModal,
-    handleError,
-  ]);
+    },
+    [
+      auth_token,
+      selectedListens,
+      customTimestamp,
+      selectedDate,
+      invertOrder,
+      APIService,
+      modal,
+      handleError,
+      keepModalOpen,
+      listenOption,
+      addSingleListenRef,
+      addAlbumListensRef,
+    ]
+  );
+
+  const switchMode = React.useCallback(
+    (pastedURL: string) => {
+      if (listenOption === SubmitListenType.track) {
+        setListenOption(SubmitListenType.album);
+      } else if (listenOption === SubmitListenType.album) {
+        setListenOption(SubmitListenType.track);
+      }
+      setTimeout(() => {
+        // Trigger search in the inner (grandchild) search input component by modifying the textToSearch prop in child component
+        // Give it some time to allow re-render and trigger search in the correct child component
+        setTextToSearch(pastedURL);
+      }, 200);
+      setTimeout(() => {
+        // Reset text trigger
+        setTextToSearch("");
+      }, 500);
+    },
+    [listenOption]
+  );
 
   const userLocale = navigator.languages?.length
     ? navigator.languages[0]
     : navigator.language;
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Add Listens"
       id="AddListenModal"
-      tabIndex={-1}
-      role="dialog"
       aria-labelledby="AddListenModalLabel"
-      data-backdrop="static"
     >
-      <div className="modal-dialog" role="document">
-        <form className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={closeModal}
+      <Modal.Header closeButton>
+        <Modal.Title id="AddListenModalLabel">Add Listens</Modal.Title>
+      </Modal.Header>
+      <form onSubmit={submitListens}>
+        <Modal.Body>
+          <div className="add-listen-header">
+            <Pill
+              active={listenOption === SubmitListenType.track}
+              onClick={() => {
+                setListenOption(SubmitListenType.track);
+              }}
+              type="secondary"
             >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4 className="modal-title" id="AddListenModalLabel">
-              Add Listens
-            </h4>
+              Add track
+            </Pill>
+            <Pill
+              active={listenOption === SubmitListenType.album}
+              onClick={() => {
+                setListenOption(SubmitListenType.album);
+              }}
+              type="secondary"
+            >
+              Add album
+            </Pill>
           </div>
-          <div className="modal-body">
-            <div className="add-listen-header">
+          {listenOption === SubmitListenType.track && (
+            <AddSingleListen
+              onPayloadChange={setSelectedListens}
+              switchMode={switchMode}
+              initialText={textToSearch}
+            />
+          )}
+          {listenOption === SubmitListenType.album && (
+            <AddAlbumListens
+              onPayloadChange={setSelectedListens}
+              switchMode={switchMode}
+              initialText={textToSearch}
+            />
+          )}
+          <hr />
+          <div className="timestamp">
+            <h5>Timestamp</h5>
+            <div className="timestamp-entities">
               <Pill
-                active={listenOption === SubmitListenType.track}
+                active={customTimestamp === false}
                 onClick={() => {
-                  setListenOption(SubmitListenType.track);
+                  setCustomTimestamp(false);
+                  setSelectedDate(new Date());
                 }}
                 type="secondary"
               >
-                Add track
+                Now
               </Pill>
               <Pill
-                active={listenOption === SubmitListenType.album}
+                active={customTimestamp === true}
                 onClick={() => {
-                  setListenOption(SubmitListenType.album);
+                  setCustomTimestamp(true);
+                  setSelectedDate(new Date());
                 }}
                 type="secondary"
               >
-                Add album
+                Custom
               </Pill>
-            </div>
-            {listenOption === SubmitListenType.track && (
-              <AddSingleListen onPayloadChange={setSelectedListens} />
-            )}
-            {listenOption === SubmitListenType.album && (
-              <AddAlbumListens onPayloadChange={setSelectedListens} />
-            )}
-            <hr />
-            <div className="timestamp">
-              <h5>Timestamp</h5>
-              <div className="timestamp-entities">
-                <Pill
-                  active={customTimestamp === false}
-                  onClick={() => {
-                    setCustomTimestamp(false);
-                    setSelectedDate(new Date());
-                  }}
-                  type="secondary"
-                >
-                  Now
-                </Pill>
-                <Pill
-                  active={customTimestamp === true}
-                  onClick={() => {
-                    setCustomTimestamp(true);
-                    setSelectedDate(new Date());
-                  }}
-                  type="secondary"
-                >
-                  Custom
-                </Pill>
-                <div className="timestamp-date-picker">
-                  <div>
-                    <label htmlFor="starts-at">
-                      <input
-                        name="invert-timestamp"
-                        type="radio"
-                        checked={invertOrder === false}
-                        id="starts-at"
-                        aria-label="Set the time of the beginning of the album"
-                        onChange={() => {
-                          setInvertOrder(false);
-                        }}
-                      />
-                      &nbsp;Starts at:
-                    </label>
-                    <label htmlFor="ends-at">
-                      <input
-                        name="invert-timestamp"
-                        type="radio"
-                        checked={invertOrder === true}
-                        id="ends-at"
-                        aria-label="Set the time of the end of the album"
-                        onChange={() => {
-                          setInvertOrder(true);
-                        }}
-                      />
-                      &nbsp;Finishes at:
-                    </label>
-                  </div>
-                  <DateTimePicker
-                    value={selectedDate}
-                    onChange={(newDateTimePickerValue: Date) => {
-                      setSelectedDate(newDateTimePickerValue);
-                    }}
-                    calendarIcon={
-                      <FontAwesomeIcon icon={faCalendar as IconProp} />
-                    }
-                    maxDate={new Date()}
-                    clearIcon={null}
-                    format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
-                    locale={userLocale}
-                    maxDetail="second"
-                    disabled={!customTimestamp}
-                  />
+              <div className="timestamp-date-picker">
+                <div>
+                  <label className="form-label" htmlFor="starts-at">
+                    <input
+                      name="invert-timestamp"
+                      type="radio"
+                      checked={invertOrder === false}
+                      id="starts-at"
+                      aria-label="Set the time of the beginning of the album"
+                      onChange={() => {
+                        setInvertOrder(false);
+                      }}
+                    />
+                    &nbsp;Starts at:
+                  </label>
+                  <label className="form-label" htmlFor="ends-at">
+                    <input
+                      name="invert-timestamp"
+                      type="radio"
+                      checked={invertOrder === true}
+                      id="ends-at"
+                      aria-label="Set the time of the end of the album"
+                      onChange={() => {
+                        setInvertOrder(true);
+                      }}
+                    />
+                    &nbsp;Finishes at:
+                  </label>
                 </div>
+                <DateTimePicker
+                  value={selectedDate}
+                  onChange={(newDateTimePickerValue: Date) => {
+                    setSelectedDate(newDateTimePickerValue);
+                  }}
+                  calendarIcon={
+                    <FontAwesomeIcon icon={faCalendar as IconProp} />
+                  }
+                  maxDate={new Date()}
+                  clearIcon={null}
+                  format={userLocale ? undefined : "yyyy-MM-dd hh:mm:ss"}
+                  locale={userLocale}
+                  maxDetail="second"
+                  disabled={!customTimestamp}
+                />
               </div>
             </div>
           </div>
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-default"
-              data-dismiss="modal"
-              onClick={closeModal}
-            >
-              Close
-            </button>
-            <button
-              type="submit"
-              className="btn btn-success"
-              data-dismiss="modal"
-              disabled={!selectedListens?.length}
-              onClick={submitListens}
-            >
-              Submit {selectedListens.length ?? 0} listen
-              {selectedListens.length > 1 ? "s" : ""}
-            </button>
+        </Modal.Body>
+        <Modal.Footer className="d-flex align-items-center gap-3">
+          <div style={{ flex: 1 }}>
+            <label style={{ userSelect: "none", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={keepModalOpen}
+                onChange={(e) => setKeepModalOpen(e.target.checked)}
+                style={{ marginRight: "0.5em" }}
+              />
+              Add another
+            </label>
           </div>
-        </form>
-      </div>
-    </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={modal.hide}
+          >
+            Close
+          </button>
+          <button
+            type="submit"
+            className="btn btn-success"
+            disabled={!selectedListens?.length}
+          >
+            Submit {selectedListens.length ?? 0} listen
+            {selectedListens.length > 1 ? "s" : ""}
+          </button>
+        </Modal.Footer>
+      </form>
+    </Modal>
   );
 });

@@ -1,6 +1,6 @@
 import { faSpinner, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { throttle } from "lodash";
+import { isFunction, throttle } from "lodash";
 import React, {
   forwardRef,
   useCallback,
@@ -15,8 +15,14 @@ import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
+import {
+  LB_ALBUM_MBID_REGEXP,
+  RECORDING_MBID_REGEXP,
+  RELEASE_GROUP_MBID_REGEXP,
+  RELEASE_MBID_REGEXP,
+  UUID_REGEXP,
+} from "./constants";
 
-const RECORDING_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/recording\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1500;
 
 type PayloadType = "trackmetadata" | "recording";
@@ -38,14 +44,21 @@ type SearchTrackOrMBIDProps = {
   autofocus?: boolean;
   defaultValue?: string;
   expectedPayload: PayloadType;
+  switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 } & ConditionalReturnValue;
 
-const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
+const SearchTrackOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchTrackOrMBIDProps
+>(function SearchTrackOrMBID(
   {
     onSelectRecording,
     expectedPayload,
     defaultValue,
     autofocus = true,
+    switchMode,
+    requiredInput = true,
   }: SearchTrackOrMBIDProps,
   inputRefForParent
 ) {
@@ -60,17 +73,26 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
   const inputRefLocal = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
 
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    setSelectedIndex(-1);
+    inputRefLocal?.current?.focus();
+  }, []);
+
   // Allow parents to focus on input
   useImperativeHandle(
     inputRefForParent,
-    () => {
-      return {
-        focus() {
-          inputRefLocal?.current?.focus();
-        },
-      };
-    },
-    []
+    () => ({
+      focus() {
+        inputRefLocal?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
   );
 
   // Autofocus once on load
@@ -132,10 +154,13 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
     () =>
       throttle(
         async (input: string, canonicalReleaseMBID?: string) => {
-          const newRecordingMBID = RECORDING_MBID_REGEXP.exec(
-            input
-          )![2].toLowerCase();
-
+          let newRecordingMBID =
+            RECORDING_MBID_REGEXP.exec(input)?.[1] ??
+            UUID_REGEXP.exec(input)?.[0];
+          if (!newRecordingMBID) {
+            return;
+          }
+          newRecordingMBID = newRecordingMBID?.toLowerCase();
           try {
             const recordingLookupResponse = (await lookupMBRecording(
               newRecordingMBID,
@@ -211,20 +236,22 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
     }
   };
 
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    setSelectedIndex(-1);
-    inputRefLocal?.current?.focus();
-  };
-
   useEffect(() => {
     if (!inputValue) {
       return;
     }
     setLoading(true);
-    const isValidUUID = RECORDING_MBID_REGEXP.test(inputValue);
-    if (isValidUUID) {
+    const isValidUUID = UUID_REGEXP.test(inputValue);
+    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    const isValidAlbumUUID =
+      RELEASE_MBID_REGEXP.test(inputValue) ||
+      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      LB_ALBUM_MBID_REGEXP.test(inputValue);
+    if (isValidAlbumUUID && isFunction(switchMode)) {
+      switchMode(inputValue);
+      return;
+    }
+    if (isValidUUID || isValidRecordingUUID) {
       throttledHandleValidMBID(inputValue);
     } else {
       throttledSearchTrack(inputValue);
@@ -246,17 +273,15 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
             setInputValue(event.target.value);
           }}
           placeholder="Track name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
         />
-        <span className="input-group-btn">
-          <button className="btn btn-default" type="button" onClick={reset}>
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faTimesCircle} />
-            )}
-          </button>
-        </span>
+        <button className="btn btn-secondary" type="button" onClick={reset}>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faTimesCircle} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"

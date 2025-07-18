@@ -1,30 +1,14 @@
 import json
-from copy import deepcopy
-from datetime import datetime
-from unittest.mock import patch
 
-import requests
 import orjson
+import requests
 from brainzutils.ratelimit import set_rate_limits
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import requests_mock
-
-from data.model.user_artist_map import UserArtistMapRecord
-
-from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.db import couchdb
 from listenbrainz.spark.handlers import handle_entity_listener
 from listenbrainz.tests.integration import IntegrationTestCase
-
-
-class MockDate(datetime):
-    """ Mock class for datetime which returns epoch """
-
-    @classmethod
-    def now(cls, tzinfo=None):
-        return cls.fromtimestamp(0)
 
 
 class StatsAPITestCase(IntegrationTestCase):
@@ -34,14 +18,11 @@ class StatsAPITestCase(IntegrationTestCase):
         super(StatsAPITestCase, cls).setUpClass()
 
         stats = ["artists", "releases", "recordings", "release_groups", "daily_activity", "listening_activity",
-                 "artistmap"]
+                 "artist_map"]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:
-                if stat == "artistmap":
-                    couchdb.create_database(f"{stat}_{range_}")
-                else:
-                    couchdb.create_database(f"{stat}_{range_}_20220718")
+                couchdb.create_database(f"{stat}_{range_}_20220718")
 
         # we do not clear the couchdb databases after each test. user stats keep working because
         # the user id changes for each test. for sitewide stats this is not the case as the user id
@@ -107,7 +88,7 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
             self.artist_map_payload[0]["user_id"] = self.user["id"]
-        database = 'artistmap_all_time'
+        database = 'artist_map_all_time_20220718'
         db_stats.insert(database, 0, 5, self.artist_map_payload)
 
         self.create_user_with_id(db_stats.SITEWIDE_STATS_USER_ID, 2, "listenbrainz-stats-user")
@@ -248,7 +229,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
         received = orjson.loads(response.data)['payload']
 
-        self.assertEqual(sent['count'], received['count'])
+        singular_entity = entity[:-1] if entity.endswith('s') else entity
+        self.assertEqual(sent[f'total_{singular_entity}_count'], received[f'total_{singular_entity}_count'])
+        self.assertEqual(count, received['count'])
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(stats_range, received['range'])
@@ -367,7 +350,6 @@ class StatsAPITestCase(IntegrationTestCase):
                     expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
 
-    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
     def test_artist_map_stat(self):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
         with self.subTest(f"test valid response is received for artist_map stats"):
@@ -380,98 +362,10 @@ class StatsAPITestCase(IntegrationTestCase):
                 with open(self.path_to_data_file(f'user_artist_map_db_data_for_api_test_{range_}.json'), 'r') as f:
                     payload = json.load(f)
                     payload[0]["user_id"] = self.user["id"]
-                db_stats.insert(f"artistmap_{range_}", 0, 5, payload)
+                db_stats.insert(f"artist_map_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
                                            query_string={'range': range_})
                 self.assertArtistMapEqual(payload, response)
-
-    @patch('listenbrainz.webserver.views.stats_api._get_country_wise_counts')
-    def test_artist_map_not_calculated(self, mock_get_country_wise_counts):
-        """ Test to make sure stats are calculated if not present in DB """
-        mock_get_country_wise_counts.return_value = [
-            UserArtistMapRecord(**country) for country in self.artist_map_payload[0]['data']
-        ]
-        couchdb.delete_data("artistmap_all_time", self.user['id'])
-        response = self.client.get(
-            self.custom_url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-            query_string={'range': 'all_time'})
-        self.assertArtistMapEqual(self.artist_map_payload, response)
-        mock_get_country_wise_counts.assert_called_once()
-
-    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
-    def test_artist_map_not_calculated_artist_stat_not_present(self):
-        """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
-        response = self.client.get(
-            self.custom_url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-            query_string={'range': 'this_month'})
-        self.assertEqual(response.status_code, 204)
-
-    def test_artist_map_stat_invalid_force_recalculate(self):
-        """ Test to make sure 400 is received if force_recalculate argument is invalid """
-        response = self.client.get(
-            self.custom_url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-            query_string={'force_recalculate': 'foobar'})
-        self.assert400(response)
-        self.assertEqual("Invalid value of force_recalculate: foobar", response.json['error'])
-
-    @requests_mock.Mocker(real_http=True)
-    def test_get_country_code(self, mock_requests):
-        """ Test to check if "_get_country_wise_counts" is working correctly """
-        # Mock fetching country data from labs.api.listenbrainz.org
-        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
-            mbid_country_mapping_result = json.load(f)
-        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           json=mbid_country_mapping_result)
-
-        response = self.client.get(
-            self.custom_url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-            query_string={'range': 'all_time', 'force_recalculate': 'true'})
-        data = response.json["payload"]
-        received = data["artist_map"]
-        expected = [
-            {
-                "country": "GBR",
-                'artists': [
-                    {
-                        'artist_mbid': 'cc197bad-dc9c-440d-a5b5-d52ba2e14234',
-                        'artist_name': 'Coldplay',
-                        'listen_count': 321
-                    }
-                ],
-                "artist_count": 1,
-                "listen_count": 321,
-            }
-        ]
-        self.assertListEqual(expected, received)
-
-    @requests_mock.Mocker(real_http=True)
-    def test_get_country_code_mbid_country_mapping_failure(self, mock_requests):
-        """ Test to check if appropriate message is returned if fetching country code fetching fails """
-        # Mock fetching country data from labs.api.listenbrainz.org
-        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
-                           status_code=500)
-
-        response = self.client.get(
-            self.custom_url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-            query_string={'range': 'all_time', 'force_recalculate': 'true'})
-        error_msg = ("An error occurred while calculating artist_map data, "
-                     "try setting 'force_recalculate' to 'false' to get a cached copy if available")
-        self.assert500(response, message=error_msg)
-
-    def test_get_country_code_no_msids_and_mbids(self):
-        """ Test to check if no error is thrown if no msids and mbids are present"""
-        # Overwrite the artist stats so that no artist has msids or mbids present
-        artist_stats = deepcopy(self.user_artist_payload)
-        for artist in artist_stats[0]["data"]:
-            artist['artist_mbid'] = None
-        couchdb.create_database("artists_this_week_20220718")
-        couchdb.create_database("artistmap_this_week")
-        db_stats.insert("artists_this_week_20220718", 0, 5, artist_stats)
-        response = self.client.get(
-            self.custom_url_for('stats_api_v1.get_artist_map', user_name=self.user['musicbrainz_id']),
-            query_string={'range': 'this_week', 'force_recalculate': 'true'})
-        self.assert200(response)
-        self.assertListEqual([], json.loads(response.data)['payload']['artist_map'])
 
     def test_sitewide_entity_stat(self):
         for entity in self.sitewide_entity_endpoints:

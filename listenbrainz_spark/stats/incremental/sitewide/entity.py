@@ -1,6 +1,7 @@
 import abc
 import logging
-from typing import Iterator, Dict
+from datetime import datetime
+from typing import Iterator, Dict, Optional, List
 
 from pydantic import ValidationError
 from pyspark.sql import DataFrame
@@ -11,7 +12,7 @@ from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
 from listenbrainz_spark.path import LISTENBRAINZ_SITEWIDE_STATS_DIRECTORY
 
-from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
+from listenbrainz_spark.stats.incremental.message_creator import SitewideStatsMessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
@@ -34,7 +35,8 @@ class SitewideStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"sitewide_{self.entity}_{self.stats_range}"
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
+                                   existed_created: Optional[datetime]) -> str:
         return f"SELECT * FROM {existing_aggregate}"
 
 
@@ -57,13 +59,10 @@ class SitewideEntityStatsQueryProvider(SitewideStatsQueryProvider, abc.ABC):
         return 500
 
 
-class SitewideEntityStatsMessageCreator(StatsMessageCreator):
+class SitewideEntityStatsMessageCreator(SitewideStatsMessageCreator):
 
     def __init__(self, entity, selector):
         super().__init__(entity, "sitewide_entity", selector)
-
-    def default_database_prefix(self):
-        return ""
 
     def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         message = {

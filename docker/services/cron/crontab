@@ -12,12 +12,16 @@ MAILTO=""
 5 * * * 0,1 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_troi_playlists --slug weekly-exploration >> /logs/troi_spark.log
 
 ## Trigger an incremental dump everyday, near noon, far away from whole dump times, again do not block for the lock.
-0 0 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/dumps.log 2>&1
+0 0 * * * root flock -x -n /var/lock/lb-incremental-dumps.lock /code/listenbrainz/admin/create-dumps.sh incremental >> /logs/incremental_dumps.log 2>&1
 ## Around 1 hour later, trigger an incremental import into the spark cluster, blocking for the lock in case the dump was not complete
-0 1 * * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_incremental >> /logs/dumps.log 2>&1
+0 1 * * * root flock -x /var/lock/lb-incremental-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_incremental >> /logs/incremental_dumps.log 2>&1
+# After incremental dumps, import deleted listens into spark cluster
+5 1 * * * root flock -x /var/lock/lb-incremental-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_deleted_listens >> /logs/deleted_listens.log 2>&1
+# Twice a month, compact listens in spark cluster
+15 1 1,16 * * root flock -x /var/lock/lb-incremental-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_compact_listens >> /logs/compact_listens.log 2>&1
 
 # After the daily dumping is done, make sure everything turned out ok, otherwise mail the observability list.
-0 2 * * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/dumps.log 2>&1
+0 2 * * * root flock -x /var/lock/lb-full-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py dump check_dump_ages >> /logs/check_dumps.log 2>&1
 
 # batch up all the spark requests, spaced by 1 minute in order to ensure the correct order
 # Request all statistics
@@ -30,15 +34,13 @@ MAILTO=""
 3 2 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similar_users >> /logs/stats.log 2>&1
 
 # Dump user feedback before we generate recommendations
-15 2 * * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/dumps.log 2>&1
+15 2 * * * root flock -x -n /var/lock/lb-feedback-dumps.lock /code/listenbrainz/admin/create-dumps.sh feedback >> /logs/feedback_dumps.log 2>&1
 
 # Request user fresh releases daily
 0 3 * * * root /usr/local/bin/python /code/listenbrainz/manage.py spark request_fresh_releases --threshold 10 >> /logs/fresh_releases.log 2>&1
 
 ## Trigger a full dump on 1st and 15th of every month, in the middle of the night, do not block to wait for lock.
-0 4 1,15 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/dumps.log 2>&1
-## Around 24 hours later, trigger a full import into the spark cluster, and this time wait for the lock, in case the dump hasn't finished.
-0 4 2,16 * * root flock -x /var/lock/lb-dumps.lock /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full >> /logs/dumps.log 2>&1
+0 4 1,15 * * root flock -x -n /var/lock/lb-full-dumps.lock /code/listenbrainz/admin/create-dumps.sh full >> /logs/full_dumps.log 2>&1
 
 # run job to update msids with mapped mbids daily
 0 6 * * * root /usr/local/bin/python /code/listenbrainz/manage.py update-msid-tables >> /logs/msid-updater.log 2>&1
@@ -48,7 +50,7 @@ MAILTO=""
 
 ## Trigger a canonical dump on 3rd and 17th of every month do not block to wait for lock.
 # The canonical tables are re-generated every day at 4am, so do this later in order to get today's data
-0 8 3,17 * * root flock -x -n /var/lock/lb-dumps.lock /code/listenbrainz/admin/create-dumps.sh mbcanonical >> /logs/dumps.log 2>&1
+0 8 3,17 * * root flock -x -n /var/lock/lb-canonical-dumps.lock /code/listenbrainz/admin/create-dumps.sh mbcanonical >> /logs/canonical_dumps.log 2>&1
 
 # run weekly cron job to remove expired do not recommends
 0 8 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py clear-expired-do-not-recommends >> /logs/do_not_recommend.log 2>&1
@@ -57,7 +59,7 @@ MAILTO=""
 0 9 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_similarity_datasets >> /logs/similarity_datasets.log 2>&1
 
 # run weekly cron job to update popularity datasets
-0 10 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark request_popularity >> /logs/popularity_datasets.log 2>&1
+0 10 * * 0 root /usr/local/bin/python /code/listenbrainz/manage.py spark cron_request_popularity >> /logs/popularity_datasets.log 2>&1
 
 # delete old and expired user data exports
 0 11 * * * root /usr/local/bin/python /code/listenbrainz/manage.py delete-old-user-data-exports >> /logs/user_data_exports.log 2>&1

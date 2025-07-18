@@ -42,18 +42,6 @@ def create_channel_to_consume(connection, exchange: str, queue: str, callback_fu
     return ch
 
 
-def unix_timestamp_to_datetime(timestamp):
-    """ Converts expires_at timestamp received from Spotify to a datetime object
-
-    Args:
-        timestamp (int): the unix timestamp to be converted to datetime
-
-    Returns:
-        A datetime object with timezone UTC corresponding to the provided timestamp
-    """
-    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
-
-
 def get_fallback_connection_name():
     """ Get a connection name friendlier than docker gateway ip during connecting
     to services like redis, rabbitmq etc."""

@@ -5,14 +5,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
 rm -rf pyspark_venv pyspark_venv.tar.gz listenbrainz_spark_request_consumer.zip models.zip
 
-python3 -m venv pyspark_venv
+python3.13 -m venv pyspark_venv
 source pyspark_venv/bin/activate
-pip install -r requirements_spark.txt
-pip install venv-pack
+pip install --upgrade pip setuptools wheel venv-pack -r requirements_spark.txt
 venv-pack -o pyspark_venv.tar.gz
 
-export PYSPARK_DRIVER_PYTHON=python
-export PYSPARK_PYTHON=./environment/bin/python
+VENV_PATH="$(realpath pyspark_venv)"
+export PYSPARK_DRIVER_PYTHON="${VENV_PATH}/bin/python3.13"
+export PYSPARK_PYTHON=./environment/bin/python3.13
 
 GIT_COMMIT_SHA="$(git describe --tags --dirty --always)"
 echo "$GIT_COMMIT_SHA" > .git-version
@@ -25,8 +25,9 @@ source spark_config.sh
         --master spark://leader:7077 \
         --archives "pyspark_venv.tar.gz#environment" \
         --conf "spark.cores.max=$MAX_CORES" \
+        --conf "spark.driver.maxResultSize=$DRIVER_MAX_RESULT_SIZE" \
         --executor-cores "$EXECUTOR_CORES" \
         --executor-memory "$EXECUTOR_MEMORY" \
         --driver-memory "$DRIVER_MEMORY" \
         --py-files listenbrainz_spark_request_consumer.zip,models.zip \
-    spark_manage.py request_consumer
+        spark_manage.py

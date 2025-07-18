@@ -10,7 +10,8 @@ CREATE TABLE "user" (
   gdpr_agreed           TIMESTAMP WITH TIME ZONE,
   musicbrainz_row_id    INTEGER NOT NULL,
   login_id              TEXT NOT NULL DEFAULT uuid_generate_v4()::text,
-  email                 TEXT
+  email                 TEXT,
+  is_paused             BOOLEAN NOT NULL DEFAULT FALSE
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
@@ -45,7 +46,8 @@ ALTER TABLE api_compat.token ADD CONSTRAINT token_token_uniq UNIQUE (token);
 
 CREATE TABLE data_dump (
   id          SERIAL,
-  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  dump_type   data_dump_type_type
 );
 
 CREATE TABLE missing_musicbrainz_data (
@@ -140,6 +142,7 @@ CREATE TABLE listens_importer (
     service                     external_service_oauth_type NOT NULL,
     last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
+    status                      JSONB,
     error_message               TEXT
 );
 

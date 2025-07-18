@@ -27,12 +27,13 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
   getAlbumArtFromListenMetadataKey,
+  getAlbumLink,
   getArtistLink,
   getArtistMBIDs,
   getArtistName,
@@ -266,7 +267,8 @@ export class ListenCard extends React.Component<
       ...otherProps
     } = this.props;
     const { listen, isCurrentlyPlaying } = this.state;
-    const { currentUser } = this.context;
+    const { currentUser, userPreferences } = this.context;
+
     const isLoggedIn = !isEmpty(currentUser);
 
     const recordingMSID = getRecordingMSID(listen);
@@ -274,6 +276,7 @@ export class ListenCard extends React.Component<
     const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseMBID = getReleaseMBID(listen);
     const releaseGroupMBID = getReleaseGroupMBID(listen);
+    const releaseName = getReleaseName(listen);
     const artistMBIDs = getArtistMBIDs(listen);
     const spotifyURL = SpotifyPlayer.getURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getURLFromListen(listen);
@@ -302,6 +305,9 @@ export class ListenCard extends React.Component<
       youtubeURL ||
       soundcloudURL;
     const hideActionsMenu = compact || !hasActionOptions;
+
+    const renderBrainzplayer =
+      userPreferences?.brainzplayer?.brainzplayerEnabled ?? true;
 
     let timeStampForDisplay;
     if (customTimestamp) {
@@ -341,7 +347,7 @@ export class ListenCard extends React.Component<
       let optionalAttributes = {};
       if (releaseMBID) {
         thumbnailLink = `/release/${releaseMBID}`;
-        thumbnailTitle = getReleaseName(listen);
+        thumbnailTitle = releaseName;
       } else if (releaseGroupMBID) {
         thumbnailLink = `/album/${releaseGroupMBID}`;
         thumbnailTitle = get(
@@ -391,12 +397,12 @@ export class ListenCard extends React.Component<
               <FontAwesomeIcon icon={faImage} />
               <FontAwesomeIcon
                 icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
+                transform="shrink-10 start-5 up-2.5"
               />
               <FontAwesomeIcon
                 icon={faPlus}
                 inverse
-                transform="shrink-11 left-2.5 up-2.5"
+                transform="shrink-11 start-2.5 up-2.5"
                 style={{ stroke: "white", strokeWidth: "60" }}
               />
             </span>
@@ -446,7 +452,7 @@ export class ListenCard extends React.Component<
                 <FontAwesomeIcon icon={faImage} />
                 <FontAwesomeIcon
                   icon={faSquare}
-                  transform="shrink-10 left-5 up-2.5"
+                  transform="shrink-10 start-5 up-2.5"
                 />
               </span>
             </div>
@@ -464,7 +470,7 @@ export class ListenCard extends React.Component<
                 <FontAwesomeIcon icon={faImage} />
                 <FontAwesomeIcon
                   icon={faSquare}
-                  transform="shrink-10 left-5 up-2.5"
+                  transform="shrink-10 start-5 up-2.5"
                 />
               </span>
             </div>
@@ -480,7 +486,7 @@ export class ListenCard extends React.Component<
               <FontAwesomeIcon icon={faImage} />
               <FontAwesomeIcon
                 icon={faSquare}
-                transform="shrink-10 left-5 up-2.5"
+                transform="shrink-10 start-5 up-2.5"
               />
             </span>
           </div>
@@ -491,7 +497,7 @@ export class ListenCard extends React.Component<
     return (
       <Card
         {...otherProps}
-        onDoubleClick={this.playListen}
+        onDoubleClick={renderBrainzplayer ? this.playListen : undefined}
         className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${
           compact ? " compact" : ""
         }${additionalContent ? " has-additional-content" : " "} ${
@@ -508,10 +514,10 @@ export class ListenCard extends React.Component<
             <div className="listen-details">
               <div className="title-duration">
                 <div
-                  title={trackName}
+                  title={trackName ?? releaseName}
                   className={compact ? "ellipsis" : "ellipsis-2-lines"}
                 >
-                  {getTrackLink(listen)}
+                  {trackName ? getTrackLink(listen) : getAlbumLink(listen)}
                 </div>
                 {trackDurationMs && (
                   <div className="small text-muted" title="Duration">
@@ -546,9 +552,9 @@ export class ListenCard extends React.Component<
                     title="More actions"
                     className="btn btn-transparent dropdown-toggle"
                     id="listenControlsDropdown"
-                    data-toggle="dropdown"
+                    data-bs-toggle="dropdown"
                     aria-haspopup="true"
-                    aria-expanded="true"
+                    aria-expanded="false"
                     type="button"
                   >
                     <FontAwesomeIcon icon={faEllipsisVertical} fixedWidth />
@@ -576,18 +582,23 @@ export class ListenCard extends React.Component<
                         }}
                       />
                     )}
-                    <ListenControl
-                      text="Play Next"
-                      icon={faPlay}
-                      title="Play Next"
-                      action={this.addToTopOfQueue}
-                    />
-                    <ListenControl
-                      text="Add to Queue"
-                      icon={faPlusCircle}
-                      title="Add to Queue"
-                      action={this.addToBottomOfQueue}
-                    />
+                    {renderBrainzplayer && (
+                      <>
+                        <ListenControl
+                          text="Play Next"
+                          icon={faPlay}
+                          title="Play Next"
+                          action={this.addToTopOfQueue}
+                        />
+                        <ListenControl
+                          text="Add to Queue"
+                          icon={faPlusCircle}
+                          title="Add to Queue"
+                          action={this.addToBottomOfQueue}
+                        />
+                      </>
+                    )}
+
                     {spotifyURL && (
                       <ListenControl
                         icon={faSpotify}
@@ -640,8 +651,6 @@ export class ListenCard extends React.Component<
                             recordingToPin: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#PinRecordingModal"
                       />
                     )}
                     {isLoggedIn && hasInfoAndMBID && (
@@ -663,8 +672,6 @@ export class ListenCard extends React.Component<
                             listenToPersonallyRecommend: listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#PersonalRecommendationModal"
                       />
                     )}
                     {isLoggedIn && Boolean(recordingMSID) && (
@@ -689,8 +696,6 @@ export class ListenCard extends React.Component<
                             listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#CBReviewModal"
                       />
                     )}
                     {isLoggedIn && (
@@ -703,8 +708,6 @@ export class ListenCard extends React.Component<
                             listen,
                           });
                         }}
-                        dataToggle="modal"
-                        dataTarget="#AddToPlaylistModal"
                       />
                     )}
                     {additionalMenuItems}
@@ -717,25 +720,25 @@ export class ListenCard extends React.Component<
                           listen,
                         });
                       }}
-                      dataToggle="modal"
-                      dataTarget="#ListenPayloadModal"
                     />
                   </ul>
                 </>
               )}
-              <button
-                title="Play"
-                className={`btn btn-transparent play-button${
-                  isCurrentlyPlaying ? " playing" : ""
-                }`}
-                onClick={this.playListen}
-                type="button"
-              >
-                <FontAwesomeIcon
-                  fixedWidth
-                  icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
-                />
-              </button>
+              {renderBrainzplayer && (
+                <button
+                  title="Play"
+                  className={`btn btn-transparent play-button${
+                    isCurrentlyPlaying ? " playing" : ""
+                  }`}
+                  onClick={this.playListen}
+                  type="button"
+                >
+                  <FontAwesomeIcon
+                    fixedWidth
+                    icon={isCurrentlyPlaying ? faPlay : faPlayCircle}
+                  />
+                </button>
+              )}
               {additionalActions}
             </div>
           </div>
@@ -774,8 +777,7 @@ export default function ListenCardWrapper(props: ListenCardProps) {
       try {
         const albumArtURL = await getAlbumArtFromListenMetadata(
           listen,
-          spotifyAuth,
-          APIService
+          spotifyAuth
         );
         return albumArtURL ?? "";
       } catch (error) {

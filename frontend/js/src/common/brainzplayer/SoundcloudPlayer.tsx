@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { faSoundcloud } from "@fortawesome/free-brands-svg-icons";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import {
   getArtistName,
@@ -402,7 +402,7 @@ export default class SoundcloudPlayer
     return (
       <img
         alt="coverart"
-        className="img-responsive"
+        className="img-fluid"
         src={currentSound.artwork_url}
       />
     );

@@ -9,7 +9,7 @@ import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import fresh_releases_schema
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_latest_listen_ts, get_listens_from_dump
+from listenbrainz_spark.listens.data import get_listens_from_dump, get_latest_listen_ts
 
 USERS_PER_MESSAGE = 5
 
@@ -43,23 +43,16 @@ def load_all_releases():
 
 def get_query(threshold):
     return f"""
-        WITH artists AS (
-            SELECT DISTINCT explode(artist_mbids) AS artist_mbid
-              FROM fresh_releases
+        WITH exploded_fresh_releases AS (
+            SELECT rr.*
+                 , explode(artist_mbids) AS artist_mbid
+              FROM fresh_releases rr
         ), exploded_listens AS (
             SELECT user_id
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM fresh_releases_listens
-        ), artist_discovery AS (
-            SELECT user_id
-                 , artist_mbid
-                 , count(*) AS partial_confidence
-              FROM exploded_listens
-              JOIN artists
-             USING (artist_mbid)
-          GROUP BY user_id, artist_mbid
         ), filtered_releases AS (
-            SELECT ad.user_id
+            SELECT el.user_id
                  , rr.release_name
                  , rr.release_mbid
                  , rr.release_group_mbid
@@ -72,11 +65,11 @@ def get_query(threshold):
                  , rr.caa_release_mbid
                  , rr.release_tags
                  , rr.listen_count
-                 , SUM(partial_confidence) AS confidence
-              FROM artist_discovery ad
-              JOIN fresh_releases rr
-                ON array_contains(rr.artist_mbids, ad.artist_mbid)
-          GROUP BY ad.user_id
+                 , count(*) AS confidence
+              FROM exploded_listens el
+              JOIN exploded_fresh_releases rr
+             USING (artist_mbid)
+          GROUP BY el.user_id
                  , rr.release_name
                  , rr.release_mbid
                  , rr.release_group_mbid

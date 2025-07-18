@@ -14,7 +14,13 @@ function NamePill(props: NamePillProps) {
     <div className="pill secondary active">
       <span>{title}</span>
       {isFunction(closeAction) && (
-        <ListenControl text="" icon={faTimesCircle} action={closeAction} />
+        <ListenControl
+          title="Remove"
+          text=""
+          icon={faTimesCircle}
+          action={closeAction}
+          isDropdown={false}
+        />
       )}
     </div>
   );

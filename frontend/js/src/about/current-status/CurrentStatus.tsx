@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { RouteQuery } from "../../utils/Loader";
 
 type CurrentStatusLoaderData = {
@@ -27,7 +27,7 @@ export default function CurrentStatus() {
       <div className="row">
         <div className="col-md-7 col-lg-8">
           <h3>ListenBrainz Stats</h3>
-          <table className="table table-border table-condensed table-striped">
+          <table className="table table-border table-sm table-striped">
             <thead>
               <tr>
                 <th>Description</th>
@@ -85,7 +85,7 @@ export default function CurrentStatus() {
           <h3>load average</h3>
 
           <p>Current server load average</p>
-          <div className="well">{load}</div>
+          <div className="border p-4 rounded bg-body-tertiary">{load}</div>
         </div>
 
         <div className="col-md-5 col-lg-4">

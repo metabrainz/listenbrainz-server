@@ -2,19 +2,28 @@ import { faPauseCircle } from "@fortawesome/free-regular-svg-icons";
 import { faHeart, faHeartCrack } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import * as tinycolor from "tinycolor2";
-import { first, isEmpty, isNumber, isPlainObject, pick } from "lodash";
-import { Link } from "react-router-dom";
+import type { Palette } from "@vibrant/color";
+import { Vibrant } from "node-vibrant/browser";
+import {
+  first,
+  isEmpty,
+  isNumber,
+  isPlainObject,
+  isString,
+  pick,
+} from "lodash";
+import { Link } from "react-router";
+import { Accordion } from "react-bootstrap";
 import { millisecondsToStr } from "../../playlists/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import TagsComponent from "../../tags/TagsComponent";
 import {
   getArtistName,
-  getAverageRGBOfImage,
   getRecordingMBID,
   getTrackName,
 } from "../../utils/utils";
 import OpenInMusicBrainzButton from "../../components/OpenInMusicBrainz";
+import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 
 type MetadataViewerProps = {
   recordingData?: MetadataLookup;
@@ -60,29 +69,24 @@ export default function MetadataViewer(props: MetadataViewerProps) {
   const { auth_token, name: username } = currentUser;
 
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
-  const [expandedAccordion, setExpandedAccordion] = React.useState(1);
+  const [selectedAccordion, setSelectedAccordion] = React.useState("recording");
   const albumArtRef = React.useRef<HTMLImageElement>(null);
-  const [albumArtColor, setAlbumArtColor] = React.useState({
-    r: 0,
-    g: 0,
-    b: 0,
-  });
-
+  const [albumArtPalette, setAlbumArtPalette] = React.useState<Palette>();
   React.useEffect(() => {
-    const setAverageColor = () => {
-      const averageColor = getAverageRGBOfImage(albumArtRef?.current);
-      setAlbumArtColor(averageColor);
-    };
-    const currentAlbumArtRef = albumArtRef.current;
-    if (currentAlbumArtRef) {
-      currentAlbumArtRef.addEventListener("load", setAverageColor);
+    if (!albumArtRef.current) {
+      return;
     }
-    return () => {
-      if (currentAlbumArtRef) {
-        currentAlbumArtRef.removeEventListener("load", setAverageColor);
-      }
-    };
-  }, [setAlbumArtColor]);
+    Vibrant.from(albumArtRef.current)
+      .getPalette()
+      .then((palette) => {
+        setAlbumArtPalette(palette);
+      })
+      // eslint-disable-next-line no-console
+      .catch(console.error);
+  }, []);
+  const backgroundGradient = albumArtPalette
+    ? `linear-gradient(to bottom, ${albumArtPalette?.Vibrant?.hex} 60%, ${albumArtPalette?.DarkVibrant?.hex})`
+    : `linear-gradient(to bottom, ${COLOR_LB_BLUE} 30%, ${COLOR_LB_ORANGE})`;
 
   React.useEffect(() => {
     const getFeedbackPromise = async () => {
@@ -141,18 +145,6 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       submitFeedback,
       auth_token,
     ]
-  );
-
-  const adjustedAlbumColor = tinycolor.fromRatio(albumArtColor);
-  adjustedAlbumColor.saturate(20);
-  adjustedAlbumColor.setAlpha(0.6);
-
-  const textColor = tinycolor.mostReadable(
-    adjustedAlbumColor,
-    adjustedAlbumColor.monochromatic().map((color) => color.toHexString()),
-    {
-      includeFallbackColors: true,
-    }
   );
 
   // Default to empty object
@@ -260,48 +252,37 @@ export default function MetadataViewer(props: MetadataViewerProps) {
     );
   } else {
     rightSideContent = (
-      <div
-        className="right-side panel-group"
-        id="accordion"
-        role="tablist"
-        aria-multiselectable="false"
-      >
-        <div
-          className={`panel panel-default ${
-            expandedAccordion === 1 ? "expanded" : ""
-          }`}
+      <div className="right-side" role="tablist" aria-multiselectable="false">
+        <Accordion
+          defaultActiveKey="recording"
+          id="accordion"
+          className="h-100 d-flex flex-column"
+          onSelect={(eKey) => {
+            if (isString(eKey)) {
+              setSelectedAccordion(eKey);
+            } else {
+              setSelectedAccordion("");
+            }
+          }}
         >
-          <div
-            className="panel-heading"
-            role="tab"
-            tabIndex={0}
-            id="headingOne"
-            onKeyDown={() => setExpandedAccordion(1)}
-            onClick={() => setExpandedAccordion(1)}
-            aria-expanded={expandedAccordion === 1}
-            aria-selected={expandedAccordion === 1}
-            aria-controls="collapseOne"
-          >
-            <h4 className="panel-title">
-              <div className="recordingheader">
-                <div className="name strong">{trackName}</div>
-                &nbsp;<small>Track</small>
-                <div className="date">
-                  {isNumber(duration) && millisecondsToStr(duration)}
-                </div>
-                <div className="caret" />
-              </div>
-            </h4>
-          </div>
-          <div
-            id="collapseOne"
-            className={`panel-collapse collapse ${
-              expandedAccordion === 1 ? "in" : ""
+          <Accordion.Item
+            className={`d-flex flex-column ${
+              selectedAccordion === "recording" ? "flex-grow-1" : "flex-grow-0"
             }`}
-            role="tabpanel"
-            aria-labelledby="headingOne"
+            eventKey="recording"
           >
-            <div className="panel-body">
+            <Accordion.Header>
+              <h4 className="me-2 flex-grow-1">
+                <div className="recordingheader d-flex align-items-center gap-2">
+                  <div className="name strong">{trackName}</div>
+                  &nbsp;<small>Track</small>
+                  <div className="date small ms-auto">
+                    {isNumber(duration) && millisecondsToStr(duration)}
+                  </div>
+                </div>
+              </h4>
+            </Accordion.Header>
+            <Accordion.Body className="d-flex flex-column h-100 justify-content-between">
               <TagsComponent
                 key={recordingMBID}
                 tags={filterAndSortTags(metadata?.tag?.recording)}
@@ -341,44 +322,27 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   entityMBID={recordingMBID}
                 />
               </div>
-            </div>
-          </div>
-        </div>
-        {Boolean(releaseName) && (
-          <div
-            className={`panel panel-default ${
-              expandedAccordion === 2 ? "expanded" : ""
-            }`}
-          >
-            <div
-              className="panel-heading"
-              role="tab"
-              tabIndex={0}
-              id="headingTwo"
-              onKeyDown={() => setExpandedAccordion(2)}
-              onClick={() => setExpandedAccordion(2)}
-              aria-expanded={expandedAccordion === 2}
-              aria-selected={expandedAccordion === 2}
-              aria-controls="collapseTwo"
-            >
-              <h4 className="panel-title">
-                <div className="releaseheader">
-                  <div className="name strong">{releaseName}</div>
-                  &nbsp;<small>Album</small>
-                  <div className="date">{metadata?.release?.year}</div>
-                  <div className="caret" />
-                </div>
-              </h4>
-            </div>
-            <div
-              id="collapseTwo"
-              className={`panel-collapse collapse ${
-                expandedAccordion === 2 ? "in" : ""
+            </Accordion.Body>
+          </Accordion.Item>
+          {Boolean(releaseName) && (
+            <Accordion.Item
+              className={`d-flex flex-column ${
+                selectedAccordion === "release" ? "flex-grow-1" : "flex-grow-0"
               }`}
-              role="tabpanel"
-              aria-labelledby="headingTwo"
+              eventKey="release"
             >
-              <div className="panel-body">
+              <Accordion.Header>
+                <h4 className="me-2 flex-grow-1">
+                  <div className="releaseheader d-flex align-items-center gap-2">
+                    <div className="name strong">{releaseName}</div>
+                    &nbsp;<small>Album</small>
+                    <div className="date small ms-auto">
+                      {metadata?.release?.year}
+                    </div>
+                  </div>
+                </h4>
+              </Accordion.Header>
+              <Accordion.Body className="d-flex flex-column h-100 justify-content-between">
                 <TagsComponent
                   key={releaseName}
                   tags={filterAndSortTags(metadata?.tag?.release_group)}
@@ -389,44 +353,25 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   entityType="release"
                   entityMBID={releaseMBID}
                 />
-              </div>
-            </div>
-          </div>
-        )}
-        <div
-          className={`panel panel-default ${
-            expandedAccordion === 3 ? "expanded" : ""
-          }`}
-        >
-          <div
-            className="panel-heading"
-            role="tab"
-            tabIndex={0}
-            id="headingThree"
-            onKeyDown={() => setExpandedAccordion(3)}
-            onClick={() => setExpandedAccordion(3)}
-            aria-expanded={expandedAccordion === 3}
-            aria-selected={expandedAccordion === 3}
-            aria-controls="collapseThree"
-          >
-            <h4 className="panel-title">
-              <div className="artistheader">
-                <div className="name strong">{artistName}</div>
-                &nbsp;<small>Artist</small>
-                <div className="date">{artist?.begin_year}</div>
-                <div className="caret" />
-              </div>
-            </h4>
-          </div>
-          <div
-            id="collapseThree"
-            className={`panel-collapse collapse ${
-              expandedAccordion === 3 ? "in" : ""
+              </Accordion.Body>
+            </Accordion.Item>
+          )}
+          <Accordion.Item
+            className={`d-flex flex-column ${
+              selectedAccordion === "artist" ? "flex-grow-1" : "flex-grow-0"
             }`}
-            role="tabpanel"
-            aria-labelledby="headingThree"
+            eventKey="artist"
           >
-            <div className="panel-body">
+            <Accordion.Header>
+              <h4 className="me-2 flex-grow-1">
+                <div className="artistheader d-flex align-items-center gap-2">
+                  <div className="name strong">{artistName}</div>
+                  &nbsp;<small>Artist</small>
+                  <div className="date small ms-auto">{artist?.begin_year}</div>
+                </div>
+              </h4>
+            </Accordion.Header>
+            <Accordion.Body className="d-flex flex-column h-100 justify-content-between">
               <TagsComponent
                 key={artistName}
                 tags={filterAndSortTags(metadata?.tag?.artist)}
@@ -445,7 +390,7 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                 {lyricsLink?.lyrics && (
                   <a
                     href={lyricsLink.lyrics}
-                    className="btn btn-outline"
+                    className="btn btn-outline-info"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -457,9 +402,9 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   entityMBID={artistMBID}
                 />
               </div>
-            </div>
-          </div>
-        </div>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
       </div>
     );
   }
@@ -469,8 +414,8 @@ export default function MetadataViewer(props: MetadataViewerProps) {
       <div
         className="left-side"
         style={{
-          backgroundColor: adjustedAlbumColor.toRgbString(),
-          color: textColor.toString(),
+          background: backgroundGradient,
+          color: albumArtPalette?.Vibrant?.titleTextColor,
         }}
       >
         <div className="track-info">
@@ -558,21 +503,24 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   ? " disabled"
                   : ""
               }`}
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
               type="button"
             >
               <b>Support the artist</b>
-              <span className="caret" />
             </button>
             <ul className="dropdown-menu dropdown-menu-right" role="menu">
               {!isEmpty(supportLinks) ? (
                 Object.entries(supportLinks).map(([key, value]) => {
                   return (
-                    <li key={key}>
-                      <a href={value} target="_blank" rel="noopener noreferrer">
-                        {key}
-                      </a>
-                    </li>
+                    <a
+                      className="dropdown-item"
+                      key={key}
+                      href={value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {key}
+                    </a>
                   );
                 })
               ) : (
@@ -583,28 +531,27 @@ export default function MetadataViewer(props: MetadataViewerProps) {
                   >
                     We couldn&apos;t find any links
                   </li>
-                  <li>
-                    <a
-                      href={
-                        artistMBID
-                          ? `${musicBrainzURLRoot}artist/${artistMBID}`
-                          : `${musicBrainzURLRoot}artist/create`
-                      }
-                      aria-label="Edit in MusicBrainz"
-                      title="Edit in MusicBrainz"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img
-                        src="/static/img/meb-icons/MusicBrainz.svg"
-                        width="18"
-                        height="18"
-                        alt="MusicBrainz"
-                        style={{ verticalAlign: "bottom" }}
-                      />{" "}
-                      {artistMBID ? "Add links" : "Create"} in MusicBrainz
-                    </a>
-                  </li>
+                  <a
+                    className="dropdown-item"
+                    href={
+                      artistMBID
+                        ? `${musicBrainzURLRoot}artist/${artistMBID}`
+                        : `${musicBrainzURLRoot}artist/create`
+                    }
+                    aria-label="Edit in MusicBrainz"
+                    title="Edit in MusicBrainz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      src="/static/img/meb-icons/MusicBrainz.svg"
+                      width="18"
+                      height="18"
+                      alt="MusicBrainz"
+                      style={{ verticalAlign: "bottom" }}
+                    />{" "}
+                    {artistMBID ? "Add links" : "Create"} in MusicBrainz
+                  </a>
                 </>
               )}
             </ul>

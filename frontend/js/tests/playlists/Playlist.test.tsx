@@ -1,5 +1,5 @@
 import * as React from "react";
-import { RouterProvider, createMemoryRouter } from "react-router-dom";
+import { RouterProvider, createMemoryRouter } from "react-router";
 import { screen } from "@testing-library/react";
 import PlaylistPage from "../../src/playlists/Playlist";
 import * as playlistPageProps from "../__mocks__/playlistPageProps.json";

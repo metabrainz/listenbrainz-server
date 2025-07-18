@@ -1,10 +1,12 @@
 import { faSpinner, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { throttle } from "lodash";
+import { isFunction, throttle } from "lodash";
 import React, {
+  forwardRef,
   useCallback,
   useContext,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -13,21 +15,35 @@ import { toast } from "react-toastify";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
+import {
+  LB_ALBUM_MBID_REGEXP,
+  RELEASE_GROUP_MBID_REGEXP,
+  RELEASE_MBID_REGEXP,
+  RECORDING_MBID_REGEXP,
+  UUID_REGEXP,
+} from "./constants";
 
-const RELEASE_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
-const RELEASE_GROUP_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?musicbrainz\.org\/release-group\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
-const LB_ALBUM_MBID_REGEXP = /^(https?:\/\/(?:beta\.)?listenbrainz\.org\/album\/)?([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
 const THROTTLE_MILLISECONDS = 1500;
 
-type SearchTrackOrMBIDProps = {
+type SearchAlbumOrMBIDProps = {
   onSelectAlbum: (releaseMBID?: string) => void;
   defaultValue?: string;
+  switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 };
 
-export default function SearchAlbumOrMBID({
-  onSelectAlbum,
-  defaultValue,
-}: SearchTrackOrMBIDProps) {
+const SearchAlbumOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchAlbumOrMBIDProps
+>(function SearchAlbumOrMBID(
+  {
+    onSelectAlbum,
+    defaultValue,
+    switchMode,
+    requiredInput = true,
+  }: SearchAlbumOrMBIDProps,
+  inputRefForParent
+) {
   const { APIService } = useContext(GlobalAppContext);
   const { lookupMBReleaseGroup, searchMBRelease } = APIService;
   const dropdownRef = DropdownRef();
@@ -37,6 +53,30 @@ export default function SearchAlbumOrMBID({
   const [searchResults, setSearchResults] = useState<
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
   >([]);
+
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    onSelectAlbum();
+    setLoading(false);
+    searchInputRef?.current?.focus();
+  }, [onSelectAlbum]);
+
+  // Allow parents to focus on input and trigger search
+  useImperativeHandle(
+    inputRefForParent,
+    () => ({
+      focus() {
+        searchInputRef?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
+  );
+
   const handleError = useCallback(
     (error: string | Error, title?: string): void => {
       if (!error) {
@@ -76,12 +116,12 @@ export default function SearchAlbumOrMBID({
     () =>
       throttle(
         async (input: string) => {
-          const newReleaseMBID = RELEASE_MBID_REGEXP.exec(
-            input
-          )?.[2].toLowerCase();
+          const newReleaseMBID =
+            RELEASE_MBID_REGEXP.exec(input)?.[1] ??
+            UUID_REGEXP.exec(input)?.[0];
           const newReleaseGroupMBID =
-            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[2].toLowerCase() ||
-            LB_ALBUM_MBID_REGEXP.exec(input)?.[2].toLowerCase();
+            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[1].toLowerCase() ??
+            LB_ALBUM_MBID_REGEXP.exec(input)?.[1].toLowerCase();
           try {
             if (newReleaseMBID) {
               onSelectAlbum(newReleaseMBID);
@@ -97,8 +137,6 @@ export default function SearchAlbumOrMBID({
                 })
               );
               setSearchResults(releasesWithAC);
-            } else {
-              return;
             }
           } catch (error) {
             handleError(
@@ -123,29 +161,32 @@ export default function SearchAlbumOrMBID({
     [onSelectAlbum]
   );
 
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    onSelectAlbum();
-    setLoading(false);
-    searchInputRef?.current?.focus();
-  };
-
   useEffect(() => {
     if (!inputValue) {
       return;
     }
     setLoading(true);
-    const isValidUUID =
+    const isValidUUID = UUID_REGEXP.test(inputValue);
+    const isValidAlbumUUID =
       RELEASE_MBID_REGEXP.test(inputValue) ||
       RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
       LB_ALBUM_MBID_REGEXP.test(inputValue);
-    if (isValidUUID) {
+    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    if (isValidRecordingUUID && isFunction(switchMode)) {
+      switchMode(inputValue);
+      return;
+    }
+    if (isValidUUID || isValidAlbumUUID) {
       throttledHandleValidMBID(inputValue);
     } else {
       throttledSearchRelease(inputValue);
     }
-  }, [inputValue, throttledHandleValidMBID, throttledSearchRelease]);
+  }, [
+    inputValue,
+    throttledHandleValidMBID,
+    throttledSearchRelease,
+    switchMode,
+  ]);
 
   // Autofocus once on load
   useEffect(() => {
@@ -168,18 +209,16 @@ export default function SearchAlbumOrMBID({
             setInputValue(event.target.value);
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
           aria-haspopup={Boolean(searchResults?.length)}
         />
-        <span className="input-group-btn">
-          <button className="btn btn-default" type="button" onClick={reset}>
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faTimesCircle} />
-            )}
-          </button>
-        </span>
+        <button className="btn btn-secondary" type="button" onClick={reset}>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faTimesCircle} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"
@@ -198,9 +237,9 @@ export default function SearchAlbumOrMBID({
               let releaseInfoString = `(${release.media
                 ?.map((medium) => medium.format)
                 .join(" + ")}) 
-              ${
-                release.country === "XE" ? "Worldwide" : release.country ?? ""
-              } ${release.date ?? ""}`;
+                ${
+                  release.country === "XE" ? "Worldwide" : release.country ?? ""
+                } ${release.date ?? ""}`;
               if (release["label-info"]?.length) {
                 const labelNames = release["label-info"]
                   ?.map((li) => li.label?.name)
@@ -243,4 +282,6 @@ export default function SearchAlbumOrMBID({
       </div>
     </div>
   );
-}
+});
+
+export default SearchAlbumOrMBID;

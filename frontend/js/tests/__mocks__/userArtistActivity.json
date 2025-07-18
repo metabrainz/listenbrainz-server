@@ -1,0 +1,130 @@
+{
+  "result": [
+    {
+      "name": "Ed Sheeran",
+      "listen_count": 87,
+      "albums": [
+        { "listen_count": 17, "name": "=" },
+        { "listen_count": 12, "name": "÷" },
+        { "listen_count": 11, "name": "+" },
+        { "listen_count": 10, "name": "×" },
+        { "listen_count": 16, "name": "No.6 Collaborations Project" },
+        { "listen_count": 16, "name": "-" },
+        { "listen_count": 3, "name": "Autumn Variations" },
+        { "listen_count": 2, "name": "Under the tree" }
+      ]
+    },
+    {
+      "name": "AP Dhillon",
+      "listen_count": 46,
+      "albums": [
+        { "listen_count": 6, "name": "Two Hearts Never Break The Same" },
+        { "listen_count": 3, "name": "HIDDEN GEMS" },
+        { "listen_count": 8, "name": "Summer High" },
+        { "listen_count": 8, "name": "Ma Belle" },
+        { "listen_count": 8, "name": "Excuses" },
+        { "listen_count": 7, "name": "Insane" },
+        { "listen_count": 6, "name": "The Brownprint" }
+      ]
+    },
+    {
+      "name": "Diljit Dosanjh",
+      "listen_count": 27,
+      "albums": [
+        { "listen_count": 7, "name": "Ghost" },
+        { "listen_count": 5, "name": "G.O.A.T." },
+        { "listen_count": 3, "name": "Drive Thru" },
+        { "listen_count": 6, "name": "Love Ya" },
+        { "listen_count": 6, "name": "In Love With Diljit Dosanjh" }
+      ]
+    },
+    {
+      "name": "Honey Singh",
+      "listen_count": 21,
+      "albums": [
+        { "listen_count": 21, "name": "International Villager" }
+      ]
+    },
+    {
+      "name": "Yo Yo Honey Singh",
+      "listen_count": 14,
+      "albums": [
+        { "listen_count": 4, "name": "Desi Kalakaar" },
+        { "listen_count": 2, "name": "Zorawar" },
+        { "listen_count": 8, "name": "Glory" }
+      ]
+    },
+    {
+      "name": "Anuv Jain",
+      "listen_count": 12,
+      "albums": [
+        { "listen_count": 5, "name": "Ocean" },
+        { "listen_count": 7, "name": "Baarishein" }
+      ]
+    },
+    {
+      "name": "Avvy Sra & Karan Aujla",
+      "listen_count": 8,
+      "albums": [
+        { "listen_count": 8, "name": "White Brown Black" }
+      ]
+    },
+    {
+      "name": "Shubh",
+      "listen_count": 8,
+      "albums": [
+        { "listen_count": 2, "name": "We Rollin" },
+        { "listen_count": 6, "name": "Bandana" }
+      ]
+    },
+    {
+      "name": "Pav Dharia",
+      "listen_count": 8,
+      "albums": [
+        { "listen_count": 8, "name": "Na Ja" }
+      ]
+    },
+    {
+      "name": "Vishal Mishra",
+      "listen_count": 8,
+      "albums": [
+        { "listen_count": 8, "name": "Manjha" }
+      ]
+    },
+    {
+      "name": "Aditya Rikhari",
+      "listen_count": 8,
+      "albums": [
+        { "listen_count": 8, "name": "Jaana Samjho Na (From \"Bhool Bhulaiyaa 3\")" }
+      ]
+    },
+    {
+      "name": "Juss & MixSingh",
+      "listen_count": 7,
+      "albums": [
+        { "listen_count": 7, "name": "Suniyan Suniyan" }
+      ]
+    },
+    {
+      "name": "Diljit Dosanjh & Sia",
+      "listen_count": 7,
+      "albums": [
+        { "listen_count": 7, "name": "Hass Hass" }
+      ]
+    },
+    {
+      "name": "Jassa Dhillon",
+      "listen_count": 6,
+      "albums": [
+        { "listen_count": 6, "name": "VIBIN" }
+      ]
+    },
+    {
+      "name": "Jasleen Royal",
+      "listen_count": 6,
+      "albums": [
+        { "listen_count": 6, "name": "Sahiba" }
+      ]
+    }
+  ]
+}

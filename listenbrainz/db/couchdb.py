@@ -295,17 +295,24 @@ def dump_database(prefix: str, fp: BinaryIO):
             response = http.get(database_url)
             total_docs = response.json()["doc_count"]
 
+            all_docs_url = f"{database_url}/_all_docs"
+
+            startkey_docid = None
             limit = 50
             for skip in range(0, total_docs, limit):
-                response = http.get(f"{database_url}/_all_docs", params={
-                    "skip": skip,
+                params = {
                     "limit": limit,
                     "include_docs": True
-                })
+                }
+                if startkey_docid is not None:
+                    params["startkey_docid"] = startkey_docid
+                    params["skip"] = 1
+                response = http.get(all_docs_url, params=params)
+
                 rows = orjson.loads(response.content)["rows"]
                 for row in rows:
                     doc = row["doc"]
-                    doc.pop("_id", None)
+                    startkey_docid = doc.pop("_id", None)
                     doc.pop("key", None)
                     doc.pop("_rev", None)
                     doc.pop("_revisions", None)

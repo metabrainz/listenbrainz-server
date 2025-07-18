@@ -12,9 +12,9 @@ import {
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { toast } from "react-toastify";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import Card from "../../../components/Card";
 import { ToastMsg } from "../../../notifications/Notifications";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -105,7 +105,7 @@ export default function PlaylistCard({
   }, [currentUser.auth_token, playlistId, APIService, onSuccessfulCopy]);
 
   const navigateToPlaylist = () => {
-    navigate(`/playlist/${sanitize(playlistId)}/`);
+    navigate(`/playlist/${DOMPurify.sanitize(playlistId)}/`);
   };
 
   if (view === PlaylistView.LIST) {
@@ -125,7 +125,7 @@ export default function PlaylistCard({
             <div className="playlist-index">{index + 1}</div>
             <div className="playlist-info-content">
               <div className="playlist-title">
-                <Link to={`/playlist/${sanitize(playlistId)}/`}>
+                <Link to={`/playlist/${DOMPurify.sanitize(playlistId)}/`}>
                   {playlist.title}
                 </Link>
               </div>
@@ -159,9 +159,9 @@ export default function PlaylistCard({
             icon={faEllipsisVertical}
             fixedWidth
             id="playlistOptionsDropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
             type="button"
           />
           {showOptions ? (
@@ -176,15 +176,17 @@ export default function PlaylistCard({
               className="dropdown-menu dropdown-menu-right"
               aria-labelledby="playlistOptionsDropdown"
             >
-              <li>
-                <a onClick={onCopyPlaylist} role="button" href="#">
-                  <FontAwesomeIcon
-                    icon={faSave as IconProp}
-                    title="Save to my playlists"
-                  />
-                  &nbsp;Save
-                </a>
-              </li>
+              <button
+                className="dropdown-item"
+                onClick={onCopyPlaylist}
+                type="button"
+              >
+                <FontAwesomeIcon
+                  icon={faSave as IconProp}
+                  title="Save to my playlists"
+                />
+                &nbsp;Save
+              </button>
             </ul>
           )}
         </div>
@@ -212,9 +214,9 @@ export default function PlaylistCard({
             className="dropdown-toggle playlist-card-action-button"
             type="button"
             id="playlistOptionsDropdown"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
-            aria-expanded="true"
+            aria-expanded="false"
           >
             <FontAwesomeIcon icon={faCog as IconProp} title="More options" />
             &nbsp;Options
@@ -227,7 +229,10 @@ export default function PlaylistCard({
           />
         </div>
       )}
-      <Link className="info" to={`/playlist/${sanitize(playlistId)}/`}>
+      <Link
+        className="info"
+        to={`/playlist/${DOMPurify.sanitize(playlistId)}/`}
+      >
         <h4>{playlist.title}</h4>
         {playlist.annotation && (
           <div
@@ -235,7 +240,7 @@ export default function PlaylistCard({
             // Sanitize the HTML string before passing it to dangerouslySetInnerHTML
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{
-              __html: sanitize(playlist.annotation),
+              __html: DOMPurify.sanitize(playlist.annotation),
             }}
           />
         )}

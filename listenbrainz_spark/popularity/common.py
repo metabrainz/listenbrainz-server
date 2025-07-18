@@ -104,7 +104,7 @@ class PopularityMessageCreator(MessageCreator):
     def parse_row(self, row: Dict) -> Optional[Dict]:
         return row
 
-    def create_messages(self, results: DataFrame) -> Iterator[Dict]:
+    def create_messages(self, results: DataFrame, only_inc: bool) -> Iterator[Dict]:
         itr = results.toLocalIterator()
         for chunk in chunked(itr, ROWS_PER_MESSAGE):
             multiple_stats = [row.asDict(recursive=True) for row in chunk]
@@ -113,4 +113,5 @@ class PopularityMessageCreator(MessageCreator):
                 "is_mlhd": self.is_mlhd,
                 "entity": self.entity,
                 "data": multiple_stats,
+                "only_inc": only_inc
             }

@@ -5,7 +5,7 @@ import {
   faListAlt,
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import Pill from "../components/Pill";
 import { formatListenCount } from "../explore/fresh-releases/utils";

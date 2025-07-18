@@ -544,7 +544,11 @@ describe("getLatestImport", () => {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ latest_import: "0" }),
+        json: () =>
+          Promise.resolve({
+            latest_import: 0,
+            status: null,
+          }),
       });
     });
 
@@ -570,7 +574,7 @@ describe("getLatestImport", () => {
   it("returns the latest import timestamp", async () => {
     await expect(
       apiService.getLatestImport("foobar", "lastfm")
-    ).resolves.toEqual(0);
+    ).resolves.toEqual({ latest_import: 0, status: null });
   });
 });
 

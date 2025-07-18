@@ -1,6 +1,7 @@
 from typing import List
 
-from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.postgres.release import get_release_metadata_cache
+from listenbrainz_spark.postgres.release_group import get_release_group_metadata_cache
 from listenbrainz_spark.stats.incremental.user.entity import UserEntityStatsQueryProvider
 
 
@@ -11,12 +12,9 @@ class ReleaseGroupUserEntity(UserEntityStatsQueryProvider):
     def entity(self):
         return "release_groups"
 
-    def get_cache_tables(self) -> List[str]:
-        return [RELEASE_METADATA_CACHE_DATAFRAME, RELEASE_GROUP_METADATA_CACHE_DATAFRAME]
-
-    def get_aggregate_query(self, table, cache_tables):
-        rel_cache_table = cache_tables[0]
-        rg_cache_table = cache_tables[1]
+    def get_aggregate_query(self, table):
+        rel_cache_table = get_release_metadata_cache()
+        rg_cache_table = get_release_group_metadata_cache()
         return f"""
             WITH gather_release_data AS (
                 SELECT user_id

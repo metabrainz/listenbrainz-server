@@ -1,5 +1,6 @@
 import abc
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
 
@@ -13,7 +14,6 @@ class QueryProvider(abc.ABC):
             selector: ListenRangeSelector to provide dates and stats range for listens to choose stat from
         """
         self.stats_range, self.from_date, self.to_date = selector.get_dates()
-        self._cache_tables = []
 
     @property
     @abc.abstractmethod
@@ -27,11 +27,6 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_cache_tables(self) -> List[str]:
-        """ Returns the list of HDFS paths for the metadata cache tables required by the statistic. """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
     def get_base_path(self) -> str:
         """ Returns the base HDFS path for storing partial data and metadata for this category of statistics. """
         raise NotImplementedError()
@@ -41,17 +36,16 @@ class QueryProvider(abc.ABC):
         return f"{self.get_base_path()}/aggregates/{self.entity}/{self.stats_range}"
 
     def get_bookkeeping_path(self) -> str:
-        """ Returns the HDFS path for bookkeeping metadata. """
+        """ Returns the HDFS path for bookkeeping metadata directory. """
         return f"{self.get_base_path()}/bookkeeping/{self.entity}/{self.stats_range}"
 
     @abc.abstractmethod
-    def get_aggregate_query(self, table: str, cache_tables: List[str]) -> str:
+    def get_aggregate_query(self, table: str) -> str:
         """
         Returns the query to create (partial) aggregates from the given listens.
 
         Args:
             table: The listen table to aggregation.
-            cache_tables: List of metadata cache tables.
         """
         raise NotImplementedError()
 
@@ -68,14 +62,14 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime) -> str:
         """
-        Return the query to filter the existing aggregate based on the listens present in incremental
-        aggregate.
+        Return the query to filter the aggregate based on the listens submitted since existing created timestamp.
 
         Args:
-            existing_aggregate: The table name for existing aggregate.
-            incremental_aggregate: The table name for incremental aggregate.
+            aggregate: The table name for the aggregate to filter
+            inc_listens_table: The table name for incremental listens.
+            existing_created: The max listen created value last time incremental stats for this query was run.
         """
         raise NotImplementedError()
 

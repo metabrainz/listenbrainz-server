@@ -40,7 +40,7 @@ def get_most_recent_model_meta():
             model_id (str): Model identification string.
     """
     utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA).createOrReplaceTempView("model_metadata")
-    meta = listenbrainz_spark.sql_context.sql("""
+    meta = listenbrainz_spark.session.sql("""
         SELECT model_id, model_html_file
           FROM model_metadata
       ORDER BY model_created DESC
@@ -313,13 +313,6 @@ def get_user_count(df):
 
 
 def main(recommendation_raw_limit=None, users=None):
-
-    try:
-        listenbrainz_spark.init_spark_session('Recommendations')
-    except SparkSessionNotInitializedException as err:
-        logger.error(str(err), exc_info=True)
-        raise
-
     try:
         recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
         all_users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)

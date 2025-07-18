@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import {
   faChevronDown,
   faTimesCircle,
@@ -12,11 +18,14 @@ import ReleaseCard from "../../explore/fresh-releases/components/ReleaseCard";
 
 interface AddSingleListenProps {
   onPayloadChange: (listens: Listen[]) => void;
+  switchMode: (text: string) => void;
+  initialText?: string;
 }
 
-export default function AddSingleListen({
-  onPayloadChange,
-}: AddSingleListenProps) {
+const AddSingleListen = forwardRef(function AddSingleListen(
+  { onPayloadChange, switchMode, initialText }: AddSingleListenProps,
+  ref
+) {
   const [selectedRecordings, setSelectedRecordings] = useState<
     MusicBrainzRecordingWithReleasesAndRGs[]
   >([]);
@@ -26,7 +35,27 @@ export default function AddSingleListen({
       | undefined;
   }>({});
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<SearchInputImperativeHandle>(null);
+
+  const initialTextRef = useRef(initialText);
+  React.useEffect(() => {
+    // Trigger search manually if auto-switching from album to recording search
+    if (initialText && initialTextRef.current !== initialText) {
+      searchInputRef.current?.triggerSearch(initialText);
+      initialTextRef.current = initialText;
+    }
+    return () => {
+      initialTextRef.current = undefined;
+    };
+  }, [initialText]);
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setSelectedRecordings([]);
+      setSelectedReleases({});
+      searchInputRef.current?.reset();
+    },
+  }));
 
   const removeRecording = (recordingMBID: string) => {
     setSelectedRecordings((prevRecordings) =>
@@ -77,6 +106,8 @@ export default function AddSingleListen({
         ref={searchInputRef}
         expectedPayload="recording"
         onSelectRecording={selectRecording}
+        switchMode={switchMode}
+        requiredInput={selectedRecordings.length === 0}
       />
       <div className="track-info">
         <div className="content">
@@ -112,8 +143,8 @@ export default function AddSingleListen({
                 {recording?.releases?.length > 1 && (
                   <>
                     <h5
-                      data-toggle="collapse"
-                      data-target={`#collapsible-${recording.id}`}
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#collapsible-${recording.id}`}
                       aria-controls={`collapsible-${recording.id}`}
                       className="header-with-line collapsed"
                       style={{
@@ -132,7 +163,7 @@ export default function AddSingleListen({
                       className="collapse"
                       id={`collapsible-${recording.id}`}
                     >
-                      <div className="help-block">
+                      <div className="form-text">
                         Too many choices? See more details{" "}
                         <a
                           href={`https://musicbrainz.org/recording/${recording.id}`}
@@ -148,8 +179,8 @@ export default function AddSingleListen({
                           const releaseGroup = release["release-group"];
                           return (
                             <span
-                              data-toggle="collapse"
-                              data-target={`#collapsible-${recording.id}`}
+                              data-bs-toggle="collapse"
+                              data-bs-target={`#collapsible-${recording.id}`}
                               key={release.id}
                             >
                               <ReleaseCard
@@ -211,4 +242,6 @@ export default function AddSingleListen({
       </div>
     </div>
   );
-}
+});
+
+export default AddSingleListen;

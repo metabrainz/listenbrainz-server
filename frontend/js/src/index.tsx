@@ -8,7 +8,7 @@ import {
   matchRoutes,
   useLocation,
   useNavigationType,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import ErrorBoundary from "./utils/ErrorBoundary";
 import GlobalAppContext from "./utils/GlobalAppContext";
@@ -40,7 +40,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { currentUser } = globalAppContext;
 
-  const routes = getRoutes(currentUser?.name);
+  const brainzPlayerDisabled =
+    globalAppContext?.userPreferences?.brainzplayer?.brainzplayerEnabled ===
+    false;
+
+  const routes = getRoutes(currentUser?.name, !brainzPlayerDisabled);
   const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouter(
     createBrowserRouter
   );
@@ -52,9 +56,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       <GlobalAppContext.Provider value={globalAppContext}>
         <Helmet defaultTitle="ListenBrainz" titleTemplate="%s - ListenBrainz" />
         <ReactQueryDevtool client={queryClient}>
-          <BrainzPlayerProvider>
+          {brainzPlayerDisabled ? (
             <RouterProvider router={router} />
-          </BrainzPlayerProvider>
+          ) : (
+            <BrainzPlayerProvider>
+              <RouterProvider router={router} />
+            </BrainzPlayerProvider>
+          )}
         </ReactQueryDevtool>
       </GlobalAppContext.Provider>
     </ErrorBoundary>
