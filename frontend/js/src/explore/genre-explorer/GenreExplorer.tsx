@@ -126,8 +126,8 @@ export default function GenreExplorer() {
     }
   }, [playlistData, dispatch]);
 
-  const handleGenreChange = (newGenreMBID: string) => {
-    navigate(`/explore/genre-explorer/${newGenreMBID}/`);
+  const handleGenreChange = (genreName: string) => {
+    navigate(`/explore/genre-explorer/${genreName}/`);
   };
 
   const onClickDownload = React.useCallback(async () => {

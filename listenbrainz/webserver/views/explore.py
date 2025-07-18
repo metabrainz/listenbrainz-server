@@ -102,9 +102,9 @@ def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict]
     parent_edges = []
     
     # Get immediate parents of the current genre
-    for parent in parent_map[name]:
-        parent_nodes.append({"id": name_id_map[parent], "name": parent})
-        parent_edges.append({"source": parent, "target": name})
+    for parent_name in parent_map[name]:
+        parent_nodes.append({"id": name_id_map[parent_name], "name": parent_name})
+        parent_edges.append({"source": name_id_map[parent_name], "target": name_id_map[name]})
 
     parent_graph = {
         "nodes": parent_nodes,

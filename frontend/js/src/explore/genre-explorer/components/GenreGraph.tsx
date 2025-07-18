@@ -104,7 +104,7 @@ function GenreGraph({
         activeNodeSize={(node) => node.size * 1.2}
         inactiveNodeSize={(node) => node.size}
         nodeComponent={CustomNodeComponent}
-        onClick={(node) => onGenreChange(node.id)}
+        onClick={(node) => onGenreChange(node.data.name)}
         motionConfig="default"
         animate
         isInteractive
