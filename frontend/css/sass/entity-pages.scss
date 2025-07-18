@@ -22,6 +22,11 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
       height: 100%;
       margin-bottom: 0.5em;
     }
+
+    @media (max-width: 768px) {
+      max-height: -webkit-fill-available;
+      max-width: -webkit-fill-available;
+    }
   }
   .artist-info,
   .playlist-info {
