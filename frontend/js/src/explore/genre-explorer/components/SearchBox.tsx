@@ -45,55 +45,60 @@ export default function SearchBox({ onGenreSelect }: SearchBoxProps) {
   };
 
   return (
-    <div className="input-group dropdown-search" ref={dropdownRef}>
-      <input
-        ref={searchInputRef}
-        id="searchbox-genre-name"
-        type="search"
-        className="form-control"
-        name="genre_name"
-        onChange={(e) => handleSearchChange(e.target.value)}
-        placeholder="Search genres..."
-        value={searchQuery}
-        aria-haspopup={Boolean(searchResults?.length)}
-        required
-      />
-      <span className="input-group-btn">
+    <div className="genre-search-box">
+      <label htmlFor="searchbox-genre-name">Genre name</label>
+      <div
+        className="input-group dropdown-search"
+        ref={dropdownRef}
+        id="genre-search-box"
+      >
+        <input
+          ref={searchInputRef}
+          id="searchbox-genre-name"
+          type="search"
+          className="form-control"
+          name="genre_name"
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Search genres..."
+          value={searchQuery}
+          aria-haspopup={Boolean(searchResults?.length)}
+          required
+        />
         <button
-          className="btn btn-default"
+          className="btn btn-info"
           type="button"
           onClick={reset}
           id="genre-search-button"
         >
           <FontAwesomeIcon icon={faSearch} />
         </button>
-      </span>
-      {Boolean(searchResults?.length) && (
-        <select
-          className="dropdown-search-suggestions"
-          onChange={(e) => {
-            if (!e.currentTarget.value) {
-              return;
-            }
-            setSearchQuery(e.currentTarget.value);
-            onGenreSelect(e.currentTarget.value);
-            e.target.blur();
-          }}
-          size={Math.min(searchResults.length + 1, 8)}
-          tabIndex={-1}
-        >
-          {searchResults.map((genre) => (
-            <option key={genre} value={genre} title={genre}>
-              {genre}
-            </option>
-          ))}
-          {searchResults.length < 25 && (
-            <option value="" style={{ textAlign: "center", color: "gray" }}>
-              — No more options —
-            </option>
-          )}
-        </select>
-      )}
+        {Boolean(searchResults?.length) && (
+          <select
+            className="dropdown-search-suggestions"
+            onChange={(e) => {
+              if (!e.currentTarget.value) {
+                return;
+              }
+              setSearchQuery(e.currentTarget.value);
+              onGenreSelect(e.currentTarget.value);
+              e.target.blur();
+            }}
+            size={Math.min(searchResults.length + 1, 8)}
+            tabIndex={-1}
+          >
+            {searchResults.map((genre) => (
+              <option key={genre} value={genre} title={genre}>
+                {genre}
+              </option>
+            ))}
+            {searchResults.length < 25 && (
+              <option value="" style={{ textAlign: "center", color: "gray" }}>
+                — No more options —
+              </option>
+            )}
+          </select>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+@use "sass:map";
+
 .genre-explorer-main-container {
   display: flex;
   flex-direction: column;
@@ -7,83 +9,18 @@
     align-items: center;
     justify-content: start;
     flex-wrap: wrap;
+    gap: 1em;
     padding: 2vh 0;
 
-    @media screen and (max-width: @screen-sm) {
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
       justify-content: space-between;
     }
 
-    #genre-search-button {
-      margin-right: 10px;
-      background-color: @blue;
-
-      &:hover {
-        background-color: @mb_blue_light;
-        border-color: @mb_blue_dark;
-      }
+    .genre-search-box {
+      flex-grow: 1;
+      max-width: 400px;
     }
-
-    .share-buttons {
-      margin-left: 30px;
-      display: flex;
-      align-items: center;
-    }
-
-    // Search box specific styles
-    .dropdown-search {
-      position: relative;
-
-      input {
-        min-width: 300px;
-
-        @media screen and (max-width: @screen-sm) {
-          min-width: 200px;
-        }
-      }
-
-      .dropdown-search-suggestions {
-        display: none; // hidden by default
-        position: absolute;
-        width: calc(100% - 55px);
-        left: 0;
-        top: 33px;
-        z-index: 6;
-        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.175);
-        list-style: none;
-        border: 1px solid @gray-light;
-        border: 1px solid rgba(0, 0, 0, 0.15);
-        background-color: @white-background;
-        overflow-y: auto;
-        border-radius: 0;
-        padding: 0;
-        cursor: pointer;
-
-        // Options within the dropdown menu
-        > option {
-          display: block;
-          width: 100%;
-          outline: inherit;
-          padding: 5px 20px;
-          font: inherit;
-          text-align: left;
-          background: none;
-          color: inherit;
-          border: none;
-          cursor: pointer;
-
-          &:hover,
-          &:focus {
-            color: #fff;
-            background-color: #353070;
-          }
-        }
-      }
-    }
-
-    // Show dropdown when parent is focused
-    .dropdown-search:focus-within .dropdown-search-suggestions {
-      display: block;
-    }
+  
   }
 
   .genre-explorer-content {
@@ -94,7 +31,7 @@
 
     .genre-graph-container {
       flex: 1;
-      height: calc(100vh - @brainzplayer-height);
+      height: calc(100vh - $brainzplayer-height);
       max-height: 1120px;
       overflow: auto;
 
@@ -155,10 +92,10 @@
 
         #genre-mb-link-button {
           font-size: 14px;
-          background-color: @blue;
+          background-color: $blue;
           border: none;
           border-radius: 4px;
-          color: @white;
+          color: $white;
           padding: 0.5em;
           text-decoration: none;
         }

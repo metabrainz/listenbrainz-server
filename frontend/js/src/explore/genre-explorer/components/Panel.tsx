@@ -2,7 +2,7 @@ import * as React from "react";
 import { faInfo } from "@fortawesome/free-solid-svg-icons";
 import { useQuery } from "@tanstack/react-query";
 import Spinner from "react-loader-spinner";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import SideBar from "../../../components/Sidebar";
 import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";

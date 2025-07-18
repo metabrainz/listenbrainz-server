@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQuery } from "@tanstack/react-query";
 import { kebabCase, merge } from "lodash";
 import { Helmet } from "react-helmet";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { toast } from "react-toastify";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import Loader from "../../components/Loader";
@@ -167,9 +167,9 @@ export default function GenreExplorer() {
         <title>Genre Explorer</title>
       </Helmet>
       <div className="genre-explorer-main-container" role="main">
-        <div className="genre-explorer-header">
+        <div className="genre-explorer-header align-items-end">
           <SearchBox onGenreSelect={handleGenreChange} />
-          <div className="share-buttons">
+          <div>
             <button
               type="button"
               className="btn btn-icon btn-info"
