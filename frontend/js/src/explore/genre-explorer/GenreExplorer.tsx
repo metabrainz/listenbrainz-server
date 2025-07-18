@@ -36,14 +36,14 @@ type LBRadioPlaylistResponse = {
 export default function GenreExplorer() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { genreMBID } = useParams<GenreExplorerParams>();
+  const params = useParams<GenreExplorerParams>();
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
   const { APIService } = React.useContext(GlobalAppContext);
   const dispatch = useBrainzPlayerDispatch();
 
   // Query for genre data
   const { data: genreData } = useQuery<GenreExplorerLoaderData>(
-    RouteQuery(["genre-explorer"], location.pathname)
+    RouteQuery(["genre-explorer", params], location.pathname)
   );
 
   const graphData = React.useMemo(() => transformGenreData(genreData!), [
@@ -127,7 +127,7 @@ export default function GenreExplorer() {
   }, [playlistData, dispatch]);
 
   const handleGenreChange = (newGenreMBID: string) => {
-    navigate(`/explore/genre-explorer/${newGenreMBID}`);
+    navigate(`/explore/genre-explorer/${newGenreMBID}/`);
   };
 
   const onClickDownload = React.useCallback(async () => {

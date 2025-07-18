@@ -62,39 +62,39 @@ def ai_brainz():
     return render_template("index.html")
 
 
-def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list[dict], dict, list[dict]]:
+def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict], dict, list[dict]]:
     adj_matrix = defaultdict(list)
-    id_name_map = {}
+    name_id_map = {}
     parent_map = defaultdict(set)
 
     # Build the graph
     for row in data:
-        genre_id = row["genre_gid"]
-        id_name_map[genre_id] = row.get("genre")
+        genre_name = row["genre"]
+        name_id_map[genre_name] = row.get("genre_gid")
         
         # Initialize parent_map entry for genre_id if not exists
-        if genre_id not in parent_map:
-            parent_map[genre_id] = set()
+        if genre_name not in parent_map:
+            parent_map[genre_name] = set()
 
-        subgenre_id = row["subgenre_gid"]
-        if subgenre_id:
-            id_name_map[subgenre_id] = row.get("subgenre")
+        subgenre_name = row["subgenre"]
+        if subgenre_name:
+            name_id_map[subgenre_name] = row.get("subgenre_gid")
             # Add parent relationship
-            parent_map[subgenre_id].add(genre_id)
-            adj_matrix[genre_id].append(subgenre_id)
+            parent_map[subgenre_name].add(genre_name)
+            adj_matrix[genre_name].append(subgenre_name)
         else:
-            adj_matrix[genre_id] = []
+            adj_matrix[genre_name] = []
 
-    if genre_mbid not in id_name_map:
+    if name not in name_id_map:
         return None, None, None, None
 
     # 1. Current genre
-    current_genre = {"id": genre_mbid, "name": id_name_map[genre_mbid]}
+    current_genre = {"id": name_id_map[name], "name": name}
 
     # 2. Get children
     children = [
-        {"id": child_id, "name": id_name_map[child_id]}
-        for child_id in adj_matrix[genre_mbid]
+        {"id": name_id_map[child_name], "name": child_name}
+        for child_name in adj_matrix[name]
     ]
 
     # 3. Get immediate parents only
@@ -102,9 +102,9 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
     parent_edges = []
     
     # Get immediate parents of the current genre
-    for parent in parent_map[genre_mbid]:
-        parent_nodes.append({"id": parent, "name": id_name_map[parent]})
-        parent_edges.append({"source": parent, "target": genre_mbid})
+    for parent in parent_map[name]:
+        parent_nodes.append({"id": name_id_map[parent], "name": parent})
+        parent_edges.append({"source": parent, "target": name})
 
     parent_graph = {
         "nodes": parent_nodes,
@@ -113,20 +113,17 @@ def process_genre_explorer_data(data: list, genre_mbid: str) -> tuple[dict, list
 
     # 4. Get siblings (keeping this as is)
     siblings = set()
-    for parent in parent_map[genre_mbid]:
+    for parent in parent_map[name]:
         siblings.update(adj_matrix[parent])
-    siblings.discard(genre_mbid)
-    siblings_list = [{"id": genre, "name": id_name_map[genre]} for genre in siblings]
+    siblings.discard(name)
+    siblings_list = [{"id": name_id_map[genre], "name": genre} for genre in siblings]
 
     return current_genre, children, parent_graph, siblings_list
 
 
-@explore_bp.post("/genre-explorer/<genre_mbid>/")
-def genre_explorer(genre_mbid):
+@explore_bp.post("/genre-explorer/<genre_name>/")
+def genre_explorer(genre_name):
     """ Get genre explorer data """
-    if not is_valid_uuid(genre_mbid):
-        return jsonify({"error": "Provided genre ID is invalid: %s" % genre_mbid}), 400
-
     try:
         data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
         if not data:
@@ -139,7 +136,7 @@ def genre_explorer(genre_mbid):
         current_app.logger.error("Error loading genre explorer data: %s", e)
         return jsonify({"error": "Failed to load genre explorer data"}), 500
 
-    genre, children, parents, siblings = process_genre_explorer_data(data, genre_mbid)
+    genre, children, parents, siblings = process_genre_explorer_data(data, genre_name)
     if not genre:
         return jsonify({"error": "Genre not found"}), 404
 
