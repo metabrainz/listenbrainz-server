@@ -304,11 +304,11 @@ def get_fresh_releases():
             f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        fe.link(href=f"{_external_url_for('release.release_page')}{release_mbid}", rel="alternate")
+        fe.link(href=f"{_external_url_for('release.release_page', path="")}{release_mbid}", rel="alternate")
 
         content = render_template(
             "atom/fresh_releases.html",
-            release_lb_page_base_url=_external_url_for('release.release_page'),
+            release_lb_page_base_url=_external_url_for('release.release_page', path=""),
             release_name=release_name,
             release_mbid=release_mbid,
             artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
@@ -387,11 +387,11 @@ def get_user_fresh_releases(user_name):
             f"{this_feed_url}/{uts}/{artist_credit_name}/{release_name}"
         )
         fe.title(f"{release_name} by {artist_credit_name}")
-        fe.link(href=f"{_external_url_for('release.release_page')}{release_mbid}", rel="alternate")
+        fe.link(href=f"{_external_url_for('release.release_page', path="")}{release_mbid}", rel="alternate")
 
         content = render_template(
             "atom/fresh_releases.html",
-            release_lb_page_base_url=_external_url_for('release.release_page'),
+            release_lb_page_base_url=_external_url_for('release.release_page', path=""),
             release_name=release_name,
             release_mbid=release_mbid,
             artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
