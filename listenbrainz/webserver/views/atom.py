@@ -234,7 +234,7 @@ def get_listens(user_name):
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
             track_name=track_name,
             recording_mbid=recording_mbid,
-            artist_page_base_url=_external_url_for("artist.artist_page"),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
             artist_mbid=artist_mbid,
             artist_name=artist_name,
         )
@@ -311,7 +311,7 @@ def get_fresh_releases():
             release_lb_page_base_url=_external_url_for('release.release_page'),
             release_name=release_name,
             release_mbid=release_mbid,
-            artist_page_base_url=_external_url_for("artist.artist_page"),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
             explore_fresh_releases_url=_external_url_for(
@@ -394,7 +394,7 @@ def get_user_fresh_releases(user_name):
             release_lb_page_base_url=_external_url_for('release.release_page'),
             release_name=release_name,
             release_mbid=release_mbid,
-            artist_page_base_url=_external_url_for("artist.artist_page"),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
             artist_mbid=artist_mbid,
             artist_name=artist_credit_name,
             explore_fresh_releases_url=_external_url_for(
@@ -490,7 +490,7 @@ def get_artist_stats(user_name):
     content = render_template(
         "atom/top_artists.html",
         artists=entity_list,
-        artist_page_base_url=_external_url_for("artist.artist_page"),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
     )
     fe.content(
         content=content,
@@ -571,8 +571,8 @@ def get_release_group_stats(user_name):
     content = render_template(
         "atom/top_albums.html",
         release_groups=entity_list,
-        artist_page_base_url=_external_url_for("artist.artist_page"),
-        album_page_base_url=_external_url_for("album.album_page"),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
+        album_page_base_url=_external_url_for("album.album_page", release_group_mbid=""),
     )
     fe.content(
         content=content,
@@ -653,7 +653,7 @@ def get_recording_stats(user_name):
     content = render_template(
         "atom/top_tracks.html",
         tracks=entity_list,
-        artist_page_base_url=_external_url_for("artist.artist_page"),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
     )
     fe.content(
         content=content,
@@ -724,7 +724,7 @@ def get_playlist_recordings(playlist_mbid):
             artist_credit=recording.artist_credit,
             artist_mbid=recording.artist_mbids[0] if recording.artist_mbids else None,
             recording_mb_page_base_url="https://musicbrainz.org/recording/",
-            artist_page_base_url=_external_url_for("artist.artist_page"),
+            artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
         )
         fe.content(
             content=content,
@@ -814,7 +814,7 @@ def get_recommendation(user_name):
         "atom/playlist.html",
         tracks=playlist.recordings,
         recording_mb_page_base_url="https://musicbrainz.org/recording/",
-        artist_page_base_url=_external_url_for("artist.artist_page"),
+        artist_page_base_url=_external_url_for("artist.artist_page", artist_mbid=""),
     )
     fe.content(
         content=content,
@@ -1124,7 +1124,7 @@ def _generate_event_title(event):
 
 #     user_page_url = _external_url_for("user.index", user_name=user_name)
 #     user_page_base_url = _external_url_for("user.index", user_name="")[:-1]
-#     artist_page_base_url = _external_url_for("artist.artist_page")
+#     artist_page_base_url = _external_url_for("artist.artist_page", artist_mbid="")
 #     recording_mb_page_base_url = "https://musicbrainz.org/recording/"
 
 #     for event in user_events:
