@@ -343,13 +343,11 @@ def release_group_redirect(path):
     return render_template("index.html")
 
 
-@recording_bp.get("/",  defaults={'path': ''})
 @recording_bp.get('/<path:path>/')
 def recording_redirect(path):
     return render_template("index.html")
 
 
-@track_bp.get("/",  defaults={'path': ''})
 @track_bp.get('/<recording_mbid>/')
 def recording_page(recording_mbid: str):
     og_meta_tags = None
