@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import NiceModal from "@ebay/nice-modal-react";
 import CBReviewForm from "./CBReviewForm";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -41,7 +41,7 @@ export default function CBReview(props: {
   if (!hasPermissions) {
     return (
       <div>
-        <h4> Submit Reviews </h4>
+        <h4>Submit Reviews</h4>
         <p>
           Before you can submit reviews for your Listens, you must{" "}
           <b>
@@ -82,8 +82,6 @@ export default function CBReview(props: {
       <button
         className="btn btn-success"
         type="button"
-        data-toggle="modal"
-        data-target="#CBReviewModal"
         disabled={!reviewValid}
         onClick={() => {
           NiceModal.show(CBReviewModal, {

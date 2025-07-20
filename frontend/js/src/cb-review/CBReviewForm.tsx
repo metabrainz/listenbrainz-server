@@ -91,7 +91,9 @@ function CBReviewForm({
           <span className="dropdown">
             <button
               className="dropdown-toggle btn-transparent"
-              data-toggle="dropdown"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
               type="button"
             >
               {`${entityToReview.name} (${lowerCase(entityToReview.type)})`}
@@ -103,6 +105,7 @@ function CBReviewForm({
                 if (entity) {
                   return (
                     <button
+                      className="dropdown-item"
                       key={entity.mbid}
                       name={`select-${kebabCase(entityToReview.type)}`}
                       onClick={() => setEntityToReview(entity)}
@@ -137,8 +140,9 @@ function CBReviewForm({
             />
           </div>
           <small
-            className={!isReviewValid ? "text-danger" : ""}
-            style={{ display: "block", textAlign: "right" }}
+            className={`d-flex justify-content-end ${
+              !isReviewValid ? "invalid-feedback" : "valid-feedback"
+            }`}
           >
             Words: {countWords(blurbContent)} / Characters:{" "}
             {blurbContent.length}
@@ -159,6 +163,7 @@ function CBReviewForm({
           <div className="dropdown">
             <b>Language of your review: </b>
             <select
+              className="form-select"
               id="language-selector"
               value={language}
               name="language"
@@ -185,7 +190,7 @@ function CBReviewForm({
               onChange={handleLicenseChange}
               required
             />
-            <small>
+            <small className="fw-normal">
               &nbsp;You acknowledge and agree that your contributed reviews to
               CritiqueBrainz are licensed under a Creative Commons
               Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) license. You
@@ -205,7 +210,7 @@ function CBReviewForm({
       {showAlert && (
         <div
           id="text-too-short-alert"
-          className="alert alert-danger mt-10"
+          className="alert alert-danger mt-3"
           role="alert"
         >
           Your review needs to be longer than {minTextLength} characters.

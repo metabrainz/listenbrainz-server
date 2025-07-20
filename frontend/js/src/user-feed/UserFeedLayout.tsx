@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { FeedModes } from "./types";
 
@@ -16,9 +16,13 @@ function NavItem({
 }) {
   return (
     <li
-      className={`${isActive ? "active" : ""} ${isDisabled ? "disabled" : ""}`}
+      className={`nav-item ${isActive ? "active" : ""} ${
+        isDisabled ? "disabled" : ""
+      }`}
     >
-      <NavLink to={url}>{label}</NavLink>
+      <NavLink end className="nav-link" to={url}>
+        {label}
+      </NavLink>
     </li>
   );
 }

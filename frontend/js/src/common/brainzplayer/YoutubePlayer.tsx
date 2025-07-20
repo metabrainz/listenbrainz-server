@@ -18,7 +18,7 @@ import {
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   getArtistName,
   getTrackName,
@@ -432,6 +432,7 @@ export default class YoutubePlayer
             onError={this.onError}
             onStateChange={this.handlePlayerStateChanged}
             onReady={this.onReady}
+            videoId=""
           />
         </div>
       </Draggable>

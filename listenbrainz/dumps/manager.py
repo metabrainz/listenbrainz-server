@@ -33,9 +33,11 @@ from listenbrainz.db.dump_entry import get_latest_incremental_dump, add_dump_ent
 from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.dumps.check import check_ftp_dump_ages
 from listenbrainz.dumps.cleanup import _cleanup_dumps
-from listenbrainz.dumps.exporter import create_statistics_dump, dump_feedback_for_spark, dump_database
+from listenbrainz.dumps.exporter import create_statistics_dump, dump_feedback_for_spark, dump_database, \
+    create_sample_dump
 from listenbrainz.dumps.importer import import_postgres_dump
 from listenbrainz.dumps.mapping import create_mapping_dump
+from listenbrainz.dumps.sample import import_sample_data
 from listenbrainz.listenstore import LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.utils import create_path
@@ -219,8 +221,6 @@ def create_full(location: str, location_private: str, threads: int, dump_id: int
         if do_spark_dump:
             ls.cleanup_listen_delete_metadata()
 
-        sys.exit(0)
-
 
 @cli.command(name="create_incremental")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
@@ -273,7 +273,6 @@ def create_incremental(location, threads, dump_id):
             f.write("%s %s incremental\n" % (end_time.strftime('%Y%m%d-%H%M%S'), dump_id))
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
-        sys.exit(0)
 
 
 @cli.command(name="create_feedback")
@@ -313,7 +312,42 @@ def create_feedback(location, threads):
         current_app.logger.info(
             'Feedback dump created and hashes written at %s' % dump_path)
 
-        sys.exit(0)
+
+@cli.command(name="create_sample")
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'),
+              help="path to the directory where the dump should be made")
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
+              help="the number of threads to be used while compression")
+def create_sample(location, threads):
+    """ Create a sample data dump."""
+    app = create_app()
+    with app.app_context():
+
+        end_time = datetime.now()
+        ts = end_time.strftime('%Y%m%d-%H%M%S')
+        dump_name = 'listenbrainz-sample-{time}-full'.format(time=ts)
+        dump_path = os.path.join(location, dump_name)
+        create_path(dump_path)
+        create_sample_dump(dump_path, end_time, threads)
+
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error(
+                'Unable to create hash files! Error: %s', str(e), exc_info=True)
+            sys.exit(-1)
+
+        try:
+            if not sanity_check_dumps(dump_path, 3):
+                sys.exit(-1)
+        except OSError as e:
+            sys.exit(-1)
+
+        # Write the DUMP_ID file so that the FTP sync scripts can be more robust
+        with open(os.path.join(dump_path, "DUMP_ID.txt"), "w") as f:
+            f.write("%s 0 sample\n" % (end_time.strftime('%Y%m%d-%H%M%S')))
+
+        current_app.logger.info('Sample dump created and hashes written at %s' % dump_path)
 
 
 @cli.command(name="import_dump")
@@ -327,10 +361,13 @@ def create_feedback(location, threads):
               help="the path to the ListenBrainz public timescale dump to be imported")
 @click.option('--listen-archive', '-l', default=None, required=False,
               help="the path to the ListenBrainz listen dump archive to be imported")
+@click.option('--sample-archive', '-s', default=None, required=False,
+              help="the path to the ListenBrainz sample dump archive to be imported")
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT,
               help="the number of threads to use during decompression, defaults to 1")
 def import_dump(private_archive, private_timescale_archive,
-                public_archive, public_timescale_archive, listen_archive, threads):
+                public_archive, public_timescale_archive,
+                listen_archive, sample_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
     Args:
@@ -339,6 +376,7 @@ def import_dump(private_archive, private_timescale_archive,
         public_archive (str): the path to the ListenBrainz public dump to be imported
         public_timescale_archive (str): the path to the ListenBrainz public timescale dump to be imported
         listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
+        sample_archive (str): the path to the ListenBrainz sample dump archive to be imported
         threads (int): the number of threads to use during decompression, defaults to 1
 
     .. note::
@@ -349,28 +387,29 @@ def import_dump(private_archive, private_timescale_archive,
     """
     app = create_app()
     with app.app_context():
-        import_postgres_dump(private_archive, private_timescale_archive,
-                                     public_archive, public_timescale_archive,
-                                     threads)
+        if private_archive or private_timescale_archive or public_archive or public_timescale_archive:
+            import_postgres_dump(private_archive, private_timescale_archive,
+                                 public_archive, public_timescale_archive,
+                                 threads)
+
         if listen_archive:
             from listenbrainz.webserver.timescale_connection import _ts as ls
             ls.import_listens_dump(listen_archive, threads)
 
-    sys.exit(0)
+        if sample_archive:
+            import_sample_data(sample_archive, threads)
 
 
 @cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
-    sys.exit(0)
 
 
 @cli.command(name="check_dump_ages")
 def check_dump_ages():
     """Check to make sure that data dumps are sufficiently fresh. Send mail if they are not."""
     check_ftp_dump_ages()
-    sys.exit(0)
 
 
 def write_hashes(location):

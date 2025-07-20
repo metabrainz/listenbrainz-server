@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router";
 
 export default function ReleaseGroup() {
   const { releaseGroupMBID } = useParams();

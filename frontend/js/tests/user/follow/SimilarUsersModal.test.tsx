@@ -1,6 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import SimilarUsersModal from "../../../src/user/components/follow/SimilarUsersModal";
 import GlobalAppContext, {
   GlobalAppContextT,

@@ -14,7 +14,7 @@ import {
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { Helmet } from "react-helmet";
 import {
   ToastMsg,

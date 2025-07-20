@@ -1,4 +1,5 @@
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import {
   faArrowRightLong,
   faInfoCircle,
@@ -46,7 +47,7 @@ export default NiceModal.create(
     const { lookupMBRelease, submitMBIDMapping } = APIService;
     const { auth_token } = currentUser;
 
-    const { resolve, visible } = modal;
+    const { resolve } = modal;
 
     const [matchingTracks, setMatchingTracks] = React.useState<
       MatchingTracksResults
@@ -69,31 +70,6 @@ export default NiceModal.create(
     const [potentialTracks, setPotentialTracks] = React.useState<
       MBTrackWithAC[]
     >();
-
-    const closeModal = React.useCallback(() => {
-      modal.hide();
-      document?.body?.classList?.remove("modal-open");
-      // Need to manually remove the modal backdrop
-      const backdrop = document?.body?.getElementsByClassName(
-        "modal-backdrop"
-      )?.[0];
-      backdrop?.parentElement?.removeChild(backdrop);
-      setTimeout(modal.remove, 200);
-      // Reset
-      setSelectedAlbumMBID(undefined);
-      setEscapeSpecialCharacters(false);
-      setIncludeArtistNameSearch(true);
-    }, [modal]);
-
-    React.useEffect(() => {
-      const closeOnEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          closeModal();
-        }
-      };
-      window.addEventListener("keydown", closeOnEscape);
-      return () => window.removeEventListener("keydown", closeOnEscape);
-    }, [closeModal]);
 
     const handleError = React.useCallback(
       (error: string | Error, title?: string): void => {
@@ -217,14 +193,14 @@ export default NiceModal.create(
             resolve(returnValue);
           }
 
-          closeModal();
+          modal.hide();
         } catch (error) {
           handleError(error, "Error while linking listens");
         }
       },
       [
         auth_token,
-        closeModal,
+        modal,
         resolve,
         submitMBIDMapping,
         matchingTracks,
@@ -329,15 +305,18 @@ export default NiceModal.create(
     }
 
     return (
-      <div
-        className={`modal fade ${visible ? "in" : ""}`}
-        id="MultiTrackMBIDMappingModal"
-        role="dialog"
+      <Modal
+        {...bootstrapDialog(modal)}
+        title="Link listens"
         aria-labelledby="MultiTrackMBIDMappingModalLabel"
-        data-backdrop
-        data-keyboard
+        id="MultiTrackMBIDMappingModal"
       >
-        <div className="modal-dialog" role="document">
+        <Modal.Header closeButton>
+          <Modal.Title id="MultiTrackMBIDMappingModalLabel">
+            Link listens
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
           <Tooltip id="musicbrainz-helptext" type="info" multiline>
             Search for an album matching the listens above.
             <br />
@@ -347,286 +326,266 @@ export default NiceModal.create(
             When you have found the one that matches your listens, copy its URL
             (link) into the search box above.
           </Tooltip>
-          <div className="modal-content">
-            <div className="modal-header">
-              <button
-                type="button"
-                className="close"
-                onClick={closeModal}
-                aria-label="Close"
-              >
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 className="modal-title" id="MultiTrackMBIDMappingModalLabel">
-                Link listens
-              </h4>
+          <div>
+            <p className="small form-text text-start">
+              Search by album/artist name or paste a{" "}
+              <a href="https://musicbrainz.org/doc/About">
+                MusicBrainz URL or MBID
+              </a>
+              .
+              <FontAwesomeIcon
+                icon={faQuestionCircle}
+                data-tip
+                data-for="musicbrainz-helptext"
+                size="sm"
+              />
+            </p>
+            <div className="card listen-card">
+              <SearchAlbumOrMBID
+                key={searchTerm}
+                onSelectAlbum={setSelectedAlbumMBID}
+                defaultValue={searchTerm ?? ""}
+              />
             </div>
-            <div className="modal-body">
-              <div>
-                <p className="small help-block text-left">
-                  Search by album/artist name or paste a{" "}
-                  <a href="https://musicbrainz.org/doc/About">
-                    MusicBrainz URL or MBID
-                  </a>
-                  .
-                  <FontAwesomeIcon
-                    icon={faQuestionCircle}
-                    data-tip
-                    data-for="musicbrainz-helptext"
-                    size="sm"
-                  />
-                </p>
-                <div className="card listen-card">
-                  <SearchAlbumOrMBID
-                    key={searchTerm}
-                    onSelectAlbum={setSelectedAlbumMBID}
-                    defaultValue={searchTerm ?? ""}
-                  />
-                </div>
-                <div className="form-check mt-15">
-                  <input
-                    className="form-check-input"
-                    id="includeArtistSearch"
-                    type="checkbox"
-                    checked={includeArtistNameSearch}
-                    onChange={(e) =>
-                      setIncludeArtistNameSearch(e.target.checked)
-                    }
-                  />
-                  &nbsp;
-                  <label
-                    htmlFor="includeArtistSearch"
-                    style={{ fontWeight: "initial" }}
-                  >
-                    Include artist name when searching{" "}
-                    <FontAwesomeIcon
-                      icon={faQuestionCircle}
-                      data-tip
-                      data-for="includeArtistNameHelp"
-                      size="sm"
-                    />{" "}
-                  </label>
-                </div>
-                <Tooltip id="includeArtistNameHelp" type="info" multiline>
-                  Depending on the data we have available, including the artist
-                  name can result in worse matching. Tick this checkbox if you
-                  have a poor matching rate.
-                </Tooltip>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    id="escapeSpecialCharacters"
-                    type="checkbox"
-                    checked={escapeSpecialCharacters}
-                    onChange={(e) =>
-                      setEscapeSpecialCharacters(e.target.checked)
-                    }
-                  />
-                  &nbsp;
-                  <label
-                    htmlFor="escapeSpecialCharacters"
-                    style={{ fontWeight: "initial" }}
-                  >
-                    Preserve special characters{" "}
-                    <FontAwesomeIcon
-                      icon={faQuestionCircle}
-                      data-tip
-                      data-for="escapeSpecialCharactersHepl"
-                      size="sm"
-                    />{" "}
-                  </label>
-                </div>
-                <Tooltip id="escapeSpecialCharactersHepl" type="info">
-                  Escape special characters such as{" "}
-                  <span className="code-block strong">
-                    ( ) [ ] ! * ~ ^ &quot; ~ ? \ / || &&
-                  </span>
-                  &nbsp;to preserve them in the search term.
-                  <br />
-                  Otherwise those characters may be ignored.
-                  <br />
-                  For example, to search for an album by the band
-                  &quot;!!!&quot;,
-                  <br />
-                  you will need to escape the characters like so:{" "}
-                  <pre>artist:(\!\!\!)</pre>
-                </Tooltip>
-              </div>
-              <hr />
-              {selectedAlbum && (
-                <div className="header-with-line">
-                  <a
-                    href={`https://musicbrainz.org/release/${selectedAlbum.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <strong>{selectedAlbum.title}</strong>
-                  </a>
-                  {selectedAlbum.date &&
-                    isValid(new Date(selectedAlbum.date)) && (
-                      <span>
-                        &nbsp;({new Date(selectedAlbum.date).getFullYear()})
-                      </span>
-                    )}
-                  &nbsp;–&nbsp;
-                  {selectedAlbum["artist-credit"]
-                    ?.map((artist) => `${artist.name}${artist.joinphrase}`)
-                    .join("")}
-                  {selectedAlbum["release-group"]?.["primary-type"] && (
-                    <small>
-                      &nbsp;(
-                      {selectedAlbum["release-group"]?.["primary-type"]})
-                    </small>
-                  )}
-                </div>
+            <div className="form-check mt-4">
+              <input
+                className="form-check-input"
+                id="includeArtistSearch"
+                type="checkbox"
+                checked={includeArtistNameSearch}
+                onChange={(e) => setIncludeArtistNameSearch(e.target.checked)}
+              />
+              &nbsp;
+              <label
+                htmlFor="includeArtistSearch"
+                style={{ fontWeight: "initial" }}
+                className="form-check-label"
+              >
+                Include artist name when searching{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="includeArtistNameHelp"
+                  size="sm"
+                />{" "}
+              </label>
+            </div>
+            <Tooltip id="includeArtistNameHelp" type="info" multiline>
+              Depending on the data we have available, including the artist name
+              can result in worse matching. Tick this checkbox if you have a
+              poor matching rate.
+            </Tooltip>
+            <div className="form-check">
+              <input
+                className="form-check-input"
+                id="escapeSpecialCharacters"
+                type="checkbox"
+                checked={escapeSpecialCharacters}
+                onChange={(e) => setEscapeSpecialCharacters(e.target.checked)}
+              />
+              &nbsp;
+              <label
+                className="form-check-label"
+                htmlFor="escapeSpecialCharacters"
+                style={{ fontWeight: "initial" }}
+              >
+                Preserve special characters{" "}
+                <FontAwesomeIcon
+                  icon={faQuestionCircle}
+                  data-tip
+                  data-for="escapeSpecialCharactersHepl"
+                  size="sm"
+                />{" "}
+              </label>
+            </div>
+            <Tooltip id="escapeSpecialCharactersHepl" type="info">
+              Escape special characters such as{" "}
+              <span className="code-block strong">
+                ( ) [ ] ! * ~ ^ &quot; ~ ? \ / || &&
+              </span>
+              &nbsp;to preserve them in the search term.
+              <br />
+              Otherwise those characters may be ignored.
+              <br />
+              For example, to search for an album by the band &quot;!!!&quot;,
+              <br />
+              you will need to escape the characters like so:{" "}
+              <pre>artist:(\!\!\!)</pre>
+            </Tooltip>
+          </div>
+          <hr />
+          {selectedAlbum && (
+            <div className="header-with-line">
+              <a
+                href={`https://musicbrainz.org/release/${selectedAlbum.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <strong>{selectedAlbum.title}</strong>
+              </a>
+              {selectedAlbum.date && isValid(new Date(selectedAlbum.date)) && (
+                <span>
+                  &nbsp;({new Date(selectedAlbum.date).getFullYear()})
+                </span>
               )}
-              {hasMatches && matchingTracksEntries && (
-                <>
-                  <h5>
-                    Found {matchingTracksEntries.length} matches. Please check
-                    each listen below:
-                  </h5>
-                  <div className="mt-15">
-                    {matchingTracksEntries.map(([recordingMSID, track]) => {
-                      return (
-                        <div
+              &nbsp;–&nbsp;
+              {selectedAlbum["artist-credit"]
+                ?.map((artist) => `${artist.name}${artist.joinphrase}`)
+                .join("")}
+              {selectedAlbum["release-group"]?.["primary-type"] && (
+                <small>
+                  &nbsp;(
+                  {selectedAlbum["release-group"]?.["primary-type"]})
+                </small>
+              )}
+            </div>
+          )}
+          {hasMatches && matchingTracksEntries && (
+            <>
+              <h5>
+                Found {matchingTracksEntries.length} matches. Please check each
+                listen below:
+              </h5>
+              <div className="mt-4">
+                {matchingTracksEntries.map(([recordingMSID, track]) => {
+                  return (
+                    <div
+                      key={recordingMSID}
+                      className="flex"
+                      style={{ alignItems: "center" }}
+                    >
+                      <q>{track.searchString}</q>
+                      <FontAwesomeIcon
+                        icon={faArrowRightLong}
+                        style={{ flex: "0 1 50px" }}
+                      />
+                      <div style={{ flex: "2 1 0%" }}>
+                        <ListenCard
                           key={recordingMSID}
-                          className="flex"
-                          style={{ alignItems: "center" }}
-                        >
-                          <q>{track.searchString}</q>
-                          <FontAwesomeIcon
-                            icon={faArrowRightLong}
-                            style={{ flex: "0 1 50px" }}
-                          />
-                          <div style={{ flex: "2 1 0%" }}>
-                            <ListenCard
-                              key={recordingMSID}
-                              compact
-                              listen={getListenFromTrack(
-                                track,
-                                new Date(0),
-                                selectedAlbum
-                              )}
-                              showTimestamp={false}
-                              showUsername={false}
-                              // eslint-disable-next-line react/jsx-no-useless-fragment
-                              feedbackComponent={<></>}
-                              additionalActions={
-                                <ListenControl
-                                  buttonClassName="btn-transparent"
-                                  text=""
-                                  title="Remove incorrect match"
-                                  icon={faTimesCircle}
-                                  iconSize="lg"
-                                  action={() =>
-                                    removeItemFromMatches(recordingMSID)
-                                  }
-                                />
+                          compact
+                          listen={getListenFromTrack(
+                            track,
+                            new Date(0),
+                            selectedAlbum
+                          )}
+                          showTimestamp={false}
+                          showUsername={false}
+                          // eslint-disable-next-line react/jsx-no-useless-fragment
+                          feedbackComponent={<></>}
+                          additionalActions={
+                            <ListenControl
+                              buttonClassName="btn btn-transparent"
+                              text=""
+                              title="Remove incorrect match"
+                              icon={faTimesCircle}
+                              iconSize="lg"
+                              action={() =>
+                                removeItemFromMatches(recordingMSID)
                               }
                             />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-              {unmatchedItems && Boolean(unmatchedItems.length) && (
+                          }
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {unmatchedItems && Boolean(unmatchedItems.length) && (
+            <>
+              {selectedAlbum ? (
                 <>
-                  {selectedAlbum ? (
-                    <>
-                      <h5>Unlinked items</h5>
-                      We could not automatically find a match for the following
-                      listens:
-                    </>
-                  ) : (
-                    <h5>Listens to link</h5>
-                  )}
-                  <ul style={{ fontSize: "smaller" }}>
-                    {unmatchedItems.map((unmatched) => (
-                      <li key={unmatched.recording_name}>
-                        {[unmatched.recording_name, unmatched.artist_name].join(
-                          " - "
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                  <h5>Unlinked items</h5>
+                  We could not automatically find a match for the following
+                  listens:
                 </>
+              ) : (
+                <h5>Listens to link</h5>
               )}
-              <div className="form-check mt-15">
-                <input
-                  className="form-check-input"
-                  id="includeArtistMatch"
-                  type="checkbox"
-                  checked={includeArtistNameMatch}
-                  onChange={(e) => setIncludeArtistNameMatch(e.target.checked)}
-                />
-                &nbsp;
-                <label
-                  htmlFor="includeArtistMatch"
-                  style={{ fontWeight: "initial" }}
-                >
-                  Include artist name when matching{" "}
-                  <FontAwesomeIcon
-                    icon={faQuestionCircle}
-                    data-tip
-                    data-for="includeArtistNameMatchHelp"
-                    size="sm"
-                  />{" "}
-                </label>
-                <Tooltip id="includeArtistNameMatchHelp" type="info" multiline>
-                  Depending on the data we have available, including the artist
-                  name can result in worse matching. Tick this checkbox if you
-                  have a poor matching rate.
-                </Tooltip>
-              </div>
+              <ul style={{ fontSize: "smaller" }}>
+                {unmatchedItems.map((unmatched) => (
+                  <li key={unmatched.recording_name}>
+                    {[unmatched.recording_name, unmatched.artist_name].join(
+                      " - "
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <div className="form-check mt-4">
+            <input
+              className="form-check-input"
+              id="includeArtistMatch"
+              type="checkbox"
+              checked={includeArtistNameMatch}
+              onChange={(e) => setIncludeArtistNameMatch(e.target.checked)}
+            />
+            &nbsp;
+            <label
+              className="form-check-label"
+              htmlFor="includeArtistMatch"
+              style={{ fontWeight: "initial" }}
+            >
+              Include artist name when matching{" "}
+              <FontAwesomeIcon
+                icon={faQuestionCircle}
+                data-tip
+                data-for="includeArtistNameMatchHelp"
+                size="sm"
+              />{" "}
+            </label>
+            <Tooltip id="includeArtistNameMatchHelp" type="info" multiline>
+              Depending on the data we have available, including the artist name
+              can result in worse matching. Tick this checkbox if you have a
+              poor matching rate.
+            </Tooltip>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={modal.hide}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="btn btn-success"
+            disabled={!hasMatches}
+            onClick={submitMBIDMappingCallback}
+          >
+            Link listens
+          </button>
+          <div className="small form-text text-start">
+            <div>
+              <FontAwesomeIcon icon={faInfoCircle} />
+              &nbsp;
+              <a
+                href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                How long until my stats reflect the change?
+              </a>
             </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-default"
-                onClick={closeModal}
+            <div>
+              <FontAwesomeIcon icon={faInfoCircle} />
+              &nbsp;
+              <a
+                href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-success"
-                disabled={!hasMatches}
-                onClick={submitMBIDMappingCallback}
-              >
-                Link listens
-              </button>
-              <div className="small help-block text-left">
-                <div>
-                  <FontAwesomeIcon icon={faInfoCircle} />
-                  &nbsp;
-                  <a
-                    href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#user-statistics"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    How long until my stats reflect the change?
-                  </a>
-                </div>
-                <div>
-                  <FontAwesomeIcon icon={faInfoCircle} />
-                  &nbsp;
-                  <a
-                    href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html#mbid-mapper-musicbrainz-metadata-cache"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Releases added to MusicBrainz within the last 4 hours may
-                    temporarily look incomplete.
-                  </a>
-                </div>
-              </div>
+                Releases added to MusicBrainz within the last 4 hours may
+                temporarily look incomplete.
+              </a>
             </div>
           </div>
-        </div>
-      </div>
+        </Modal.Footer>
+      </Modal>
     );
   }
 );

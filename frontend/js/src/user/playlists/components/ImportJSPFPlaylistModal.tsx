@@ -1,17 +1,14 @@
 import * as React from "react";
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
 
 export default NiceModal.create(() => {
   const modal = useModal();
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
@@ -128,7 +125,7 @@ export default NiceModal.create(() => {
         return;
       }
       modal.resolve(newPlaylist);
-      closeModal();
+      modal.hide();
     } catch (error) {
       toast.error(
         <ToastMsg
@@ -141,71 +138,53 @@ export default NiceModal.create(() => {
   };
 
   return (
-    <div
-      className={`modal fade ${modal.visible ? "in" : ""}`}
+    <Modal
+      {...bootstrapDialog(modal)}
+      title="Import playlist"
+      aria-labelledby="ImportPlaylistModalLabel"
       id="ImportPlaylistModal"
-      tabIndex={-1}
-      role="dialog"
-      aria-labelledby="playlistModalLabel"
-      data-backdrop="static"
     >
-      <div className="modal-dialog" role="document">
-        <form className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4 className="modal-title" id="playlistModalLabel">
-              Import playlist
-            </h4>
-          </div>
-          <div className="modal-body">
-            <div className="form-group">
-              <label htmlFor="playlistFile">
-                Choose or drop a file with .json or .jspf extension
-              </label>
-              <input
-                type="file"
-                className=""
-                id="playlistFile"
-                accept=".jspf, .json"
-                onChange={handleFileChange}
-              />
-              {fileError && <div className="has-error">{fileError}</div>}
-              <p className="help-block">
-                For information on the JSPF playlist format, please visit{" "}
-                <a href="https://musicbrainz.org/doc/jspf">
-                  musicbrainz.org/doc/jspf
-                </a>
-              </p>
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-default"
-              data-dismiss="modal"
-              onClick={closeModal}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              data-dismiss="modal"
-              disabled={!currentUser?.auth_token || fileContent === null}
-              onClick={onSubmit}
-            >
-              Import
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <Modal.Header closeButton>
+        <Modal.Title id="ImportPlaylistModalLabel">Import playlist</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <div>
+          <label className="form-label" htmlFor="playlistFile">
+            Choose or drop a file with .json or .jspf extension
+          </label>
+          <input
+            type="file"
+            className="form-control"
+            id="playlistFile"
+            accept=".jspf, .json"
+            onChange={handleFileChange}
+          />
+        </div>
+        {fileError && <div className="has-error">{fileError}</div>}
+        <p className="form-text">
+          For information on the JSPF playlist format, please visit{" "}
+          <a href="https://musicbrainz.org/doc/jspf">
+            musicbrainz.org/doc/jspf
+          </a>
+        </p>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={modal.hide}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={!currentUser?.auth_token || fileContent === null}
+          onClick={onSubmit}
+        >
+          Import
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });

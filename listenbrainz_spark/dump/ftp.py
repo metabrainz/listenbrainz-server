@@ -2,7 +2,6 @@ import ftplib
 import logging
 import os
 import time
-from abc import ABC
 
 from listenbrainz_spark import config
 from listenbrainz_spark.dump import DumpType, ListenbrainzDumpLoader
@@ -11,7 +10,7 @@ from listenbrainz_spark.exceptions import DumpInvalidException
 logger = logging.getLogger(__name__)
 
 
-class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader, ABC):
+class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader):
 
     def __init__(self):
         self.connect()
@@ -51,8 +50,10 @@ class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader, ABC):
     def list_dump_directories(self, dump_type: DumpType):
         if dump_type == DumpType.INCREMENTAL:
             dump_dir = os.path.join(config.FTP_LISTENS_DIR, 'incremental/')
-        else:
+        elif dump_type == DumpType.FULL:
             dump_dir = os.path.join(config.FTP_LISTENS_DIR, 'fullexport/')
+        else:
+            dump_dir = os.path.join(config.FTP_LISTENS_DIR, 'sample/')
 
         self.connection.cwd(dump_dir)
         return self.list_dir()
@@ -106,7 +107,7 @@ class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader, ABC):
         self.connection.cwd('/')
         return dest_path
 
-    def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> (str, str, int):
+    def download_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> tuple[str, str, int]:
         """ Download listens to dir passed as an argument.
 
             Args:
@@ -135,5 +136,26 @@ class ListenBrainzFtpDumpLoader(ListenbrainzDumpLoader, ABC):
         logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
         return dest_path, listens_file_name, dump_id
 
-    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> (str, str, int):
+    def load_listens(self, directory, listens_dump_id=None, dump_type: DumpType = DumpType.FULL) -> tuple[str, str, int]:
         return self.download_listens(directory, listens_dump_id, dump_type)
+
+    def download_sample_dump(self, directory):
+        dump_directories = self.list_dump_directories(DumpType.SAMPLE)
+        dump_list = sorted(dump_directories, key=lambda x: int(x.split("-")[2]))
+        if len(dump_list) == 0:
+            raise Exception("No sample dump found")
+
+        latest_dump = dump_list[-1]
+        self.connection.cwd(latest_dump)
+
+        parts = latest_dump.split("-")
+        filename = f"listenbrainz-sample-dump-{parts[2]}-{parts[3]}.tar.zst"
+
+        t0 = time.monotonic()
+        logger.info(f"Downloading {latest_dump} from FTP...")
+        dest_path = self.download_dump(filename , directory)
+        logger.info(f"Done. Total time: {time.monotonic() - t0:.2f} sec")
+        return dest_path
+
+    def get_api_base_url(self):
+        return "https://api.listenbrainz.org"

@@ -4,7 +4,7 @@ import { mount, shallow } from "enzyme";
 import { omit, set, merge } from "lodash";
 import { act } from "react-dom/test-utils";
 import NiceModal from "@ebay/nice-modal-react";
-import { BrowserRouter, Link } from "react-router-dom";
+import { BrowserRouter, Link } from "react-router";
 import ListenCard, {
   ListenCardProps,
   ListenCardState,

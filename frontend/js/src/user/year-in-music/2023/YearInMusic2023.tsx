@@ -1,7 +1,9 @@
 import * as React from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { Navigation, Keyboard, EffectCoverflow, Lazy } from "swiper";
+/* eslint-disable import/no-unresolved */
+import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+/* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import Tooltip from "react-tooltip";
 import { toast } from "react-toastify";
@@ -27,7 +29,7 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
@@ -297,7 +299,7 @@ export default class YearInMusic extends React.Component<
     const { selectedColor } = this.state;
     const { user } = this.props;
     return (
-      <div className="card content-card mb-10" id={`${coverArtKey}`}>
+      <div className="card content-card mb-3" id={`${coverArtKey}`}>
         <div className="center-p heading">
           <object
             className="img-header"
@@ -351,7 +353,7 @@ export default class YearInMusic extends React.Component<
           <hr />
           <a
             href={topLevelPlaylist.identifier}
-            className="btn btn-info btn-block"
+            className="btn btn-info w-100"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -545,14 +547,17 @@ export default class YearInMusic extends React.Component<
           >
             ListenBrainz Profile
           </Link>
-          <div className="input-group">
+          <div
+            className="input-group"
+            style={{ width: "auto", alignItems: "center" }}
+          >
             <input
               type="text"
               className="form-control"
               size={linkToThisPage.length - 5}
               value={linkToThisPage}
             />
-            <span className="btn btn-info input-group-addon">
+            <span className="btn btn-info">
               <FontAwesomeIcon
                 icon={faCopy}
                 onClick={async () => {
@@ -610,7 +615,7 @@ export default class YearInMusic extends React.Component<
               }}
             >
               <img
-                className="img-responsive header-image"
+                className="img-fluid header-image"
                 src="/static/img/year-in-music-23/yim23-logo.png"
                 alt="Your year in music 2023"
               />
@@ -661,7 +666,7 @@ export default class YearInMusic extends React.Component<
             <div className="section">
               <div className="card content-card" id="overview">
                 <h3 className="flex-center">Overview</h3>
-                <div className="center-p">
+                <div className="d-flex justify-content-center">
                   <object
                     className="card"
                     data={`${APIService.APIBaseURI}/art/year-in-music/2023/${user.name}?image=overview`}
@@ -687,16 +692,11 @@ export default class YearInMusic extends React.Component<
                   <h3 className="flex-center">Top albums of 2023</h3>
                   <div id="top-albums">
                     <Swiper
-                      modules={[Navigation, Keyboard, EffectCoverflow, Lazy]}
+                      modules={[Navigation, Keyboard, EffectCoverflow]}
                       spaceBetween={15}
                       slidesPerView={2}
                       initialSlide={0}
                       centeredSlides
-                      lazy={{
-                        enabled: true,
-                        loadPrevNext: true,
-                        loadPrevNextAmount: 4,
-                      }}
                       watchSlidesProgress
                       navigation
                       effect="coverflow"
@@ -735,6 +735,7 @@ export default class YearInMusic extends React.Component<
                           return (
                             <SwiperSlide
                               key={`coverflow-${release_group.release_group_name}`}
+                              lazy
                             >
                               <img
                                 data-src={
@@ -743,6 +744,7 @@ export default class YearInMusic extends React.Component<
                                 }
                                 alt={release_group.release_group_name}
                                 className="swiper-lazy"
+                                loading="lazy"
                               />
                               <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                               <div title={release_group.release_group_name}>
@@ -865,7 +867,7 @@ export default class YearInMusic extends React.Component<
                             artist.artist_mbid
                           );
                           const thumbnail = (
-                            <span className="badge badge-info">
+                            <span className="badge bg-info">
                               <FontAwesomeIcon
                                 style={{ marginRight: "4px" }}
                                 icon={faHeadphones}
@@ -1090,50 +1092,43 @@ export default class YearInMusic extends React.Component<
                           <span className="dropdown">
                             <button
                               className="dropdown-toggle btn-transparent capitalize-bold"
-                              data-toggle="dropdown"
+                              data-bs-toggle="dropdown"
                               type="button"
                             >
                               {selectedMetric}s
-                              <span className="caret" />
                             </button>
-                            <ul className="dropdown-menu" role="menu">
-                              <li
-                                className={
+                            <div className="dropdown-menu" role="menu">
+                              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                              <a
+                                href=""
+                                className={`dropdown-item ${
                                   selectedMetric === "listen"
                                     ? "active"
                                     : undefined
+                                }`}
+                                role="button"
+                                onClick={(event) =>
+                                  this.changeSelectedMetric("listen", event)
                                 }
                               >
-                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                                <a
-                                  href=""
-                                  role="button"
-                                  onClick={(event) =>
-                                    this.changeSelectedMetric("listen", event)
-                                  }
-                                >
-                                  Listens
-                                </a>
-                              </li>
-                              <li
-                                className={
+                                Listens
+                              </a>
+                              {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                              <a
+                                href=""
+                                className={`dropdown-item ${
                                   selectedMetric === "artist"
                                     ? "active"
                                     : undefined
+                                }`}
+                                role="button"
+                                onClick={(event) =>
+                                  this.changeSelectedMetric("artist", event)
                                 }
                               >
-                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                                <a
-                                  href=""
-                                  role="button"
-                                  onClick={(event) =>
-                                    this.changeSelectedMetric("artist", event)
-                                  }
-                                >
-                                  Artists
-                                </a>
-                              </li>
-                            </ul>
+                                Artists
+                              </a>
+                            </div>
                           </span>
                         </div>
                         <CustomChoropleth

@@ -18,12 +18,7 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
 import { Helmet } from "react-helmet";
-import {
-  Link,
-  useLoaderData,
-  useNavigate,
-  useRevalidator,
-} from "react-router-dom";
+import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
 import Card from "../components/Card";
@@ -448,27 +443,21 @@ export default function PlaylistPage() {
                 <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
               )}
             </div>
-            <small className="help-block">
-              <div>Created: {new Date(playlist.date).toLocaleString()}</div>
+            <small className="form-text">
+              Created: {new Date(playlist.date).toLocaleString()}
             </small>
             {customFields?.last_modified_at && (
-              <small className="help-block">
-                <div>
-                  Last modified:{" "}
-                  {new Date(customFields.last_modified_at).toLocaleString()}
-                </div>
+              <small className="form-text">
+                Last modified:{" "}
+                {new Date(customFields.last_modified_at).toLocaleString()}
               </small>
             )}
             {customFields?.copied_from && (
-              <small className="help-block">
-                <div>
-                  Copied from:
-                  <a href={sanitizeUrl(customFields.copied_from)}>
-                    {customFields.copied_from.substr(
-                      PLAYLIST_URI_PREFIX.length
-                    )}
-                  </a>
-                </div>
+              <small className="form-text">
+                Copied from:
+                <a href={sanitizeUrl(customFields.copied_from)}>
+                  {customFields.copied_from.substr(PLAYLIST_URI_PREFIX.length)}
+                </a>
               </small>
             )}
           </div>
@@ -502,9 +491,9 @@ export default function PlaylistPage() {
                 className="btn btn-info dropdown-toggle"
                 type="button"
                 id="playlistOptionsDropdown"
-                data-toggle="dropdown"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
-                aria-expanded="true"
+                aria-expanded="false"
               >
                 <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                 &nbsp;Options
@@ -522,8 +511,6 @@ export default function PlaylistPage() {
               <button
                 type="button"
                 className="btn btn-icon btn-info btn-sm atom-button"
-                data-toggle="modal"
-                data-target="#SyndicationFeedModal"
                 title="Subscribe to syndication feed (Atom)"
                 onClick={() => {
                   NiceModal.show(SyndicationFeedModal, {
@@ -544,7 +531,7 @@ export default function PlaylistPage() {
       <div
         id="playlist"
         data-testid="playlist"
-        className="col-md-8 col-md-offset-2"
+        className="col-md-8 offset-md-2"
       >
         <div className="header">
           <h3 className="header-with-line">

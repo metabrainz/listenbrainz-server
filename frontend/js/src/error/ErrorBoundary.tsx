@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Helmet } from "react-helmet";
-import { isRouteErrorResponse, Link, useRouteError } from "react-router-dom";
+import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
 const ErrorStatusMessage: { [key: number]: string } = {
   400: "Invalid request",

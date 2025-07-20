@@ -5,7 +5,7 @@ import { get, has } from "lodash";
 import tinycolor from "tinycolor2";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import ColorWheel from "./components/ColorWheel";
 import { convertColorReleaseToListen } from "./utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
@@ -164,7 +164,7 @@ export default function HueSound() {
             <div className="col-md-8" style={{ marginTop: "3em" }}>
               <Card style={{ display: "flex" }}>
                 <img
-                  className="img-rounded"
+                  className="rounded"
                   style={{ flex: 1 }}
                   src={`https://archive.org/download/mbid-${selectedRelease.release_mbid}/mbid-${selectedRelease.release_mbid}-${selectedRelease.caa_id}_thumb250.jpg`}
                   alt={`Cover art for Release ${selectedRelease.release_name}`}

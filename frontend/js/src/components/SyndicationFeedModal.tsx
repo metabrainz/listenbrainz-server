@@ -1,4 +1,5 @@
-import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
+import { Modal } from "react-bootstrap";
 import * as React from "react";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -39,11 +40,6 @@ type SelectedOptions = {
 
 export default NiceModal.create((props: SyndicationFeedModalProps) => {
   const modal = useModal();
-  const closeModal = React.useCallback(() => {
-    modal.hide();
-    document?.body?.classList?.remove("modal-open");
-    setTimeout(modal.remove, 200);
-  }, [modal]);
 
   const { feedTitle, options, baseUrl } = props;
 
@@ -89,107 +85,92 @@ export default NiceModal.create((props: SyndicationFeedModalProps) => {
   };
 
   return (
-    <div
+    <Modal
+      size="lg"
+      {...bootstrapDialog(modal)}
+      title="Syndication feed"
+      aria-labelledby="SyndicationFeedModalLabel"
       id="SyndicationFeedModal"
-      className={`modal fade ${modal.visible ? "in" : ""}`}
-      tabIndex={-1}
-      role="dialog"
-      aria-labelledby="syndicationFeedModalLabel"
-      data-backdrop="static"
     >
-      <div
-        className="modal-dialog"
-        role="document"
-        style={{ maxWidth: "800px" }}
-      >
-        <div className="modal-content">
-          <div className="modal-header">
-            <button
-              type="button"
-              className="close"
-              data-dismiss="modal"
-              aria-label="Close"
-              onClick={closeModal}
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-            <h4 className="modal-title" id="syndicationFeedModalLabel">
-              <FontAwesomeIcon icon={faRssSquare} />
-              &nbsp; Syndication feed: {feedTitle}
-            </h4>
-          </div>
-
-          <div className="modal-body">
-            {options.map((option) => (
-              <div className="form-group" key={option.key}>
-                <label htmlFor={option.key}>
-                  {option.label}
-                  {option.tooltip && (
-                    <>
-                      &nbsp;
-                      <FontAwesomeIcon
-                        icon={faCircleQuestion}
-                        data-tip={option.tooltip}
-                      />
-                      <Tooltip place="right" type="dark" effect="solid" />
-                    </>
-                  )}
-                </label>
-                {option.type === "dropdown" && (
-                  <select
-                    className="form-control"
-                    id={option.key}
-                    onChange={(e) =>
-                      handleOptionChange(option.key, e.target.value)
-                    }
-                    defaultValue={selectedOptions[option.key]}
-                  >
-                    {option.values.map((value) => (
-                      <option key={value.id} value={value.value}>
-                        {value.displayValue || value.value}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {option.type === "number" && (
-                  <input
-                    type="number"
-                    className="form-control"
-                    id={option.key}
-                    value={selectedOptions[option.key]}
-                    min={option.min}
-                    max={option.max}
-                    onChange={(e) =>
-                      handleOptionChange(option.key, e.target.value)
-                    }
+      <Modal.Header closeButton>
+        <Modal.Title id="SyndicationFeedModalLabel">
+          <FontAwesomeIcon icon={faRssSquare} />
+          &nbsp; Syndication feed: {feedTitle}
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {options.map((option) => (
+          <div className="mb-4" key={option.key}>
+            <label className="form-label" htmlFor={option.key}>
+              {option.label}
+              {option.tooltip && (
+                <>
+                  &nbsp;
+                  <FontAwesomeIcon
+                    icon={faCircleQuestion}
+                    data-tip={option.tooltip}
                   />
-                )}
-              </div>
-            ))}
-            <div className="form-group">
-              <label htmlFor="feedLink">Subscription URL</label>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="feedLink"
-                  value={buildLink()}
-                  readOnly
-                  style={{ marginRight: "10px", flexGrow: 1 }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-info btn-sm"
-                  onClick={handleCopyClick}
-                  style={{ minWidth: "100px", height: "34px" }}
-                >
-                  {copyButtonText}
-                </button>
-              </div>
-            </div>
+                  <Tooltip place="right" type="dark" effect="solid" />
+                </>
+              )}
+            </label>
+            {option.type === "dropdown" && (
+              <select
+                className="form-select"
+                id={option.key}
+                onChange={(e) => handleOptionChange(option.key, e.target.value)}
+                defaultValue={selectedOptions[option.key]}
+              >
+                {option.values.map((value) => (
+                  <option key={value.id} value={value.value}>
+                    {value.displayValue || value.value}
+                  </option>
+                ))}
+              </select>
+            )}
+            {option.type === "number" && (
+              <input
+                type="number"
+                className="form-control"
+                id={option.key}
+                value={selectedOptions[option.key]}
+                min={option.min}
+                max={option.max}
+                onChange={(e) => handleOptionChange(option.key, e.target.value)}
+              />
+            )}
           </div>
+        ))}
+        <label className="form-label" htmlFor="feedLink">
+          Subscription URL
+        </label>
+        <div className="btn-group d-flex">
+          <input
+            type="text"
+            className="form-control"
+            id="feedLink"
+            value={buildLink()}
+            readOnly
+          />
+          <button
+            type="button"
+            className="btn btn-info"
+            onClick={handleCopyClick}
+            style={{ minWidth: "100px" }}
+          >
+            {copyButtonText}
+          </button>
         </div>
-      </div>
-    </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={modal.hide}
+        >
+          Close
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 });

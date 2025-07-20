@@ -13,7 +13,7 @@ import {
   useLocation,
   useParams,
   useSearchParams,
-} from "react-router-dom";
+} from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
@@ -139,9 +139,9 @@ export default class PlayerPage extends React.Component<
                   className="btn btn-info dropdown-toggle"
                   type="button"
                   id="playlistOptionsDropdown"
-                  data-toggle="dropdown"
+                  data-bs-toggle="dropdown"
                   aria-haspopup="true"
-                  aria-expanded="true"
+                  aria-expanded="false"
                 >
                   <FontAwesomeIcon icon={faCog as IconProp} title="Options" />
                   &nbsp;Options
@@ -151,7 +151,7 @@ export default class PlayerPage extends React.Component<
                   aria-labelledby="playlistOptionsDropdown"
                 >
                   {releaseLink && (
-                    <li>
+                    <li className="dropdown-item">
                       See on MusicBrainz
                       <ListenControl
                         icon={faExternalLinkAlt}
@@ -166,16 +166,14 @@ export default class PlayerPage extends React.Component<
                     </li>
                   )}
                   {currentUser?.auth_token && (
-                    <li>
-                      <a
-                        id="exportPlaylistToSpotify"
-                        role="button"
-                        href="#"
-                        onClick={this.savePlaylist}
-                      >
-                        Save Playlist
-                      </a>
-                    </li>
+                    <button
+                      className="dropdown-item"
+                      id="exportPlaylistToSpotify"
+                      type="button"
+                      onClick={this.savePlaylist}
+                    >
+                      Save Playlist
+                    </button>
                   )}
                 </ul>
               </span>

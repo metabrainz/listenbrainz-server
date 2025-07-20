@@ -143,8 +143,8 @@ const AddSingleListen = forwardRef(function AddSingleListen(
                 {recording?.releases?.length > 1 && (
                   <>
                     <h5
-                      data-toggle="collapse"
-                      data-target={`#collapsible-${recording.id}`}
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#collapsible-${recording.id}`}
                       aria-controls={`collapsible-${recording.id}`}
                       className="header-with-line collapsed"
                       style={{
@@ -163,7 +163,7 @@ const AddSingleListen = forwardRef(function AddSingleListen(
                       className="collapse"
                       id={`collapsible-${recording.id}`}
                     >
-                      <div className="help-block">
+                      <div className="form-text">
                         Too many choices? See more details{" "}
                         <a
                           href={`https://musicbrainz.org/recording/${recording.id}`}
@@ -179,8 +179,8 @@ const AddSingleListen = forwardRef(function AddSingleListen(
                           const releaseGroup = release["release-group"];
                           return (
                             <span
-                              data-toggle="collapse"
-                              data-target={`#collapsible-${recording.id}`}
+                              data-bs-toggle="collapse"
+                              data-bs-target={`#collapsible-${recording.id}`}
                               key={release.id}
                             >
                               <ReleaseCard
