@@ -101,7 +101,7 @@ $youtube-resize-transition: height 0.25s ease-out;
         }
 
         .youtube-drag-handle,
-        .youtube-reduce-button {
+        .youtube-button {
           height: $youtube-button-size;
           display: inline-block;
           background: fadeout(black, 50%);
