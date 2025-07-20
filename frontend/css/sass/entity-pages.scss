@@ -54,15 +54,6 @@ $white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
       margin-top: 0;
     }
   }
-  .track-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    .track-play-button {
-      max-width: 200px;
-      border-radius: 999px;
-    }
-  }
   .lb-radio-button {
     align-self: flex-end;
     gap: 0.1em;

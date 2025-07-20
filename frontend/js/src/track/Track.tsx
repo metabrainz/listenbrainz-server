@@ -237,7 +237,7 @@ export default function TrackPage(): JSX.Element {
             alt="Album art"
           />
         </div>
-        <div className="artist-info track-info">
+        <div className="artist-info">
           <div>
             <h1>{recordingName}</h1>
             <div className="details h3">
@@ -257,7 +257,7 @@ export default function TrackPage(): JSX.Element {
             </div>
           </div>
           <button
-            className="btn btn-icon btn-info track-play-button"
+            className="btn btn-info btn-rounded align-self-baseline fs-3 mt-auto"
             title="Play this track"
             type="button"
             onClick={() => {
@@ -270,7 +270,7 @@ export default function TrackPage(): JSX.Element {
               );
             }}
           >
-            <FontAwesomeIcon icon={faPlayCircle} /> Play
+            <FontAwesomeIcon icon={faPlayCircle} /> Play this track
           </button>
         </div>
         <div className="right-side">
