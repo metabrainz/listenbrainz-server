@@ -218,6 +218,8 @@ export default function TrackPage(): JSX.Element {
       ?.map((a) => `artist:(${a.artist_mbid ?? a.artist_credit_name})::nosim`)
       .join(" ") ?? `artist:(${encodeURIComponent(artist_credit_name)})::nosim`;
 
+  const recordingAsListen = recordingToListen(track);
+
   return (
     <div id="entity-page" role="main" className="track-page">
       <Helmet>
@@ -235,23 +237,41 @@ export default function TrackPage(): JSX.Element {
             alt="Album art"
           />
         </div>
-        <div className="artist-info">
-          <h1>{recordingName}</h1>
-          <div className="details h3">
-            <div>
-              {artists.map((ar) => {
-                return (
-                  <span key={ar.artist_mbid}>
-                    <Link to={`/artist/${ar.artist_mbid}/`}>
-                      {ar?.artist_credit_name}
-                    </Link>
-                    {ar.join_phrase}
-                  </span>
-                );
-              })}
+        <div className="artist-info track-info">
+          <div>
+            <h1>{recordingName}</h1>
+            <div className="details h3">
+              <div>
+                {artists.map((ar) => {
+                  return (
+                    <span key={ar.artist_mbid}>
+                      <Link to={`/artist/${ar.artist_mbid}/`}>
+                        {ar?.artist_credit_name}
+                      </Link>
+                      {ar.join_phrase}
+                    </span>
+                  );
+                })}
+              </div>
+              <small className="form-text">{formattedDuration}</small>
             </div>
-            <small className="form-text">{formattedDuration}</small>
           </div>
+          <button
+            className="btn btn-icon btn-info track-play-button"
+            title="Play this track"
+            type="button"
+            onClick={() => {
+              window.postMessage(
+                {
+                  brainzplayer_event: "play-listen",
+                  payload: recordingAsListen,
+                },
+                window.location.origin
+              );
+            }}
+          >
+            <FontAwesomeIcon icon={faPlayCircle} /> Play
+          </button>
         </div>
         <div className="right-side">
           <div className="entity-rels">
