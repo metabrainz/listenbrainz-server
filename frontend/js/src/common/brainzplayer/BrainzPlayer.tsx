@@ -56,6 +56,7 @@ import {
   currentTrackAlbumAtom,
   currentTrackURLAtom,
   currentTrackCoverURLAtom,
+  currentDataSourceIndexAtom,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
@@ -162,6 +163,7 @@ export default function BrainzPlayer() {
   const setCurrentTrackArtist = useSetAtom(currentTrackArtistAtom);
   const setCurrentTrackAlbum = useSetAtom(currentTrackAlbumAtom);
   const setCurrentTrackURL = useSetAtom(currentTrackURLAtom);
+  const setCurrentDataSourceIndex = useSetAtom(currentDataSourceIndexAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
@@ -178,6 +180,7 @@ export default function BrainzPlayer() {
   const getCurrentTrackArtist = () => store.get(currentTrackArtistAtom);
   const getCurrentTrackAlbum = () => store.get(currentTrackAlbumAtom);
   const getCurrentTrackURL = () => store.get(currentTrackURLAtom);
+  const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -286,9 +289,7 @@ export default function BrainzPlayer() {
   const onLocalStorageEvent = async (event: StorageEvent) => {
     if (event.storageArea !== localStorage) return;
     if (event.key === "BrainzPlayer_stop") {
-      const dataSource =
-        dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-          ?.current;
+      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
       if (dataSource && !playerPaused) {
         await dataSource.togglePlay();
       }
@@ -357,7 +358,7 @@ export default function BrainzPlayer() {
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ): void => {
-    let dataSourceIndex = brainzPlayerContextRef.current.currentDataSourceIndex;
+    let dataSourceIndex = getCurrentDataSourceIndex();
     if (dataSource) {
       dataSourceIndex = dataSourceRefs.findIndex(
         (source) => source.current === dataSource
@@ -372,8 +373,7 @@ export default function BrainzPlayer() {
   };
 
   const getListenMetadataToSubmit = (): BaseListenFormat => {
-    const dataSource =
-      dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex];
+    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()];
 
     const brainzplayer_metadata = {
       artist_name: getCurrentTrackArtist(),
@@ -426,8 +426,7 @@ export default function BrainzPlayer() {
     listen: BaseListenFormat,
     retries: number = 3
   ): Promise<void> => {
-    const dataSource =
-      dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex];
+    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()];
     if (!currentUser || !currentUser.auth_token) {
       return;
     }
@@ -560,17 +559,8 @@ export default function BrainzPlayer() {
       return;
     }
     stopOtherBrainzPlayers();
-    dispatch({ currentDataSourceIndex: selectedDatasourceIndex }, async () => {
-      while (
-        brainzPlayerContextRef.current.currentListen !== listen ||
-        brainzPlayerContextRef.current.currentDataSourceIndex !==
-          selectedDatasourceIndex
-      ) {
-        // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-      datasource.playListen(listen);
-    });
+    setCurrentDataSourceIndex(selectedDatasourceIndex);
+    datasource.playListen(listen);
   };
 
   const stopPlayerStateTimer = (): void => {
@@ -687,9 +677,7 @@ export default function BrainzPlayer() {
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const dataSource =
-      dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-        ?.current;
+    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
     if (!dataSource) {
       invalidateDataSource();
       return;
@@ -721,9 +709,7 @@ export default function BrainzPlayer() {
 
   const togglePlay = async (): Promise<void> => {
     try {
-      const dataSource =
-        dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-          ?.current;
+      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
       if (!dataSource) {
         invalidateDataSource();
         return;
@@ -759,14 +745,13 @@ export default function BrainzPlayer() {
 
     if (
       brainzPlayerContextRef.current.currentListen &&
-      brainzPlayerContextRef.current.currentDataSourceIndex <
-        dataSourceRefs.length - 1
+      getCurrentDataSourceIndex() < dataSourceRefs.length - 1
     ) {
       // Try playing the listen with the next dataSource
       playListen(
         brainzPlayerContextRef.current.currentListen,
         brainzPlayerContextRef.current.currentListenIndex,
-        brainzPlayerContextRef.current.currentDataSourceIndex + 1
+        getCurrentDataSourceIndex() + 1
       );
     } else {
       handleWarning(
@@ -1044,10 +1029,7 @@ export default function BrainzPlayer() {
         togglePlay={getIsActivated() ? togglePlay : activatePlayerAndPlay}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
-        currentDataSource={
-          dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex]
-            ?.current
-        }
+        currentDataSource={dataSourceRefs[getCurrentDataSourceIndex()]?.current}
         clearQueue={clearQueue}
       >
         {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
@@ -1055,9 +1037,8 @@ export default function BrainzPlayer() {
             volume={volume}
             show={
               getIsActivated() &&
-              dataSourceRefs[
-                brainzPlayerContextRef.current.currentDataSourceIndex
-              ]?.current instanceof SpotifyPlayer
+              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
+                SpotifyPlayer
             }
             refreshSpotifyToken={refreshSpotifyToken}
             onInvalidateDataSource={invalidateDataSource}
@@ -1079,9 +1060,8 @@ export default function BrainzPlayer() {
             volume={volume}
             show={
               getIsActivated() &&
-              dataSourceRefs[
-                brainzPlayerContextRef.current.currentDataSourceIndex
-              ]?.current instanceof YoutubePlayer
+              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
+                YoutubePlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={youtubePlayerRef}
@@ -1104,9 +1084,8 @@ export default function BrainzPlayer() {
             volume={volume}
             show={
               getIsActivated() &&
-              dataSourceRefs[
-                brainzPlayerContextRef.current.currentDataSourceIndex
-              ]?.current instanceof SoundcloudPlayer
+              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
+                SoundcloudPlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={soundcloudPlayerRef}
@@ -1128,9 +1107,8 @@ export default function BrainzPlayer() {
             volume={volume}
             show={
               getIsActivated() &&
-              dataSourceRefs[
-                brainzPlayerContextRef.current.currentDataSourceIndex
-              ]?.current instanceof AppleMusicPlayer
+              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
+                AppleMusicPlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={appleMusicPlayerRef}

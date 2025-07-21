@@ -4,14 +4,12 @@ import { listenOrJSPFTrackToQueueItem } from "./utils";
 export type BrainzPlayerContextT = {
   currentListen?: BrainzPlayerQueueItem;
   currentListenIndex: number;
-  currentDataSourceIndex: number;
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
 };
 
 export const initialValue: BrainzPlayerContextT = {
   currentListenIndex: -1,
-  currentDataSourceIndex: 0,
   queue: [],
   ambientQueue: [],
 };
