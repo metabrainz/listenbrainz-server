@@ -42,7 +42,7 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
 
-function SortingButtons({
+export function SortingButtons({
   sort,
   setSort,
 }: {
@@ -71,7 +71,8 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
+export interface ReleaseGroupWithSecondaryTypesAndListenCount
+  extends ReleaseGroup {
   secondary_types: string[];
   total_listen_count: number | null;
 }
@@ -89,7 +90,57 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
-const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const typeOrder = [
+  "Album",
+  "EP",
+  "Single",
+  "Live",
+  "Compilation",
+  "Remix",
+  "Broadcast",
+];
+export const sortReleaseGroups = (
+  sort: "release_date" | "total_listen_count",
+  releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
+) =>
+  orderBy(
+    releaseGroupsInput,
+    [
+      sort === "release_date"
+        ? (rg) => rg.date || ""
+        : (rg) => rg.total_listen_count ?? 0,
+      sort === "release_date"
+        ? (rg) => rg.total_listen_count ?? 0
+        : (rg) => rg.date || "",
+      "name",
+    ],
+    ["desc", "desc", "asc"]
+  );
+
+export const getReleaseCard = (rg: ReleaseGroup) => {
+  return (
+    <ReleaseCard
+      key={rg.mbid}
+      releaseDate={rg.date ?? undefined}
+      dateFormatOptions={{ year: "numeric", month: "short" }}
+      releaseGroupMBID={rg.mbid}
+      releaseName={rg.name}
+      releaseTypePrimary={rg.type}
+      artistCredits={rg.artists}
+      artistCreditName={rg.artists
+        .map((ar) => ar.artist_credit_name + ar.join_phrase)
+        .join("")}
+      artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
+      caaID={rg.caa_id}
+      caaReleaseMBID={rg.caa_release_mbid}
+      showInformation
+      showArtist
+      showReleaseTitle
+      showListens
+    />
+  );
+};
 
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
@@ -139,32 +190,6 @@ export default function ArtistPage(): JSX.Element {
     (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
   );
 
-  const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
-  ) =>
-    orderBy(
-      releaseGroupsInput,
-      [
-        sort === "release_date"
-          ? (rg) => rg.date || ""
-          : (rg) => rg.total_listen_count ?? 0,
-        sort === "release_date"
-          ? (rg) => rg.total_listen_count ?? 0
-          : (rg) => rg.date || "",
-        "name",
-      ],
-      ["desc", "desc", "asc"]
-    );
-
-  const typeOrder = [
-    "Album",
-    "EP",
-    "Single",
-    "Live",
-    "Compilation",
-    "Remix",
-    "Broadcast",
-  ];
   const last = Object.keys(rgGroups).length;
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
     typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
@@ -175,7 +200,7 @@ export default function ArtistPage(): JSX.Element {
     ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
-    groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
+    groupedReleaseGroups[type] = sortReleaseGroups(sort, rgGroups[type]);
   });
 
   React.useEffect(() => {
@@ -247,30 +272,6 @@ export default function ArtistPage(): JSX.Element {
   };
 
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
-
-  const getReleaseCard = (rg: ReleaseGroup) => {
-    return (
-      <ReleaseCard
-        key={rg.mbid}
-        releaseDate={rg.date ?? undefined}
-        dateFormatOptions={{ year: "numeric", month: "short" }}
-        releaseGroupMBID={rg.mbid}
-        releaseName={rg.name}
-        releaseTypePrimary={rg.type}
-        artistCredits={rg.artists}
-        artistCreditName={rg.artists
-          .map((ar) => ar.artist_credit_name + ar.join_phrase)
-          .join("")}
-        artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
-        caaID={rg.caa_id}
-        caaReleaseMBID={rg.caa_release_mbid}
-        showInformation
-        showArtist
-        showReleaseTitle
-        showListens
-      />
-    );
-  };
 
   React.useEffect(() => {
     // Reset default view

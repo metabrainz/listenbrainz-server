@@ -1,10 +1,11 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import ListenControl, {
   ListenControlProps,
 } from "../../../src/common/listens/ListenControl";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const user = userEvent.setup();
 
@@ -16,7 +17,7 @@ const defaultProps: ListenControlProps = {
 
 describe("ListenControl", () => {
   it("renders as a button by default", () => {
-    render(<ListenControl {...defaultProps} />);
+    renderWithProviders(<ListenControl {...defaultProps} />);
     const button = screen.getByRole("menuitem");
 
     expect(button).toBeInTheDocument();
@@ -26,7 +27,7 @@ describe("ListenControl", () => {
   });
 
   it("renders as a link when 'link' prop is provided", () => {
-    render(<ListenControl {...defaultProps} link="https://example.com" />);
+    renderWithProviders(<ListenControl {...defaultProps} link="https://example.com" />);
     const link = screen.getByRole("link", { name: "foobar title" });
 
     expect(link).toBeInTheDocument();
@@ -37,7 +38,7 @@ describe("ListenControl", () => {
   it("calls the action handler when the button is clicked", async () => {
     const handleClick = jest.fn();
 
-    render(<ListenControl {...defaultProps} action={handleClick} />);
+    renderWithProviders(<ListenControl {...defaultProps} action={handleClick} />);
 
     await user.click(screen.getByRole("menuitem"));
     expect(handleClick).toHaveBeenCalledTimes(1);
@@ -45,7 +46,7 @@ describe("ListenControl", () => {
 
   it("is disabled when the 'disabled' prop is true", async () => {
     const handleClick = jest.fn();
-    render(<ListenControl {...defaultProps} action={handleClick} disabled />);
+    renderWithProviders(<ListenControl {...defaultProps} action={handleClick} disabled />);
 
     const button = screen.getByRole("menuitem");
     expect(button).toBeDisabled();
@@ -55,12 +56,12 @@ describe("ListenControl", () => {
   });
 
   it("renders with 'dropdown-item' class by default", () => {
-    render(<ListenControl {...defaultProps} />);
+    renderWithProviders(<ListenControl {...defaultProps} />);
     expect(screen.getByRole("menuitem")).toHaveClass("dropdown-item");
   });
 
   it("renders without 'dropdown-item' class when isDropdown is false", () => {
-    render(<ListenControl {...defaultProps} isDropdown={false} />);
+    renderWithProviders(<ListenControl {...defaultProps} isDropdown={false} />);
     expect(screen.getByRole("menuitem")).not.toHaveClass("dropdown-item");
   });
 });

@@ -440,11 +440,9 @@ export class ListenCard extends React.Component<
     } else if (recordingMBID || releaseGroupMBID) {
       if (recordingMBID) {
         thumbnail = (
-          <a
-            href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          <Link
+            to={`/track/${recordingMBID}`}
             title="Could not load cover art"
-            target="_blank"
-            rel="noopener noreferrer"
             className="listen-thumbnail"
           >
             <div className="cover-art-fallback">
@@ -456,7 +454,7 @@ export class ListenCard extends React.Component<
                 />
               </span>
             </div>
-          </a>
+          </Link>
         );
       } else {
         thumbnail = (
@@ -575,11 +573,7 @@ export class ListenCard extends React.Component<
                         title="Open in MusicBrainz"
                         text="Open in MusicBrainz"
                         key="Open in MusicBrainz"
-                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
-                        anchorTagAttributes={{
-                          target: "_blank",
-                          rel: "noopener noreferrer",
-                        }}
+                        link={`/track/${recordingMBID}`}
                       />
                     )}
                     {renderBrainzplayer && (
