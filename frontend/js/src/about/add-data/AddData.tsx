@@ -71,7 +71,7 @@ export default function AddData() {
           <em>
             <a href="https://longplay.app/">Longplay</a>
           </em>
-          , an album-based music player for iOS
+          , an album-based music player for iOS and macOS
         </li>
         <li>
           <em>
