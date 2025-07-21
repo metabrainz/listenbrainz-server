@@ -1,5 +1,5 @@
 import React from "react";
-import { faArchive } from "@fortawesome/free-solid-svg-icons";
+import faInternetArchive from "../icons/faInternetArchive";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import { getTrackName, getArtistName } from "../../utils/utils";
 
@@ -13,7 +13,6 @@ type IARecording = {
 };
 
 type State = {
-  loading: boolean;
   currentTrack: IARecording | null;
 };
 
@@ -22,7 +21,7 @@ export default class InternetArchivePlayer
   implements DataSourceType {
   public name = "internetArchive";
   public domainName = "archive.org";
-  public icon = faArchive;
+  public icon = faInternetArchive;
   public iconColor = "#6c757d";
   audioRef: React.RefObject<HTMLAudioElement>;
 
@@ -30,7 +29,6 @@ export default class InternetArchivePlayer
     super(props);
     this.audioRef = React.createRef();
     this.state = {
-      loading: false,
       currentTrack: null,
     };
   }
@@ -55,16 +53,20 @@ export default class InternetArchivePlayer
   };
 
   searchAndPlayTrack = async (listen: any) => {
-    const { onTrackNotFound, handleError } = this.props;
+    const { onTrackNotFound, handleError, handleWarning } = this.props;
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
 
     if (!trackName && !artistName) {
+      handleWarning(
+        "We are missing a track title, artist or album name to search on Internet Archive",
+        "Not enough info to search on Internet Archive"
+      );
       onTrackNotFound();
       return;
     }
 
-    this.setState({ loading: true, currentTrack: null });
+    this.setState({ currentTrack: null });
 
     try {
       const params = new URLSearchParams();
@@ -80,15 +82,15 @@ export default class InternetArchivePlayer
         // TODO: It might make sense to sanity-check the results to see if the first one is indeed the best match
         // We do something like this in the AppleMusicPlayer with the fuzzysort library
         this.setState(
-          { currentTrack: data.results[0], loading: false },
+          { currentTrack: data.results[0] },
           this.playCurrentTrack
         );
       } else {
-        this.setState({ loading: false, currentTrack: null });
+        this.setState({ currentTrack: null });
         onTrackNotFound();
       }
     } catch (err) {
-      this.setState({ loading: false, currentTrack: null });
+      this.setState({ currentTrack: null });
       handleError(err, "Internet Archive search error");
       onTrackNotFound();
     }
@@ -158,39 +160,28 @@ export default class InternetArchivePlayer
   datasourceRecordsListens = () => false;
 
   render() {
-    const { show, playerPaused } = this.props;
-    const { loading, currentTrack } = this.state;
+    const { show } = this.props;
+    const { currentTrack } = this.state;
     if (!show) return null;
 
     return (
       <div className="internet-archive-player">
-        {loading && <div>Searching Internet Archive...</div>}
-        {currentTrack && (
-          <>
-            {currentTrack.artwork_url && (
-              <img
-                src={currentTrack.artwork_url}
-                alt={currentTrack.name}
-                width={60}
-                style={{ marginRight: 10 }}
-              />
-            )}
-            <audio
-              ref={this.audioRef}
-              onEnded={this.handleAudioEnded}
-              onTimeUpdate={this.handleTimeUpdate}
-              onDurationChange={this.handleLoadedMetadata}
-              autoPlay
-              controls={false}
-            >
-              <track kind="captions" />
-            </audio>
-            <div>
-              <strong>{currentTrack.artist.join(", ")}</strong> –{" "}
-              {currentTrack.name}
-            </div>
-          </>
+        {currentTrack?.artwork_url && (
+          <img
+            src={currentTrack.artwork_url}
+            alt={currentTrack.name}
+            width={60}
+          />
         )}
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <audio
+          ref={this.audioRef}
+          onEnded={this.handleAudioEnded}
+          onTimeUpdate={this.handleTimeUpdate}
+          onDurationChange={this.handleLoadedMetadata}
+          autoPlay
+          controls={false}
+        />
       </div>
     );
   }

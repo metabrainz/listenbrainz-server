@@ -4,7 +4,7 @@ from listenbrainz.metadata_cache.internetarchive.store import search_ia_tracks
 
 internet_archive_api_bp = Blueprint('internet_archive_api', __name__)
 
-@internet_archive_api_bp.route('/internet_archive/search', methods=['GET'])
+@internet_archive_api_bp.get('/search')
 def search_ia():
     artist = request.args.get('artist')
     track = request.args.get('track')
