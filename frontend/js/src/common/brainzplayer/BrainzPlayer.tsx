@@ -40,6 +40,7 @@ import {
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
 import {
+  QueueRepeatModes,
   playerPausedAtom,
   setPlaybackTimerAtom,
   durationMsAtom,
@@ -50,7 +51,11 @@ import {
   listenSubmittedAtom,
   continuousPlaybackTimeAtom,
   isActivatedAtom,
-  QueueRepeatModes,
+  currentTrackNameAtom,
+  currentTrackArtistAtom,
+  currentTrackAlbumAtom,
+  currentTrackURLAtom,
+  currentTrackCoverURLAtom,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
@@ -152,6 +157,11 @@ export default function BrainzPlayer() {
   const setProgressMs = useSetAtom(progressMsAtom);
   const setListenSubmitted = useSetAtom(listenSubmittedAtom);
   const setContinuousPlaybackTime = useSetAtom(continuousPlaybackTimeAtom);
+  const setCurrentTrackCoverURL = useSetAtom(currentTrackCoverURLAtom);
+  const setCurrentTrackName = useSetAtom(currentTrackNameAtom);
+  const setCurrentTrackArtist = useSetAtom(currentTrackArtistAtom);
+  const setCurrentTrackAlbum = useSetAtom(currentTrackAlbumAtom);
+  const setCurrentTrackURL = useSetAtom(currentTrackURLAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
@@ -164,6 +174,10 @@ export default function BrainzPlayer() {
   const getProgressMs = () => store.get(progressMsAtom);
   const getListenSubmitted = () => store.get(listenSubmittedAtom);
   const getIsActivated = () => store.get(isActivatedAtom);
+  const getCurrentTrackName = () => store.get(currentTrackNameAtom);
+  const getCurrentTrackArtist = () => store.get(currentTrackArtistAtom);
+  const getCurrentTrackAlbum = () => store.get(currentTrackAlbumAtom);
+  const getCurrentTrackURL = () => store.get(currentTrackURLAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -331,7 +345,7 @@ export default function BrainzPlayer() {
 
   // Set Title
   const updateWindowTitleWithTrackName = () => {
-    const trackName = brainzPlayerContextRef.current.currentTrackName || "";
+    const trackName = getCurrentTrackName() || "";
     setCurrentHTMLTitle(`🎵 ${trackName}`);
   };
 
@@ -362,9 +376,9 @@ export default function BrainzPlayer() {
       dataSourceRefs[brainzPlayerContextRef.current.currentDataSourceIndex];
 
     const brainzplayer_metadata = {
-      artist_name: brainzPlayerContextRef.current.currentTrackArtist,
-      release_name: brainzPlayerContextRef.current.currentTrackAlbum,
-      track_name: brainzPlayerContextRef.current.currentTrackName,
+      artist_name: getCurrentTrackArtist(),
+      release_name: getCurrentTrackAlbum(),
+      track_name: getCurrentTrackName(),
     };
     // Create a new listen and augment it with the existing listen and datasource's metadata
     const newListen: BaseListenFormat = {
@@ -380,12 +394,11 @@ export default function BrainzPlayer() {
     const musicServiceName = dataSource.current?.name;
     let musicServiceDomain = dataSource.current?.domainName;
     // Best effort try?
-    if (!musicServiceDomain && brainzPlayerContextRef.current.currentTrackURL) {
+    const currentTrackURL = getCurrentTrackURL();
+    if (!musicServiceDomain && currentTrackURL) {
       try {
         // Browser could potentially be missing the URL constructor
-        musicServiceDomain = new URL(
-          brainzPlayerContextRef.current.currentTrackURL
-        ).hostname;
+        musicServiceDomain = new URL(currentTrackURL).hostname;
       } catch (e) {
         // Do nothing, we just fallback gracefully to dataSource name.
       }
@@ -402,7 +415,7 @@ export default function BrainzPlayer() {
         // submission_client_version:"",
         music_service: musicServiceDomain,
         music_service_name: musicServiceName,
-        origin_url: brainzPlayerContextRef.current.currentTrackURL,
+        origin_url: currentTrackURL,
       },
     });
     return newListen;
@@ -810,21 +823,16 @@ export default function BrainzPlayer() {
     album?: string,
     artwork?: Array<MediaImage>
   ): void => {
-    dispatch(
-      {
-        currentTrackName: title,
-        currentTrackArtist: artist!,
-        currentTrackAlbum: album,
-        currentTrackURL: trackURL,
-        currentTrackCoverURL: artwork?.[0]?.src,
-      },
-      () => {
-        updateWindowTitleWithTrackName();
-        if (!playerPaused) {
-          submitNowPlayingToListenBrainz();
-        }
-      }
-    );
+    setCurrentTrackName(title);
+    setCurrentTrackArtist(artist!);
+    setCurrentTrackAlbum(album);
+    setCurrentTrackURL(trackURL);
+    setCurrentTrackCoverURL(artwork?.[0]?.src);
+
+    updateWindowTitleWithTrackName();
+    if (!playerPaused) {
+      submitNowPlayingToListenBrainz();
+    }
     if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)

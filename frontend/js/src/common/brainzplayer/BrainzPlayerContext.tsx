@@ -5,11 +5,6 @@ export type BrainzPlayerContextT = {
   currentListen?: BrainzPlayerQueueItem;
   currentListenIndex: number;
   currentDataSourceIndex: number;
-  currentTrackName: string;
-  currentTrackArtist?: string;
-  currentTrackAlbum?: string;
-  currentTrackURL?: string;
-  currentTrackCoverURL?: string;
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
 };
@@ -17,8 +12,6 @@ export type BrainzPlayerContextT = {
 export const initialValue: BrainzPlayerContextT = {
   currentListenIndex: -1,
   currentDataSourceIndex: 0,
-  currentTrackName: "",
-  currentTrackArtist: "",
   queue: [],
   ambientQueue: [],
 };

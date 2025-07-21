@@ -30,10 +30,7 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
-import {
-  useBrainzPlayerContext,
-  useBrainzPlayerDispatch,
-} from "./BrainzPlayerContext";
+import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import Queue from "./Queue";
 import MusicPlayer from "./MusicPlayer";
 import { FeedbackValue } from "./utils";
@@ -44,6 +41,10 @@ import {
   playerPausedAtom,
   queueRepeatModeAtom,
   toggleRepeatModeAtom,
+  currentTrackURLAtom,
+  currentTrackNameAtom,
+  currentTrackArtistAtom,
+  currentTrackCoverURLAtom,
 } from "./BrainzPlayerAtoms";
 import BrainzPlayerTimer from "./BrainzPlayerTimer";
 
@@ -107,10 +108,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
   const playerPaused = useAtomValue(playerPausedAtom);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
+  const currentTrackURL = useAtomValue(currentTrackURLAtom);
+  const currentTrackName = useAtomValue(currentTrackNameAtom);
+  const currentTrackArtist = useAtomValue(currentTrackArtistAtom);
+  const currentTrackCoverURL = useAtomValue(currentTrackCoverURLAtom);
 
   const toggleRepeatMode = useSetAtom(toggleRepeatModeAtom);
-
-  const dispatch = useBrainzPlayerDispatch();
 
   React.useEffect(() => {
     async function getFeedback() {
@@ -247,15 +250,15 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
 
   React.useEffect(() => {
-    if (!brainzPlayerContextRef.current.currentTrackCoverURL) {
+    if (!currentTrackCoverURL) {
       return;
     }
-    VibrantLibrary.from(brainzPlayerContextRef.current.currentTrackCoverURL)
+    VibrantLibrary.from(currentTrackCoverURL)
       .getPalette()
       .then((palette) => {
         setMusicPlayerColorPalette(palette);
       });
-  }, [brainzPlayerContextRef.current.currentTrackCoverURL]);
+  }, [currentTrackCoverURL]);
 
   let musicPlayerBackground = `linear-gradient(to bottom, ${COLOR_LB_BLUE} 30%, ${COLOR_LB_ORANGE})`;
   let musicPlayerTextColor1 = "white";
@@ -364,20 +367,17 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
             {dataSources}
           </div>
           <div className={isPlayingATrack ? "currently-playing" : ""}>
-            {brainzPlayerContextRef.current.currentTrackName && (
-              <div
-                title={brainzPlayerContextRef.current.currentTrackName}
-                className="ellipsis-2-lines"
-              >
-                {brainzPlayerContextRef.current.currentTrackName}
+            {currentTrackName && (
+              <div title={currentTrackName} className="ellipsis-2-lines">
+                {currentTrackName}
               </div>
             )}
-            {brainzPlayerContextRef.current.currentTrackArtist && (
+            {currentTrackArtist && (
               <span
                 className="small text-muted ellipsis"
-                title={brainzPlayerContextRef.current.currentTrackArtist}
+                title={currentTrackArtist}
               >
-                {brainzPlayerContextRef.current.currentTrackArtist}
+                {currentTrackArtist}
               </span>
             )}
           </div>
@@ -416,7 +416,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           {isPlayingATrack && currentDataSource?.name && (
             <>
               <a
-                href={brainzPlayerContextRef.current.currentTrackURL || "#"}
+                href={currentTrackURL || "#"}
                 className="music-service-icon"
                 aria-label={`Open in ${currentDataSource.name}`}
                 title={`Open in ${currentDataSource.name}`}
