@@ -416,7 +416,10 @@ export default class YoutubePlayer
           className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}`}
           data-testid="youtube-wrapper"
         >
-          <button className="btn btn-sm youtube-drag-handle" type="button">
+          <button
+            className="btn btn-sm youtube-button youtube-drag-handle"
+            type="button"
+          >
             <FontAwesomeIcon icon={faArrowsAlt} />
           </button>
           <button

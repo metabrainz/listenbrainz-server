@@ -100,12 +100,15 @@ $youtube-resize-transition: height 0.25s ease-out;
           }
         }
 
-        .youtube-drag-handle,
         .youtube-button {
           height: $youtube-button-size;
+          min-width: $youtube-button-size;
           display: inline-block;
-          background: fadeout(black, 50%);
+          background: color.change($black, $alpha: 50%);
           color: $white;
+          + .youtube-button {
+            margin-left: 0.5em;
+          }
         }
         .youtube-drag-handle {
           cursor: grab;
