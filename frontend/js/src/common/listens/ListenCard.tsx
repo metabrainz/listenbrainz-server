@@ -207,7 +207,7 @@ export class ListenCard extends React.Component<
           toast.success(
             <ToastMsg
               title="You recommended a track to your followers"
-              message={`${getArtistName(listen)} - ${getTrackName(listen)}`}
+              message={`${getTrackName(listen)} by ${getArtistName(listen)}`}
             />,
             { toastId: "recommended-success" }
           );
