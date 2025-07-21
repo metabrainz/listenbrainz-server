@@ -49,6 +49,7 @@ import {
   queueRepeatModeAtom,
   listenSubmittedAtom,
   continuousPlaybackTimeAtom,
+  isActivatedAtom,
   QueueRepeatModes,
 } from "./BrainzPlayerAtoms";
 
@@ -149,11 +150,11 @@ export default function BrainzPlayer() {
   // Context Atoms - Setters
   const setUpdateTime = useSetAtom(updateTimeAtom);
   const setProgressMs = useSetAtom(progressMsAtom);
+  const setListenSubmitted = useSetAtom(listenSubmittedAtom);
+  const setContinuousPlaybackTime = useSetAtom(continuousPlaybackTimeAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
-  const setListenSubmitted = useSetAtom(listenSubmittedAtom);
-  const setContinuousPlaybackTime = useSetAtom(continuousPlaybackTimeAtom);
 
   // Action Atoms
   const setPlaybackTimer = useSetAtom(setPlaybackTimerAtom);
@@ -162,6 +163,7 @@ export default function BrainzPlayer() {
   const getContinuousPlaybackTime = () => store.get(continuousPlaybackTimeAtom);
   const getProgressMs = () => store.get(progressMsAtom);
   const getListenSubmitted = () => store.get(listenSubmittedAtom);
+  const getIsActivated = () => store.get(isActivatedAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -501,8 +503,8 @@ export default function BrainzPlayer() {
     dispatch({
       currentListen: listen,
       currentListenIndex: nextListenIndex,
-      isActivated: true,
     });
+    store.set(isActivatedAtom, true);
     setContinuousPlaybackTime(0);
     setListenSubmitted(false);
 
@@ -567,7 +569,7 @@ export default function BrainzPlayer() {
   };
 
   const playNextTrack = (invert: boolean = false): void => {
-    if (!brainzPlayerContextRef.current.isActivated) {
+    if (!getIsActivated()) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -668,7 +670,7 @@ export default function BrainzPlayer() {
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
-    if (!brainzPlayerContextRef.current.isActivated) {
+    if (!getIsActivated()) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -700,9 +702,8 @@ export default function BrainzPlayer() {
 
   const activatePlayerAndPlay = (): void => {
     overwriteMediaSession(mediaSessionHandlers);
-    dispatch({ isActivated: true }, () => {
-      playNextTrack();
-    });
+    store.set(isActivatedAtom, true);
+    playNextTrack();
   };
 
   const togglePlay = async (): Promise<void> => {
@@ -738,7 +739,7 @@ export default function BrainzPlayer() {
 
   /* Listeners for datasource events */
   const failedToPlayTrack = (): void => {
-    if (!brainzPlayerContextRef.current.isActivated) {
+    if (!getIsActivated()) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -900,17 +901,18 @@ export default function BrainzPlayer() {
     // 1. Clear the items in the queue after the current playing track
     const currentPlayingListenIndex =
       brainzPlayerContextRef.current.currentListenIndex;
+
+    store.set(isActivatedAtom, true);
     dispatch(
       {
         type: "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE",
         data: tracks,
-        isActivated: true,
       },
       async () => {
         while (
           brainzPlayerContextRef.current.queue.length !==
             currentPlayingListenIndex + 1 &&
-          brainzPlayerContextRef.current.isActivated
+          getIsActivated()
         ) {
           // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
           await new Promise((resolve) => setTimeout(resolve, 100));
@@ -1003,7 +1005,7 @@ export default function BrainzPlayer() {
   // Hide the player if user is on homepage and the player is not activated, and there are nothing in both the queue
   if (
     pathname === "/" &&
-    !brainzPlayerContextRef.current.isActivated &&
+    !getIsActivated() &&
     brainzPlayerContextRef.current.queue.length === 0 &&
     brainzPlayerContextRef.current.ambientQueue.length === 0
   ) {
@@ -1031,11 +1033,7 @@ export default function BrainzPlayer() {
         disabled={brainzPlayerDisabled}
         playPreviousTrack={playPreviousTrack}
         playNextTrack={playNextTrack}
-        togglePlay={
-          brainzPlayerContextRef.current.isActivated
-            ? togglePlay
-            : activatePlayerAndPlay
-        }
+        togglePlay={getIsActivated() ? togglePlay : activatePlayerAndPlay}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
         currentDataSource={
@@ -1048,7 +1046,7 @@ export default function BrainzPlayer() {
           <SpotifyPlayer
             volume={volume}
             show={
-              brainzPlayerContextRef.current.isActivated &&
+              getIsActivated() &&
               dataSourceRefs[
                 brainzPlayerContextRef.current.currentDataSourceIndex
               ]?.current instanceof SpotifyPlayer
@@ -1072,7 +1070,7 @@ export default function BrainzPlayer() {
           <YoutubePlayer
             volume={volume}
             show={
-              brainzPlayerContextRef.current.isActivated &&
+              getIsActivated() &&
               dataSourceRefs[
                 brainzPlayerContextRef.current.currentDataSourceIndex
               ]?.current instanceof YoutubePlayer
@@ -1097,7 +1095,7 @@ export default function BrainzPlayer() {
           <SoundcloudPlayer
             volume={volume}
             show={
-              brainzPlayerContextRef.current.isActivated &&
+              getIsActivated() &&
               dataSourceRefs[
                 brainzPlayerContextRef.current.currentDataSourceIndex
               ]?.current instanceof SoundcloudPlayer
@@ -1121,7 +1119,7 @@ export default function BrainzPlayer() {
           <AppleMusicPlayer
             volume={volume}
             show={
-              brainzPlayerContextRef.current.isActivated &&
+              getIsActivated() &&
               dataSourceRefs[
                 brainzPlayerContextRef.current.currentDataSourceIndex
               ]?.current instanceof AppleMusicPlayer
