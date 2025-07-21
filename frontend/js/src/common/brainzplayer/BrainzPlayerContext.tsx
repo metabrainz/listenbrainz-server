@@ -40,8 +40,6 @@ export type BrainzPlayerContextT = {
   currentTrackURL?: string;
   currentTrackCoverURL?: string;
   isActivated: boolean;
-  listenSubmitted: boolean;
-  continuousPlaybackTime: number;
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
 };
@@ -52,8 +50,6 @@ export const initialValue: BrainzPlayerContextT = {
   currentTrackName: "",
   currentTrackArtist: "",
   isActivated: false,
-  listenSubmitted: false,
-  continuousPlaybackTime: 0,
   queue: [],
   ambientQueue: [],
 };

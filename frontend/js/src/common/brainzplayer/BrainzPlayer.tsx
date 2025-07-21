@@ -16,7 +16,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import { Link, useLocation } from "react-router";
 import { Helmet } from "react-helmet";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import {
   ToastMsg,
   createNotification,
@@ -48,6 +48,8 @@ import {
   progressMsAtom,
   updateTimeAtom,
   queueRepeatModeAtom,
+  listenSubmittedAtom,
+  continuousPlaybackTimeAtom,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
@@ -150,9 +152,16 @@ export default function BrainzPlayer() {
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
+  const setListenSubmitted = useSetAtom(listenSubmittedAtom);
+  const setContinuousPlaybackTime = useSetAtom(continuousPlaybackTimeAtom);
 
   // Action Atoms
   const setPlaybackTimer = useSetAtom(setPlaybackTimerAtom);
+
+  const store = useStore();
+  const getContinuousPlaybackTime = () => store.get(continuousPlaybackTimeAtom);
+  const getProgressMs = () => store.get(progressMsAtom);
+  const getListenSubmitted = () => store.get(listenSubmittedAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -240,7 +249,6 @@ export default function BrainzPlayer() {
   }, [sortedDataSources]);
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
-  const currentProgressMsRef = React.useRef<number>(0);
 
   // Functions
   const alertBeforeClosingPage = (event: BeforeUnloadEvent) => {
@@ -456,10 +464,7 @@ export default function BrainzPlayer() {
   };
 
   const checkProgressAndSubmitListen = async () => {
-    if (
-      !currentUser?.auth_token ||
-      brainzPlayerContextRef.current.listenSubmitted
-    ) {
+    if (!currentUser?.auth_token || getListenSubmitted()) {
       return;
     }
     let playbackTimeRequired = SUBMIT_LISTEN_AFTER_MS;
@@ -469,12 +474,10 @@ export default function BrainzPlayer() {
         durationMs - SUBMIT_LISTEN_UPDATE_INTERVAL
       );
     }
-    if (
-      brainzPlayerContextRef.current.continuousPlaybackTime >=
-      playbackTimeRequired
-    ) {
+
+    if (getContinuousPlaybackTime() >= playbackTimeRequired) {
       const listen = getListenMetadataToSubmit();
-      dispatch({ listenSubmitted: true });
+      setListenSubmitted(true);
       await submitListenToListenBrainz("single", listen);
     }
   };
@@ -499,9 +502,9 @@ export default function BrainzPlayer() {
       currentListen: listen,
       currentListenIndex: nextListenIndex,
       isActivated: true,
-      listenSubmitted: false,
-      continuousPlaybackTime: 0,
     });
+    setContinuousPlaybackTime(0);
+    setListenSubmitted(false);
 
     window.postMessage(
       {
@@ -662,7 +665,6 @@ export default function BrainzPlayer() {
   const progressChange = (newProgressMs: number): void => {
     setProgressMs(newProgressMs);
     setUpdateTime(performance.now());
-    currentProgressMsRef.current = newProgressMs;
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
@@ -682,11 +684,11 @@ export default function BrainzPlayer() {
   };
 
   const seekForward = (): void => {
-    seekToPositionMs(currentProgressMsRef.current + SEEK_TIME_MILLISECONDS);
+    seekToPositionMs(getProgressMs() + SEEK_TIME_MILLISECONDS);
   };
 
   const seekBackward = (): void => {
-    seekToPositionMs(currentProgressMsRef.current - SEEK_TIME_MILLISECONDS);
+    seekToPositionMs(getProgressMs() - SEEK_TIME_MILLISECONDS);
   };
 
   const mediaSessionHandlers = [
