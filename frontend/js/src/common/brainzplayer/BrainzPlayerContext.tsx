@@ -1,34 +1,5 @@
 import * as React from "react";
-import { faRepeat } from "@fortawesome/free-solid-svg-icons";
-import { isEqual, isNil } from "lodash";
-import { faRepeatOnce } from "../../utils/icons";
 import { listenOrJSPFTrackToQueueItem } from "./utils";
-
-export const QueueRepeatModes = {
-  off: {
-    icon: faRepeatOnce,
-    title: "Repeat off",
-    color: undefined,
-  },
-  one: {
-    icon: faRepeatOnce,
-    title: "Repeat one",
-    color: "green",
-  },
-  all: {
-    icon: faRepeat,
-    title: "Repeat all",
-    color: "green",
-  },
-} as const;
-
-export type QueueRepeatMode = typeof QueueRepeatModes[keyof typeof QueueRepeatModes];
-
-const repeatModes = [
-  QueueRepeatModes.off,
-  QueueRepeatModes.all,
-  QueueRepeatModes.one,
-];
 
 export type BrainzPlayerContextT = {
   currentListen?: BrainzPlayerQueueItem;

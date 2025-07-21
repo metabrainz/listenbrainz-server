@@ -36,7 +36,6 @@ import {
   defaultDataSourcesPriority,
 } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import {
-  QueueRepeatModes,
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
@@ -50,6 +49,7 @@ import {
   queueRepeatModeAtom,
   listenSubmittedAtom,
   continuousPlaybackTimeAtom,
+  QueueRepeatModes,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
