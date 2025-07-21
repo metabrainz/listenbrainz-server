@@ -222,7 +222,8 @@ const getReleaseGroupMBID = (listen: Listen): string | undefined =>
 
 const getReleaseName = (listen: Listen): string =>
   _.get(listen, "track_metadata.mbid_mapping.release_name", "") ||
-  _.get(listen, "track_metadata.release_name", "");
+  _.get(listen, "track_metadata.release_name", "") ||
+  _.get(listen, "track_metadata.mbid_mapping.release_group_name", "");
 
 const getTrackName = (listen?: Listen | JSPFTrack | PinnedRecording): string =>
   _.get(listen, "track_metadata.mbid_mapping.recording_name", "") ||
@@ -305,6 +306,20 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
     return <Link to={`/track/${recordingMbid}`}>{trackName}</Link>;
   }
   return trackName;
+};
+
+const getAlbumLink = (listen: Listen): JSX.Element | string => {
+  const releaseName = getReleaseName(listen);
+  const releaseGroupMBID = getReleaseGroupMBID(listen);
+  const releaseMBID = getReleaseMBID(listen);
+
+  if (releaseGroupMBID) {
+    return <Link to={`/album/${releaseGroupMBID}`}>{releaseName}</Link>;
+  }
+  if (releaseMBID) {
+    return <Link to={`/release/${releaseMBID}`}>{releaseName}</Link>;
+  }
+  return releaseName;
 };
 
 const getListenCardKey = (listen: Listen): string =>
@@ -985,10 +1000,6 @@ export function feedReviewEventToListen(
     artist_mbids = [entity_id] as string[];
   }
   if (entity_type === "release_group" && entity_id) {
-    // currently releaseGroupName isn't displayed by the ListenCard
-    // so also assign trackName and recording_mbid
-    trackName = entity_name;
-    recording_mbid = entity_id;
     releaseGroupName = entity_name;
     release_group_mbid = entity_id;
   }
@@ -1118,6 +1129,7 @@ export {
   getStatsArtistLink,
   getArtistLink,
   getTrackLink,
+  getAlbumLink,
   formatWSMessageToListen,
   preciseTimestamp,
   fullLocalizedDateFromTimestampOrISODate,

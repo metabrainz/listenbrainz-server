@@ -489,6 +489,8 @@ export default function AlbumPage(): JSX.Element {
             </div>
           )}
         </div>
+      </div>
+      <div className="entity-page-content">
         <div className="reviews">
           <h3 className="header-with-line">Reviews</h3>
           <div className="row">
@@ -506,7 +508,7 @@ export default function AlbumPage(): JSX.Element {
                 }}
               />
             </div>
-            {reviews?.length && (
+            {reviews?.length ? (
               <div className="col-md-6">
                 <div className="review-cards">
                   {reviews.slice(0, 3).map(getReviewEventContent)}
@@ -518,7 +520,7 @@ export default function AlbumPage(): JSX.Element {
                   More on CritiqueBrainz…
                 </a>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
