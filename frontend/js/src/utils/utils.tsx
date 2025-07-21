@@ -428,15 +428,7 @@ const getTrackLink = (listen: Listen): JSX.Element | string => {
   const recordingMbid = getRecordingMBID(listen);
 
   if (recordingMbid) {
-    return (
-      <a
-        href={`https://musicbrainz.org/recording/${recordingMbid}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {trackName}
-      </a>
-    );
+    return <Link to={`/track/${recordingMbid}`}>{trackName}</Link>;
   }
   return trackName;
 };

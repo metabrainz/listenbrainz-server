@@ -17,7 +17,7 @@ module.exports = {
   moduleFileExtensions: ["ts", "tsx", "js", "json", "jsx"],
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ["<rootDir>/enzyme.config.ts", "jest-canvas-mock"],
+  setupFiles: ["jest-canvas-mock"],
 
   setupFilesAfterEnv: [
     "jest-location-mock",
@@ -58,10 +58,4 @@ module.exports = {
   // Indicates whether each individual test should be reported during the run
   verbose: true,
 
-  snapshotSerializers: ["enzyme-to-json/serializer"],
-
-  snapshotFormat: {
-    escapeString: true,
-    printBasicPrototype: true,
-  },
 };
