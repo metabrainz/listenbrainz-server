@@ -1,0 +1,312 @@
+@use "sass:map";
+
+$white-gradient: linear-gradient(to bottom, transparent, #fff 65%);
+
+.entity-page-header {
+  padding: 2em;
+  gap: 2em;
+  background: linear-gradient(45deg, var(--bg-color), transparent 80%);
+  flex-wrap: wrap;
+  justify-content: center;
+  .cover-art {
+    aspect-ratio: 1;
+    height: 100%;
+    max-height: 400px;
+    max-width: 400px;
+    flex-grow: 1;
+    flex-shrink: 0;
+    border-radius: 5px;
+    text-align: center;
+    > * {
+      max-width: inherit;
+      height: 100%;
+      margin-bottom: 0.5em;
+    }
+
+    @media (max-width: 768px) {
+      max-height: -webkit-fill-available;
+      max-width: -webkit-fill-available;
+    }
+  }
+  .artist-info,
+  .playlist-info {
+    flex-grow: 2;
+    display: flex;
+    flex-direction: column;
+    min-width: 15em;
+    max-height: 29em;
+    overflow: hidden;
+    > *:first-child {
+      line-height: 1em;
+    }
+    .wikipedia-extract {
+      margin-top: 2em;
+      overflow: hidden;
+      .content {
+        max-height: calc(100% - 1.5em);
+        overflow-y: hidden;
+        mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
+        -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 98%);
+        padding-bottom: 2rem;
+      }
+    }
+    .details {
+      margin-top: 0;
+    }
+  }
+  .lb-radio-button {
+    align-self: flex-end;
+    gap: 0.1em;
+    .tags-list {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 10em;
+    }
+    .btn {
+      font-size: 1.3em;
+    }
+  }
+  .right-side {
+    flex-grow: 0.8;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-width: 230px;
+    margin-left: auto;
+  }
+  .entity-rels {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-end;
+    justify-content: flex-end;
+    min-width: 230px;
+  }
+  .details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.header-with-line .play-tracks-button {
+  order: 3;
+  margin-left: 2em;
+}
+
+#entity-page {
+  --bg-color: #e7e4e4; // default color
+
+  &.album-page .entity-page-content .tracks .listen-card .track-position {
+    flex: 0 3em;
+    align-self: center;
+    color: $gray-500;
+  }
+  &.artist-page .entity-page-content .tracks {
+    max-height: 500px;
+    overflow-y: hidden;
+    border-bottom-style: inset;
+    position: relative;
+    &.expanded {
+      max-height: initial;
+      padding-bottom: 4em;
+    }
+  }
+
+  .top-listeners {
+    max-width: 400px;
+    .listener {
+      line-height: 2em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+  .listening-stats {
+    font-size: 1.6em;
+    flex-grow: 1;
+    height: 5em;
+    padding: 0.7em;
+    display: flex;
+    justify-content: space-evenly;
+    gap: 0.5em;
+    flex-direction: unset;
+    .separator {
+      width: 1px;
+      height: 100%;
+      border-left: 1px solid $hr-border-color;
+    }
+    .number {
+      font-size: 1.5em;
+    }
+  }
+  .tags {
+    margin-top: 0.5em;
+  }
+  .entity-page-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+
+    .tracks {
+      flex: 3 400px;
+      min-height: 150px;
+      min-width: 0;
+
+      .read-more {
+        bottom: 0;
+        padding: 1em 0;
+      }
+    }
+
+    .stats {
+      margin-top: 2em;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 3em;
+      flex: 0 1;
+      flex-basis: 350px;
+    }
+    .top-listeners,
+    .reviews {
+      flex: 1;
+      flex-basis: 300px;
+    }
+    .reviews {
+      .review-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .critiquebrainz-button {
+        margin-top: 2em;
+      }
+    }
+    .discography {
+      max-height: 860px;
+      width: 100%;
+      overflow: hidden;
+      position: relative; // For the .read-more button absolute positioning
+      &.expanded {
+        max-height: fit-content;
+        .read-more {
+          position: relative;
+          bottom: 0;
+        }
+      }
+      .albums {
+        width: 100%;
+        .cover-art-container {
+          display: grid;
+          grid-gap: 1.5em;
+          grid-auto-flow: column;
+          justify-items: center;
+          grid-template-columns: repeat(auto-fill, minmax(190px, max-content));
+          grid-template-rows: repeat(2, 1fr);
+          &.single-row {
+            grid-template-rows: repeat(1, 1fr);
+          }
+          .cover-art {
+            aspect-ratio: 1;
+            background: lightgrey;
+          }
+        }
+      }
+    }
+  }
+  .listen-card .main-content .listen-controls {
+    // with the badges at the end of the listencard we need to align it to the right;
+    justify-content: flex-end;
+  }
+
+  @media (min-width: map.get($grid-breakpoints, "md")) {
+    .reviews .review-cards {
+      .review:first-of-type {
+        margin-top: 0;
+      }
+    }
+  }
+
+  .CBReviewForm {
+    width: auto;
+  }
+}
+
+.header-with-line {
+  display: flex;
+  width: 100%;
+  &::after {
+    flex: 1;
+    content: " ";
+    border-top: 1px solid $hr-border-color;
+    height: 0;
+    align-self: center;
+    margin: 0 0.5em;
+  }
+}
+
+.review {
+  border: 1px solid $gray-300;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  transition: box-shadow 0.3s ease;
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .review-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .rating-stars {
+      margin-left: 8px;
+    }
+    .review-card-header-author {
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+  .text {
+    max-height: 10em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    line-height: 1.6;
+    color: $text-muted;
+
+    display: -webkit-box;
+    line-clamp: 4;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+  }
+  .review-card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: bold;
+    color: $text-muted;
+    .read-more-link {
+      text-decoration: none;
+      transition: color 0.3s ease;
+      color: $blue;
+
+      &:hover {
+        color: #4a4a8c;
+      }
+    }
+  }
+}
+
+.read-more {
+  position: absolute;
+  bottom: -10px;
+  z-index: 2;
+  width: 100%;
+  text-align: center;
+  padding: 40px 0 0;
+  background-image: $white-gradient;
+}

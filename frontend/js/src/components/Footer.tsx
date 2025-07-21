@@ -25,7 +25,7 @@ export default function Footer() {
               You can use ListenBrainz to track your listening habits, discover
               new music with personalized recommendations, and share your
               musical taste with others using our visualizations. User listen
-              data and text is is made public under the{" "}
+              data and text is made public under the{" "}
               <a href="https://creativecommons.org/public-domain/cc0/">
                 Creative Commons Zero (CC0)
               </a>{" "}
@@ -233,7 +233,7 @@ export default function Footer() {
         </div>
         <div className="row center-p">
           <div className="col-lg-3 d-none d-md-block">
-            <p className="section-line">
+            <p className="border-light border-top pt-5">
               OSS Geek?{" "}
               <a
                 href="https://github.com/metabrainz/listenbrainz-server"
@@ -246,7 +246,7 @@ export default function Footer() {
             </p>
           </div>
           <div className="col-lg-6">
-            <p className="section-line">
+            <p className="border-light border-top pt-5">
               Brought to you by{" "}
               <img
                 src="/static/img/meb-icons/MetaBrainz.svg"
@@ -258,7 +258,7 @@ export default function Footer() {
             </p>
           </div>
           <div className="col-lg-3 d-none d-md-block">
-            <p className="section-line">
+            <p className="border-light border-top pt-5">
               Found an Issue?{" "}
               <a
                 href="https://tickets.metabrainz.org/"

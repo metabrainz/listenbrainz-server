@@ -6,12 +6,13 @@ from werkzeug.exceptions import BadRequest
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.db import popularity, similarity
 from listenbrainz.db.stats import get_entity_listener
+from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects, load_release_groups_for_recordings
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.utils import number_readable
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata
+from listenbrainz.webserver.views.metadata_api import fetch_release_group_metadata, fetch_metadata
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -19,6 +20,8 @@ artist_bp = Blueprint("artist", __name__)
 album_bp = Blueprint("album", __name__)
 release_bp = Blueprint("release", __name__)
 release_group_bp = Blueprint("release-group", __name__)
+track_bp = Blueprint("track", __name__)
+recording_bp = Blueprint("recording", __name__)
 
 
 def get_release_group_sort_key(release_group):
@@ -83,7 +86,6 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.get("/",  defaults={'path': ''})
 @release_bp.get('/<path:path>/')
 def release_page(path):
     return render_template("index.html")
@@ -111,7 +113,6 @@ def release_redirect(release_mbid):
         return jsonify({"releaseGroupMBID": result["release_group_mbid"]})
 
 
-@artist_bp.get("/",  defaults={'path': ''})
 @artist_bp.get("/<artist_mbid>/")
 def artist_page(artist_mbid: str):
     og_meta_tags = None
@@ -235,7 +236,6 @@ def artist_entity(artist_mbid: str):
     return jsonify(data)
 
 
-@album_bp.get("/",  defaults={'path': ''})
 @album_bp.get("/<release_group_mbid>/")
 def album_page(release_group_mbid: str):
     og_meta_tags = None
@@ -334,7 +334,112 @@ def album_entity(release_group_mbid: str):
     return jsonify(data)
 
 
-@release_group_bp.get("/",  defaults={'path': ''})
 @release_group_bp.get('/<path:path>/')
 def release_group_redirect(path):
     return render_template("index.html")
+
+
+@recording_bp.get('/<path:path>/')
+def recording_redirect(path):
+    return render_template("index.html")
+
+
+@track_bp.get('/<recording_mbid>/')
+def recording_page(recording_mbid: str):
+    og_meta_tags = None
+    if is_valid_uuid(recording_mbid):
+        metadata = fetch_metadata(
+            [recording_mbid],
+            ["artist", "release"]
+        )
+        if len(metadata) == 0:
+            pass
+        else:
+            recording = metadata[recording_mbid]
+            recording_name = recording.get("recording").get("name")
+            artist_name = recording.get("artist").get("name")
+            release_group_mbid = recording.get("release").get("release_group_mbid")
+
+            og_meta_tags = {
+                "title": f'{recording_name} — {artist_name}',
+                "description": f'Recording — ListenBrainz',
+                "type": "music.song",
+                "music:musician": artist_name,
+                "music:release_date": recording.get("release").get("date"),
+                "image": f'https://coverartarchive.org/release-group/{release_group_mbid}/front-500',
+                "image:width": "500",
+                "image:alt": f"Cover art for {recording_name}",
+                "url": f'{current_app.config["SERVER_ROOT_URL"]}/track/{recording_mbid}',
+            }
+
+    return render_template("index.html", og_meta_tags=og_meta_tags)
+
+
+@track_bp.post("/<recording_mbid>/")
+@web_listenstore_needed
+def recording_entity(recording_mbid: str):
+    """ Show a recording page with all their relevant information """
+
+    if not is_valid_uuid(recording_mbid):
+        return jsonify({"error": "Provided recording mbid is invalid: %s" % recording_mbid}), 400
+
+    with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+            psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+            mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs, \
+            ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+        recording_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, [recording_mbid])
+    if recording_data is None or len(recording_data) == 0 or recording_data[0].get("recording_mbid") is None:
+        return jsonify({"error": f"Recording {recording_mbid} not found in the metadata cache"}), 404
+
+    recording_data = recording_data[0]
+
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs, \
+                ts_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as ts_curs:
+
+            similar_recordings = similarity.get_recordings(
+                mb_curs,
+                ts_curs,
+                [recording_mbid],
+                "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000",
+                18
+            )
+            similar_recording_mbids = [recording["recording_mbid"] for recording in similar_recordings]
+            similar_recordings_data = load_recordings_from_mbids_with_redirects(mb_curs, ts_curs, similar_recording_mbids)
+    except Exception:
+        current_app.logger.error("Error loading similar recordings:", exc_info=True)
+        similar_recordings_data = []
+
+    try:
+        with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \
+                mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+            release_groups_data = load_release_groups_for_recordings(mb_curs, [recording_mbid])
+            release_groups_data = list(release_groups_data.values())
+    except Exception:
+        current_app.logger.error("Error loading release groups for recording:", exc_info=True)
+        release_groups_data = []
+
+    release_group_mbids = [rg["mbid"] for rg in release_groups_data]
+    try:
+        with psycopg2.connect(current_app.config["SQLALCHEMY_TIMESCALE_URI"]) as ts_conn, \
+                ts_conn.cursor(cursor_factory=DictCursor) as ts_curs:
+            popularity_data, _ = popularity.get_counts(ts_curs, "release_group", release_group_mbids)
+    except Exception:
+        current_app.logger.error("Error loading popularity data for release groups:", exc_info=True)
+        popularity_data = []
+
+    release_groups = []
+    for release_group, pop in zip(release_groups_data, popularity_data):
+        release_group["total_listen_count"] = pop["total_listen_count"]
+        release_group["total_user_count"] = pop["total_user_count"]
+        release_groups.append(release_group)
+
+    data = {
+        "track_mbid": recording_mbid,
+        "track": recording_data,
+        "similarTracks": similar_recordings_data,
+        "releaseGroups": release_groups,
+    }
+
+    return jsonify(data)

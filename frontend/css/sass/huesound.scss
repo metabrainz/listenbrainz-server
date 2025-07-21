@@ -1,0 +1,79 @@
+@use "sass:map";
+
+.huesound-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-flow: wrap;
+
+  .colour-picker-container {
+    flex: 0 1;
+  }
+
+  .cover-art-grid {
+    flex: 1 0 320px;
+    border-radius: 10px;
+    transition: all 1s;
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-flow: row;
+    justify-content: center;
+
+    padding: 1em;
+    margin: 1em;
+    min-height: 375px;
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      grid-template-columns: repeat(4, 1fr);
+      min-height: 580px;
+    }
+
+    @media (max-width: map.get($grid-breakpoints, "xs")) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (min-width: map.get($grid-breakpoints, "md")) {
+      min-height: 600px;
+    }
+
+    @media (min-width: map.get($grid-breakpoints, "lg")) {
+      min-height: 794px;
+    }
+    &.invisible {
+      flex: 0 1 0px;
+      width: 0px;
+      padding: 0;
+      min-height: initial;
+    }
+    .cover-art-container {
+      // Using a <button> element for semantic behaviour, we need to reset the browser styles
+      background: none;
+      border: none;
+      padding: initial;
+
+      img {
+        -webkit-transform: scale(1);
+        transform: scale(1);
+        -webkit-transition: transform 0.2s ease-in-out;
+        transition: transform 0.2s ease-in-out;
+        width: 100%;
+        height: auto;
+        max-width: 150px;
+        max-height: 150px;
+        object-fit: cover;
+      }
+      &:hover img {
+        -webkit-transform: scale(1.1);
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+.beta {
+  font-size: 45%;
+  font-style: italic;
+  vertical-align: 0.8em;
+  color: $orange;
+}
