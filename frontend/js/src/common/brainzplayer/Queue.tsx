@@ -3,6 +3,7 @@ import { ReactSortable } from "react-sortablejs";
 import NiceModal from "@ebay/nice-modal-react";
 import { faChevronDown, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useAtomValue } from "jotai";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
@@ -12,6 +13,7 @@ import {
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
+import { currentListenAtom } from "./BrainzPlayerAtoms";
 
 type BrainzPlayerQueueProps = {
   clearQueue: () => void;
@@ -22,10 +24,10 @@ const MAX_AMBIENT_QUEUE_ITEMS = 15;
 
 function Queue(props: BrainzPlayerQueueProps) {
   const dispatch = useBrainzPlayerDispatch();
+  const currentListen = useAtomValue(currentListenAtom);
   const {
     queue,
     ambientQueue,
-    currentListen,
     currentListenIndex = -1,
   } = useBrainzPlayerContext();
 

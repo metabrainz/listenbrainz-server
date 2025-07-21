@@ -57,6 +57,7 @@ import {
   currentTrackURLAtom,
   currentTrackCoverURLAtom,
   currentDataSourceIndexAtom,
+  currentListenAtom,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
@@ -167,6 +168,7 @@ export default function BrainzPlayer() {
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
+  const [currentListen, setCurrentListen] = useAtom(currentListenAtom);
 
   // Action Atoms
   const setPlaybackTimer = useSetAtom(setPlaybackTimerAtom);
@@ -385,10 +387,7 @@ export default function BrainzPlayer() {
       // convert Javascript millisecond time to unix epoch in seconds
       listened_at: Math.floor(Date.now() / 1000),
       track_metadata:
-        cloneDeep(
-          (brainzPlayerContextRef.current.currentListen as BaseListenFormat)
-            ?.track_metadata
-        ) ?? {},
+        cloneDeep((currentListen as BaseListenFormat)?.track_metadata) ?? {},
     };
 
     const musicServiceName = dataSource.current?.name;
@@ -513,9 +512,9 @@ export default function BrainzPlayer() {
     datasourceIndex: number = 0
   ): Promise<void> => {
     dispatch({
-      currentListen: listen,
       currentListenIndex: nextListenIndex,
     });
+    setCurrentListen(listen);
     store.set(isActivatedAtom, true);
     setContinuousPlaybackTime(0);
     setListenSubmitted(false);
@@ -744,12 +743,12 @@ export default function BrainzPlayer() {
     }
 
     if (
-      brainzPlayerContextRef.current.currentListen &&
+      currentListen &&
       getCurrentDataSourceIndex() < dataSourceRefs.length - 1
     ) {
       // Try playing the listen with the next dataSource
       playListen(
-        brainzPlayerContextRef.current.currentListen,
+        currentListen,
         brainzPlayerContextRef.current.currentListenIndex,
         getCurrentDataSourceIndex() + 1
       );

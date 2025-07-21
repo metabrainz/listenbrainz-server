@@ -2,7 +2,6 @@ import * as React from "react";
 import { listenOrJSPFTrackToQueueItem } from "./utils";
 
 export type BrainzPlayerContextT = {
-  currentListen?: BrainzPlayerQueueItem;
   currentListenIndex: number;
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;

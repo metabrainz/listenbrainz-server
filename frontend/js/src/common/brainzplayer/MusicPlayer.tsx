@@ -33,6 +33,7 @@ import {
   currentTrackArtistAtom,
   currentTrackAlbumAtom,
   currentTrackCoverURLAtom,
+  currentListenAtom,
 } from "./BrainzPlayerAtoms";
 
 type PlaybackControlButtonProps = {
@@ -182,13 +183,9 @@ function MusicPlayer(props: MusicPlayerProps) {
   } = props;
 
   // BrainzPlayer Context
-  const {
-    currentListen,
-    currentListenIndex,
-    queue,
-    ambientQueue,
-  } = useBrainzPlayerContext();
+  const { currentListenIndex, queue, ambientQueue } = useBrainzPlayerContext();
 
+  const currentListen = useAtomValue(currentListenAtom);
   const playerPaused = useAtomValue(playerPausedAtom);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
   const currentTrackName = useAtomValue(currentTrackNameAtom);

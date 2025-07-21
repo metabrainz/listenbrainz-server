@@ -45,6 +45,7 @@ import {
   currentTrackNameAtom,
   currentTrackArtistAtom,
   currentTrackCoverURLAtom,
+  currentListenAtom,
 } from "./BrainzPlayerAtoms";
 import BrainzPlayerTimer from "./BrainzPlayerTimer";
 
@@ -112,22 +113,18 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const currentTrackName = useAtomValue(currentTrackNameAtom);
   const currentTrackArtist = useAtomValue(currentTrackArtistAtom);
   const currentTrackCoverURL = useAtomValue(currentTrackCoverURLAtom);
-
+  const currentListen = useAtomValue(currentListenAtom);
   const toggleRepeatMode = useSetAtom(toggleRepeatModeAtom);
 
   React.useEffect(() => {
     async function getFeedback() {
       // Get feedback for currentListen
 
-      if (!currentUser?.name || !brainzPlayerContextRef.current.currentListen) {
+      if (!currentUser?.name || !currentListen) {
         return;
       }
-      const recordingMBID = getRecordingMBID(
-        brainzPlayerContextRef.current.currentListen as Listen
-      );
-      const recordingMSID = getRecordingMSID(
-        brainzPlayerContextRef.current.currentListen as Listen
-      );
+      const recordingMBID = getRecordingMBID(currentListen as Listen);
+      const recordingMSID = getRecordingMSID(currentListen as Listen);
 
       if (!recordingMBID && !recordingMSID) {
         return;
@@ -155,11 +152,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       }
     }
     getFeedback();
-  }, [
-    brainzPlayerContextRef.current.currentListen,
-    currentUser.name,
-    listenBrainzAPIBaseURI,
-  ]);
+  }, [currentListen, currentUser.name, listenBrainzAPIBaseURI]);
 
   React.useEffect(() => {
     // Also check the width on first render
@@ -176,12 +169,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
       if (currentUser?.auth_token) {
         setCurrentListenFeedback(score);
 
-        const recordingMSID = getRecordingMSID(
-          brainzPlayerContextRef.current.currentListen as Listen
-        );
-        const recordingMBID = getRecordingMBID(
-          brainzPlayerContextRef.current.currentListen as Listen
-        );
+        const recordingMSID = getRecordingMSID(currentListen as Listen);
+        const recordingMBID = getRecordingMBID(currentListen as Listen);
 
         try {
           const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
@@ -216,13 +205,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     [currentUser.auth_token, listenBrainzAPIBaseURI]
   );
 
-  const isPlayingATrack = Boolean(brainzPlayerContextRef.current.currentListen);
-  const recordingMSID = getRecordingMSID(
-    brainzPlayerContextRef.current.currentListen as Listen
-  );
-  const recordingMBID = getRecordingMBID(
-    brainzPlayerContextRef.current.currentListen as Listen
-  );
+  const isPlayingATrack = Boolean(currentListen);
+  const recordingMSID = getRecordingMSID(currentListen as Listen);
+  const recordingMBID = getRecordingMBID(currentListen as Listen);
   const showFeedback =
     (Boolean(recordingMSID) || Boolean(recordingMBID)) && isPlayingATrack;
   const playbackDisabledText = "Playback disabled in preferences";
@@ -500,11 +485,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               <FontAwesomeIcon icon={faSlash} />
             </span>
           ) : (
-            !isMobile && (
-              <MenuOptions
-                currentListen={brainzPlayerContextRef.current.currentListen}
-              />
-            )
+            !isMobile && <MenuOptions currentListen={currentListen} />
           )}
           {!isMobile && (
             <Link to="/settings/brainzplayer/">
