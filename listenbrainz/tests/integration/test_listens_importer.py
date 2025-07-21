@@ -81,7 +81,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         if service:
             data['service'] = service
         response = self.client.post(
-            self.custom_url_for('api_v1.import'),
+            self.custom_url_for('import.create_import_task'),
             data=data,
             content_type='multipart/form-data'
         )
