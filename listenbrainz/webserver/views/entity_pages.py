@@ -83,7 +83,6 @@ def get_cover_art_for_artist(release_groups):
     )
 
 
-@release_bp.get("/",  defaults={'path': ''})
 @release_bp.get('/<path:path>/')
 def release_page(path):
     return render_template("index.html")
@@ -111,7 +110,6 @@ def release_redirect(release_mbid):
         return jsonify({"releaseGroupMBID": result["release_group_mbid"]})
 
 
-@artist_bp.get("/",  defaults={'path': ''})
 @artist_bp.get("/<artist_mbid>/")
 def artist_page(artist_mbid: str):
     og_meta_tags = None
@@ -235,7 +233,6 @@ def artist_entity(artist_mbid: str):
     return jsonify(data)
 
 
-@album_bp.get("/",  defaults={'path': ''})
 @album_bp.get("/<release_group_mbid>/")
 def album_page(release_group_mbid: str):
     og_meta_tags = None
@@ -334,7 +331,6 @@ def album_entity(release_group_mbid: str):
     return jsonify(data)
 
 
-@release_group_bp.get("/",  defaults={'path': ''})
 @release_group_bp.get('/<path:path>/')
 def release_group_redirect(path):
     return render_template("index.html")
