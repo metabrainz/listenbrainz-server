@@ -442,4 +442,4 @@ def _register_blueprints(app):
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
 
     from listenbrainz.webserver.views.internet_archive_api import internet_archive_api_bp
-    app.register_blueprint(internet_archive_api_bp, url_prefix='/1')
+    app.register_blueprint(internet_archive_api_bp, url_prefix=API_PREFIX+"/internet_archive")

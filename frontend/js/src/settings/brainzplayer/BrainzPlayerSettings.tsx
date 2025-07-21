@@ -6,7 +6,6 @@ import {
   faSoundcloud,
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
-import { faArchive, faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { Helmet } from "react-helmet";
 import { Link } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -24,6 +23,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faFunkwhale from "../../common/icons/faFunkwhale";
+import faInternetArchive from "../../common/icons/faInternetArchive";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -53,7 +53,7 @@ export const dataSourcesInfo = {
   },
   internetArchive: {
     name: "Internet Archive",
-    icon: faArchive,
+    icon: faInternetArchive,
     color: "#6c757d",
   },
 } as const;
@@ -474,12 +474,8 @@ function BrainzPlayerSettings() {
               >
                 <span>
                   <FontAwesomeIcon
-                    icon={faArchive}
-                    color={
-                      internetArchiveEnabled
-                        ? dataSourcesInfo.internetArchive.color
-                        : ""
-                    }
+                     icon={dataSourcesInfo.internetArchive.icon}
+                     color={dataSourcesInfo.internetArchive.color}
                   />
                 </span>
                 <span>&nbsp;Internet Archive</span>
