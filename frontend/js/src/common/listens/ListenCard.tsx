@@ -58,10 +58,6 @@ import PinRecordingModal from "../../pins/PinRecordingModal";
 import { millisecondsToStr } from "../../playlists/utils";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import {
-  BrainzPlayerActionType,
-  useBrainzPlayerDispatch,
-} from "../brainzplayer/BrainzPlayerContext";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
@@ -72,7 +68,10 @@ import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
 import MBIDMappingModal from "./MBIDMappingModal";
-import { addListenToBottomOfQueueAtom } from "../brainzplayer/BrainzPlayerAtoms";
+import {
+  addListenToBottomOfQueueAtom,
+  addListenToTopOfQueueAtom,
+} from "../brainzplayer/BrainzPlayerAtoms";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -105,9 +104,9 @@ export type ListenCardState = {
 
 type ListenCardPropsWithDispatch = ListenCardProps & {
   thumbnailSrc?: string;
-  dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
   isMobile: boolean;
   addListenToBottomOfQueue: (listen: Listen) => void;
+  addListenToTopOfQueue: (listen: Listen) => void;
 };
 
 export class ListenCard extends React.Component<
@@ -238,9 +237,9 @@ export class ListenCard extends React.Component<
   };
 
   addToTopOfQueue = () => {
-    const { dispatch } = this.props;
+    const { addListenToTopOfQueue } = this.props;
     const { listen } = this.state;
-    dispatch({ type: "ADD_LISTEN_TO_TOP_OF_QUEUE", data: listen });
+    addListenToTopOfQueue(listen);
   };
 
   addToBottomOfQueue = () => {
@@ -265,7 +264,6 @@ export class ListenCard extends React.Component<
       additionalActions,
       addListenToBottomOfQueue,
       listen: listenFromProps,
-      dispatch: dispatchProp,
       thumbnailSrc,
       isMobile,
       ...otherProps
@@ -752,10 +750,7 @@ export class ListenCard extends React.Component<
 }
 
 export default function ListenCardWrapper(props: ListenCardProps) {
-  const dispatch = useBrainzPlayerDispatch();
-  const { spotifyAuth, APIService, userPreferences } = React.useContext(
-    GlobalAppContext
-  );
+  const { spotifyAuth, userPreferences } = React.useContext(GlobalAppContext);
   const { listen, customThumbnail } = props;
 
   const albumArtQueryKey = React.useMemo(
@@ -791,14 +786,15 @@ export default function ListenCardWrapper(props: ListenCardProps) {
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
+  const addListenToTopOfQueue = useSetAtom(addListenToTopOfQueueAtom);
 
   return (
     <ListenCard
       {...props}
-      dispatch={dispatch}
       thumbnailSrc={thumbnailSrc}
       isMobile={isMobile}
       addListenToBottomOfQueue={addListenToBottomOfQueue}
+      addListenToTopOfQueue={addListenToTopOfQueue}
     />
   );
 }

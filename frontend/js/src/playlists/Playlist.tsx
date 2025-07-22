@@ -43,6 +43,7 @@ import { getBaseUrl } from "../utils/utils";
 import DuplicateTrackModal from "./components/DuplicateTrackModal";
 import {
   addListenToBottomOfAmbientQueueAtom,
+  moveAmbientQueueItemAtom,
   removeTrackFromAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
@@ -87,6 +88,7 @@ export default function PlaylistPage() {
   const removeTrackFromAmbientQueue = useSetAtom(
     removeTrackFromAmbientQueueAtom
   );
+  const moveAmbientQueueItem = useSetAtom(moveAmbientQueueItemAtom);
 
   const dispatch = useBrainzPlayerDispatch();
   const revalidator = useRevalidator();
@@ -335,10 +337,7 @@ export default function PlaylistPage() {
         evt.newIndex,
         1
       );
-      dispatch({
-        type: "MOVE_AMBIENT_QUEUE_ITEM",
-        data: evt,
-      });
+      moveAmbientQueueItem(evt);
       emitPlaylistChanged(playlist);
       revalidator.revalidate();
     } catch (error) {

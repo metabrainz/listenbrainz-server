@@ -19,6 +19,8 @@ import {
   currentListenAtom,
   moveAmbientQueueItemsToQueueAtom,
   removeTrackFromAmbientQueueAtom,
+  moveQueueItemAtom,
+  removeTrackFromQueueAtom,
 } from "./BrainzPlayerAtoms";
 
 type BrainzPlayerQueueProps = {
@@ -42,32 +44,12 @@ function Queue(props: BrainzPlayerQueueProps) {
   const removeTrackFromAmbientQueue = useSetAtom(
     removeTrackFromAmbientQueueAtom
   );
+  const moveQueueItem = useSetAtom(moveQueueItemAtom);
+  const removeTrackFromQueue = useSetAtom(removeTrackFromQueueAtom);
 
   const { currentListenIndex = -1 } = useBrainzPlayerContext();
 
   const { clearQueue, onHide } = props;
-
-  const removeTrackFromQueue = React.useCallback(
-    (track: BrainzPlayerQueueItem, index: number) => {
-      dispatch({
-        type: "REMOVE_TRACK_FROM_QUEUE",
-        data: {
-          track,
-          index,
-        },
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  const moveQueueItem = React.useCallback((evt: any) => {
-    dispatch({
-      type: "MOVE_QUEUE_ITEM",
-      data: evt,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
 
@@ -141,7 +123,12 @@ function Queue(props: BrainzPlayerQueueProps) {
           <ReactSortable
             handle=".drag-handle"
             list={queueNextUp}
-            onEnd={moveQueueItem}
+            onEnd={(evt) =>
+              moveQueueItem({
+                oldIndex: evt.oldIndex ?? 0,
+                newIndex: evt.newIndex ?? 0,
+              })
+            }
             setList={() => {}}
           >
             {queueNextUp.map(
@@ -154,10 +141,10 @@ function Queue(props: BrainzPlayerQueueProps) {
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem
                     ) =>
-                      removeTrackFromQueue(
-                        trackToDelete,
-                        index + currentListenIndex + 1
-                      )
+                      removeTrackFromQueue({
+                        track: trackToDelete,
+                        index: index + currentListenIndex + 1,
+                      })
                     }
                   />
                 );
