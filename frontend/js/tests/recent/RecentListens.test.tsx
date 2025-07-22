@@ -16,6 +16,9 @@ import {
 } from "../../src/recent/RecentListens"; // Import the wrapper component
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
 import { ReactQueryWrapper } from "../test-react-query";
+import { createStore, Provider as JotaiProvider } from "jotai";
+import { ambientQueueAtom } from "../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { listenOrJSPFTrackToQueueItem } from "../../src/common/brainzplayer/utils";
 
 const {
   listens,
@@ -90,12 +93,6 @@ const mockUseLoaderData = jest.fn().mockReturnValue(loaderDataProps);
 jest.mock("react-router", () => ({
   ...jest.requireActual("react-router"),
   useLoaderData: () => mockUseLoaderData(),
-}));
-
-// We need to mock useBrainzPlayerDispatch to check if it's called
-const mockDispatch = jest.fn();
-jest.mock("../../src/common/brainzplayer/BrainzPlayerContext", () => ({
-  useBrainzPlayerDispatch: () => mockDispatch,
 }));
 
 describe("RecentListensWrapper", () => {
@@ -186,27 +183,31 @@ describe("RecentListensWrapper", () => {
       listens: recentListensPropsOneListen.listens,
     });
 
+    const store = createStore();
+
     const { rerender } = render(
       <GlobalAppContext.Provider value={globalContext}>
         <BrowserRouter>
           <ReactQueryWrapper>
+            <JotaiProvider store={store}> 
             <RecentListensWrapper />
+            </JotaiProvider>
           </ReactQueryWrapper>
         </BrowserRouter>
       </GlobalAppContext.Provider>
     );
 
     await waitFor(() => {
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "SET_AMBIENT_QUEUE",
-        data: recentListensPropsOneListen.listens,
-      });
+      expect(store.get(ambientQueueAtom)).toEqual(recentListensPropsOneListen.listens.map(listenOrJSPFTrackToQueueItem));
     });
 
     mockUseLoaderData.mockReturnValueOnce({
       ...loaderDataProps,
       // a different listen object
-      listens: [{ name: "New Listen" }],
+      listens: [{
+        ...recentListensPropsOneListen.listens[0],
+        user_name: "New user",
+      }],
     });
 
     // Simulate an update to listens prop to trigger useEffect again
@@ -214,19 +215,19 @@ describe("RecentListensWrapper", () => {
       <GlobalAppContext.Provider value={globalContext}>
         <BrowserRouter>
           <ReactQueryWrapper>
-            <RecentListensWrapper />
+            <JotaiProvider store={store}> 
+              <RecentListensWrapper />
+            </JotaiProvider>
           </ReactQueryWrapper>
         </BrowserRouter>
       </GlobalAppContext.Provider>
     );
 
     await waitFor(() => {
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "SET_AMBIENT_QUEUE",
-        data: [{ name: "New Listen" }],
-      });
-      // Called once initially, once on update
-      expect(mockDispatch).toHaveBeenCalledTimes(2);
+      expect(store.get(ambientQueueAtom)).toEqual([{
+        ...recentListensPropsOneListen.listens[0],
+        user_name: "New user",
+      }].map(listenOrJSPFTrackToQueueItem));
     });
   });
 });
