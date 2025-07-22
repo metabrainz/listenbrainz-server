@@ -71,12 +71,11 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             }
         ]'''
 
-        self.spotify_valid_listens_zip = self.create_zip(self.spotify_valid_listens)
-        self.spotify_invalid_listens = self.create_invalid_file()
     
     def post_listens(self, listens_file, service):
+        listens_file.seek(0)
         data = {
-            'file': (listens_file, "listens.zip"),
+            'file': (listens_file, listens_file.name),
         }
         if service:
             data['service'] = service
@@ -104,15 +103,19 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
     def test_imports(self):
         self.temporary_login(self.user['login_id'])
 
+        self.spotify_valid_listens_zip = self.create_zip()
         response = self.post_listens(self.spotify_valid_listens_zip, "spotify")
         self.assert200(response)
 
+        self.spotify_invalid_listens = self.create_invalid_file()
         response = self.post_listens(self.spotify_invalid_listens, "spotify")
         self.assert400(response)
 
+        self.spotify_valid_listens_zip = self.create_zip()
         response = self.post_listens(self.spotify_valid_listens_zip, "abc")
         self.assert400(response)
 
+        self.spotify_valid_listens_zip = self.create_zip()
         response = self.post_listens(self.spotify_valid_listens_zip, "")
         self.assert400(response)
 
@@ -121,11 +124,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
          
 
-
-
-
-
-    def create_zip(self, filename="Spotify_Streaming_History.json", zipname="Spotify_Streaming_History.zip"):
+    def create_zip(self, filename="Spotify_Streaming_History.json"):
         json_bytes = self.spotify_valid_listens.encode('utf-8')
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, mode='w', compression=zipfile.ZIP_DEFLATED) as zf:

@@ -121,7 +121,7 @@ def create_import_task():
                     "service": import_task.service,
                     "created": import_task.created.isoformat(),
                     "metadata": import_task.metadata,
-                    "file_path": import_task.filename,
+                    "file_path": import_task.file_path,
                 })
 
         # task already exists in queue, rollback new entry
