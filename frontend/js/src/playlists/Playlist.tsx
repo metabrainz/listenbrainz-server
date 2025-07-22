@@ -41,7 +41,11 @@ import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerCont
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
 import DuplicateTrackModal from "./components/DuplicateTrackModal";
-import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
+import {
+  addListenToBottomOfAmbientQueueAtom,
+  removeTrackFromAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -74,7 +78,16 @@ export default function PlaylistPage() {
   const { currentUser, APIService, websocketsUrl } = React.useContext(
     GlobalAppContext
   );
+
+  // BrainzPlayer Atoms
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const addListenToBottomOfAmbientQueue = useSetAtom(
+    addListenToBottomOfAmbientQueueAtom
+  );
+  const removeTrackFromAmbientQueue = useSetAtom(
+    removeTrackFromAmbientQueueAtom
+  );
+
   const dispatch = useBrainzPlayerDispatch();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
@@ -247,10 +260,8 @@ export default function PlaylistPage() {
         getPlaylistId(playlist),
         [jspfTrack]
       );
-      dispatch({
-        type: "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
-        data: jspfTrack,
-      });
+      addListenToBottomOfAmbientQueue(jspfTrack);
+
       toast.success(
         <ToastMsg
           title="Added Track"
@@ -294,12 +305,9 @@ export default function PlaylistPage() {
           ...playlist,
           track: [...tracks],
         };
-        dispatch({
-          type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-          data: {
-            track: trackToDelete,
-            index: -1,
-          },
+        removeTrackFromAmbientQueue({
+          track: trackToDelete,
+          index: -1,
         });
         emitPlaylistChanged(newPlaylist);
         revalidator.revalidate();

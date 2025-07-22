@@ -29,6 +29,7 @@ import { useQuery } from "@tanstack/react-query";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { Link } from "react-router";
 import { toast } from "react-toastify";
+import { useSetAtom } from "jotai";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -71,6 +72,7 @@ import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
 import MBIDMappingModal from "./MBIDMappingModal";
+import { addListenToBottomOfQueueAtom } from "../brainzplayer/BrainzPlayerAtoms";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -105,6 +107,7 @@ type ListenCardPropsWithDispatch = ListenCardProps & {
   thumbnailSrc?: string;
   dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
   isMobile: boolean;
+  addListenToBottomOfQueue: (listen: Listen) => void;
 };
 
 export class ListenCard extends React.Component<
@@ -241,9 +244,9 @@ export class ListenCard extends React.Component<
   };
 
   addToBottomOfQueue = () => {
-    const { dispatch } = this.props;
+    const { addListenToBottomOfQueue } = this.props;
     const { listen } = this.state;
-    dispatch({ type: "ADD_LISTEN_TO_BOTTOM_OF_QUEUE", data: listen });
+    addListenToBottomOfQueue(listen);
   };
 
   render() {
@@ -260,6 +263,7 @@ export class ListenCard extends React.Component<
       feedbackComponent,
       additionalMenuItems,
       additionalActions,
+      addListenToBottomOfQueue,
       listen: listenFromProps,
       dispatch: dispatchProp,
       thumbnailSrc,
@@ -786,12 +790,15 @@ export default function ListenCardWrapper(props: ListenCardProps) {
 
   const isMobile = useMediaQuery("(max-width: 480px)");
 
+  const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
+
   return (
     <ListenCard
       {...props}
       dispatch={dispatch}
       thumbnailSrc={thumbnailSrc}
       isMobile={isMobile}
+      addListenToBottomOfQueue={addListenToBottomOfQueue}
     />
   );
 }

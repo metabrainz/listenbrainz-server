@@ -36,7 +36,10 @@ import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { RouteQuery } from "../../utils/Loader";
 import Pagination from "../../common/Pagination";
-import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
+import {
+  removeTrackFromAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type LinkListensProps = {
   unlinkedListens?: Array<UnlinkedListens>;
@@ -80,7 +83,12 @@ export default function LinkListensPage() {
   // Context
   const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
   const dispatch = useBrainzPlayerDispatch();
+
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const removeTrackFromAmbientQueue = useSetAtom(
+    removeTrackFromAmbientQueueAtom
+  );
+
   const location = useLocation();
   // Loader
   const { data: loaderData, isLoading } = useQuery<LinkListensLoaderData>(
@@ -231,12 +239,9 @@ export default function LinkListensPage() {
             { toastId: "deleted-track" }
           );
           // Remove the listen from the BrainzPlayer queue
-          dispatch({
-            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-            data: {
-              track: unlinkedListenDataToListen(data, user),
-              index: -1,
-            },
+          removeTrackFromAmbientQueue({
+            track: unlinkedListenDataToListen(data, user),
+            index: -1,
           });
         }
       } catch (error) {
@@ -275,12 +280,9 @@ export default function LinkListensPage() {
         );
         if (itemBeforeMatching) {
           // Remove the listen from the BrainzPlayer queue
-          dispatch({
-            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-            data: {
-              track: unlinkedListenDataToListen(itemBeforeMatching, user),
-              index: -1,
-            },
+          removeTrackFromAmbientQueue({
+            track: unlinkedListenDataToListen(itemBeforeMatching, user),
+            index: -1,
           });
         }
       });
@@ -478,12 +480,9 @@ export default function LinkListensPage() {
                           listenToMap: listen,
                         }).then(({ recording_msid }) => {
                           // Remove the listen from the BrainzPlayer queue
-                          dispatch({
-                            type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-                            data: {
-                              track: listen,
-                              index: -1,
-                            },
+                          removeTrackFromAmbientQueue({
+                            track: listen,
+                            index: -1,
                           });
                           const filterOutMatched = (
                             prevValue: Array<UnlinkedListens>

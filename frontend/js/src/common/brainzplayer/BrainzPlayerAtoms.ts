@@ -207,7 +207,7 @@ export const removeTrackFromAmbientQueueAtom = atom(
   (
     get,
     set,
-    { track, index }: { track: BrainzPlayerQueueItem; index: number }
+    { track, index }: { track: Listen | JSPFTrack; index: number }
   ) => {
     const trackToDelete = listenOrJSPFTrackToQueueItem(track);
     const ambientQueue = get(ambientQueueAtom);

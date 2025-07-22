@@ -18,12 +18,9 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "MOVE_QUEUE_ITEM"
     | "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE"
     | "MOVE_AMBIENT_QUEUE_ITEM"
-    | "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE"
     | "REMOVE_TRACK_FROM_QUEUE"
-    | "REMOVE_TRACK_FROM_AMBIENT_QUEUE"
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
-    | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
     | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
   data?: any;
 };
@@ -118,39 +115,6 @@ function valueReducer(
         currentListenIndex: newCurrentListenIndex,
       };
     }
-    case "REMOVE_TRACK_FROM_AMBIENT_QUEUE": {
-      const { track, index } = action.data as {
-        track: BrainzPlayerQueueItem;
-        index: number;
-      };
-      const trackToDelete = listenOrJSPFTrackToQueueItem(track);
-      const { ambientQueue } = state;
-
-      if (index === -1) {
-        const updatedQueue = ambientQueue.filter(
-          (trackInQueue) => trackInQueue.id !== trackToDelete.id
-        );
-        return {
-          ...state,
-          ambientQueue: updatedQueue,
-        };
-      }
-
-      if (
-        index >= ambientQueue.length ||
-        ambientQueue[index]?.id !== trackToDelete.id
-      ) {
-        return state;
-      }
-
-      const updatedAmbientQueue = [...ambientQueue];
-      updatedAmbientQueue.splice(index, 1);
-
-      return {
-        ...state,
-        ambientQueue: updatedAmbientQueue,
-      };
-    }
     case "ADD_LISTEN_TO_TOP_OF_QUEUE": {
       const trackToAdd = listenOrJSPFTrackToQueueItem(action.data);
       const { queue, currentListenIndex } = state;
@@ -173,14 +137,6 @@ function valueReducer(
         queue: [...queue, trackToAdd],
       };
     }
-    case "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE": {
-      const trackToAdd = listenOrJSPFTrackToQueueItem(action.data);
-      const { ambientQueue } = state;
-      return {
-        ...state,
-        ambientQueue: [...ambientQueue, trackToAdd],
-      };
-    }
     case "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE": {
       const { currentListenIndex, queue } = state;
       const updatedQueue = queue.slice(0, currentListenIndex + 1);
@@ -192,14 +148,6 @@ function valueReducer(
         ...restActions,
         queue: updatedQueue,
         ambientQueue: newAmbientQueue,
-      };
-    }
-    case "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE": {
-      const { queue, ambientQueue } = state;
-      return {
-        ...state,
-        queue: [...queue, ...ambientQueue],
-        ambientQueue: [],
       };
     }
     case "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE": {
