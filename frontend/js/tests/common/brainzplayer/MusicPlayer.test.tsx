@@ -1,186 +1,134 @@
-// import * as React from "react";
-// import { screen, waitFor } from "@testing-library/react";
-// import fetchMock from "jest-fetch-mock";
-// import "@testing-library/jest-dom";
-// import userEvent from "@testing-library/user-event";
-// import MusicPlayer from "../../../src/common/brainzplayer/MusicPlayer";
-// import {
-//   BrainzPlayerContextT,
-//   BrainzPlayerProvider,
-//   initialValue as initialBrainzPlayerContextValue,
-// } from "../../../src/common/brainzplayer/BrainzPlayerContext";
-// import type { GlobalAppContextT } from "../../../src/utils/GlobalAppContext";
-// import { renderWithProviders } from "../../test-utils/rtl-test-utils";
-// import APIService from "../../../src/utils/APIService";
-// import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-// import IntersectionObserver from "../../__mocks__/intersection-observer";
-// import {
-//   FeedbackValue,
-//   listenOrJSPFTrackToQueueItem,
-// } from "../../../src/common/brainzplayer/utils";
+import * as React from "react";
+import { screen } from "@testing-library/react";
+import { Provider as JotaiProvider, createStore } from "jotai";
+import fetchMock from "jest-fetch-mock";
+import "@testing-library/jest-dom";
+import userEvent from "@testing-library/user-event";
+import MusicPlayer from "../../../src/common/brainzplayer/MusicPlayer";
+import {
+  playerPausedAtom,
+  currentTrackNameAtom,
+  currentTrackArtistAtom,
+  currentListenAtom,
+  queueAtom,
+  ambientQueueAtom,
+  currentListenIndexAtom,
+  queueRepeatModeAtom,
+  QueueRepeatModes,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { FeedbackValue, listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
+import APIService from "../../../src/utils/APIService";
+import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
+import IntersectionObserver from "../../__mocks__/intersection-observer";
 
-// const GlobalContextMock: { context: GlobalAppContextT } = {
-//   context: {
-//     APIService: new APIService("base-uri"),
-//     websocketsUrl: "",
-//     spotifyAuth: {
-//       access_token: "heyo",
-//       permission: [
-//         "user-read-currently-playing",
-//         "user-read-recently-played",
-//       ] as Array<SpotifyPermission>,
-//     },
-//     soundcloudAuth: {
-//       access_token: "heyo-soundcloud",
-//     },
-//     youtubeAuth: {
-//       api_key: "fake-api-key",
-//     },
-//     currentUser: { name: "" },
-//     recordingFeedbackManager: new RecordingFeedbackManager(
-//       new APIService("foo"),
-//       { name: "Fnord" }
-//     ),
-//   },
-// };
+const GlobalContextMock = {
+  APIService: new APIService("base-uri"),
+  websocketsUrl: "",
+  spotifyAuth: {},
+  soundcloudAuth: {},
+  youtubeAuth: { api_key: "fake-api-key" },
+  currentUser: { name: "" },
+  recordingFeedbackManager: new RecordingFeedbackManager(new APIService("foo"), { name: "Fnord" }),
+};
 
-// const listen = listenOrJSPFTrackToQueueItem({
-//   listened_at: 0,
-//   track_metadata: {
-//     artist_name: "Moondog",
-//     track_name: "Bird's Lament",
-//   },
-// });
+const listen = listenOrJSPFTrackToQueueItem({
+  listened_at: 0,
+  track_metadata: {
+    artist_name: "Moondog",
+    track_name: "Bird's Lament",
+  },
+});
 
-// const defaultProps = {
-//   onHide: jest.fn(),
-//   toggleQueue: jest.fn(),
-//   playPreviousTrack: jest.fn(),
-//   playNextTrack: jest.fn(),
-//   togglePlay: jest.fn(),
-//   seekToPositionMs: jest.fn(),
-//   toggleRepeatMode: jest.fn(),
-//   submitFeedback: jest.fn(),
-//   currentListenFeedback: 0,
-//   musicPlayerCoverArtRef: { current: null },
-//   disabled: false,
-//   mostReadableTextColor: "#000000",
-// };
+const defaultProps = {
+  onHide: jest.fn(),
+  toggleQueue: jest.fn(),
+  playPreviousTrack: jest.fn(),
+  playNextTrack: jest.fn(),
+  togglePlay: jest.fn(),
+  seekToPositionMs: jest.fn(),
+  toggleRepeatMode: jest.fn(),
+  submitFeedback: jest.fn(),
+  currentListenFeedback: 0,
+  musicPlayerCoverArtRef: { current: null },
+  disabled: false,
+  toggleShowVolume: jest.fn(), // required prop
+};
 
-// function MusicPlayerWithWrapper(props: {
-//   additionalContextValues?: Partial<BrainzPlayerContextT>;
-//   musicPlayerProps?: any;
-// }) {
-//   const { additionalContextValues, musicPlayerProps } = props || {};
-//   return (
-//     <BrainzPlayerProvider additionalContextValues={additionalContextValues}>
-//       <MusicPlayer {...defaultProps} {...musicPlayerProps} />
-//     </BrainzPlayerProvider>
-//   );
-// }
+const user = userEvent.setup();
 
-// const useBrainzPlayerDispatch = jest.fn();
-// const useBrainzPlayerContext = jest.fn();
-// const mockDispatch = jest.fn();
+type AtomValues = {
+  currentListen?: any;
+  currentTrackName?: string;
+  currentTrackArtist?: string;
+  playerPaused?: boolean;
+  queue?: any[];
+  ambientQueue?: any[];
+  currentListenIndex?: number;
+  queueRepeatMode?: typeof QueueRepeatModes[keyof typeof QueueRepeatModes];
+};
 
-// const user = userEvent.setup();
+type MusicPlayerProps = React.ComponentProps<typeof MusicPlayer>;
 
-// describe("MusicPlayer", () => {
-//   beforeAll(() => {
-//     global.IntersectionObserver = IntersectionObserver;
-//     window.HTMLElement.prototype.scrollIntoView = jest.fn();
-//     fetchMock.enableMocks();
-//   });
-//   beforeEach(() => {
-//     (useBrainzPlayerContext as jest.MockedFunction<
-//       typeof useBrainzPlayerContext
-//     >).mockReturnValue(initialBrainzPlayerContextValue);
+function renderMusicPlayerWithAtoms(
+  atomValues: AtomValues = {},
+  musicPlayerProps: Partial<MusicPlayerProps> = {}
+) {
+  const store = createStore();
+  store.set(currentListenAtom, atomValues.currentListen ?? listen);
+  store.set(currentTrackNameAtom, atomValues.currentTrackName ?? "Bird's Lament");
+  store.set(currentTrackArtistAtom, atomValues.currentTrackArtist ?? "Moondog");
+  store.set(playerPausedAtom, atomValues.playerPaused ?? false);
+  store.set(queueAtom, atomValues.queue ?? [listen]);
+  store.set(ambientQueueAtom, atomValues.ambientQueue ?? []);
+  store.set(currentListenIndexAtom, atomValues.currentListenIndex ?? 0);
+  store.set(queueRepeatModeAtom, atomValues.queueRepeatMode ?? QueueRepeatModes.off);
+  return renderWithProviders(
+    <JotaiProvider store={store}>
+      <MusicPlayer {...defaultProps} {...musicPlayerProps} />
+    </JotaiProvider>,
+    GlobalContextMock
+  );
+}
 
-//     (useBrainzPlayerDispatch as jest.MockedFunction<
-//       typeof useBrainzPlayerDispatch
-//     >).mockReturnValue(mockDispatch);
-//   });
+describe("MusicPlayer", () => {
+  beforeAll(() => {
+    global.IntersectionObserver = IntersectionObserver;
+    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    fetchMock.enableMocks();
+  });
 
-//   test("renders the component with track information", async () => {
-//     renderWithProviders(
-//       <MusicPlayerWithWrapper
-//         additionalContextValues={{
-//           currentListen: listen,
-//           currentTrackName: "Bird's Lament",
-//           currentTrackArtist: "Moondog",
-//         }}
-//       />,
-//       {
-//         ...GlobalContextMock.context,
-//         spotifyAuth: {},
-//         soundcloudAuth: {},
-//       },
-//       {}
-//     );
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-//     expect(screen.getByText("Moondog")).toBeInTheDocument();
-//     expect(screen.getByText("Bird's Lament")).toBeInTheDocument();
-//   });
+  test("renders the component with track information", () => {
+    renderMusicPlayerWithAtoms();
+    expect(screen.getByText("Moondog")).toBeInTheDocument();
+    expect(screen.getByText("Bird's Lament")).toBeInTheDocument();
+  });
 
-//   test("renders the component with feedback buttons", async () => {
-//     renderWithProviders(
-//       <MusicPlayerWithWrapper
-//         additionalContextValues={{
-//           currentListen: listen,
-//           currentTrackName: "Bird's Lament",
-//           currentTrackArtist: "Moondog",
-//         }}
-//         musicPlayerProps={{
-//           currentListenFeedback: FeedbackValue.LIKE,
-//         }}
-//       />,
-//       {
-//         ...GlobalContextMock.context,
-//         spotifyAuth: {},
-//         soundcloudAuth: {},
-//       },
-//       {}
-//     );
+  test("renders the component with feedback buttons and toggles feedback", async () => {
+    renderMusicPlayerWithAtoms({}, { currentListenFeedback: FeedbackValue.LIKE });
+    expect(screen.getByText("Love")).toBeInTheDocument();
+    expect(screen.getByText("Hate")).toBeInTheDocument();
 
-//     expect(screen.getByText("Love")).toBeInTheDocument();
-//     expect(screen.getByText("Hate")).toBeInTheDocument();
+    const loveButton = screen.getByText("Love");
+    await user.click(loveButton);
+    expect(defaultProps.submitFeedback).toHaveBeenCalledWith(FeedbackValue.NEUTRAL);
+  });
 
-//     const loveButton = screen.getByText("Love");
-//     await user.click(loveButton);
-//     expect(defaultProps.submitFeedback).toHaveBeenCalledWith(
-//       FeedbackValue.NEUTRAL
-//     );
-//   });
+  test("on clicking next track button, playNextTrack is called", async () => {
+    renderMusicPlayerWithAtoms();
+    const nextButton = screen.getByTestId("bp-mp-next-button");
+    await user.click(nextButton);
+    expect(defaultProps.playNextTrack).toHaveBeenCalled();
+  });
 
-//   test("on clicking next track button, playNextTrack is called", async () => {
-//     renderWithProviders(
-//       <MusicPlayerWithWrapper
-//         additionalContextValues={{
-//           currentListen: listen,
-//           currentTrackName: "Bird's Lament",
-//           currentTrackArtist: "Moondog",
-//         }}
-//       />
-//     );
-
-//     const nextButton = screen.getByTestId("bp-mp-next-button");
-//     await user.click(nextButton);
-//     expect(defaultProps.playNextTrack).toHaveBeenCalled();
-//   });
-
-//   test("on clicking previous track button, playPreviousTrack is called", async () => {
-//     renderWithProviders(
-//       <MusicPlayerWithWrapper
-//         additionalContextValues={{
-//           currentListen: listen,
-//           currentTrackName: "Bird's Lament",
-//           currentTrackArtist: "Moondog",
-//         }}
-//       />
-//     );
-
-//     const previousButton = screen.getByTestId("bp-mp-previous-button");
-//     await user.click(previousButton);
-//     expect(defaultProps.playPreviousTrack).toHaveBeenCalled();
-//   });
-// });
+  test("on clicking previous track button, playPreviousTrack is called", async () => {
+    renderMusicPlayerWithAtoms();
+    const previousButton = screen.getByTestId("bp-mp-previous-button");
+    await user.click(previousButton);
+    expect(defaultProps.playPreviousTrack).toHaveBeenCalled();
+  });
+});
