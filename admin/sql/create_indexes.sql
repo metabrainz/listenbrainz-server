@@ -64,6 +64,6 @@ CREATE UNIQUE INDEX user_data_export_deduplicate_waiting_idx ON user_data_export
 
 CREATE INDEX user_data_import_user_id_idx ON user_data_import (user_id);
 
-CREATE UNIQUE INDEX user_data_import_deduplicate_waiting_idx ON user_data_import (user_id, service) WHERE status = 'waiting' OR status = 'in_progress';
+CREATE UNIQUE INDEX user_data_import_deduplicate_waiting_idx ON user_data_import (user_id, service) WHERE metadata->>'status' IN ('waiting', 'in_progress');
 
 COMMIT;

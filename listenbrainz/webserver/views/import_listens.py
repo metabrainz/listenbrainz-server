@@ -94,7 +94,7 @@ def create_import_task():
         query = """
             INSERT INTO user_data_import (user_id, service, from_date, to_date, file_path, metadata)
                  VALUES (:user_id, :service, :from_date, :to_date, :file_path, :metadata)
-              RETURNING id, service, created, progress, status, file_path, metadata
+              RETURNING id, service, created, file_path, metadata
         """
         result = db_conn.execute(text(query), {
             "user_id": current_user.id,
@@ -102,7 +102,7 @@ def create_import_task():
             "from_date": from_date,
             "to_date": to_date,
             "file_path": save_path,
-            "metadata": {"status": "waiting", "progress": "Your data import will start soon.", "filename": filename}
+            "metadata": json.dumps({"status": "waiting", "progress": "Your data import will start soon.", "filename": filename})
         })
         import_task = result.first()
 
@@ -118,7 +118,7 @@ def create_import_task():
                 db_conn.commit()
                 return jsonify({
                     "import_id": import_task.id,
-                    "type": import_task.type,
+                    "service": import_task.service,
                     "created": import_task.created.isoformat(),
                     "metadata": import_task.metadata,
                     "file_path": import_task.filename,
