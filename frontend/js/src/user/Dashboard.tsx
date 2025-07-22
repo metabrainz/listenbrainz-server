@@ -19,6 +19,7 @@ import { io } from "socket.io-client";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../utils/GlobalAppContext";
 
 import AddListenModal from "./components/AddListenModal";
@@ -41,6 +42,7 @@ import { RouteQuery } from "../utils/Loader";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type ListensProps = {
   latestListenTs: number;
@@ -442,11 +444,10 @@ export default function Listen() {
     allListenables = [listenablePin, ...listens];
   }
 
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: allListenables,
-    });
+    setAmbientQueue(allListenables);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allListenables]);
 

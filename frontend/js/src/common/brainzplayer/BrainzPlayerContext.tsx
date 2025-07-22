@@ -15,7 +15,6 @@ export const initialValue: BrainzPlayerContextT = {
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
   type?:
-    | "SET_AMBIENT_QUEUE"
     | "MOVE_QUEUE_ITEM"
     | "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE"
     | "MOVE_AMBIENT_QUEUE_ITEM"
@@ -38,22 +37,6 @@ function valueReducer(
   }
 
   switch (action.type) {
-    case "SET_AMBIENT_QUEUE": {
-      if (!action.data) {
-        return { ...state, ...action };
-      }
-      const data = action.data as BrainzPlayerQueue;
-      const { data: _, ...restActions } = action;
-      const newQueue = [...data].map(listenOrJSPFTrackToQueueItem);
-      if (data.length !== 0) {
-        return {
-          ...state,
-          ...restActions,
-          ambientQueue: newQueue,
-        };
-      }
-      break;
-    }
     case "MOVE_QUEUE_ITEM": {
       const { queue, currentListenIndex } = state;
       const evt = action.data as any;
@@ -233,7 +216,6 @@ function valueReducer(
       throw Error(`Unknown action: ${action.type}`);
     }
   }
-  return state;
 }
 
 export const useReducerWithCallback = (

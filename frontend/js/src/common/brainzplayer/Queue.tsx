@@ -13,7 +13,7 @@ import {
   useBrainzPlayerContext,
   useBrainzPlayerDispatch,
 } from "./BrainzPlayerContext";
-import { currentListenAtom } from "./BrainzPlayerAtoms";
+import { ambientQueueAtom, currentListenAtom } from "./BrainzPlayerAtoms";
 
 type BrainzPlayerQueueProps = {
   clearQueue: () => void;
@@ -25,11 +25,8 @@ const MAX_AMBIENT_QUEUE_ITEMS = 15;
 function Queue(props: BrainzPlayerQueueProps) {
   const dispatch = useBrainzPlayerDispatch();
   const currentListen = useAtomValue(currentListenAtom);
-  const {
-    queue,
-    ambientQueue,
-    currentListenIndex = -1,
-  } = useBrainzPlayerContext();
+  const ambientQueue = useAtomValue(ambientQueueAtom);
+  const { queue, currentListenIndex = -1 } = useBrainzPlayerContext();
 
   const { clearQueue, onHide } = props;
 

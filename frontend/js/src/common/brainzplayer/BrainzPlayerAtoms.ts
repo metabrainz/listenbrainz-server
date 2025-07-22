@@ -84,7 +84,7 @@ export const queueRepeatModeAtom = atomWithReset<QueueRepeatMode>(
 // Action Atoms
 export const setAmbientQueueAtom = atom(
   null,
-  (get, set, data: BrainzPlayerQueue) => {
+  (get, set, data: Listen[] | JSPFTrack[]) => {
     if (data && data.length > 0) {
       const newQueue = [...data].map(listenOrJSPFTrackToQueueItem);
       set(ambientQueueAtom, newQueue);

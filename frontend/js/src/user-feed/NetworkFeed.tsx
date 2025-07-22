@@ -11,12 +11,14 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
+import { useSetAtom } from "jotai";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import UserSocialNetwork from "../user/components/follow/UserSocialNetwork";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { getListenCardKey } from "../utils/utils";
 import { FeedFetchParams, FeedModes } from "./types";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type NetworkFeedPageProps = {
   events: TimelineEvent<Listen>[];
@@ -30,6 +32,7 @@ export default function NetworkFeedPage() {
     getListensFromSimilarUsers,
   } = APIService;
   const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const prevListens = React.useRef<Listen[]>([]);
 
   const navigate = useNavigate();
@@ -112,10 +115,7 @@ export default function NetworkFeedPage() {
     // But on first load, we need to add replace the entire queue with the listens
 
     if (!prevListens.current?.length) {
-      dispatch({
-        type: "SET_AMBIENT_QUEUE",
-        data: listens,
-      });
+      setAmbientQueue(listens ?? []);
     } else {
       const newListens = listens?.filter(
         (listen) => !prevListens.current?.includes(listen)

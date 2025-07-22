@@ -6,14 +6,15 @@ import { kebabCase } from "lodash";
 import { useLocation } from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { ToastMsg } from "../../notifications/Notifications";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SearchBox from "./components/SearchBox";
 import Panel from "./components/Panel";
 import { downloadComponentAsImage, copyImageToClipboard } from "./utils/utils";
 import { RouteQuery } from "../../utils/Loader";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtist from "./components/SimilarArtist";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 type MusicNeighborhoodLoaderData = {
   algorithm: string;
@@ -59,13 +60,10 @@ export default function MusicNeighborhood() {
 
   const [currentTracks, setCurrentTracks] = React.useState<Array<Listen>>([]);
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: currentTracks,
-    });
+    setAmbientQueue(currentTracks);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTracks]);
 

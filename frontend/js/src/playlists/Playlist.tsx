@@ -21,6 +21,7 @@ import { Helmet } from "react-helmet";
 import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSetAtom } from "jotai";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -40,6 +41,7 @@ import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerCont
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
 import DuplicateTrackModal from "./components/DuplicateTrackModal";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -72,6 +74,7 @@ export default function PlaylistPage() {
   const { currentUser, APIService, websocketsUrl } = React.useContext(
     GlobalAppContext
   );
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const dispatch = useBrainzPlayerDispatch();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
@@ -356,10 +359,7 @@ export default function PlaylistPage() {
   const customFields = getPlaylistExtension(playlist);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: tracks,
-    });
+    setAmbientQueue(tracks);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
 

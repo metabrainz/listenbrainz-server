@@ -10,6 +10,7 @@ import {
 import { Link, useLocation, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 
 import NiceModal from "@ebay/nice-modal-react";
 
@@ -35,6 +36,7 @@ import Accordion from "../../common/Accordion";
 import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { RouteQuery } from "../../utils/Loader";
 import Pagination from "../../common/Pagination";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type LinkListensProps = {
   unlinkedListens?: Array<UnlinkedListens>;
@@ -78,6 +80,7 @@ export default function LinkListensPage() {
   // Context
   const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
   const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const location = useLocation();
   // Loader
   const { data: loaderData, isLoading } = useQuery<LinkListensLoaderData>(
@@ -304,10 +307,7 @@ export default function LinkListensPage() {
     const unlinkedDataAsListen = itemsOnThisPage.flatMap((x) => [
       ...x.map((y) => unlinkedListenDataToListen(y, user)),
     ]);
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: unlinkedDataAsListen,
-    });
+    setAmbientQueue(unlinkedDataAsListen);
   }, [dispatch, itemsOnThisPage, user]);
 
   return (
