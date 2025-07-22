@@ -33,7 +33,6 @@ import MultiTrackMBIDMappingModal, {
   MatchingTracksResults,
 } from "./MultiTrackMBIDMappingModal";
 import Accordion from "../../common/Accordion";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import { RouteQuery } from "../../utils/Loader";
 import Pagination from "../../common/Pagination";
 import {
@@ -82,7 +81,6 @@ const EXPECTED_ITEMS_PER_PAGE = 25;
 export default function LinkListensPage() {
   // Context
   const { APIService, currentUser: user } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
 
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   const removeTrackFromAmbientQueue = useSetAtom(
@@ -287,7 +285,7 @@ export default function LinkListensPage() {
         }
       });
     },
-    [dispatch, user]
+    [removeTrackFromAmbientQueue, user]
   );
 
   // Effects
@@ -310,7 +308,7 @@ export default function LinkListensPage() {
       ...x.map((y) => unlinkedListenDataToListen(y, user)),
     ]);
     setAmbientQueue(unlinkedDataAsListen);
-  }, [dispatch, itemsOnThisPage, user]);
+  }, [removeTrackFromAmbientQueue, itemsOnThisPage, user]);
 
   return (
     <>

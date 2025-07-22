@@ -39,7 +39,6 @@ import {
 } from "../utils/utils";
 import FollowButton from "./components/follow/FollowButton";
 import { RouteQuery } from "../utils/Loader";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ReportUserButton from "../report-user/ReportUser";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
@@ -74,7 +73,6 @@ export default function Listen() {
     queryFn,
     staleTime: isTimeNavigation ? 1000 * 60 * 5 : 0,
   });
-  const dispatch = useBrainzPlayerDispatch();
 
   const {
     listens = [],

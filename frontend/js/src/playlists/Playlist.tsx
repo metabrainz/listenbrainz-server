@@ -37,7 +37,6 @@ import {
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
 } from "./utils";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
 import DuplicateTrackModal from "./components/DuplicateTrackModal";
@@ -90,7 +89,6 @@ export default function PlaylistPage() {
   );
   const moveAmbientQueueItem = useSetAtom(moveAmbientQueueItemAtom);
 
-  const dispatch = useBrainzPlayerDispatch();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   // Loader data

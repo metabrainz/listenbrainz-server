@@ -9,10 +9,7 @@ import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import { listenToJSPFTrack } from "../../playlists/utils";
 import { getListenCardKey } from "../../utils/utils";
-import {
-  useBrainzPlayerContext,
-  useBrainzPlayerDispatch,
-} from "./BrainzPlayerContext";
+import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import {
   queueAtom,
   ambientQueueAtom,
@@ -31,8 +28,6 @@ type BrainzPlayerQueueProps = {
 const MAX_AMBIENT_QUEUE_ITEMS = 15;
 
 function Queue(props: BrainzPlayerQueueProps) {
-  const dispatch = useBrainzPlayerDispatch();
-
   const currentListen = useAtomValue(currentListenAtom);
   const ambientQueue = useAtomValue(ambientQueueAtom);
   const queue = useAtomValue(queueAtom);
