@@ -474,7 +474,7 @@ export default NiceModal.create(
                           feedbackComponent={<></>}
                           additionalActions={
                             <ListenControl
-                              buttonClassName="btn-transparent"
+                              buttonClassName="btn btn-transparent"
                               text=""
                               title="Remove incorrect match"
                               icon={faTimesCircle}

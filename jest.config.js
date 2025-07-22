@@ -17,7 +17,7 @@ module.exports = {
   moduleFileExtensions: ["ts", "tsx", "js", "json", "jsx"],
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ["<rootDir>/enzyme.config.ts", "jest-canvas-mock"],
+  setupFiles: ["jest-canvas-mock"],
 
   setupFilesAfterEnv: [
     "jest-location-mock",
@@ -39,8 +39,7 @@ module.exports = {
     customExportConditions: [""],
   },
   moduleNameMapper: {
-    "react-markdown":
-      "<rootDir>/node_modules/react-markdown/react-markdown.min.js",
+    "react-markdown": "<rootDir>/frontend/js/tests/__mocks__/react-markdown.tsx",
     "^localforage$": "<rootDir>/frontend/js/tests/__mocks__/localforage.ts",
     "d3-interpolate":
       "<rootDir>/node_modules/d3-interpolate/dist/d3-interpolate.min.js",
@@ -59,10 +58,4 @@ module.exports = {
   // Indicates whether each individual test should be reported during the run
   verbose: true,
 
-  snapshotSerializers: ["enzyme-to-json/serializer"],
-
-  snapshotFormat: {
-    escapeString: true,
-    printBasicPrototype: true,
-  },
 };

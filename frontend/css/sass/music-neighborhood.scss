@@ -1,0 +1,150 @@
+@use "sass:map";
+
+$font_family_1: Sintony, sans-serif;
+$font_family_2: "Roboto", sans-serif;
+$mb_blue_light: #413b89;
+$mb_blue_dark: #211e45;
+
+.artist-similarity-main-container {
+  display: flex;
+  flex-direction: column;
+
+  .artist-similarity-header {
+    display: flex;
+    justify-content: start;
+    flex-wrap: wrap;
+    gap: 1em;
+    padding: 2vh 0;
+
+    @media screen and (max-width: map.get($grid-breakpoints, "sm")) {
+      justify-content: space-between;
+    }
+
+    #artist-graph-size-input {
+      max-width: 6em;
+    }
+  }
+
+  .artist-similarity-graph-panel-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+
+    .sidebar {
+      width: max(20%, 225px);
+      z-index: 2;
+      @media screen and (max-width: map.get($grid-breakpoints, "md")) {
+        // on mobile, show the sidebar tray above BrainzPlayer; it can be collapsed
+        z-index: 6;
+      }
+
+      .sidebar-header {
+        background: $blue;
+        color: $white;
+        padding-top: 20px;
+
+        p:first-of-type {
+          font-size: 25px;
+          font-weight: 900;
+        }
+
+        p {
+          margin-bottom: 5px;
+        }
+      }
+
+      .artist-panel-info {
+        height: min(fit-content, 200px);
+        #artist-wiki {
+          padding-top: 0.5em;
+          padding-bottom: 0.5em;
+          height: 70%;
+          overflow: hidden;
+          mask-image: linear-gradient(180deg, #000 60%, transparent);
+          -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+        }
+        .artist-mb-link {
+          text-align: end;
+          padding: 0.5em 0;
+
+          #artist-mb-link-button {
+            font-size: 14px;
+            background-color: $blue;
+            border: none;
+            border-radius: 4px;
+            color: $white;
+            padding: 0.5em;
+            text-decoration: none;
+          }
+        }
+      }
+
+      .artist-top-album-container,
+      .artist-top-track-container {
+        > h5 {
+          font-weight: bolder;
+          color: inherit;
+          overflow: hidden;
+          margin: 0;
+          //padding-bottom: 0.5em;
+          &:after {
+            content: "";
+            display: inline-block;
+            height: 0.5em;
+            vertical-align: bottom;
+            width: 100%;
+            margin-right: -100%;
+            margin-left: 10px;
+            border-top: 1.75px solid $hr-border-color;
+          }
+        }
+        #artist-top-track,
+        #artist-top-album {
+          border: none;
+          background-color: $white;
+          border-radius: 0.5em;
+          padding: 1em 0 0 0;
+          &:hover {
+            background-color: $gray-200;
+          }
+        }
+      }
+    }
+  }
+}
+
+.entity-similarity-graph-container {
+  flex: 1;
+  height: calc(100vh - $brainzplayer-height);
+  max-height: 1120px; // 80% of the max content width (so we have a square aspect ratio
+  overflow: auto;
+
+  .entity-similarity-graph-node {
+    cursor: pointer;
+
+    .centered-text {
+      padding: 0 4px;
+      overflow: hidden;
+
+      display: flex;
+      align-items: center;
+      text-align: center;
+      border-radius: 50%;
+      height: inherit;
+
+      .centered-text-inner {
+        width: 100%;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1em;
+        // Hyphenation when possible
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+    }
+  }
+}
