@@ -19,7 +19,7 @@ function RecommendationControl(props: RecommendationControlProps) {
       className={`recommendation-icon ${cssClass}`}
       title={title}
       onClick={action}
-      onKeyPress={action}
+      onKeyUp={action}
       role="button"
       tabIndex={0}
     >

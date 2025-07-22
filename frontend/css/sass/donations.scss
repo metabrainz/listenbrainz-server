@@ -1,3 +1,5 @@
+@use "sass:color";
+
 #donations-page {
   background: $homepage-background;
   margin-left: -15px;
@@ -55,7 +57,7 @@
     &:hover {
       scale: 1.1;
     }
-    background: fadeout(white, 30%) !important;
+    background: color.change($white, $alpha: 35%);
     transition: scale 0.2s ease-in-out;
     // blurred glass effect
     // background: rgba(255, 255, 255, 0.2);
