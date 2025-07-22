@@ -30,7 +30,6 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getRecordingMBID, getRecordingMSID } from "../../utils/utils";
 import MenuOptions from "./MenuOptions";
 import ProgressBar from "./ProgressBar";
-import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import Queue from "./Queue";
 import MusicPlayer from "./MusicPlayer";
 import { FeedbackValue } from "./utils";
@@ -101,11 +100,6 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
   const [currentListenFeedback, setCurrentListenFeedback] = React.useState(0);
   const [isMobile, setIsMobile] = React.useState(false);
   const { currentUser } = React.useContext(GlobalAppContext);
-
-  // BrainzPlayerContext
-  const brainzPlayerContext = useBrainzPlayerContext();
-  const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
-  brainzPlayerContextRef.current = brainzPlayerContext;
 
   const playerPaused = useAtomValue(playerPausedAtom);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);

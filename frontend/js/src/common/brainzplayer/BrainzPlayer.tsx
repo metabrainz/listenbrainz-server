@@ -36,10 +36,6 @@ import {
   defaultDataSourcesPriority,
 } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import {
-  useBrainzPlayerContext,
-  useBrainzPlayerDispatch,
-} from "./BrainzPlayerContext";
-import {
   QueueRepeatModes,
   playerPausedAtom,
   setPlaybackTimerAtom,
@@ -58,6 +54,12 @@ import {
   currentTrackCoverURLAtom,
   currentDataSourceIndexAtom,
   currentListenAtom,
+  queueAtom,
+  ambientQueueAtom,
+  currentListenIndexAtom,
+  addListenToTopOfQueueAtom,
+  addListenToBottomOfQueueAtom,
+  clearQueueAfterCurrentAndSetAmbientQueueAtom,
 } from "./BrainzPlayerAtoms";
 
 export type DataSourceType = {
@@ -165,6 +167,9 @@ export default function BrainzPlayer() {
   const setCurrentTrackAlbum = useSetAtom(currentTrackAlbumAtom);
   const setCurrentTrackURL = useSetAtom(currentTrackURLAtom);
   const setCurrentDataSourceIndex = useSetAtom(currentDataSourceIndexAtom);
+  const setQueue = useSetAtom(queueAtom);
+  const setAmbientQueue = useSetAtom(ambientQueueAtom);
+  const setCurrentListenIndex = useSetAtom(currentListenIndexAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
@@ -172,6 +177,11 @@ export default function BrainzPlayer() {
 
   // Action Atoms
   const setPlaybackTimer = useSetAtom(setPlaybackTimerAtom);
+  const addListenToTopOfQueue = useSetAtom(addListenToTopOfQueueAtom);
+  const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
+  const clearQueueAfterCurrentAndSetAmbientQueue = useSetAtom(
+    clearQueueAfterCurrentAndSetAmbientQueueAtom
+  );
 
   const store = useStore();
   const getContinuousPlaybackTime = () => store.get(continuousPlaybackTimeAtom);
@@ -183,6 +193,9 @@ export default function BrainzPlayer() {
   const getCurrentTrackAlbum = () => store.get(currentTrackAlbumAtom);
   const getCurrentTrackURL = () => store.get(currentTrackURLAtom);
   const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
+  const getQueue = () => store.get(queueAtom);
+  const getAmbientQueue = () => store.get(ambientQueueAtom);
+  const getCurrentListenIndex = () => store.get(currentListenIndexAtom);
 
   // Constants
   // By how much should we seek in the track?
@@ -198,14 +211,6 @@ export default function BrainzPlayer() {
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
-
-  // BrainzPlayerContext
-  const brainzPlayerContext = useBrainzPlayerContext();
-
-  const brainzPlayerContextRef = React.useRef(brainzPlayerContext);
-  brainzPlayerContextRef.current = brainzPlayerContext;
-
-  const dispatch = useBrainzPlayerDispatch();
 
   // State
   const [htmlTitle, setHtmlTitle] = React.useState<string>(
@@ -511,9 +516,7 @@ export default function BrainzPlayer() {
     nextListenIndex: number,
     datasourceIndex: number = 0
   ): Promise<void> => {
-    dispatch({
-      currentListenIndex: nextListenIndex,
-    });
+    setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
     store.set(isActivatedAtom, true);
     setContinuousPlaybackTime(0);
@@ -577,8 +580,8 @@ export default function BrainzPlayer() {
     }
     debouncedCheckProgressAndSubmitListen.flush();
 
-    const currentQueue = brainzPlayerContextRef.current.queue;
-    const currentAmbientQueue = brainzPlayerContextRef.current.ambientQueue;
+    const currentQueue = getQueue();
+    const currentAmbientQueue = getAmbientQueue();
 
     if (currentQueue.length === 0 && currentAmbientQueue.length === 0) {
       handleWarning(
@@ -588,8 +591,7 @@ export default function BrainzPlayer() {
       return;
     }
 
-    const currentPlayingListenIndex =
-      brainzPlayerContextRef.current.currentListenIndex;
+    const currentPlayingListenIndex = getCurrentListenIndex();
 
     let nextListenIndex: number;
     // If the queue repeat mode is one, then play the same track again
@@ -621,25 +623,10 @@ export default function BrainzPlayer() {
       const ambientQueueTop = currentAmbientQueue.shift();
       if (ambientQueueTop) {
         const currentQueueLength = currentQueue.length;
-        dispatch(
-          {
-            type: "ADD_LISTEN_TO_BOTTOM_OF_QUEUE",
-            data: ambientQueueTop,
-          },
-          async () => {
-            while (
-              brainzPlayerContextRef.current.queue.length !==
-              currentQueueLength + 1
-            ) {
-              // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
-              await new Promise((resolve) => setTimeout(resolve, 100));
-            }
-            const nextListen =
-              brainzPlayerContextRef.current.queue[currentQueueLength];
-            dispatch({ ambientQueue: currentAmbientQueue });
-            playListen(nextListen, currentQueueLength, 0);
-          }
-        );
+        addListenToBottomOfQueue(ambientQueueTop);
+        const nextListen = getQueue()[currentQueueLength];
+        setAmbientQueue(currentAmbientQueue);
+        playListen(nextListen, currentQueueLength, 0);
         return;
       }
     } else if (queueRepeatMode === QueueRepeatModes.off) {
@@ -749,7 +736,7 @@ export default function BrainzPlayer() {
       // Try playing the listen with the next dataSource
       playListen(
         currentListen,
-        brainzPlayerContextRef.current.currentListenIndex,
+        getCurrentListenIndex(),
         getCurrentDataSourceIndex() + 1
       );
     } else {
@@ -857,63 +844,35 @@ export default function BrainzPlayer() {
   };
 
   const clearQueue = async (): Promise<void> => {
-    const currentQueue = brainzPlayerContextRef.current.queue;
+    const currentQueue = getQueue();
 
     // Clear the queue by keeping only the currently playing song
-    const currentPlayingListenIndex =
-      brainzPlayerContextRef.current.currentListenIndex;
-    dispatch({
-      queue: currentQueue[currentPlayingListenIndex]
+    const currentPlayingListenIndex = getCurrentListenIndex();
+    setQueue(
+      currentQueue[currentPlayingListenIndex]
         ? [currentQueue[currentPlayingListenIndex]]
-        : [],
-    });
+        : []
+    );
   };
 
   const playNextListenFromQueue = (datasourceIndex: number = 0): void => {
-    const currentPlayingListenIndex =
-      brainzPlayerContextRef.current.currentListenIndex;
-    const nextTrack =
-      brainzPlayerContextRef.current.queue[currentPlayingListenIndex + 1];
+    const currentPlayingListenIndex = getCurrentListenIndex();
+    const nextTrack = getQueue()[currentPlayingListenIndex + 1];
     playListen(nextTrack, currentPlayingListenIndex + 1, datasourceIndex);
   };
 
   const playListenEventHandler = (listen: Listen | JSPFTrack) => {
-    dispatch(
-      {
-        type: "ADD_LISTEN_TO_TOP_OF_QUEUE",
-        data: listen,
-      },
-      () => {
-        playNextListenFromQueue();
-      }
-    );
+    addListenToTopOfQueue(listen);
+    playNextListenFromQueue();
   };
 
   const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
     // 1. Clear the items in the queue after the current playing track
-    const currentPlayingListenIndex =
-      brainzPlayerContextRef.current.currentListenIndex;
-
     store.set(isActivatedAtom, true);
-    dispatch(
-      {
-        type: "CLEAR_QUEUE_AFTER_CURRENT_AND_SET_AMBIENT_QUEUE",
-        data: tracks,
-      },
-      async () => {
-        while (
-          brainzPlayerContextRef.current.queue.length !==
-            currentPlayingListenIndex + 1 &&
-          getIsActivated()
-        ) {
-          // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
+    clearQueueAfterCurrentAndSetAmbientQueue(tracks);
 
-        // 2. Play the first item in the ambient queue
-        playNextTrack();
-      }
-    );
+    // 2. Play the first item in the ambient queue
+    playNextTrack();
   };
 
   // eslint-disable-next-line react/sort-comp
@@ -998,8 +957,8 @@ export default function BrainzPlayer() {
   if (
     pathname === "/" &&
     !getIsActivated() &&
-    brainzPlayerContextRef.current.queue.length === 0 &&
-    brainzPlayerContextRef.current.ambientQueue.length === 0
+    getQueue().length === 0 &&
+    getAmbientQueue().length === 0
   ) {
     return null;
   }

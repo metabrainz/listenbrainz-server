@@ -9,7 +9,6 @@ import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import { listenToJSPFTrack } from "../../playlists/utils";
 import { getListenCardKey } from "../../utils/utils";
-import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import {
   queueAtom,
   ambientQueueAtom,
@@ -18,6 +17,7 @@ import {
   removeTrackFromAmbientQueueAtom,
   moveQueueItemAtom,
   removeTrackFromQueueAtom,
+  currentListenIndexAtom,
 } from "./BrainzPlayerAtoms";
 
 type BrainzPlayerQueueProps = {
@@ -42,7 +42,7 @@ function Queue(props: BrainzPlayerQueueProps) {
   const moveQueueItem = useSetAtom(moveQueueItemAtom);
   const removeTrackFromQueue = useSetAtom(removeTrackFromQueueAtom);
 
-  const { currentListenIndex = -1 } = useBrainzPlayerContext();
+  const currentListenIndex = useAtomValue(currentListenIndexAtom);
 
   const { clearQueue, onHide } = props;
 

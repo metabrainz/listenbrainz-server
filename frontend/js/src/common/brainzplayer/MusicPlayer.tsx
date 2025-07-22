@@ -21,7 +21,6 @@ import {
 } from "@fortawesome/fontawesome-svg-core";
 import { useAtomValue } from "jotai";
 import ProgressBar from "./ProgressBar";
-import { useBrainzPlayerContext } from "./BrainzPlayerContext";
 import { getAlbumArtFromListenMetadata } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { FeedbackValue } from "./utils";
@@ -34,6 +33,9 @@ import {
   currentTrackAlbumAtom,
   currentTrackCoverURLAtom,
   currentListenAtom,
+  currentListenIndexAtom,
+  queueAtom,
+  ambientQueueAtom,
 } from "./BrainzPlayerAtoms";
 
 type PlaybackControlButtonProps = {
@@ -183,7 +185,9 @@ function MusicPlayer(props: MusicPlayerProps) {
   } = props;
 
   // BrainzPlayer Context
-  const { currentListenIndex, queue, ambientQueue } = useBrainzPlayerContext();
+  const currentListenIndex = useAtomValue(currentListenIndexAtom);
+  const queue = useAtomValue(queueAtom);
+  const ambientQueue = useAtomValue(ambientQueueAtom);
 
   const currentListen = useAtomValue(currentListenAtom);
   const playerPaused = useAtomValue(playerPausedAtom);
