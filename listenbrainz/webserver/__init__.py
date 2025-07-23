@@ -349,8 +349,8 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.export import export_bp
     app.register_blueprint(export_bp, url_prefix='/export')
 
-    from listenbrainz.webserver.views.import_listens import import_bp
-    app.register_blueprint(import_bp, url_prefix='/import')
+    from listenbrainz.webserver.views.import_listens import import_api_bp
+    app.register_blueprint(import_api_bp, url_prefix=API_PREFIX+'/import-listens')
 
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
     app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
