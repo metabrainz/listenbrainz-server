@@ -50,6 +50,7 @@ export type BrainzPlayerContextT = {
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
   queueRepeatMode: QueueRepeatMode;
+  shuffleMode: boolean;
 };
 
 export const initialValue: BrainzPlayerContextT = {
@@ -68,6 +69,7 @@ export const initialValue: BrainzPlayerContextT = {
   queue: [],
   ambientQueue: [],
   queueRepeatMode: QueueRepeatModes.off,
+  shuffleMode: false,
 };
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
@@ -86,7 +88,7 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
     | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
-    | "SHUFFLE_QUEUE";
+    | "TOGGLE_SHUFFLE_MODE";
   data?: any;
 };
 
@@ -326,12 +328,10 @@ function valueReducer(
         ambientQueue: [...ambientQueue, ...tracksToAdd],
       };
     }
-    case "SHUFFLE_QUEUE": {
-      const { queue, currentListenIndex } = state;
-      const newQueue = shuffleQueue(queue, currentListenIndex);
+    case "TOGGLE_SHUFFLE_MODE": {
       return {
         ...state,
-        queue: newQueue,
+        shuffleMode: !state.shuffleMode,
       };
     }
     default: {
