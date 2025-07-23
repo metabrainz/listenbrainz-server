@@ -80,7 +80,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         if service:
             data['service'] = service
         response = self.client.post(
-            self.custom_url_for('import.create_import_task'),
+            self.custom_url_for('import_listens_api_v1.create_import_task'),
             data=data,
             content_type='multipart/form-data'
         )
@@ -92,7 +92,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             'service': "spotify",
         }
         response = self.client.post(
-            self.custom_url_for('import.create_import_task'),
+            self.custom_url_for('import_listens_api_v1.create_import_task'),
             data=data,
             content_type='multipart/form-data'
         )
