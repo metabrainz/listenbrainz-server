@@ -39,7 +39,6 @@ import { FeedbackValue } from "./utils";
 import VolumeControlButton from "./VolumeControlButton";
 import { COLOR_LB_BLUE, COLOR_LB_ORANGE } from "../../utils/constants";
 import { DataSourceType } from "./BrainzPlayer";
-import faFunkwhale from "../icons/faFunkwhale";
 
 type BrainzPlayerUIProps = {
   currentDataSource?: DataSourceType | null;

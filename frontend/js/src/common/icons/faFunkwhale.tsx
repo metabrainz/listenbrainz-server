@@ -7,7 +7,7 @@ import {
 /**
  * Custom FontAwesome-compatible icon definition for Funkwhale
  * Multi-path duotone icon matching the official Funkwhale logo
- * Uses FontAwesome duotone system for proper blue arcs + dark bird
+ * Uses FontAwesome duotone system for proper blue arcs + dark whale fluke
  */
 export const faFunkwhale: IconDefinition = {
   prefix: "fab" as IconPrefix,
