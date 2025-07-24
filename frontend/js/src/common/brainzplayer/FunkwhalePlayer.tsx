@@ -459,7 +459,7 @@ export default class FunkwhalePlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    return false; // will recoed listens later
+    return true; // record listens
   };
 
   getAuthenticatedAudioUrl = async (
@@ -506,7 +506,8 @@ export default class FunkwhalePlayer
     const { volume = 100 } = this.props;
     const audioElement = this.audioRef.current;
     if (audioElement) {
-      audioElement.volume = (volume ?? 100) / 100;
+      const safeVolume = Number.isFinite(volume) ? volume : 100;
+      audioElement.volume = safeVolume / 100;
     }
   };
 

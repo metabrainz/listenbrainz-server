@@ -437,6 +437,3 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.atom import atom_bp
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
-
-    from listenbrainz.webserver.views.funkwhale import funkwhale_api_bp
-    app.register_blueprint(funkwhale_api_bp, url_prefix='/settings/music-services/funkwhale')
