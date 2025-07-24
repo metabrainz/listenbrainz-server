@@ -78,6 +78,12 @@ def create_import_task():
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
     
+    # WIP for more services
+    if service == "spotify" and extension == ".zip":
+        pass
+    else:
+        raise APIBadRequest("This combination of service and filetype is not supported!")
+    
     saved_filename = secure_filename(filename)
     
     try:

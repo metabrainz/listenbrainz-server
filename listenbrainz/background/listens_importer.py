@@ -3,6 +3,7 @@ import ijson
 import os
 import io
 from datetime import datetime
+from pathlib import Path
 
 from listenbrainz.db import user as db_user
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, insert_payload
@@ -11,7 +12,7 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from listenbrainz.domain.external_service import ExternalServiceError
 
 from flask import current_app
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -136,11 +137,12 @@ def spotify_web_api_track_info(sp, track_id):
     return track
 
 
-def process_spotify_zip_file(file_path, from_date, to_date):
+def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
 
     # Check for zip bomb attack
     with zipfile.ZipFile(file_path, 'r') as zip_file:
         if len(zip_file.namelist()) > 100:
+            update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
             current_app.logger.error("Potential zip bomb attack")
             return
         
@@ -153,6 +155,7 @@ def process_spotify_zip_file(file_path, from_date, to_date):
             info = zip_file.getinfo(file)
             
             if info.file_size > 524288000: # 500MB limit
+                update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
                 current_app.logger.error("Potential zip bomb attack")
                 return
 
@@ -177,7 +180,7 @@ def process_spotify_zip_file(file_path, from_date, to_date):
                         return
                     
 
-def submit_listens(listens, user_id, db_conn):
+def submit_listens(db_conn, listens, user_id, import_id):
     query = "SELECT musicbrainz_id FROM user WHERE id = :user_id"
     result = db_conn.execute(text(query), {"user_id": user_id,})
     username = result.first()["musicbrainz_id"]
@@ -194,28 +197,54 @@ def submit_listens(listens, user_id, db_conn):
             retries -= 1
             current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
             if retries == 0:
+                update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
                 raise ExternalServiceError('ISE while trying to import listens: %s', str(e))
 
 
-def import_spotify_listens(file_path, from_date, to_date, user_id, db_conn, ts_conn):
+def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id):
     sp = initialize_spotify()
-    for batch in process_spotify_zip_file(file_path, from_date, to_date):
+    for batch in process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
         parsed_listens = []
         if batch is None:
+            update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
             current_app.logger.error("Error in processing the uploaded spotify listening history files!")
             return
         
         parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
         
-        submit_listens(parsed_listens, user_id, db_conn)
+        submit_listens(db_conn, parsed_listens, user_id, import_id)
 
 
+def update_import_progress_and_status(db_conn, import_id, status, progress):
+    """ Update progress for user data import """
+    db_conn.execute(text("""
+        UPDATE user_data_import
+            SET metadata = jsonb_set(jsonb_set(metadata, '{status}', to_jsonb(:status), true), '{progress}', to_jsonb(:progress), true)
+        WHERE id = :import_id
+    """).bindparams(
+            bindparam("status", type_=str),
+            bindparam("progress", type_=str),
+            bindparam("import_id", type_=int)
+        ), {"import_id": import_id, "status": status, "progress": progress})
+    db_conn.commit()
 
-def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
+
+def check_if_cancelled(db_conn, import_id):
+    """ Check if an import task was cancelled """
+    result = db_conn.execute(text("""
+        SELECT metadata->>'status' FROM user_data_import WHERE id = :import_id
+    """), {"import_id": import_id})
+    if result is not None and result[0] == 'cancelled':
+        return True
+    return False
+    
+
+def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     user = db_user.get(db_conn, user_id)
     if user is None:
         current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
         return
+    
 
     result = db_conn.execute(text("""
         SELECT *
@@ -223,7 +252,7 @@ def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
          WHERE id = :import_id
     """), {"import_id": bg_task_metadata["import_id"]})
     import_task = result.first()
-    user_id = import_task["user_id"]
+    user_id = import_task.user_id
     if import_task is None:
         current_app.logger.error("No import with import_id: %s, skipping.", bg_task_metadata["import_id"])
         return
@@ -232,11 +261,33 @@ def import_listens(db_conn, ts_conn, user_id: int, bg_task_metadata):
     file_path = import_task.file_path
     service = import_task.service
     from_date = import_task.from_date
-    from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+    try:
+        from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
+    except:
+        pass
     to_date = import_task.to_date
-    to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+    try:
+        to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
+    except:
+        pass
     import_task_metadata = import_task.metadata
 
+    update_import_progress_and_status(db_conn, import_id, "in_progress", "Importing user listens")
+
     if service == "spotify":
-        import_spotify_listens(file_path, from_date, to_date, user_id, db_conn, ts_conn)
-            
+        import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id)
+        if not check_if_cancelled(db_conn, import_id):
+            update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
+
+
+def cleanup_old_imports(db_conn):
+    """ Delete user data imports that have been completed or cancelled """
+    with db_conn.begin():
+        result = db_conn.execute(text("SELECT * FROM user_data_import WHERE metadata->>'status' IN ('completed', 'cancelled')"))
+        files_to_delete = [row.file_path for row in result]
+
+        # Delete old listening history files that are no longer required
+        for path in files_to_delete:
+            file_path = Path(path)
+            current_app.logger.info("Removing file: %s", file_path)
+            file_path.unlink(missing_ok=True)
