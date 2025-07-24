@@ -82,6 +82,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         response = self.client.post(
             self.custom_url_for('import_listens_api_v1.create_import_task'),
             data=data,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type='multipart/form-data'
         )
         time.sleep(1)
@@ -94,6 +95,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         response = self.client.post(
             self.custom_url_for('import_listens_api_v1.create_import_task'),
             data=data,
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
             content_type='multipart/form-data'
         )
         time.sleep(1)
@@ -101,7 +103,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
     
 
     def test_imports(self):
-        self.temporary_login(self.user['login_id'])
 
         self.spotify_valid_listens_zip = self.create_zip()
         response = self.post_listens(self.spotify_valid_listens_zip, "spotify")
