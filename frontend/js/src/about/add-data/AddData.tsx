@@ -27,7 +27,9 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://chiselapp.com/user/MistressRemilia/repository/benben">Benben</a>
+            <a href="https://chiselapp.com/user/MistressRemilia/repository/benben">
+              Benben
+            </a>
           </em>
           , a command line music player and converter for Unix-like operating
           systems
@@ -69,7 +71,7 @@ export default function AddData() {
           <em>
             <a href="https://longplay.app/">Longplay</a>
           </em>
-          , an album-based music player for iOS
+          , an album-based music player for iOS and macOS
         </li>
         <li>
           <em>

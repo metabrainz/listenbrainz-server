@@ -1,0 +1,28 @@
+/* Entity icons, copied from MusicBrainz:
+	https://github.com/metabrainz/musicbrainz-server/blob/75162fb76e8a55d6c578a527fbcbfab5d7e4c5c8/root/static/styles/entity-icons.less
+*/
+.artistheader,
+.releaseheader,
+.recordingheader {
+  &::before {
+    display: inline-block;
+    content: " ";
+    background-size: $entity-icon-size;
+    background-repeat: no-repeat;
+    height: $entity-icon-size;
+    width: $entity-icon-size + 0.3rem;
+    vertical-align: text-bottom;
+  }
+}
+.recordingheader::before {
+  background-image: data-uri("../img/mb-entity-icons/recording.svg");
+}
+.releaseheader::before {
+  background-image: data-uri("../img/mb-entity-icons/release.svg");
+}
+.artistheader::before {
+  background-image: data-uri("../img/mb-entity-icons/artist.svg");
+}
+.artistheader.group-icon::before {
+  background-image: data-uri("../img/mb-entity-icons/group.svg");
+}

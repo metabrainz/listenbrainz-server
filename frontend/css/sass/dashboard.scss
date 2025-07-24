@@ -1,0 +1,160 @@
+@use "sass:map";
+
+#dashboard {
+  .side-column > *:not(:last-child) {
+    margin-bottom: 15px;
+  }
+}
+
+.webSocket-box {
+  max-height: 420px;
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+  border-bottom-style: inset;
+  .read-more {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    padding: 100px 0 20px;
+    background-image: linear-gradient(to bottom, transparent, #fff 80%);
+  }
+}
+
+#listen-count-card {
+  padding: 15px 50px;
+  text-align: center;
+
+  font-size: 24px;
+
+  hr {
+    margin: 8px 0 16px 0;
+    border-top: 1px solid $hr-border-color;
+  }
+}
+
+#compatibility-card {
+  padding: 15px 50px;
+  text-align: center;
+  font-size: 16px;
+  position: relative;
+
+  > .info-icon {
+    color: gray;
+    position: absolute;
+    right: 0.75em;
+    top: 0.5em;
+    > a {
+      color: grey;
+    }
+  }
+
+  hr {
+    margin: 8px 0 16px 0;
+    border-top: 1px solid $hr-border-color;
+  }
+
+  > .similarity-score {
+    display: flex;
+    > .progress {
+      height: 15px;
+      width: 300px;
+      margin: 10px 5px 10px 0;
+    }
+    > p {
+      margin: 10px 0 0 0;
+    }
+  }
+}
+
+#navigation.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  & > .feed-button-and-date-time-picker {
+    order: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @media (max-width: map.get($grid-breakpoints, "sm")) {
+      // on phones, put the datepicker below the arrow nav
+      order: 1;
+      margin-top: 10px;
+    }
+  }
+}
+
+#spacer {
+  margin-top: 54px;
+}
+
+.empty-listens {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $orange;
+
+  .empty-text {
+    text-align: center;
+    margin: 4px 0px 0px;
+    color: $asphalt;
+  }
+
+  .empty-action {
+    margin-top: 12px;
+    padding: 0px 8em;
+    text-align: center;
+    color: $asphalt;
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
+    .empty-action {
+      padding: 0px 6em;
+    }
+  }
+
+  @media (max-width: map.get($grid-breakpoints, "xs")) {
+    .empty-action {
+      padding: 0px 3em;
+    }
+  }
+}
+
+.add-listen-btn {
+  margin-left: auto;
+  position: relative;
+  align-self: center;
+}
+
+.listen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  line-height: 1.5em;
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+  }
+  &.pills {
+    justify-content: initial;
+    .pill {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.user-charts-pill {
+  color: unset !important;
+  text-decoration: unset !important;
+}
+
+.link-listens-tooltip {
+  border-bottom: 1px dotted #000;
+  text-decoration: none;
+}

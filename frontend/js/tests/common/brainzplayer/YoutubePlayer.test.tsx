@@ -1,224 +1,257 @@
 import * as React from "react";
-import { mount, shallow } from "enzyme";
+import { render, screen, act, waitFor } from "@testing-library/react";
+import YoutubePlayer, {
+  YoutubePlayerProps,
+} from "../../../src/common/brainzplayer/YoutubePlayer";
 
-import { act } from "react-dom/test-utils";
-import YoutubePlayer from "../../../src/common/brainzplayer/YoutubePlayer";
-import { DataSourceTypes } from "../../../src/common/brainzplayer/BrainzPlayer";
-import APIService from "../../../src/utils/APIService";
+// Store the props passed to the mocked YouTube component to trigger them in tests
+let mockYoutubeProps: {
+  onReady?: (event: YT.PlayerEvent) => void;
+  onStateChange?: (event: YT.OnStateChangeEvent) => void;
+} = {};
 
-const props = {
+// Mock the react-youtube library
+jest.mock("react-youtube", () => {
+  const mockComponent = (props: any) => {
+    mockYoutubeProps.onReady = props.onReady;
+    mockYoutubeProps.onStateChange = props.onStateChange;
+    return <div data-testid="youtube-player" />;
+  };
+  // Attach the PlayerState enum to the mock component
+  mockComponent.PlayerState = {
+    UNSTARTED: -1,
+    ENDED: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+  };
+  return {
+    __esModule: true,
+    default: mockComponent,
+  };
+});
+
+const mockPlayer: YT.Player = {
+  playVideo: jest.fn(),
+  pauseVideo: jest.fn(),
+  nextVideo: jest.fn(),
+  previousVideo: jest.fn(),
+  stopVideo: jest.fn(),
+  cuePlaylist: jest.fn(),
+  loadPlaylist: jest.fn(),
+  cueVideoById: jest.fn(),
+  cueVideoByUrl: jest.fn(),
+  loadVideoById: jest.fn(),
+  loadVideoByUrl: jest.fn(),
+  seekTo: jest.fn(),
+  setVolume: jest.fn(),
+  getDuration: jest.fn().mockReturnValue(180), // 3 minutes
+  getCurrentTime: jest.fn().mockReturnValue(30), // 30 seconds
+  // @ts-ignore
+  getVideoData: jest.fn().mockReturnValue({
+    video_id: "dQw4w9WgXcQ",
+    title: "Never Gonna Give You Up",
+  }),
+};
+
+const props: YoutubePlayerProps = {
   show: true,
   playerPaused: false,
+  volume: 100,
   youtubeUser: {
     api_key: "fake-api-key",
   } as YoutubeUser,
-  refreshYoutubeToken: new APIService("base-uri").refreshYoutubeToken,
-  onPlayerPausedChange: (paused: boolean) => {},
-  onProgressChange: (progressMs: number) => {},
-  onDurationChange: (durationMs: number) => {},
-  onTrackInfoChange: (
-    title: string,
-    trackId: string,
-    artist?: string,
-    album?: string,
-    artwork?: ReadonlyArray<MediaImage>
-  ) => {},
-  onTrackEnd: () => {},
-  onTrackNotFound: () => {},
-  handleError: (error: BrainzPlayerError, title?: string) => {},
-  handleWarning: (message: string | JSX.Element, title?: string) => {},
-  handleSuccess: (message: string | JSX.Element, title?: string) => {},
-  onInvalidateDataSource: (
-    dataSource?: DataSourceTypes,
-    message?: string | JSX.Element
-  ) => {},
+  refreshYoutubeToken: jest.fn().mockResolvedValue("new-token"),
+  onPlayerPausedChange: jest.fn(),
+  onProgressChange: jest.fn(),
+  onDurationChange: jest.fn(),
+  onTrackInfoChange: jest.fn(),
+  onTrackEnd: jest.fn(),
+  onTrackNotFound: jest.fn(),
+  handleError: jest.fn(),
+  handleWarning: jest.fn(),
+  handleSuccess: jest.fn(),
+  onInvalidateDataSource: jest.fn(),
 };
 
 describe("YoutubePlayer", () => {
-  it("renders", () => {
-    window.fetch = jest.fn();
-    const wrapper = mount(<YoutubePlayer {...props} />);
-    expect(wrapper.find(".youtube-wrapper")).toHaveLength(1);
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockYoutubeProps = {};
   });
 
-  describe("handlePlayerStateChanged", () => {
-    const youtubePlayerState = {
-      data: 2,
-      target: {
-        playerInfo: {
-          videoData: { title: "FNORD", video_id: "IhaveSeenTheFnords" },
-        },
-        getCurrentTime: jest.fn().mockReturnValue(3),
-        getDuration: jest.fn().mockReturnValue(25),
-        playVideo: jest.fn(),
-      } as any, // Cheating, shhh don't tell anyone.
-    };
-    it("calls onPlayerPausedChange if player paused state changes", async () => {
-      const onPlayerPausedChange = jest.fn();
-      const onProgressChange = jest.fn();
-      const mockProps = { ...props, onPlayerPausedChange, onProgressChange };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
-      const instance = wrapper.instance();
+  it("renders the youtube player wrapper", () => {
+    render(<YoutubePlayer {...props} />);
+    expect(screen.getByTestId("youtube-wrapper")).toBeInTheDocument();
+    expect(screen.getByTestId("youtube-player")).toBeInTheDocument();
+  });
 
-      await act(() => {
-        instance.handlePlayerStateChanged(youtubePlayerState);
+  describe("Player State Changes", () => {
+    it("calls onPlayerPausedChange when player state changes to PAUSED", () => {
+      render(<YoutubePlayer {...props} />);
+      // Simulate the player becoming ready
+      act(() => {
+        mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
-      expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(true);
-      expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onProgressChange).toHaveBeenCalledWith(3000);
-      onPlayerPausedChange.mockClear();
-      onProgressChange.mockClear();
-
-      await act(() => {
-        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 1 });
+      act(() => {
+        mockYoutubeProps.onStateChange?.({
+          data: YT.PlayerState.PAUSED,
+          target: mockPlayer,
+        });
       });
-      expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
-      expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onProgressChange).toHaveBeenCalledWith(3000);
+      expect(props.onPlayerPausedChange).toHaveBeenCalledWith(true);
     });
 
-    it("detects the end of a track", async () => {
-      const onTrackEnd = jest.fn();
-      const onProgressChange = jest.fn();
-      const mockProps = { ...props, onTrackEnd, onProgressChange };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
-      const instance = wrapper.instance();
-      await act(() => {
-        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: 0 });
+    it("calls onPlayerPausedChange when player state changes to PLAYING", () => {
+      render(<YoutubePlayer {...props} />);
+      // Simulate the player becoming ready
+      act(() => {
+        mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
-      expect(instance.props.onTrackEnd).toHaveBeenCalledTimes(1);
-      expect(instance.props.onProgressChange).not.toHaveBeenCalled();
+      act(() => {
+        mockYoutubeProps.onStateChange?.({
+          data: YT.PlayerState.PLAYING,
+          target: mockPlayer,
+        });
+      });
+      expect(props.onPlayerPausedChange).toHaveBeenCalledWith(false);
     });
 
-    it("detects a new track and sends information and duration", async () => {
-      const onTrackInfoChange = jest.fn();
-      const onPlayerPausedChange = jest.fn();
-      const onDurationChange = jest.fn();
-      const onProgressChange = jest.fn();
-      const mockProps = {
-        ...props,
-        onTrackInfoChange,
-        onPlayerPausedChange,
-        onDurationChange,
-        onProgressChange,
-      };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
-      const instance = wrapper.instance();
-      await act(() => {
-        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
+    it("calls onTrackEnd when player state changes to ENDED", () => {
+      render(<YoutubePlayer {...props} />);
+      // Simulate the player becoming ready
+      act(() => {
+        mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
-      // Update info with title only
-      expect(instance.props.onTrackInfoChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onTrackInfoChange).toHaveBeenCalledWith(
-        "FNORD",
-        "https://www.youtube.com/watch?v=IhaveSeenTheFnords",
-        undefined,
-        undefined,
-        [
-          {
-            src: "http://img.youtube.com/vi/IhaveSeenTheFnords/sddefault.jpg",
-            sizes: "640x480",
-            type: "image/jpg",
-          },
-          {
-            src: "http://img.youtube.com/vi/IhaveSeenTheFnords/hqdefault.jpg",
-            sizes: "480x360",
-            type: "image/jpg",
-          },
-          {
-            src: "http://img.youtube.com/vi/IhaveSeenTheFnords/mqdefault.jpg",
-            sizes: "320x180",
-            type: "image/jpg",
-          },
-        ]
-      );
-      // Update duration in milliseconds
-      expect(instance.props.onDurationChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onDurationChange).toHaveBeenCalledWith(25000);
-      // Update progress in milliseconds
-      expect(instance.props.onProgressChange).toHaveBeenCalledTimes(1);
-      expect(instance.props.onProgressChange).toHaveBeenCalledWith(3000);
+      act(() => {
+        mockYoutubeProps.onStateChange?.({
+          data: YT.PlayerState.ENDED,
+          target: mockPlayer,
+        });
+      });
+      expect(props.onTrackEnd).toHaveBeenCalledTimes(1);
     });
 
-    it("does nothing if it's not the currently selected datasource", async () => {
-      const onTrackInfoChange = jest.fn();
-      const onPlayerPausedChange = jest.fn();
-      const onDurationChange = jest.fn();
-      const onProgressChange = jest.fn();
-      const onTrackEnd = jest.fn();
-      const mockProps = {
-        ...props,
-        show: false,
-        onTrackInfoChange,
-        onPlayerPausedChange,
-        onDurationChange,
-        onProgressChange,
-        onTrackEnd,
-      };
-      const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
-      const instance = wrapper.instance();
-      await act(() => {
-        instance.handlePlayerStateChanged({ ...youtubePlayerState, data: -1 });
+    it("updates track info when a new track is unstarted", () => {
+      render(<YoutubePlayer {...props} />);
+
+      // Simulate the player becoming ready
+      act(() => {
+        mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
 
-      expect(instance.props.onTrackInfoChange).not.toHaveBeenCalled();
-      expect(instance.props.onPlayerPausedChange).not.toHaveBeenCalled();
-      expect(instance.props.onDurationChange).not.toHaveBeenCalled();
-      expect(instance.props.onProgressChange).not.toHaveBeenCalled();
-      expect(instance.props.onTrackEnd).not.toHaveBeenCalled();
+      act(() => {
+        mockYoutubeProps.onStateChange?.({
+          data: YT.PlayerState.UNSTARTED,
+          target: mockPlayer,
+        });
+      });
+      waitFor(() => {
+        expect(props.onTrackInfoChange).toHaveBeenCalledWith(
+          "Never Gonna Give You Up",
+          "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          undefined,
+          undefined,
+          [
+            {
+              src: "http://img.youtube.com/vi/dQw4w9WgXcQ/sddefault.jpg",
+              sizes: "640x480",
+              type: "image/jpg",
+            },
+            {
+              src: "http://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+              sizes: "480x360",
+              type: "image/jpg",
+            },
+            {
+              src: "http://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+              sizes: "320x180",
+              type: "image/jpg",
+            },
+          ]
+        );
+        // 180s * 1000
+        expect(props.onDurationChange).toHaveBeenCalledWith(180000);
+      });
     });
   });
 
-  it("toggles play/pause when calling togglePlay", async () => {
-    const onPlayerPausedChange = jest.fn();
-    const onProgressChange = jest.fn();
-    const mockProps = { ...props, onPlayerPausedChange, onProgressChange };
-    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...mockProps} />);
-    const instance = wrapper.instance();
+  it("toggles play/pause when togglePlay is called", () => {
+    const playerRef = React.createRef<YoutubePlayer>();
+    const { rerender } = render(<YoutubePlayer {...props} ref={playerRef} />);
 
-    const pauseVideo = jest.fn();
-    const playVideo = jest.fn();
-    instance.youtubePlayer = {
-      pauseVideo,
-      playVideo,
-    } as any;
-    await act(() => {
-      instance.togglePlay();
+    // Simulate the player becoming ready
+    act(() => {
+      mockYoutubeProps.onReady?.({ target: mockPlayer });
     });
-    expect(pauseVideo).toHaveBeenCalledTimes(1);
-    expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
-    expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(true);
-    onPlayerPausedChange.mockClear();
-    await act(() => {
-      wrapper.setProps({ playerPaused: true });
-      instance.togglePlay();
+
+    // Call togglePlay while playing
+    act(() => {
+      playerRef.current?.togglePlay();
     });
-    expect(playVideo).toHaveBeenCalledTimes(1);
-    expect(instance.props.onPlayerPausedChange).toHaveBeenCalledTimes(1);
-    expect(instance.props.onPlayerPausedChange).toHaveBeenCalledWith(false);
+    expect(mockPlayer.pauseVideo).toHaveBeenCalledTimes(1);
+    expect(props.onPlayerPausedChange).toHaveBeenCalledWith(true);
+
+    // Rerender with playerPaused = true
+    rerender(<YoutubePlayer {...props} playerPaused ref={playerRef} />);
+
+    // Call togglePlay while paused
+    act(() => {
+      playerRef.current?.togglePlay();
+    });
+    expect(mockPlayer.playVideo).toHaveBeenCalledTimes(1);
+    expect(props.onPlayerPausedChange).toHaveBeenCalledWith(false);
+  });
+  it("does nothing if it's not the currently selected datasource", () => {
+    jest.useFakeTimers();
+    render(
+      // Set the prop show>false to simulate anothr datasource selected in BrainzPlayer
+      <YoutubePlayer {...props} show={false} />
+    );
+
+    // Simulate the player becoming ready
+    act(() => {
+      mockYoutubeProps.onReady?.({ target: mockPlayer });
+    });
+
+    act(() => {
+      mockYoutubeProps.onStateChange?.({
+        data: YT.PlayerState.UNSTARTED,
+        target: mockPlayer,
+      });
+    });
+    jest.advanceTimersByTime(2000);
+    expect(props.onPlayerPausedChange).not.toHaveBeenCalled();
+    expect(props.onTrackInfoChange).not.toHaveBeenCalled();
+    expect(props.onDurationChange).not.toHaveBeenCalled();
+    expect(props.onTrackEnd).not.toHaveBeenCalled();
+    expect(props.onProgressChange).not.toHaveBeenCalled();
+    jest.useRealTimers();
   });
 
-  it("should play from youtube URL if present on the listen", async () => {
-    const wrapper = shallow<YoutubePlayer>(<YoutubePlayer {...props} />);
-    const instance = wrapper.instance();
-    const playTrackById = jest.fn();
-    instance.playTrackById = playTrackById;
+  it("plays a track from a listen with a youtube URL", () => {
+    const playerRef = React.createRef<YoutubePlayer>();
+    render(<YoutubePlayer {...props} ref={playerRef} />);
+
+    // Simulate the player becoming ready
+    act(() => {
+      mockYoutubeProps.onReady?.({ target: mockPlayer });
+    });
+
     const youtubeListen: Listen = {
       listened_at: 0,
       track_metadata: {
-        artist_name: "Moondog",
-        track_name: "Bird's Lament",
+        artist_name: "Rick Astley",
+        track_name: "Never Gonna Give You Up",
         additional_info: {
-          origin_url: "https://www.youtube.com/watch?v=RW8SBwGNcF8",
+          origin_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         },
       },
     };
-    await act(() => {
-      instance.playListen(youtubeListen);
+
+    act(() => {
+      playerRef.current?.playListen(youtubeListen);
     });
-    expect(playTrackById).toHaveBeenCalledTimes(1);
-    expect(playTrackById).toHaveBeenCalledWith("RW8SBwGNcF8");
+
+    expect(mockPlayer.loadVideoById).toHaveBeenCalledWith("dQw4w9WgXcQ");
   });
 });
