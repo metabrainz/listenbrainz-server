@@ -144,9 +144,9 @@ class InternetArchiveHandler(BaseHandler):
             {
                 "track_id": f"https://archive.org/details/{identifier}",
                 "name": meta.get("title", ""),
-                "artist": artist,
+                "artist": json.dumps(artist),
                 "album": album,
-                "stream_urls": stream_urls,
+                "stream_urls": json.dumps(stream_urls),
                 "artwork_url": artwork_url,
                 "data": json.dumps(meta),
             }
