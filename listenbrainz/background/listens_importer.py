@@ -1,5 +1,6 @@
 import zipfile
 import ijson
+import json
 import os
 import io
 from datetime import datetime
@@ -12,7 +13,7 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from listenbrainz.domain.external_service import ExternalServiceError
 
 from flask import current_app
-from sqlalchemy import text, bindparam
+from sqlalchemy import text, bindparam, Integer, String
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -166,6 +167,7 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                     try:
                         batch = []
                         for entry in ijson.items(contents, 'item'):
+                            current_app.logger.debug("TESTINGGGG")
                             timestamp = entry.get("ts")
                             timestamp_date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").date()
                             if from_date <= timestamp_date <= to_date:
@@ -191,7 +193,7 @@ def submit_listens(db_conn, listens, user_id, import_id):
         try:
             current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
             insert_payload(listens, user_metadata, listen_type=LISTEN_TYPE_IMPORT)
-            current_app.logger.debug('Submitted!')
+            current_app.logger.debug('Submitted from importer!')
             break
         except (InternalServerError, ServiceUnavailable) as e:
             retries -= 1
@@ -217,15 +219,20 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
 
 def update_import_progress_and_status(db_conn, import_id, status, progress):
     """ Update progress for user data import """
-    db_conn.execute(text("""
-        UPDATE user_data_import
-            SET metadata = jsonb_set(jsonb_set(metadata, '{status}', to_jsonb(:status), true), '{progress}', to_jsonb(:progress), true)
-        WHERE id = :import_id
-    """).bindparams(
-            bindparam("status", type_=str),
-            bindparam("progress", type_=str),
-            bindparam("import_id", type_=int)
-        ), {"import_id": import_id, "status": status, "progress": progress})
+    current_metadata = db_conn.execute(
+        text("SELECT metadata FROM user_data_import WHERE id = :import_id"),
+        {"import_id": import_id}
+    ).scalar() or {}  
+
+    updated_metadata = {**current_metadata, 'status': status, 'progress': progress}
+    
+    db_conn.execute(
+        text("UPDATE user_data_import SET metadata = (:metadata)::jsonb WHERE id = :import_id"),
+        {
+            "metadata": json.dumps(updated_metadata),
+            "import_id": import_id
+        }
+    )
     db_conn.commit()
 
 
@@ -233,7 +240,7 @@ def check_if_cancelled(db_conn, import_id):
     """ Check if an import task was cancelled """
     result = db_conn.execute(text("""
         SELECT metadata->>'status' FROM user_data_import WHERE id = :import_id
-    """), {"import_id": import_id})
+    """), {"import_id": import_id}).fetchone()
     if result is not None and result[0] == 'cancelled':
         return True
     return False
