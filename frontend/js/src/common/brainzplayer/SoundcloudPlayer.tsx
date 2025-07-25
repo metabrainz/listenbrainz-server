@@ -9,7 +9,6 @@ import {
   searchForSoundcloudTrack,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 require("../../../lib/soundcloud-player-api");
