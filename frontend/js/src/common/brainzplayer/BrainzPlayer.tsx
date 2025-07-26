@@ -562,7 +562,15 @@ export default function BrainzPlayer() {
     }
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
-    datasource.playListen(listen);
+
+    // wait for isActive to be true
+    const intervalID = setInterval(() => {
+      // Wait for isActivated to be true
+      if (getIsActivated()) {
+        datasource.playListen(listen);
+        clearInterval(intervalID);
+      }
+    }, 200);
   };
 
   const stopPlayerStateTimer = (): void => {
