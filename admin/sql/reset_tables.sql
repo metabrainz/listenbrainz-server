@@ -33,4 +33,7 @@ DELETE FROM user_setting                   CASCADE;
 DELETE FROM funkwhale_tokens               CASCADE;
 DELETE FROM funkwhale_servers              CASCADE;
 
+DELETE FROM navridrome_tokens              CASCADE;
+DELETE FROM navidrome_servers              CASCADE;
+
 COMMIT;
