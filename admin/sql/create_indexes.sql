@@ -62,4 +62,9 @@ CREATE INDEX user_data_export_user_id_idx ON user_data_export (user_id);
 
 CREATE UNIQUE INDEX user_data_export_deduplicate_waiting_idx ON user_data_export (user_id, type) WHERE status = 'waiting' OR status = 'in_progress';
 
+CREATE INDEX host_url_ndx_funkwhale_servers ON funkwhale_servers (host_url);
+CREATE INDEX user_id_ndx_funkwhale_tokens ON funkwhale_tokens (user_id);
+CREATE INDEX server_id_ndx_funkwhale_tokens ON funkwhale_tokens (funkwhale_server_id);
+CREATE UNIQUE INDEX unique_user_server_funkwhale_tokens ON funkwhale_tokens (user_id, funkwhale_server_id);
+
 COMMIT;
