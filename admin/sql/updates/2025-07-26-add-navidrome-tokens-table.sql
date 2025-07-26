@@ -5,7 +5,7 @@ CREATE TABLE navidrome_tokens (
     user_id             INTEGER NOT NULL,
     navidrome_server_id INTEGER NOT NULL REFERENCES navidrome_servers(id) ON DELETE CASCADE,
     username            TEXT NOT NULL,
-    access_token        TEXT NOT NULL,
+    access_token        TEXT NOT NULL,    -- MD5(password + salt) hash for Subsonic API
     created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
