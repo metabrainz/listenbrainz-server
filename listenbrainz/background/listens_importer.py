@@ -38,7 +38,7 @@ def parse_spotify_listen(batch, db_conn, ts_conn, sp):
             track_name = listen.get('master_metadata_track_name', '')
             listened_at = listen.get("ts")
             timestamp_dt = datetime.strptime(listened_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            unix_timestamp = int(timestamp_dt.timestamp())
+            unix_timestamp = timestamp_dt.timestamp()
             crafted_listen = {
                 "listened_at": unix_timestamp,
                 "track_metadata": {
@@ -122,7 +122,7 @@ def parse_spotify_listen(batch, db_conn, ts_conn, sp):
                 if artists[0].get('name'):
                     artist = artists[0].get('name')
             
-            crafted_listen['track_metadata']['artist'] = artist
+            crafted_listen['track_metadata']['artist_name'] = artist
 
             if not crafted_listen:
                 current_app.logger.error("Failed to parse the listen: ", listen)
@@ -134,8 +134,7 @@ def parse_spotify_listen(batch, db_conn, ts_conn, sp):
             continue
     
     return parsed_listens
-    
-    
+
 
 
 def spotify_web_api_track_info(sp, track_id):
@@ -185,8 +184,8 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                             if len(batch) == BATCH_SIZE:
                                 batch = []
                                 yield batch
-                            if batch:
-                                yield batch
+                        if batch:
+                            yield batch
                     except Exception as e:
                         current_app.logger.error(f"Error reading {filename}: {e}")
                         return
@@ -226,12 +225,7 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
         current_app.logger.error("TESTING 3")
         parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
 
-        final_listens = {
-            "listen_type": "import",
-            "payload": parsed_listens
-        }
-        
-        submit_listens(db_conn, final_listens, user_id, import_id)
+        submit_listens(db_conn, parsed_listens, user_id, import_id)
 
 
 def update_import_progress_and_status(db_conn, import_id, status, progress):
