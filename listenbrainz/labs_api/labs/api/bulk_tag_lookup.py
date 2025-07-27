@@ -16,6 +16,7 @@ class BulkTagLookupInput(BaseModel):
 class BulkTagLookupOutput(BaseModel):
     recording_mbid: UUID
     tag: str
+    tag_count: int
     percent: float
     source: str
 
@@ -47,6 +48,7 @@ class BulkTagLookup(Query):
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 query = '''SELECT recording_mbid
                                 , tag
+                                , tag_count
                                 , percent
                                 , source
                              FROM tags.lb_tag_radio
