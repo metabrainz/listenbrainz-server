@@ -3,7 +3,7 @@ import ijson
 import json
 import os
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from listenbrainz.db import user as db_user
@@ -18,7 +18,7 @@ from sqlalchemy import text, bindparam, Integer, String
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-BATCH_SIZE = 100
+BATCH_SIZE = 1000
 
 def initialize_spotify():
     client_credentials_manager = SpotifyClientCredentials( client_id = current_app.config['SPOTIFY_CLIENT_ID'], client_secret = current_app.config['SPOTIFY_CLIENT_SECRET'])
@@ -36,7 +36,11 @@ def parse_spotify_listen(batch, db_conn, ts_conn, sp):
         if validate_spotify_listen(listen):
             artist = listen.get('master_metadata_album_artist_name', '')
             track_name = listen.get('master_metadata_track_name', '')
+            listened_at = listen.get("ts")
+            timestamp_dt = datetime.strptime(listened_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            unix_timestamp = int(timestamp_dt.timestamp())
             crafted_listen = {
+                "listened_at": unix_timestamp,
                 "track_metadata": {
                     "artist_name": artist,
                     "track_name": track_name,
@@ -123,6 +127,7 @@ def parse_spotify_listen(batch, db_conn, ts_conn, sp):
             if not crafted_listen:
                 current_app.logger.error("Failed to parse the listen: ", listen)
                 continue
+            current_app.logger.debug(str(type(crafted_listen)))
             parsed_listens.append(crafted_listen)
         else:
             current_app.logger.error("Failed to validate the listen: ", listen)
@@ -161,15 +166,20 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                 return
 
         
+        current_app.logger.error("TESTING 5")
+        current_app.logger.error(str(audio_files))
         for filename in audio_files:
+            current_app.logger.error("TESTING 6")
             with zip_file.open(filename) as file:
+                current_app.logger.error("TESTING 7")
                 with io.TextIOWrapper(file, encoding='utf-8') as contents:
+                    current_app.logger.error("TESTING 8")
                     try:
                         batch = []
                         for entry in ijson.items(contents, 'item'):
-                            current_app.logger.debug("TESTINGGGG")
+                            current_app.logger.error("TESTINGGGG")
                             timestamp = entry.get("ts")
-                            timestamp_date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").date()
+                            timestamp_date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                             if from_date <= timestamp_date <= to_date:
                                 batch.append(entry)
                             if len(batch) == BATCH_SIZE:
@@ -183,9 +193,9 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                     
 
 def submit_listens(db_conn, listens, user_id, import_id):
-    query = "SELECT musicbrainz_id FROM user WHERE id = :user_id"
+    query = 'SELECT musicbrainz_id FROM "user" WHERE id = :user_id'
     result = db_conn.execute(text(query), {"user_id": user_id,})
-    username = result.first()["musicbrainz_id"]
+    username = result.first().musicbrainz_id
 
     user_metadata = SubmitListenUserMetadata(user_id=user_id, musicbrainz_id=username)
     retries = 10
@@ -205,6 +215,7 @@ def submit_listens(db_conn, listens, user_id, import_id):
 
 def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id):
     sp = initialize_spotify()
+    current_app.logger.error("TESTING 2")
     for batch in process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
         parsed_listens = []
         if batch is None:
@@ -212,9 +223,15 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
             current_app.logger.error("Error in processing the uploaded spotify listening history files!")
             return
         
+        current_app.logger.error("TESTING 3")
         parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
+
+        final_listens = {
+            "listen_type": "import",
+            "payload": parsed_listens
+        }
         
-        submit_listens(db_conn, parsed_listens, user_id, import_id)
+        submit_listens(db_conn, final_listens, user_id, import_id)
 
 
 def update_import_progress_and_status(db_conn, import_id, status, progress):
@@ -247,6 +264,8 @@ def check_if_cancelled(db_conn, import_id):
     
 
 def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
+    #raise  ExternalServiceError("lets see")
+
     user = db_user.get(db_conn, user_id)
     if user is None:
         current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
@@ -278,6 +297,8 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     except:
         pass
     import_task_metadata = import_task.metadata
+
+    current_app.logger.error("TESTING 4")
 
     update_import_progress_and_status(db_conn, import_id, "in_progress", "Importing user listens")
 
