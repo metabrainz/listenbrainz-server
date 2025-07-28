@@ -244,21 +244,21 @@ CREATE TABLE user_data_export (
 );
 
 CREATE TABLE funkwhale_servers (
-    id          SERIAL PRIMARY KEY,
-    host_url    TEXT NOT NULL UNIQUE,
-    client_id   TEXT,
-    client_secret TEXT,
-    scopes      TEXT,
-    created     TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    host_url            TEXT NOT NULL UNIQUE,
+    client_id           TEXT NOT NULL,
+    client_secret       TEXT NOT NULL,
+    scopes              TEXT NOT NULL,
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE funkwhale_tokens (
-    id                  SERIAL PRIMARY KEY,
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
     user_id             INTEGER NOT NULL,
-    funkwhale_server_id INTEGER NOT NULL REFERENCES funkwhale_servers(id) ON DELETE CASCADE,
-    access_token        TEXT,
-    refresh_token       TEXT,
-    token_expiry        TIMESTAMP WITH TIME ZONE
+    funkwhale_server_id INTEGER NOT NULL,
+    access_token        TEXT NOT NULL,
+    refresh_token       TEXT NOT NULL,
+    token_expiry        TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 

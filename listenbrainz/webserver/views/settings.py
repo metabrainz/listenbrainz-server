@@ -1,4 +1,6 @@
+import base64
 import json
+import os
 from datetime import datetime
 from typing import Any
 
@@ -13,7 +15,6 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.background.background_tasks import add_task
-from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
@@ -221,10 +222,8 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
-    # For Funkwhale, check if user has any tokens (regardless of expiry)
-    # This ensures we don't auto-disable when tokens are expired - let frontend handle reconnection
     funkwhale_tokens = db_funkwhale.get_all_user_tokens(current_user.id)
-    funkwhale_host_urls = [token['host_url'] for token in funkwhale_tokens] if funkwhale_tokens else []
+    funkwhale_host_urls = [token["host_url"] for token in funkwhale_tokens]
     current_funkwhale_permission = "listen" if funkwhale_tokens else "disable"
 
     librefm_service = LibrefmService()
@@ -258,145 +257,96 @@ def music_services_details():
 @settings_bp.get('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    if service_name.lower() == "funkwhale":
-        # handle OAuth callback
-        error = request.args.get('error')
-        if error:
-            current_app.logger.error("Funkwhale OAuth error: %s", error)
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error=f"Funkwhale authorization failed: {error}"))
-
-        # Verify state parameter to prevent CSRF
-        state = request.args.get('state')
-        if not state:
-            current_app.logger.error("No state parameter in callback")
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error="Missing state parameter"))
-        
-        stored_state = session.get('funkwhale_state')
-        if not stored_state or state != stored_state:
-            current_app.logger.error("Invalid state parameter. Expected: %s, Got: %s", stored_state, state)
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error="Invalid state parameter"))
-
-        # Get the authorization code
-        code = request.args.get('code')
-        if not code:
-            current_app.logger.error("No authorization code in callback")
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error="No authorization code received"))
-
-        # Get the host URL from session
-        host_url = session.get('funkwhale_host_url')
-        if not host_url:
-            current_app.logger.error("No host URL in session")
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error="No host URL found in session"))
-        
-        # Get the user ID from session
-        user_id = session.get('funkwhale_user_id')
-        if not user_id:
-            current_app.logger.error("No user ID in session")
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error="No user ID found in session"))
-
-        # Exchange code for access token
-        try:
-            service = FunkwhaleService()
-            token = service.fetch_access_token(code)
-
-            # Get client_id, client_secret, scopes from server
-            server = db_funkwhale.get_server_by_host_url(host_url)
-            if not server:
-                raise Exception("No Funkwhale server found for host_url")
-            client_id = server['client_id']
-            client_secret = server['client_secret']
-            scopes = server['scopes']
-
-            # Create new Funkwhale connection
-            service.add_new_user(user_id, host_url, token, client_id, client_secret, scopes)
-
-            # Clear session data
-            session.pop('funkwhale_state', None)
-            session.pop('funkwhale_host_url', None)
-            session.pop('funkwhale_user_id', None)
-
-            # Redirect back to music services page with success message
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', success="Successfully connected to Funkwhale"))
-        except Exception as e:
-            current_app.logger.error("Error in FunkwhaleService: %s", str(e), exc_info=True)
-            return redirect(url_for('settings.index', path='music-services/details', _anchor='funkwhale', error=f"Failed to connect to Funkwhale: {str(e)}"))
-
     service = _get_service_or_raise_404(service_name, exclude_apple=True)
 
     # Check for error parameter first
-    error = request.args.get('error')
+    error = request.args.get("error")
     if error:
-        return redirect(url_for('settings.index', path='music-services/details'))
+        return redirect(url_for("settings.index", path="music-services/details"))
 
-    code = request.args.get('code')
+    code = request.args.get("code")
     if not code:
-        raise BadRequest('missing code')
+        raise BadRequest("missing code")
+
+    if isinstance(service, FunkwhaleService):
+        state = request.args.get("state")
+        if not state:
+            current_app.logger.error("No state parameter in callback")
+            return redirect(url_for(
+                "settings.index", path="music-services/details", _anchor="funkwhale",
+                error="Missing state parameter"
+            ))
+        
+        stored_state = session.get("funkwhale_state")
+        if not stored_state or state != stored_state:
+            current_app.logger.error("Invalid state parameter. Expected: %s, Got: %s", stored_state, state)
+            return redirect(url_for(
+                "settings.index", path="music-services/details", _anchor="funkwhale", error="Invalid state parameter"
+            ))
+
+        host_url = session.get("funkwhale_host_url")
+        if not host_url:
+            current_app.logger.error("No host URL in session")
+            return redirect(url_for(
+                "settings.index", path="music-services/details", _anchor="funkwhale",
+                error="No host URL found in session"
+            ))
+
+        try:
+            token = service.fetch_access_token(code)
+            server = db_funkwhale.get_server_by_host_url(host_url)
+            if not server:
+                raise Exception("No Funkwhale server found for host_url")
+            service.add_new_user(current_user.id, server['id'], token)
+
+            return redirect(url_for("settings.index", path="music-services/details", _anchor="funkwhale",
+                                    success="Successfully connected to Funkwhale"))
+        except Exception as e:
+            current_app.logger.error("Error in FunkwhaleService: %s", str(e), exc_info=True)
+            return redirect(url_for("settings.index", path="music-services/details", _anchor="funkwhale",
+                                    error=f"Failed to connect to Funkwhale: {str(e)}"))
+        finally:
+            session.pop("state", None)
+            session.pop("funkwhale_host_url", None)
+            session.pop("funkwhale_user_id", None)
+
     token = service.fetch_access_token(code)
 
     service.add_new_user(current_user.id, token)
-    return redirect(url_for('settings.index', path='music-services/details'))
+    return redirect(url_for("settings.index", path="music-services/details"))
+
 
 @settings_bp.post('/music-services/<service_name>/refresh/')
 @api_login_required
 def refresh_service_token(service_name: str):
-    if service_name.lower() == 'funkwhale':
-        # Funkwhale token refresh with host_url parameter
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
+
+    if isinstance(service, FunkwhaleService):
         data = request.get_json() or {}
         host_url = data.get('host_url')
-        
         if not host_url:
             raise APIBadRequest("Missing host_url parameter for Funkwhale token refresh")
-        
-        try:
-            # Validate and normalize the host URL
-            host_url = validate_funkwhale_url(host_url)
-            
-            current_app.logger.info(f"Refresh token request for user {current_user.id} at {host_url}")
-            
-            service = FunkwhaleService()
-            user_data = service.get_user(current_user.id, host_url)
-            if not user_data:
-                current_app.logger.warning(f"No Funkwhale connection found for user {current_user.id} at {host_url}")
-                raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
-            
-            if not user_data.get('refresh_token'):
-                current_app.logger.warning(f"No refresh token available for user {current_user.id} at {host_url}")
-                raise APIBadRequest("No refresh token available for this connection")
-            
-            # Check if token has expired and refresh if needed
-            if service.user_oauth_token_has_expired(user_data):
-                current_app.logger.debug(f"Token expired for user {current_user.id} at {host_url}, refreshing...")
-                try:
-                    refreshed_user = service.refresh_access_token(
-                        current_user.id, 
-                        host_url, 
-                        user_data['refresh_token']
-                    )
-                    current_app.logger.info(f"Successfully refreshed Funkwhale token for user {current_user.id} at {host_url}")
-                    user_data = refreshed_user
-                except ExternalServiceInvalidGrantError:
-                    current_app.logger.warning(f"User {current_user.id} has revoked authorization to Funkwhale at {host_url}")
-                    raise APIForbidden("User has revoked authorization to Funkwhale")
-                except Exception as e:
-                    # Check if this is an invalid_client error (OAuth app deleted)
-                    if "invalid_client" in str(e).lower():
-                        current_app.logger.warning(f"Invalid client error for user {current_user.id} at {host_url} - OAuth app likely deleted")
-                        raise APIForbidden("Funkwhale connection is no longer valid - please reconnect to this server")
-                    current_app.logger.error(f"Funkwhale service error for user {current_user.id} at {host_url}: {e}")
-                    raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
-            else:
-                current_app.logger.debug(f"Token for user {current_user.id} at {host_url} is still valid, no refresh needed")
-            
-            return jsonify({"access_token": user_data["access_token"]})
-            
-        except (APIBadRequest, APINotFound, APIForbidden, APIServiceUnavailable) as e:
-            raise e
-        except Exception as e:
-            current_app.logger.error("Unexpected error in refresh Funkwhale token: %s", str(e), exc_info=True)
-            raise APIInternalServerError("An error occurred while refreshing Funkwhale token")
+
+        host_url = validate_funkwhale_url(host_url)
+        user = service.get_user(current_user.id, host_url)
+        if not user:
+            raise APINotFound("User has not authenticated to Funkwhale at %s" % host_url)
+
+        if service.user_oauth_token_has_expired(user):
+            try:
+                user = service.refresh_access_token(
+                    current_user.id,
+                    user,
+                    user['refresh_token']
+                )
+            except ExternalServiceInvalidGrantError:
+                current_app.logger.warning(
+                    f"User {current_user.id} has revoked authorization to Funkwhale at {host_url}")
+                raise APIForbidden("User has revoked authorization to Funkwhale")
+            except Exception as e:
+                current_app.logger.error(f"Funkwhale service error for user {current_user.id} at {host_url}: {e}", exc_info=True)
+                raise APIServiceUnavailable("Cannot refresh Funkwhale token right now")
     else:
-        # Handle other services
-        service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
         user = service.get_user(current_user.id)
         if not user:
             raise APINotFound("User has not authenticated to %s" % service_name.capitalize())
@@ -410,33 +360,28 @@ def refresh_service_token(service_name: str):
                 current_app.logger.error("Unable to refresh %s token:", exc_info=True)
                 raise APIServiceUnavailable("Cannot refresh %s token right now" % service_name.capitalize())
 
-        return jsonify({"access_token": user["access_token"]})
-    
+    return jsonify({"access_token": user["access_token"]})
+
+
 @settings_bp.post('/music-services/<service_name>/connect/')
 @api_login_required
 def music_services_connect(service_name: str):
     """ Connect last.fm/libre.fm/funkwhale account to ListenBrainz user. """
     if service_name.lower() == "funkwhale":
-        # Funkwhale expects host_url in request body
         data = request.get_json() or {}
         host_url = data.get("host_url")
         if not host_url:
             raise APIBadRequest("Missing 'host_url' in request body for Funkwhale connect.")
 
-        # Validate and normalize host_url
         try:
             host_url = validate_funkwhale_url(host_url)
         except Exception as e:
             raise APIBadRequest(str(e))
 
-        # Generate OAuth state
-        import base64, os
         state = base64.b64encode(os.urandom(32)).decode('utf-8')
         session['funkwhale_state'] = state
         session['funkwhale_host_url'] = host_url
-        session['funkwhale_user_id'] = current_user.id
 
-        # Generate authorization URL using FunkwhaleService (handles OAuth app creation)
         try:
             service = FunkwhaleService()
             scopes = [

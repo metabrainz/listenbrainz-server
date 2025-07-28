@@ -98,37 +98,28 @@ def get_current_funkwhale_user():
     """Returns the funkwhale access token and instance URL for the current user.
     If the user has not linked a Funkwhale account, returns empty dict.
     For Funkwhale, we return the first connected server if multiple exist.
-    The backend automatically handles token refresh, so tokens returned are always valid."""
+    """
     if not current_user.is_authenticated:
         return {}
-    try:
-        # Get all tokens for this user to find the first server
-        tokens = db_funkwhale.get_all_user_tokens(current_user.id)
-        if not tokens:
-            return {}
-        # Use the first server (consistent with frontend logic)
-        first_token = tokens[0]
-        host_url = first_token['host_url']
-        # Use the FunkwhaleService to get user with automatic refresh
-        service = FunkwhaleService()
-        user = service.get_user(current_user.id, host_url, refresh=True)
-        if not user:
-            return {}
-        # Return user data - backend has already handled token refresh if needed
-        return {
-            'access_token': user['access_token'],
-            'instance_url': user['host_url'],
-            'client_id': user['client_id'],
-            'client_secret': user['client_secret'],
-            'token_expiry': user['token_expiry'],
-            'refresh_token': user['refresh_token'],
-            'funkwhale_server_id': user['funkwhale_server_id']
-        }
-    except Exception as e:
-        # If funkwhale tables don't exist (e.g., in test environment), just return empty dict
-        # instead of crashing. This allows the application to run without Funkwhale functionality.
-        if "funkwhale_tokens" in str(e) or "funkwhale_servers" in str(e):
-            current_app.logger.debug(f"Funkwhale tables not available, skipping: {e}")
-            return {}
-        current_app.logger.error(f"Funkwhale user fetch error: {e}")
+
+    # Get all tokens for this user to find the first server
+    # Use the first server (consistent with frontend logic)
+    tokens = db_funkwhale.get_all_user_tokens(current_user.id)
+    if not tokens:
         return {}
+
+    first_token = tokens[0]
+    service = FunkwhaleService()
+    user = service.get_user(current_user.id, first_token["host_url"], refresh=True)
+    if not user:
+        return {}
+
+    return {
+        "access_token": user["access_token"],
+        "instance_url": user["host_url"],
+        "client_id": user["client_id"],
+        "client_secret": user["client_secret"],
+        "token_expiry": user["token_expiry"],
+        "refresh_token": user["refresh_token"],
+        "funkwhale_server_id": user["funkwhale_server_id"]
+    }
