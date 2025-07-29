@@ -8,6 +8,7 @@ import { interpolateRainbow } from "d3-scale-chromatic";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 
 export type UserGenreDayActivityProps = {
   range: UserStatsAPIRange;
@@ -128,7 +129,7 @@ function TimeMarker({
       style={{
         position: "absolute",
         fontWeight: "bold",
-        fontSize: isMobile ? 16 : 20,
+        fontSize: isMobile ? 12 : 16,
         zIndex: 10,
         color: "#666",
         ...position,
@@ -148,17 +149,7 @@ export default function UserGenreDayActivity({
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
 
   // Detect mobile screen size
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["userGenreDayActivity", user?.name, range],
@@ -238,46 +229,12 @@ export default function UserGenreDayActivity({
 
   // Responsive time markers - all four markers with mobile-optimized positioning
   const getTimeMarkersConfig = () => {
-    if (isMobile) {
-      return [
-        {
-          position: {
-            top: "15px",
-            left: "50%",
-            transform: "translateX(-50%)",
-          },
-          label: "12AM",
-        },
-        {
-          position: {
-            top: "50%",
-            right: "5px",
-            transform: "translateY(-50%)",
-          },
-          label: "6AM",
-        },
-        {
-          position: {
-            bottom: "15px",
-            left: "50%",
-            transform: "translateX(-50%)",
-          },
-          label: "12PM",
-        },
-        {
-          position: {
-            top: "50%",
-            left: "5px",
-            transform: "translateY(-50%)",
-          },
-          label: "6PM",
-        },
-      ];
-    }
+    const margin = isMobile ? 40 : 80;
+
     return [
       {
         position: {
-          top: "30px",
+          top: `calc(50% - ${margin}px)`,
           left: "50%",
           transform: "translateX(-50%)",
         },
@@ -286,14 +243,14 @@ export default function UserGenreDayActivity({
       {
         position: {
           top: "50%",
-          right: "15%",
+          right: `calc(50% - ${margin}px)`,
           transform: "translateY(-50%)",
         },
         label: "6AM",
       },
       {
         position: {
-          bottom: "30px",
+          bottom: `calc(50% - ${margin}px)`,
           left: "50%",
           transform: "translateX(-50%)",
         },
@@ -302,7 +259,7 @@ export default function UserGenreDayActivity({
       {
         position: {
           top: "50%",
-          left: "15%",
+          left: `calc(50% - ${margin}px)`,
           transform: "translateY(-50%)",
         },
         label: "6PM",
@@ -348,7 +305,7 @@ export default function UserGenreDayActivity({
               minHeight: "inherit",
             }}
           >
-            <span style={{ fontSize: isMobile ? 18 : 24 }}>
+            <span style={{ fontSize: isMobile ? 12 : 18 }}>
               <FontAwesomeIcon icon={faExclamationCircle} /> {errorMessage}
             </span>
           </div>
