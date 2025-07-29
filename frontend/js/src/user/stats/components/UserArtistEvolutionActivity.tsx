@@ -19,20 +19,25 @@ export type StreamDataItem = {
 };
 
 // Transform function to convert API response to stream chart format
+// Transform function to convert API response to stream chart format
 const transformArtistEvolutionData = (
   rawData: any[] | null | undefined,
-  range: UserStatsAPIRange
+  timeRange: UserStatsAPIRange
 ) => {
   if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
     return { chartData: [], keys: [] };
   }
 
   // First, extract all unique artist names across all time units
+  // Exclude 'id' field which is metadata, not artist data
   const allArtistNames = new Set<string>();
   rawData.forEach((timeUnit) => {
     if (timeUnit && typeof timeUnit === "object") {
       Object.keys(timeUnit).forEach((key) => {
-        allArtistNames.add(key);
+        // Skip the 'id' field - it's metadata, not an artist
+        if (key !== "id") {
+          allArtistNames.add(key);
+        }
       });
     }
   });
@@ -42,7 +47,8 @@ const transformArtistEvolutionData = (
   rawData.forEach((timeUnit) => {
     if (timeUnit && typeof timeUnit === "object") {
       Object.entries(timeUnit).forEach(([artist, count]) => {
-        if (typeof count === "number") {
+        // Skip the 'id' field and only process actual artist data
+        if (artist !== "id" && typeof count === "number") {
           if (!artistTotals[artist]) {
             artistTotals[artist] = 0;
           }
@@ -61,8 +67,8 @@ const transformArtistEvolutionData = (
   // Transform the data for the stream chart
   const chartData = rawData.map((timeUnit, index) => {
     const result: StreamDataItem = {
-      // Add an id field for better identification
-      id: index.toString(),
+      // Use the id from the backend data if available, otherwise fall back to index
+      id: (timeUnit && timeUnit.id) || index.toString(),
     };
 
     // Add each top artist's data for this time unit
@@ -79,14 +85,14 @@ const transformArtistEvolutionData = (
 
 // Format function for axis labels based on range
 const getAxisFormatter = (
-  range: UserStatsAPIRange,
+  timeRange: UserStatsAPIRange,
   orderedTimeUnits: string[]
 ) => {
   return (index: number) => {
     const timeUnit = orderedTimeUnits[index];
     if (!timeUnit) return "";
 
-    switch (range) {
+    switch (timeRange) {
       case "week":
         return timeUnit.substring(0, 3);
       case "month":
@@ -99,6 +105,115 @@ const getAxisFormatter = (
         return timeUnit;
     }
   };
+};
+
+// Helper function to get ordered time units
+const getOrderedTimeUnits = (
+  timeRange: UserStatsAPIRange,
+  offsetYear: number | undefined
+) => {
+  if (timeRange.includes("week")) {
+    return [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+  }
+  if (timeRange.includes("month")) {
+    return Array.from({ length: 30 }, (_, i) => (i + 1).toString());
+  }
+  if (timeRange.includes("year")) {
+    return [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+  }
+  if (timeRange.includes("all_time")) {
+    const currentYear = new Date().getFullYear();
+    const safeOffsetYear = offsetYear || 2020;
+    const yearRange = currentYear - safeOffsetYear + 1;
+    return Array.from({ length: yearRange }, (_, i) =>
+      (safeOffsetYear + i).toString()
+    );
+  }
+  return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
+};
+
+// Custom tooltip function moved outside of render
+const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
+  const { slice } = tooltipProps;
+
+  if (!slice || typeof slice.index === "undefined") {
+    return (
+      <div
+        style={{
+          background: "white",
+          padding: "9px 12px",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+          fontSize: "12px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          maxWidth: "200px",
+        }}
+      >
+        <div>No data available</div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        background: "white",
+        padding: "9px 12px",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        fontSize: "12px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        maxWidth: "200px",
+      }}
+    >
+      <div style={{ marginBottom: "4px", fontWeight: "bold" }}>
+        {orderedTimeUnits[slice.index] || `Time Unit ${slice.index + 1}`}
+      </div>
+      {slice.stack &&
+        slice.stack
+          .filter((point: any) => point.data && point.data.value > 0)
+          .map((point: any) => (
+            <div
+              key={`${point.id}-${point.data.value}`}
+              style={{ marginBottom: "2px" }}
+            >
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "12px",
+                  height: "12px",
+                  backgroundColor: point.color,
+                  marginRight: "6px",
+                  borderRadius: "2px",
+                }}
+              />
+              <span style={{ fontWeight: "bold" }}>{point.id}:</span>{" "}
+              {point.data.value} listens
+            </div>
+          ))}
+    </div>
+  );
 };
 
 export default function ArtistEvolutionStreamGraph(
@@ -145,6 +260,12 @@ export default function ArtistEvolutionStreamGraph(
   const [keys, setKeys] = React.useState<string[]>([]);
   const [orderedTimeUnits, setOrderedTimeUnits] = React.useState<string[]>([]);
 
+  // Create memoized tooltip function to prevent recreation on each render
+  const tooltipRenderer = React.useCallback(
+    (tooltipProps: any) => renderCustomTooltip(tooltipProps, orderedTimeUnits),
+    [orderedTimeUnits]
+  );
+
   // Transform data when raw data changes
   React.useEffect(() => {
     if (
@@ -159,52 +280,6 @@ export default function ArtistEvolutionStreamGraph(
 
       setChartData(transformedData);
       setKeys(transformedKeys);
-
-      // Create ordered time units for axis formatting
-      const getOrderedTimeUnits = (
-        range: UserStatsAPIRange,
-        offsetYear: number
-      ) => {
-        if (range.includes("week")) {
-          return [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-          ];
-        }
-        if (range.includes("month")) {
-          return Array.from({ length: 30 }, (_, i) => (i + 1).toString());
-        }
-        if (range.includes("year")) {
-          return [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ];
-        }
-        if (range.includes("all_time")) {
-          const currentYear = new Date().getFullYear();
-          const yearRange = currentYear - offsetYear + 1;
-          return Array.from({ length: yearRange }, (_, i) =>
-            (offsetYear + i).toString()
-          );
-        }
-        return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
-      };
-
       setOrderedTimeUnits(getOrderedTimeUnits(range, rawData.offset_year));
     } else {
       setChartData([]);
@@ -212,6 +287,14 @@ export default function ArtistEvolutionStreamGraph(
       setOrderedTimeUnits([]);
     }
   }, [rawData, range]);
+
+  // Helper functions for rendering different legend texts
+  const getLegendText = (timeRange: UserStatsAPIRange) => {
+    if (timeRange === "week") return "Days of Week";
+    if (timeRange === "month") return "Days of Month";
+    if (timeRange === "year") return "Months";
+    return "Years";
+  };
 
   let content;
   if (hasError) {
@@ -258,14 +341,7 @@ export default function ArtistEvolutionStreamGraph(
                 format: getAxisFormatter(range, orderedTimeUnits),
                 tickSize: 5,
                 tickPadding: 5,
-                legend:
-                  range === "week"
-                    ? "Days of Week"
-                    : range === "month"
-                    ? "Days of Month"
-                    : range === "year"
-                    ? "Months"
-                    : "Years",
+                legend: getLegendText(range),
                 legendOffset: 40,
                 legendPosition: "middle",
               }}
@@ -323,67 +399,7 @@ export default function ArtistEvolutionStreamGraph(
                   ],
                 },
               ]}
-              tooltip={({ slice }: any) => {
-                if (!slice || typeof slice.index === "undefined") {
-                  return (
-                    <div
-                      style={{
-                        background: "white",
-                        padding: "9px 12px",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        maxWidth: "200px",
-                      }}
-                    >
-                      <div>No data available</div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    style={{
-                      background: "white",
-                      padding: "9px 12px",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      maxWidth: "200px",
-                    }}
-                  >
-                    <div style={{ marginBottom: "4px", fontWeight: "bold" }}>
-                      {orderedTimeUnits[slice.index] ||
-                        `Time Unit ${slice.index + 1}`}
-                    </div>
-                    {slice.stack &&
-                      slice.stack
-                        .filter(
-                          (point: any) => point.data && point.data.value > 0
-                        )
-                        .map((point: any, index: number) => (
-                          <div key={index} style={{ marginBottom: "2px" }}>
-                            <span
-                              style={{
-                                display: "inline-block",
-                                width: "12px",
-                                height: "12px",
-                                backgroundColor: point.color,
-                                marginRight: "6px",
-                                borderRadius: "2px",
-                              }}
-                            />
-                            <span style={{ fontWeight: "bold" }}>
-                              {point.id}:
-                            </span>{" "}
-                            {point.data.value} listens
-                          </div>
-                        ))}
-                  </div>
-                );
-              }}
+              tooltip={tooltipRenderer}
             />
           </div>
         </div>
