@@ -533,7 +533,7 @@ def _transform_artist_evolution_data(raw_data, stats_range):
     # Group data by time_unit
     grouped_by_time = {}
     for item in raw_data:
-        time_unit = item['time_unit']
+        time_unit = str(item['time_unit'])
         artist_name = item['artist_name']
         listen_count = item['listen_count']
         
@@ -541,7 +541,6 @@ def _transform_artist_evolution_data(raw_data, stats_range):
             grouped_by_time[time_unit] = {}
         
         grouped_by_time[time_unit][artist_name] = listen_count
-    
     # Calculate total listens per artist across all time units
     artist_totals = {}
     for item in raw_data:
@@ -574,12 +573,12 @@ def _transform_artist_evolution_data(raw_data, stats_range):
             for item in raw_data:
                 try:
                     year = int(item['time_unit'])
-                    listen_count = item['listen_count']
-                    if listen_count > 0:
+                    if item['listen_count'] > 0:
                         years_with_data.append(year)
                 except (ValueError, TypeError):
                     continue
-            
+            if not years_with_data:
+                return [], None
             first_year_with_data = min(years_with_data)
             offset_year = first_year_with_data - 1
             all_years = list(range(offset_year, current_year + 1))
@@ -590,8 +589,8 @@ def _transform_artist_evolution_data(raw_data, stats_range):
     
     result = []
     for time_unit in all_time_units:
-        time_data = grouped_by_time.get(time_unit, {})
-        result_item = {}
+        time_data = grouped_by_time.get(str(time_unit), {})
+        result_item = {"id": str(time_unit)}
         
         for artist in top_artist_names:
             result_item[artist] = time_data.get(artist, 0)
