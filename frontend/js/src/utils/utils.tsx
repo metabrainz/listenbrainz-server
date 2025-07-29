@@ -1,11 +1,12 @@
 import * as React from "react";
 import * as _ from "lodash";
-import { isFinite, isUndefined } from "lodash";
+import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
+import fuzzysort from "fuzzysort";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import NamePill from "../personal-recommendations/NamePill";
@@ -177,78 +178,20 @@ const searchForSoundcloudTrack = async (
   return responseBody?.[0]?.uri ?? null;
 };
 
-// Helper function to select the best track from search results
-// Funkwhale is self hosted platform so unlike other services it won't available all songs,
-// so we need to be more strict in our matching criteria,
-// there is 50-50 chance that the track we are looking for is not available on Funkwhale
-const selectBestTrack = (
-  tracks: any[],
-  trackName?: string,
-  artistName?: string
-): FunkwhaleTrack | null => {
-  const playableTracks = tracks.filter(
-    (track: any) => track.is_playable === true
-  );
-
-  if (playableTracks.length === 0) {
-    return null;
-  }
-
-  // Only return a track if we have a match for both track and artist
-  if (trackName && artistName) {
-    const goodMatches = playableTracks.filter((track: any) => {
-      const trackTitle = track.title?.toLowerCase() || "";
-      const artistCredit =
-        track.artist_credit?.[0]?.artist?.name?.toLowerCase() ||
-        track.artist?.name?.toLowerCase() ||
-        "";
-
-      // We require BOTH track name and artist name to have good similarity
-      const trackMatch =
-        trackTitle.includes(trackName.toLowerCase()) ||
-        trackName.toLowerCase().includes(trackTitle);
-      const artistMatch =
-        artistCredit.includes(artistName.toLowerCase()) ||
-        artistName.toLowerCase().includes(artistCredit);
-
-      return trackMatch && artistMatch;
-    });
-
-    return goodMatches.length > 0 ? goodMatches[0] : null;
-  }
-
-  // If we only have track name or artist name, be even more strict
-  if (trackName) {
-    const trackMatches = playableTracks.filter((track: any) => {
-      const trackTitle = track.title?.toLowerCase() || "";
-      return (
-        trackTitle.includes(trackName.toLowerCase()) ||
-        trackName.toLowerCase().includes(trackTitle)
-      );
-    });
-    return trackMatches.length > 0 ? trackMatches[0] : null;
-  }
-  return null;
-};
-
 const searchForFunkwhaleTrack = async (
   funkwhaleToken: string,
   instanceURL: string,
   trackName?: string,
   artistName?: string
 ): Promise<FunkwhaleTrack | null> => {
-  let query = trackName ?? "";
-  if (artistName) {
-    query += ` ${artistName}`;
-  }
+  const query = trackName ?? "";
   if (!query) {
     return null;
   }
 
-  // first try the enhanced search endpoint first (Funkwhale v1.3+)
   try {
-    const enhancedResponse = await fetch(
-      `${instanceURL}/api/v1/search?q=${encodeURIComponent(query)}`,
+    const response = await fetch(
+      `${instanceURL}/api/v1/tracks?q=${encodeURIComponent(query)}&limit=10`,
       {
         method: "GET",
         headers: {
@@ -258,48 +201,75 @@ const searchForFunkwhaleTrack = async (
       }
     );
 
-    if (enhancedResponse.ok) {
-      const enhancedData = await enhancedResponse.json();
-      const tracks = enhancedData?.tracks || [];
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const error = new Error(errorBody.detail || response.statusText);
+      (error as any).status = response.status;
+      throw error;
+    }
 
-      if (tracks.length > 0) {
-        return selectBestTrack(tracks, trackName, artistName);
+    const responseBody = await response.json();
+    const tracks = responseBody?.results ?? [];
+
+    if (tracks.length === 0) {
+      return null;
+    }
+
+    // Filter only playable tracks
+    const playableTracks = tracks.filter(
+      (track: any) => track.is_playable === true
+    );
+
+    if (playableTracks.length === 0) {
+      return null;
+    }
+
+    if (!trackName) {
+      // If no track name to match against, return first playable track
+      return playableTracks[0] || null;
+    }
+
+    // Remove accents from track name for better matching
+    const trackNameWithoutAccents = deburr(trackName);
+
+    // Prepare candidates with normalized titles for fuzzy matching
+    const candidateMatches = playableTracks.map((candidate: any) => ({
+      ...candidate,
+      normalizedTitle: deburr(candidate.title || ""),
+    }));
+
+    // Check if the first API result is a close match using regex
+    if (
+      new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+        candidateMatches?.[0]?.normalizedTitle
+      )
+    ) {
+      // First result matches track title, assume it's the correct result
+      return candidateMatches[0];
+    }
+
+    // Fallback to fuzzy matching based on track title
+    const fuzzyMatches = fuzzysort.go(
+      trackNameWithoutAccents,
+      candidateMatches,
+      {
+        key: "normalizedTitle",
+        limit: 1,
       }
+    );
+
+    if (fuzzyMatches[0]) {
+      return fuzzyMatches[0].obj as FunkwhaleTrack;
     }
+
+    // No good match found, return the first playable track as fallback
+    return playableTracks[0] || null;
   } catch (error) {
-    // Fallback to old search if enhanced search fails -> silent fallback for compatibility
-  }
-
-  // Fallback to the original tracks only search
-  // This is the old search endpoint that returns tracks only
-  // Cross verify to ensure the availablity of tracks
-  const response = await fetch(
-    `${instanceURL}/api/v1/tracks/?search=${encodeURIComponent(query)} 
-     &limit=10`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${funkwhaleToken}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    const error = new Error(errorBody.detail || response.statusText);
-    (error as any).status = response.status;
-    throw error;
-  }
-
-  const responseBody = await response.json();
-  const tracks = responseBody?.results ?? [];
-
-  if (tracks.length === 0) {
+    // Log the error and return null instead of throwing
+    // eslint-disable-next-line no-console
+    console.error("Funkwhale search failed:", error);
     return null;
   }
-
-  return selectBestTrack(tracks, trackName, artistName);
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>
