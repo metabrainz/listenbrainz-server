@@ -55,18 +55,15 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                       </Link>
                     ))}
                   <p>
-                    {donor.currency === "usd" ? "$" : "€"}
+                    {donor.currency === "usd" && "$"}
                     {donor.donation}
+                    {donor.currency === "eur" && "€"}
                   </p>
                 </div>
                 {pinnedRecordingListen && (
                   <Link
                     className="donor-pinned-recording btn btn-sm"
-                    to={`https://musicbrainz.org/recording/${getRecordingMBID(
-                      pinnedRecordingListen
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    to={`/track/${getRecordingMBID(pinnedRecordingListen)}`}
                     tabIndex={0}
                   >
                     <FontAwesomeIcon icon={faThumbtack} />

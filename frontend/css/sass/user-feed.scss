@@ -1,0 +1,139 @@
+@use 'sass:color';
+
+#timeline {
+  > ul {
+    padding-left: 1em;
+    list-style: none;
+    position: relative;
+
+    // Vertical line
+    &::before {
+      content: " ";
+      height: 100%;
+      width: 1px;
+      // Fade the line out at the bottom.
+      background: linear-gradient(
+        180deg,
+        $gray-light calc(100% - 65px),
+        transparent 100%
+      );
+      position: absolute;
+      top: 10px;
+      left: 1.5em;
+      z-index: -1;
+    }
+
+    li.timeline-event {
+      margin-bottom: 2em;
+      position: relative;
+      .event-description {
+        display: flex;
+        flex-wrap: wrap;
+        .event-time {
+          color: $gray-600;
+          // position: absolute;
+          // right:0;
+          font-size: 0.8em;
+          font-style: italic;
+          text-align: right;
+          align-self: flex-end;
+          flex: 1;
+          flex-basis: 7em;
+        }
+
+        .event-icon {
+          position: absolute;
+          border-radius: 50%;
+          background: $white;
+          z-index: 1;
+          border: 7px solid $white;
+          left: -6px;
+          top: -6px;
+          &.recording_recommendation {
+            color: $orange;
+          }
+          &.listen {
+            color: $blue;
+          }
+          &.like {
+            color: $red;
+          }
+          &.follow {
+            color: $green;
+          }
+          &.notification {
+            color: $turquoise;
+          }
+          &.recording_pin {
+            color: $yellow;
+          }
+          &.thanks {
+            color: $purple;
+          }
+        }
+
+        .event-description-text {
+          flex: 1;
+          flex-basis: 25em;
+          margin-left: 2.5em;
+        }
+      }
+      .event-content {
+        padding-top: 1em;
+        padding-left: 2.5em;
+      }
+
+      &.timeline-sub-event {
+        opacity: 0.8;
+        // Horizontal line
+        &::before {
+          content: "";
+          height: 1.25px;
+          width: 2em;
+          background-color: $gray-light;
+          position: absolute;
+          top: 2em;
+          left: -2.3em;
+          z-index: -1;
+        }
+
+        list-style: none;
+        padding-top: 1.3em;
+
+        .event-description-text {
+          margin-left: 2em;
+        }
+        .event-content {
+          padding-left: 3em;
+        }
+
+        details .event-icon:before {
+          content: "+";
+          font-weight: bold;
+          background-color: $asphalt;
+          aspect-ratio: 1;
+          border-radius: 50%;
+          width: 0.65em;
+          display: block;
+          color: $white;
+          font-size: 2em;
+          border: none;
+          line-height: 0.65em;
+          text-align: center;
+          margin-top: 0.65em;
+          margin-left: -0.5em;
+          cursor: pointer;
+        }
+
+        details[open] .event-icon:before {
+          background-color: color.adjust(
+            $asphalt,
+            $lightness: 25%,
+            $space: hsl
+          );
+          content: "-";
+        }
+      }
+    }
+  }
+}

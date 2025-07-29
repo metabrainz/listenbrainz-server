@@ -154,7 +154,7 @@ describe("BrainzPlayer", () => {
     await user.click(playButton);
 
     expect(screen.getByTestId("youtube-wrapper")).toBeInTheDocument();
-    expect(screen.getByTestId("soundcloud hidden")).toBeInTheDocument();
+    expect(screen.getByTestId("soundcloud")).toBeInTheDocument();
     expect(screen.queryByTestId("spotify-player")).toBeNull();
   });
 
