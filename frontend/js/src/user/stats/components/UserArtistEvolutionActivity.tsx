@@ -103,7 +103,7 @@ const getAxisFormatter = (
       case "all_time":
         // For mobile, show only every 5th year
         if (isMobile) {
-          const year = parseInt(timeUnit);
+          const year = parseInt(timeUnit, 10);
           if (year % 5 === 0) {
             return timeUnit;
           }
