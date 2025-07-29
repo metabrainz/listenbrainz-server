@@ -43,10 +43,7 @@ export default function GDPR() {
         Agree to General Data Protection Regulations
       </h2>
       <form onSubmit={onFormSubmit}>
-        <div
-          className="well bg-danger"
-          style={{ maxWidth: "600px", margin: "0 auto" }}
-        >
+        <div className="well" style={{ maxWidth: "600px", margin: "0 auto" }}>
           <p className="text-danger" style={{ fontSize: "16pt" }}>
             Important!
           </p>
