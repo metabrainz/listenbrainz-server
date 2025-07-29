@@ -83,10 +83,11 @@ const transformArtistEvolutionData = (
   return { chartData, keys: topArtists };
 };
 
-// Format function for axis labels based on range
+// Format function for axis labels based on range with mobile responsiveness
 const getAxisFormatter = (
   timeRange: UserStatsAPIRange,
-  orderedTimeUnits: string[]
+  orderedTimeUnits: string[],
+  isMobile: boolean = false
 ) => {
   return (index: number) => {
     const timeUnit = orderedTimeUnits[index];
@@ -100,6 +101,14 @@ const getAxisFormatter = (
       case "year":
         return timeUnit.substring(0, 3);
       case "all_time":
+        // For mobile, show only every 5th year
+        if (isMobile) {
+          const year = parseInt(timeUnit);
+          if (year % 5 === 0) {
+            return timeUnit;
+          }
+          return "";
+        }
         return timeUnit;
       default:
         return timeUnit;
@@ -224,6 +233,21 @@ export default function ArtistEvolutionStreamGraph(
   // Props
   const { user, range } = props;
 
+  // Mobile detection hook
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  // Check for mobile screen size
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // API data fetching
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["ArtistEvolution", user?.name, range],
@@ -332,18 +356,23 @@ export default function ArtistEvolutionStreamGraph(
     content = (
       <div className="row">
         <div className="col-xs-12">
-          <div style={{ width: "100%", height: "600px" }}>
+          <div style={{ width: "100%", height: isMobile ? "500px" : "600px" }}>
             <ResponsiveStream
               data={chartData}
               keys={keys}
-              margin={{ top: 20, right: 100, bottom: 60, left: 60 }}
+              margin={
+                isMobile
+                  ? { top: 20, right: 20, bottom: 120, left: 40 }
+                  : { top: 20, right: 100, bottom: 60, left: 60 }
+              }
               axisBottom={{
-                format: getAxisFormatter(range, orderedTimeUnits),
+                format: getAxisFormatter(range, orderedTimeUnits, isMobile),
                 tickSize: 5,
                 tickPadding: 5,
                 legend: getLegendText(range),
                 legendOffset: 40,
                 legendPosition: "middle",
+                tickRotation: isMobile ? -45 : 0,
               }}
               axisLeft={{
                 tickSize: 5,
@@ -367,7 +396,7 @@ export default function ArtistEvolutionStreamGraph(
                 axis: {
                   ticks: {
                     text: {
-                      fontSize: 12,
+                      fontSize: isMobile ? 10 : 12,
                       fill: "#333333",
                     },
                   },
@@ -381,14 +410,16 @@ export default function ArtistEvolutionStreamGraph(
               }}
               legends={[
                 {
-                  anchor: "right",
-                  direction: "column",
-                  translateX: 100,
-                  itemWidth: 80,
+                  anchor: isMobile ? "bottom" : "right",
+                  direction: isMobile ? "row" : "column",
+                  translateX: isMobile ? 0 : 100,
+                  translateY: isMobile ? 80 : 0,
+                  itemWidth: isMobile ? 60 : 80,
                   itemHeight: 20,
                   itemTextColor: "#333333",
                   symbolSize: 12,
                   symbolShape: "circle",
+                  itemsSpacing: isMobile ? 5 : 0,
                   effects: [
                     {
                       on: "hover",
