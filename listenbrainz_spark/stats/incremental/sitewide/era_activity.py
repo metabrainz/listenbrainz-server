@@ -8,7 +8,7 @@ from listenbrainz_spark.stats.incremental.message_creator import SitewideStatsMe
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.sitewide.entity import SitewideStatsQueryProvider
 from listenbrainz_spark.utils import read_files_from_HDFS
-from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME
+from listenbrainz_spark.path import RELEASE_GROUP_METADATA_CACHE_DATAFRAME, RELEASE_METADATA_CACHE_DATAFRAME
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,17 @@ class EraActivitySitewideStatsQuery(SitewideStatsQueryProvider):
         release_groups_df = read_files_from_HDFS(RELEASE_GROUP_METADATA_CACHE_DATAFRAME)
         release_groups_df.createOrReplaceTempView("release_groups")
 
+        release_df = read_files_from_HDFS(RELEASE_METADATA_CACHE_DATAFRAME)
+        release_df.createOrReplaceTempView("release")
+
         return f"""
             SELECT rg.first_release_date_year AS year,
                    COUNT(*) AS listen_count
-              FROM {table} l
-              LEFT JOIN release_groups rg ON l.release_mbid = rg.caa_release_mbid
-             WHERE rg.first_release_date_year IS NOT NULL
-          GROUP BY rg.first_release_date_year
+            FROM {table} l
+            LEFT JOIN release r ON l.release_mbid = r.release_mbid
+            LEFT JOIN release_groups rg ON r.release_group_mbid = rg.release_group_mbid
+            WHERE rg.first_release_date_year IS NOT NULL
+            GROUP BY rg.first_release_date_year
         """
 
     def get_combine_aggregates_query(self, existing_aggregate, incremental_aggregate):
