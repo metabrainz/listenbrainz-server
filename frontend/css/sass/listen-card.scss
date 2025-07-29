@@ -69,6 +69,12 @@
     width: 100%;
     .review {
       font-style: italic;
+      // Remove usual styling since this review is already in a styled .additional-content parent container
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+      border: none;
+      background-color: transparent;
     }
     .sent-to {
       padding-bottom: 10px;

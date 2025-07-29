@@ -12,7 +12,7 @@ $white-background: $white;
 // Recommended minimum size required by Youtube
 $youtube-player-height: 200px;
 $youtube-player-width: 350px;
-$youtube-drag-handle-size: 30px;
+$youtube-button-size: 30px;
 $youtube-resize-transition: height 0.25s ease-out;
 
 #brainz-player {
@@ -75,7 +75,7 @@ $youtube-resize-transition: height 0.25s ease-out;
         position: absolute;
         bottom: $brainzplayer-height + 10px;
         right: 10px;
-        height: $youtube-player-height + $youtube-drag-handle-size;
+        height: $youtube-player-height + $youtube-button-size;
         width: $youtube-player-width;
         max-width: calc(100vw - 20px);
         z-index: 4;
@@ -83,7 +83,7 @@ $youtube-resize-transition: height 0.25s ease-out;
         transition: $youtube-resize-transition;
 
         &.reduced {
-          height: $youtube-drag-handle-size;
+          height: $youtube-button-size;
           .youtube-player {
             height: 0;
           }
@@ -100,12 +100,15 @@ $youtube-resize-transition: height 0.25s ease-out;
           }
         }
 
-        .youtube-drag-handle,
-        .youtube-reduce-button {
-          height: $youtube-drag-handle-size;
+        .youtube-button {
+          height: $youtube-button-size;
+          min-width: $youtube-button-size;
           display: inline-block;
-          background: fadeout(black, 50%);
+          background: color.change($black, $alpha: 50%);
           color: $white;
+          + .youtube-button {
+            margin-left: 0.5em;
+          }
         }
         .youtube-drag-handle {
           cursor: grab;

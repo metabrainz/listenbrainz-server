@@ -31,6 +31,7 @@ class RecordingFromRecordingMBIDOutput(BaseModel):
     release_name: Optional[str]
     release_mbid: Optional[UUID]
     artists: list[RecordingFromRecordingMBIDArtist]
+    tags: list[str]
 
 
 class RecordingFromRecordingMBIDQuery(Query):

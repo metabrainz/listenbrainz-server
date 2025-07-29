@@ -33,6 +33,7 @@ import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
   getAlbumArtFromListenMetadataKey,
+  getAlbumLink,
   getArtistLink,
   getArtistMBIDs,
   getArtistName,
@@ -206,7 +207,7 @@ export class ListenCard extends React.Component<
           toast.success(
             <ToastMsg
               title="You recommended a track to your followers"
-              message={`${getArtistName(listen)} - ${getTrackName(listen)}`}
+              message={`${getTrackName(listen)} by ${getArtistName(listen)}`}
             />,
             { toastId: "recommended-success" }
           );
@@ -275,6 +276,7 @@ export class ListenCard extends React.Component<
     const trackMBID = get(listen, "track_metadata.additional_info.track_mbid");
     const releaseMBID = getReleaseMBID(listen);
     const releaseGroupMBID = getReleaseGroupMBID(listen);
+    const releaseName = getReleaseName(listen);
     const artistMBIDs = getArtistMBIDs(listen);
     const spotifyURL = SpotifyPlayer.getURLFromListen(listen);
     const youtubeURL = YoutubePlayer.getURLFromListen(listen);
@@ -345,7 +347,7 @@ export class ListenCard extends React.Component<
       let optionalAttributes = {};
       if (releaseMBID) {
         thumbnailLink = `/release/${releaseMBID}`;
-        thumbnailTitle = getReleaseName(listen);
+        thumbnailTitle = releaseName;
       } else if (releaseGroupMBID) {
         thumbnailLink = `/album/${releaseGroupMBID}`;
         thumbnailTitle = get(
@@ -438,11 +440,9 @@ export class ListenCard extends React.Component<
     } else if (recordingMBID || releaseGroupMBID) {
       if (recordingMBID) {
         thumbnail = (
-          <a
-            href={`https://musicbrainz.org/recording/${recordingMBID}`}
+          <Link
+            to={`/track/${recordingMBID}`}
             title="Could not load cover art"
-            target="_blank"
-            rel="noopener noreferrer"
             className="listen-thumbnail"
           >
             <div className="cover-art-fallback">
@@ -454,7 +454,7 @@ export class ListenCard extends React.Component<
                 />
               </span>
             </div>
-          </a>
+          </Link>
         );
       } else {
         thumbnail = (
@@ -512,10 +512,10 @@ export class ListenCard extends React.Component<
             <div className="listen-details">
               <div className="title-duration">
                 <div
-                  title={trackName}
+                  title={trackName ?? releaseName}
                   className={compact ? "ellipsis" : "ellipsis-2-lines"}
                 >
-                  {getTrackLink(listen)}
+                  {trackName ? getTrackLink(listen) : getAlbumLink(listen)}
                 </div>
                 {trackDurationMs && (
                   <div className="small text-muted" title="Duration">
@@ -573,11 +573,7 @@ export class ListenCard extends React.Component<
                         title="Open in MusicBrainz"
                         text="Open in MusicBrainz"
                         key="Open in MusicBrainz"
-                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
-                        anchorTagAttributes={{
-                          target: "_blank",
-                          rel: "noopener noreferrer",
-                        }}
+                        link={`/track/${recordingMBID}`}
                       />
                     )}
                     {renderBrainzplayer && (
