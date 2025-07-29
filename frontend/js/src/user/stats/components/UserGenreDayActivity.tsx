@@ -42,26 +42,6 @@ const TIME_PERIODS = [
   { timeRange: "Evening", timeOfDay: "6PM-12AM", hour: 21, from: 18, to: 23 },
 ];
 
-// Circular time markers placed around the pie chart to indicate major time labels.
-const timeMarkers = [
-  {
-    position: { top: "5px", left: "50%", transform: "translateX(-50%)" },
-    label: "12AM",
-  },
-  {
-    position: { top: "50%", right: "25%", transform: "translateY(-50%)" },
-    label: "6AM",
-  },
-  {
-    position: { bottom: "5px", left: "50%", transform: "translateX(-50%)" },
-    label: "12PM",
-  },
-  {
-    position: { top: "50%", left: "25%", transform: "translateY(-50%)" },
-    label: "6PM",
-  },
-];
-
 const getRoundedTimezoneOffset = (): number => {
   const offsetMinutes = -new Date().getTimezoneOffset();
   const offsetHours = offsetMinutes / 60;
@@ -137,17 +117,20 @@ function CustomTooltip({ datum }: { datum: any }) {
 function TimeMarker({
   position,
   label,
+  isMobile,
 }: {
   position: React.CSSProperties;
   label: string;
+  isMobile: boolean;
 }) {
   return (
     <div
       style={{
         position: "absolute",
         fontWeight: "bold",
-        fontSize: 20,
+        fontSize: isMobile ? 16 : 20,
         zIndex: 10,
+        color: "#666",
         ...position,
       }}
     >
@@ -163,6 +146,19 @@ export default function UserGenreDayActivity({
   const { APIService } = React.useContext(GlobalAppContext);
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
+
+  // Detect mobile screen size
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["userGenreDayActivity", user?.name, range],
@@ -240,6 +236,101 @@ export default function UserGenreDayActivity({
     });
   }, [colorScale, rawData, timezoneOffset]);
 
+  // Responsive time markers - all four markers with mobile-optimized positioning
+  const getTimeMarkersConfig = () => {
+    if (isMobile) {
+      return [
+        {
+          position: {
+            top: "15px",
+            left: "50%",
+            transform: "translateX(-50%)",
+          },
+          label: "12AM",
+        },
+        {
+          position: {
+            top: "50%",
+            right: "5px",
+            transform: "translateY(-50%)",
+          },
+          label: "6AM",
+        },
+        {
+          position: {
+            bottom: "15px",
+            left: "50%",
+            transform: "translateX(-50%)",
+          },
+          label: "12PM",
+        },
+        {
+          position: {
+            top: "50%",
+            left: "5px",
+            transform: "translateY(-50%)",
+          },
+          label: "6PM",
+        },
+      ];
+    }
+    return [
+      {
+        position: {
+          top: "30px",
+          left: "50%",
+          transform: "translateX(-50%)",
+        },
+        label: "12AM",
+      },
+      {
+        position: {
+          top: "50%",
+          right: "15%",
+          transform: "translateY(-50%)",
+        },
+        label: "6AM",
+      },
+      {
+        position: {
+          bottom: "30px",
+          left: "50%",
+          transform: "translateX(-50%)",
+        },
+        label: "12PM",
+      },
+      {
+        position: {
+          top: "50%",
+          left: "15%",
+          transform: "translateY(-50%)",
+        },
+        label: "6PM",
+      },
+    ];
+  };
+
+  // Responsive chart dimensions and margins
+  const getChartConfig = () => {
+    if (isMobile) {
+      return {
+        height: 400,
+        margin: { top: 50, right: 40, bottom: 50, left: 40 },
+        innerRadius: 0.3,
+        arcLabelsSkipAngle: 15,
+      };
+    }
+    return {
+      height: 600,
+      margin: { top: 75, right: 80, bottom: 75, left: 80 },
+      innerRadius: 0.4,
+      arcLabelsSkipAngle: 10,
+    };
+  };
+
+  const chartConfig = getChartConfig();
+  const timeMarkersConfig = getTimeMarkersConfig();
+
   return (
     <Card className="user-stats-card" data-testid="user-genre-day-activity">
       <div className="row">
@@ -257,7 +348,7 @@ export default function UserGenreDayActivity({
               minHeight: "inherit",
             }}
           >
-            <span style={{ fontSize: 24 }}>
+            <span style={{ fontSize: isMobile ? 18 : 24 }}>
               <FontAwesomeIcon icon={faExclamationCircle} /> {errorMessage}
             </span>
           </div>
@@ -267,30 +358,36 @@ export default function UserGenreDayActivity({
               <div
                 style={{
                   position: "relative",
-                  height: "600px",
+                  height: `${chartConfig.height}px`,
                   width: "100%",
                   margin: "0 auto",
+                  overflow: "hidden", // Prevent markers from causing horizontal scroll
                 }}
               >
-                {timeMarkers.map((marker, index) => (
+                {timeMarkersConfig.map((marker, index) => (
                   <TimeMarker
                     key={marker.label}
                     position={marker.position}
                     label={marker.label}
+                    isMobile={isMobile}
                   />
                 ))}
                 <ResponsivePie
                   data={chartData}
-                  margin={{ top: 75, right: 80, bottom: 75, left: 80 }}
-                  innerRadius={0.4}
+                  margin={chartConfig.margin}
+                  innerRadius={chartConfig.innerRadius}
                   padAngle={0.7}
-                  activeOuterRadiusOffset={8}
-                  cornerRadius={10}
+                  activeOuterRadiusOffset={isMobile ? 4 : 8}
+                  cornerRadius={isMobile ? 6 : 10}
                   colors={(d) => d.data.color}
                   arcLabel={(d) => `${d.data.actualValue}`}
                   arcLinkLabel={(d) => d.data.displayName}
-                  arcLabelsSkipAngle={10}
+                  arcLabelsSkipAngle={chartConfig.arcLabelsSkipAngle}
                   arcLabelsTextColor="#333333"
+                  arcLinkLabelsSkipAngle={isMobile ? 20 : 10}
+                  arcLinkLabelsTextColor="#333333"
+                  arcLinkLabelsThickness={isMobile ? 1 : 2}
+                  arcLinkLabelsOffset={isMobile ? -5 : 0}
                   tooltip={CustomTooltip}
                   animate
                   motionConfig="gentle"
