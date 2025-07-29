@@ -6,7 +6,6 @@ import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
 import { Link } from "react-router";
 import ReactMarkdown from "react-markdown";
-import fuzzysort from "fuzzysort";
 import SpotifyPlayer from "../common/brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../common/brainzplayer/YoutubePlayer";
 import NamePill from "../personal-recommendations/NamePill";
@@ -232,34 +231,87 @@ const searchForFunkwhaleTrack = async (
     // Remove accents from track name for better matching
     const trackNameWithoutAccents = deburr(trackName);
 
-    // Prepare candidates with normalized titles for fuzzy matching
-    const candidateMatches = playableTracks.map((candidate: any) => ({
-      ...candidate,
-      normalizedTitle: deburr(candidate.title || ""),
-    }));
+    // https://docs.funkwhale.audio/specs/multi-artist/mb-content.html
+    // using multi-artist approch for better matching of tracks
+    const candidateMatches = playableTracks.map((candidate: any) => {
+      // Get artist name from multiple possible sources:
+      // 1. New multi-artist format: artist_credit array
+      // 2. Legacy format: artist object
+      // 3. Fallback: artist_credit as single object (if not array)
+      let candidateArtistName = "";
+      let artistCredits: any[] = [];
 
-    // Check if the first API result is a close match using regex
-    if (
-      new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
-        candidateMatches?.[0]?.normalizedTitle
-      )
-    ) {
-      // First result matches track title, assume it's the correct result
-      return candidateMatches[0];
+      if (
+        candidate.artist_credit &&
+        Array.isArray(candidate.artist_credit) &&
+        candidate.artist_credit.length > 0
+      ) {
+        // New multi-artist format: preserve artist_credit structure
+        artistCredits = candidate.artist_credit;
+        // For search purposes, combine artist credits (without joinphrases)
+        candidateArtistName = candidate.artist_credit
+          .map((credit: any) => credit.credit || credit.name || "")
+          .filter((name: string) => name.trim())
+          .join(" ");
+      } else if (
+        candidate.artist_credit &&
+        !Array.isArray(candidate.artist_credit)
+      ) {
+        // Single artist_credit object format
+        artistCredits = [candidate.artist_credit];
+        candidateArtistName =
+          candidate.artist_credit.credit || candidate.artist_credit.name || "";
+      } else if (candidate.artist?.name) {
+        // Legacy artist format - convert to artist_credit-like structure
+        artistCredits = [
+          {
+            artist_id: candidate.artist.id,
+            credit: candidate.artist.name,
+            joinphrase: "",
+          },
+        ];
+        candidateArtistName = candidate.artist.name;
+      }
+
+      return {
+        ...candidate,
+        normalizedTitle: deburr(candidate.title || ""),
+        normalizedArtist: deburr(candidateArtistName),
+        artistCredits, // Preserve original structure for proper display
+      };
+    });
+
+    // If artist name is provided, try to filter by artist first
+    let filteredCandidates = candidateMatches;
+    if (artistName) {
+      const artistNameWithoutAccents = deburr(artistName);
+      const artistMatches = candidateMatches.filter((candidate: any) =>
+        candidate.normalizedArtist
+          .toLowerCase()
+          .includes(artistNameWithoutAccents.toLowerCase())
+      );
+
+      // If we found tracks by the right artist, use those for matching
+      if (artistMatches.length > 0) {
+        filteredCandidates = artistMatches;
+      }
     }
 
-    // Fallback to fuzzy matching based on track title
-    const fuzzyMatches = fuzzysort.go(
-      trackNameWithoutAccents,
-      candidateMatches,
-      {
-        key: "normalizedTitle",
-        limit: 1,
-      }
+    // After artist filtering, check for exact title match first
+    const exactMatch = filteredCandidates.find((candidate: any) =>
+      new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+        candidate.normalizedTitle
+      )
     );
 
-    if (fuzzyMatches[0]) {
-      return fuzzyMatches[0].obj as FunkwhaleTrack;
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // If no exact match, return the first artist-filtered result
+    // (since artist filtering already gave us the right artist)
+    if (filteredCandidates.length > 0) {
+      return filteredCandidates[0];
     }
 
     // No good match found, return the first playable track as fallback
