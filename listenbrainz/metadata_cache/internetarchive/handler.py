@@ -17,25 +17,6 @@ AUDIO_KEYWORDS = [
     "ra", "rm", "vox", "dts", "ac3", "atrac", "pcm", "adpcm", "gsm", "mmf", "3ga", "8svx"
 ]
 
-def extract_from_description(description, field):
-    """
-    Extracts a field (e.g. 'Artist', 'Album') from the IA description HTML using BeautifulSoup.
-    Handles both string and list input.
-    """
-    if not description:
-        return None
-    # If it's a list, join elements to a single string
-    if isinstance(description, list):
-        description = " ".join(str(x) for x in description if x)
-    try:
-        soup = BeautifulSoup(description, "html.parser")
-        for element in soup.find_all(['div', 'p', 'span']):
-            text = element.get_text(strip=True)
-            if text.startswith(f"{field}:"):
-                return text[len(field)+1:].strip()
-    except Exception as e:
-        logger.error("Error parsing description HTML: %s", str(e))
-    return None
 
 class InternetArchiveHandler(BaseHandler):
     def __init__(self, app):
@@ -48,11 +29,9 @@ class InternetArchiveHandler(BaseHandler):
         self.redis = cache._r
 
     def get_items_from_listen(self, listen):
-        # Not used for IA
         return []
 
     def get_items_from_seeder(self, message):
-        # Expecting message: {"ia_identifiers": [id1, id2, ...]}
         return [JobItem(0, identifier) for identifier in message.get("ia_identifiers", [])]
 
     def get_seed_ids(self, limit_per_collection=1000) -> list[str]:
@@ -87,7 +66,28 @@ class InternetArchiveHandler(BaseHandler):
                     self.redis.setex(redis_key, 86400, "1")
             except Exception as e:
                 logger.error("Error processing %s: %s", identifier, str(e), exc_info=True)
-        return []  
+        return []
+
+    @staticmethod
+    def extract_from_description(description, field):
+        """
+        Extracts a field (e.g. 'Artist', 'Album') from the IA description HTML using BeautifulSoup.
+        Handles both string and list input.
+        """
+        if not description:
+            return None
+        if isinstance(description, list):
+            description = " ".join(str(x) for x in description if x)
+
+        try:
+            soup = BeautifulSoup(description, "html.parser")
+            for element in soup.find_all(['div', 'p', 'span']):
+                _text = element.get_text(strip=True)
+                if _text.startswith(f"{field}:"):
+                    return _text[len(field) + 1:].strip()
+        except Exception as e:
+            logger.error("Error parsing description HTML: %s", str(e))
+        return None
 
     def process_identifier(self, identifier, conn):
         try:
@@ -104,27 +104,22 @@ class InternetArchiveHandler(BaseHandler):
 
         for f in files:
             fmt = f.get("format", "").lower()
-            # Check if any audio keyword is in the format string
             if any(keyword in fmt for keyword in AUDIO_KEYWORDS):
                 stream_urls.append(f"https://archive.org/download/{identifier}/{f['name']}")
-            # Check for artwork
             if not artwork_url and fmt in {"jpeg", "jpg", "png"}:
                 artwork_url = f"https://archive.org/download/{identifier}/{f['name']}"
 
-        # Extract artist with fallback to description parsing
         artist = meta.get("creator")
         if not artist:
-            artist = extract_from_description(meta.get("description", ""), "Artist")
+            artist = self.extract_from_description(meta.get("description", ""), "Artist")
         if isinstance(artist, str):
             artist = [artist]
         elif artist is None:
             artist = []
 
-        # Extract album with fallback to description parsing
         album = meta.get("album")
         if not album:
-            album = extract_from_description(meta.get("description", ""), "Album")
-        # Leave as None if still not found
+            album = self.extract_from_description(meta.get("description", ""), "Album")
 
         conn.execute(
             text("""
