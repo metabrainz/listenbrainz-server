@@ -83,7 +83,7 @@ export default function MusicNeighborhood() {
     try {
       downloadComponentAsImage(
         graphParentElementRef.current,
-        `${kebabCase(artistInfo?.name)}-music-neighborhood.png`
+        `${kebabCase(artistInfo?.name)}-music-neighborhood`
       );
     } catch (error) {
       toast.error(
