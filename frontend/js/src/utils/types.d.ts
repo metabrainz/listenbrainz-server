@@ -305,6 +305,13 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare interface UserArtistEvolutionActivityResponse {
+  result: Array<{
+	  [artistName: string]: number;
+  }>;
+  offset_year?: number;
+}
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;
