@@ -67,6 +67,15 @@ CREATE INDEX apple_cache_rel_track_artist_track_id_idx ON apple_cache.rel_track_
 CREATE UNIQUE INDEX soundcloud_cache_track_soundcloud_id_idx ON soundcloud_cache.track (track_id);
 CREATE UNIQUE INDEX soundcloud_cache_artist_soundcloud_id_idx ON soundcloud_cache.artist (artist_id);
 
+-- Internet Archive indexes
+CREATE UNIQUE INDEX internetarchive_cache_track_track_id_idx ON internetarchive_cache.track (track_id);
+CREATE INDEX internetarchive_cache_track_artist_gin_idx ON internetarchive_cache.track USING GIN (artist);
+CREATE INDEX internetarchive_cache_track_name_idx ON internetarchive_cache.track (name);
+CREATE INDEX internetarchive_cache_track_album_idx ON internetarchive_cache.track (album);
+CREATE INDEX internetarchive_cache_track_stream_urls_gin_idx ON internetarchive_cache.track USING GIN (stream_urls);
+CREATE INDEX internetarchive_cache_track_last_updated_idx ON internetarchive_cache.track (last_updated);
+
+
 CREATE UNIQUE INDEX similar_recordings_dev_uniq_idx ON similarity.recording_dev (mbid0, mbid1);
 CREATE UNIQUE INDEX similar_recordings_dev_reverse_uniq_idx ON similarity.recording_dev (mbid1, mbid0);
 CREATE INDEX similar_recordings_algorithm_dev_idx ON similarity.recording_dev USING gin (metadata);
