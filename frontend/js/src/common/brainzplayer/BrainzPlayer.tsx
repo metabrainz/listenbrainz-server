@@ -861,6 +861,7 @@ export default function BrainzPlayer() {
         ? [currentQueue[currentPlayingListenIndex]]
         : []
     );
+    setCurrentListenIndex(0);
   };
 
   const playNextListenFromQueue = (datasourceIndex: number = 0): void => {
