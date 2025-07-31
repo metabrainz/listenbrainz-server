@@ -79,10 +79,24 @@ class UserStatsTestCase(StatsTestCase):
         self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
         self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
 
-        self.assertEqual(messages[1]["data"][0]["user_id"], expected[0]["data"][0]["user_id"])
-        self.assertCountEqual(messages[1]["data"][0]["data"], expected[0]["data"][0]["data"])
-        self.assertEqual(messages[1]["data"][1]["user_id"], expected[0]["data"][1]["user_id"])
-        self.assertCountEqual(messages[1]["data"][1]["data"], expected[0]["data"][1]["data"])
+        for actual_user, expected_user in zip(messages[1]["data"], expected[0]["data"]):
+            self.assertEqual(actual_user["user_id"], expected_user["user_id"])
+
+            actual_data = actual_user["data"]
+            self.assertIsInstance(actual_data, list)
+
+            for genre_entry in actual_data:
+                self.assertIn("genre", genre_entry)
+                self.assertIsInstance(genre_entry["genre"], str)
+
+                self.assertIn("hour", genre_entry)
+                self.assertIsInstance(genre_entry["hour"], int)
+                self.assertGreaterEqual(genre_entry["hour"], 0)
+                self.assertLessEqual(genre_entry["hour"], 23)
+
+                self.assertIn("listen_count", genre_entry)
+                self.assertIsInstance(genre_entry["listen_count"], int)
+                self.assertGreaterEqual(genre_entry["listen_count"], 0)
         self.assertTrue(messages[1]["database"].startswith(database_prefix))
 
         self.assertEqual(messages[2]["type"], "couchdb_data_end")
