@@ -289,7 +289,7 @@ export default function UserGenreActivity({
   const timeMarkersConfig = getTimeMarkersConfig();
 
   return (
-    <Card className="user-stats-card" data-testid="user-genre-day-activity">
+    <Card className="user-stats-card" data-testid="user-genre-activity">
       <div className="row">
         <div className="col-xs-10">
           <h3 className="capitalize-bold">Genre Activity</h3>
