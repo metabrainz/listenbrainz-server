@@ -530,6 +530,57 @@ def get_artist_activity(user_name: str):
 @crossdomain
 @ratelimit()
 def get_genre_activity(user_name: str):
+    """
+    Get the genre activity for user ``user_name``. The genre activity shows the total number of listens
+    for each genre broken down by hour of the day.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "genre": "alternative dance",
+                    "hour": 14,
+                    "listen_count": 3
+                },
+                {
+                    "genre": "alternative punk",
+                    "hour": 11,
+                    "listen_count": 6
+                },
+                {
+                    "genre": "alternative rock",
+                    "hour": 11,
+                    "listen_count": 8
+                },
+                {
+                    "genre": "electronic",
+                    "hour": 10,
+                    "listen_count": 13
+                },
+                {
+                    "genre": "rock",
+                    "hour": 11,
+                    "listen_count": 16
+                }
+            ]
+        }
+
+    .. note::
+
+        - The example above shows genre activity data with listening patterns across different hours.
+        - Each entry represents the number of times a genre was listened to during a specific hour of the day.
+        - Hours are in 24-hour format (0-23).
+        - The statistics help identify when users prefer to listen to different genres throughout the day.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
     user, stats_range = _validate_stats_user_params(user_name)
     stats = db_stats.get(user['id'], "genre_activity", stats_range, GenreActivityRecord)
     if stats is None:
