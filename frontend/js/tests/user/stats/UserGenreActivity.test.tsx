@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import UserGenreActivity, {
   UserGenreActivityProps,
 } from "../../../src/user/stats/components/UserGenreActivity";
-import * as userGenreDayActivityResponse from "../../__mocks__/userGenreActivity.json";
+import * as userGenreActivityResponse from "../../__mocks__/userGenreActivity.json";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const userProps: UserGenreActivityProps = {
@@ -49,7 +49,7 @@ describe("User Stats", () => {
 
         switch (range) {
           case "week":
-            return HttpResponse.json(userGenreDayActivityResponse);
+            return HttpResponse.json(userGenreActivityResponse);
           default:
             return HttpResponse.json(
               { error: "Failed to fetch data" },
