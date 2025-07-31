@@ -602,7 +602,7 @@ export default class APIService {
     return response.json();
   };
 
-  getUserGenreDayActivity = async (
+  getUserGenreActivity = async (
     userName: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserGenreDayActivityResponse> => {

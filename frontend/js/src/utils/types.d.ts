@@ -311,7 +311,7 @@ declare type GenreHourData = {
   listen_count: number;
 }
 
-declare type UserGenreDayActivityResponse = {
+declare type UserGenreActivityResponse = {
   result: Array<GenreHourData>;
 }
 

@@ -10,7 +10,7 @@ import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 
-export type UserGenreDayActivityProps = {
+export type UserGenreActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
@@ -143,7 +143,7 @@ function TimeMarker({
 export default function UserGenreActivity({
   user,
   range,
-}: UserGenreDayActivityProps) {
+}: UserGenreActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
@@ -152,7 +152,7 @@ export default function UserGenreActivity({
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["userGenreDayActivity", user?.name, range],
+    queryKey: ["userGenreActivity", user?.name, range],
     queryFn: async () => {
       try {
         // Fix: Handle undefined user name
@@ -160,14 +160,14 @@ export default function UserGenreActivity({
           throw new Error("User name is required");
         }
 
-        const queryData = await APIService.getUserGenreDayActivity(
+        const queryData = await APIService.getUserGenreActivity(
           user.name,
           range
         );
         return { data: queryData, hasError: false, errorMessage: "" };
       } catch (error) {
         return {
-          data: { result: [] } as UserGenreDayActivityResponse,
+          data: { result: [] } as UserGenreActivityResponse,
           hasError: true,
           errorMessage: error.message,
         };
