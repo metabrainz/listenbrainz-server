@@ -11,6 +11,9 @@ services:
     command: bash -c "hdfs namenode"
     volumes:
       - namenode:/hdfs:z
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9870:9870"
 
   datanode:
     volumes:
@@ -28,4 +31,4 @@ services:
 networks:
   default:
     external: true
-    name: listenbrainz_default
+    name: listenbrainz_holycow_default

@@ -6,6 +6,7 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.user.daily_activity import get_daily_activity
 from listenbrainz_spark.stats.user.entity import get_entity_stats
 from listenbrainz_spark.stats.user.listening_activity import get_listening_activity
+from listenbrainz_spark.stats.user.genre_activity import get_genre_activity
 from listenbrainz_spark.stats.user.tests import StatsTestCase
 
 
@@ -65,7 +66,7 @@ class UserStatsTestCase(StatsTestCase):
         self.assertListEqual(list(time_range_expected), list(time_range_received))
 
     def test_get_genre_activity(self):
-        messages = list(get_daily_activity("all_time"))
+        messages = list(get_genre_activity("all_time"))
         with open(self.path_to_data_file("user_genre_activity_all_time.json")) as f:
             expected = json.load(f)
 

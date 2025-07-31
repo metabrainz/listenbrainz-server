@@ -31,3 +31,12 @@ services:
     environment:
       PYTHONDONTWRITEBYTECODE: 1
       USER: root
+    networks:
+      musicbrainz-docker_default:
+      default:
+
+networks:
+  musicbrainz-docker_default:
+    external: true
+  listenbrainz_holycow_default:
+    external: true
