@@ -35,9 +35,9 @@ def get_user():
         raise MusicBrainzAuthSessionError()
 
     user = db_user.get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id)
-    user_email = "granthbagadia2004@gmail.com"
-    # if mb_engine:
-    #     user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)["email"]
+    user_email = None
+    if mb_engine:
+        user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)["email"]
 
     if user is None:  # a new user is trying to sign up
         if current_app.config["REJECT_NEW_USERS_WITHOUT_EMAIL"] and user_email is None:

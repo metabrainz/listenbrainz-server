@@ -32,7 +32,7 @@ fi
 
 function invoke_docker_compose {
     exec $DOCKER_COMPOSE_CMD -f docker/docker-compose.yml \
-                -p listenbrainz_holycow \
+                -p listenbrainz \
                 --env-file .env \
                 "$@"
 }
