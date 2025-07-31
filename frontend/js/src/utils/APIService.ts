@@ -605,7 +605,7 @@ export default class APIService {
   getUserGenreActivity = async (
     userName: string,
     range: UserStatsAPIRange = "all_time"
-  ): Promise<UserGenreDayActivityResponse> => {
+  ): Promise<UserGenreActivityResponse> => {
     const url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
