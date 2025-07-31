@@ -140,7 +140,7 @@ function TimeMarker({
   );
 }
 
-export default function UserGenreDayActivity({
+export default function UserGenreActivity({
   user,
   range,
 }: UserGenreDayActivityProps) {
@@ -305,7 +305,7 @@ export default function UserGenreDayActivity({
               minHeight: "inherit",
             }}
           >
-            <span style={{ fontSize: isMobile ? 12 : 18 }}>
+            <span style={{ fontSize: isMobile ? 18 : 24 }}>
               <FontAwesomeIcon icon={faExclamationCircle} /> {errorMessage}
             </span>
           </div>
