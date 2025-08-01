@@ -4,6 +4,7 @@ import json
 
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.user.daily_activity import get_daily_activity
+from listenbrainz_spark.stats.user.era_activity import get_era_activity
 from listenbrainz_spark.stats.user.entity import get_entity_stats
 from listenbrainz_spark.stats.user.listening_activity import get_listening_activity
 from listenbrainz_spark.stats.user.tests import StatsTestCase
@@ -63,3 +64,7 @@ class UserStatsTestCase(StatsTestCase):
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
         time_range_received = run_query("SELECT * FROM time_range").toLocalIterator()
         self.assertListEqual(list(time_range_expected), list(time_range_received))
+        
+    def test_get_era_activity(self):
+        messages = list(get_era_activity("all_time"))
+        print(messages)
