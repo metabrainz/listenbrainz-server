@@ -2072,7 +2072,8 @@ export default class APIService {
   }
 
   importListens = async (userToken: string, formData: FormData) => {
-    const url = `http://localhost:8100/import/`;
+    // const url: string = `${this.APIBaseURI}/import-listens`;
+    const url: string = `http://localhost:8100/1/import-listens/`;
 
     const response = await fetch(url, {
       method: "POST",

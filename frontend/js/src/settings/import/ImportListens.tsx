@@ -130,7 +130,7 @@ export default function ImportListens() {
                 <label className="form-label" htmlFor="datetime">
                   Select Service:
                 </label>
-                <select className="form-select" required>
+                <select className="form-select" name="service" required>
                   <option value="spotify">Spotify</option>
                   <option value="listenbrainz">Listenbrainz</option>
                   <option value="applemusic">Apple Music</option>
@@ -145,7 +145,7 @@ export default function ImportListens() {
                   type="date"
                   className="form-control"
                   max={new Date().toISOString()}
-                  name="ImportStartDate"
+                  name="from_date"
                   title="Date and time to start import at"
                 />
               </div>
@@ -158,7 +158,7 @@ export default function ImportListens() {
                   type="date"
                   className="form-control"
                   max={new Date().toISOString()}
-                  name="ImportEndDate"
+                  name="to_date"
                   title="Date and time to end import at"
                 />
               </div>
