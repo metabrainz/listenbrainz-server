@@ -350,7 +350,7 @@ def cleanup_old_exports(db_conn):
         result = db_conn.execute(text("SELECT filename FROM user_data_export"))
         files_to_keep = {r.filename for r in result.all()}
 
-        # delete exports that are no longer required
+        # Delete exports that are no longer required
         for path in Path(current_app.config["USER_DATA_EXPORT_BASE_DIR"]).iterdir():
             if path.is_file() and path.name not in files_to_keep:
                 current_app.logger.info("Removing file: %s", path)

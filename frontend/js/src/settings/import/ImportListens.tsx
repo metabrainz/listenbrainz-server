@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet";
 import ReactTooltip from "react-tooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPersonDigging } from "@fortawesome/free-solid-svg-icons";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
@@ -14,10 +15,40 @@ export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
   const { user_has_email: userHasEmail } = data;
 
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+
+  const handleListensSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    if (event) event.preventDefault();
+
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const file = formData.get("file") as File;
+    const service = formData.get("service") as string;
+    const from_date = formData.get("from_date") as string | null;
+    const to_date = formData.get("to_date") as string | null;
+
+    if (!currentUser?.auth_token) {
+      console.error("No auth token available");
+      return;
+    }
+    try {
+      const status = await APIService.importListens(
+        currentUser?.auth_token,
+        formData
+      );
+
+      console.log("Import req sent. Status:", status);
+    } catch (err) {
+      console.error("Import req failed:", err);
+    }
+  };
+
   return (
     <>
       <Helmet>
-        <title>Import listening history</title>
+        <title>Import listens for {currentUser?.name}</title>
       </Helmet>
       <h2 className="page-title">Import your listening history</h2>
       {!userHasEmail && (
@@ -73,14 +104,74 @@ export default function ImportListens() {
         avoid duplicates, be sure to set the appropriate limit date and time.
       </p>
 
-      <h3>
-        Coming soon
-        <FontAwesomeIcon icon={faPersonDigging} size="sm" className="ms-2" />
-      </h3>
+      <h3 className="card-title">Import from Listening History Files</h3>
+      <br />
       <p>
-        We are currently working on this feature as a matter of high priority,
-        please stay tuned.
+        Migrate your listens from different streaming services to Listenbrainz!
       </p>
+      <div className="card">
+        <div className="card-body">
+          <form onSubmit={handleListensSubmit}>
+            <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="datetime">
+                  Choose a File:
+                </label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="file"
+                  accept=".zip,.csv,.json,.jsonl"
+                  required
+                />
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="datetime">
+                  Select Service:
+                </label>
+                <select className="form-select" name="service" required>
+                  <option value="spotify">Spotify</option>
+                  <option value="listenbrainz">Listenbrainz</option>
+                  <option value="applemusic">Apple Music</option>
+                </select>
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="start-datetime">
+                  Start import from (optional):
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  name="from_date"
+                  title="Date and time to start import at"
+                />
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="end-datetime">
+                  End date for import (optional):
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  name="to_date"
+                  title="Date and time to end import at"
+                />
+              </div>
+
+              <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
+                <button type="submit" className="btn btn-success">
+                  Import Listens
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </>
   );
 }
