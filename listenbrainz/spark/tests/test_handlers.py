@@ -329,7 +329,7 @@ class HandlersTestCase(DatabaseTestCase):
             data=StatRecordList[EraActivityRecord](
                 __root__=[
                     EraActivityRecord(
-                        day=1999,
+                        year=1999,
                         listen_count=3,
                     )
                 ]
@@ -346,11 +346,11 @@ class HandlersTestCase(DatabaseTestCase):
             data=StatRecordList[EraActivityRecord](
                 __root__=[
                     EraActivityRecord(
-                        day=2000,
+                        year=2000,
                         listen_count=3,
                     ),
                     EraActivityRecord(
-                        day=2001,
+                        year=2001,
                         listen_count=5,
                     ),
                 ]
