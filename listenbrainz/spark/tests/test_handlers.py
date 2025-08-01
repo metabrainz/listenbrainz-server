@@ -20,7 +20,7 @@ from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity,
-    handle_user_listening_activity,
+    handle_user_listening_activity, handle_user_era_activity,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -317,8 +317,8 @@ class HandlersTestCase(DatabaseTestCase):
             ],
             'database': 'era_activity_all_time_20220718'
         }
-        CouchDbDataset.handle_start({"database": "daily_activity_all_time_20220718"})
-        handle_user_daily_activity(data)
+        CouchDbDataset.handle_start({"database": "era_activity_all_time_20220718"})
+        handle_user_era_activity(data)
 
         received = db_stats.get(self.user1['id'], 'era_activity', 'all_time', EraActivityRecord)
         self.assertEqual(received, StatApi[EraActivityRecord](
@@ -326,7 +326,7 @@ class HandlersTestCase(DatabaseTestCase):
             to_ts=10,
             from_ts=1,
             stats_range='all_time',
-            data=StatRecordList[DailyActivityRecord](
+            data=StatRecordList[EraActivityRecord](
                 __root__=[
                     EraActivityRecord(
                         day=1999,
