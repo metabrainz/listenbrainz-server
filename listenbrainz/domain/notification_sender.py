@@ -7,8 +7,7 @@ import requests
 
 
 TOKEN_CACHE_KEY = "notification_access_token"
-# METABRAINZ_SEND_NOTIFICATIONS_URL = "https://metabrainz.org/notification/send"
-METABRAINZ_SEND_NOTIFICATIONS_URL = "http://metabrainz-web-1:8000/notification/send"
+METABRAINZ_NOTIFICATIONS_SEND_URL = "https://metabrainz.org/notification/send"
 
 
 def send_notification(
@@ -70,7 +69,7 @@ def send_multiple_notifications(notifications: list[dict]):
     """
 
     token = _fetch_token()
-    tokenized_url = METABRAINZ_SEND_NOTIFICATIONS_URL + f"?token={token}"
+    tokenized_url = METABRAINZ_NOTIFICATIONS_SEND_URL + f"?token={token}"
 
     response = requests.post(url=tokenized_url, json=notifications)
     response.raise_for_status()
