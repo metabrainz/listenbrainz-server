@@ -602,7 +602,7 @@ export default class APIService {
     return response.json();
   };
 
-  getUserListensEraActivity = async (
+  getUserEraActivity = async (
     userName?: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserListensEraActivityResponse> => {

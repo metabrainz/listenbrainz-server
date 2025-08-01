@@ -17,7 +17,7 @@ import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
 import UserArtistActivity from "./components/UserArtistActivity";
-import UserListensEraActivity from "./components/UserListensEraActivity";
+import UserEraActivity from "./components/UserEraActivity";
 import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
@@ -173,7 +173,7 @@ export default function UserReports() {
       </section>
       <section id="era-activity">
         {statsExplanationModalButton}
-        <UserListensEraActivity range={range} user={user} />
+        <UserEraActivity range={range} user={user} />
       </section>
       <section id="artist-origin">
         {statsExplanationModalButton}

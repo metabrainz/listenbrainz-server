@@ -16,7 +16,7 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 const MIN_BAR_WIDTH_PX = 60;
 const BAR_PADDING_RATIO = 0.3;
 
-export type UserListensEraActivityProps = {
+export type UserEraActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
@@ -100,20 +100,17 @@ const getExpandedDecadeData = (
   return result;
 };
 
-export default function UserListensEraActivity({
-  user,
-  range,
-}: UserListensEraActivityProps) {
+export default function UserEraActivity({ user, range }: UserEraActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [selectedDecade, setSelectedDecade] = useState<number | null>(null);
 
   const { data: loaderData, isLoading } = useQuery({
-    queryKey: ["userListensEraActivity", user?.name, range],
+    queryKey: ["userEraActivity", user?.name, range],
     queryFn: async () => {
       try {
-        const queryData = await APIService.getUserListensEraActivity(
+        const queryData = await APIService.getUserEraActivity(
           user?.name,
           range
         );
