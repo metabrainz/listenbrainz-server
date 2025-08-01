@@ -1,26 +1,29 @@
 import * as React from "react";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { screen, waitFor } from "@testing-library/react";
 import { SetupServerApi, setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import UserDailyActivity, {
-  UserDailyActivityProps,
-} from "../../../src/user/stats/components/UserDailyActivity";
-import * as userDailyActivityResponse from "../../__mocks__/userDailyActivity.json";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import UserEraActivity, {
+  UserEraActivityProps,
+} from "../../../src/user/stats/components/UserEraActivity";
+import * as userEraActivityResponse from "../../__mocks__/userEraActivity.json";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
-const props: UserDailyActivityProps = {
+const userProps: UserEraActivityProps = {
   user: {
     name: "foobar",
   },
-  range: "week",
+  range: "all_time",
 };
 
-jest.mock("@nivo/core", () => ({
-  ...jest.requireActual("@nivo/core"),
-  ResponsiveWrapper: ({ children }: any) =>
-    children({ width: 400, height: 400 }),
+const sitewideProps: UserEraActivityProps = {
+  range: "all_time",
+};
+
+jest.mock("@nivo/bar", () => ({
+  ...jest.requireActual("@nivo/bar"),
+  ResponsiveBar: ({ children }: any) => children({ width: 400, height: 400 }),
 }));
 
 const queryClient = new QueryClient({
@@ -30,22 +33,45 @@ const queryClient = new QueryClient({
     },
   },
 });
-const queryKey = ["userDailyActivity", props.user.name, "week"];
 
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-// Set timeZone to UTC+5:30 because the testdata is in that format
-// eslint-disable-next-line no-extend-native
-Date.prototype.getTimezoneOffset = () => -330;
-
-describe("UserDailyActivity", () => {
+describe.each([
+  ["User Stats", userProps],
+  ["Sitewide Stats", sitewideProps],
+])("%s", (name, props) => {
   let server: SetupServerApi;
-  beforeAll(async () => {
+  beforeAll(() => {
     const handlers = [
-      http.get("/1/stats/user/foobar/daily-activity", async (path) => {
-        return HttpResponse.json(userDailyActivityResponse);
+      http.get("/1/stats/user/foobar/era-activity", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userEraActivityResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
+      }),
+      http.get("/1/stats/sitewide/era-activity", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userEraActivityResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
       }),
     ];
     server = setupServer(...handlers);
@@ -55,61 +81,41 @@ describe("UserDailyActivity", () => {
     queryClient.cancelQueries();
     queryClient.clear();
   });
+  afterAll(() => {
+    server.close();
+  });
+
   it("renders correctly", async () => {
     renderWithProviders(
-      <UserDailyActivity {...props} />,
+      <UserEraActivity {...props} />,
       {},
       {
         wrapper: reactQueryWrapper,
       }
     );
 
-    expect(screen.getByTestId("user-daily-activity")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("user-era-activity")).toBeInTheDocument();
+    });
   });
 
   it("displays error message when API call fails", async () => {
-    const errorMessage = "API Error";
-
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: {},
-          hasError: true,
-          errorMessage,
-        };
-      },
-    });
-
     renderWithProviders(
-      <UserDailyActivity {...props} />,
+      <UserEraActivity {...{ ...props, range: "month" }} />,
       {},
       {
         wrapper: reactQueryWrapper,
       }
     );
-    await waitFor(() => {
-      expect(screen.getByTestId("user-daily-activity")).toBeInTheDocument();
-    });
 
-    expect(screen.getByText(errorMessage)).toBeInTheDocument();
-    expect(screen.queryByTestId("heatmap")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Failed to fetch data")).toBeInTheDocument();
+    });
   });
 
-  it("renders heatmap with processed data", async () => {
-    queryClient.ensureQueryData({
-      queryKey,
-      queryFn: () => {
-        return {
-          data: userDailyActivityResponse,
-          hasError: false,
-          errorMessage: "",
-        };
-      },
-    });
-
+  it("displays Era Activity title", async () => {
     renderWithProviders(
-      <UserDailyActivity {...props} />,
+      <UserEraActivity {...props} />,
       {},
       {
         wrapper: reactQueryWrapper,
@@ -117,11 +123,7 @@ describe("UserDailyActivity", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("heatmap")).toBeInTheDocument();
+      expect(screen.getByText("Era Activity")).toBeInTheDocument();
     });
-
-    const heatmap = screen.getByTestId("heatmap");
-    // eslint-disable-next-line testing-library/no-node-access
-    expect(heatmap.querySelectorAll("g")).toHaveLength(227);
   });
 });

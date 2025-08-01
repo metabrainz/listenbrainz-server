@@ -209,7 +209,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
   );
 
   return (
-    <Card className="user-stats-card" data-testid="yearly-listening-activity">
+    <Card className="user-stats-card" data-testid="user-era-activity">
       <div className="row">
         <div className="col-xs-10">
           <h3 className="capitalize-bold">
