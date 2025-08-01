@@ -26,8 +26,8 @@ export default function ImportListens() {
     const formData = new FormData(form);
     const file = formData.get("file") as File;
     const service = formData.get("service") as string;
-    const from_date = formData.get("ImportStartDate") as string | null;
-    const to_date = formData.get("ImportEndDate") as string | null;
+    const from_date = formData.get("from_date") as string | null;
+    const to_date = formData.get("to_date") as string | null;
 
     if (!currentUser?.auth_token) {
       console.error("No auth token available");
@@ -48,7 +48,7 @@ export default function ImportListens() {
   return (
     <>
       <Helmet>
-        <title>Import listening history</title>
+        <title>Import listens for {currentUser?.name}</title>
       </Helmet>
       <h2 className="page-title">Import your listening history</h2>
       {!userHasEmail && (
