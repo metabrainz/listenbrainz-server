@@ -440,3 +440,4 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.atom import atom_bp
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
+
