@@ -77,7 +77,7 @@ def send_multiple_notifications(notifications: list[dict]):
 
 
 def _fetch_token() -> str:
-    """Helper function to fetch token from redis cache, If no token is found or it's expired, a new token is requested."""
+    """Helper function to fetch OAuth2 token from redis cache, If no token is found or it's expired, a new token is requested."""
 
     token = cache.get(TOKEN_CACHE_KEY)
     if token is not None:
