@@ -7,6 +7,7 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_era_activity import EraActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
@@ -278,6 +279,79 @@ class HandlersTestCase(DatabaseTestCase):
                         day='Friday',
                         hour=11,
                         listen_count=22,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+    def test_handle_user_era_activity(self):
+        data = {
+            'type': 'era_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'data': [
+                {
+                    'user_id': self.user1['id'],
+                    'data': [
+                        {
+                            'year': 1999,
+                            'listen_count': 3
+                        }
+                    ]
+                },
+                {
+                    'user_id': self.user2['id'],
+                    'data': [
+                        {
+                            'year': 2000,
+                            'listen_count': 3
+                        },
+                        {
+                            'year': 2001,
+                            'listen_count': 5
+                        }
+                    ]
+                }
+            ],
+            'database': 'era_activity_all_time_20220718'
+        }
+        CouchDbDataset.handle_start({"database": "daily_activity_all_time_20220718"})
+        handle_user_daily_activity(data)
+
+        received = db_stats.get(self.user1['id'], 'era_activity', 'all_time', EraActivityRecord)
+        self.assertEqual(received, StatApi[EraActivityRecord](
+            user_id=self.user1['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[DailyActivityRecord](
+                __root__=[
+                    EraActivityRecord(
+                        day=1999,
+                        listen_count=3,
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+        received = db_stats.get(self.user2['id'], 'era_activity', 'all_time', EraActivityRecord)
+        self.assertEqual(received, StatApi[EraActivityRecord](
+            user_id=self.user2['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[EraActivityRecord](
+                __root__=[
+                    EraActivityRecord(
+                        day=2000,
+                        listen_count=3,
+                    ),
+                    EraActivityRecord(
+                        day=2001,
+                        listen_count=5,
                     ),
                 ]
             ),

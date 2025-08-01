@@ -12,7 +12,7 @@ from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
-from data.model.user_era_activity import UserEraActivityRecord
+from data.model.user_era_activity import EraActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -533,7 +533,7 @@ def get_listens_era_activity(user_name: str):
     user, stats_range = _validate_stats_user_params(user_name)
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
-    stats = db_stats.get(user["id"], "era_activity", stats_range, UserEraActivityRecord)
+    stats = db_stats.get(user["id"], "era_activity", stats_range, EraActivityRecord)
     if stats is None:
         raise APINoContent('')
 

@@ -7,11 +7,11 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
-from data.model.user_era_activity import UserEraActivityRecord
+from data.model.user_era_activity import EraActivityRecord
 
 # Order of the records in union is important and should be from more specific to less specific
 # For more info read https://pydantic-docs.helpmanual.io/usage/types/#unions
-EntityRecord = Union[RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, UserEraActivityRecord]
+EntityRecord = Union[RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, EraActivityRecord]
 
 
 class UserEntityRecords(UserStatRecords[EntityRecord]):

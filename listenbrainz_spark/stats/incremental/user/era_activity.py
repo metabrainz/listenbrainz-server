@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 import listenbrainz_spark
 from data.model.common_stat_spark import UserStatRecords
-from data.model.user_era_activity import UserEraActivityRecord
+from data.model.user_era_activity import EraActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 from listenbrainz_spark.utils import read_files_from_HDFS
@@ -82,7 +82,7 @@ class EraActivityUserMessageCreator(UserStatsMessageCreator):
 
     def parse_row(self, entry: dict):
         try:
-            UserStatRecords[UserEraActivityRecord](
+            UserStatRecords[EraActivityRecord](
                 user_id=entry["user_id"],
                 data=entry["era_activity"]
             )
