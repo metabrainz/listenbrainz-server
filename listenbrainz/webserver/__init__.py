@@ -440,3 +440,5 @@ def _register_blueprints(app):
 
     from listenbrainz.webserver.views.internet_archive_api import internet_archive_api_bp
     app.register_blueprint(internet_archive_api_bp, url_prefix=API_PREFIX+"/internet_archive")
+
+
