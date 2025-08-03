@@ -3,13 +3,140 @@ import * as React from "react";
 import { Link, useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 import ReactTooltip from "react-tooltip";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPersonDigging } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRightLong,
+  faCancel,
+  faChevronCircleRight,
+  faRefresh,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import { format } from "date-fns";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import * as React from "react";
+import { ToastMsg } from "../../notifications/Notifications";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
 };
+
+enum ImportStatus {
+  inProgress = "in_progress",
+  waiting = "waiting",
+  complete = "completed",
+  failed = "failed",
+  cancelled = "cancelled",
+}
+type Import = {
+  import_id: number;
+  created: string;
+  progress: string;
+  filename: string | null;
+  status: ImportStatus;
+};
+
+
+function renderImport(
+  ex: Import,
+  cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
+  fetchImport: (importId: number) => Promise<any>
+) {
+  const extraInfo = (
+    <p>
+      <details>
+        <summary>
+          <FontAwesomeIcon
+            icon={faChevronCircleRight}
+            size="sm"
+            className="summary-indicator"
+          />
+          Details
+        </summary>
+        <dl className="row">
+          <dt className="col-4">Progress</dt>
+          <dd className="col-8">{ex.progress}</dd>
+          <dt className="col-4">Requested on</dt>
+          <dd className="col-8">{format(ex.created, "PPp")}</dd>
+          <dt className="col-4">Import #</dt>
+          <dd className="col-8">{ex.import_id}</dd>
+        </dl>
+      </details>
+    </p>
+  );
+  if (ex.status === ImportStatus.complete) {
+    return (
+      <div className="mt-4 alert alert-success" role="alert">
+        <h4 className="alert-heading">Import completed!</h4>
+        
+        <p>
+          <b>
+            Note: the uploaded file(s) will be deleted automatically after the import
+          </b>
+        </p>
+        <form
+          onSubmit={(e) => cancelImport(e, ex.import_id)}
+          className="mt-3 mb-3"
+        >
+          <button type="submit" name="cancel_import" className="btn btn-danger">
+            <FontAwesomeIcon icon={faTrash} />
+            &nbsp;Cancel import
+          </button>
+        </form>
+        {extraInfo}
+      </div>
+    );
+  }
+  if (ex.status === ImportStatus.failed) {
+    return (
+      <div className="mt-4 alert alert-danger" role="alert">
+        <h4 className="alert-heading">Import failed</h4>
+        <p>
+          There was an error importing your data.
+          <br />
+          Please try again and contact us if the issue persists.
+        </p>
+        {extraInfo}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 alert alert-info" role="alert">
+      <h4 className="alert-heading">
+        Import in progress
+        <br />
+      </h4>
+      <p className="text-primary">
+        <FontAwesomeIcon icon={faArrowRightLong} />
+        &nbsp;{ex.progress}
+        <button
+          type="button"
+          className="btn btn-sm btn-transparent"
+          onClick={() => {
+            fetchimport(ex.import_id);
+          }}
+        >
+          <FontAwesomeIcon icon={faRefresh} />
+        </button>
+      </p>
+      <p>
+        Feel free to close this page while we import your listens.
+      </p>
+      <form
+        onSubmit={(e) => cancelImport(e, ex.import_id)}
+        className="mt-3 mb-3"
+      >
+        <button type="submit" name="cancel_import" className="btn btn-warning">
+          <FontAwesomeIcon icon={faCancel} />
+          &nbsp;Cancel import
+        </button>
+      </form>
+      {extraInfo}
+    </div>
+  );
+}
+
 
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
@@ -44,6 +171,156 @@ export default function ImportListens() {
       console.error("Import req failed:", err);
     }
   };
+
+  const [loading, setLoading] = React.useState(false);
+  const [imports, setImports] = React.useState<Array<Import>>([]);
+
+  React.useEffect(() => {
+    // Fetch the list of imports in progress in background tasks or finished
+    async function getImportsInProgress() {
+      try {
+        const response = await fetch("/import-listens/list/", {
+          method: "GET",
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of imports
+        const results = await response.json();
+        setImports(results);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error retrieving your imports in progress"
+            message={`Please try again and contact us if the issue persists.
+            Details: ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+    setLoading(true);
+    getImportsInProgress();
+  }, []);
+
+  const fetchImport = React.useCallback(
+    async function fetchImport(id: number) {
+      setLoading(true);
+      try {
+        const response = await fetch(`/import-listens/${id}/`, {
+          method: "GET",
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of imports
+        const nexImport = await response.json();
+        setImports((prevImports) => {
+          // Replace item in imports array, or if not found there
+          // place the newly created one at the beginning
+          const existingImportIndex = prevImports.findIndex(
+            (ex) => ex.import_id === nexImport.import_id
+          );
+          if (existingImportIndex !== -1) {
+            const newArray = [...prevImports];
+            newArray.splice(existingImportIndex, 1, nexImport);
+            return newArray;
+          }
+          return [nexImport, ...prevImports];
+        });
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error getting your imports in progress."
+            message={`Please try again and contact us if the issue persists.
+        ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading]
+  );
+
+  const hasAnImportInProgress =
+    imports.findIndex(
+      (imp) =>
+        imp.status !== ImportStatus.complete
+    ) !== -1;
+
+  const createImport = React.useCallback(
+    async (event: React.SyntheticEvent) => {
+      event.preventDefault();
+      try {
+        const response = await fetch("/import-listens/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+
+        const newImport: Import = await response.json();
+        setImports((prevImports) => [newImport, ...prevImports]);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error creating an import of your data"
+            message={`Please try again and contact us if the issue persists.
+          ${error}`}
+          />
+        );
+      }
+    },
+    []
+  );
+
+  const cancelImport = React.useCallback(
+    async (event: React.SyntheticEvent, importToCancelId: number) => {
+      event.preventDefault();
+      try {
+        const response = await fetch(`/import-listens/cancel/${importToCancelId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        setImports((prevImports) =>
+          prevImports.filter(
+            (_import) => _import.import_id !== importToCancelId
+          )
+        );
+        toast.info(
+          <ToastMsg
+            title="Your data import has been cancelled"
+            message="You can request a new import at any time. If you are experiencing an issue please let us know."
+          />
+        );
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error cancelling your import"
+            message={`Please try again and contact us if the issue persists.
+           Details: ${error}`}
+          />
+        );
+      }
+    },
+    []
+  );
 
   return (
     <>
