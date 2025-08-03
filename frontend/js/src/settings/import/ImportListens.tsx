@@ -10,12 +10,11 @@ import {
   faCancel,
   faChevronCircleRight,
   faRefresh,
-  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { format } from "date-fns";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import * as React from "react";
 import { ToastMsg } from "../../notifications/Notifications";
+import Loader from "../../components/Loader";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
@@ -28,14 +27,20 @@ enum ImportStatus {
   failed = "failed",
   cancelled = "cancelled",
 }
+enum Services {
+  spotify = "spotify",
+  listenbrainz = "listenbrainz",
+  applemusic = "applemusic",
+}
 type Import = {
   import_id: number;
   created: string;
-  progress: string;
-  filename: string | null;
-  status: ImportStatus;
+  file_path: string;
+  metadata: { filename: string; progress: string; status: ImportStatus };
+  service: Services;
 };
 
+const API_PREFIX = "/1";
 
 function renderImport(
   im: Import,
@@ -55,7 +60,7 @@ function renderImport(
         </summary>
         <dl className="row">
           <dt className="col-4">Progress</dt>
-          <dd className="col-8">{im.progress}</dd>
+          <dd className="col-8">{im.metadata.progress}</dd>
           <dt className="col-4">Requested on</dt>
           <dd className="col-8">{format(im.created, "PPp")}</dd>
           <dt className="col-4">Import #</dt>
@@ -64,30 +69,22 @@ function renderImport(
       </details>
     </p>
   );
-  if (im.status === ImportStatus.complete) {
+  if (im.metadata.status === ImportStatus.complete) {
     return (
       <div className="mt-4 alert alert-success" role="alert">
         <h4 className="alert-heading">Import completed!</h4>
-        
+
         <p>
           <b>
-            Note: the uploaded file(s) will be deleted automatically after the import
+            Note: the uploaded file(s) will be deleted automatically after the
+            import
           </b>
         </p>
-        <form
-          onSubmit={(e) => cancelImport(e, im.import_id)}
-          className="mt-3 mb-3"
-        >
-          <button type="submit" name="cancel_import" className="btn btn-danger">
-            <FontAwesomeIcon icon={faTrash} />
-            &nbsp;Cancel import
-          </button>
-        </form>
         {extraInfo}
       </div>
     );
   }
-  if (im.status === ImportStatus.failed) {
+  if (im.metadata.status === ImportStatus.failed) {
     return (
       <div className="mt-4 alert alert-danger" role="alert">
         <h4 className="alert-heading">Import failed</h4>
@@ -109,7 +106,7 @@ function renderImport(
       </h4>
       <p className="text-primary">
         <FontAwesomeIcon icon={faArrowRightLong} />
-        &nbsp;{im.progress}
+        &nbsp;{im.metadata.progress}
         <button
           type="button"
           className="btn btn-sm btn-transparent"
@@ -120,9 +117,7 @@ function renderImport(
           <FontAwesomeIcon icon={faRefresh} />
         </button>
       </p>
-      <p>
-        Feel free to close this page while we import your listens.
-      </p>
+      <p>Feel free to close this page while we import your listens.</p>
       <form
         onSubmit={(e) => cancelImport(e, im.import_id)}
         className="mt-3 mb-3"
@@ -137,50 +132,29 @@ function renderImport(
   );
 }
 
-
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
   const { user_has_email: userHasEmail } = data;
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
-  const handleListensSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    if (event) event.preventDefault();
-
-    const form = event.target as HTMLFormElement;
-    const formData = new FormData(form);
-    const file = formData.get("file") as File;
-    const service = formData.get("service") as string;
-    const from_date = formData.get("from_date") as string | null;
-    const to_date = formData.get("to_date") as string | null;
-
-    if (!currentUser?.auth_token) {
-      console.error("No auth token available");
-      return;
-    }
-    try {
-      const status = await APIService.importListens(
-        currentUser?.auth_token,
-        formData
-      );
-
-      console.log("Import req sent. Status:", status);
-    } catch (err) {
-      console.error("Import req failed:", err);
-    }
-  };
-
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
+
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+
+  if (currentUser?.auth_token) {
+    headers.append("Authorization", `Token ${currentUser.auth_token}`);
+  }
 
   React.useEffect(() => {
     // Fetch the list of imports in progress in background tasks or finished
     async function getImportsInProgress() {
       try {
-        const response = await fetch("/import-listens/list/", {
+        const response = await fetch(`${API_PREFIX}/import-listens/list/`, {
           method: "GET",
+          headers,
         });
         if (!response.ok) {
           const errorText = await response.text();
@@ -209,8 +183,9 @@ export default function ImportListens() {
     async function fetchImport(id: number) {
       setLoading(true);
       try {
-        const response = await fetch(`/import-listens/${id}/`, {
+        const response = await fetch(`${API_PREFIX}/import-listens/${id}/`, {
           method: "GET",
+          headers,
         });
         if (!response.ok) {
           const errorText = await response.text();
@@ -248,19 +223,35 @@ export default function ImportListens() {
 
   const hasAnImportInProgress =
     imports.findIndex(
-      (imp) =>
-        imp.status !== ImportStatus.complete
+      (imp) => imp.metadata.status !== ImportStatus.complete
     ) !== -1;
 
   const createImport = React.useCallback(
-    async (event: React.SyntheticEvent) => {
-      event.preventDefault();
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      if (event) event.preventDefault();
       try {
-        const response = await fetch("/import-listens/", {
+        const form = event.target as HTMLFormElement;
+        const formData = new FormData(form);
+        const file = formData.get("file") as File;
+        const service = formData.get("service") as string;
+        const from_date = formData.get("from_date") as string | null;
+        const to_date = formData.get("to_date") as string | null;
+
+        if (!currentUser?.auth_token) {
+          toast.error(
+            <ToastMsg
+              title="There was an error in authorization"
+              message="No auth token was provided!"
+            />
+          );
+          return;
+        }
+        const response = await fetch(`${API_PREFIX}/import-listens/`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            Authorization: `Token ${currentUser?.auth_token}`,
           },
+          body: formData,
         });
 
         if (!response.ok) {
@@ -287,12 +278,13 @@ export default function ImportListens() {
     async (event: React.SyntheticEvent, importToCancelId: number) => {
       event.preventDefault();
       try {
-        const response = await fetch(`/import-listens/cancel/${importToCancelId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `${API_PREFIX}/import-listens/cancel/${importToCancelId}`,
+          {
+            method: "POST",
+            headers,
+          }
+        );
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -388,7 +380,7 @@ export default function ImportListens() {
       </p>
       <div className="card">
         <div className="card-body">
-          <form onSubmit={handleListensSubmit}>
+          <form onSubmit={createImport}>
             <div className="flex flex-wrap" style={{ gap: "1em" }}>
               <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="datetime">
@@ -441,7 +433,11 @@ export default function ImportListens() {
               </div>
 
               <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
-                <button type="submit" className="btn btn-success">
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                  disabled={hasAnImportInProgress}
+                >
                   Import Listens
                 </button>
               </div>
@@ -449,6 +445,12 @@ export default function ImportListens() {
           </form>
         </div>
       </div>
+
+      <section id="import-buttons">
+        <Loader isLoading={loading} style={{ margin: "0 1em" }} />
+        {imports &&
+          imports.map((ex) => renderImport(ex, cancelImport, fetchImport))}
+      </section>
     </>
   );
 }
