@@ -38,7 +38,7 @@ type Import = {
 
 
 function renderImport(
-  ex: Import,
+  im: Import,
   cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
   fetchImport: (importId: number) => Promise<any>
 ) {
@@ -55,16 +55,16 @@ function renderImport(
         </summary>
         <dl className="row">
           <dt className="col-4">Progress</dt>
-          <dd className="col-8">{ex.progress}</dd>
+          <dd className="col-8">{im.progress}</dd>
           <dt className="col-4">Requested on</dt>
-          <dd className="col-8">{format(ex.created, "PPp")}</dd>
+          <dd className="col-8">{format(im.created, "PPp")}</dd>
           <dt className="col-4">Import #</dt>
-          <dd className="col-8">{ex.import_id}</dd>
+          <dd className="col-8">{im.import_id}</dd>
         </dl>
       </details>
     </p>
   );
-  if (ex.status === ImportStatus.complete) {
+  if (im.status === ImportStatus.complete) {
     return (
       <div className="mt-4 alert alert-success" role="alert">
         <h4 className="alert-heading">Import completed!</h4>
@@ -75,7 +75,7 @@ function renderImport(
           </b>
         </p>
         <form
-          onSubmit={(e) => cancelImport(e, ex.import_id)}
+          onSubmit={(e) => cancelImport(e, im.import_id)}
           className="mt-3 mb-3"
         >
           <button type="submit" name="cancel_import" className="btn btn-danger">
@@ -87,7 +87,7 @@ function renderImport(
       </div>
     );
   }
-  if (ex.status === ImportStatus.failed) {
+  if (im.status === ImportStatus.failed) {
     return (
       <div className="mt-4 alert alert-danger" role="alert">
         <h4 className="alert-heading">Import failed</h4>
@@ -109,12 +109,12 @@ function renderImport(
       </h4>
       <p className="text-primary">
         <FontAwesomeIcon icon={faArrowRightLong} />
-        &nbsp;{ex.progress}
+        &nbsp;{im.progress}
         <button
           type="button"
           className="btn btn-sm btn-transparent"
           onClick={() => {
-            fetchimport(ex.import_id);
+            fetchImport(im.import_id);
           }}
         >
           <FontAwesomeIcon icon={faRefresh} />
@@ -124,7 +124,7 @@ function renderImport(
         Feel free to close this page while we import your listens.
       </p>
       <form
-        onSubmit={(e) => cancelImport(e, ex.import_id)}
+        onSubmit={(e) => cancelImport(e, im.import_id)}
         className="mt-3 mb-3"
       >
         <button type="submit" name="cancel_import" className="btn btn-warning">
@@ -222,7 +222,7 @@ export default function ImportListens() {
           // Replace item in imports array, or if not found there
           // place the newly created one at the beginning
           const existingImportIndex = prevImports.findIndex(
-            (ex) => ex.import_id === nexImport.import_id
+            (im) => im.import_id === nexImport.import_id
           );
           if (existingImportIndex !== -1) {
             const newArray = [...prevImports];
