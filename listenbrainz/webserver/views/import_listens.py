@@ -155,22 +155,24 @@ def create_import_task():
     
 
 @import_api_bp.get("/<import_id>/")
-@api_login_required
 @web_listenstore_needed
 @crossdomain
 @ratelimit()
 def get_import_task(import_id):
     """ Retrieve the requested import's data if it belongs to the specified user """
+
+    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
+
     result = db_conn.execute(
         text("SELECT * FROM user_data_import WHERE user_id = :user_id AND id = :import_id"),
-        {"user_id": current_user.id, "import_id": import_id}
+        {"user_id": user["id"], "import_id": import_id}
     )
     row = result.first()
     if row is None:
         raise APINotFound("Import not found")
     return jsonify({
         "import_id": row.id,
-        "service": row.type,
+        "service": row.service,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
     })
@@ -192,7 +194,7 @@ def list_import_tasks():
     rows = result.mappings().all()
     return jsonify([{
         "import_id": row.id,
-        "service": row.type,
+        "service": row.service,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
         "file_path": row.file_path,
@@ -201,6 +203,8 @@ def list_import_tasks():
 
 @import_api_bp.post("/cancel/<import_id>/")
 @web_listenstore_needed
+@crossdomain
+@ratelimit()
 def delete_export_archive(import_id):
     """ Cancel the specified import in progress """
 
