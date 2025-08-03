@@ -147,7 +147,7 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
     # Check for zip bomb attack
     with zipfile.ZipFile(file_path, 'r') as zip_file:
         if len(zip_file.namelist()) > 100:
-            update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
+            update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
             current_app.logger.error("Potential zip bomb attack")
             return
         
@@ -160,7 +160,7 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
             info = zip_file.getinfo(file)
             
             if info.file_size > 524288000: # 500MB limit
-                update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
+                update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
                 current_app.logger.error("Potential zip bomb attack")
                 return
 
@@ -208,7 +208,7 @@ def submit_listens(db_conn, listens, user_id, import_id):
             retries -= 1
             current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
             if retries == 0:
-                update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
+                update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
                 raise ExternalServiceError('ISE while trying to import listens: %s', str(e))
 
 
@@ -218,7 +218,7 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
     for batch in process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
         parsed_listens = []
         if batch is None:
-            update_import_progress_and_status(db_conn, import_id, "cancelled", "Import was cancelled due to an error")
+            update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
             current_app.logger.error("Error in processing the uploaded spotify listening history files!")
             return
         
@@ -247,12 +247,12 @@ def update_import_progress_and_status(db_conn, import_id, status, progress):
     db_conn.commit()
 
 
-def check_if_cancelled(db_conn, import_id):
-    """ Check if an import task was cancelled """
+def check_if_cancelled_or_failed(db_conn, import_id):
+    """ Check if an import task was cancelled or failed """
     result = db_conn.execute(text("""
         SELECT metadata->>'status' FROM user_data_import WHERE id = :import_id
     """), {"import_id": import_id}).fetchone()
-    if result is not None and result[0] == 'cancelled':
+    if result is not None and (result[0] == 'cancelled' or result[0] == 'failed'):
         return True
     return False
     
@@ -297,15 +297,17 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     update_import_progress_and_status(db_conn, import_id, "in_progress", "Importing user listens")
 
     if service == "spotify":
-        import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id)
-        if not check_if_cancelled(db_conn, import_id):
+        if not check_if_cancelled_or_failed(db_conn, import_id):
+            import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id)
+        if not check_if_cancelled_or_failed(db_conn, import_id):
             update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
+        
 
 
 def cleanup_old_imports(db_conn):
-    """ Delete user data imports that have been completed or cancelled """
+    """ Delete user data imports that have been completed, cancelled or failed """
     with db_conn.begin():
-        result = db_conn.execute(text("SELECT * FROM user_data_import WHERE metadata->>'status' IN ('completed', 'cancelled')"))
+        result = db_conn.execute(text("SELECT * FROM user_data_import WHERE metadata->>'status' IN ('completed', 'cancelled', 'failed')"))
         files_to_delete = [row.file_path for row in result]
 
         # Delete old listening history files that are no longer required
