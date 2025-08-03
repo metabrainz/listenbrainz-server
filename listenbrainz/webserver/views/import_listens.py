@@ -5,7 +5,9 @@ from flask import Blueprint, current_app, jsonify, send_file, request
 from psycopg2 import DatabaseError
 from sqlalchemy import text
 from datetime import datetime, date
+from pathlib import Path
 
+from flask_login import current_user
 from werkzeug.utils import secure_filename
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
@@ -153,6 +155,7 @@ def create_import_task():
     
 
 @import_api_bp.get("/<import_id>/")
+@api_login_required
 @web_listenstore_needed
 @crossdomain
 @ratelimit()
@@ -170,7 +173,6 @@ def get_import_task(import_id):
         "service": row.type,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
-        "file_path": row.file_path,
     })
 
 
@@ -195,3 +197,29 @@ def list_import_tasks():
         "metadata": row.metadata,
         "file_path": row.file_path,
     } for row in rows])
+
+
+@import_api_bp.post("/delete/<import_id>/")
+@web_listenstore_needed
+def delete_export_archive(import_id):
+    """ Delete the specified export archive """
+
+    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
+
+    result = db_conn.execute(
+        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id RETURNING file_path"),
+        {"user_id": user["id"], "import_id": import_id}
+    )
+    row = result.first()
+    if row is not None:
+        db_conn.execute(
+            text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->'import_id')::int = :import_id"),
+            {"user_id": user["id"], "import_id": import_id}
+        )
+        db_conn.commit()
+        file_path = Path(row.file_path)
+        current_app.logger.info("Removing file: %s", file_path)
+        file_path.unlink(missing_ok=True)
+        return jsonify({"success": True})
+    else:
+        raise APINotFound("Import not found")
