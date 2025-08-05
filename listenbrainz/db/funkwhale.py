@@ -1,10 +1,9 @@
 import sqlalchemy
-from listenbrainz.webserver import db_conn
 from typing import Optional, Dict, Any
 
-def get_or_create_server(host_url: str, client_id: str, client_secret: str, scopes: str) -> int:
+def get_or_create_server(db_conn, host_url: str, client_id: str, client_secret: str, scopes: str) -> int:
     # First, try to get existing server
-    existing_server = get_server_by_host_url(host_url)
+    existing_server = get_server_by_host_url(db_conn, host_url)
     if existing_server:
         return existing_server['id']
 
@@ -24,21 +23,21 @@ def get_or_create_server(host_url: str, client_id: str, client_secret: str, scop
     db_conn.commit()
     return result.fetchone().id
 
-def get_server_by_host_url(host_url: str) -> Optional[Dict[str, Any]]:
+def get_server_by_host_url(db_conn, host_url: str) -> Optional[Dict[str, Any]]:
     result = db_conn.execute(sqlalchemy.text("""
         SELECT * FROM funkwhale_servers WHERE host_url = :host_url
     """), {'host_url': host_url})
     row = result.mappings().first()
     return dict(row) if row else None
 
-def get_token(user_id: int, funkwhale_server_id: int) -> Optional[Dict[str, Any]]:
+def get_token(db_conn, user_id: int, funkwhale_server_id: int) -> Optional[Dict[str, Any]]:
     result = db_conn.execute(sqlalchemy.text("""
         SELECT * FROM funkwhale_tokens WHERE user_id = :user_id AND funkwhale_server_id = :funkwhale_server_id
     """), {'user_id': user_id, 'funkwhale_server_id': funkwhale_server_id})
     row = result.mappings().first()
     return dict(row) if row else None
 
-def save_token(user_id: int, funkwhale_server_id: int, access_token: str, refresh_token: str, token_expiry) -> int:
+def save_token(db_conn, user_id: int, funkwhale_server_id: int, access_token: str, refresh_token: str, token_expiry) -> int:
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO funkwhale_tokens (user_id, funkwhale_server_id, access_token, refresh_token, token_expiry)
         VALUES (:user_id, :funkwhale_server_id, :access_token, :refresh_token, :token_expiry)
@@ -57,7 +56,7 @@ def save_token(user_id: int, funkwhale_server_id: int, access_token: str, refres
     db_conn.commit()
     return result.fetchone().id
 
-def update_token(user_id: int, funkwhale_server_id: int, access_token: str, refresh_token: str, token_expiry) -> None:
+def update_token(db_conn, user_id: int, funkwhale_server_id: int, access_token: str, refresh_token: str, token_expiry) -> None:
     db_conn.execute(sqlalchemy.text("""
         UPDATE funkwhale_tokens SET
             access_token = :access_token,
@@ -73,13 +72,13 @@ def update_token(user_id: int, funkwhale_server_id: int, access_token: str, refr
     })
     db_conn.commit()
 
-def delete_token(user_id: int, funkwhale_server_id: int) -> None:
+def delete_token(db_conn, user_id: int, funkwhale_server_id: int) -> None:
     db_conn.execute(sqlalchemy.text("""
         DELETE FROM funkwhale_tokens WHERE user_id = :user_id AND funkwhale_server_id = :funkwhale_server_id
     """), {'user_id': user_id, 'funkwhale_server_id': funkwhale_server_id})
     db_conn.commit()
 
-def get_all_user_tokens(user_id: int) -> list:
+def get_all_user_tokens(db_conn, user_id: int) -> list:
     """Get all tokens for a user with server information"""
     result = db_conn.execute(sqlalchemy.text("""
         SELECT t.*, s.id as server_id, s.host_url, s.client_id, s.client_secret, s.scopes

@@ -8,6 +8,7 @@ from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.db import funkwhale as db_funkwhale
+from listenbrainz.webserver import db_conn
 
 
 def get_current_spotify_user():
@@ -104,7 +105,7 @@ def get_current_funkwhale_user():
 
     # Get all tokens for this user to find the first server
     # Use the first server (consistent with frontend logic)
-    tokens = db_funkwhale.get_all_user_tokens(current_user.id)
+    tokens = db_funkwhale.get_all_user_tokens(db_conn, current_user.id)
     if not tokens:
         return {}
 

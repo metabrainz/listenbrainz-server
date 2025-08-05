@@ -24,10 +24,10 @@ class FunkwhaleService:
     def get_user(self, user_id: int, host_url: str = None, refresh: bool = False) -> Optional[dict]:
         if not host_url:
             return None
-        server = db_funkwhale.get_server_by_host_url(host_url)
+        server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
         if not server:
             return None
-        token = db_funkwhale.get_token(user_id, server["id"])
+        token = db_funkwhale.get_token(db_conn, user_id, server["id"])
         if not token:
             return None
         user = {
@@ -49,12 +49,12 @@ class FunkwhaleService:
         refresh_token = token['refresh_token']
         expires_at = int(time.time()) + token['expires_in']
         token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
-        db_funkwhale.save_token(user_id, server_id, access_token, refresh_token, token_expiry_datetime)
+        db_funkwhale.save_token(db_conn, user_id, server_id, access_token, refresh_token, token_expiry_datetime)
         return True
 
     def get_authorize_url(self, host_url: str, scopes: List[str], state: Optional[str] = None) -> str:
         host_url = host_url.rstrip('/')
-        server = db_funkwhale.get_server_by_host_url(host_url)
+        server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
 
         if server:
             client_id = server['client_id']
@@ -74,7 +74,7 @@ class FunkwhaleService:
             client_id = app_credentials['client_id']
             client_secret = app_credentials['client_secret']
             current_app.logger.debug(f"Created new OAuth app with client_id {client_id[:8]}...")
-            db_funkwhale.get_or_create_server(host_url, client_id, client_secret, ' '.join(scopes))
+            db_funkwhale.get_or_create_server(db_conn, host_url, client_id, client_secret, ' '.join(scopes))
 
         auth_url = f"{host_url}/api/v1/oauth/authorize"
         oauth = OAuth2Session(
@@ -90,7 +90,7 @@ class FunkwhaleService:
         host_url = session.get('funkwhale_host_url')
         if not host_url:
             raise ExternalServiceError("No host URL found in session")
-        server = db_funkwhale.get_server_by_host_url(host_url)
+        server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
         if not server:
             raise ExternalServiceError("No Funkwhale server found for host_url")
         client_id = server['client_id']
@@ -148,14 +148,14 @@ class FunkwhaleService:
         token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
         
         current_app.logger.debug(f"Successfully refreshed Funkwhale token for user {user_id}, expires at {token_expiry_datetime}")
-        db_funkwhale.update_token(user_id, server['id'], access_token, new_refresh_token, token_expiry_datetime)
+        db_funkwhale.update_token(db_conn, user_id, server['id'], access_token, new_refresh_token, token_expiry_datetime)
         return self.get_user(user_id, server['host_url'])
 
     def revoke_user(self, user_id: int, host_url: str):
-        server = db_funkwhale.get_server_by_host_url(host_url)
+        server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
         if not server:
             return
-        db_funkwhale.delete_token(user_id, server['id'])
+        db_funkwhale.delete_token(db_conn, user_id, server['id'])
 
     def remove_user(self, user_id: int):
         # Remove all tokens for this user across all servers

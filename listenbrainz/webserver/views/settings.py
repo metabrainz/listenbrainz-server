@@ -222,7 +222,7 @@ def music_services_details():
     lastfm_user = lastfm_service.get_user(current_user.id)
     current_lastfm_permissions = "import" if lastfm_user else "disable"
 
-    funkwhale_tokens = db_funkwhale.get_all_user_tokens(current_user.id)
+    funkwhale_tokens = db_funkwhale.get_all_user_tokens(db_conn, current_user.id)
     funkwhale_host_urls = [token["host_url"] for token in funkwhale_tokens]
     current_funkwhale_permission = "listen" if funkwhale_tokens else "disable"
 
@@ -294,7 +294,7 @@ def music_services_callback(service_name: str):
 
         try:
             token = service.fetch_access_token(code)
-            server = db_funkwhale.get_server_by_host_url(host_url)
+            server = db_funkwhale.get_server_by_host_url(db_conn, host_url)
             if not server:
                 raise Exception("No Funkwhale server found for host_url")
             service.add_new_user(current_user.id, server['id'], token)
@@ -384,15 +384,7 @@ def music_services_connect(service_name: str):
 
         try:
             service = FunkwhaleService()
-            scopes = [
-                'read:profile',
-                'read:libraries', 
-                'read:favorites',
-                'read:listenings',
-                'read:follows',
-                'read:playlists',
-                'read:radios'
-            ]
+            scopes = ['read']
             auth_url = service.get_authorize_url(host_url, scopes, state)
         except Exception as e:
             current_app.logger.error("Failed to get authorization URL: %s", str(e), exc_info=True)
