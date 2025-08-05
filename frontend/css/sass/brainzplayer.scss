@@ -477,31 +477,26 @@ $youtube-resize-transition: height 0.25s ease-out;
     min-width: 3em;
   }
 
-  // First header with negative top margin to remove gap with buttons above
-  > :nth-child(1 of .queue-headers) {
-    margin-top: -30px;
-  }
   .queue-headers {
-    font-size: 16px;
     margin-top: 4px;
     margin-bottom: 4px;
-    display: flex;
-    justify-content: space-between;
     border-bottom: 1px solid #ccc;
 
     h4 {
-      font-size: 18px;
       margin: 0;
       padding: 10px;
       padding-left: 0;
-      width: 100%;
     }
-
-    .queue-buttons {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  }
+  .queue-buttons {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 1em;
+  }
+  // Negative top margin to remove gap with buttons above
+  .queue-buttons + .queue-headers {
+    margin-top: -30px;
   }
 }
 
