@@ -80,26 +80,28 @@ function Queue(props: BrainzPlayerQueueProps) {
         title="Hide queue"
         onClick={onHide}
       />
+      {queueNextUp.length > 0 && (
+        <div className="queue-buttons d-flex justify-content-end gap-3">
+          <button
+            className="btn btn-info btn-sm"
+            onClick={addQueueToPlaylist}
+            type="button"
+          >
+            <FontAwesomeIcon icon={faSave} fixedWidth /> Save to Playlist
+          </button>
+          <button
+            className="btn btn-info btn-sm"
+            onClick={clearQueue}
+            type="button"
+          >
+            Clear Queue
+          </button>
+        </div>
+      )}
       {currentListen && (
         <>
           <div className="queue-headers">
             <h4>Now Playing:</h4>
-            <div className="queue-buttons">
-              <button
-                className="btn btn-info btn-sm"
-                onClick={addQueueToPlaylist}
-                type="button"
-              >
-                <FontAwesomeIcon icon={faSave} fixedWidth /> Save to Playlist
-              </button>
-              <button
-                className="btn btn-info btn-sm"
-                onClick={clearQueue}
-                type="button"
-              >
-                Clear Queue
-              </button>
-            </div>
           </div>
           <ListenCard
             key={`queue-listening-now-${getListenCardKey(currentListen)}}`}
@@ -152,9 +154,8 @@ function Queue(props: BrainzPlayerQueueProps) {
           </div>
         )}
       </div>
-      <div className="queue-headers">
-        <h4>On this page:</h4>
-        {ambientQueue.length > 0 && (
+      {ambientQueue.length > 0 && (
+        <>
           <div className="queue-buttons">
             <button
               className="btn btn-info btn-sm"
@@ -164,8 +165,11 @@ function Queue(props: BrainzPlayerQueueProps) {
               Move to Queue
             </button>
           </div>
-        )}
-      </div>
+          <div className="queue-headers">
+            <h4>On this page:</h4>
+          </div>
+        </>
+      )}
       <div className="queue-list" data-testid="ambient-queue">
         {ambientQueue.length > 0
           ? ambientQueue
