@@ -173,6 +173,8 @@ def lb_radio():
     if prompt is None:
         raise APIBadRequest(f"The prompt parameter cannot be empty.")
 
+    current_app.logger.info("LB radio: '%s'" % prompt)
+
     mode = request.args.get("mode", None)
     if mode is None or mode not in ("easy", "medium", "hard"):
         raise APIBadRequest(
