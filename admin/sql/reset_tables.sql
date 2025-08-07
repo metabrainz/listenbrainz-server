@@ -30,4 +30,10 @@ DELETE FROM release_color                  CASCADE;
 DELETE FROM pinned_recording               CASCADE;
 DELETE FROM user_setting                   CASCADE;
 
+DELETE FROM funkwhale_tokens               CASCADE;
+DELETE FROM funkwhale_servers              CASCADE;
+
+DELETE FROM navidrome_tokens               CASCADE;
+DELETE FROM navidrome_servers              CASCADE;
+
 COMMIT;
