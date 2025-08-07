@@ -16,7 +16,7 @@ xmltodict==0.14.2
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v3.0.0
 spotipy==2.25.1
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@830ecb2b2120acbd5deed2dab4587784c7be04b6
-troi==2025.8.6.2
+troi==2025.8.6.3
 eventlet==0.39.1
 uWSGI==2.0.29
 sentry-sdk[flask]==2.27.0
