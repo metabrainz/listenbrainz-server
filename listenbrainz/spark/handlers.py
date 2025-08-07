@@ -68,6 +68,10 @@ def handle_user_daily_activity(message):
     """ Take daily activity stats for user and save it in database. """
     _handle_stats(message, "daily_activity", "user_id")
 
+def handle_user_genre_activity(message):
+    """ Take genre activity stats for user and save it in database. """
+    _handle_stats(message, "genre_activity", "user_id")
+
 
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
