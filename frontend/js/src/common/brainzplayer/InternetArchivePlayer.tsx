@@ -33,6 +33,17 @@ export default class InternetArchivePlayer
     };
   }
 
+  componentDidUpdate(prevProps: DataSourceProps) {
+    const { show, volume } = this.props;
+    if (prevProps.volume !== volume && this.audioRef.current) {
+      this.audioRef.current.volume = (volume ?? 100) / 100;
+    }
+
+    if (prevProps.show && !show && this.audioRef.current) {
+      this.audioRef.current.pause();
+    }
+  }
+
   handleAudioEnded = () => {
     const { onTrackEnd } = this.props;
     onTrackEnd();
@@ -103,11 +114,14 @@ export default class InternetArchivePlayer
       onTrackInfoChange,
       onDurationChange,
       handleError,
+      volume,
     } = this.props;
     const { currentTrack } = this.state;
     if (this.audioRef.current && currentTrack) {
       const [firstUrl] = currentTrack.stream_urls;
       this.audioRef.current.src = firstUrl;
+      // Set volume when loading new track 
+      this.audioRef.current.volume = (volume ?? 100) / 100;
       try {
         await this.audioRef.current.play();
       } catch (error) {
