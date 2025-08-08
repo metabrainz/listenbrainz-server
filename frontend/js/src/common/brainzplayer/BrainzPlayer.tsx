@@ -1135,27 +1135,29 @@ export default function BrainzPlayer() {
           />
         )}
 
-        {}
-        <InternetArchivePlayer
-          show={
-            brainzPlayerContextRef.current.isActivated &&
-            dataSourceRefs[
-              brainzPlayerContextRef.current.currentDataSourceIndex
-            ]?.current instanceof InternetArchivePlayer
-          }
-          ref={internetArchivePlayerRef}
-          playerPaused={brainzPlayerContextRef.current.playerPaused}
-          onPlayerPausedChange={playerPauseChange}
-          onProgressChange={progressChange}
-          onDurationChange={durationChange}
-          onTrackInfoChange={throttledTrackInfoChange}
-          onTrackEnd={playNextTrack}
-          onTrackNotFound={failedToPlayTrack}
-          handleError={handleError}
-          handleWarning={handleWarning}
-          handleSuccess={handleSuccess}
-          onInvalidateDataSource={invalidateDataSource}
-        />
+        {userPreferences?.brainzplayer?.internetArchiveEnabled !== false && (
+          <InternetArchivePlayer
+            volume={brainzPlayerContextRef.current.volume}
+            show={
+              brainzPlayerContextRef.current.isActivated &&
+              dataSourceRefs[
+                brainzPlayerContextRef.current.currentDataSourceIndex
+              ]?.current instanceof InternetArchivePlayer
+            }
+            ref={internetArchivePlayerRef}
+            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            onPlayerPausedChange={playerPauseChange}
+            onProgressChange={progressChange}
+            onDurationChange={durationChange}
+            onTrackInfoChange={throttledTrackInfoChange}
+            onTrackEnd={playNextTrack}
+            onTrackNotFound={failedToPlayTrack}
+            handleError={handleError}
+            handleWarning={handleWarning}
+            handleSuccess={handleSuccess}
+            onInvalidateDataSource={invalidateDataSource}
+          />
+        )}
       </BrainzPlayerUI>
     </div>
   );
