@@ -81,10 +81,7 @@ export default class InternetArchivePlayer
       if (data.results && data.results.length > 0) {
         // TODO: It might make sense to sanity-check the results to see if the first one is indeed the best match
         // We do something like this in the AppleMusicPlayer with the fuzzysort library
-        this.setState(
-          { currentTrack: data.results[0] },
-          this.playCurrentTrack
-        );
+        this.setState({ currentTrack: data.results[0] }, this.playCurrentTrack);
       } else {
         this.setState({ currentTrack: null });
         onTrackNotFound();
