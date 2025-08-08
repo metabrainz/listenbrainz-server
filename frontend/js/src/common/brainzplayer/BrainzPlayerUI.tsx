@@ -8,6 +8,7 @@ import {
   faMusic,
   faPauseCircle,
   faPlayCircle,
+  faShuffle,
   faSlash,
   faVolumeUp,
   faMaximize,
@@ -237,6 +238,11 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const toggleShuffleMode = React.useCallback(() => {
+    console.log("Test");
+    dispatch({ type: "TOGGLE_SHUFFLE_MODE" });
+  }, []);
+
   const musicPlayerCoverArtRef = React.useRef<HTMLImageElement>(null);
 
   React.useEffect(() => {
@@ -325,6 +331,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           toggleShowVolume={toggleShowVolume}
           seekToPositionMs={seekToPositionMs}
           toggleRepeatMode={toggleRepeatMode}
+          toggleShuffleMode={toggleShuffleMode}
           submitFeedback={submitFeedback}
           currentListenFeedback={currentListenFeedback}
           musicPlayerCoverArtRef={musicPlayerCoverArtRef}
@@ -451,6 +458,14 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
 
           {!isMobile && (
             <FontAwesomeIcon
+              icon={faShuffle}
+              title="Shuffle mode"
+              onClick={toggleShuffleMode}
+            />
+          )}
+
+          {!isMobile && (
+            <FontAwesomeIcon
               icon={brainzPlayerContextRef.current.queueRepeatMode.icon}
               title={brainzPlayerContextRef.current.queueRepeatMode.title}
               style={{
@@ -459,6 +474,7 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
               onClick={toggleRepeatMode}
             />
           )}
+
           {showFeedback && !isMobile && (
             <>
               <FontAwesomeIcon
