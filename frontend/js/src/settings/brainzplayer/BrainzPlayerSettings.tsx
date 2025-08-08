@@ -410,10 +410,14 @@ function BrainzPlayerSettings() {
                   !internetArchiveEnabled ? "text-muted" : ""
                 }`}
               >
-                <span>
+                <span className={internetArchiveEnabled ? "text-success" : ""}>
                   <FontAwesomeIcon
-                     icon={dataSourcesInfo.internetArchive.icon}
-                     color={dataSourcesInfo.internetArchive.color}
+                    icon={dataSourcesInfo.internetArchive.icon}
+                    color={
+                      internetArchiveEnabled
+                        ? dataSourcesInfo.internetArchive.color
+                        : ""
+                    }
                   />
                 </span>
                 <span>&nbsp;Internet Archive</span>
