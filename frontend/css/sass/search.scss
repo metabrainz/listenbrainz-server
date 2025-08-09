@@ -1,20 +1,19 @@
 .search-bar {
   position: relative;
-  margin-top: 1em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: flex;
   max-width: 400px;
   align-items: stretch;
+  height: 50px;
   input,
   button {
-    background-color: $nav-tabs-border-color;
+    background-color: $nav-tabs-border-color !important;
     color: $nav-link-color;
     border: none;
   }
   input {
-    border-radius: 33px 0 0 33px;
     height: auto;
     font-size: 1.8rem;
     &:focus {
@@ -27,7 +26,6 @@
   }
   button {
     font-size: 1.2em;
-    border-radius: 0 33px 33px 0;
     padding-right: 0.5em;
   }
 }
