@@ -7,8 +7,6 @@ import {
   isNil as _isNil,
   isString as _isString,
   throttle as _throttle,
-  assign,
-  cloneDeep,
   debounce,
   omit,
 } from "lodash";
@@ -35,6 +33,8 @@ import {
   DataSourceKey,
   defaultDataSourcesPriority,
 } from "../../settings/brainzplayer/BrainzPlayerSettings";
+
+// Atoms
 import {
   QueueRepeatModes,
   playerPausedAtom,
@@ -61,6 +61,10 @@ import {
   addListenToBottomOfQueueAtom,
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
 } from "./BrainzPlayerAtoms";
+
+import useWindowTitle from "./hooks/useWindowTitle";
+import useCrossTabSync from "./hooks/useCrossTabSync";
+import useListenSubmission from "./hooks/useListenSubmission";
 
 export type DataSourceType = {
   name: string;
@@ -188,10 +192,6 @@ export default function BrainzPlayer() {
   const getProgressMs = () => store.get(progressMsAtom);
   const getListenSubmitted = () => store.get(listenSubmittedAtom);
   const getIsActivated = () => store.get(isActivatedAtom);
-  const getCurrentTrackName = () => store.get(currentTrackNameAtom);
-  const getCurrentTrackArtist = () => store.get(currentTrackArtistAtom);
-  const getCurrentTrackAlbum = () => store.get(currentTrackAlbumAtom);
-  const getCurrentTrackURL = () => store.get(currentTrackURLAtom);
   const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);
@@ -211,14 +211,6 @@ export default function BrainzPlayer() {
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
-
-  // State
-  const [htmlTitle, setHtmlTitle] = React.useState<string>(
-    window.document.title
-  );
-  const [currentHTMLTitle, setCurrentHTMLTitle] = React.useState<string | null>(
-    null
-  );
 
   const {
     spotifyEnabled = true,
@@ -289,26 +281,6 @@ export default function BrainzPlayer() {
     return null;
   };
 
-  /** We use LocalStorage events as a form of communication between BrainzPlayers
-   * that works across browser windows/tabs, to ensure only one BP is playing at a given time.
-   * The event is not fired in the tab/window where the localStorage.setItem call initiated.
-   */
-  const onLocalStorageEvent = async (event: StorageEvent) => {
-    if (event.storageArea !== localStorage) return;
-    if (event.key === "BrainzPlayer_stop") {
-      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-      if (dataSource && !playerPaused) {
-        await dataSource.togglePlay();
-      }
-    }
-  };
-
-  const stopOtherBrainzPlayers = (): void => {
-    // Tell all other BrainzPlayer instances to please STFU
-    // Using timestamp to ensure a new value each time
-    window?.localStorage?.setItem("BrainzPlayer_stop", Date.now().toString());
-  };
-
   // Handle Notifications
   const handleError = (error: BrainzPlayerError, title: string): void => {
     if (!error) {
@@ -351,16 +323,6 @@ export default function BrainzPlayer() {
     });
   };
 
-  // Set Title
-  const updateWindowTitleWithTrackName = () => {
-    const trackName = getCurrentTrackName() || "";
-    setCurrentHTMLTitle(`🎵 ${trackName}`);
-  };
-
-  const reinitializeWindowTitle = () => {
-    setCurrentHTMLTitle(htmlTitle);
-  };
-
   const invalidateDataSource = (
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
@@ -379,107 +341,24 @@ export default function BrainzPlayer() {
     }
   };
 
-  const getListenMetadataToSubmit = (): BaseListenFormat => {
-    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()];
+  // Hooks
+  const {
+    htmlTitle,
+    setHtmlTitle,
+    currentHTMLTitle,
+    updateWindowTitleWithTrackName,
+    reinitializeWindowTitle,
+  } = useWindowTitle();
 
-    const brainzplayer_metadata = {
-      artist_name: getCurrentTrackArtist(),
-      release_name: getCurrentTrackAlbum(),
-      track_name: getCurrentTrackName(),
-    };
-    // Create a new listen and augment it with the existing listen and datasource's metadata
-    const newListen: BaseListenFormat = {
-      // convert Javascript millisecond time to unix epoch in seconds
-      listened_at: Math.floor(Date.now() / 1000),
-      track_metadata:
-        cloneDeep((currentListen as BaseListenFormat)?.track_metadata) ?? {},
-    };
+  const { stopOtherBrainzPlayers } = useCrossTabSync(dataSourceRefs);
 
-    const musicServiceName = dataSource.current?.name;
-    let musicServiceDomain = dataSource.current?.domainName;
-    // Best effort try?
-    const currentTrackURL = getCurrentTrackURL();
-    if (!musicServiceDomain && currentTrackURL) {
-      try {
-        // Browser could potentially be missing the URL constructor
-        musicServiceDomain = new URL(currentTrackURL).hostname;
-      } catch (e) {
-        // Do nothing, we just fallback gracefully to dataSource name.
-      }
-    }
-
-    // ensure the track_metadata.additional_info path exists and add brainzplayer_metadata field
-    assign(newListen.track_metadata, {
-      brainzplayer_metadata,
-      additional_info: {
-        duration_ms: durationMs > 0 ? durationMs : undefined,
-        media_player: "BrainzPlayer",
-        submission_client: "BrainzPlayer",
-        // TODO:  passs the GIT_COMMIT_SHA env variable to the globalprops and add it here as submission_client_version
-        // submission_client_version:"",
-        music_service: musicServiceDomain,
-        music_service_name: musicServiceName,
-        origin_url: currentTrackURL,
-      },
-    });
-    return newListen;
-  };
-
-  const submitListenToListenBrainz = async (
-    listenType: ListenType,
-    listen: BaseListenFormat,
-    retries: number = 3
-  ): Promise<void> => {
-    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()];
-    if (!currentUser || !currentUser.auth_token) {
-      return;
-    }
-    const isPlayingNowType = listenType === "playing_now";
-    // Always submit playing_now listens for a better experience on LB pages
-    // (ingestion of playing-now info from spotify can take minutes,
-    // sometimes not getting updated before the end of the track)
-    if (
-      isPlayingNowType ||
-      (dataSource?.current && !dataSource.current.datasourceRecordsListens())
-    ) {
-      try {
-        const { auth_token } = currentUser;
-        let processedPayload = listen;
-        // When submitting playing_now listens, listened_at must NOT be present
-        if (isPlayingNowType) {
-          processedPayload = omit(listen, "listened_at") as Listen;
-        }
-
-        const struct = {
-          listen_type: listenType,
-          payload: [processedPayload],
-        } as SubmitListensPayload;
-        const url = `${listenBrainzAPIBaseURI}/submit-listens`;
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${auth_token}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify(struct),
-        });
-        if (!response.ok) {
-          throw response.statusText;
-        }
-      } catch (error) {
-        if (retries > 0) {
-          // Something went wrong, try again in 3 seconds.
-          await new Promise((resolve) => {
-            setTimeout(resolve, 3000);
-          });
-          await submitListenToListenBrainz(listenType, listen, retries - 1);
-        } else if (!isPlayingNowType) {
-          handleWarning(error.toString(), "Could not save this listen");
-        }
-      }
-    }
-  };
+  const { submitCurrentListen, submitNowPlaying } = useListenSubmission({
+    currentUser,
+    listenBrainzAPIBaseURI,
+    onError: handleError,
+    onWarning: handleWarning,
+    dataSourceRefs,
+  });
 
   const checkProgressAndSubmitListen = async () => {
     if (!currentUser?.auth_token || getListenSubmitted()) {
@@ -494,9 +373,7 @@ export default function BrainzPlayer() {
     }
 
     if (getContinuousPlaybackTime() >= playbackTimeRequired) {
-      const listen = getListenMetadataToSubmit();
-      setListenSubmitted(true);
-      await submitListenToListenBrainz("single", listen);
+      submitCurrentListen();
     }
   };
 
@@ -790,11 +667,6 @@ export default function BrainzPlayer() {
     }
   }, [durationMs]);
 
-  const submitNowPlayingToListenBrainz = async (): Promise<void> => {
-    const newListen = getListenMetadataToSubmit();
-    return submitListenToListenBrainz("playing_now", newListen);
-  };
-
   const trackInfoChange = (
     title: string,
     trackURL: string,
@@ -810,7 +682,7 @@ export default function BrainzPlayer() {
 
     updateWindowTitleWithTrackName();
     if (!playerPaused) {
-      submitNowPlayingToListenBrainz();
+      submitNowPlaying();
     }
     if (playerPaused) {
       // Don't send notifications or any of that if the player is not playing
@@ -935,7 +807,6 @@ export default function BrainzPlayer() {
   };
 
   React.useEffect(() => {
-    window.addEventListener("storage", onLocalStorageEvent);
     window.addEventListener("message", receiveBrainzPlayerMessage);
     window.addEventListener("beforeunload", alertBeforeClosingPage);
     // Remove SpotifyPlayer if the user doesn't have the relevant permissions to use it
@@ -952,7 +823,6 @@ export default function BrainzPlayer() {
       invalidateDataSource(soundcloudPlayerRef.current);
     }
     return () => {
-      window.removeEventListener("storage", onLocalStorageEvent);
       window.removeEventListener("message", receiveBrainzPlayerMessage);
       window.removeEventListener("beforeunload", alertBeforeClosingPage);
       stopPlayerStateTimer();
