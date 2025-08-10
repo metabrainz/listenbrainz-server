@@ -165,18 +165,13 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                 return
 
         
-        current_app.logger.error("TESTING 5")
         current_app.logger.error(str(audio_files))
         for filename in audio_files:
-            current_app.logger.error("TESTING 6")
             with zip_file.open(filename) as file:
-                current_app.logger.error("TESTING 7")
                 with io.TextIOWrapper(file, encoding='utf-8') as contents:
-                    current_app.logger.error("TESTING 8")
                     try:
                         batch = []
                         for entry in ijson.items(contents, 'item'):
-                            current_app.logger.error("TESTINGGGG")
                             timestamp = entry.get("ts")
                             timestamp_date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                             if from_date <= timestamp_date <= to_date:
@@ -214,7 +209,6 @@ def submit_listens(db_conn, listens, user_id, import_id):
 
 def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id):
     sp = initialize_spotify()
-    current_app.logger.error("TESTING 2")
     for batch in process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
         parsed_listens = []
         if batch is None:
@@ -222,7 +216,6 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
             current_app.logger.error("Error in processing the uploaded spotify listening history files!")
             return
         
-        current_app.logger.error("TESTING 3")
         parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
 
         submit_listens(db_conn, parsed_listens, user_id, import_id)
@@ -292,7 +285,6 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
         pass
     import_task_metadata = import_task.metadata
 
-    current_app.logger.error("TESTING 4")
 
     update_import_progress_and_status(db_conn, import_id, "in_progress", "Importing user listens")
 

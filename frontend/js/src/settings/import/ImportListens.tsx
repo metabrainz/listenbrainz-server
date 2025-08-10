@@ -38,6 +38,8 @@ type Import = {
   file_path: string;
   metadata: { filename: string; progress: string; status: ImportStatus };
   service: Services;
+  from_date: string;
+  to_date: string;
 };
 
 const API_PREFIX = "/1";
@@ -65,6 +67,12 @@ function renderImport(
           <dd className="col-8">{format(im.created, "PPp")}</dd>
           <dt className="col-4">Import #</dt>
           <dd className="col-8">{im.import_id}</dd>
+          <dt className="col-4">File name</dt>
+          <dd className="col-8">{im.metadata.filename}</dd>
+          <dt className="col-4">Start date</dt>
+          <dd className="col-8">{format(im.from_date, "PPP")}</dd>
+          <dt className="col-4">End date</dt>
+          <dd className="col-8">{format(im.to_date, "PPP")}</dd>
         </dl>
       </details>
     </p>
@@ -449,7 +457,7 @@ export default function ImportListens() {
       <section id="import-buttons">
         <Loader isLoading={loading} style={{ margin: "0 1em" }} />
         {imports &&
-          imports.map((ex) => renderImport(ex, cancelImport, fetchImport))}
+          imports.map((im) => renderImport(im, cancelImport, fetchImport))}
       </section>
     </>
   );

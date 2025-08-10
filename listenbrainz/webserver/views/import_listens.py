@@ -175,6 +175,8 @@ def get_import_task(import_id):
         "service": row.service,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
+        "to_date": row.to_date,
+        "from_date": row.from_date,
     })
 
 
@@ -197,7 +199,8 @@ def list_import_tasks():
         "service": row.service,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
-        "file_path": row.file_path,
+        "to_date": row.to_date,
+        "from_date": row.from_date,
     } for row in rows])
 
 
