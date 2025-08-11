@@ -69,9 +69,11 @@ def send_multiple_notifications(notifications: list[dict]):
     """
 
     token = _fetch_token()
-    tokenized_url = METABRAINZ_NOTIFICATIONS_SEND_URL + f"?token={token}"
+    headers = {"Authorization": f"Bearer {token}"}
 
-    response = requests.post(url=tokenized_url, json=notifications)
+    response = requests.post(
+        url=METABRAINZ_NOTIFICATIONS_SEND_URL, json=notifications, headers=headers
+    )
     response.raise_for_status()
 
 
