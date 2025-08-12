@@ -70,7 +70,7 @@ function renderImport(
           <dt className="col-4">File name</dt>
           <dd className="col-8">{im.metadata.filename}</dd>
           <dt className="col-4">Service</dt>
-          <dd className="col-8">{Services[im.service]}</dd>
+          <dd className="col-8">{im.service}</dd>
           <dt className="col-4">Start date</dt>
           <dd className="col-8">
             {im.from_date && new Date(im.from_date).getTime() !== 0
