@@ -293,6 +293,7 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
             import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id)
         if not check_if_cancelled_or_failed(db_conn, import_id):
             update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
+            cleanup_old_imports(db_conn)
         
 
 
