@@ -28,9 +28,9 @@ enum ImportStatus {
   cancelled = "cancelled",
 }
 enum Services {
-  spotify = "spotify",
-  listenbrainz = "listenbrainz",
-  applemusic = "applemusic",
+  spotify = "Spotify",
+  listenbrainz = "Listenbrainz",
+  applemusic = "Apple Music",
 }
 type Import = {
   import_id: number;
@@ -50,7 +50,7 @@ function renderImport(
   fetchImport: (importId: number) => Promise<any>
 ) {
   const extraInfo = (
-    <p>
+    <div>
       <details>
         <summary>
           <FontAwesomeIcon
@@ -69,13 +69,21 @@ function renderImport(
           <dd className="col-8">{im.import_id}</dd>
           <dt className="col-4">File name</dt>
           <dd className="col-8">{im.metadata.filename}</dd>
+          <dt className="col-4">Service</dt>
+          <dd className="col-8">{Services[im.service]}</dd>
           <dt className="col-4">Start date</dt>
-          <dd className="col-8">{format(im.from_date, "PPP")}</dd>
+          <dd className="col-8">
+            {im.from_date && new Date(im.from_date).getTime() !== 0
+              ? format(new Date(im.from_date), "PPP")
+              : "-"}
+          </dd>
           <dt className="col-4">End date</dt>
-          <dd className="col-8">{format(im.to_date, "PPP")}</dd>
+          <dd className="col-8">
+            {im.from_date ? format(im.to_date, "PPP") : "-"}
+          </dd>
         </dl>
       </details>
-    </p>
+    </div>
   );
   if (im.metadata.status === ImportStatus.complete) {
     return (
