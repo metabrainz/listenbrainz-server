@@ -1,32 +1,37 @@
-import type { RouteObject } from "react-router-dom";
+import type { RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../../utils/Loader";
 
 const getRecommendationsRoutes = (): RouteObject[] => {
   const routes = [
     {
       path: "/recommended/tracks/:userName/",
-      lazy: async () => {
-        const RecommendationsPageLayout = await import("../Layout");
-        return { Component: RecommendationsPageLayout.default };
+      lazy: {
+        Component: async () => {
+          return (await import("../Layout")).default;
+        },
       },
       children: [
         {
           index: true,
-          lazy: async () => {
-            const Info = await import("../Info");
-            return { Component: Info.default };
+          lazy: {
+            Component: async () => {
+              return (await import("../Info")).default;
+            },
+            loader: async () => {
+              return RouteLoader;
+            },
           },
-          loader: RouteLoader,
         },
         {
           path: "raw/",
-          lazy: async () => {
-            const RecommendationsPage = await import("../Recommendations");
-            return {
-              Component: RecommendationsPage.default,
-            };
+          lazy: {
+            Component: async () => {
+              return (await import("../Recommendations")).default;
+            },
+            loader: async () => {
+              return RouteQueryLoader("recommendation", true);
+            },
           },
-          loader: RouteQueryLoader("recommendation", true),
         },
       ],
     },

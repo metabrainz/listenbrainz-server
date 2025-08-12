@@ -1,11 +1,7 @@
-/* eslint-disable jest/no-disabled-tests */
-
-import * as React from "react";
-import { mount, ReactWrapper } from "enzyme";
-import * as timeago from "time-ago";
+import React from "react";
+import { render, screen, waitFor } from "@testing-library/react";
 import fetchMock from "jest-fetch-mock";
-import { act } from "react-dom/test-utils";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../src/utils/GlobalAppContext";
@@ -14,73 +10,95 @@ import APIServiceClass from "../../src/utils/APIService";
 import * as recentListensProps from "../__mocks__/recentListensProps.json";
 import * as recentListensPropsOneListen from "../__mocks__/recentListensPropsOneListen.json";
 
-import RecentListens, {
+import {
+  RecentListensWrapper,
   RecentListensProps,
-  RecentListensState,
-} from "../../src/recent/RecentListens";
-import { waitForComponentToPaint } from "../test-utils";
+} from "../../src/recent/RecentListens"; // Import the wrapper component
 import RecordingFeedbackManager from "../../src/utils/RecordingFeedbackManager";
-import ListenCard from "../../src/common/listens/ListenCard";
 import { ReactQueryWrapper } from "../test-react-query";
-// import Card from "../../src/components/Card";
-// import BrainzPlayer from "../../src/brainzplayer/BrainzPlayer";
-
-jest.createMockFromModule("../../src/common/brainzplayer/BrainzPlayer");
-
-// Font Awesome generates a random hash ID for each icon everytime.
-// Mocking Math.random() fixes this
-// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
-jest.spyOn(global.Math, "random").mockImplementation(() => 0);
-
-// Mock socketIO library and the Socket object it returns
-const mockSocket = { on: jest.fn(), emit: jest.fn() };
-jest.mock("socket.io-client", () => {
-  return { io: jest.fn(() => mockSocket) };
-});
 
 const {
-  latestListenTs,
   listens,
-  oldestListenTs,
   spotify,
   youtube,
-  user,
-  userPinnedRecording,
   globalListenCount,
   globalUserCount,
 } = recentListensProps;
 
-const props = {
-  latestListenTs,
-  listens,
-  oldestListenTs,
-  user,
-  userPinnedRecording,
-  globalListenCount,
-  globalUserCount,
-  recentDonors: [],
-};
-
-// Create a new instance of GlobalAppContext
-const mountOptions: { context: GlobalAppContextT } = {
-  context: {
-    APIService: new APIServiceClass("foo"),
-    websocketsUrl: "",
-    youtubeAuth: youtube as YoutubeUser,
-    spotifyAuth: spotify as SpotifyUser,
-    currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
-    recordingFeedbackManager: new RecordingFeedbackManager(
-      new APIServiceClass("foo"),
-      { name: "Fnord" }
-    ),
+const pinnedRecordingFromAPI: PinnedRecording = {
+  created: 1605927742,
+  pinned_until: 1605927893,
+  blurb_content:
+    "Our perception of the passing of time is really just a side-effect of gravity",
+  recording_mbid: "recording_mbid",
+  row_id: 1,
+  track_metadata: {
+    artist_name: "TWICE",
+    track_name: "Feel Special",
+    additional_info: {
+      release_mbid: "release_mbid",
+      recording_msid: "recording_msid",
+      recording_mbid: "recording_mbid",
+    },
   },
 };
 
-const propsOneListen = {
-  ...recentListensPropsOneListen,
+const loaderDataProps: RecentListensProps = {
+  listens,
+  globalListenCount,
+  globalUserCount,
+  recentDonors: [
+    {
+      id: 123456,
+      donated_at: "",
+      donation: 42,
+      currency: "eur",
+      musicbrainz_id: "Foo",
+      is_listenbrainz_user: true,
+      listenCount: 1234,
+      playlistCount: 123,
+      pinnedRecording: pinnedRecordingFromAPI,
+    },
+    {
+      id: 1234,
+      donated_at: "",
+      donation: 123,
+      currency: "eur",
+      musicbrainz_id: "Bar",
+      is_listenbrainz_user: true,
+      listenCount: 999,
+      playlistCount: 0,
+      pinnedRecording: pinnedRecordingFromAPI,
+    },
+  ],
 };
 
-describe("Recentlistens", () => {
+const globalContext: GlobalAppContextT = {
+  APIService: new APIServiceClass("foo"),
+  websocketsUrl: "",
+  youtubeAuth: youtube as YoutubeUser,
+  spotifyAuth: spotify as SpotifyUser,
+  currentUser: { id: 1, name: "iliekcomputers", auth_token: "fnord" },
+  recordingFeedbackManager: new RecordingFeedbackManager(
+    new APIServiceClass("foo"),
+    { name: "Fnord" }
+  ),
+};
+
+// Mock `useLoaderData` from `react-router`
+const mockUseLoaderData = jest.fn().mockReturnValue(loaderDataProps);
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
+  useLoaderData: () => mockUseLoaderData(),
+}));
+
+// We need to mock useBrainzPlayerDispatch to check if it's called
+const mockDispatch = jest.fn();
+jest.mock("../../src/common/brainzplayer/BrainzPlayerContext", () => ({
+  useBrainzPlayerDispatch: () => mockDispatch,
+}));
+
+describe("RecentListensWrapper", () => {
   beforeAll(() => {
     fetchMock.enableMocks();
     fetchMock.mockIf(
@@ -96,23 +114,119 @@ describe("Recentlistens", () => {
       }
     );
   });
-  it("renders the page correctly", () => {
-    const wrapper = mount<RecentListens>(
-      <GlobalAppContext.Provider value={mountOptions.context}>
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("renders the page correctly with listens", async () => {
+    render(
+      <GlobalAppContext.Provider value={globalContext}>
         <BrowserRouter>
           <ReactQueryWrapper>
-            <RecentListens {...props} />
+            <RecentListensWrapper />
           </ReactQueryWrapper>
         </BrowserRouter>
       </GlobalAppContext.Provider>
     );
-    // We only expect two Card elements, but the Card component
-    // passes down the id prop to it's children so we get 4 results
-    const listenCountCards = wrapper.find("#listen-count-card");
-    expect(listenCountCards).toHaveLength(4);
-    const listensContainer = wrapper.find("#listens");
-    expect(listensContainer).toHaveLength(1);
-    expect(listensContainer.find(ListenCard)).toHaveLength(25);
-    wrapper.unmount();
+
+    expect(
+      screen.getByRole("heading", { name: /Global listens/i })
+    ).toBeInTheDocument();
+
+    // Check for the global listen count and user count
+    expect(screen.getByText("666")).toBeInTheDocument();
+    expect(screen.getByText("songs played")).toBeInTheDocument();
+    // Check for the global user count
+    expect(screen.getByText("42")).toBeInTheDocument();
+    expect(screen.getByText("users")).toBeInTheDocument();
+
+    // Check if ListenCards are rendered
+    expect(screen.getAllByTestId("listen")).toHaveLength(25);
+    expect(screen.getByText("Falling")).toBeInTheDocument();
+
+    // Check for the presence of the RecentDonorsCard and FlairsExplanationButton
+    expect(screen.getByText(/Recent Donors/i)).toBeInTheDocument();
+    expect(screen.getByText("Foo")).toBeInTheDocument();
+    expect(screen.getByText("42€")).toBeInTheDocument();
+    expect(screen.getByText("Bar")).toBeInTheDocument();
+    expect(screen.getByText("123€")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /why are some names a n i m a t e d \?/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("renders 'No listens to show' when listens list is empty", async () => {
+    mockUseLoaderData.mockReturnValueOnce({ ...loaderDataProps, listens: [] });
+
+    render(
+      <GlobalAppContext.Provider value={globalContext}>
+        <BrowserRouter>
+          <ReactQueryWrapper>
+            <RecentListensWrapper />
+          </ReactQueryWrapper>
+        </BrowserRouter>
+      </GlobalAppContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /No listens to show/i })
+      ).toBeInTheDocument();
+    });
+    // Ensure no ListenCards are rendered
+    expect(screen.queryByTestId("listen")).not.toBeInTheDocument();
+  });
+
+  it("sets ambient queue when listens data changes", async () => {
+    mockUseLoaderData.mockReturnValueOnce({
+      ...loaderDataProps,
+      listens: recentListensPropsOneListen.listens,
+    });
+
+    const { rerender } = render(
+      <GlobalAppContext.Provider value={globalContext}>
+        <BrowserRouter>
+          <ReactQueryWrapper>
+            <RecentListensWrapper />
+          </ReactQueryWrapper>
+        </BrowserRouter>
+      </GlobalAppContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: "SET_AMBIENT_QUEUE",
+        data: recentListensPropsOneListen.listens,
+      });
+    });
+
+    mockUseLoaderData.mockReturnValueOnce({
+      ...loaderDataProps,
+      // a different listen object
+      listens: [{ name: "New Listen" }],
+    });
+
+    // Simulate an update to listens prop to trigger useEffect again
+    rerender(
+      <GlobalAppContext.Provider value={globalContext}>
+        <BrowserRouter>
+          <ReactQueryWrapper>
+            <RecentListensWrapper />
+          </ReactQueryWrapper>
+        </BrowserRouter>
+      </GlobalAppContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: "SET_AMBIENT_QUEUE",
+        data: [{ name: "New Listen" }],
+      });
+      // Called once initially, once on update
+      expect(mockDispatch).toHaveBeenCalledTimes(2);
+    });
   });
 });

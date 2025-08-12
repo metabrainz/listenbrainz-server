@@ -10,7 +10,7 @@ import {
   difference,
 } from "lodash";
 import { faSpotify } from "@fortawesome/free-brands-svg-icons";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   searchForSpotifyTrack,
   loadScriptAsync,
@@ -579,17 +579,15 @@ export default class SpotifyPlayer
         durationMs: duration,
         currentSpotifyTrack: current_track ?? undefined,
       });
+      onDurationChange(duration);
       return;
     }
 
     onProgressChange(position);
-
-    if (duration !== durationMs) {
-      onDurationChange(duration);
-      this.setState({
-        durationMs: duration,
-      });
-    }
+    onDurationChange(duration);
+    this.setState({
+      durationMs: duration,
+    });
   };
 
   getAlbumArt = (): JSX.Element | null => {
@@ -607,11 +605,7 @@ export default class SpotifyPlayer
     );
     return (
       sortedImages[0] && (
-        <img
-          alt="coverart"
-          className="img-responsive"
-          src={sortedImages[0].url}
-        />
+        <img alt="coverart" className="img-fluid" src={sortedImages[0].url} />
       )
     );
   };

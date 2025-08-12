@@ -472,7 +472,7 @@ export default class APIService {
   getLatestImport = async (
     userName: string,
     service: ImportService
-  ): Promise<number> => {
+  ): Promise<LatestImportResponse> => {
     const url = encodeURI(
       `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
     );
@@ -480,8 +480,7 @@ export default class APIService {
       method: "GET",
     });
     await this.checkStatus(response);
-    const result = await response.json();
-    return parseInt(result.latest_import, 10);
+    return response.json();
   };
 
   /*
@@ -1298,6 +1297,19 @@ export default class APIService {
     return response.json();
   };
 
+  importPlaylistFromSoundCloud = async (userToken?: string): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/import/soundcloud`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
   importSpotifyPlaylistTracks = async (
     userToken: string,
     playlistID: string
@@ -1319,6 +1331,22 @@ export default class APIService {
     playlistID: string
   ): Promise<any> => {
     const url = `${this.APIBaseURI}/playlist/apple_music/${playlistID}/tracks`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  importSoundCloudPlaylistTracks = async (
+    userToken: string,
+    playlistID: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/soundcloud/${playlistID}/tracks`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -1701,6 +1729,42 @@ export default class APIService {
       throw new Error("Expected a playlist");
     }
     const url = `${this.APIBaseURI}/playlist/export-jspf/spotify`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify(playlist),
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist_mbid: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/playlist/${playlist_mbid}/export/soundcloud`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+    });
+    await this.checkStatus(response);
+    return response.json();
+  };
+
+  exportJSPFPlaylistToSoundCloud = async (
+    userToken: string,
+    playlist: JSPFPlaylist
+  ): Promise<any> => {
+    if (!playlist) {
+      throw new Error("Expected a playlist");
+    }
+    const url = `${this.APIBaseURI}/playlist/export-jspf/soundcloud`;
     const response = await fetch(url, {
       method: "POST",
       headers: {

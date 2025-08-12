@@ -34,7 +34,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
@@ -481,15 +481,14 @@ export default function UserFeedPage() {
             text=""
             icon={faHandHoldingHeart}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               NiceModal.show(ThanksModal, {
                 original_event_id: event.id!,
                 original_event_type: event.event_type,
               });
             }}
-            dataToggle="modal"
-            dataTarget="#ThanksModal"
+            isDropdown={false}
           />
         )}
         {hidden && (
@@ -498,10 +497,11 @@ export default function UserFeedPage() {
             text=""
             icon={faEye}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               hideEventMutation(event);
             }}
+            isDropdown={false}
           />
         )}
         {!hidden && isHidable && (
@@ -510,10 +510,11 @@ export default function UserFeedPage() {
             text=""
             icon={faEyeSlash}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               hideEventMutation(event);
             }}
+            isDropdown={false}
           />
         )}
         {isDeletable && (
@@ -522,10 +523,11 @@ export default function UserFeedPage() {
             text=""
             icon={faTrash}
             iconSize="lg"
-            buttonClassName="btn btn-link btn-xs"
+            buttonClassName="btn btn-link btn-sm"
             action={() => {
               deleteEventMutation(event);
             }}
+            isDropdown={false}
           />
         )}
       </>
@@ -729,15 +731,13 @@ export default function UserFeedPage() {
         <title>Feed</title>
       </Helmet>
       <div className="row">
-        <div className="col-md-9">
+        <div className="col-lg-9">
           <div className="listen-header">
             <h3 className="header-with-line">Latest activity</h3>
             {/* Commented out as new OAuth is not merged yet. */}
             {/* <button
               type="button"
               className="btn btn-icon btn-info atom-button"
-              data-toggle="modal"
-              data-target="#SyndicationFeedModal"
               title="Subscribe to syndication feed (Atom)"
               onClick={() => {
                 NiceModal.show(SyndicationFeedModal, {
@@ -793,7 +793,7 @@ export default function UserFeedPage() {
             </button> */}
             <button
               type="button"
-              className="btn btn-info btn-rounded play-tracks-button"
+              className="btn btn-info btn-rounded play-tracks-button text-nowrap"
               title="Play album"
               onClick={() => {
                 window.postMessage(
@@ -828,10 +828,10 @@ export default function UserFeedPage() {
             </>
           ) : (
             <>
-              <div className="text-center mb-15">
+              <div className="text-center mb-4">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-outline-info"
                   onClick={() => {
                     fetchPreviousPage();
                   }}
@@ -912,7 +912,7 @@ export default function UserFeedPage() {
               </div>
               {Boolean(events?.length) && (
                 <div
-                  className="text-center mb-15"
+                  className="text-center mb-4"
                   style={{
                     width: "50%",
                     marginLeft: "auto",
@@ -921,7 +921,7 @@ export default function UserFeedPage() {
                 >
                   <button
                     type="button"
-                    className="btn btn-outline btn-block"
+                    className="btn btn-outline-info w-100"
                     onClick={() => fetchNextPage()}
                     disabled={!hasNextPage || isFetchingNextPage}
                   >

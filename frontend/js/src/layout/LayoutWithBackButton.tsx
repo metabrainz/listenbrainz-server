@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet, ScrollRestoration, useNavigate } from "react-router-dom";
+import { Outlet, ScrollRestoration, useNavigate } from "react-router";
 
 export default function LayoutWithBackButton() {
   const navigate = useNavigate();

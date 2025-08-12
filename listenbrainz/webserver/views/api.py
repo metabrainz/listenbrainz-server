@@ -337,7 +337,11 @@ def latest_import():
 
         {
             "musicbrainz_id": "the MusicBrainz ID of the user",
-            "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0"
+            "latest_import": "the timestamp of the newest listen submitted in previous imports. Defaults to 0",
+            "status: {
+                "state": "a short string denoting the state of the import",
+                "count": "the number of listens that have been imported for the user by the importer",
+            },
         }
 
     :param user_name: the MusicBrainz ID of the user whose data is needed
@@ -367,10 +371,11 @@ def latest_import():
         user = db_user.get_by_mb_id(db_conn, user_name)
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
-        latest_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
+        status = listens_importer.get_import_status(db_conn, user["id"], service)
         return jsonify({
-            'musicbrainz_id': user['musicbrainz_id'],
-            'latest_import': 0 if not latest_import_ts else int(latest_import_ts.strftime('%s'))
+            "musicbrainz_id": user["musicbrainz_id"],
+            "latest_import": status["latest_listened_at"],
+            "status": status["status"]
         })
     elif request.method == 'POST':
         user = validate_auth_header()
@@ -384,15 +389,15 @@ def latest_import():
             raise APIBadRequest('Invalid data sent')
 
         try:
-            last_import_ts = listens_importer.get_latest_listened_at(db_conn, user["id"], service)
-            last_import_ts = 0 if not last_import_ts else int(last_import_ts.strftime('%s'))
-            if ts > last_import_ts:
+            status = listens_importer.get_import_status(db_conn, user["id"], service)
+            if ts > status["latest_listened_at"]:
                 listens_importer.update_latest_listened_at(db_conn, user["id"], service, ts)
         except DatabaseException:
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
         return jsonify({'status': 'ok'})
+    return None
 
 
 @api_bp.get("/validate-token")

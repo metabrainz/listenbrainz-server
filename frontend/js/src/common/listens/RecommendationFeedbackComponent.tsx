@@ -110,13 +110,16 @@ export default class RecommendationFeedbackComponent extends React.Component<
         break;
     }
     return (
-      <div className="recommendation-controls">
+      <div
+        className="recommendation-controls"
+        data-testid="recommendation-controls"
+      >
         <button
           className={`btn ${currentFeedback}`}
           id="recommendationControlsDropdown"
-          data-toggle="dropdown"
+          data-bs-toggle="dropdown"
           aria-haspopup="true"
-          aria-expanded="true"
+          aria-expanded="false"
           type="button"
         >
           <FontAwesomeIcon icon={icon as IconProp} /> {text}

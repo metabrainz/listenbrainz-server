@@ -1156,7 +1156,8 @@ class PlaylistAPITestCase(IntegrationTestCase):
             headers={"Authorization": "Token {}".format(self.user["auth_token"])}
         )
         self.assert400(response)
-        self.assertEqual(response.json["error"], "Service lastfm is not supported. We currently only support 'spotify' and 'apple_music'.")
+        self.assertEqual(
+            response.json["error"], "Service lastfm is not supported. Supported services are: 'spotify', 'apple_music', 'soundcloud'.")
 
         response = self.client.post(
             self.custom_url_for("playlist_api_v1.export_playlist", playlist_mbid=playlist_mbid, service="spotify"),

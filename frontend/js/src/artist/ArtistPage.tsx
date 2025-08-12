@@ -15,7 +15,7 @@ import {
   useLocation,
   useNavigate,
   useParams,
-} from "react-router-dom";
+} from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
@@ -42,7 +42,7 @@ import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
 
-function SortingButtons({
+export function SortingButtons({
   sort,
   setSort,
 }: {
@@ -71,7 +71,8 @@ function SortingButtons({
   );
 }
 
-interface ReleaseGroupWithSecondaryTypesAndListenCount extends ReleaseGroup {
+export interface ReleaseGroupWithSecondaryTypesAndListenCount
+  extends ReleaseGroup {
   secondary_types: string[];
   total_listen_count: number | null;
 }
@@ -89,7 +90,57 @@ export type ArtistPageProps = {
   coverArt?: string;
 };
 
-const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const COVER_ART_SINGLE_ROW_COUNT = 8;
+export const typeOrder = [
+  "Album",
+  "EP",
+  "Single",
+  "Live",
+  "Compilation",
+  "Remix",
+  "Broadcast",
+];
+export const sortReleaseGroups = (
+  sort: "release_date" | "total_listen_count",
+  releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
+) =>
+  orderBy(
+    releaseGroupsInput,
+    [
+      sort === "release_date"
+        ? (rg) => rg.date || ""
+        : (rg) => rg.total_listen_count ?? 0,
+      sort === "release_date"
+        ? (rg) => rg.total_listen_count ?? 0
+        : (rg) => rg.date || "",
+      "name",
+    ],
+    ["desc", "desc", "asc"]
+  );
+
+export const getReleaseCard = (rg: ReleaseGroup) => {
+  return (
+    <ReleaseCard
+      key={rg.mbid}
+      releaseDate={rg.date ?? undefined}
+      dateFormatOptions={{ year: "numeric", month: "short" }}
+      releaseGroupMBID={rg.mbid}
+      releaseName={rg.name}
+      releaseTypePrimary={rg.type}
+      artistCredits={rg.artists}
+      artistCreditName={rg.artists
+        .map((ar) => ar.artist_credit_name + ar.join_phrase)
+        .join("")}
+      artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
+      caaID={rg.caa_id}
+      caaReleaseMBID={rg.caa_release_mbid}
+      showInformation
+      showArtist
+      showReleaseTitle
+      showListens
+    />
+  );
+};
 
 export default function ArtistPage(): JSX.Element {
   const _ = useLoaderData();
@@ -139,32 +190,6 @@ export default function ArtistPage(): JSX.Element {
     (rg) => rg.secondary_types?.[0] ?? rg.type ?? "Other"
   );
 
-  const sortReleaseGroups = (
-    releaseGroupsInput: ReleaseGroupWithSecondaryTypesAndListenCount[]
-  ) =>
-    orderBy(
-      releaseGroupsInput,
-      [
-        sort === "release_date"
-          ? (rg) => rg.date || ""
-          : (rg) => rg.total_listen_count ?? 0,
-        sort === "release_date"
-          ? (rg) => rg.total_listen_count ?? 0
-          : (rg) => rg.date || "",
-        "name",
-      ],
-      ["desc", "desc", "asc"]
-    );
-
-  const typeOrder = [
-    "Album",
-    "EP",
-    "Single",
-    "Live",
-    "Compilation",
-    "Remix",
-    "Broadcast",
-  ];
   const last = Object.keys(rgGroups).length;
   const sortedRgGroupsKeys = sortBy(Object.keys(rgGroups), (type) =>
     typeOrder.indexOf(type) !== -1 ? typeOrder.indexOf(type) : last
@@ -175,7 +200,7 @@ export default function ArtistPage(): JSX.Element {
     ReleaseGroupWithSecondaryTypesAndListenCount[]
   > = {};
   sortedRgGroupsKeys.forEach((type) => {
-    groupedReleaseGroups[type] = sortReleaseGroups(rgGroups[type]);
+    groupedReleaseGroups[type] = sortReleaseGroups(sort, rgGroups[type]);
   });
 
   React.useEffect(() => {
@@ -248,30 +273,6 @@ export default function ArtistPage(): JSX.Element {
 
   const graphParentElementRef = React.useRef<HTMLDivElement>(null);
 
-  const getReleaseCard = (rg: ReleaseGroup) => {
-    return (
-      <ReleaseCard
-        key={rg.mbid}
-        releaseDate={rg.date ?? undefined}
-        dateFormatOptions={{ year: "numeric", month: "short" }}
-        releaseGroupMBID={rg.mbid}
-        releaseName={rg.name}
-        releaseTypePrimary={rg.type}
-        artistCredits={rg.artists}
-        artistCreditName={rg.artists
-          .map((ar) => ar.artist_credit_name + ar.join_phrase)
-          .join("")}
-        artistMBIDs={rg.artists.map((ar) => ar.artist_mbid)}
-        caaID={rg.caa_id}
-        caaReleaseMBID={rg.caa_release_mbid}
-        showInformation
-        showArtist
-        showReleaseTitle
-        showListens
-      />
-    );
-  };
-
   React.useEffect(() => {
     // Reset default view
     setExpandDiscography(false);
@@ -310,7 +311,7 @@ export default function ArtistPage(): JSX.Element {
         <div className="artist-info">
           <h1>{artist?.name}</h1>
           <div className="details">
-            <small className="help-block">
+            <small className="form-text">
               {artist?.begin_year}
               {Boolean(artist?.end_year) && ` — ${artist?.end_year}`}
               <br />
@@ -337,7 +338,7 @@ export default function ArtistPage(): JSX.Element {
             </div>
           )}
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {artist &&
               !isEmpty(artist?.rels) &&
@@ -360,42 +361,37 @@ export default function ArtistPage(): JSX.Element {
               </Link>
               <button
                 type="button"
-                className="btn btn-info dropdown-toggle"
-                data-toggle="dropdown"
+                className="btn btn-info dropdown-toggle px-3"
+                data-bs-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
-              >
-                <span className="caret" />
-                <span className="sr-only">Toggle Dropdown</span>
-              </button>
-              <ul className="dropdown-menu">
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
-                  >
-                    Artist radio
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
-                  >
-                    This artist only
-                  </Link>
-                </li>
+                aria-label="Toggle dropdown"
+              />
+              <div className="dropdown-menu">
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Artist radio
+                </Link>
+                <Link
+                  to={`/explore/lb-radio/?prompt=artist:(${artistMBID})::nosim&mode=easy`}
+                  className="dropdown-item"
+                >
+                  This artist only
+                </Link>
                 {Boolean(filteredTags?.length) && (
-                  <li>
-                    <Link
-                      to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                        filteredTagsAsString
-                      )})::or&mode=easy`}
-                    >
-                      Tags (
-                      <span className="tags-list">{filteredTagsAsString}</span>)
-                    </Link>
-                  </li>
+                  <Link
+                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                      filteredTagsAsString
+                    )})::or&mode=easy`}
+                    className="dropdown-item"
+                  >
+                    Tags (
+                    <span className="tags-list">{filteredTagsAsString}</span>)
+                  </Link>
                 )}
-              </ul>
+              </div>
             </div>
           )}
         </div>
@@ -437,7 +433,7 @@ export default function ArtistPage(): JSX.Element {
             let listenCountComponent;
             if (Number.isFinite(recording.total_listen_count)) {
               listenCountComponent = (
-                <span className="badge badge-info">
+                <span className="badge bg-info">
                   {bigNumberFormatter.format(recording.total_listen_count)}
                   &nbsp;
                   <FontAwesomeIcon icon={faHeadphones} />
@@ -458,7 +454,7 @@ export default function ArtistPage(): JSX.Element {
             <div className="read-more">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() =>
                   setExpandPopularTracks((prevValue) => !prevValue)
                 }
@@ -502,7 +498,7 @@ export default function ArtistPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -537,10 +533,10 @@ export default function ArtistPage(): JSX.Element {
             </div>
           ))}
           {showFullDiscographyButton && (
-            <div className="read-more mb-10">
+            <div className="read-more mb-3">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline-info"
                 onClick={() => setExpandDiscography((prevValue) => !prevValue)}
               >
                 See {expandDiscography ? "less" : "full discography"}

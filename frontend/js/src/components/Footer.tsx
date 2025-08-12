@@ -2,14 +2,14 @@ import * as React from "react";
 
 import { faAnglesRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function Footer() {
   return (
     <section className="footer">
-      <div className="container-fluid">
-        <div className="row">
-          <div className="col-sm-12 col-md-6">
+      <div className="container-fluid px-4">
+        <div className="row align-items-baseline">
+          <div className="col-12 col-sm-12 col-lg-6">
             <h3>
               <img
                 src="/static/img/listenbrainz-logo.svg"
@@ -18,14 +18,14 @@ export default function Footer() {
               />
             </h3>
             <br />
-            <p className="color-gray">
+            <p>
               ListenBrainz keeps track of music you listen to and provides you
               with insights into your listening habits.
               <br />
               You can use ListenBrainz to track your listening habits, discover
               new music with personalized recommendations, and share your
               musical taste with others using our visualizations. User listen
-              data and text is is made public under the{" "}
+              data and text is made public under the{" "}
               <a href="https://creativecommons.org/public-domain/cc0/">
                 Creative Commons Zero (CC0)
               </a>{" "}
@@ -33,7 +33,7 @@ export default function Footer() {
             </p>
             <ul className="list-unstyled">
               <li className="color-a">
-                <span className="color-gray">Chat with us: </span>{" "}
+                <span>Chat with us: </span>{" "}
                 <a
                   href="https://musicbrainz.org/doc/Communication/ChatBrainz"
                   target="_blank"
@@ -43,16 +43,15 @@ export default function Footer() {
                 </a>
               </li>
               <li className="color-a">
-                <span className="color-gray">Email: </span>{" "}
+                <span>Email: </span>{" "}
                 <a href="mailto:support@metabrainz.org">
                   support@metabrainz.org{" "}
                 </a>
               </li>
             </ul>
           </div>
-          <br />
-          <div className="col-xs-12 col-sm-6 col-md-3">
-            <h3 className="w-title-a text-brand">Useful Links</h3>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <h3 className="text-brand text-body">Useful Links</h3>
             <ul className="list-unstyled">
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
@@ -108,7 +107,7 @@ export default function Footer() {
                   MetaBrainz
                 </a>
               </li>
-              <li className="visible-xs">
+              <li className="d-block d-md-none">
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
                 <a
                   href="https://github.com/metabrainz/listenbrainz-server"
@@ -118,7 +117,7 @@ export default function Footer() {
                   Contribute Here
                 </a>
               </li>
-              <li className="visible-xs">
+              <li className="d-block d-md-none">
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
                 <a
                   href="https://tickets.metabrainz.org/"
@@ -130,8 +129,8 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          <div className="col-xs-12 col-sm-6 col-md-3">
-            <h3 className="w-title-a text-brand">Fellow Projects</h3>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <h3 className="text-brand text-body">Fellow Projects</h3>
             <ul className="list-unstyled">
               <li>
                 <FontAwesomeIcon icon={faAnglesRight} size="sm" />{" "}
@@ -233,8 +232,8 @@ export default function Footer() {
           </div>
         </div>
         <div className="row center-p">
-          <div className="col-md-3 d-none d-md-block hidden-xs">
-            <p className="color-gray section-line">
+          <div className="col-lg-3 d-none d-md-block">
+            <p className="border-light border-top pt-5">
               OSS Geek?{" "}
               <a
                 href="https://github.com/metabrainz/listenbrainz-server"
@@ -246,8 +245,8 @@ export default function Footer() {
               </a>
             </p>
           </div>
-          <div className="col-md-6">
-            <p className="section-line">
+          <div className="col-lg-6">
+            <p className="border-light border-top pt-5">
               Brought to you by{" "}
               <img
                 src="/static/img/meb-icons/MetaBrainz.svg"
@@ -258,8 +257,8 @@ export default function Footer() {
               <span className="color-a"> MetaBrainz Foundation </span>
             </p>
           </div>
-          <div className="col-md-3 d-none d-md-block hidden-xs">
-            <p className="color-gray section-line">
+          <div className="col-lg-3 d-none d-md-block">
+            <p className="border-light border-top pt-5">
               Found an Issue?{" "}
               <a
                 href="https://tickets.metabrainz.org/"

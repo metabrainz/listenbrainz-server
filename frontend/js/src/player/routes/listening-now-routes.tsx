@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Outlet } from "react-router-dom";
-import type { RouteObject } from "react-router-dom";
+import { Outlet } from "react-router";
+import type { RouteObject } from "react-router";
 import RouteLoader from "../../utils/Loader";
 
 const getPlayingNowRoutes = (): RouteObject[] => {
@@ -11,13 +11,15 @@ const getPlayingNowRoutes = (): RouteObject[] => {
       children: [
         {
           path: "listening-now/",
-          lazy: async () => {
-            const PlayingNowPage = await import(
-              "../../metadata-viewer/MetadataViewerPage"
-            );
-            return { Component: PlayingNowPage.PlayingNowPageWrapper };
+          lazy: {
+            Component: async () => {
+              return (await import("../../metadata-viewer/MetadataViewerPage"))
+                .PlayingNowPageWrapper;
+            },
+            loader: async () => {
+              return RouteLoader;
+            },
           },
-          loader: RouteLoader,
         },
       ],
     },

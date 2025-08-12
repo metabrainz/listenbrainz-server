@@ -271,6 +271,20 @@ CREATE TABLE soundcloud_cache.track (
     data                    JSONB NOT NULL
 );
 
+
+CREATE TABLE internetarchive_cache.track (
+    id            INTEGER GENERATED ALWAYS AS IDENTITY NOT NULL,
+    track_id      TEXT UNIQUE NOT NULL,
+    name          TEXT NOT NULL,
+    artist        TEXT[] NOT NULL,
+    album         TEXT,
+    stream_urls   TEXT[] NOT NULL,
+    artwork_url   TEXT,
+    data          JSONB NOT NULL,
+    last_updated  TIMESTAMPTZ DEFAULT NOW()
+);
+
+
 CREATE TABLE background_worker_state (
     key     TEXT NOT NULL,
     value   TEXT
@@ -323,7 +337,19 @@ CREATE TABLE popularity.recording (
     total_user_count        INTEGER NOT NULL
 );
 
+CREATE TABLE popularity.mlhd_recording (
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
 CREATE TABLE popularity.artist (
+    artist_mbid             UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_artist (
     artist_mbid             UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
     total_user_count        INTEGER NOT NULL
@@ -335,7 +361,32 @@ CREATE TABLE popularity.release (
     total_user_count        INTEGER NOT NULL
 );
 
+CREATE TABLE popularity.mlhd_release (
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_release_group (
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
 CREATE TABLE popularity.top_recording (
+    artist_mbid             UUID NOT NULL,
+    recording_mbid          UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_recording (
     artist_mbid             UUID NOT NULL,
     recording_mbid          UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
@@ -345,6 +396,28 @@ CREATE TABLE popularity.top_recording (
 CREATE TABLE popularity.top_release (
     artist_mbid             UUID NOT NULL,
     release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release (
+    artist_mbid             UUID NOT NULL,
+    release_mbid            UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+
+CREATE TABLE popularity.top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
+    total_listen_count      INTEGER NOT NULL,
+    total_user_count        INTEGER NOT NULL
+);
+
+CREATE TABLE popularity.mlhd_top_release_group (
+    artist_mbid             UUID NOT NULL,
+    release_group_mbid      UUID NOT NULL,
     total_listen_count      INTEGER NOT NULL,
     total_user_count        INTEGER NOT NULL
 );

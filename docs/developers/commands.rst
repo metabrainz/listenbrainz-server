@@ -27,7 +27,7 @@ Dump Manager
 
 These commands are used to export and import dumps.
 
-.. click:: listenbrainz.db.dump_manager:cli
+.. click:: listenbrainz.dumps.manager:cli
    :prog: ./develop.sh manage dump
    :nested: full
 

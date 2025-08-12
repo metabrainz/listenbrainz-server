@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import current_app,flash,redirect
 from flask_admin.model import action
@@ -15,11 +15,11 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    created = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(tz=timezone.utc))
     musicbrainz_id = db.Column(db.String)
     auth_token = db.Column(db.String)
-    last_login = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    latest_import = db.Column(db.DateTime(timezone=True), default=lambda: datetime.fromutctimestamp(0))
+    last_login = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(tz=timezone.utc), nullable=False)
+    latest_import = db.Column(db.DateTime(timezone=True), default=lambda: datetime.fromtimestamp(0, tz=timezone.utc))
     gdpr_agreed = db.Column(db.DateTime(timezone=True))
     musicbrainz_row_id = db.Column(db.Integer, nullable=False)
     login_id = db.Column(db.String)

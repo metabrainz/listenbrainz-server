@@ -26,10 +26,12 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
 
   return (
     <div
-      className="modal fade in"
+      className={`modal fade ${modal.visible ? "show" : ""}`}
+      style={{ display: modal.visible ? "block" : "none" }}
       tabIndex={-1}
       role="dialog"
-      style={{ display: "block" }}
+      data-bs-backdrop="true"
+      aria-hidden={!modal.visible}
     >
       <div
         className="modal-dialog"
@@ -40,32 +42,32 @@ export default NiceModal.create((props: DuplicateTrackModalProps) => {
           <div className="modal-header">
             <button
               type="button"
-              className="close"
+              className="btn-close"
               onClick={cancel}
               aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
+            />
             <h4 className="modal-title">Duplicate Track</h4>
           </div>
           <div className="modal-body">
             <p>{message}</p>
           </div>
-          <div className="modal-footer">
-            <div className="checkbox pull-left">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={localDontAskAgain}
-                  onChange={(e) => setLocalDontAskAgain(e.target.checked)}
-                />
+          <div className="modal-footer" style={{ display: "inline-block" }}>
+            <div className="form-check pull-left">
+              <input
+                id="dontAskAgain"
+                type="checkbox"
+                className="form-check-input"
+                checked={localDontAskAgain}
+                onChange={(e) => setLocalDontAskAgain(e.target.checked)}
+              />
+              <label className="form-check-label" htmlFor="dontAskAgain">
                 Don&apos;t ask me again until I close this page
               </label>
             </div>
             <div className="pull-right">
               <button
                 type="button"
-                className="btn btn-default"
+                className="btn btn-secondary"
                 onClick={cancel}
               >
                 Cancel

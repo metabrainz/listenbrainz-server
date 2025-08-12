@@ -5,6 +5,7 @@ from pyspark import StorageLevel
 from pyspark.sql import DataFrame
 
 import listenbrainz_spark
+from data.postgres.artist import get_artist_country_cache_query
 from listenbrainz_spark import config
 from listenbrainz_spark.path import ARTIST_COUNTRY_CODE_DATAFRAME
 from listenbrainz_spark.postgres.utils import load_from_db
@@ -28,32 +29,7 @@ def create_iso_country_codes_df():
 
 def create_artist_country_cache():
     """ Import artist country from postgres to HDFS for use in artist map stats calculation. """
-    query = """
-        -- for the case where artist area is a subdivision of a country
-        SELECT a.gid AS artist_mbid
-             , a.name AS artist_name
-             , iso.code AS country_code_alpha_2
-          FROM musicbrainz.artist a
-          JOIN musicbrainz.area_containment ac
-            ON ac.descendant = a.area
-          JOIN musicbrainz.iso_3166_1 iso
-            ON iso.area = ac.parent
-         UNION
-         -- for the case where artist area is a country itself
-        SELECT a.gid AS artist_mbid
-             , a.name AS artist_name
-             , iso.code AS country_code_alpha_2
-          FROM musicbrainz.artist a
-          JOIN musicbrainz.iso_3166_1 iso
-            ON iso.area = a.area
-        -- for the case where artist area is null
-         UNION
-        SELECT a.gid AS artist_mbid
-             , a.name AS artist_name
-             , NULL AS country_code_alpha_2
-          FROM musicbrainz.artist a
-         WHERE a.area IS NULL
-    """
+    query = get_artist_country_cache_query()
     artist_df = load_from_db(config.PG_JDBC_URI, config.PG_USER, config.PG_PASSWORD, query)
     artist_df.createOrReplaceTempView("artist_cache_mb_db")
 

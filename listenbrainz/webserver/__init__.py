@@ -96,10 +96,7 @@ def create_app(debug=None):
     In the Flask app returned, blueprints are not registered.
     """
 
-    app = CustomFlask(
-        import_name=__name__,
-        use_flask_uuid=True,
-    )
+    app = CustomFlask(import_name=__name__)
 
     load_config(app)
     if debug is not None:
@@ -315,10 +312,7 @@ def create_app_rtfd():
     packages (like MessyBrainz), so we have to ignore these initialization
     steps. Only blueprints/views are needed to render documentation.
     """
-    app = CustomFlask(
-        import_name=__name__,
-        use_flask_uuid=True,
-    )
+    app = CustomFlask(import_name=__name__)
 
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -433,11 +427,14 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.donor_api import donor_api_bp
     app.register_blueprint(donor_api_bp, url_prefix=API_PREFIX+"/donors")
 
-    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp
+    from listenbrainz.webserver.views.entity_pages import artist_bp, album_bp, release_bp, release_group_bp, recording_bp, track_bp
     app.register_blueprint(artist_bp, url_prefix='/artist')
     app.register_blueprint(album_bp, url_prefix='/album')
     app.register_blueprint(release_bp, url_prefix='/release')
     app.register_blueprint(release_group_bp, url_prefix='/release-group')
+    app.register_blueprint(recording_bp, url_prefix='/recording')
+    app.register_blueprint(track_bp, url_prefix='/track')
 
     from listenbrainz.webserver.views.atom import atom_bp
     app.register_blueprint(atom_bp, url_prefix='/syndication-feed')
+

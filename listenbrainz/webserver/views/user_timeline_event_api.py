@@ -895,7 +895,7 @@ def get_listen_events(
             max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
         else:
-            max_ts = datetime.utcnow()
+            max_ts = datetime.now(tz=timezone.utc)
             min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW
 
     listens = timescale_connection._ts.fetch_recent_listens_for_users(
@@ -954,7 +954,7 @@ def get_all_listen_events(
         max_ts = datetime.fromtimestamp(max_ts, timezone.utc)
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
     else:
-        max_ts = datetime.utcnow()
+        max_ts = datetime.now(tz=timezone.utc)
         min_ts = max_ts - DEFAULT_LISTEN_EVENT_WINDOW_NEW
 
     listens = timescale_connection._ts.fetch_all_recent_listens_for_users(

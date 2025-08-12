@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router";
 
 type NavbarLink = { to: string; label: string };
 

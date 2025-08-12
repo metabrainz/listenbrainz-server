@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { toast } from "react-toastify";
 import { findKey, startCase } from "lodash";
 import Select, { OptionProps, components } from "react-select";
@@ -100,8 +100,8 @@ export default function FlairsSettings() {
   };
 
   return (
-    <div className="mb-15 donation-flairs-settings">
-      <form className="form-group" onSubmit={submitFlairPreferences}>
+    <div className="mb-4 donation-flairs-settings">
+      <form className="mb-4" onSubmit={submitFlairPreferences}>
         <ReactTooltip id="flair-tooltip" place="bottom" multiline>
           Every $5 donation unlocks flairs for 1 month,
           <br />
@@ -182,7 +182,7 @@ export default function FlairsSettings() {
           </div>
         </div>
 
-        <button className="btn btn-success mt-10" type="submit">
+        <button className="btn btn-success mt-3" type="submit">
           Save flair
         </button>
       </form>

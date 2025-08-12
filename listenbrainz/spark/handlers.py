@@ -15,9 +15,8 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
-from listenbrainz.db import year_in_music, couchdb
+from listenbrainz.db import year_in_music
 from listenbrainz.db.fresh_releases import insert_fresh_releases
-from listenbrainz.db import similarity
 from listenbrainz.db.similar_users import import_user_similarities
 from listenbrainz.troi.daily_jams import run_post_recommendation_troi_bot
 from listenbrainz.troi.weekly_playlists import process_weekly_playlists, process_weekly_playlists_end
@@ -362,15 +361,6 @@ def handle_yim_playlists(message):
 
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
-
-
-def handle_similar_recordings(message):
-    similarity.insert("recording", message["data"], message["algorithm"])
-
-
-def handle_similar_artists(message):
-    similarity.insert("artist_credit_mbids", message["data"], message["algorithm"])
-
 
 def handle_troi_playlists(message):
     process_weekly_playlists(message["slug"], message["data"])

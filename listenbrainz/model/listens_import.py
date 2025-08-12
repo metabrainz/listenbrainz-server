@@ -2,6 +2,9 @@ from listenbrainz.model import db
 from listenbrainz.model.utils import generate_username_link
 from listenbrainz.webserver.admin import AdminModelView
 
+from sqlalchemy.dialects.postgresql import JSONB
+
+
 
 class ListensImporter(db.Model):
     __tablename__ = 'listens_importer'
@@ -15,6 +18,7 @@ class ListensImporter(db.Model):
     service = db.Column(db.String, nullable=False)
     last_updated = db.Column(db.DateTime(timezone=True))
     latest_listened_at = db.Column(db.DateTime(timezone=True))
+    status = db.Column(JSONB)
     error_message = db.Column(db.String)
     user = db.relationship('User')
 
@@ -27,6 +31,7 @@ class ListensImporterAdminView(AdminModelView):
         'service',
         'last_updated',
         'latest_listened_at',
+        'status',
         'error_message'
     ]
 
@@ -38,6 +43,7 @@ class ListensImporterAdminView(AdminModelView):
         'service',
         'last_updated',
         'latest_listened_at',
+        'status',
         'error_message'
     ]
 

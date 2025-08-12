@@ -3,7 +3,7 @@
 import { merge } from "lodash";
 import * as React from "react";
 import { useState } from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 import Loader from "../../components/Loader";
 import {

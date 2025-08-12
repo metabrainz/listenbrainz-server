@@ -95,8 +95,8 @@ function BrainzPlayerWithWrapper(brainzPlayerProps: {
 
 const mockDispatch = jest.fn();
 
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
+jest.mock("react-router", () => ({
+  ...jest.requireActual("react-router"),
   useLocation: () => ({
     pathname: "/user/foobar/",
   }),
@@ -121,9 +121,7 @@ describe("BrainzPlayer", () => {
     });
   });
   beforeAll(() => {
-    window.location = {
-      href: "http://nevergonnagiveyouup.com",
-    } as Window["location"];
+    window.location.href = "http://nevergonnagiveyouup.com";
 
     global.IntersectionObserver = IntersectionObserver;
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
@@ -156,7 +154,7 @@ describe("BrainzPlayer", () => {
     await user.click(playButton);
 
     expect(screen.getByTestId("youtube-wrapper")).toBeInTheDocument();
-    expect(screen.getByTestId("soundcloud hidden")).toBeInTheDocument();
+    expect(screen.getByTestId("soundcloud")).toBeInTheDocument();
     expect(screen.queryByTestId("spotify-player")).toBeNull();
   });
 

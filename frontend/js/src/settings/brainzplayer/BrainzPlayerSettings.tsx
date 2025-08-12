@@ -6,7 +6,7 @@ import {
   faYoutube,
 } from "@fortawesome/free-brands-svg-icons";
 import { Helmet } from "react-helmet";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
@@ -193,7 +193,7 @@ function BrainzPlayerSettings() {
             </p>
           )}
         </summary>
-        <h3 className="mt-15">Play music with...</h3>
+        <h3 className="mt-4">Play music with...</h3>
         <p>Choose which music services to use for playback in ListenBrainz.</p>
 
         <p>
@@ -201,7 +201,7 @@ function BrainzPlayerSettings() {
           recommend enabling another service.
         </p>
         <div
-          className="mb-15"
+          className="mb-4"
           data-tip
           data-tip-disable={
             spotifyEnabled || SpotifyPlayer.hasPermissions(spotifyAuth)
@@ -242,7 +242,7 @@ function BrainzPlayerSettings() {
           </small>
         </div>
         <div
-          className="mb-15"
+          className="mb-4"
           data-tip
           data-tip-disable={
             appleMusicEnabled || AppleMusicPlayer.hasPermissions(appleAuth)
@@ -288,7 +288,7 @@ function BrainzPlayerSettings() {
           </small>
         </div>
         <div
-          className="mb-15"
+          className="mb-4"
           data-tip
           data-tip-disable={
             soundcloudEnabled || SoundcloudPlayer.hasPermissions(soundcloudAuth)
@@ -332,7 +332,7 @@ function BrainzPlayerSettings() {
             </Link>
           </small>
         </div>
-        <div className="mb-15">
+        <div className="mb-4">
           <Switch
             id="enable-youtube"
             value="youtube"
@@ -381,7 +381,7 @@ function BrainzPlayerSettings() {
             </ul>
           </small>
         </div>
-        <h3 className="mt-15">Music services priority</h3>
+        <h3 className="mt-4">Music services priority</h3>
         <p>
           You have the option to adjust the priority of the music services. They
           will be used in the order you set here.

@@ -17,22 +17,31 @@ import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
 import {
   LB_ALBUM_MBID_REGEXP,
-  RELEASE_GROUP_MBID_REGEXP,
-  RELEASE_MBID_REGEXP,
-  RECORDING_MBID_REGEXP,
+  MB_RELEASE_GROUP_MBID_REGEXP,
+  MB_RELEASE_MBID_REGEXP,
+  MB_RECORDING_MBID_REGEXP,
   UUID_REGEXP,
 } from "./constants";
 
 const THROTTLE_MILLISECONDS = 1500;
 
-type SearchTrackOrMBIDProps = {
+type SearchAlbumOrMBIDProps = {
   onSelectAlbum: (releaseMBID?: string) => void;
   defaultValue?: string;
   switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 };
 
-const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
-  { onSelectAlbum, defaultValue, switchMode }: SearchTrackOrMBIDProps,
+const SearchAlbumOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchAlbumOrMBIDProps
+>(function SearchAlbumOrMBID(
+  {
+    onSelectAlbum,
+    defaultValue,
+    switchMode,
+    requiredInput = true,
+  }: SearchAlbumOrMBIDProps,
   inputRefForParent
 ) {
   const { APIService } = useContext(GlobalAppContext);
@@ -45,20 +54,27 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     Array<MusicBrainzRelease & Partial<WithMedia> & WithArtistCredits>
   >([]);
 
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    onSelectAlbum();
+    setLoading(false);
+    searchInputRef?.current?.focus();
+  }, [onSelectAlbum]);
+
   // Allow parents to focus on input and trigger search
   useImperativeHandle(
     inputRefForParent,
-    () => {
-      return {
-        focus() {
-          searchInputRef?.current?.focus();
-        },
-        triggerSearch(newText: string) {
-          setInputValue(newText);
-        },
-      };
-    },
-    []
+    () => ({
+      focus() {
+        searchInputRef?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
   );
 
   const handleError = useCallback(
@@ -101,10 +117,10 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
       throttle(
         async (input: string) => {
           const newReleaseMBID =
-            RELEASE_MBID_REGEXP.exec(input)?.[1] ??
+            MB_RELEASE_MBID_REGEXP.exec(input)?.[1] ??
             UUID_REGEXP.exec(input)?.[0];
           const newReleaseGroupMBID =
-            RELEASE_GROUP_MBID_REGEXP.exec(input)?.[1].toLowerCase() ??
+            MB_RELEASE_GROUP_MBID_REGEXP.exec(input)?.[1].toLowerCase() ??
             LB_ALBUM_MBID_REGEXP.exec(input)?.[1].toLowerCase();
           try {
             if (newReleaseMBID) {
@@ -121,8 +137,6 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
                 })
               );
               setSearchResults(releasesWithAC);
-            } else {
-              return;
             }
           } catch (error) {
             handleError(
@@ -147,14 +161,6 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     [onSelectAlbum]
   );
 
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    onSelectAlbum();
-    setLoading(false);
-    searchInputRef?.current?.focus();
-  };
-
   useEffect(() => {
     if (!inputValue) {
       return;
@@ -162,10 +168,10 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
     setLoading(true);
     const isValidUUID = UUID_REGEXP.test(inputValue);
     const isValidAlbumUUID =
-      RELEASE_MBID_REGEXP.test(inputValue) ||
-      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
       LB_ALBUM_MBID_REGEXP.test(inputValue);
-    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    const isValidRecordingUUID = MB_RECORDING_MBID_REGEXP.test(inputValue);
     if (isValidRecordingUUID && isFunction(switchMode)) {
       switchMode(inputValue);
       return;
@@ -203,18 +209,16 @@ const SearchAlbumOrMBID = forwardRef(function SearchAlbumOrMBID(
             setInputValue(event.target.value);
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
           aria-haspopup={Boolean(searchResults?.length)}
         />
-        <span className="input-group-btn">
-          <button className="btn btn-default" type="button" onClick={reset}>
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faTimesCircle} />
-            )}
-          </button>
-        </span>
+        <button className="btn btn-secondary" type="button" onClick={reset}>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faTimesCircle} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"

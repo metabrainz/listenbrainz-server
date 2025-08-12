@@ -4,17 +4,18 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Tuple, Optional
 
+import orjson
 import psycopg2
 import psycopg2.sql
 import sqlalchemy
-import orjson
 from brainzutils import cache
 from psycopg2.errors import UntranslatableCharacter
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz.db import timescale, DUMP_DEFAULT_THREAD_COUNT
-from listenbrainz.db.dump import SchemaMismatchException
+from listenbrainz.db import timescale
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH

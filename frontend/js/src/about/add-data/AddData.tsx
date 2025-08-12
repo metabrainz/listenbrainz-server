@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function AddData() {
   return (
@@ -20,10 +20,19 @@ export default function AddData() {
           <em>
             <a href="https://audacious-media-player.org/">Audacious</a>
           </em>
-          , a cross-platform open source audio player:{" "}
+          , a cross-platform open source music player:{" "}
           <a href="https://codeberg.org/punkscience/clscrobble">
             <code>clscrobble</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://chiselapp.com/user/MistressRemilia/repository/benben">
+              Benben
+            </a>
+          </em>
+          , a command line music player and converter for Unix-like operating
+          systems
         </li>
         <li>
           <em>
@@ -47,7 +56,7 @@ export default function AddData() {
           <em>
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>
-          , full-fledged audio player for Windows:{" "}
+          , full-fledged music player for Windows:{" "}
           <a href="https://github.com/phw/foo_listenbrainz2">
             <code>foo_listenbrainz2</code>
           </a>
@@ -62,7 +71,7 @@ export default function AddData() {
           <em>
             <a href="https://longplay.app/">Longplay</a>
           </em>
-          , an album-based music player for iOS
+          , an album-based music player for iOS and macOS
         </li>
         <li>
           <em>
@@ -105,7 +114,7 @@ export default function AddData() {
           <em>
             <a href="https://quodlibet.readthedocs.io/">Quod Libet</a>
           </em>
-          , a cross-platform audio player
+          , a cross-platform music player
         </li>
         <li>
           <em>
@@ -137,8 +146,8 @@ export default function AddData() {
             <a href="https://tidal.com/">TIDAL</a>
           </em>
           , a cross-platform music player and streaming service:{" "}
-          <a href="https://github.com/uwu/neptune">
-            <code>neptune client mod</code>
+          <a href="https://github.com/Inrixia/TidaLuna">
+            <code>TidaLuna client mod</code>
           </a>
           +{" "}
           <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
@@ -380,6 +389,13 @@ export default function AddData() {
           <em>
             <Link to="/settings/music-services/details/">
               Connect your Spotify or Last.fm account to ListenBrainz
+            </Link>
+          </em>
+        </li>
+        <li>
+          <em>
+            <Link to="/settings/import/">
+              Import your listening history (file uploads)
             </Link>
           </em>
         </li>

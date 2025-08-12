@@ -17,7 +17,7 @@ module.exports = {
   moduleFileExtensions: ["ts", "tsx", "js", "json", "jsx"],
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ["<rootDir>/enzyme.config.ts", "jest-canvas-mock"],
+  setupFiles: ["jest-canvas-mock"],
 
   setupFilesAfterEnv: [
     "jest-location-mock",
@@ -39,27 +39,23 @@ module.exports = {
     customExportConditions: [""],
   },
   moduleNameMapper: {
-    'react-markdown': '<rootDir>/node_modules/react-markdown/react-markdown.min.js',
-    '^localforage$': '<rootDir>/frontend/js/tests/__mocks__/localforage.ts'
+    "react-markdown": "<rootDir>/frontend/js/tests/__mocks__/react-markdown.tsx",
+    "^localforage$": "<rootDir>/frontend/js/tests/__mocks__/localforage.ts",
+    "d3-interpolate":
+      "<rootDir>/node_modules/d3-interpolate/dist/d3-interpolate.min.js",
+    "d3-color": "<rootDir>/node_modules/d3-color/dist/d3-color.min.js",
+    "d3-scale-chromatic":
+      "<rootDir>/node_modules/d3-scale-chromatic/dist/d3-scale-chromatic.min.js",
+    "d3-scale": "<rootDir>/node_modules/d3-scale/dist/d3-scale.min.js",
+    "d3-shape": "<rootDir>/node_modules/d3-shape/dist/d3-shape.min.js",
+    "d3-path": "<rootDir>/node_modules/d3-path/dist/d3-path.min.js",
   },
   transform: {
     "\\.[jt]sx?$": "ts-jest",
-    "^.+\\.(js|jsx)$": "babel-jest"
+    "^.+\\.(js|jsx)$": "babel-jest",
   },
-
-  // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  // Re-include d3 packages
-  transformIgnorePatterns: [
-    "<rootDir>/node_modules/(?!(d3-color|d3-scale-chromatic))",
-  ],
 
   // Indicates whether each individual test should be reported during the run
   verbose: true,
 
-  snapshotSerializers: ["enzyme-to-json/serializer"],
-
-  snapshotFormat: {
-    escapeString: true,
-    printBasicPrototype: true,
-  },
 };

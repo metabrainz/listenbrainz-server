@@ -12,7 +12,7 @@ import type { Palette } from "@vibrant/color";
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import { toast } from "react-toastify";
 import CBReview from "../cb-review/CBReview";
 import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
@@ -212,7 +212,7 @@ export default function AlbumPage(): JSX.Element {
           width={200}
         />
         <br />
-        <div className="help-block small mb-15">
+        <div className="form-text small mb-4">
           Broken CD by{" "}
           <a href="https://www.vecteezy.com/members/amandalamsyah/uploads">
             amandalamsyah on Vecteezy
@@ -292,14 +292,14 @@ export default function AlbumPage(): JSX.Element {
                 );
               })}
             </div>
-            <small className="help-block">
+            <small className="form-text">
               {type}
               {type && album?.date ? " - " : ""}
               {album?.date}
             </small>
           </div>
         </div>
-        <div className="right-side">
+        <div className="right-side gap-1">
           <div className="entity-rels">
             {!isEmpty(artist?.artists?.[0]?.rels) &&
               Object.entries(
@@ -321,50 +321,43 @@ export default function AlbumPage(): JSX.Element {
             </Link>
             <button
               type="button"
-              className="btn btn-info dropdown-toggle"
-              data-toggle="dropdown"
+              className="btn btn-info dropdown-toggle px-3"
+              data-bs-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false"
-            >
-              <span className="caret" />
-              <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-              <li>
-                <Link
-                  to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
-                >
-                  Artist{artist.artists?.length > 1 && "s"} radio
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
-                >
-                  {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
-                  only
-                </Link>
-              </li>
+              aria-label="Toggle dropdown"
+            />
+            <div className="dropdown-menu">
+              <Link
+                to={`/explore/lb-radio/?prompt=${artistsRadioPrompt}&mode=easy`}
+                className="dropdown-item"
+              >
+                Artist{artist.artists?.length > 1 && "s"} radio
+              </Link>
+              <Link
+                to={`/explore/lb-radio/?prompt=${artistsRadioPromptNoSim}&mode=easy`}
+                className="dropdown-item"
+              >
+                {artist.artists?.length > 1 ? "These artists" : "This artist"}{" "}
+                only
+              </Link>
               {Boolean(filteredTags?.length) && (
-                <li>
-                  <Link
-                    to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
-                      filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")
-                    )})::or&mode=easy`}
-                  >
-                    Tags (
-                    <span className="tags-list">
-                      {filteredTags
-                        .map((filteredTag) => filteredTag.tag)
-                        .join(",")}
-                    </span>
-                    )
-                  </Link>
-                </li>
+                <Link
+                  to={`/explore/lb-radio/?prompt=tag:(${encodeURIComponent(
+                    filteredTags.map((filteredTag) => filteredTag.tag).join(",")
+                  )})::or&mode=easy`}
+                  className="dropdown-item"
+                >
+                  Tags (
+                  <span className="tags-list">
+                    {filteredTags
+                      .map((filteredTag) => filteredTag.tag)
+                      .join(",")}
+                  </span>
+                  )
+                </Link>
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -416,7 +409,7 @@ export default function AlbumPage(): JSX.Element {
                     Number.isFinite(recording.total_listen_count)
                   ) {
                     listenCountComponent = (
-                      <span className="badge badge-info">
+                      <span className="badge bg-info">
                         {bigNumberFormatter.format(
                           recording.total_listen_count
                         )}
@@ -484,7 +477,7 @@ export default function AlbumPage(): JSX.Element {
                     return (
                       <div key={listener.user_name} className="listener">
                         <Username username={listener.user_name} />
-                        <span className="badge badge-info">
+                        <span className="badge bg-info">
                           {bigNumberFormatter.format(listener.listen_count)}
                           &nbsp;
                           <FontAwesomeIcon icon={faHeadphones} />
@@ -496,6 +489,8 @@ export default function AlbumPage(): JSX.Element {
             </div>
           )}
         </div>
+      </div>
+      <div className="entity-page-content">
         <div className="reviews">
           <h3 className="header-with-line">Reviews</h3>
           <div className="row">

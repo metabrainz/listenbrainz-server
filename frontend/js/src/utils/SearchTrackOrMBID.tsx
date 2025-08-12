@@ -17,9 +17,10 @@ import GlobalAppContext from "./GlobalAppContext";
 import DropdownRef from "./Dropdown";
 import {
   LB_ALBUM_MBID_REGEXP,
-  RECORDING_MBID_REGEXP,
-  RELEASE_GROUP_MBID_REGEXP,
-  RELEASE_MBID_REGEXP,
+  LB_RECORDING_MBID_REGEXP,
+  MB_RECORDING_MBID_REGEXP,
+  MB_RELEASE_GROUP_MBID_REGEXP,
+  MB_RELEASE_MBID_REGEXP,
   UUID_REGEXP,
 } from "./constants";
 
@@ -45,15 +46,20 @@ type SearchTrackOrMBIDProps = {
   defaultValue?: string;
   expectedPayload: PayloadType;
   switchMode?: (text: string) => void;
+  requiredInput?: boolean;
 } & ConditionalReturnValue;
 
-const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
+const SearchTrackOrMBID = forwardRef<
+  SearchInputImperativeHandle,
+  SearchTrackOrMBIDProps
+>(function SearchTrackOrMBID(
   {
     onSelectRecording,
     expectedPayload,
     defaultValue,
     autofocus = true,
     switchMode,
+    requiredInput = true,
   }: SearchTrackOrMBIDProps,
   inputRefForParent
 ) {
@@ -68,20 +74,26 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
   const inputRefLocal = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
 
+  const reset = useCallback(() => {
+    setInputValue("");
+    setSearchResults([]);
+    setSelectedIndex(-1);
+    inputRefLocal?.current?.focus();
+  }, []);
+
   // Allow parents to focus on input
   useImperativeHandle(
     inputRefForParent,
-    () => {
-      return {
-        focus() {
-          inputRefLocal?.current?.focus();
-        },
-        triggerSearch(newText: string) {
-          setInputValue(newText);
-        },
-      };
-    },
-    []
+    () => ({
+      focus() {
+        inputRefLocal?.current?.focus();
+      },
+      triggerSearch(newText: string) {
+        setInputValue(newText);
+      },
+      reset,
+    }),
+    [reset]
   );
 
   // Autofocus once on load
@@ -144,7 +156,8 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
       throttle(
         async (input: string, canonicalReleaseMBID?: string) => {
           let newRecordingMBID =
-            RECORDING_MBID_REGEXP.exec(input)?.[1] ??
+            MB_RECORDING_MBID_REGEXP.exec(input)?.[1] ??
+            LB_RECORDING_MBID_REGEXP.exec(input)?.[1] ??
             UUID_REGEXP.exec(input)?.[0];
           if (!newRecordingMBID) {
             return;
@@ -225,23 +238,18 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
     }
   };
 
-  const reset = () => {
-    setInputValue("");
-    setSearchResults([]);
-    setSelectedIndex(-1);
-    inputRefLocal?.current?.focus();
-  };
-
   useEffect(() => {
     if (!inputValue) {
       return;
     }
     setLoading(true);
     const isValidUUID = UUID_REGEXP.test(inputValue);
-    const isValidRecordingUUID = RECORDING_MBID_REGEXP.test(inputValue);
+    const isValidRecordingUUID =
+      MB_RECORDING_MBID_REGEXP.test(inputValue) ||
+      LB_RECORDING_MBID_REGEXP.test(inputValue);
     const isValidAlbumUUID =
-      RELEASE_MBID_REGEXP.test(inputValue) ||
-      RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_MBID_REGEXP.test(inputValue) ||
+      MB_RELEASE_GROUP_MBID_REGEXP.test(inputValue) ||
       LB_ALBUM_MBID_REGEXP.test(inputValue);
     if (isValidAlbumUUID && isFunction(switchMode)) {
       switchMode(inputValue);
@@ -269,17 +277,15 @@ const SearchTrackOrMBID = forwardRef(function SearchTrackOrMBID(
             setInputValue(event.target.value);
           }}
           placeholder="Track name or MusicBrainz URL/MBID"
-          required
+          required={requiredInput}
         />
-        <span className="input-group-btn">
-          <button className="btn btn-default" type="button" onClick={reset}>
-            {loading ? (
-              <FontAwesomeIcon icon={faSpinner} spin />
-            ) : (
-              <FontAwesomeIcon icon={faTimesCircle} />
-            )}
-          </button>
-        </span>
+        <button className="btn btn-secondary" type="button" onClick={reset}>
+          {loading ? (
+            <FontAwesomeIcon icon={faSpinner} spin />
+          ) : (
+            <FontAwesomeIcon icon={faTimesCircle} />
+          )}
+        </button>
         {Boolean(searchResults?.length) && (
           <select
             className="dropdown-search-suggestions"

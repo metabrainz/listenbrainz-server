@@ -90,10 +90,6 @@ declare type YoutubeUser = {
   api_key?: string;
 };
 
-declare type SoundCloudUser = {
-  access_token?: string;
-};
-
 declare type MetaBrainzProjectUser = {
   access_token?: string;
 };
@@ -106,6 +102,14 @@ declare type BrainzPlayerError =
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
+  };
+};
+
+declare type LatestImportResponse = {
+  latest_import: number;
+  status?: {
+    state: ImportStatusT;
+    count: number;
   };
 };
 
@@ -695,7 +699,6 @@ declare type BrainzPlayerSettings = {
   >;
 };
 
-
 declare type UserPreferences = {
   saveData?: boolean;
   brainzplayer?: BrainzPlayerSettings;
@@ -711,3 +714,9 @@ declare type BrainzPlayerQueueItem = Listen & {
 };
 
 declare type BrainzPlayerQueue = BrainzPlayerQueueItem[];
+
+type SearchInputImperativeHandle = {
+  focus(): void;
+  triggerSearch(newText: string): void;
+  reset(): void;
+};

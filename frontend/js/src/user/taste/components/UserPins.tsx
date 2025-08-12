@@ -6,7 +6,7 @@ import * as React from "react";
 import * as _ from "lodash";
 
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import Loader from "../../../components/Loader";
 import PinnedRecordingCard from "../../components/PinnedRecordingCard";
@@ -70,9 +70,9 @@ export default class UserPins extends React.Component<
     this.setState({ loading: true });
 
     try {
-      const limit = (page - 1) * this.DEFAULT_PINS_PER_PAGE;
+      const offset = (page - 1) * this.DEFAULT_PINS_PER_PAGE;
       const count = this.DEFAULT_PINS_PER_PAGE;
-      const newPins = await APIService.getPinsForUser(user.name, limit, count);
+      const newPins = await APIService.getPinsForUser(user.name, offset, count);
 
       if (!newPins.pinned_recordings.length) {
         // No pins were fetched
@@ -174,6 +174,7 @@ export default class UserPins extends React.Component<
             </div>
             <div
               id="pinned-recordings"
+              data-testid="pinned-recordings"
               style={{ opacity: loading ? "0.4" : "1" }}
             >
               {pins?.map((pin, index) => {
@@ -187,8 +188,8 @@ export default class UserPins extends React.Component<
                 );
               })}
               <button
-                className={`mt-15 btn btn-block ${
-                  noMorePins ? "btn-default" : "btn-info"
+                className={`mt-4 btn w-100 ${
+                  noMorePins ? "btn-secondary" : "btn-info"
                 }`}
                 disabled={noMorePins}
                 type="button"

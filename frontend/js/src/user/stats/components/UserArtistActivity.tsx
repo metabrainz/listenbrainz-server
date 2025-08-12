@@ -4,10 +4,9 @@ import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type UserArtistActivityProps = {
@@ -19,6 +18,33 @@ export declare type ChartDataItem = {
   label: string;
   [albumName: string]: number | string;
 };
+
+// Define CustomTooltip outside of the main component
+function CustomTooltip({
+  id,
+  value,
+  color,
+}: {
+  id: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div
+      style={{
+        padding: "10px",
+        background: "white",
+        border: `1px solid ${color}`,
+        borderRadius: "4px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
+    >
+      <strong>
+        {id}: {value}
+      </strong>
+    </div>
+  );
+}
 
 export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
@@ -106,24 +132,24 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
     }
   }, [rawData]);
 
+  const tooltipRenderer = React.useCallback(
+    (tooltipProps: { id: string | number; value: number; color: string }) => {
+      const { id, value, color } = tooltipProps;
+      return <CustomTooltip id={id as string} value={value} color={color} />;
+    },
+    []
+  );
+
   return (
     <Card className="user-stats-card" data-testid="user-artist-activity">
-      <div className="row">
-        <div className="col-xs-10">
-          <h3 className="capitalize-bold">Artist Activity</h3>
-        </div>
-        <div className="col-xs-2 text-right">
-          <h4 style={{ marginTop: 20 }}>
-            <a href="#artist-activity">
-              <FontAwesomeIcon
-                icon={faLink as IconProp}
-                size="sm"
-                color={COLOR_BLACK}
-                style={{ marginRight: 20 }}
-              />
-            </a>
-          </h4>
-        </div>
+      <div className="d-flex align-items-baseline">
+        <h3 className="capitalize-bold">Artist Activity</h3>
+        <a
+          href="#artist-activity"
+          className="btn btn-icon btn-link ms-auto text-body fs-3"
+        >
+          <FontAwesomeIcon icon={faLink as IconProp} />
+        </a>
       </div>
       <Loader isLoading={loading}>
         {hasError ? (
@@ -144,7 +170,14 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
           <div className="row">
             <div className="col-xs-12">
               <div
-                style={{ width: "100%", height: "600px", minHeight: "400px" }}
+                style={{
+                  width: "100%",
+                  height: "600px",
+                  minHeight: "400px",
+                  textAlign: "right",
+                  fontSize: "11px",
+                  lineHeight: "1em",
+                }}
               >
                 <ResponsiveBar
                   data={chartData}
@@ -156,7 +189,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     )
                   )}
                   indexBy="label"
-                  margin={{ top: 20, right: 80, bottom: 80, left: 80 }}
+                  margin={{ top: 20, right: 80, bottom: 100, left: 120 }}
                   padding={0.2}
                   layout="vertical"
                   colors={{ scheme: "nivo" }}
@@ -166,28 +199,35 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     tickSize: 5,
                     tickPadding: 5,
                     tickRotation: -45,
-                    renderTick: (tick) => (
-                      <g transform={`translate(${tick.x},${tick.y})`}>
-                        {tick.value
-                          .split("\n")
-                          .map((line: string, i: number) => (
-                            <text
-                              key={line}
-                              x={0}
-                              y={10 + i * 15}
-                              textAnchor="end"
-                              dominantBaseline="middle"
-                              style={{
-                                fontSize: 10,
-                                fill: "#000",
-                                transform: `rotate(-45deg)`,
-                              }}
-                            >
-                              {line}
-                            </text>
-                          ))}
-                      </g>
-                    ),
+                    renderTick: (tick) => {
+                      const artistMbid =
+                        rawData?.result?.[tick.tickIndex]?.artist_mbid || "";
+                      const artistName =
+                        rawData?.result?.[tick.tickIndex]?.name || "";
+                      const linkTo = artistMbid
+                        ? `/artist/${artistMbid}`
+                        : `/search?search_term=${encodeURIComponent(
+                            artistName
+                          )}&search_type=artist`;
+                      return (
+                        <g transform={`translate(${tick.x},${tick.y})`}>
+                          <foreignObject
+                            x="-90"
+                            y="0"
+                            width="90"
+                            height="30"
+                            style={{
+                              overflow: "visible",
+                              transform: "translate(-5px, 5px) rotate(-45deg)",
+                            }}
+                          >
+                            <Link to={linkTo} className="ellipsis-3-lines">
+                              {tick.value}
+                            </Link>
+                          </foreignObject>
+                        </g>
+                      );
+                    },
                   }}
                   onClick={(barData, event) => {
                     const albumName = barData.id;
@@ -198,6 +238,7 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                       navigate(`/album/${releaseGroupMbid}`);
                     }
                   }}
+                  tooltip={tooltipRenderer}
                 />
               </div>
             </div>

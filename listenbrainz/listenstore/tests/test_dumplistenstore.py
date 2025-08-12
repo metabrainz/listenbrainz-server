@@ -10,7 +10,7 @@ from psycopg2.extras import execute_values
 
 import listenbrainz.db.user as db_user
 from listenbrainz.db import timescale
-from listenbrainz.db.dump import SchemaMismatchException
+from listenbrainz.dumps.exceptions import SchemaMismatchException
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore.dump_listenstore import DumpListenStore
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data

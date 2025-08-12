@@ -1,30 +1,23 @@
 import os
-import shutil
-import subprocess
-import tarfile
 import time
-import uuid
 from datetime import datetime, timedelta, timezone
 
+import orjson
 import pandas as pd
 import psycopg2
 import psycopg2.sql
 import pyarrow as pa
 import pyarrow.parquet as pq
 import sqlalchemy
-import tempfile
-import orjson
 from psycopg2.extras import execute_values
 from sqlalchemy import text
 
-from listenbrainz import DUMP_LICENSE_FILE_PATH
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db import timescale
 from listenbrainz.db.user import get_all_usernames
+from listenbrainz.dumps import DUMP_DEFAULT_THREAD_COUNT
+from listenbrainz.dumps.exporter import zstd_dump, uncompressed_dump
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.timescale_listenstore import DATA_START_YEAR_IN_SECONDS
-from listenbrainz.utils import create_path
 
 # These values are defined to create spark parquet files that are at most 128MB in size.
 # This compression ration allows us to roughly estimate how full we can make files before starting a new one
@@ -53,7 +46,6 @@ class DumpListenStore:
 
     def __init__(self, app):
         self.log = app.logger
-        self.dump_temp_dir_root = os.path.join("/code", "listenbrainz", "dumps")
 
     def get_listens_query_for_dump(self, start_time, end_time, max_created):
         """
@@ -96,56 +88,23 @@ class DumpListenStore:
         }
         return query, args
 
-    def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
-        """ Write metadata files (schema version, timestamps, license) into the dump archive.
+    def get_dump_metadata(self, start_time: datetime, end_time: datetime, full_dump):
+        """ Get metadata to write into the dump archive.
 
         Args:
-            archive_name: the name of the archive
-            start_time and end_time: the time range of the dump
-            temp_dir: the directory to use for writing files before addition into the archive
-            tar (TarFile object): The tar file to add the files into
+            start_time: the start time of the dump
+            end_time: the end time of the dump
             full_dump (bool): flag to specify whether the archive is a full dump or an incremental dump
         """
-        try:
-            if full_dump:
-                # add timestamp
-                timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
-                with open(timestamp_path, 'w') as f:
-                    f.write(end_time.isoformat(' '))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, 'TIMESTAMP'))
-            else:
-                start_timestamp_path = os.path.join(
-                    temp_dir, 'START_TIMESTAMP')
-                with open(start_timestamp_path, 'w') as f:
-                    f.write(start_time.isoformat(' '))
-                tar.add(start_timestamp_path,
-                        arcname=os.path.join(archive_name, 'START_TIMESTAMP'))
-                end_timestamp_path = os.path.join(temp_dir, 'END_TIMESTAMP')
-                with open(end_timestamp_path, 'w') as f:
-                    f.write(end_time.isoformat(' '))
-                tar.add(end_timestamp_path,
-                        arcname=os.path.join(archive_name, 'END_TIMESTAMP'))
-
-            # add schema version
-            schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
-            with open(schema_version_path, 'w') as f:
-                f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
-            tar.add(schema_version_path,
-                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
-
-            # add copyright notice
-            tar.add(DUMP_LICENSE_FILE_PATH,
-                    arcname=os.path.join(archive_name, 'COPYING'))
-
-        except IOError as e:
-            self.log.critical(
-                'IOError while writing metadata dump files: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            self.log.error(
-                'Exception while adding dump metadata: %s', str(e), exc_info=True)
-            raise
+        metadata: dict[str, int | str | datetime] = {
+            "SCHEMA_SEQUENCE": LISTENS_DUMP_SCHEMA_VERSION,
+        }
+        if full_dump:
+            metadata["TIMESTAMP"] = end_time
+        else:
+            metadata["START_TIMESTAMP"] = start_time
+            metadata["END_TIMESTAMP"] = end_time
+        return metadata
 
     def write_listens(self, temp_dir, tar_file, archive_name,
                       start_time_range, end_time_range, full_dump):
@@ -254,31 +213,14 @@ class DumpListenStore:
             archive_name = '{}-full'.format(archive_name)
         else:
             archive_name = '{}-incremental'.format(archive_name)
-        archive_path = os.path.join(location, f'{archive_name}.tar.zst')
-        with open(archive_path, 'w') as archive:
-            zstd_command = ['zstd', '--compress', f'-T{threads}', '-10']
-            zstd = subprocess.Popen(zstd_command, stdin=subprocess.PIPE, stdout=archive)
 
-            with tarfile.open(fileobj=zstd.stdin, mode='w|') as tar:
-                temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
-                create_path(temp_dir)
-                self.write_dump_metadata(
-                    archive_name, start_time, end_time,
-                    temp_dir, tar, full_dump
-                )
-
-                listens_path = os.path.join(temp_dir, 'listens')
-                self.write_listens(
-                    listens_path, tar, archive_name,
-                    start_time, end_time, full_dump
-                )
-
-                # remove the temporary directory
-                shutil.rmtree(temp_dir)
-
-            zstd.stdin.close()
-
-        zstd.wait()
+        metadata = self.get_dump_metadata(start_time, end_time, full_dump)
+        with zstd_dump(location, archive_name, metadata, threads) as (zstd, tar, temp_dir, archive_path):
+            listens_path = os.path.join(temp_dir, 'listens')
+            self.write_listens(
+                listens_path, tar, archive_name,
+                start_time, end_time, full_dump
+            )
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
@@ -507,16 +449,11 @@ class DumpListenStore:
             archive_name = f'{archive_name}-full'
         else:
             archive_name = f'{archive_name}-incremental'
-        archive_path = os.path.join(location, f'{archive_name}.tar')
 
+        metadata = self.get_dump_metadata(start_time, end_time, full_dump)
         max_created = end_time
-
         parquet_index = 0
-        with tarfile.open(archive_path, "w") as tar:
-
-            temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
-            create_path(temp_dir)
-            self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
+        with uncompressed_dump(location, archive_name, metadata) as (tar, temp_dir, archive_path):
 
             for year in range(start_time.year, end_time.year + 1):
                 if year == start_time.year:
@@ -540,8 +477,6 @@ class DumpListenStore:
                 except Exception as err:
                     self.log.exception("likely test failure: " + str(err))
                     raise
-
-            shutil.rmtree(temp_dir)
 
         self.log.info('ListenBrainz spark listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
