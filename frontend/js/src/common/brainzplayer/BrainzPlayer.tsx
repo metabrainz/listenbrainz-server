@@ -551,6 +551,7 @@ export default function BrainzPlayer() {
 
     const currentQueue = brainzPlayerContextRef.current.queue;
     const currentAmbientQueue = brainzPlayerContextRef.current.ambientQueue;
+    const { shuffleMode } = brainzPlayerContextRef.current;
 
     if (currentQueue.length === 0 && currentAmbientQueue.length === 0) {
       handleWarning(
@@ -570,6 +571,18 @@ export default function BrainzPlayer() {
     ) {
       nextListenIndex =
         currentPlayingListenIndex + (currentPlayingListenIndex < 0 ? 1 : 0);
+    } else if (shuffleMode) {
+      const availableIndices = currentQueue
+        .map((_, index) => index)
+        .filter((index) => index !== currentPlayingListenIndex);
+
+      if (availableIndices.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableIndices.length);
+        nextListenIndex = availableIndices[randomIndex];
+      } else {
+        // Fallback to sequential if only one track or error
+        nextListenIndex = currentPlayingListenIndex + 1;
+      }
     } else {
       // Otherwise, play the next track in the queue
       nextListenIndex = currentPlayingListenIndex + (invert === true ? -1 : 1);
@@ -577,7 +590,12 @@ export default function BrainzPlayer() {
 
     // If nextListenIndex is less than 0, wrap around to the last track in the queue
     if (nextListenIndex < 0) {
-      nextListenIndex = currentQueue.length - 1;
+      if (shuffleMode) {
+        // In shuffle mode, go to a random track instead of wrapping
+        nextListenIndex = Math.floor(Math.random() * currentQueue.length);
+      } else {
+        nextListenIndex = currentQueue.length - 1;
+      }
     }
 
     // If nextListenIndex is within the queue length, play the next track
@@ -626,7 +644,12 @@ export default function BrainzPlayer() {
     }
 
     // If there are no listens in the ambient queue, then play the first listen in the main queue
-    nextListenIndex = 0;
+    if (shuffleMode) {
+      nextListenIndex = Math.floor(Math.random() * currentQueue.length);
+    } else {
+      nextListenIndex = 0;
+    }
+
     const nextListen = currentQueue[nextListenIndex];
     if (!nextListen) {
       handleWarning(
