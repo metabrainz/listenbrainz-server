@@ -113,3 +113,14 @@ $bar-height: 4.5em;
   grid-template-columns: repeat(auto-fit, minmax(160px, max-content));
   place-content: space-evenly;
 }
+.lb-icon-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 14px;
+}
+.lb-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

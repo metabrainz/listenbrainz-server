@@ -39,7 +39,6 @@ class UserStatsTestCase(StatsTestCase):
 
     def test_get_daily_activity(self):
         messages = list(get_daily_activity("all_time"))
-        print(messages)
         with open(self.path_to_data_file("user_daily_activity_all_time.json")) as f:
             expected = json.load(f)
 
