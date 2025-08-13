@@ -8,7 +8,7 @@ from psycopg2 import DatabaseError
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
-from brainzutils.mail import send_mail
+from listenbrainz.domain.notification_sender import send_notification
 
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.external_service import ExternalServiceError
@@ -41,17 +41,17 @@ class ListensImporter(abc.ABC):
             musicbrainz_id: the MusicBrainz ID of the user
             error: a description of the error encountered.
         """
-        user_email = db_user.get_by_mb_id(listenbrainz.webserver.db_conn, musicbrainz_id, fetch_email=True)["email"]
-        if not user_email:
+        user = db_user.get_by_mb_id(listenbrainz.webserver.db_conn, musicbrainz_id, fetch_email=True)
+        if not user["email"]:
             return
 
         link = current_app.config['SERVER_ROOT_URL'] + '/settings/music-services/details/'
         text = render_template('emails/listens_importer_error.txt', error=error, link=link)
-        send_mail(
+        send_notification(
             subject=f'ListenBrainz {self.user_friendly_name} Importer Error',
-            text=text,
-            recipients=[user_email],
-            from_name='ListenBrainz',
+            body=text,
+            user_id=user["musicbrainz_row_id"],
+            user_email=user["email"],
             from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
         )
 

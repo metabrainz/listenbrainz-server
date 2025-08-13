@@ -13,7 +13,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from typing import Tuple, List
 
 from flask import current_app, render_template
-from brainzutils.mail import send_mail
+from listenbrainz.domain.notification_sender import send_notification
 
 
 logger = logging.getLogger(__name__)
@@ -627,10 +627,10 @@ def _notify_user_paused(db_conn, user_id,paused):
     subject = ("Your ListenBrainz account %s has been paused and is not accepting incoming listens" % user["musicbrainz_id"] if paused
                  else "Your ListenBrainz account %s has been unpaused and is accepting incoming listens" % user["musicbrainz_id"])
     content = render_template(template, username=user["musicbrainz_id"], url=url)
-    send_mail(
+    send_notification(
         subject=subject,
-        text=content,
-        recipients=[user["email"]],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+        body=content,
+        user_id=user["musicbrainz_row_id"],
+        user_email=user["email"],
+        from_addr="noreply@" + current_app.config["MAIL_FROM_DOMAIN"],
     )

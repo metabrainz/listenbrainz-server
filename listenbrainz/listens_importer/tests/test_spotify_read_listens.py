@@ -100,16 +100,16 @@ class ConvertListensTestCase(DatabaseTestCase):
 
         self.assertDictEqual(listen, expected_listen)
 
-    @patch('listenbrainz.listens_importer.base.send_mail')
-    def test_notify_user(self, mock_send_mail):
+    @patch('listenbrainz.listens_importer.base.send_notification')
+    def test_notify_user(self, mock_send_notification):
         db_user.create(self.db_conn, 2, "two", "one@two.one")
         app = listenbrainz.webserver.create_app()
         app.config['SERVER_NAME'] = "test"
         with app.app_context():
             importer = SpotifyImporter()
             importer.notify_error(musicbrainz_id="two", error='some random error')
-        mock_send_mail.assert_called_once()
-        self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['one@two.one'])
+        mock_send_notification.assert_called_once()
+        self.assertEqual(mock_send_notification.call_args[1]['user_email'], 'one@two.one')
 
     @patch('listenbrainz.domain.spotify.SpotifyService.update_user_import_status')
     @patch.object(SpotifyImporter, 'notify_error')

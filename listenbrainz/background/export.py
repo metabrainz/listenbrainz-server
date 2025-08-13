@@ -6,7 +6,7 @@ from datetime import datetime, date, time, timedelta, timezone
 from pathlib import Path
 
 import orjson
-from brainzutils.mail import send_mail
+from listenbrainz.domain.notification_sender import send_notification
 from dateutil.relativedelta import relativedelta
 from flask import current_app, render_template
 from sqlalchemy import text
@@ -334,12 +334,12 @@ def notify_user_email(db_conn, user_id):
         return
     url = current_app.config['SERVER_ROOT_URL'] + '/settings/export/'
     content = render_template('emails/export_completed.txt', username=user["musicbrainz_id"], url=url)
-    send_mail(
-        subject='ListenBrainz User Data Export',
-        text=content,
-        recipients=[user["email"]],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    send_notification(
+        subject="ListenBrainz User Data Export",
+        body=content,
+        user_id=user["musicbrainz_row_id"],
+        user_email=user["email"],
+        from_addr="noreply@" + current_app.config["MAIL_FROM_DOMAIN"],
     )
 
 
