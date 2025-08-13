@@ -13,7 +13,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_LB_ORANGE } from "../../../utils/constants";
+import { COLOR_LB_ORANGE, COLOR_LB_GREEN } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 // Constants
@@ -275,9 +275,12 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               disabled={selectedDecade !== null || firstDecade === null}
               className="lb-icon-btn"
               title="Zoom in to first decade"
+<<<<<<< HEAD
               style={{
                 color: COLOR_LB_ORANGE,
               }}
+=======
+>>>>>>> 6689c191067f524d6d7f96898632b83558372431
             >
               <FontAwesomeIcon icon={faSearchPlus as IconProp} />
             </button>
@@ -287,9 +290,12 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               disabled={selectedDecade === null}
               className="lb-icon-btn"
               title="Zoom out to decades view"
+<<<<<<< HEAD
               style={{
                 color: COLOR_LB_ORANGE,
               }}
+=======
+>>>>>>> 6689c191067f524d6d7f96898632b83558372431
             >
               <FontAwesomeIcon icon={faSearchMinus as IconProp} />
             </button>
