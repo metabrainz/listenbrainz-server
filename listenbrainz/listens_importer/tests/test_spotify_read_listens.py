@@ -109,7 +109,7 @@ class ConvertListensTestCase(DatabaseTestCase):
             importer = SpotifyImporter()
             importer.notify_error(musicbrainz_id="two", error='some random error')
         mock_send_notification.assert_called_once()
-        self.assertListEqual(mock_send_notification.call_args[1]['user_email'], ['one@two.one'])
+        self.assertEqual(mock_send_notification.call_args[1]['user_email'], 'one@two.one')
 
     @patch('listenbrainz.domain.spotify.SpotifyService.update_user_import_status')
     @patch.object(SpotifyImporter, 'notify_error')

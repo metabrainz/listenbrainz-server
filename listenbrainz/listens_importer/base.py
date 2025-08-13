@@ -51,7 +51,7 @@ class ListensImporter(abc.ABC):
             subject=f'ListenBrainz {self.user_friendly_name} Importer Error',
             body=text,
             user_id=user["musicbrainz_row_id"],
-            user_email=user["user_email"],
+            user_email=user["email"],
             from_addr='noreply@' + current_app.config['MAIL_FROM_DOMAIN'],
         )
 
