@@ -276,9 +276,12 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               className="lb-icon-btn"
               title="Zoom in to first decade"
 <<<<<<< HEAD
+<<<<<<< HEAD
               style={{
                 color: COLOR_LB_ORANGE,
               }}
+=======
+>>>>>>> 6689c191067f524d6d7f96898632b83558372431
 =======
 >>>>>>> 6689c191067f524d6d7f96898632b83558372431
             >
@@ -291,9 +294,12 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               className="lb-icon-btn"
               title="Zoom out to decades view"
 <<<<<<< HEAD
+<<<<<<< HEAD
               style={{
                 color: COLOR_LB_ORANGE,
               }}
+=======
+>>>>>>> 6689c191067f524d6d7f96898632b83558372431
 =======
 >>>>>>> 6689c191067f524d6d7f96898632b83558372431
             >
