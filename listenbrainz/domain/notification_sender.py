@@ -13,7 +13,7 @@ METABRAINZ_NOTIFICATIONS_SEND_URL = "https://metabrainz.org/notification/send"
 def send_notification(
     subject: str,
     body: str,
-    user_id: int,
+    musicbrainz_row_id: int,
     user_email: str,
     from_addr: str,
     project: str = "listenbrainz",
@@ -27,7 +27,7 @@ def send_notification(
     Args:
         ``subject``
         ``body``
-        ``userid``
+        ``musicbrainz_row_id``
         ``user_email``
         ``from_addr``
         ``project``
@@ -44,7 +44,7 @@ def send_notification(
         {
             "subject": subject,
             "body": body,
-            "user_id": user_id,
+            "user_id": musicbrainz_row_id,
             "to": user_email,
             "project": project,
             "sent_from": from_addr,
