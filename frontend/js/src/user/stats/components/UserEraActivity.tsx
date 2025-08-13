@@ -275,15 +275,9 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               disabled={selectedDecade !== null || firstDecade === null}
               className="lb-icon-btn"
               title="Zoom in to first decade"
-<<<<<<< HEAD
-<<<<<<< HEAD
               style={{
                 color: COLOR_LB_ORANGE,
               }}
-=======
->>>>>>> 6689c191067f524d6d7f96898632b83558372431
-=======
->>>>>>> 6689c191067f524d6d7f96898632b83558372431
             >
               <FontAwesomeIcon icon={faSearchPlus as IconProp} />
             </button>
@@ -293,15 +287,9 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               disabled={selectedDecade === null}
               className="lb-icon-btn"
               title="Zoom out to decades view"
-<<<<<<< HEAD
-<<<<<<< HEAD
               style={{
                 color: COLOR_LB_ORANGE,
               }}
-=======
->>>>>>> 6689c191067f524d6d7f96898632b83558372431
-=======
->>>>>>> 6689c191067f524d6d7f96898632b83558372431
             >
               <FontAwesomeIcon icon={faSearchMinus as IconProp} />
             </button>
