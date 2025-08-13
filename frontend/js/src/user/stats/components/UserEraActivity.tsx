@@ -3,13 +3,17 @@ import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
-import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
+import {
+  faExclamationCircle,
+  faSearchPlus,
+  faSearchMinus,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_LB_ORANGE } from "../../../utils/constants";
+import { COLOR_LB_ORANGE, COLOR_LB_GREEN } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 // Constants
@@ -43,6 +47,14 @@ const getDecade = (year: number): number => {
   return Math.floor(year / 10) * 10;
 };
 
+const getCount = (item: {
+  year: number;
+  listen_count?: number;
+  count?: number;
+}): number => {
+  return item.listen_count || item.count || 0;
+};
+
 const processDataIntoDecades = (
   data: Array<{ year: number; listen_count?: number; count?: number }>
 ) => {
@@ -53,7 +65,7 @@ const processDataIntoDecades = (
   data.forEach((item) => {
     const decade = getDecade(item.year);
     const currentCount = decadeMap.get(decade) || 0;
-    const itemCount = item.listen_count ?? item.count ?? 0;
+    const itemCount = getCount(item);
     decadeMap.set(decade, currentCount + itemCount);
   });
 
@@ -84,7 +96,7 @@ const getExpandedDecadeData = (
   const yearMap = new Map<number, number>();
   data.forEach((item) => {
     if (item.year >= selectedDecade && item.year <= decadeEnd) {
-      const itemCount = item.listen_count ?? item.count ?? 0;
+      const itemCount = getCount(item);
       yearMap.set(item.year, itemCount);
     }
   });
@@ -114,7 +126,6 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
           user?.name,
           range
         );
-        console.log(queryData);
         return { data: queryData, hasError: false, errorMessage: "" };
       } catch (error) {
         return {
@@ -139,6 +150,24 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
       ? getExpandedDecadeData(dataResult, selectedDecade)
       : processDataIntoDecades(dataResult);
   }, [rawData?.result, selectedDecade]);
+
+  const selectedDecadeTotal = useMemo(() => {
+    if (!selectedDecade || !rawData?.result) return 0;
+    const dataResult = rawData.result;
+    const decadeEnd = selectedDecade + 9;
+
+    return dataResult
+      .filter((item) => item.year >= selectedDecade && item.year <= decadeEnd)
+      .reduce((total, item) => total + getCount(item), 0);
+  }, [selectedDecade, rawData?.result]);
+
+  const firstDecade = useMemo(() => {
+    const dataResult = rawData?.result || [];
+    if (dataResult.length === 0) return null;
+    const years = dataResult.map((item) => item.year);
+    const minYear = Math.min(...years);
+    return getDecade(minYear);
+  }, [rawData?.result]);
 
   useEffect(() => {
     const containerElement = scrollContainerRef.current;
@@ -188,6 +217,16 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
     [selectedDecade]
   );
 
+  const handleZoomIn = useCallback(() => {
+    if (firstDecade && !selectedDecade) {
+      setSelectedDecade(firstDecade);
+    }
+  }, [firstDecade, selectedDecade]);
+
+  const handleZoomOut = useCallback(() => {
+    setSelectedDecade(null);
+  }, []);
+
   // Format function for display
   const formatDecadeLabel = useCallback(
     (decade: number): string => {
@@ -210,30 +249,50 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
 
   return (
     <Card className="user-stats-card" data-testid="user-era-activity">
-      <div className="row">
-        <div className="col-xs-10">
-          <h3 className="capitalize-bold">
-            Era Activity
+      <div className="d-flex align-items-start justify-content-between mb-3 mt-3">
+        <div className="flex-grow-1 min-w-0">
+          <h3 style={{ margin: 0, marginBottom: "5px" }}>
+            <span className="capitalize-bold">Era Activity</span>
+          </h3>
+          <div className="small text-secondary lh-sm">
             {selectedDecade && (
-              <span
-                style={{ marginLeft: 10, fontSize: "0.8em", color: "#666" }}
-              >
-                - {selectedDecade}s (click any bar to collapse)
+              <span>
+                {selectedDecade}s - {selectedDecadeTotal.toLocaleString()}{" "}
+                {selectedDecadeTotal === 1 ? "listen" : "listens"} (Click any
+                bar to zoom out)
               </span>
             )}
-          </h3>
+            {!selectedDecade && (
+              <span>Click any bar to zoom in and see individual years</span>
+            )}
+          </div>
         </div>
+        {!isLoading && !hasError && chartData.length > 0 && (
+          <div className="d-flex gap-1 ms-3 flex-shrink-0">
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              disabled={selectedDecade !== null || firstDecade === null}
+              className="lb-icon-btn"
+              title="Zoom in to first decade"
+            >
+              <FontAwesomeIcon icon={faSearchPlus as IconProp} />
+            </button>
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              disabled={selectedDecade === null}
+              className="lb-icon-btn"
+              title="Zoom out to decades view"
+            >
+              <FontAwesomeIcon icon={faSearchMinus as IconProp} />
+            </button>
+          </div>
+        )}
       </div>
       <Loader isLoading={isLoading}>
         {hasError ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "inherit",
-            }}
-          >
+          <div className="d-flex gap-1 ms-3 flex-shrink-0">
             <span style={{ fontSize: 24 }}>
               <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
               {errorMessage}
