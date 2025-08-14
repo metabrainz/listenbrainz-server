@@ -1,7 +1,9 @@
 import hashlib
 import time
+import base64
 from typing import Optional, Dict, Any
 from urllib.parse import urljoin
+from cryptography.fernet import Fernet
 
 import requests
 from flask import current_app
@@ -15,7 +17,41 @@ NAVIDROME_API_RETRIES = 3
 
 class NavidromeService:
     def __init__(self):
-        pass
+        # Get or generate encryption key for password storage
+        self.encryption_key = self._get_encryption_key()
+
+    def _get_encryption_key(self):
+        """Get encryption key from config or generate one"""
+        key = current_app.config.get('NAVIDROME_ENCRYPTION_KEY')
+        
+        # Ensure key is properly encoded for Fernet
+        if isinstance(key, str):
+            key = key.encode('utf-8')
+        return key
+
+    def _encrypt_password(self, password: str) -> str:
+        """Encrypt password for storage"""
+        f = Fernet(self.encryption_key)
+        return f.encrypt(password.encode('utf-8')).decode('utf-8')
+
+    def _decrypt_password(self, encrypted_password: str) -> str:
+        """Decrypt password for API requests"""
+        f = Fernet(self.encryption_key)
+        return f.decrypt(encrypted_password.encode('utf-8')).decode('utf-8')
+
+    def _generate_auth_params(self, username: str, password: str) -> Dict[str, str]:
+        """Generate fresh authentication parameters for each request"""
+        # Generate random salt (timestamp-based)
+        salt = str(int(time.time() * 1000))
+        
+        # Create MD5 hash of password + salt
+        token = hashlib.md5((password + salt).encode('utf-8')).hexdigest()
+        
+        return {
+            'username': username,
+            'token': token,
+            'salt': salt
+        }
 
     def authenticate(self, host_url: str, username: str, password: str) -> Dict[str, Any]:
         """Authenticate with Navidrome using Subsonic API and basic auth"""
@@ -35,17 +71,16 @@ class NavidromeService:
             
             current_app.logger.info(f"Navidrome auth attempt - Processed host_url: '{host_url}'")
             
-            # Create MD5 hash token (salt + password)
-            salt = str(int(time.time() * 1000))  # Use timestamp as salt
-            token = hashlib.md5((password + salt).encode('utf-8')).hexdigest()
+            # Generate auth parameters with random salt
+            auth_params = self._generate_auth_params(username, password)
             
             # Test authentication with ping request
             ping_url = urljoin(host_url, '/rest/ping')
             current_app.logger.info(f"Navidrome auth attempt - Final ping_url: '{ping_url}'")
             params = {
-                'u': username,
-                't': token,
-                's': salt,
+                'u': auth_params['username'],
+                't': auth_params['token'],
+                's': auth_params['salt'],
                 'v': '1.16.0',  # Subsonic API version
                 'c': 'ListenBrainz',  # Client
                 'f': 'json'
@@ -67,12 +102,11 @@ class NavidromeService:
                 error_message = error.get('message', 'Authentication failed')
                 raise ExternalServiceError(f"Navidrome authentication failed: {error_message}")
             
-            # Return authentication data
+            # Return authentication data with encrypted password
             return {
                 'host_url': host_url,
                 'username': username,
-                'token': token,
-                'salt': salt,
+                'encrypted_password': self._encrypt_password(password),
                 'server_version': subsonic_response.get('version', 'unknown')
             }
             
@@ -87,12 +121,13 @@ class NavidromeService:
             # Authenticate with Navidrome
             auth_data = self.authenticate(host_url, username, password)
             
-            # Save user token (replaces any existing connection)
+            # Save encrypted password (not token)
             token_id = db_navidrome.save_user_token(
+                db_conn,
                 user_id=user_id,
                 host_url=auth_data['host_url'],
                 username=username,
-                access_token=auth_data['token']
+                encrypted_password=auth_data['encrypted_password']
             )
             
             return {
@@ -109,13 +144,14 @@ class NavidromeService:
     def get_user_connection(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get user's Navidrome connection (only one per user)"""
         try:
-            token_data = db_navidrome.get_user_token(user_id)
+            token_data = db_navidrome.get_user_token(db_conn, user_id)
             if not token_data:
                 return None
             
             return {
                 'host_url': token_data['host_url'],
                 'username': token_data['username'],
+                'encrypted_password': token_data['encrypted_password'],
                 'connected': True,
                 'permissions': ['listen']
             }
@@ -124,10 +160,29 @@ class NavidromeService:
             current_app.logger.error(f"Failed to get Navidrome connection for user {user_id}: {str(e)}")
             return None
 
+    def get_auth_params_for_user(self, user_id: int) -> Optional[Dict[str, str]]:
+        """Generate fresh authentication parameters for a user's API requests"""
+        try:
+            token_data = db_navidrome.get_user_token(db_conn, user_id)
+            if not token_data:
+                return None
+            
+            # Decrypt stored password
+            encrypted_password = token_data['encrypted_password']
+            password = self._decrypt_password(encrypted_password)
+            username = token_data['username']
+            
+            # Generate fresh auth params with new salt
+            return self._generate_auth_params(username, password)
+            
+        except Exception as e:
+            current_app.logger.error(f"Failed to generate auth params for user {user_id}: {str(e)}")
+            return None
+
     def remove_user(self, user_id: int):
         """Remove user's Navidrome connection (same as Funkwhale)"""
         try:
-            db_navidrome.delete_user_token(user_id)
+            db_navidrome.delete_user_token(db_conn, user_id)
         except Exception as e:
             current_app.logger.error(f"Failed to remove Navidrome token for user {user_id}: {str(e)}")
             raise
