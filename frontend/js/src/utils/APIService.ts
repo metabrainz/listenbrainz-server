@@ -613,6 +613,11 @@ export default class APIService {
       url = `${this.APIBaseURI}/stats/sitewide/era-activity`;
     }
     url += `?range=${range}`;
+  getUserGenreActivity = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserGenreActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {

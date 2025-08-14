@@ -310,6 +310,14 @@ declare type UserListensEraActivityResponse = {
     year: number;
     count: number;
   }>;
+declare type GenreHourData = {
+  genre: string;
+  hour: number;
+  listen_count: number;
+}
+
+declare type UserGenreActivityResponse = {
+  result: Array<GenreHourData>;
 }
 
 declare type UserArtistMapArtist = {
