@@ -2,7 +2,8 @@ import json
 
 from listenbrainz_spark.hdfs.utils import delete_dir, upload_to_HDFS
 from listenbrainz_spark.path import RELEASE_METADATA_CACHE_DATAFRAME, ARTIST_COUNTRY_CODE_DATAFRAME, \
-    RELEASE_GROUP_METADATA_CACHE_DATAFRAME, RECORDING_ARTIST_DATAFRAME
+    RELEASE_GROUP_METADATA_CACHE_DATAFRAME, RECORDING_ARTIST_DATAFRAME, RECORDING_RECORDING_TAG_DATAFRAME, \
+    RECORDING_RECORDING_GENRE_DATAFRAME
 from listenbrainz_spark.postgres.artist import unpersist_artist_country_cache
 from listenbrainz_spark.postgres.recording import unpersist_recording_artist_cache
 from listenbrainz_spark.postgres.release import unpersist_release_metadata_cache
@@ -36,6 +37,14 @@ class StatsTestCase(SparkNewTestCase):
             RECORDING_ARTIST_DATAFRAME,
             cls.path_to_data_file("recording_artist.parquet")
         )
+        upload_to_HDFS(
+            RECORDING_RECORDING_TAG_DATAFRAME,
+            cls.path_to_data_file("recording_tag.parquet")
+        )
+        upload_to_HDFS(
+            RECORDING_RECORDING_GENRE_DATAFRAME,
+            cls.path_to_data_file("recording_genre.parquet")
+        )
 
     @classmethod
     def delete_uploaded_metadata_cache(cls) -> None:
@@ -47,6 +56,8 @@ class StatsTestCase(SparkNewTestCase):
         delete_dir(RELEASE_METADATA_CACHE_DATAFRAME)
         delete_dir(ARTIST_COUNTRY_CODE_DATAFRAME)
         delete_dir(RECORDING_ARTIST_DATAFRAME)
+        delete_dir(RECORDING_RECORDING_TAG_DATAFRAME)
+        delete_dir(RECORDING_RECORDING_GENRE_DATAFRAME)
 
     @classmethod
     def tearDownClass(cls) -> None:
