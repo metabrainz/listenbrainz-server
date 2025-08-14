@@ -41,7 +41,10 @@ class FunkwhaleService:
             "funkwhale_server_id": server["id"]
         }
         if refresh and self.user_oauth_token_has_expired(user):
-            user = self.refresh_access_token(user_id, server, user["refresh_token"])
+            try:
+                user = self.refresh_access_token(user_id, server, user["refresh_token"])
+            except:
+                return None
         return user
 
     def add_new_user(self, user_id: int, server_id: int, token: dict) -> bool:
