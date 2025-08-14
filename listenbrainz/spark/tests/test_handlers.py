@@ -21,7 +21,7 @@ from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity, handle_user_genre_activity,
-    handle_user_listening_activity, handle_user_era_activity
+    handle_user_listening_activity, handle_user_era_activity,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
