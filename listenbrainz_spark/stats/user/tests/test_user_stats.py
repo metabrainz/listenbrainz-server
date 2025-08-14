@@ -68,7 +68,38 @@ class UserStatsTestCase(StatsTestCase):
         
     def test_get_era_activity(self):
         messages = list(get_era_activity("all_time"))
-        print(messages)
+        with open(self.path_to_data_file("user_era_activity_all_time.json")) as f:
+            expected = json.load(f)
+        
+        database_prefix = "era_activity_all_time"
+        self.assertEqual(messages[0]["type"], "couchdb_data_start")
+        self.assertTrue(messages[0]["database"].startswith(database_prefix))
+        
+        self.assertEqual(messages[1]["type"], expected[0]["type"])
+        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
+        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
+        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+        
+        for actual_user, expected_user in zip(messages[1]["data"], expected[0]["data"]):
+            self.assertEqual(actual_user["user_id"], expected_user["user_id"])
+            
+            actual_data = actual_user["data"]
+            self.assertIsInstance(actual_data, list)
+            
+            for era_entry in actual_data:
+                self.assertIn("year", era_entry)
+                self.assertIsInstance(era_entry["year"], int)
+                self.assertGreaterEqual(era_entry["year"], 1900)  # reasonable minimum year
+                self.assertLessEqual(era_entry["year"], 2024)     # reasonable maximum year
+                
+                self.assertIn("listen_count", era_entry)
+                self.assertIsInstance(era_entry["listen_count"], int)
+                self.assertGreaterEqual(era_entry["listen_count"], 0)
+        
+        self.assertTrue(messages[1]["database"].startswith(database_prefix))
+        
+        self.assertEqual(messages[2]["type"], "couchdb_data_end")
+        self.assertTrue(messages[2]["database"].startswith(database_prefix))
 
     def test_get_genre_activity(self):
         messages = list(get_genre_activity("all_time"))
