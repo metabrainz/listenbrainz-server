@@ -7,6 +7,7 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_era_activity import EraActivityRecord
 from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
@@ -20,7 +21,7 @@ from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity, handle_user_genre_activity,
-    handle_user_listening_activity,
+    handle_user_listening_activity, handle_user_era_activity
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
