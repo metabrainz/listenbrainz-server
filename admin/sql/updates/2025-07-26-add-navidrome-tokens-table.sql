@@ -1,13 +1,29 @@
 BEGIN;
 
+DROP TABLE IF EXISTS navidrome_tokens;
+
 CREATE TABLE navidrome_tokens (
-    id                  SERIAL PRIMARY KEY,
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
     user_id             INTEGER NOT NULL,
-    navidrome_server_id INTEGER NOT NULL REFERENCES navidrome_servers(id) ON DELETE CASCADE,
+    navidrome_server_id INTEGER NOT NULL,
     username            TEXT NOT NULL,
-    access_token        TEXT NOT NULL,    -- MD5(password + salt) hash for Subsonic API
+    encrypted_password  TEXT NOT NULL,
     created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE navidrome_tokens
+    ADD CONSTRAINT navidrome_tokens_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE navidrome_tokens
+    ADD CONSTRAINT navidrome_tokens_server_id_foreign_key
+    FOREIGN KEY (navidrome_server_id)
+    REFERENCES navidrome_servers (id)
+    ON DELETE CASCADE;
 
 CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
 CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
