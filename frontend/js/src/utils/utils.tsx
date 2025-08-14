@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import { isFinite, isUndefined } from "lodash";
+import { isFinite, isUndefined, deburr, escapeRegExp } from "lodash";
 import * as timeago from "time-ago";
 import { Rating } from "react-simple-star-rating";
 import { toast } from "react-toastify";
@@ -177,78 +177,20 @@ const searchForSoundcloudTrack = async (
   return responseBody?.[0]?.uri ?? null;
 };
 
-// Helper function to select the best track from search results
-// Funkwhale is self hosted platform so unlike other services it won't available all songs,
-// so we need to be more strict in our matching criteria,
-// there is 50-50 chance that the track we are looking for is not available on Funkwhale
-const selectBestTrack = (
-  tracks: any[],
-  trackName?: string,
-  artistName?: string
-): FunkwhaleTrack | null => {
-  const playableTracks = tracks.filter(
-    (track: any) => track.is_playable === true
-  );
-
-  if (playableTracks.length === 0) {
-    return null;
-  }
-
-  // Only return a track if we have a match for both track and artist
-  if (trackName && artistName) {
-    const goodMatches = playableTracks.filter((track: any) => {
-      const trackTitle = track.title?.toLowerCase() || "";
-      const artistCredit =
-        track.artist_credit?.[0]?.artist?.name?.toLowerCase() ||
-        track.artist?.name?.toLowerCase() ||
-        "";
-
-      // We require BOTH track name and artist name to have good similarity
-      const trackMatch =
-        trackTitle.includes(trackName.toLowerCase()) ||
-        trackName.toLowerCase().includes(trackTitle);
-      const artistMatch =
-        artistCredit.includes(artistName.toLowerCase()) ||
-        artistName.toLowerCase().includes(artistCredit);
-
-      return trackMatch && artistMatch;
-    });
-
-    return goodMatches.length > 0 ? goodMatches[0] : null;
-  }
-
-  // If we only have track name or artist name, be even more strict
-  if (trackName) {
-    const trackMatches = playableTracks.filter((track: any) => {
-      const trackTitle = track.title?.toLowerCase() || "";
-      return (
-        trackTitle.includes(trackName.toLowerCase()) ||
-        trackName.toLowerCase().includes(trackTitle)
-      );
-    });
-    return trackMatches.length > 0 ? trackMatches[0] : null;
-  }
-  return null;
-};
-
 const searchForFunkwhaleTrack = async (
   funkwhaleToken: string,
   instanceURL: string,
   trackName?: string,
   artistName?: string
 ): Promise<FunkwhaleTrack | null> => {
-  let query = trackName ?? "";
-  if (artistName) {
-    query += ` ${artistName}`;
-  }
+  const query = trackName ?? "";
   if (!query) {
     return null;
   }
 
-  // first try the enhanced search endpoint first (Funkwhale v1.3+)
   try {
-    const enhancedResponse = await fetch(
-      `${instanceURL}/api/v1/search?q=${encodeURIComponent(query)}`,
+    const response = await fetch(
+      `${instanceURL}/api/v1/tracks?q=${encodeURIComponent(query)}&limit=10`,
       {
         method: "GET",
         headers: {
@@ -258,48 +200,128 @@ const searchForFunkwhaleTrack = async (
       }
     );
 
-    if (enhancedResponse.ok) {
-      const enhancedData = await enhancedResponse.json();
-      const tracks = enhancedData?.tracks || [];
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const error = new Error(errorBody.detail || response.statusText);
+      (error as any).status = response.status;
+      throw error;
+    }
 
-      if (tracks.length > 0) {
-        return selectBestTrack(tracks, trackName, artistName);
+    const responseBody = await response.json();
+    const tracks = responseBody?.results ?? [];
+
+    if (tracks.length === 0) {
+      return null;
+    }
+
+    // Filter only playable tracks
+    const playableTracks = tracks.filter(
+      (track: any) => track.is_playable === true
+    );
+
+    if (playableTracks.length === 0) {
+      return null;
+    }
+
+    if (!trackName) {
+      // If no track name to match against, return first playable track
+      return playableTracks[0] || null;
+    }
+
+    // Remove accents from track name for better matching
+    const trackNameWithoutAccents = deburr(trackName);
+
+    // https://docs.funkwhale.audio/specs/multi-artist/mb-content.html
+    // using multi-artist approch for better matching of tracks
+    const candidateMatches = playableTracks.map((candidate: any) => {
+      // Get artist name from multiple possible sources:
+      // 1. New multi-artist format: artist_credit array
+      // 2. Legacy format: artist object
+      // 3. Fallback: artist_credit as single object (if not array)
+      let candidateArtistName = "";
+      let artistCredits: any[] = [];
+
+      if (
+        candidate.artist_credit &&
+        Array.isArray(candidate.artist_credit) &&
+        candidate.artist_credit.length > 0
+      ) {
+        // New multi-artist format: preserve artist_credit structure
+        artistCredits = candidate.artist_credit;
+        // For search purposes, combine artist credits (without joinphrases)
+        candidateArtistName = candidate.artist_credit
+          .map((credit: any) => credit.credit || credit.name || "")
+          .filter((name: string) => name.trim())
+          .join(" ");
+      } else if (
+        candidate.artist_credit &&
+        !Array.isArray(candidate.artist_credit)
+      ) {
+        // Single artist_credit object format
+        artistCredits = [candidate.artist_credit];
+        candidateArtistName =
+          candidate.artist_credit.credit || candidate.artist_credit.name || "";
+      } else if (candidate.artist?.name) {
+        // Legacy artist format - convert to artist_credit-like structure
+        artistCredits = [
+          {
+            artist_id: candidate.artist.id,
+            credit: candidate.artist.name,
+            joinphrase: "",
+          },
+        ];
+        candidateArtistName = candidate.artist.name;
+      }
+
+      return {
+        ...candidate,
+        normalizedTitle: deburr(candidate.title || ""),
+        normalizedArtist: deburr(candidateArtistName),
+        artistCredits, // Preserve original structure for proper display
+      };
+    });
+
+    // If artist name is provided, try to filter by artist first
+    let filteredCandidates = candidateMatches;
+    if (artistName) {
+      const artistNameWithoutAccents = deburr(artistName);
+      const artistMatches = candidateMatches.filter((candidate: any) =>
+        candidate.normalizedArtist
+          .toLowerCase()
+          .includes(artistNameWithoutAccents.toLowerCase())
+      );
+
+      // If we found tracks by the right artist, use those for matching
+      if (artistMatches.length > 0) {
+        filteredCandidates = artistMatches;
       }
     }
-  } catch (error) {
-    // Fallback to old search if enhanced search fails -> silent fallback for compatibility
-  }
 
-  // Fallback to the original tracks only search
-  // This is the old search endpoint that returns tracks only
-  // Cross verify to ensure the availablity of tracks
-  const response = await fetch(
-    `${instanceURL}/api/v1/tracks/?search=${encodeURIComponent(query)} 
-     &limit=10`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${funkwhaleToken}`,
-      },
+    // After artist filtering, check for exact title match first
+    const exactMatch = filteredCandidates.find((candidate: any) =>
+      new RegExp(escapeRegExp(trackNameWithoutAccents), "igu").test(
+        candidate.normalizedTitle
+      )
+    );
+
+    if (exactMatch) {
+      return exactMatch;
     }
-  );
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    const error = new Error(errorBody.detail || response.statusText);
-    (error as any).status = response.status;
-    throw error;
-  }
+    // If no exact match, return the first artist-filtered result
+    // (since artist filtering already gave us the right artist)
+    if (filteredCandidates.length > 0) {
+      return filteredCandidates[0];
+    }
 
-  const responseBody = await response.json();
-  const tracks = responseBody?.results ?? [];
-
-  if (tracks.length === 0) {
+    // No good match found, return the first playable track as fallback
+    return playableTracks[0] || null;
+  } catch (error) {
+    // Log the error and return null instead of throwing
+    // eslint-disable-next-line no-console
+    console.error("Funkwhale search failed:", error);
     return null;
   }
-
-  return selectBestTrack(tracks, trackName, artistName);
 };
 
 const getAdditionalContent = (metadata: EventMetadata): string =>

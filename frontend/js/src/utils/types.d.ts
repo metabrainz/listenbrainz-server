@@ -35,6 +35,7 @@ interface AdditionalInfo {
   track_mbid?: string | null;
   tracknumber?: string | number | null;
   work_mbids?: Array<string> | null;
+  funkwhale_id?: string | null;
 }
 
 declare type MBIDMappingArtist = {
