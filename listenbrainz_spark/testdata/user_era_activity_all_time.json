@@ -3,7 +3,7 @@
 	  "type": "user_era_activity",
 	  "stats_range": "all_time",
 	  "from_ts": 1009843200,
-	  "to_ts": 1755053639,
+	  "to_ts": 1628511763,
 	  "entity": "era_activity",
 	  "data": [
 		{

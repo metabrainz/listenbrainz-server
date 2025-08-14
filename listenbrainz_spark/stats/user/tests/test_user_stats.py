@@ -89,8 +89,8 @@ class UserStatsTestCase(StatsTestCase):
             for era_entry in actual_data:
                 self.assertIn("year", era_entry)
                 self.assertIsInstance(era_entry["year"], int)
-                self.assertGreaterEqual(era_entry["year"], 1900)  # reasonable minimum year
-                self.assertLessEqual(era_entry["year"], 2024)     # reasonable maximum year
+                self.assertGreaterEqual(era_entry["year"], 1900)
+                self.assertLessEqual(era_entry["year"], 2024)
                 
                 self.assertIn("listen_count", era_entry)
                 self.assertIsInstance(era_entry["listen_count"], int)
