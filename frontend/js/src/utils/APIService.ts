@@ -613,6 +613,19 @@ export default class APIService {
       url = `${this.APIBaseURI}/stats/sitewide/era-activity`;
     }
     url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
   getUserGenreActivity = async (
     userName: string,
     range: UserStatsAPIRange = "all_time"

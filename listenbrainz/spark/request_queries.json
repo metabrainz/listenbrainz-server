@@ -28,6 +28,7 @@
     "name": "stats.user.era_activity",
     "description": "Calculate number of listens for an user per year of release on each day of the requested stats_range.",
     "params": ["stats_range", "database"]
+  },
   "stats.user.genre_activity": {
     "name": "stats.user.genre_activity",
     "description": "Calculate the top genres listened to by the user in the requested stats_range grouped by time of the day",
