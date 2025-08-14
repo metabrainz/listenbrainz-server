@@ -33,7 +33,6 @@ from listenbrainz.webserver.login import api_login_required
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.domain.navidrome import NavidromeService
 from listenbrainz.db import funkwhale as db_funkwhale
-from listenbrainz.db import navidrome as db_navidrome
 
 
 
@@ -162,7 +161,7 @@ def delete_listens():
         raise APIInternalServerError(f"Error while deleting listens for user: {current_user.musicbrainz_id}")
 
 
-def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False, exclude_navidrome=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -187,7 +186,7 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return MusicBrainzService()
         elif service == ExternalServiceType.FUNKWHALE:
             return FunkwhaleService()
-        elif service == ExternalServiceType.NAVIDROME:
+        elif not exclude_navidrome and service == ExternalServiceType.NAVIDROME:
             return NavidromeService()
     except KeyError:
         raise NotFound("Service %s is invalid." % (name,))
@@ -272,7 +271,7 @@ def music_services_details():
 @settings_bp.get('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name, exclude_apple=True)
+    service = _get_service_or_raise_404(service_name, exclude_apple=True, exclude_navidrome=True)
 
     # Check for error parameter first
     error = request.args.get("error")
@@ -334,7 +333,7 @@ def music_services_callback(service_name: str):
 @settings_bp.post('/music-services/<service_name>/refresh/')
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True, exclude_navidrome=True)
 
     if isinstance(service, FunkwhaleService):
         data = request.get_json() or {}
