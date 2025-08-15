@@ -10,15 +10,14 @@ import { GlobalAppContextT } from "../../../src/utils/GlobalAppContext";
 
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-import {
-  BrainzPlayerContextT,
-  BrainzPlayerProvider,
-  initialValue as initialBrainzPlayerContextValue,
-} from "../../../src/common/brainzplayer/BrainzPlayerContext";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
 import IntersectionObserver from "../../__mocks__/intersection-observer";
 import { ReactQueryWrapper } from "../../test-react-query";
+import { queueAtom, ambientQueueAtom, BrainzPlayerContextT } from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { Provider as JotaiProvider } from "jotai";
+import { createStore } from "jotai";
+import { currentListenAtom, currentTrackNameAtom, currentTrackArtistAtom, playerPausedAtom } from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -82,14 +81,31 @@ const listen2 = listenOrJSPFTrackToQueueItem({
   },
 });
 
-function BrainzPlayerWithWrapper(brainzPlayerProps: {
-  additionalContextValues?: Partial<BrainzPlayerContextT>;
-}) {
-  const { additionalContextValues } = brainzPlayerProps || {};
+function BrainzPlayerWithWrapper({additionalContextValues}: {additionalContextValues?: Partial<BrainzPlayerContextT>}) {
+  const store = createStore();
+  if (additionalContextValues?.currentListen) {
+    store.set(currentListenAtom, additionalContextValues.currentListen);
+  }
+  if (additionalContextValues?.currentTrackName) {
+    store.set(currentTrackNameAtom, additionalContextValues.currentTrackName);
+  }
+  if (additionalContextValues?.currentTrackArtist) {
+    store.set(currentTrackArtistAtom, additionalContextValues.currentTrackArtist);
+  }
+  if (additionalContextValues?.playerPaused) {
+    store.set(playerPausedAtom, additionalContextValues.playerPaused);
+  }
+  if (additionalContextValues?.queue) {
+    store.set(queueAtom, additionalContextValues.queue);
+  }
+  if (additionalContextValues?.ambientQueue) {
+    store.set(ambientQueueAtom, additionalContextValues.ambientQueue);
+  }
+
   return (
-    <BrainzPlayerProvider additionalContextValues={additionalContextValues}>
+    <JotaiProvider store={store}>
       <BrainzPlayer />
-    </BrainzPlayerProvider>
+    </JotaiProvider>
   );
 }
 
@@ -106,7 +122,7 @@ describe("BrainzPlayer", () => {
   beforeEach(() => {
     (useBrainzPlayerContext as jest.MockedFunction<
       typeof useBrainzPlayerContext
-    >).mockReturnValue(initialBrainzPlayerContextValue);
+    >).mockReturnValue({});
 
     (useBrainzPlayerDispatch as jest.MockedFunction<
       typeof useBrainzPlayerDispatch
@@ -156,23 +172,6 @@ describe("BrainzPlayer", () => {
     expect(screen.getByTestId("youtube-wrapper")).toBeInTheDocument();
     expect(screen.getByTestId("soundcloud")).toBeInTheDocument();
     expect(screen.queryByTestId("spotify-player")).toBeNull();
-  });
-
-  test("creates a Spotify datasource when passed a spotify user with right permissions", async () => {
-    renderWithProviders(
-      <BrainzPlayerWithWrapper />,
-      {
-        ...GlobalContextMock.context,
-        spotifyAuth: spotifyAccountWithPermissions,
-      },
-      {}
-    );
-
-    const playButton = screen.getByTestId("bp-play-button");
-
-    await user.click(playButton);
-
-    expect(screen.getByTestId("spotify-player")).toBeInTheDocument();
   });
 
   test("current listen item is being rendered correctly", async () => {

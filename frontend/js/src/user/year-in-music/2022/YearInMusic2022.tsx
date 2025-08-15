@@ -27,6 +27,7 @@ import {
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
@@ -41,7 +42,7 @@ import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import SEO, { YIMYearMetaTags } from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
-import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -1328,9 +1329,9 @@ export function YearInMusicWrapper() {
     });
   }
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   React.useEffect(() => {
-    dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    setAmbientQueue(listens);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
 
