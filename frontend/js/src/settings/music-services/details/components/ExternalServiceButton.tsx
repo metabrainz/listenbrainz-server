@@ -7,7 +7,9 @@ type ExternalServiceButtonProps = {
     | "critiquebrainz"
     | "appleMusic"
     | "lastfm"
-    | "librefm";
+    | "librefm"
+    | "funkwhale"
+    | "navidrome";
   current: string;
   value: string;
   title: string;

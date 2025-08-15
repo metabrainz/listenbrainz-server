@@ -223,3 +223,10 @@ USER_DATA_EXPORT_BASE_DIR = "/code/listenbrainz/exports/"
 # Service monitoring -- only needed for MetaBrainz production
 SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = ""
 SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""
+
+# Funkwhale configuration
+FUNKWHALE_CALLBACK_URL = 'http://localhost:8100/settings/music-services/funkwhale/callback/'
+
+# Navidrome configuration
+#Generate key : from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
+NAVIDROME_ENCRYPTION_KEY = 'Set to a base64 encoded key for encryption/decryption of passwords'
