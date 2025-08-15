@@ -312,6 +312,16 @@ declare interface UserArtistEvolutionActivityResponse {
   offset_year?: number;
 }
 
+declare type GenreHourData = {
+  genre: string;
+  hour: number;
+  listen_count: number;
+}
+
+declare type UserGenreActivityResponse = {
+  result: Array<GenreHourData>;
+}
+
 declare type UserArtistMapArtist = {
   artist_name: string;
   artist_mbid: string;

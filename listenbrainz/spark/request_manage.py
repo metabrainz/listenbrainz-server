@@ -89,7 +89,7 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'artist_evolution_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'artist_evolution_activity', 'genre_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
