@@ -9,6 +9,7 @@ import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import Username from "../common/Username";
 import FlairsSettings from "./flairs/FlairsSettings";
+import DigestSettings from "./digest-settings/DigestSettings";
 
 export default function Settings() {
   const globalContext = React.useContext(GlobalAppContext);
@@ -87,6 +88,8 @@ export default function Settings() {
         </div>
 
         <FlairsSettings />
+
+        <DigestSettings />
 
         <h3>User token</h3>
         <p>

@@ -1,13 +1,12 @@
-from requests.auth import HTTPBasicAuth
-from oauthlib.oauth2 import BackendApplicationClient
-from requests_oauthlib import OAuth2Session
+import requests
 from brainzutils import cache
 from flask import current_app
-import requests
-
+from oauthlib.oauth2 import BackendApplicationClient
+from requests.auth import HTTPBasicAuth
+from requests_oauthlib import OAuth2Session
 
 TOKEN_CACHE_KEY = "notification_access_token"
-METABRAINZ_NOTIFICATIONS_SEND_URL = "https://metabrainz.org/notification/send"
+METABRAINZ_NOTIFICATIONS_ENDPOINT = "https://metabrainz.org/notification"
 
 
 def send_notification(
@@ -70,11 +69,34 @@ def send_multiple_notifications(notifications: list[dict]):
 
     token = _fetch_token()
     headers = {"Authorization": f"Bearer {token}"}
+    notification_send_endpoint = METABRAINZ_NOTIFICATIONS_ENDPOINT + "/send"
 
-    response = requests.post(
-        url=METABRAINZ_NOTIFICATIONS_SEND_URL, json=notifications, headers=headers
-    )
+    response = requests.post(url=notification_send_endpoint, json=notifications, headers=headers)
     response.raise_for_status()
+
+
+def get_digest_preference(musicbrainz_row_id: int) -> dict:
+    
+    digest_endpoint = METABRAINZ_NOTIFICATIONS_ENDPOINT + f"/{musicbrainz_row_id}/digest-preference"
+    token = _fetch_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(url=digest_endpoint, headers=headers)
+    response.raise_for_status()
+
+    return response.json()
+
+
+def set_digest_preference(musicbrainz_row_id: int, digest: bool, digest_age: int = None) -> dict:
+    digest_endpoint = METABRAINZ_NOTIFICATIONS_ENDPOINT + f"/{musicbrainz_row_id}/digest-preference"
+    token = _fetch_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    data = {"digest": digest, "digest_age": digest_age}
+
+    response = requests.post(url=digest_endpoint, json=data, headers=headers)
+    response.raise_for_status()
+
+    return response.json()
 
 
 def _fetch_token() -> str:
@@ -90,9 +112,7 @@ def _fetch_token() -> str:
 
     client = BackendApplicationClient(client_id=client_id, scope="notification")
     oauth = OAuth2Session(client=client)
-    token = oauth.fetch_token(
-        token_url=token_url, auth=HTTPBasicAuth(client_id, client_secret)
-    )
+    token = oauth.fetch_token(token_url=token_url, auth=HTTPBasicAuth(client_id, client_secret))
     access_token = token["access_token"]
     expires_in = token["expires_in"]
 

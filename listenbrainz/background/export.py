@@ -6,7 +6,7 @@ from datetime import datetime, date, time, timedelta, timezone
 from pathlib import Path
 
 import orjson
-from listenbrainz.domain.notification_sender import send_notification
+from listenbrainz.domain.metabrainz_notifications import send_notification
 from dateutil.relativedelta import relativedelta
 from flask import current_app, render_template
 from sqlalchemy import text

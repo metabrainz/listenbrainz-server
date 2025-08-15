@@ -13,7 +13,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from typing import Tuple, List
 
 from flask import current_app, render_template
-from listenbrainz.domain.notification_sender import send_notification
+from listenbrainz.domain.metabrainz_notifications import send_notification
 
 
 logger = logging.getLogger(__name__)
