@@ -7,6 +7,7 @@ from data.model.user_artist_stat import ArtistRecord
 from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
                                                                   UserRecommendationsRecord)
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_era_activity import EraActivityRecord
 from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
@@ -20,7 +21,7 @@ from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity, handle_user_genre_activity,
-    handle_user_listening_activity,
+    handle_user_listening_activity, handle_user_era_activity,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -383,6 +384,82 @@ class HandlersTestCase(DatabaseTestCase):
             ),
             last_updated=received.last_updated
         ))
+
+
+    def test_handle_user_era_activity(self):
+        data = {
+            'type': 'era_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'data': [
+                {
+                    'user_id': self.user1['id'],
+                    'data': [
+                        {
+                            'year': 1999,
+                            'listen_count': 3
+                        }
+                    ]
+                },
+                {
+                    'user_id': self.user2['id'],
+                    'data': [
+                        {
+                            'year': 2000,
+                            'listen_count': 3
+                        },
+                        {
+                            'year': 2001,
+                            'listen_count': 5
+                        }
+                    ]
+                }
+            ],
+            'database': 'era_activity_all_time_20220718'
+        }
+        CouchDbDataset.handle_start({"database": "era_activity_all_time_20220718"})
+        handle_user_era_activity(data)
+
+        received = db_stats.get(self.user1['id'], 'era_activity', 'all_time', EraActivityRecord)
+        self.assertEqual(received, StatApi[EraActivityRecord](
+            user_id=self.user1['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[EraActivityRecord](
+                __root__=[
+                    EraActivityRecord(
+                        year=1999,
+                        listen_count=3,
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+        received = db_stats.get(self.user2['id'], 'era_activity', 'all_time', EraActivityRecord)
+        self.assertEqual(received, StatApi[EraActivityRecord](
+            user_id=self.user2['id'],
+            to_ts=10,
+            from_ts=1,
+            stats_range='all_time',
+            data=StatRecordList[EraActivityRecord](
+                __root__=[
+                    EraActivityRecord(
+                        year=2000,
+                        listen_count=3,
+                    ),
+                    EraActivityRecord(
+                        year=2001,
+                        listen_count=5,
+                    ),
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+
     
     def test_handle_sitewide_artists(self):
         data = {
