@@ -13,7 +13,6 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_setting as db_usersetting
 from data.model.external_service import ExternalServiceType
 from listenbrainz.background.background_tasks import add_task
-from listenbrainz.db import listens_importer
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
@@ -24,12 +23,12 @@ from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
+from listenbrainz.domain.metabrainz_notifications import get_digest_preference, set_digest_preference
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
-from data.model.external_service import ExternalServiceType
 
 
 settings_bp = Blueprint("settings", __name__)
@@ -374,6 +373,29 @@ def link_listens():
         "last_updated": created,
     }
     return jsonify(data)
+
+
+@settings_bp.get("/get-digest")
+@api_login_required
+def get_digest_setting():
+    """Returns the current digest setting of the user."""
+    user = db_user.get(db_conn, current_user.id)
+    data = get_digest_preference(user["musicbrainz_row_id"])
+
+    return jsonify(data)
+
+
+@settings_bp.post("/set-digest")
+@api_login_required
+def set_digest_setting():
+    """Sets the digest preference for the user."""
+    user = db_user.get(db_conn, current_user.id)
+    data = request.json
+    resp_data = set_digest_preference(user["musicbrainz_row_id"], data["digest"], data["digest_age"])
+    if resp_data == data:
+        return jsonify({"success": True})
+    else:
+        raise APIBadRequest("API request data doesn't match the response data.") 
 
 
 @settings_bp.get('/', defaults={'path': ''})
