@@ -726,3 +726,43 @@ svg.fa-funkwhale,
   --fa-primary-opacity: 1 !important;
   --fa-secondary-opacity: 1 !important;
 }
+
+// Custom styling for Navidrome icon - temporary
+svg.fa-navidrome,
+.fa-navidrome {
+  width: 1.0em !important;
+  height: 1.0em !important;
+
+  // Match the vertical alignment used by other music service icons
+  vertical-align: -0.15em !important;
+
+  // Default duotone colors for Navidrome branding
+  --fa-secondary-color: #0084ff; /* outer disc */
+  --fa-primary-color:   #000000; /* rings, arcs, dot */
+
+  --fa-secondary-opacity: 1;
+  --fa-primary-opacity:   1;
+
+  .fa-secondary { 
+    color: #0084ff; // Blue background disc
+  }
+  .fa-primary { 
+    color: #000000; // Black outline rings and borders
+  }
+}
+
+// When in a muted context, use currentColor to match other services
+.text-muted svg.fa-navidrome,
+.text-muted .fa-navidrome {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 1 !important;
+  --fa-secondary-opacity: 1 !important;
+
+  .fa-secondary { 
+    color: currentColor !important;
+  }
+  .fa-primary { 
+    color: currentColor !important;
+  }
+}
