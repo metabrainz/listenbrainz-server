@@ -14,7 +14,7 @@ export default function DigestSettings() {
   React.useEffect(() => {
     async function fetchDigestSettings() {
       try {
-        const response = await fetch("/settings/get-digest");
+        const response = await fetch("/settings/digest-setting/");
         if (!response.ok) {
           throw new Error(`${response.status} HTTP response.`);
         }
@@ -38,7 +38,7 @@ export default function DigestSettings() {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await fetch("/settings/set-digest", {
+      const response = await fetch("/settings/digest-setting/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
