@@ -94,7 +94,7 @@ export default function DigestSettings() {
               type="number"
               className="form-control"
               id="digest-age"
-              min={0}
+              min={1}
               max={100}
               value={digestAge ?? ""}
               onChange={(e) => {
