@@ -131,17 +131,24 @@ body {
     }
 
     .search-bar {
+      background-color: #a4a2bf;
       input {
         font-size: 1.2rem;
         padding: 0.5rem 0.5rem 0.5rem 1rem;
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
+        
         box-shadow: none;
+        background-color: #a4a2bf !important;
+        color: $blue;
       }
       button {
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
         box-shadow: none;
+        padding-right: 1.2em;
+        background-color: #a4a2bf !important;
+        color: $blue;
       }
     }
   }
