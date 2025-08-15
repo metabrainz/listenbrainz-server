@@ -1,24 +1,34 @@
 import json
 import os
 
-from flask import Blueprint, current_app, jsonify, send_file, request
+from flask import Blueprint, current_app, jsonify, request
 from psycopg2 import DatabaseError
 from sqlalchemy import text
-from datetime import datetime, date
+from datetime import datetime, timezone
 from pathlib import Path
 
-from flask_login import current_user
 from werkzeug.utils import secure_filename
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
-from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APINoContent, APIUnauthorized
+from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
-from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.views.api_tools import validate_auth_header
 
 import_api_bp = Blueprint("import_listens_api_v1", __name__)
+
+
+def _validate_datetime_param(param, default=None):
+    value = request.form.get(param)
+    if not value:
+        return default
+    try:
+        value = datetime.fromisoformat(value)
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        raise APIBadRequest(f"Invalid {param} format!")
 
 
 @import_api_bp.post("/")
@@ -27,88 +37,58 @@ import_api_bp = Blueprint("import_listens_api_v1", __name__)
 @ratelimit()
 def create_import_task():
     """ Add a request to upload files and create a background task for the importer """
-
     user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
 
     if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
         raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
 
-    if user['is_paused']:
+    if user["is_paused"]:
         raise APIUnauthorized(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
 
-    UPLOAD_DIR = os.path.join(os.getcwd(), 'uploads')
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-    uploaded_file = request.files.get('file')
-    service = request.form.get('service')
-    from_date = request.form.get('from_date')
-    to_date = request.form.get('to_date')
-
-    
-
-
-    try:
-        from_date = datetime.strptime(from_date, '%Y-%m-%d').date()
-    except:
-        from_date = date(1970, 1, 1) # Epoch date
-    
-    try:
-        to_date = datetime.strptime(to_date, '%Y-%m-%d').date()
-    except:
-        to_date = date.today()
-
+    uploaded_file = request.files.get("file")
     if not uploaded_file:
         raise APIBadRequest("No file uploaded!")
-    
+
+    service = request.form.get("service")
     if not service:
         raise APIBadRequest("No service selected!")
-    
     service = service.lower()
-    
-    allowed_extensions = ['.json', '.jsonl', '.csv', '.zip']
-    allowed_services = ['spotify', 'applemusic', 'listenbrainz']
-    filename = uploaded_file.filename
 
+    allowed_services = ["spotify"]
+    if service not in allowed_services:
+        raise APIBadRequest("This service is not supported!")
+
+    from_date = _validate_datetime_param("from_date", datetime.fromtimestamp(0, timezone.utc))
+    to_date = _validate_datetime_param("to_date", datetime.now(timezone.utc))
+
+    filename = uploaded_file.filename
     if not filename:
         raise APIBadRequest("Invalid file name!")
-    
+
+    allowed_extensions = [".json", ".jsonl", ".csv", ".zip"]
     extension = os.path.splitext(filename)[1].lower()
-    
     if extension not in allowed_extensions:
         raise APIBadRequest("File type not allowed!")
     
-    if service not in allowed_services:
-        raise APIBadRequest("This service is not supported!")
-    
-    # WIP for more services
     if service == "spotify" and extension == ".zip":
         pass
     else:
         raise APIBadRequest("This combination of service and filetype is not supported!")
     
     saved_filename = secure_filename(filename)
-    
-    try:
-        save_path = os.path.join(UPLOAD_DIR, saved_filename)
-        uploaded_file.save(save_path)
-    except Exception as e:
-        raise APIInternalServerError("Failed to upload the file!")
+    save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], saved_filename)
 
     try:
-
         query = """
             SELECT id FROM user_data_import
-            WHERE user_id = :user_id AND service = :service
-                AND metadata->>'status' IN ('waiting', 'in_progress');
+             WHERE user_id = :user_id AND service = :service
+               AND metadata->>'status' IN ('waiting', 'in_progress');
         """
-
         result = db_conn.execute(text(query), {
-            "user_id": user['id'],
+            "user_id": user["id"],
             "service": service,
         })
-
         check_existing = result.first()
-
         if check_existing is not None:
             raise APIBadRequest("An import task is already in progress!")
 
@@ -118,7 +98,7 @@ def create_import_task():
               RETURNING id, service, created, file_path, metadata
         """
         result = db_conn.execute(text(query), {
-            "user_id": user['id'],
+            "user_id": user["id"],
             "service": service,
             "from_date": from_date,
             "to_date": to_date,
@@ -130,13 +110,17 @@ def create_import_task():
         if import_task is not None:
             query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
             result = db_conn.execute(text(query), {
-                "user_id": user['id'],
+                "user_id": user["id"],
                 "task": "import_listens",
                 "metadata": json.dumps({"import_id": import_task.id})
             })
             task = result.first()
             if task is not None:
+                os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
+                uploaded_file.save(save_path)
+
                 db_conn.commit()
+
                 return jsonify({
                     "import_id": import_task.id,
                     "service": import_task.service,
@@ -150,8 +134,8 @@ def create_import_task():
         raise APIBadRequest(message="Data import already requested.")
 
     except DatabaseError:
-        current_app.logger.error('Error while importing user data: %s', user['musicbrainz_id'], exc_info=True)
-        raise APIInternalServerError(f'Error while importing user data {user['musicbrainz_id']}, please try again later.')
+        current_app.logger.error("Error while creating import user data task: %s", user["musicbrainz_id"], exc_info=True)
+        raise APIInternalServerError(f"Error while creating import user data task {user['musicbrainz_id']}, please try again later.")
     
 
 @import_api_bp.get("/<import_id>/")
@@ -160,9 +144,7 @@ def create_import_task():
 @ratelimit()
 def get_import_task(import_id):
     """ Retrieve the requested import's data if it belongs to the specified user """
-
-    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
-
+    user = validate_auth_header()
     result = db_conn.execute(
         text("SELECT * FROM user_data_import WHERE user_id = :user_id AND id = :import_id"),
         {"user_id": user["id"], "import_id": import_id}
@@ -186,9 +168,7 @@ def get_import_task(import_id):
 @ratelimit()
 def list_import_tasks():
     """ Retrieve the all import tasks for the current user """
-
-    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
-
+    user = validate_auth_header()
     result = db_conn.execute(
         text("SELECT * FROM user_data_import WHERE user_id = :user_id ORDER BY created DESC"),
         {"user_id": user["id"]}
@@ -210,11 +190,9 @@ def list_import_tasks():
 @ratelimit()
 def delete_export_archive(import_id):
     """ Cancel the specified import in progress """
-
-    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
-
+    user = validate_auth_header()
     result = db_conn.execute(
-        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND (metadata->>'status') IN ('in_progress', 'waiting') RETURNING file_path"),
+        text("DELETE FROM user_data_import WHERE user_id = :user_id AND id = :import_id AND metadata->>'status' IN ('waiting') RETURNING file_path"),
         {"user_id": user["id"], "import_id": import_id}
     )
     row = result.first()
@@ -223,10 +201,8 @@ def delete_export_archive(import_id):
             text("DELETE FROM background_tasks WHERE user_id = :user_id AND (metadata->>'import_id')::int = :import_id"),
             {"user_id": user["id"], "import_id": import_id}
         )
+        Path(row.file_path).unlink(missing_ok=True)
         db_conn.commit()
-        file_path = Path(row.file_path)
-        current_app.logger.info("Removing file: %s", file_path)
-        file_path.unlink(missing_ok=True)
         return jsonify({"success": True})
     else:
-        raise APINotFound("Import not found")
+        raise APINotFound("Import not found or is already being processed.")

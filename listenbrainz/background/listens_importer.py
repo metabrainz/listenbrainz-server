@@ -13,294 +13,310 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from listenbrainz.domain.external_service import ExternalServiceError
 
 from flask import current_app
-from sqlalchemy import text, bindparam, Integer, String
+from sqlalchemy import text
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
 BATCH_SIZE = 1000
+FILE_SIZE_LIMIT = 524288000  # 500 MB
+IMPORTER_NAME = "ListenBrainz Archive Importer"
+
 
 def initialize_spotify():
-    client_credentials_manager = SpotifyClientCredentials( client_id = current_app.config['SPOTIFY_CLIENT_ID'], client_secret = current_app.config['SPOTIFY_CLIENT_SECRET'])
-    sp = spotipy.Spotify(auth_manager = client_credentials_manager)
+    client_credentials_manager = SpotifyClientCredentials(
+        client_id=current_app.config["SPOTIFY_CLIENT_ID"],
+        client_secret=current_app.config["SPOTIFY_CLIENT_SECRET"]
+    )
+    sp = spotipy.Spotify(auth_manager=client_credentials_manager)
     return sp
 
-def validate_spotify_listen(listen):
-    return True # WIP
 
-def parse_spotify_listen(batch, db_conn, ts_conn, sp):
+def get_spotify_data_from_cache(ts_conn, spotify_track_ids) -> dict:
+    """ Get Spotify track data from cache for multiple track IDs.  """
+    if not spotify_track_ids:
+        return {}
 
-    parsed_listens = []
+    query = """
+            SELECT t.track_id AS track_id
+                 , t.name AS track_name
+                 , t.track_number
+                 , t.data->'duration_ms' AS duration_ms
+                 , al.album_id AS album_id
+                 , al.name AS album_name
+                 , aal.artist_name AS album_artist_name
+                 , aal.artist_ids AS album_artist_ids
+                 , tal.artist_name AS artist_name
+                 , tal.artist_ids AS artist_ids
+             FROM spotify_cache.track t
+             JOIN spotify_cache.album al
+               ON t.album_id = al.album_id
+        LEFT JOIN LATERAL (
+                    SELECT array_agg(aa.artist_id ORDER BY raa.position) AS artist_ids
+                         , string_agg(aa.name, ', 'ORDER BY raa.position) AS artist_name
+                      FROM spotify_cache.rel_album_artist raa
+                      JOIN spotify_cache.artist aa
+                        ON raa.artist_id = aa.artist_id
+                     WHERE raa.album_id = al.album_id
+                  ) aal
+               ON TRUE
+        LEFT JOIN LATERAL (
+                    SELECT array_agg(ta.artist_id ORDER BY rta.position) AS artist_ids
+                         , string_agg(ta.name, ', 'ORDER BY rta.position) AS artist_name
+                      FROM spotify_cache.rel_track_artist rta
+                      JOIN spotify_cache.artist ta
+                        ON rta.artist_id = ta.artist_id
+                     WHERE rta.track_id = t.track_id
+                  ) tal
+               ON TRUE
+            WHERE t.track_id = ANY(:track_ids);
+            """
+    result = ts_conn.execute(text(query), {"track_ids": spotify_track_ids})
+    return {r.track_id: dict(r) for r in result}
 
-    for listen in batch:
-        if validate_spotify_listen(listen):
-            artist = listen.get('master_metadata_album_artist_name', '')
-            track_name = listen.get('master_metadata_track_name', '')
-            listened_at = listen.get("ts")
-            timestamp_dt = datetime.strptime(listened_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            unix_timestamp = timestamp_dt.timestamp()
-            crafted_listen = {
-                "listened_at": unix_timestamp,
-                "track_metadata": {
-                    "artist_name": artist,
-                    "track_name": track_name,
+
+def get_spotify_data_from_api(sp, spotify_track_ids) -> dict:
+    """ Get Spotify track data from the API for multiple track IDs. """
+    if not spotify_track_ids:
+        return {}
+
+    results = {}
+    for i in range(0, len(spotify_track_ids), 50):
+        batch = spotify_track_ids[i : i + 50]
+        try:
+            tracks = sp.tracks(batch)
+            for track in tracks.get("tracks", []):
+                if not track:
+                    continue
+
+                track_id = track["id"]
+
+                artist_ids, artist_names = [], []
+                for artist in track["artists"]:
+                    artist_ids.append(artist["id"])
+                    artist_names.append(artist["name"])
+
+                album = track["album"]
+                album_artists = album.get("artists")
+                album_artist_ids, album_artist_names = [], []
+                for artist in album_artists:
+                    album_artist_ids.append(artist["id"])
+                    album_artist_names.append(artist["name"])
+
+                results[track_id] = {
+                    "track_id": track_id,
+                    "track_name": track["name"],
+                    "track_number": track.get("track_number"),
+                    "duration_ms": track.get("duration_ms"),
+                    "album_id": album["id"],
+                    "album_name": album["name"],
+                    "album_artist_name": ", ".join(album_artist_names),
+                    "album_artist_ids": album_artist_ids,
+                    "artist_name": ", ".join(artist_names),
+                    "artist_ids": artist_ids,
                 }
-            }
-            try:
-                spotify_track_id = listen.get('spotify_track_uri').split(':')[2]
-            except:
-                return crafted_listen
+        except Exception as e:
+            current_app.logger.error(f"Error fetching Spotify tracks {batch}: {str(e)}", exc_info=True)
+
+    return results
 
 
-            query = """
-                    WITH
-                        album_artists AS (
-                            SELECT
-                            raa.album_id,
-                            json_agg(json_build_object(
-                                'artist_id', a.artist_id,
-                                'name', a.name,
-                                'position', raa.position
-                            ) ORDER BY raa.position) AS album_artist_list
-                            FROM spotify_cache.rel_album_artist raa
-                            JOIN spotify_cache.artist a ON raa.artist_id = a.artist_id
-                            GROUP BY raa.album_id
-                        ),
+def get_spotify_data(ts_conn, sp: spotipy.Spotify, spotify_track_ids: set[str]) -> dict:
+    tracks = get_spotify_data_from_cache(ts_conn, list(spotify_track_ids))
+    remaining_track_ids = spotify_track_ids - set(tracks.keys())
+    if remaining_track_ids:
+        api_tracks = get_spotify_data_from_api(sp, list(remaining_track_ids))
+        tracks.update(api_tracks)
+    return tracks
 
-                        track_artists AS (
-                            SELECT
-                            rta.track_id,
-                            json_agg(json_build_object(
-                                'artist_id', a.artist_id,
-                                'name', a.name,
-                                'position', rta.position
-                            ) ORDER BY rta.position) AS track_artist_list
-                            FROM spotify_cache.rel_track_artist rta
-                            JOIN spotify_cache.artist a ON rta.artist_id = a.artist_id
-                            GROUP BY rta.track_id
-                        )
 
-                        SELECT
-                        t.track_id,
-                        t.name AS track_name,
-                        t.track_number,
-                        t.data AS track_data,
-
-                        al.album_id,
-                        al.name AS album_name,
-                        al.type AS album_type,
-                        al.release_date,
-                        al.data AS album_data,
-
-                        aa.album_artist_list,
-                        ta.track_artist_list
-
-                        FROM spotify_cache.track t
-                        JOIN spotify_cache.album al ON t.album_id = al.album_id
-                        LEFT JOIN album_artists aa ON al.album_id = aa.album_id
-                        LEFT JOIN track_artists ta ON t.track_id = ta.track_id
-
-                        WHERE t.track_id = :track_id;
-
-                """
-            result = ts_conn.execute(text(query), {
-                "track_id": spotify_track_id,
+def parse_spotify_listen(batch, ts_conn, sp):
+    items = []
+    for item in batch:
+        try:
+            items.append({
+                "artist_name": item.get("master_metadata_album_artist_name"),
+                "track_name": item.get("master_metadata_track_name"),
+                "timestamp": int(item["timestamp"].timestamp()),
+                "spotify_track_id": item["spotify_track_uri"].split(":")[2],
+                "ms_played": item.get("ms_played"),
+                "release_name": item.get("master_metadata_album_name", ""),
             })
-            spotify_track_info = result.first()
-            
-            if not spotify_track_info:
-                if not sp:
-                    current_app.logger.error(f"Can't retrieve metadata for the track {track_name}")
-                    return
-                spotify_track_info = spotify_web_api_track_info(sp, spotify_track_id)
-                artists = spotify_track_info.get('artists')
-                if artists:
-                    if artists[0].get('name'):
-                        artist = artists[0].get('name')
-            else:
-                artists = spotify_track_info.get('track_artist_list')
-                if artists[0].get('name'):
-                    artist = artists[0].get('name')
-            
-            crafted_listen['track_metadata']['artist_name'] = artist
-
-            if not crafted_listen:
-                current_app.logger.error("Failed to parse the listen: ", listen)
-                continue
-            current_app.logger.debug(str(type(crafted_listen)))
-            parsed_listens.append(crafted_listen)
-        else:
-            current_app.logger.error("Failed to validate the listen: ", listen)
+        except:
             continue
-    
-    return parsed_listens
 
+    if not items:
+        return []
 
+    spotify_track_ids = {x["spotify_track_id"] for x in items}
+    tracks = get_spotify_data(ts_conn, sp, spotify_track_ids)
 
-def spotify_web_api_track_info(sp, track_id):
-    track = sp.track(track_id)
-    return track
+    listens = []
+    for item in items:
+        sp_track = tracks.get(item["spotify_track_id"])
+        if sp_track:
+            track_metadata = {
+                "artist_name": sp_track["artist_name"],
+                "track_name": sp_track["track_name"],
+                "release_name": sp_track["album_name"],
+            }
+            additional_info = {
+                "tracknumber": sp_track["track_number"],
+                "duration_ms": sp_track["duration_ms"],
+                "spotify_artist_ids": [
+                    f"https://open.spotify.com/artist/{artist_id}" for artist_id in sp_track["artist_ids"]
+                ],
+                "spotify_album_id": f"https://open.spotify.com/album/{sp_track['album_id']}",
+                "spotify_album_artist_ids": [
+                    f"https://open.spotify.com/artist/{artist_id}" for artist_id in sp_track["album_artist_ids"]
+                ],
+                "release_artist_name": sp_track["album_artist_name"],
+            }
+        elif item["artist_name"] and item["track_name"]:
+            track_metadata = {
+                "artist_name": item["artist_name"],
+                "track_name": item["track_name"],
+            }
+            if item["release_name"]:
+                track_metadata["release_name"] = item["release_name"]
+            additional_info = {}
+        else:
+            continue
+
+        additional_info.update({
+            "ms_played": item["ms_played"],
+            "origin_url": f"https://open.spotify.com/track/{item['spotify_track_id']}",
+            "submission_client": IMPORTER_NAME,
+            "music_service": "spotify.com"
+        })
+        track_metadata["additional_info"] = additional_info
+        listens.append({
+            "listened_at": item["timestamp"],
+            "track_metadata": track_metadata,
+        })
+    return listens
 
 
 def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
-
-    # Check for zip bomb attack
-    with zipfile.ZipFile(file_path, 'r') as zip_file:
+    with zipfile.ZipFile(file_path, "r") as zip_file:
         if len(zip_file.namelist()) > 100:
             update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
             current_app.logger.error("Potential zip bomb attack")
             return
-        
-        audio_files = [
-            file for file in zip_file.namelist()
-            if 'audio' in os.path.basename(file).lower() and file.endswith('.json')
-        ]
 
-        for file in audio_files:
-            info = zip_file.getinfo(file)
+        audio_files = []
+        for file in zip_file.namelist():
+            filename = os.path.basename(file).lower()
+            if filename.endswith(".json") and ("audio" in filename or "endsong" in filename):
+                info = zip_file.getinfo(file)
             
-            if info.file_size > 524288000: # 500MB limit
-                update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
-                current_app.logger.error("Potential zip bomb attack")
-                return
+                if info.file_size > FILE_SIZE_LIMIT:
+                    update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
+                    current_app.logger.error("Potential zip bomb attack")
+                    return
 
-        
-        current_app.logger.error(str(audio_files))
+                audio_files.append(file)
+
         for filename in audio_files:
-            with zip_file.open(filename) as file:
-                with io.TextIOWrapper(file, encoding='utf-8') as contents:
-                    try:
+            update_import_progress_and_status(db_conn, import_id, "in_progress", f"Importing {filename}")
+            with zip_file.open(filename) as file, io.TextIOWrapper(file, encoding="utf-8") as contents:
+                batch = []
+                for entry in ijson.items(contents, "item"):
+                    timestamp = datetime.strptime(
+                        entry["ts"], "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=timezone.utc)
+                    if from_date <= timestamp <= to_date:
+                        entry["timestamp"] = timestamp
+                        batch.append(entry)
+                    if len(batch) == BATCH_SIZE:
+                        yield batch
                         batch = []
-                        for entry in ijson.items(contents, 'item'):
-                            timestamp = entry.get("ts")
-                            timestamp_date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-                            if from_date <= timestamp_date <= to_date:
-                                batch.append(entry)
-                            if len(batch) == BATCH_SIZE:
-                                batch = []
-                                yield batch
-                        if batch:
-                            yield batch
-                    except Exception as e:
-                        current_app.logger.error(f"Error reading {filename}: {e}")
-                        return
+                if batch:
+                    yield batch
                     
 
-def submit_listens(db_conn, listens, user_id, import_id):
-    query = 'SELECT musicbrainz_id FROM "user" WHERE id = :user_id'
-    result = db_conn.execute(text(query), {"user_id": user_id,})
-    username = result.first().musicbrainz_id
-
+def submit_listens(db_conn, listens, user_id, username, import_id):
     user_metadata = SubmitListenUserMetadata(user_id=user_id, musicbrainz_id=username)
     retries = 10
     while retries >= 0:
         try:
-            current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
+            current_app.logger.debug("Submitting %d listens for user %s", len(listens), username)
             insert_payload(listens, user_metadata, listen_type=LISTEN_TYPE_IMPORT)
-            current_app.logger.debug('Submitted from importer!')
             break
-        except (InternalServerError, ServiceUnavailable) as e:
+        except (InternalServerError, ServiceUnavailable):
             retries -= 1
-            current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
+            current_app.logger.error("ISE while trying to import listens for %s:", username, exc_info=True)
             if retries == 0:
                 update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
-                raise ExternalServiceError('ISE while trying to import listens: %s', str(e))
+                raise ExternalServiceError("ISE while trying to import listens")
 
 
-def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id):
+def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, username, import_id):
     sp = initialize_spotify()
     for batch in process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
-        parsed_listens = []
-        if batch is None:
-            update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
-            current_app.logger.error("Error in processing the uploaded spotify listening history files!")
-            return
-        
-        parsed_listens = parse_spotify_listen(batch, db_conn, ts_conn, sp)
-
-        submit_listens(db_conn, parsed_listens, user_id, import_id)
+        parsed_listens = parse_spotify_listen(batch, ts_conn, sp)
+        submit_listens(db_conn, parsed_listens, user_id, username, import_id)
 
 
 def update_import_progress_and_status(db_conn, import_id, status, progress):
     """ Update progress for user data import """
-    current_metadata = db_conn.execute(
-        text("SELECT metadata FROM user_data_import WHERE id = :import_id"),
-        {"import_id": import_id}
-    ).scalar() or {}  
-
-    updated_metadata = {**current_metadata, 'status': status, 'progress': progress}
-    
-    db_conn.execute(
-        text("UPDATE user_data_import SET metadata = (:metadata)::jsonb WHERE id = :import_id"),
-        {
-            "metadata": json.dumps(updated_metadata),
-            "import_id": import_id
-        }
-    )
+    query = text("""
+        UPDATE user_data_import
+           SET metadata = metadata || (:metadata)::jsonb
+         WHERE id = :import_id
+    """)
+    updated_metadata = {"status": status, "progress": progress}
+    db_conn.execute(query, {
+        "metadata": json.dumps(updated_metadata),
+        "import_id": import_id
+    })
     db_conn.commit()
 
 
-def check_if_cancelled_or_failed(db_conn, import_id):
-    """ Check if an import task was cancelled or failed """
-    result = db_conn.execute(text("""
-        SELECT metadata->>'status' FROM user_data_import WHERE id = :import_id
-    """), {"import_id": import_id}).fetchone()
-    if result is not None and (result[0] == 'cancelled' or result[0] == 'failed'):
-        return True
-    return False
-    
-
 def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
-    #raise  ExternalServiceError("lets see")
-
     user = db_user.get(db_conn, user_id)
     if user is None:
         current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
         return
-    
+    import_id = bg_task_metadata["import_id"]
 
     result = db_conn.execute(text("""
         SELECT *
           FROM user_data_import
          WHERE id = :import_id
-    """), {"import_id": bg_task_metadata["import_id"]})
+    """), {"import_id": import_id})
     import_task = result.first()
-    user_id = import_task.user_id
     if import_task is None:
         current_app.logger.error("No import with import_id: %s, skipping.", bg_task_metadata["import_id"])
         return
 
-    import_id = import_task.id
+    metadata = import_task.metadata
+    if metadata["status"] in {"cancelled", "failed"}:
+        return
+
     file_path = import_task.file_path
     service = import_task.service
-    from_date = import_task.from_date
-    try:
-        from_date = datetime.strptime(from_date, "%Y-%m-%d").date()
-    except:
-        pass
-    to_date = import_task.to_date
-    try:
-        to_date = datetime.strptime(to_date, "%Y-%m-%d").date()
-    except:
-        pass
-    import_task_metadata = import_task.metadata
-
 
     update_import_progress_and_status(db_conn, import_id, "in_progress", "Importing user listens")
 
     if service == "spotify":
-        if not check_if_cancelled_or_failed(db_conn, import_id):
-            import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, import_id)
-        if not check_if_cancelled_or_failed(db_conn, import_id):
-            update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
-            cleanup_old_imports(db_conn)
-        
+        import_spotify_listens(
+            db_conn, ts_conn, file_path,
+            from_date=import_task.from_date, to_date=import_task.to_date,
+            user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
+        )
+    update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
+    cleanup_old_imports(db_conn)
 
 
 def cleanup_old_imports(db_conn):
     """ Delete user data imports that have been completed, cancelled or failed """
     with db_conn.begin():
-        result = db_conn.execute(text("SELECT * FROM user_data_import WHERE metadata->>'status' IN ('completed', 'cancelled', 'failed')"))
+        result = db_conn.execute(text("""\
+            SELECT *
+              FROM user_data_import
+             WHERE metadata->>'status' IN ('completed', 'cancelled', 'failed')
+        """))
         files_to_delete = [row.file_path for row in result]
 
         # Delete old listening history files that are no longer required

@@ -132,13 +132,13 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 # MISCELLANEOUS
 
 
-# MAX file size to be allowed for the lastfm-backup import, default is infinite
+# MAX file size to be allowed for file uploads, default is infinite
 # Size is in bytes
 MAX_CONTENT_LENGTH = 200 * 1024 * 1024 + 10  # 200MB plus some buffer
 
-# Specify the upload folder where all the lastfm-backup will be stored
+# Specify the upload folder where user uploaded files for import will be stored
 # The path must be absolute path
-UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
+UPLOAD_FOLDER = "/code/listenbrainz/uploads"
 
 # Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
 # without going through the process of generating the stats in local environment. Otherwise,
