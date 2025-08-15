@@ -11,6 +11,7 @@ from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT, insert_pa
 from listenbrainz.webserver.models import SubmitListenUserMetadata
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from listenbrainz.domain.external_service import ExternalServiceError
+from listenbrainz.webserver.errors import ImportFailedError
 
 from flask import current_app
 from sqlalchemy import text
@@ -202,7 +203,7 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
         if len(zip_file.namelist()) > 100:
             update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
             current_app.logger.error("Potential zip bomb attack")
-            return
+            raise ImportFailedError("Import failed!")
 
         audio_files = []
         for file in zip_file.namelist():
@@ -213,7 +214,7 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                 if info.file_size > FILE_SIZE_LIMIT:
                     update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
                     current_app.logger.error("Potential zip bomb attack")
-                    return
+                    raise ImportFailedError("Import failed!")
 
                 audio_files.append(file)
 
@@ -299,14 +300,19 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
 
     update_import_progress_and_status(db_conn, import_id, "in_progress", "Importing user listens")
 
-    if service == "spotify":
-        import_spotify_listens(
-            db_conn, ts_conn, file_path,
-            from_date=import_task.from_date, to_date=import_task.to_date,
-            user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
-        )
-    update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
-    cleanup_old_imports(db_conn)
+    try:
+        if service == "spotify":
+            import_spotify_listens(
+                db_conn, ts_conn, file_path,
+                from_date=import_task.from_date, to_date=import_task.to_date,
+                user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
+            )
+        update_import_progress_and_status(db_conn, import_id, "completed", "Import completed!")
+    except ImportFailedError as e:
+        update_import_progress_and_status(db_conn, import_id, "failed", str(e))
+    finally:
+        cleanup_old_imports(db_conn)
+    
 
 
 def cleanup_old_imports(db_conn):
