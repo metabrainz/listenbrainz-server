@@ -705,9 +705,15 @@ declare type BrainzPlayerSettings = {
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
   funkwhaleEnabled?: boolean;
+  navidromeEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic" | "funkwhale"
+    | "spotify"
+    | "youtube"
+    | "soundcloud"
+    | "appleMusic"
+    | "funkwhale"
+    | "navidrome"
   >;
 };
 
