@@ -9,17 +9,16 @@ declare type FunkwhaleUser = {
 declare type FunkwhaleTrack = {
   id: number;
   title: string;
-  artist: {
-    id: number;
-    name: string;
-    mbid?: string;
-  };
   artist_credit?: Array<{
     artist: {
       id: number;
       name: string;
       mbid?: string;
+      fid?: string;
     };
+    credit: string;
+    joinphrase: string;
+    index: number;
   }>;
   album?: {
     id: number;
@@ -32,6 +31,7 @@ declare type FunkwhaleTrack = {
     };
   };
   listen_url: string;
+  fid?: string;
   duration: number;
   position?: number;
   mbid?: string;
