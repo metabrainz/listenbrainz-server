@@ -13,6 +13,7 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
+from data.model.user_artist_evolution import ArtistEvolutionRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -588,6 +589,101 @@ def get_genre_activity(user_name: str):
     
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"result": genre_activity})
+
+
+def _transform_artist_evolution_data(raw_data, stats_range):
+    if not raw_data:
+        return [], None
+    
+    # Group data by time_unit
+    grouped_by_time = {}
+    for item in raw_data:
+        time_unit = str(item['time_unit'])
+        artist_name = item['artist_name']
+        listen_count = item['listen_count']
+        
+        if time_unit not in grouped_by_time:
+            grouped_by_time[time_unit] = {}
+        
+        grouped_by_time[time_unit][artist_name] = listen_count
+    # Calculate total listens per artist across all time units
+    artist_totals = {}
+    for item in raw_data:
+        artist_name = item['artist_name']
+        listen_count = item['listen_count']
+        
+        if artist_name not in artist_totals:
+            artist_totals[artist_name] = 0
+        artist_totals[artist_name] += listen_count
+    
+    # Get top 5 artists by total listens
+    top_artists = sorted(artist_totals.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_artist_names = [artist[0] for artist in top_artists]
+    
+    # Get all possible time units based on stats range
+    def get_all_time_units_and_offset(stats_range):
+        if 'week' in stats_range:
+            return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], None
+        elif 'month' in stats_range:
+            return [str(i) for i in range(1, 32)], None  # Days 1-31
+        elif 'year' in stats_range:
+            return ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'], None
+        else:  # all_time
+            from datetime import datetime
+            current_year = datetime.now().year
+            
+            # Get years with non-zero counts
+            years_with_data = []
+            for item in raw_data:
+                try:
+                    year = int(item['time_unit'])
+                    if item['listen_count'] > 0:
+                        years_with_data.append(year)
+                except (ValueError, TypeError):
+                    continue
+            if not years_with_data:
+                return [], None
+            first_year_with_data = min(years_with_data)
+            offset_year = first_year_with_data - 1
+            all_years = list(range(offset_year, current_year + 1))
+            
+            return sorted(all_years), offset_year
+
+    all_time_units, offset_year = get_all_time_units_and_offset(stats_range)
+    
+    result = []
+    for time_unit in all_time_units:
+        time_data = grouped_by_time.get(str(time_unit), {})
+        result_item = {"id": str(time_unit)}
+        
+        for artist in top_artist_names:
+            result_item[artist] = time_data.get(artist, 0)
+        
+        result.append(result_item)
+    
+    return result, offset_year
+
+
+@stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_artist_evolution_activity(user_name: str):
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+
+    # Transform the raw data to the format expected by frontend
+    transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
+
+    response = {"result": transformed_data}
+    if offset_year is not None:
+        response["offset_year"] = offset_year
+
+    return jsonify(response)
 
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
@@ -1333,6 +1429,28 @@ def get_sitewide_artist_activity():
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
+
+
+@stats_api_bp.get("/sitewide/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_album_activity():
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+    
+    stats = db_stats.get_sitewide_stats("artist_evolution_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+    
+    stats_unprocessed = stats["data"]
+    transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
+    
+    response = {"result": transformed_data}
+    if offset_year is not None:
+        response["offset_year"] = offset_year
+
+    return jsonify(response)
 
 
 @stats_api_bp.get("/sitewide/artist-map")

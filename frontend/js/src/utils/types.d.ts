@@ -305,6 +305,13 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare type UserArtistEvolutionActivityResponse = {
+  result: Array<{
+    [artistName: string]: number;
+  }>;
+  offset_year?: number;
+}
+
 declare type GenreHourData = {
   genre: string;
   hour: number;
