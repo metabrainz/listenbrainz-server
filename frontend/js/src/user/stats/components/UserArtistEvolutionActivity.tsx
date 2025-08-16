@@ -1,4 +1,4 @@
-import { ResponsiveStream } from "@nivo/stream";
+import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 import * as React from "react";
 import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,10 +19,8 @@ export type StreamDataItem = {
 };
 
 // Transform function to convert API response to stream chart format
-// Transform function to convert API response to stream chart format
 const transformArtistEvolutionData = (
-  rawData: any[] | null | undefined,
-  timeRange: UserStatsAPIRange
+  rawData: UserArtistEvolutionActivityResponse["result"]
 ) => {
   if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
     return { chartData: [], keys: [] };
@@ -225,6 +223,14 @@ const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
   );
 };
 
+// Helper function for rendering different legend texts
+const getLegendText = (timeRange: UserStatsAPIRange) => {
+  if (timeRange === "week") return "Days of Week";
+  if (timeRange === "month") return "Days of Month";
+  if (timeRange === "year") return "Months";
+  return "Years";
+};
+
 export default function ArtistEvolutionStreamGraph(
   props: UserArtistEvolutionProps
 ) {
@@ -233,24 +239,9 @@ export default function ArtistEvolutionStreamGraph(
   // Props
   const { user, range } = props;
 
-  // Mobile detection hook
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  // Check for mobile screen size
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
   // API data fetching
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["ArtistEvolution", user?.name, range],
+    queryKey: ["userArtistEvolutionActivity", user?.name, range],
     queryFn: async () => {
       try {
         const queryData = (await APIService.getUserArtistEvolutionActivity(
@@ -280,161 +271,55 @@ export default function ArtistEvolutionStreamGraph(
     errorMessage = "",
   } = loaderData || {};
 
-  const [chartData, setChartData] = React.useState<StreamDataItem[]>([]);
-  const [keys, setKeys] = React.useState<string[]>([]);
-  const [orderedTimeUnits, setOrderedTimeUnits] = React.useState<string[]>([]);
+  // Mobile detection hook
+  const [isMobile, setIsMobile] = React.useState(false);
 
-  // Create memoized tooltip function to prevent recreation on each render
+  // Check for mobile screen size
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, [setIsMobile]);
+
+  const { chartData = [], keys = [] } = transformArtistEvolutionData(
+    rawData.result
+  );
+
+  const orderedTimeUnits = getOrderedTimeUnits(range, rawData.offset_year);
+
   const tooltipRenderer = React.useCallback(
-    (tooltipProps: any) => renderCustomTooltip(tooltipProps, orderedTimeUnits),
+    (tooltipProps: TooltipProps) =>
+      renderCustomTooltip(tooltipProps, orderedTimeUnits),
     [orderedTimeUnits]
   );
 
-  // Transform data when raw data changes
-  React.useEffect(() => {
-    if (
-      rawData?.result &&
-      Array.isArray(rawData.result) &&
-      rawData.result.length > 0
-    ) {
-      const {
-        chartData: transformedData,
-        keys: transformedKeys,
-      } = transformArtistEvolutionData(rawData.result, range);
-
-      setChartData(transformedData);
-      setKeys(transformedKeys);
-      setOrderedTimeUnits(getOrderedTimeUnits(range, rawData.offset_year));
-    } else {
-      setChartData([]);
-      setKeys([]);
-      setOrderedTimeUnits([]);
-    }
-  }, [rawData, range]);
-
-  // Helper functions for rendering different legend texts
-  const getLegendText = (timeRange: UserStatsAPIRange) => {
-    if (timeRange === "week") return "Days of Week";
-    if (timeRange === "month") return "Days of Month";
-    if (timeRange === "year") return "Months";
-    return "Years";
-  };
-
-  let content;
   if (hasError) {
-    content = (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "inherit",
-        }}
-      >
-        <span style={{ fontSize: 24 }}>
-          <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-          {errorMessage}
-        </span>
-      </div>
-    );
-  } else if (chartData.length === 0) {
-    content = (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "300px",
-        }}
-      >
-        <span style={{ fontSize: 18 }}>
-          No artist evolution data available for this time period
-        </span>
-      </div>
-    );
-  } else {
-    content = (
-      <div className="row">
-        <div className="col-xs-12">
-          <div style={{ width: "100%", height: isMobile ? "500px" : "600px" }}>
-            <ResponsiveStream
-              data={chartData}
-              keys={keys}
-              margin={
-                isMobile
-                  ? { top: 20, right: 20, bottom: 120, left: 40 }
-                  : { top: 20, right: 100, bottom: 60, left: 60 }
-              }
-              axisBottom={{
-                format: getAxisFormatter(range, orderedTimeUnits, isMobile),
-                tickSize: 5,
-                tickPadding: 5,
-                legend: getLegendText(range),
-                legendOffset: 40,
-                legendPosition: "middle",
-                tickRotation: isMobile ? -45 : 0,
-              }}
-              axisLeft={{
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-              }}
-              enableGridX
-              enableGridY
-              offsetType="diverging"
-              colors={{ scheme: "nivo" }}
-              fillOpacity={0.85}
-              borderColor={{ theme: "background" }}
-              dotSize={8}
-              dotColor={{ from: "color" }}
-              dotBorderWidth={2}
-              dotBorderColor={{
-                from: "color",
-                modifiers: [["darker", 0.7]],
-              }}
-              theme={{
-                axis: {
-                  ticks: {
-                    text: {
-                      fontSize: isMobile ? 10 : 12,
-                      fill: "#333333",
-                    },
-                  },
-                },
-                grid: {
-                  line: {
-                    stroke: "#dddddd",
-                    strokeWidth: 1,
-                  },
-                },
-              }}
-              legends={[
-                {
-                  anchor: isMobile ? "bottom" : "right",
-                  direction: isMobile ? "row" : "column",
-                  translateX: isMobile ? 0 : 100,
-                  translateY: isMobile ? 80 : 0,
-                  itemWidth: isMobile ? 60 : 80,
-                  itemHeight: 20,
-                  itemTextColor: "#333333",
-                  symbolSize: 12,
-                  symbolShape: "circle",
-                  itemsSpacing: isMobile ? 5 : 0,
-                  effects: [
-                    {
-                      on: "hover",
-                      style: {
-                        itemTextColor: "#000000",
-                      },
-                    },
-                  ],
-                },
-              ]}
-              tooltip={tooltipRenderer}
-            />
+    return (
+      <Card className="user-stats-card" data-testid="artist-evolution">
+        <div className="row">
+          <div className="col-xs-10">
+            <h3 className="capitalize-bold">Artist Evolution</h3>
           </div>
         </div>
-      </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "inherit",
+          }}
+        >
+          <span style={{ fontSize: 24 }}>
+            <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+            {errorMessage}
+          </span>
+        </div>
+      </Card>
     );
   }
 
@@ -445,7 +330,106 @@ export default function ArtistEvolutionStreamGraph(
           <h3 className="capitalize-bold">Artist Evolution</h3>
         </div>
       </div>
-      <Loader isLoading={loading}>{content}</Loader>
+      <Loader isLoading={loading}>
+        {chartData.length === 0 ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "300px",
+            }}
+          >
+            <span style={{ fontSize: 18 }}>
+              No artist evolution data available for this time period
+            </span>
+          </div>
+        ) : (
+          <div className="row">
+            <div className="col-xs-12">
+              <div
+                style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
+              >
+                <ResponsiveStream
+                  data={chartData}
+                  keys={keys}
+                  margin={
+                    isMobile
+                      ? { top: 20, right: 20, bottom: 120, left: 40 }
+                      : { top: 20, right: 100, bottom: 60, left: 60 }
+                  }
+                  axisBottom={{
+                    format: getAxisFormatter(range, orderedTimeUnits, isMobile),
+                    tickSize: 5,
+                    tickPadding: 5,
+                    legend: getLegendText(range),
+                    legendOffset: 40,
+                    legendPosition: "middle",
+                    tickRotation: isMobile ? -45 : 0,
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                  }}
+                  enableGridX
+                  enableGridY
+                  offsetType="diverging"
+                  colors={{ scheme: "nivo" }}
+                  fillOpacity={0.85}
+                  borderColor={{ theme: "background" }}
+                  dotSize={8}
+                  dotColor={{ from: "color" }}
+                  dotBorderWidth={2}
+                  dotBorderColor={{
+                    from: "color",
+                    modifiers: [["darker", 0.7]],
+                  }}
+                  theme={{
+                    axis: {
+                      ticks: {
+                        text: {
+                          fontSize: isMobile ? 10 : 12,
+                          fill: "#333333",
+                        },
+                      },
+                    },
+                    grid: {
+                      line: {
+                        stroke: "#dddddd",
+                        strokeWidth: 1,
+                      },
+                    },
+                  }}
+                  legends={[
+                    {
+                      anchor: isMobile ? "bottom" : "right",
+                      direction: isMobile ? "row" : "column",
+                      translateX: isMobile ? 0 : 100,
+                      translateY: isMobile ? 80 : 0,
+                      itemWidth: isMobile ? 60 : 80,
+                      itemHeight: 20,
+                      itemTextColor: "#333333",
+                      symbolSize: 12,
+                      symbolShape: "circle",
+                      itemsSpacing: isMobile ? 5 : 0,
+                      effects: [
+                        {
+                          on: "hover",
+                          style: {
+                            itemTextColor: "#000000",
+                          },
+                        },
+                      ],
+                    },
+                  ]}
+                  tooltip={tooltipRenderer}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </Loader>
     </Card>
   );
 }

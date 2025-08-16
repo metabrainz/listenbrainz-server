@@ -305,9 +305,9 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
-declare interface UserArtistEvolutionActivityResponse {
+declare type UserArtistEvolutionActivityResponse = {
   result: Array<{
-	  [artistName: string]: number;
+    [artistName: string]: number;
   }>;
   offset_year?: number;
 }
