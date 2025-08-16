@@ -30,7 +30,7 @@ function Navbar() {
     }
     setSearchTerm("");
     toggleSidebar();
-    navigate(`/search/?search_term=${searchInput}`);
+    navigate(`/search/?search_term=${encodeURIComponent(searchInput)}`);
   };
 
   return (

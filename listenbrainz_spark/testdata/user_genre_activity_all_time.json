@@ -1,0 +1,112 @@
+[
+	{
+	  "type": "user_genre_activity",
+	  "stats_range": "all_time",
+	  "from_ts": 1009843200,
+	  "to_ts": 1628511763,
+	  "entity": "genre_activity",
+	  "data": [
+		{
+		  "user_id": 1,
+		  "data": [
+			{
+			  "genre": "alternative dance",
+			  "hour": 8,
+			  "listen_count": 2
+			},
+			{
+			  "genre": "alternative dance",
+			  "hour": 9,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "alternative dance",
+			  "hour": 21,
+			  "listen_count": 2
+			},
+			{
+			  "genre": "alternative rock",
+			  "hour": 8,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "alternative rock",
+			  "hour": 9,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "ambient",
+			  "hour": 9,
+			  "listen_count": 5
+			},
+			{
+			  "genre": "ambient",
+			  "hour": 19,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "ambient",
+			  "hour": 20,
+			  "listen_count": 2
+			},
+			{
+			  "genre": "ambient house",
+			  "hour": 15,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "ambient techno",
+			  "hour": 15,
+			  "listen_count": 1
+			}
+		  ]
+		},
+		{
+		  "user_id": 2,
+		  "data": [
+			{
+			  "genre": "alternative hip hop",
+			  "hour": 10,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "alternative hip hop",
+			  "hour": 17,
+			  "listen_count": 2
+			},
+			{
+			  "genre": "alternative rock",
+			  "hour": 11,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "alternative rock",
+			  "hour": 20,
+			  "listen_count": 1
+			},
+			{
+			  "genre": "ballad",
+			  "hour": 17,
+			  "listen_count": 2
+			},
+			{
+			  "genre": "ballad",
+			  "hour": 18,
+			  "listen_count": 2
+			},
+			{
+			  "genre": "ballad",
+			  "hour": 19,
+			  "listen_count": 4
+			},
+			{
+			  "genre": "ballad",
+			  "hour": 20,
+			  "listen_count": 1
+			}
+		  ]
+		}
+	  ],
+	  "database": "genre_activity_all_time_20250731"
+	}
+  ]

@@ -283,7 +283,7 @@ def export_user(db_conn, ts_conn, user_id: int, metadata):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         archive_path = os.path.join(tmp_dir, archive_name)
-        with zipfile.ZipFile(archive_path, "w") as archive:
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             all_files = []
 
             user_file = export_info_for_user(export_id, db_conn, tmp_dir, user)
