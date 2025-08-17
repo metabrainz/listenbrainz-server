@@ -69,7 +69,7 @@ SPARK_REQUEST_QUEUE = "spark_request"
 EXTERNAL_SERVICES_EXCHANGE = "external_services"
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = "external_services_spotify_cache"
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = "external_services_apple_cache"
-EXTERNAL_SERVICES_IA_CACHE_QUEUE = "ia_metadata_seed"  
+EXTERNAL_SERVICES_IA_CACHE_QUEUE = "external_services_ia_cache"  
 
 
 # Typesense -- this is only needed if you plan to run the Labs API end point for MBID mapping
