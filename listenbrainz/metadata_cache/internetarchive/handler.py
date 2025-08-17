@@ -25,7 +25,7 @@ class InternetArchiveHandler(BaseHandler):
     def __init__(self, app):
         super().__init__(
             name="listenbrainz-internetarchive-metadata-cache",
-            external_service_queue=app.config.get("EXTERNAL_SERVICES_IA_CACHE_QUEUE", "ia_metadata_seed")
+            external_service_queue=app.config["EXTERNAL_SERVICES_IA_CACHE_QUEUE"]
         )
         self.app = app
         self.database = timescale.engine

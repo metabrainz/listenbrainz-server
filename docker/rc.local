@@ -79,6 +79,12 @@ then
     rm -f /etc/service/mbid_mapping_writer/down
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-internetarchive-metadata-cache-${DEPLOY_ENV}" ]
+then
+    log Enabling internet archive metadata cache
+    rm -f /etc/service/internetarchive_metadata_cache/down
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-metadata-cache-${DEPLOY_ENV}" ]
 then
     rm -f /etc/service/spotify_metadata_cache/down
