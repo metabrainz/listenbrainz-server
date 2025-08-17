@@ -162,6 +162,52 @@ describe("FunkwhalePlayer", () => {
         expect(FunkwhalePlayer.getURLFromListen(listen)).toBe("123");
       });
 
+      it("should prioritize funkwhale_id over origin_url", () => {
+        const listen: Listen = {
+          listened_at: 42,
+          track_metadata: {
+            additional_info: {
+              funkwhale_id: "123",
+              origin_url: "https://test.funkwhale.audio/library/tracks/456/",
+            },
+            artist_name: "Test Artist",
+            track_name: "Test Track",
+          },
+        };
+        expect(FunkwhalePlayer.getURLFromListen(listen)).toBe("123");
+      });
+
+      it("should handle funkwhale_id as a simple track ID", () => {
+        const listen: Listen = {
+          listened_at: 42,
+          track_metadata: {
+            additional_info: {
+              funkwhale_id: "12345",
+            },
+            artist_name: "Test Artist",
+            track_name: "Test Track",
+          },
+        };
+        expect(FunkwhalePlayer.getURLFromListen(listen)).toBe("12345");
+      });
+
+      it("should return origin_url regardless of domain name if isListenFromThisService validates it's from Funkwhale", () => {
+        const listen: Listen = {
+          listened_at: 42,
+          track_metadata: {
+            additional_info: {
+              music_service: "funkwhale",
+              origin_url: "https://music.example.com/library/tracks/123/",
+            },
+            artist_name: "Test Artist",
+            track_name: "Test Track",
+          },
+        };
+        expect(FunkwhalePlayer.getURLFromListen(listen)).toBe(
+          "https://music.example.com/library/tracks/123/"
+        );
+      });
+
       it("should return undefined if no funkwhale URL found", () => {
         const listen: Listen = {
           listened_at: 42,
