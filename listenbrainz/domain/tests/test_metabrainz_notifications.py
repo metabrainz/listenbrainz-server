@@ -7,21 +7,21 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
     @patch("listenbrainz.domain.metabrainz_notifications.send_multiple_notifications")
     def test_send_notification(self, mock_send_multiple):
         metabrainz_notifications.send_notification(
-            subject="Test Subject",
-            body="Test Body",
+            subject="test123",
+            body="testbody456",
             musicbrainz_row_id=123,
-            user_email="test@example.com",
-            from_addr="sender@example.com",
+            user_email="usermail@mail.com",
+            from_addr="noreply@listenbrainz.org",
         )
         expected_notification = [
             [
                 {
-                    "subject": "Test Subject",
-                    "body": "Test Body",
+                    "subject": "test123",
+                    "body": "testbody456",
                     "user_id": 123,
-                    "to": "test@example.com",
+                    "to": "usermail@mail.com",
                     "project": "listenbrainz",
-                    "sent_from": "sender@example.com",
+                    "sent_from": "noreply@listenbrainz.org",
                     "send_email": True,
                     "important": True,
                     "expire_age": 7,
@@ -78,7 +78,7 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
         mock_post.return_value = mock_response
 
         result = metabrainz_notifications.set_digest_preference(
-            musicbrainz_row_id=789, digest=False, digest_age=14
+            musicbrainz_row_id=789, digest=True, digest_age=14
         )
 
         expected_url = "https://metabrainz.org/notification/789/digest-preference"
