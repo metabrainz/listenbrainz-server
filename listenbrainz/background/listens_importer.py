@@ -267,8 +267,6 @@ def process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_d
 
                 import_files.append(file)
         
-        current_app.logger.debug(str(import_files))
-
         for filename in import_files:
             update_import_progress_and_status(db_conn, import_id, "in_progress", f"Importing {filename}")
             with zip_file.open(filename) as file, io.TextIOWrapper(file, encoding="utf-8") as contents:
@@ -277,9 +275,7 @@ def process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_d
                     if not line.strip():
                         continue
                     entry = json.loads(line)
-                    current_app.logger.debug("TESTING")
-                    timestamp = entry["listened_at"]
-                    current_app.logger.debug("TESTING2")
+                    timestamp = datetime.fromtimestamp(entry["listened_at"], tz=timezone.utc)
                     if from_date <= timestamp <= to_date:
                         batch.append(entry)
                     if len(batch) == BATCH_SIZE:
@@ -366,7 +362,6 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
                 user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
             )
         elif service == "listenbrainz":
-            current_app.logger.debug("TESTING 3")
             import_listenbrainz_listens(
                 db_conn, file_path,
                 from_date=import_task.from_date, to_date=import_task.to_date,
