@@ -392,7 +392,7 @@ def set_digest_setting():
     user = db_user.get(db_conn, current_user.id)
     data = request.json
     resp_data = set_digest_preference(user["musicbrainz_row_id"], data["digest"], data["digest_age"])
-    if resp_data == data:
+    if resp_data == data or (data["digest_age"] is None and data["digest"] == resp_data["digest"]):
         return jsonify({"success": True})
     else:
         raise APIBadRequest("API request data doesn't match the response data.") 

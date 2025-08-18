@@ -76,7 +76,20 @@ def send_multiple_notifications(notifications: list[dict]):
 
 
 def get_digest_preference(musicbrainz_row_id: int) -> dict:
-    
+    """Retrieves the current digest preference of a user.
+
+    Args:
+        ``musicbrainz_row_id`` (int)
+
+    Returns:
+        A dict containing
+        ``digest`` (bool): Whether digest is enabled for the user.
+        ``digest_age`` (int): The digest_age set for the user.
+
+    Raises:
+        A HTTPError if there's a failure.
+
+    """
     digest_endpoint = METABRAINZ_NOTIFICATIONS_ENDPOINT + f"/{musicbrainz_row_id}/digest-preference"
     token = _fetch_token()
     headers = {"Authorization": f"Bearer {token}"}
@@ -88,6 +101,22 @@ def get_digest_preference(musicbrainz_row_id: int) -> dict:
 
 
 def set_digest_preference(musicbrainz_row_id: int, digest: bool, digest_age: int = None) -> dict:
+    """Sets the digest preference for a user.
+
+    Args:
+        ``musicbrainz_row_id`` (int)
+        ``digest`` (bool): Whether digest should be enabled.
+        ``digest_age`` (int): The age in days for the digest. If set to None, MeB server defaults it to 7 days.
+
+    Returns:
+        A dict containing
+        ``digest`` (bool): Whether digest is enabled for the user.
+        ``digest_age`` (int): The digest age set for the user.
+
+    Raises:
+        A HTTPError if there's a failure.
+
+    """
     digest_endpoint = METABRAINZ_NOTIFICATIONS_ENDPOINT + f"/{musicbrainz_row_id}/digest-preference"
     token = _fetch_token()
     headers = {"Authorization": f"Bearer {token}"}
