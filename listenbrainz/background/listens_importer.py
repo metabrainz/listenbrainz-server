@@ -197,6 +197,17 @@ def parse_spotify_listen(batch, ts_conn, sp):
         })
     return listens
 
+def parse_listenbrainz_listen(batch):
+    items = []
+    for item in batch:
+        try:
+            item.pop("inserted_at", None)
+            items.append(item)
+        except:
+            continue
+    if not items:
+        return []
+
 
 def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
     with zipfile.ZipFile(file_path, "r") as zip_file:
@@ -234,7 +245,44 @@ def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
                         batch = []
                 if batch:
                     yield batch
-                    
+
+def process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_date):
+    with zipfile.ZipFile(file_path, "r") as zip_file:
+        if len(zip_file.namelist()) > 100:
+            update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
+            current_app.logger.error("Potential zip bomb attack")
+            raise ImportFailedError("Import failed!")
+
+        import_files = []
+        for file in zip_file.namelist():
+            filename = os.path.basename(file).lower()
+            if filename.endswith(".jsonl"):
+                info = zip_file.getinfo(file)
+            
+                if info.file_size > FILE_SIZE_LIMIT:
+                    update_import_progress_and_status(db_conn, import_id, "failed", "Import failed due to an error")
+                    current_app.logger.error("Potential zip bomb attack")
+                    raise ImportFailedError("Import failed!")
+
+                import_files.append(file)
+
+        for filename in import_files:
+            update_import_progress_and_status(db_conn, import_id, "in_progress", f"Importing {filename}")
+            with zip_file.open(filename) as file, io.TextIOWrapper(file, encoding="utf-8") as contents:
+                batch = []
+                for line in contents:
+                    if not line.strip():
+                        continue
+                    entry = json.loads(line)
+                    timestamp = entry["listened_at"]
+                    if from_date <= timestamp <= to_date:
+                        batch.append(entry)
+                    if len(batch) == BATCH_SIZE:
+                        yield batch
+                        batch = []
+                if batch:
+                    yield batch
+
 
 def submit_listens(db_conn, listens, user_id, username, import_id):
     user_metadata = SubmitListenUserMetadata(user_id=user_id, musicbrainz_id=username)
@@ -256,6 +304,11 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
     sp = initialize_spotify()
     for batch in process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
         parsed_listens = parse_spotify_listen(batch, ts_conn, sp)
+        submit_listens(db_conn, parsed_listens, user_id, username, import_id)
+
+def import_listenbrainz_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, username, import_id):
+    for batch in process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_date):
+        parsed_listens = parse_listenbrainz_listen(batch)
         submit_listens(db_conn, parsed_listens, user_id, username, import_id)
 
 
@@ -303,6 +356,12 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
     try:
         if service == "spotify":
             import_spotify_listens(
+                db_conn, ts_conn, file_path,
+                from_date=import_task.from_date, to_date=import_task.to_date,
+                user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
+            )
+        elif service == "listenbrainz":
+            import_listenbrainz_listens(
                 db_conn, ts_conn, file_path,
                 from_date=import_task.from_date, to_date=import_task.to_date,
                 user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
