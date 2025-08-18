@@ -178,11 +178,7 @@ export default class InternetArchivePlayer
     return (
       <div className="internet-archive-player">
         {currentTrack?.artwork_url && (
-          <img
-            src={currentTrack.artwork_url}
-            alt={currentTrack.name}
-            width={60}
-          />
+          <img src={currentTrack.artwork_url} alt={currentTrack.name} />
         )}
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <audio
