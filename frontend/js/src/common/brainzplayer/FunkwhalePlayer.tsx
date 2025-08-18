@@ -43,10 +43,7 @@ export default class FunkwhalePlayer
   static getURLFromListen = (
     listen: Listen | JSPFTrack
   ): string | undefined => {
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (originURL && /funkwhale/.test(originURL)) {
-      return originURL;
-    }
+    // Check for funkwhale_id
     const funkwhaleId = _get(
       listen,
       "track_metadata.additional_info.funkwhale_id"
@@ -54,6 +51,25 @@ export default class FunkwhalePlayer
     if (funkwhaleId) {
       return funkwhaleId;
     }
+
+    // Check for origin_url if we can confirm it's from Funkwhale
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL) {
+      // Check music_service field to confirm this is from Funkwhale
+      const musicService = _get(
+        listen,
+        "track_metadata.additional_info.music_service"
+      );
+      if (musicService && musicService.toLowerCase().includes("funkwhale")) {
+        return originURL;
+      }
+
+      // Also accept URLs that contain "funkwhale" in the domain
+      if (/funkwhale/.test(originURL)) {
+        return originURL;
+      }
+    }
+
     return undefined;
   };
 
@@ -212,6 +228,23 @@ export default class FunkwhalePlayer
     );
   };
 
+  getArtistNamesFromTrack = (track: FunkwhaleTrack): string => {
+    if (!track.artist_credit || track.artist_credit.length === 0) {
+      return "";
+    }
+
+    // Build artist name string using credits and joinphrases
+    return track.artist_credit
+      .map((credit, index) => {
+        const name = credit.credit || credit.artist.name;
+        const isLastItem = index === track.artist_credit!.length - 1;
+        const joinphrase =
+          !isLastItem && credit.joinphrase ? credit.joinphrase : "";
+        return name + joinphrase;
+      })
+      .join("");
+  };
+
   updateTrackInfo = (): void => {
     const { onTrackInfoChange } = this.props;
     const { currentTrack } = this.state;
@@ -231,8 +264,8 @@ export default class FunkwhalePlayer
 
     onTrackInfoChange(
       currentTrack.title,
-      currentTrack.listen_url || "",
-      currentTrack.artist?.name || "",
+      currentTrack.fid || "",
+      this.getArtistNamesFromTrack(currentTrack),
       currentTrack.album?.title || "",
       artwork
     );
@@ -258,8 +291,18 @@ export default class FunkwhalePlayer
     if (!audioElement) return;
 
     try {
-      // Extract track ID from URL if needed
-      const trackId = this.extractTrackIdFromURL(url);
+      // Check if this looks like a track ID rather than a full URL
+      const isTrackId = /^\d+$/.test(url);
+      let trackId: string | null = null;
+
+      if (isTrackId) {
+        // This is a funkwhale_id (just a track ID)
+        trackId = url;
+      } else {
+        // This is a full URL, try to extract track ID from it
+        trackId = this.extractTrackIdFromURL(url);
+      }
+
       if (trackId) {
         const track = await this.fetchTrackInfo(trackId);
         if (track && track.listen_url) {
@@ -329,7 +372,12 @@ export default class FunkwhalePlayer
 
   getFunkwhaleInstanceURL = (): string => {
     const { funkwhaleAuth: funkwhaleUser = undefined } = this.context;
-    return funkwhaleUser?.instance_url || "https://demo.funkwhale.audio";
+    if (!funkwhaleUser?.instance_url) {
+      throw new Error(
+        "No Funkwhale instance URL available - user not connected"
+      );
+    }
+    return funkwhaleUser.instance_url;
   };
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
@@ -355,21 +403,19 @@ export default class FunkwhalePlayer
       );
 
       if (track && track.listen_url) {
-        if (track.is_playable === false) {
-          // Track found but not playable - handle silently and try to play anyway
-          // or skip to the "not available" case below
-        }
-
         this.setState({ currentTrack: track });
-        const audioElement = this.audioRef.current;
-        if (audioElement && track.is_playable !== false) {
-          const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(
-            track.listen_url
-          );
-          if (authenticatedAudioUrl) {
-            this.setAudioSrc(audioElement, authenticatedAudioUrl);
-            await audioElement.play();
-            return;
+
+        if (track.is_playable !== false) {
+          const audioElement = this.audioRef.current;
+          if (audioElement) {
+            const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(
+              track.listen_url
+            );
+            if (authenticatedAudioUrl) {
+              this.setAudioSrc(audioElement, authenticatedAudioUrl);
+              await audioElement.play();
+              return;
+            }
           }
         }
       }
