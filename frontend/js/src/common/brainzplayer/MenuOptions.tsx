@@ -85,7 +85,7 @@ function MenuOptions(props: MenuOptionsProps) {
           {recordingMBID && (
             <ListenControl
               icon={faExternalLinkAlt}
-              text="Open in MusicBrainz"
+              text="Go to track page"
               link={`/track/${recordingMBID}`}
             />
           )}
