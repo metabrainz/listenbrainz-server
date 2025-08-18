@@ -473,7 +473,7 @@ function BrainzPlayerSettings() {
                   !internetArchiveEnabled ? "text-muted" : ""
                 }`}
               >
-                <span className={internetArchiveEnabled ? "text-success" : ""}>
+                <span>
                   <FontAwesomeIcon
                     icon={dataSourcesInfo.internetArchive.icon}
                     color={

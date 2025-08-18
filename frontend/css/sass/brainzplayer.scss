@@ -730,12 +730,6 @@ svg.fa-funkwhale,
 // Custom styling for Internet Archive icon
 svg.fa-internetarchive,
 .fa-internetarchive {
-  width: 1.2em !important;
-  height: 1.2em !important;
-
-  // Match the vertical alignment used by other music service icons
-  vertical-align: middle !important;
-
   // Default duotone colors for Internet Archive branding
   --fa-primary-color: #6c757d; // Grey color matching the iconColor
   --fa-secondary-color: #6c757d; // Same grey for consistency
