@@ -78,7 +78,7 @@ def create_import_task():
         raise APIBadRequest("This combination of service and filetype is not supported!")
     
     saved_filename = secure_filename(filename)
-    save_path = os.path.join("uploads", saved_filename)
+    save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], saved_filename)
 
     try:
         query = """
@@ -118,7 +118,7 @@ def create_import_task():
             })
             task = result.first()
             if task is not None:
-                os.makedirs("uploads", exist_ok=True)
+                os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
                 uploaded_file.save(save_path)
 
                 db_conn.commit()
