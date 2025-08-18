@@ -54,7 +54,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify"]
+    allowed_services = ["spotify", "listenbrainz"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -71,6 +71,8 @@ def create_import_task():
         raise APIBadRequest("File type not allowed!")
     
     if service == "spotify" and extension == ".zip":
+        pass
+    elif service == "listenbrainz" and extension == ".zip":
         pass
     else:
         raise APIBadRequest("This combination of service and filetype is not supported!")

@@ -207,6 +207,7 @@ def parse_listenbrainz_listen(batch):
             continue
     if not items:
         return []
+    return items
 
 
 def process_spotify_zip_file(db_conn, import_id, file_path, from_date, to_date):
@@ -265,6 +266,8 @@ def process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_d
                     raise ImportFailedError("Import failed!")
 
                 import_files.append(file)
+        
+        current_app.logger.debug(str(import_files))
 
         for filename in import_files:
             update_import_progress_and_status(db_conn, import_id, "in_progress", f"Importing {filename}")
@@ -274,7 +277,9 @@ def process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_d
                     if not line.strip():
                         continue
                     entry = json.loads(line)
+                    current_app.logger.debug("TESTING")
                     timestamp = entry["listened_at"]
+                    current_app.logger.debug("TESTING2")
                     if from_date <= timestamp <= to_date:
                         batch.append(entry)
                     if len(batch) == BATCH_SIZE:
@@ -306,7 +311,7 @@ def import_spotify_listens(db_conn, ts_conn, file_path, from_date, to_date, user
         parsed_listens = parse_spotify_listen(batch, ts_conn, sp)
         submit_listens(db_conn, parsed_listens, user_id, username, import_id)
 
-def import_listenbrainz_listens(db_conn, ts_conn, file_path, from_date, to_date, user_id, username, import_id):
+def import_listenbrainz_listens(db_conn, file_path, from_date, to_date, user_id, username, import_id):
     for batch in process_listenbrainz_zip_file(db_conn, import_id, file_path, from_date, to_date):
         parsed_listens = parse_listenbrainz_listen(batch)
         submit_listens(db_conn, parsed_listens, user_id, username, import_id)
@@ -361,8 +366,9 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
                 user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
             )
         elif service == "listenbrainz":
+            current_app.logger.debug("TESTING 3")
             import_listenbrainz_listens(
-                db_conn, ts_conn, file_path,
+                db_conn, file_path,
                 from_date=import_task.from_date, to_date=import_task.to_date,
                 user_id=user_id, username=user["musicbrainz_id"], import_id=import_id,
             )
