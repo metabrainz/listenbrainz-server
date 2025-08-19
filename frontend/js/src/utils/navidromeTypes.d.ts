@@ -1,9 +1,9 @@
 declare type NavidromeUser = {
-  encrypted_password?: string; // Encrypted password for authentication
+  md5_auth_token?: string; // MD5 hash token for authentication
   instance_url: string;
+  salt?: string; // Random salt for authentication
   username: string;
   user_id: string;
-  salt?: string; // Fresh random salt generated for each request
 };
 
 declare type NavidromeTrack = {
@@ -11,29 +11,8 @@ declare type NavidromeTrack = {
   title: string;
   artist: string;
   album: string;
-  duration: number;
-  year?: number;
-  genre?: string;
-  trackNumber?: number;
-  discNumber?: number;
-  albumArtist?: string;
-  path: string;
-  suffix: string;
-  contentType: string;
-  isDir: boolean;
-  isVideo: boolean;
-  playCount: number;
-  starred?: string;
   albumId: string;
-  artistId: string;
-  type: string;
-  bookmarkPosition?: number;
-  originalWidth?: number;
-  originalHeight?: number;
-  bitRate?: number;
-  size: number;
-  created: string;
-  updated: string;
+  duration: number;
 };
 
 declare type NavidromeAlbum = {
@@ -78,6 +57,15 @@ declare type NavidromeSearchResult = {
   artist?: NavidromeArtist[];
   album?: NavidromeAlbum[];
   song?: NavidromeTrack[];
+};
+
+declare type NavidromeAuthParams = {
+  u: string; // username
+  t: string; // token (MD5 hash)
+  s: string; // salt
+  v: string; // version
+  c: string; // client
+  f: string; // format
 };
 
 declare type NavidromeResponse<T> = {

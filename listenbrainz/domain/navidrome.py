@@ -17,11 +17,11 @@ NAVIDROME_API_RETRIES = 3
 
 class NavidromeService:
     def __init__(self):
-        # Get or generate encryption key for password storage
+        # Get encryption key for password storage
         self.encryption_key = self._get_encryption_key()
 
     def _get_encryption_key(self):
-        """Get encryption key from config or generate one"""
+        """Get encryption key from config"""
         key = current_app.config.get('NAVIDROME_ENCRYPTION_KEY')
         
         # Ensure key is properly encoded for Fernet
@@ -56,8 +56,6 @@ class NavidromeService:
     def authenticate(self, host_url: str, username: str, password: str) -> Dict[str, Any]:
         """Authenticate with Navidrome using Subsonic API and basic auth"""
         try:
-            current_app.logger.info(f"Navidrome auth attempt - Original host_url: '{host_url}'")
-            
             # Ensure host_url has proper format
             if not host_url.startswith(('http://', 'https://')):
                 # For localhost and local IPs, use http; for domains, use https
@@ -69,14 +67,11 @@ class NavidromeService:
             # Clean up trailing slash
             host_url = host_url.rstrip('/')
             
-            current_app.logger.info(f"Navidrome auth attempt - Processed host_url: '{host_url}'")
-            
             # Generate auth parameters with random salt
             auth_params = self._generate_auth_params(username, password)
             
             # Test authentication with ping request
             ping_url = urljoin(host_url, '/rest/ping')
-            current_app.logger.info(f"Navidrome auth attempt - Final ping_url: '{ping_url}'")
             params = {
                 'u': auth_params['username'],
                 't': auth_params['token'],
@@ -86,7 +81,6 @@ class NavidromeService:
                 'f': 'json'
             }
             
-            current_app.logger.info(f"Attempting to connect to Navidrome at: {ping_url}")
             response = requests.get(ping_url, params=params, timeout=10)
             response.raise_for_status()
             
@@ -100,7 +94,8 @@ class NavidromeService:
             if subsonic_response.get('status') != 'ok':
                 error = subsonic_response.get('error', {})
                 error_message = error.get('message', 'Authentication failed')
-                raise ExternalServiceError(f"Navidrome authentication failed: {error_message}")
+                
+                raise ExternalServiceError(error_message)
             
             # Return authentication data with encrypted password
             return {
@@ -111,9 +106,11 @@ class NavidromeService:
             }
             
         except requests.exceptions.RequestException as e:
-            raise ExternalServiceAPIError(f"Failed to connect to Navidrome server: {str(e)}")
+            raise ExternalServiceAPIError(f"Unable to connect to server: {str(e)}")
+        except ExternalServiceError:
+            raise
         except Exception as e:
-            raise ExternalServiceError(f"Navidrome authentication error: {str(e)}")
+            raise ExternalServiceError(f"Authentication error: {str(e)}")
 
     def connect_user(self, user_id: int, host_url: str, username: str, password: str) -> Dict[str, Any]:
         """Connect a user to Navidrome (one connection per user)"""
@@ -138,8 +135,10 @@ class NavidromeService:
                 'token_id': token_id
             }
             
+        except (ExternalServiceError, ExternalServiceAPIError):
+            raise
         except Exception as e:
-            raise ExternalServiceError(f"Failed to connect to Navidrome: {str(e)}")
+            raise ExternalServiceError(f"Connection failed: {str(e)}")
 
     def get_user_connection(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get user's Navidrome connection (only one per user)"""

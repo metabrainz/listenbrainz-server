@@ -8,6 +8,8 @@ from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.db import funkwhale as db_funkwhale
+from listenbrainz.domain.navidrome import NavidromeService
+import listenbrainz.db.navidrome as db_navidrome
 from listenbrainz.webserver import db_conn
 
 
@@ -132,9 +134,6 @@ def get_current_navidrome_user():
     if not current_user.is_authenticated:
         return {}
     
-    import listenbrainz.db.navidrome as db_navidrome
-    from listenbrainz.domain.navidrome import NavidromeService
-    
     connection = db_navidrome.get_user_token(db_conn, current_user.id)
     if not connection:
         return {}
@@ -147,7 +146,7 @@ def get_current_navidrome_user():
         return {}
     
     return {
-        'encrypted_password': auth_params['token'],  # Fresh MD5 hash
+        'md5_auth_token': auth_params['token'],      # Fresh MD5 hash
         'salt': auth_params['salt'],                 # Fresh random salt  
         'instance_url': connection['host_url'],
         'username': connection['username'],

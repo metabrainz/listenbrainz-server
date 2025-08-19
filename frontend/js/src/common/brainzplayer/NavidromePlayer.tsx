@@ -1,7 +1,6 @@
 import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { Link } from "react-router";
-import { faMusic } from "@fortawesome/free-solid-svg-icons";
 import { faNavidrome } from "../icons/faNavidrome";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import {
@@ -16,9 +15,7 @@ export type NavidromePlayerState = {
   currentTrack?: NavidromeTrack;
 };
 
-export type NavidromePlayerProps = DataSourceProps & {
-  refreshNavidromeToken: () => Promise<string>;
-};
+export type NavidromePlayerProps = DataSourceProps;
 
 export default class NavidromePlayer
   extends React.Component<NavidromePlayerProps, NavidromePlayerState>
@@ -26,7 +23,7 @@ export default class NavidromePlayer
   static contextType = GlobalAppContext;
   static hasPermissions = (navidromeUser?: NavidromeUser) => {
     return Boolean(
-      navidromeUser?.encrypted_password && navidromeUser?.instance_url
+      navidromeUser?.md5_auth_token && navidromeUser?.instance_url
     );
   };
 
@@ -36,28 +33,9 @@ export default class NavidromePlayer
       "track_metadata.additional_info.music_service"
     );
     return (
-      (isString(musicService) &&
-        musicService.toLowerCase().includes("navidrome")) ||
-      Boolean(NavidromePlayer.getURLFromListen(listen))
+      isString(musicService) && musicService.toLowerCase().includes("navidrome")
     );
   }
-
-  static getURLFromListen = (
-    listen: Listen | JSPFTrack
-  ): string | undefined => {
-    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (originURL && /navidrome/.test(originURL)) {
-      return originURL;
-    }
-    const navidromeId = _get(
-      listen,
-      "track_metadata.additional_info.navidrome_id"
-    );
-    if (navidromeId) {
-      return navidromeId;
-    }
-    return undefined;
-  };
 
   public name = "navidrome";
   public domainName = "navidrome";
@@ -65,8 +43,6 @@ export default class NavidromePlayer
   public iconColor = dataSourcesInfo.navidrome.color;
 
   audioRef: React.RefObject<HTMLAudioElement>;
-  updateProgressInterval?: NodeJS.Timeout;
-  accessToken = "";
   declare context: React.ContextType<typeof GlobalAppContext>;
 
   debouncedOnTrackEnd: () => void;
@@ -87,7 +63,6 @@ export default class NavidromePlayer
   async componentDidMount(): Promise<void> {
     const { navidromeAuth: navidromeUser = undefined } = this.context;
     if (NavidromePlayer.hasPermissions(navidromeUser)) {
-      this.accessToken = navidromeUser!.encrypted_password!;
       this.setupAudioListeners();
     }
     this.updateVolume();
@@ -109,9 +84,6 @@ export default class NavidromePlayer
 
   componentWillUnmount(): void {
     this.cleanupAudioListeners();
-    if (this.updateProgressInterval) {
-      clearInterval(this.updateProgressInterval);
-    }
   }
 
   setupAudioListeners = (): void => {
@@ -205,8 +177,29 @@ export default class NavidromePlayer
 
     // Navidrome uses getCoverArt endpoint for artwork
     const instanceURL = this.getNavidromeInstanceURL();
-    const authParams = this.getAuthParams();
+    const authParams = this.getAuthParamsString();
+
+    // If auth not available, return null
+    if (!authParams) return null;
+
     return `${instanceURL}/rest/getCoverArt?id=${track.albumId}&${authParams}`;
+  };
+
+  getTrackWebUrl = (track: NavidromeTrack): string => {
+    try {
+      const instanceURL = this.getNavidromeInstanceURL();
+
+      // Link to the album page where the song appears instead
+      if (track.albumId) {
+        return `${instanceURL}/#/album/${track.albumId}/show`;
+      }
+
+      // Fallback to song list if no album ID is available
+      return `${instanceURL}/#/song`;
+    } catch (error) {
+      // Fallback to empty string if we can't construct the URL
+      return "";
+    }
   };
 
   updateTrackInfo = (): void => {
@@ -228,7 +221,7 @@ export default class NavidromePlayer
 
     onTrackInfoChange(
       currentTrack.title,
-      currentTrack.path || "",
+      this.getTrackWebUrl(currentTrack),
       currentTrack.artist || "",
       currentTrack.album || "",
       artwork
@@ -236,123 +229,57 @@ export default class NavidromePlayer
   };
 
   playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const listenFromNavidrome = NavidromePlayer.isListenFromThisService(listen);
-
-    if (listenFromNavidrome) {
-      const navidromeURL = NavidromePlayer.getURLFromListen(listen);
-      if (navidromeURL) {
-        await this.playNavidromeURL(navidromeURL);
-        return;
-      }
-    }
-
-    // If not a direct Navidrome URL, search for the track
+    // For Navidrome, we always search for tracks by name since
+    // listens don't contain direct track IDs or URLs
     await this.searchAndPlayTrack(listen);
-  };
-
-  playNavidromeURL = async (url: string): Promise<void> => {
-    const audioElement = this.audioRef.current;
-    if (!audioElement) return;
-
-    try {
-      // Extract track ID from URL if needed
-      const trackId = this.extractTrackIdFromURL(url);
-      if (trackId) {
-        const track = await this.fetchTrackInfo(trackId);
-        if (track) {
-          // Get authenticated audio URL using Navidrome's stream endpoint
-          const streamUrl = this.getNavidromeStreamUrl(track.id);
-          this.setAudioSrc(audioElement, streamUrl);
-          this.setState({ currentTrack: track });
-          await audioElement.play();
-        } else {
-          throw new Error("Track not found on Navidrome server");
-        }
-      } else {
-        // Direct audio URL - construct stream URL if possible
-        const streamUrl = this.constructStreamUrlFromPath(url);
-        if (streamUrl) {
-          this.setAudioSrc(audioElement, streamUrl);
-          await audioElement.play();
-        } else {
-          throw new Error("Unable to construct stream URL for Navidrome track");
-        }
-      }
-    } catch (error) {
-      const { handleError } = this.props;
-      handleError(
-        error.message || "Failed to play Navidrome track",
-        "Navidrome Error"
-      );
-    }
-  };
-
-  extractTrackIdFromURL = (url: string): string | null => {
-    // Navidrome URLs might have different patterns
-    const trackMatch = url.match(/\/song\/([^/]+)/);
-    if (trackMatch) return trackMatch[1];
-
-    const idMatch = url.match(/id=([^&]+)/);
-    return idMatch ? idMatch[1] : null;
-  };
-
-  fetchTrackInfo = async (trackId: string): Promise<NavidromeTrack | null> => {
-    if (!this.accessToken) return null;
-
-    try {
-      const instanceURL = this.getNavidromeInstanceURL();
-      const authParams = this.getAuthParams();
-
-      const response = await fetch(
-        `${instanceURL}/rest/getSong?id=${trackId}&${authParams}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data["subsonic-response"]?.song || null;
-    } catch (error) {
-      return null;
-    }
   };
 
   getNavidromeInstanceURL = (): string => {
     const { navidromeAuth: navidromeUser = undefined } = this.context;
+    if (!navidromeUser?.instance_url) {
+      throw new Error(
+        "No Navidrome instance URL available - user not connected"
+      );
+    }
     return navidromeUser?.instance_url || "";
   };
 
-  getAuthParams = (): string => {
-    const { navidromeAuth: navidromeUser = undefined } = this.context;
-    if (!navidromeUser) return "";
+  getAuthParams = (): NavidromeAuthParams | null => {
+    const { navidromeAuth: navidromeUser } = this.context;
+    if (
+      !navidromeUser?.username ||
+      !navidromeUser?.md5_auth_token ||
+      !navidromeUser?.salt
+    ) {
+      return null; // Return null instead of throwing error
+    }
 
-    const { username = "", encrypted_password = "", salt = "" } = navidromeUser;
+    return {
+      u: navidromeUser.username,
+      t: navidromeUser.md5_auth_token, // This is the MD5 hash token
+      s: navidromeUser.salt,
+      v: "1.16.1",
+      c: "listenbrainz",
+      f: "json",
+    };
+  };
 
-    if (!encrypted_password || !username) return "";
-
-    // Use the fresh salt and hash provided by backend
-    // Backend generates: MD5(password + salt) and fresh random salt for each request
-    const authSalt = salt || `${username}_listenbrainz_fallback`; // Fallback for compatibility
-
-    return `u=${encodeURIComponent(username)}&t=${encodeURIComponent(
-      encrypted_password
-    )}&s=${encodeURIComponent(authSalt)}&v=1.16.1&c=listenbrainz&f=json`;
+  getAuthParamsString = (): string => {
+    const params = this.getAuthParams();
+    if (!params) {
+      return ""; // Return empty string if auth not available
+    }
+    return new URLSearchParams(params).toString();
   };
 
   getNavidromeStreamUrl = (trackId: string): string => {
     const instanceURL = this.getNavidromeInstanceURL();
-    const authParams = this.getAuthParams();
+    const authParams = this.getAuthParamsString();
+
+    // If auth not available, return empty string
+    if (!authParams) return "";
 
     return `${instanceURL}/rest/stream?id=${trackId}&${authParams}`;
-  };
-
-  constructStreamUrlFromPath = (path: string): string | null => {
-    // If the path looks like it might be a track ID, construct stream URL
-    if (path && !path.includes("/")) {
-      return this.getNavidromeStreamUrl(path);
-    }
-    return null;
   };
 
   searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
@@ -370,9 +297,21 @@ export default class NavidromePlayer
     }
 
     try {
+      const authParams = this.getAuthParamsString();
+
+      // Check if authentication is available
+      if (!authParams) {
+        handleWarning(
+          "Navidrome authentication not available. Please check your connection.",
+          "Authentication Error"
+        );
+        onTrackNotFound();
+        return;
+      }
+
       const track = await searchForNavidromeTrack(
         this.getNavidromeInstanceURL(),
-        this.getAuthParams(),
+        authParams,
         trackName,
         artistName
       );
@@ -395,10 +334,7 @@ export default class NavidromePlayer
       onTrackNotFound();
     } catch (errorObject) {
       if (errorObject.status === 401) {
-        await this.handleTokenError(
-          errorObject.message,
-          this.searchAndPlayTrack.bind(this, listen)
-        );
+        this.handleAuthenticationError();
         return;
       }
       handleError(
@@ -408,40 +344,18 @@ export default class NavidromePlayer
     }
   };
 
-  handleTokenError = async (
-    error: Error | string,
-    callbackFunction: () => void
-  ): Promise<void> => {
-    const { refreshNavidromeToken, onInvalidateDataSource } = this.props;
-    const { navidromeAuth: navidromeUser = undefined } = this.context;
+  handleAuthenticationError = (): void => {
+    const { onInvalidateDataSource } = this.props;
 
-    if (!navidromeUser?.instance_url) {
-      onInvalidateDataSource(
-        this as any,
-        <span>
-          Please{" "}
-          <Link to="/settings/music-services/details/">
-            re-connect your Navidrome account
-          </Link>
-        </span>
-      );
-      return;
-    }
-
-    try {
-      this.accessToken = await refreshNavidromeToken();
-      callbackFunction();
-    } catch (refreshError) {
-      onInvalidateDataSource(
-        this as any,
-        <span>
-          Please{" "}
-          <Link to="/settings/music-services/details/">
-            re-connect your Navidrome account
-          </Link>
-        </span>
-      );
-    }
+    onInvalidateDataSource(
+      this as any,
+      <span>
+        Please{" "}
+        <Link to="/settings/music-services/details/">
+          re-connect your Navidrome account
+        </Link>
+      </span>
+    );
   };
 
   togglePlay = async (): Promise<void> => {

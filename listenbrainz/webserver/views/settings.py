@@ -19,7 +19,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
-from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
@@ -413,7 +413,7 @@ def music_services_connect(service_name: str):
         username = data.get("username") 
         password = data.get("password")
         
-        current_app.logger.info(f"Navidrome connect request - host_url: '{host_url}', username: '{username}'")
+        current_app.logger.debug(f"Navidrome connect request - host_url: '{host_url}', username: '{username}'")
         
         if not all([host_url, username, password]):
             raise APIBadRequest("Missing 'host_url', 'username', or 'password' in request body for Navidrome connect.")
@@ -429,9 +429,11 @@ def music_services_connect(service_name: str):
                 "server_version": result.get('server_version')
             })
             
+        except (ExternalServiceError, ExternalServiceAPIError) as e:
+            raise APIBadRequest(str(e))
         except Exception as e:
-            current_app.logger.error("Failed to connect to Navidrome: %s", str(e), exc_info=True)
-            raise APIBadRequest(f"Failed to connect to Navidrome: {str(e)}")
+            current_app.logger.error("Unexpected error during Navidrome connection for user %s: %s", current_user.id, str(e), exc_info=True)
+            raise APIBadRequest("An unexpected error occurred while connecting to Navidrome")
     
     if service_name.lower() not in {"lastfm", "librefm"}:
         raise APINotFound("Service %s is invalid." % (service_name,))
