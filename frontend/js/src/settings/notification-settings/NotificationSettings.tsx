@@ -7,7 +7,7 @@ import Switch from "../../components/Switch";
 export default function NotificationSettings() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
   const [digestEnabled, setDigestEnabled] = React.useState(false);
-  const [digestAge, setDigestAge] = React.useState<number | null>(null);
+  const [digestAge, setDigestAge] = React.useState<number>(7);
   const [initialDigestEnabled, setInitialDigestEnabled] = React.useState(false);
   const [initialDigestAge, setInitialDigestAge] = React.useState<number | null>(
     null
@@ -131,11 +131,10 @@ export default function NotificationSettings() {
                 id="digest-age"
                 min={1}
                 max={100}
-                value={digestAge ?? ""}
+                defaultValue={digestAge}
                 style={{ maxWidth: "4em" }}
                 onChange={(e) => {
-                  const inputValue = e.target.value;
-                  setDigestAge(inputValue === "" ? null : Number(inputValue));
+                  setDigestAge(Number(e.target.value));
                 }}
               />{" "}
               days
@@ -146,7 +145,7 @@ export default function NotificationSettings() {
           <button
             className="btn btn-lg btn-info"
             type="submit"
-            disabled={saving || hasNoChanges}
+            disabled={saving || hasNoChanges || !digestAge}
           >
             Save notification settings
           </button>
