@@ -59,8 +59,8 @@ export default function NotificationSettings() {
       toast.success("Notification settings saved successfully");
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Could not update digest settings.", error);
-      toast.error("Failed to save digest settings. Please try again.");
+      console.error("Could not update notification settings.", error);
+      toast.error("Failed to save notification settings. Please try again.");
     } finally {
       setSaving(false);
     }
