@@ -27,6 +27,10 @@ const sections: Section[] = [
     title: "Account",
     links: [
       { to: "./", label: "User settings" },
+      {
+        to: "notification-settings/",
+        label: "Notification settings",
+      },
       { to: "select_timezone/", label: "Timezone" },
       { to: "troi/", label: "Playlist preferences" },
       { to: "export/", label: "Export data" },
