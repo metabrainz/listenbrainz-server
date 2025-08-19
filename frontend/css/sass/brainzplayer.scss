@@ -705,11 +705,12 @@ $alert-thumbnail-size: 60px;
 // Custom styling for Funkwhale icon
 svg.fa-funkwhale,
 .fa-funkwhale {
-  width: 1.2em !important;
-  height: 1.2em !important;
+  width: 1.3em !important;
+  height: 1.3em !important;
+
 
   // Match the vertical alignment used by other music service icons
-  vertical-align: middle !important;
+  vertical-align: text-bottom !important;
 
   // Default duotone colors for Funkwhale branding
   --fa-primary-color: #009fe3; // Blue arcs
