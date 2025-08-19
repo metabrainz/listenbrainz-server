@@ -122,6 +122,14 @@ const getSettingsRoutes = (): RouteObject[] => {
           // Keep the /settings/import/ route for LastFM/LibreFM historical links,
           // and redirect to the music services page that replace those manual importers
           element: <Navigate to="../music-services/details/" replace />,
+          },
+        {
+          path: "notification-settings/",
+          lazy: {
+            Component: async () => {
+              return (await import("../notification-settings/NotificationSettings")).default;
+            },
+          },
         },
       ],
     },
