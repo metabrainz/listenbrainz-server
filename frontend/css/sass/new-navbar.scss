@@ -138,14 +138,18 @@ body {
         padding: 0.5rem 0.5rem 0.5rem 1rem;
         border-radius: 0;
         box-shadow: none;
-        background-color: #a4a2bf !important;
+        background-color: #a4a2bf;
         color: $blue;
+      }
+      input:-webkit-autofill,
+      input:autofill {
+        background-color: #a4a2bf !important;
       }
       button {
         border-radius: 0;
         box-shadow: none;
         padding-right: 1.2em;
-        background-color: #a4a2bf !important;
+        background-color: #a4a2bf;
         color: $blue;
       }
     }
