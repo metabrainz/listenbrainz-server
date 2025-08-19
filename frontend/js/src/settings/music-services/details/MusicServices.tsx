@@ -130,7 +130,8 @@ export default function MusicServices() {
             break;
           case "navidrome":
             if (navidromeAuth) {
-              navidromeAuth.encrypted_password = undefined;
+              navidromeAuth.md5_auth_token = undefined;
+              navidromeAuth.salt = undefined;
             }
             break;
           default:
@@ -322,7 +323,6 @@ export default function MusicServices() {
         if (navidromeAuth) {
           navidromeAuth.instance_url = hostUrl;
           navidromeAuth.username = username;
-          navidromeAuth.encrypted_password = data.encrypted_password;
         }
 
         // Update edit values state

@@ -192,17 +192,6 @@ export default function BrainzPlayer() {
     currentUser?.auth_token,
   ]);
 
-  // Wrapper for navidrome token refresh
-  const refreshNavidromeToken = React.useCallback(async () => {
-    if (!navidromeAuth?.encrypted_password) {
-      throw new Error("No Navidrome encrypted password available");
-    }
-
-    // For Navidrome, we typically don't need to refresh tokens as they use
-    // persistent username/password based authentication. Return the existing token.
-    return navidromeAuth.encrypted_password;
-  }, [navidromeAuth]);
-
   // Constants
   // By how much should we seek in the track?
   const SEEK_TIME_MILLISECONDS = 5000;
@@ -1238,7 +1227,6 @@ export default function BrainzPlayer() {
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={navidromePlayerRef}
-            refreshNavidromeToken={refreshNavidromeToken}
             playerPaused={brainzPlayerContextRef.current.playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
