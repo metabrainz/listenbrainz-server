@@ -128,6 +128,7 @@ function renderImport(
         <button
           type="button"
           className="btn btn-sm btn-transparent"
+          aria-label="Refresh"
           onClick={() => {
             fetchImport(im.import_id);
           }}

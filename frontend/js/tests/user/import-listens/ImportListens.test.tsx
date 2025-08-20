@@ -24,11 +24,11 @@ const mockImports = [
     service: "spotify",
     created: "2025-08-12T10:00:00Z",
     metadata: {
-      filename: "listeninghistory.zip",
-      progress: "waiting",
-      status: "Your data import will start soon.",
+      filename: "spotify.zip",
+      progress: "Your data import will start soon.",
+      status: "waiting",
     },
-    from_date: "2025-08-10T00:00:00Z",
+    from_date: "1970-01-01T00:00:00Z",
     to_date: "2025-08-11T00:00:00Z",
   },
   {
@@ -36,12 +36,12 @@ const mockImports = [
     service: "listenbrainz",
     created: "2025-08-12T10:00:00Z",
     metadata: {
-      filename: "listeninghistory.zip",
-      progress: "completed",
-      status: "Import completed!",
+      filename: "listenbrainz.zip",
+      progress: "Import completed!",
+      status: "completed",
     },
-    from_date: "1970-01-01T00:00:00Z",
-    to_date: "2025-08-11T00:00:00Z",
+    from_date: "2025-08-10T00:00:00Z",
+    to_date: "2025-08-12T00:00:00Z",
   },
 ];
 
@@ -85,11 +85,25 @@ describe("ImportListensPage", () => {
       { wrapper: ReactQueryWrapper },
       false
     );
-
-    await screen.getAllByText("listeninghistory.zip");
-    expect(screen.getAllByText("listeninghistory.zip").length).toBeGreaterThan(0);
-    expect(screen.getByText("Aug 10, 2025")).toBeInTheDocument();
-    expect(screen.getByText("-")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("spotify.zip")).toBeInTheDocument();
+      
+    });
+    await waitFor(() => {
+      screen.debug(undefined, Infinity);
+      
+    });
+    await waitFor(() => {
+      expect(screen.getByText("August 11th, 2025")).toBeInTheDocument();
+      
+    });
+    await waitFor(() => {
+      expect(screen.getByText("-")).toBeInTheDocument();
+      
+    });
+    
+      
+    
   });
 
   it("calls cancel endpoint when cancel clicked", async () => {
@@ -100,9 +114,11 @@ describe("ImportListensPage", () => {
       false
     );
 
+    await waitFor(() => {
+      expect(screen.getByText("spotify.zip")).toBeInTheDocument();
+    });
     const cancelBtn = screen.getByRole("button", { name: "Cancel import" });
     await user.click(cancelBtn);
-
   });
 
   it("calls refresh endpoint when refresh clicked", async () => {
@@ -113,7 +129,10 @@ describe("ImportListensPage", () => {
       false
     );
 
-    const refreshBtn = screen.getByRole("button", { name: /refresh/i });
+    await waitFor(() => {
+      expect(screen.getByText("spotify.zip")).toBeInTheDocument();
+    });
+    const refreshBtn = screen.getByRole("button", { name: "Refresh" });
     await user.click(refreshBtn);
 
   });
