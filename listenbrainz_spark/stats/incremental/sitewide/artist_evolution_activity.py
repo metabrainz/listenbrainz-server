@@ -14,7 +14,7 @@ from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME
 logger = logging.getLogger(__name__)
 
 
-class ArtistEvolutionSitewideStatsQuery(SitewideStatsQueryProvider):
+class ArtistEvolutionActivitySitewideStatsQuery(SitewideStatsQueryProvider):
     """ Sitewide stats query provider for artist evolution - aggregates artist listening patterns by time units across all users. """
 
     def __init__(self, selector: ListenRangeSelector):
@@ -96,7 +96,7 @@ class ArtistEvolutionSitewideStatsQuery(SitewideStatsQueryProvider):
         """
 
 
-class ArtistEvolutionSitewideMessageCreator(SitewideStatsMessageCreator):
+class ArtistEvolutionActivitySitewideMessageCreator(SitewideStatsMessageCreator):
     """ Message creator for sitewide artist evolution stats. """
 
     def __init__(self, selector: StatsRangeListenRangeSelector, database=None):

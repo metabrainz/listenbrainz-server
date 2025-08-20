@@ -17,7 +17,7 @@ from listenbrainz_spark.path import RECORDING_ARTIST_DATAFRAME
 logger = logging.getLogger(__name__)
 
 
-class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
+class ArtistEvolutionActivityUserStatsQueryEntity(UserStatsQueryProvider):
     """ See base class QueryProvider for details. """
 
     def __init__(self, selector: ListenRangeSelector):
@@ -103,7 +103,7 @@ class ArtistEvolutionUserStatsQueryEntity(UserStatsQueryProvider):
            GROUP BY user_id
         """
 
-class ArtistEvolutionUserMessageCreator(UserStatsMessageCreator):
+class ArtistEvolutionActivityUserMessageCreator(UserStatsMessageCreator):
 
     def __init__(self, message_type: str, selector: StatsRangeListenRangeSelector, database=None):
         super().__init__("artist_evolution_activity", message_type, selector, database)

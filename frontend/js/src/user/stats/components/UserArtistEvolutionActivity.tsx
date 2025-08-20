@@ -9,7 +9,7 @@ import Loader from "../../../components/Loader";
 import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
-export type UserArtistEvolutionProps = {
+export type UserArtistEvolutionActivityProps = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
@@ -19,7 +19,7 @@ export type StreamDataItem = {
 };
 
 // Transform function to convert API response to stream chart format
-const transformArtistEvolutionData = (
+const transformArtistEvolutionActivityData = (
   rawData: UserArtistEvolutionActivityResponse["result"]
 ) => {
   if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
@@ -231,8 +231,8 @@ const getLegendText = (timeRange: UserStatsAPIRange) => {
   return "Years";
 };
 
-export default function ArtistEvolutionStreamGraph(
-  props: UserArtistEvolutionProps
+export default function ArtistEvolutionActivityStreamGraph(
+  props: UserArtistEvolutionActivityProps
 ) {
   const { APIService } = React.useContext(GlobalAppContext);
 
@@ -286,7 +286,7 @@ export default function ArtistEvolutionStreamGraph(
     return () => window.removeEventListener("resize", checkMobile);
   }, [setIsMobile]);
 
-  const { chartData = [], keys = [] } = transformArtistEvolutionData(
+  const { chartData = [], keys = [] } = transformArtistEvolutionActivityData(
     rawData.result
   );
 

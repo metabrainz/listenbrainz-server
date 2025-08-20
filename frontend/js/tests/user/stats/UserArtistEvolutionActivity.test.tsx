@@ -3,13 +3,13 @@ import { screen, waitFor, act } from "@testing-library/react";
 import { SetupServerApi, setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import ArtistEvolutionStreamGraph, {
-  UserArtistEvolutionProps,
+import ArtistEvolutionActivityStreamGraph, {
+  UserArtistEvolutionActivityProps,
 } from "../../../src/user/stats/components/UserArtistEvolutionActivity";
-import * as userArtistEvolutionResponse from "../../__mocks__/userArtistEvolutionActivity.json";
+import * as userArtistEvolutionActivityResponse from "../../__mocks__/userArtistEvolutionActivity.json";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
-const userProps: UserArtistEvolutionProps = {
+const userProps: UserArtistEvolutionActivityProps = {
   user: {
     name: "foobar",
   },
@@ -36,7 +36,7 @@ const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe("ArtistEvolutionStreamGraph", () => {
+describe("ArtistEvolutionActivityStreamGraph", () => {
   let server: SetupServerApi;
   
   beforeAll(() => {
@@ -48,7 +48,7 @@ describe("ArtistEvolutionStreamGraph", () => {
 
         switch (range) {
           case "week":
-            return HttpResponse.json(userArtistEvolutionResponse);
+            return HttpResponse.json(userArtistEvolutionActivityResponse);
           case "empty":
             return HttpResponse.json({
               result: [],
@@ -61,7 +61,7 @@ describe("ArtistEvolutionStreamGraph", () => {
               { status: 500 }
             );
           default:
-            return HttpResponse.json(userArtistEvolutionResponse);
+            return HttpResponse.json(userArtistEvolutionActivityResponse);
         }
       }),
     ];
@@ -85,7 +85,7 @@ describe("ArtistEvolutionStreamGraph", () => {
   it("renders correctly", async () => {
     await act(async () => {
       renderWithProviders(
-        <ArtistEvolutionStreamGraph {...userProps} />, 
+        <ArtistEvolutionActivityStreamGraph {...userProps} />, 
         {},
         { wrapper: reactQueryWrapper }
       );
@@ -99,7 +99,7 @@ describe("ArtistEvolutionStreamGraph", () => {
   it("displays error message when API call fails", async () => {
     await act(async () => {
       renderWithProviders(
-        <ArtistEvolutionStreamGraph {...{ ...userProps, range: "month" }} />, 
+        <ArtistEvolutionActivityStreamGraph {...{ ...userProps, range: "month" }} />, 
         {},
         { wrapper: reactQueryWrapper }
       );
@@ -126,13 +126,13 @@ describe("ArtistEvolutionStreamGraph", () => {
           });
         }
         
-        return HttpResponse.json(userArtistEvolutionResponse);
+        return HttpResponse.json(userArtistEvolutionActivityResponse);
       })
     );
   
     await act(async () => {
       renderWithProviders(
-        <ArtistEvolutionStreamGraph {...userProps} />, // Uses "week" range
+        <ArtistEvolutionActivityStreamGraph {...userProps} />, // Uses "week" range
         {},
         { wrapper: reactQueryWrapper }
       );
