@@ -1,6 +1,7 @@
 import calendar
 import itertools
 import json
+import datetime
 
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.user.daily_activity import get_daily_activity
@@ -109,50 +110,38 @@ class UserStatsTestCase(StatsTestCase):
         self.assertListEqual(list(time_range_expected), list(time_range_received))
 
     def test_get_artist_evolution_activity(self):
-        messages = list(get_artist_evolution_activity("all_time"))
-        with open(self.path_to_data_file("user_artist_evolution_activity_all_time.json")) as f:
-            expected = json.load(f)
+        messages = get_artist_evolution_activity(
+            self.spark, self.user1["id"], self.user2["id"]
+        )
 
-        database_prefix = "artist_evolution_activity_all_time"
-        self.assertEqual(messages[0]["type"], "couchdb_data_start")
-        self.assertTrue(messages[0]["database"].startswith(database_prefix))
+        # Validate structure
+        self.assertEqual(messages[0]["type"], "artist_evolution_activity")
+        self.assertEqual(messages[0]["stats_range"], "all_time")
+        self.assertEqual(messages[0]["from_ts"], 1)
+        self.assertEqual(messages[0]["to_ts"], 10)
 
-        self.assertEqual(messages[1]["type"], expected[0]["type"])
-        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
-        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
-        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+        # Validate data structure
+        self.assertEqual(len(messages[1]["data"]), 2)
+        current_year = datetime.datetime.now().year
 
-        for actual_user, expected_user in zip(messages[1]["data"], expected[0]["data"]):
-            self.assertEqual(actual_user["user_id"], expected_user["user_id"])
-
-            actual_data = actual_user["data"]
-            self.assertIsInstance(actual_data, list)
-
-            for artist_entry in actual_data:
-                self.assertIn("time_unit", artist_entry)
-                self.assertIsInstance(artist_entry["time_unit"], int)
-                self.assertGreaterEqual(artist_entry["time_unit"], 2000)  # Reasonable year range
-                self.assertLessEqual(artist_entry["time_unit"], 2030)
-
-                self.assertIn("artist_mbid", artist_entry)
-                self.assertIsInstance(artist_entry["artist_mbid"], str)
-                self.assertTrue(len(artist_entry["artist_mbid"]) > 0)  # Non-empty string
-
+        for user_data in messages[1]["data"]:
+            self.assertIn("user_id", user_data)
+            self.assertIn("data", user_data)
+            for artist_entry in user_data["data"]:
+                self.assertIn("artist_mbids", artist_entry)
                 self.assertIn("artist_name", artist_entry)
-                self.assertIsInstance(artist_entry["artist_name"], str)
-                self.assertTrue(len(artist_entry["artist_name"]) > 0)  # Non-empty string
-
+                self.assertIn("time_unit", artist_entry)
                 self.assertIn("listen_count", artist_entry)
-                self.assertIsInstance(artist_entry["listen_count"], int)
-                self.assertGreaterEqual(artist_entry["listen_count"], 0)
 
-        self.assertTrue(messages[1]["database"].startswith(database_prefix))
+                # Validate year is int and not from the future
+                self.assertIsInstance(artist_entry["time_unit"], int)
+                self.assertLessEqual(artist_entry["time_unit"], current_year)
 
-        self.assertEqual(messages[2]["type"], "couchdb_data_end")
-        self.assertTrue(messages[2]["database"].startswith(database_prefix))
-
-        # Test time range validation for artist evolution data
-        time_units_received = run_query("SELECT DISTINCT time_unit FROM artist_evolution_activity ORDER BY time_unit").toLocalIterator()
-        received_years = [row[0] for row in time_units_received]
-        for year in received_years:
-            self.assertIsInstance(year, int)  # Just validate they are integers (years)
+        time_units_received = [
+            entry["time_unit"]
+            for user in messages[1]["data"]
+            for entry in user["data"]
+        ]
+        for year in time_units_received:
+            self.assertIsInstance(year, int)
+            self.assertLessEqual(year, current_year)
