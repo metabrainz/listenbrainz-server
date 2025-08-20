@@ -18,7 +18,7 @@ class StatsAPITestCase(IntegrationTestCase):
         super(StatsAPITestCase, cls).setUpClass()
 
         stats = ["artists", "releases", "recordings", "release_groups", "daily_activity", "listening_activity",
-                 "artist_map"]
+                 "artist_map", "genre_activity"]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:
@@ -84,6 +84,12 @@ class StatsAPITestCase(IntegrationTestCase):
         database = 'daily_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.daily_activity_payload)
 
+        with open(self.path_to_data_file('user_genre_activity_db_data_for_api_test.json')) as f:
+            self.genre_activity_payload = json.load(f)
+            self.genre_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'genre_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.genre_activity_payload)
+
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
@@ -124,6 +130,10 @@ class StatsAPITestCase(IntegrationTestCase):
             "daily_activity": {
                 "endpoint": "stats_api_v1.get_daily_activity",
                 "payload": self.daily_activity_payload
+            },
+            "genre_activity": {
+                "endpoint": "stats_api_v1.get_genre_activity",
+                "payload": self.genre_activity_payload
             },
             "artist_map": {
                 "endpoint": "stats_api_v1.get_artist_map",
@@ -247,6 +257,16 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['data'], received['listening_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
+    def assertGenreActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+
+        self.assertEqual(sent['from_ts'], received['from_ts'])
+        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(sent['data'], received['result'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+
     def assertArtistMapEqual(self, request, response):
         self.assert200(response)
         received = json.loads(response.data)['payload']
@@ -349,6 +369,23 @@ class StatsAPITestCase(IntegrationTestCase):
                     expected = json.load(f)["payload"]
                     expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
+
+    def test_genre_activity_stat(self):
+        endpoint = self.non_entity_endpoints["genre_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for genre_activity stats"):
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            payload = self.non_entity_endpoints["genre_activity"]["payload"]
+            self.assertGenreActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with self.subTest(f"test valid response is received for {range_} genre_activity stats", range_=range_):
+                with open(self.path_to_data_file(f'user_genre_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
+                    payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
+                db_stats.insert(f"genre_activity_{range_}_20220718", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'range': range_})
+                self.assertGenreActivityEqual(payload, response)
 
     def test_artist_map_stat(self):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
