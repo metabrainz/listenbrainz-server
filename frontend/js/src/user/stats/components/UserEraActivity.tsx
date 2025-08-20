@@ -122,12 +122,23 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
     queryKey: ["userEraActivity", user?.name, range],
     queryFn: async () => {
       try {
-        const queryData = await APIService.getUserEraActivity(
-          user?.name,
-          range
-        );
-        return { data: queryData, hasError: false, errorMessage: "" };
-      } catch (error) {
+        const response = await APIService.getUserEraActivity(user?.name, range);
+  
+        return {
+          data: {
+            result: response.payload.era_activity,
+            meta: {
+              from_ts: response.payload.from_ts,
+              to_ts: response.payload.to_ts,
+              last_updated: response.payload.last_updated,
+              user_id: response.payload.user_id,
+              range: response.payload.range,
+            },
+          },
+          hasError: false,
+          errorMessage: "",
+        };
+      } catch (error: any) {
         return {
           data: { result: [] },
           hasError: true,
@@ -136,6 +147,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
       }
     },
   });
+  
 
   const {
     data: rawData = { result: [] },
@@ -316,8 +328,8 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
                   width: "100%",
                   overflowX:
                     containerWidth >
-                    (scrollContainerRef.current?.parentElement?.offsetWidth ||
-                      0) -
+                      (scrollContainerRef.current?.parentElement?.offsetWidth ||
+                        0) -
                       40
                       ? "auto"
                       : "hidden",

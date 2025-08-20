@@ -605,7 +605,7 @@ export default class APIService {
   getUserEraActivity = async (
     userName?: string,
     range: UserStatsAPIRange = "all_time"
-  ): Promise<UserListensEraActivityResponse> => {
+  ): Promise<UserEraActivityResponse> => {
     let url;
     if (userName) {
       url = `${this.APIBaseURI}/stats/user/${userName}/era-activity`;

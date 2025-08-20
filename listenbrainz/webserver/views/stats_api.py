@@ -540,8 +540,14 @@ def get_listens_era_activity(user_name: str):
 
     era_activity_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
 
-    return jsonify({"result": era_activity_list})
-
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "era_activity": era_activity_list,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated,
+    }})
 
 @stats_api_bp.get("/user/<user_name>/genre-activity")
 @crossdomain
@@ -1363,10 +1369,16 @@ def get_sitewide_listens_era_activity():
     stats = db_stats.get_sitewide_stats("era_activity", stats_range)
     if stats is None:
         raise APINoContent("")
-    
-    result = stats["data"]
-    
-    return jsonify({"result": result})
+        
+    return jsonify({
+        "payload": {
+            "era_activity": stats["data"],
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "range": stats_range,
+            "last_updated": stats["last_updated"],
+        }
+    })
 
 
 @stats_api_bp.get("/sitewide/artist-map")
