@@ -83,6 +83,7 @@ class StatsAPITestCase(IntegrationTestCase):
             self.artist_evolution_activity_payload[0]["user_id"] = self.user["id"]
             self.artist_evolution_activity_payload[0]["from_ts"] = 0
             self.artist_evolution_activity_payload[0]["to_ts"] = 5
+            self.artist_evolution_activity_payload[0]["range"] = "all_time"
         database = 'artist_evolution_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.artist_evolution_activity_payload)
 
@@ -366,6 +367,7 @@ class StatsAPITestCase(IntegrationTestCase):
                     payload[0]["user_id"] = self.user["id"]                    
                     payload[0]["from_ts"] = 0
                     payload[0]["to_ts"] = 5
+                    payload[0]["range"] = range_
                 db_stats.insert(f"artist_evolution_activity_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(
                     self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
