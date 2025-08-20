@@ -309,11 +309,18 @@ declare type GenreHourData = {
   genre: string;
   hour: number;
   listen_count: number;
-}
+};
 
 declare type UserGenreActivityResponse = {
-  result: Array<GenreHourData>;
-}
+  payload: {
+    result: Array<GenreHourData>;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+  };
+};
 
 declare type UserArtistMapArtist = {
   artist_name: string;

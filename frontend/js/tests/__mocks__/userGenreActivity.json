@@ -1,379 +1,386 @@
 {
-	"result": [
-	  {
-		"genre": "alternative dance",
-		"hour": 14,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "alternative punk",
-		"hour": 11,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "alternative rock",
-		"hour": 11,
-		"listen_count": 8
-	  },
-	  {
-		"genre": "alternative rock",
-		"hour": 13,
-		"listen_count": 9
-	  },
-	  {
-		"genre": "alternative rock",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "ambient",
-		"hour": 10,
-		"listen_count": 9
-	  },
-	  {
-		"genre": "ambient",
-		"hour": 12,
-		"listen_count": 5
-	  },
-	  {
-		"genre": "art rock",
-		"hour": 9,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "blue-eyed soul",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "breakbeat",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "breakbeat hardcore",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "classic rock",
-		"hour": 9,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "classic rock",
-		"hour": 13,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "classic rock",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "dance",
-		"hour": 12,
-		"listen_count": 4
-	  },
-	  {
-		"genre": "dance",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "dance-pop",
-		"hour": 11,
-		"listen_count": 5
-	  },
-	  {
-		"genre": "dance-pop",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "dance-pop",
-		"hour": 21,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "dance-rock",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "disco",
-		"hour": 11,
-		"listen_count": 5
-	  },
-	  {
-		"genre": "disco",
-		"hour": 21,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "downtempo",
-		"hour": 10,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "downtempo",
-		"hour": 11,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "downtempo",
-		"hour": 12,
-		"listen_count": 5
-	  },
-	  {
-		"genre": "downtempo",
-		"hour": 14,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "dub",
-		"hour": 14,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "electro",
-		"hour": 10,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "electronic",
-		"hour": 10,
-		"listen_count": 13
-	  },
-	  {
-		"genre": "electronic",
-		"hour": 11,
-		"listen_count": 12
-	  },
-	  {
-		"genre": "electronic",
-		"hour": 12,
-		"listen_count": 8
-	  },
-	  {
-		"genre": "electronic",
-		"hour": 13,
-		"listen_count": 9
-	  },
-	  {
-		"genre": "electronic",
-		"hour": 14,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "electronic",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "electronica",
-		"hour": 10,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "electronica",
-		"hour": 12,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "electronica",
-		"hour": 14,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "electronica",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "electropop",
-		"hour": 10,
-		"listen_count": 5
-	  },
-	  {
-		"genre": "experimental rock",
-		"hour": 13,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "funky breaks",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "heavy metal",
-		"hour": 12,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "hip hop",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "house",
-		"hour": 12,
-		"listen_count": 4
-	  },
-	  {
-		"genre": "indie rock",
-		"hour": 10,
-		"listen_count": 9
-	  },
-	  {
-		"genre": "indie rock",
-		"hour": 11,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "industrial",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "instrumental",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "musical",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "new wave",
-		"hour": 13,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "new wave",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "pop",
-		"hour": 11,
-		"listen_count": 9
-	  },
-	  {
-		"genre": "pop",
-		"hour": 12,
-		"listen_count": 4
-	  },
-	  {
-		"genre": "pop",
-		"hour": 13,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "pop",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "pop",
-		"hour": 21,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "pop rock",
-		"hour": 11,
-		"listen_count": 7
-	  },
-	  {
-		"genre": "pop rock",
-		"hour": 13,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "pop rock",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "progressive rock",
-		"hour": 9,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "psychedelic",
-		"hour": 13,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "psychedelic rock",
-		"hour": 9,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "psychedelic rock",
-		"hour": 13,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "rock",
-		"hour": 9,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "rock",
-		"hour": 10,
-		"listen_count": 8
-	  },
-	  {
-		"genre": "rock",
-		"hour": 11,
-		"listen_count": 16
-	  },
-	  {
-		"genre": "rock",
-		"hour": 12,
-		"listen_count": 10
-	  },
-	  {
-		"genre": "rock",
-		"hour": 13,
-		"listen_count": 12
-	  },
-	  {
-		"genre": "rock",
-		"hour": 15,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "shoegaze",
-		"hour": 10,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "synth-pop",
-		"hour": 10,
-		"listen_count": 6
-	  },
-	  {
-		"genre": "synth-pop",
-		"hour": 21,
-		"listen_count": 1
-	  },
-	  {
-		"genre": "techno",
-		"hour": 16,
-		"listen_count": 3
-	  },
-	  {
-		"genre": "trip hop",
-		"hour": 12,
-		"listen_count": 4
-	  },
-	  {
-		"genre": "trip hop",
-		"hour": 14,
-		"listen_count": 3
-	  }
-	]
-  }
+	"payload": {
+		"user_id": "foobar",
+		"range": "week",
+		"last_updated": 1700000000,
+		"from_ts": 1699400000,
+		"to_ts": 1700000000,
+		"result": [
+			{
+				"genre": "alternative dance",
+				"hour": 14,
+				"listen_count": 3
+			},
+			{
+				"genre": "alternative punk",
+				"hour": 11,
+				"listen_count": 6
+			},
+			{
+				"genre": "alternative rock",
+				"hour": 11,
+				"listen_count": 8
+			},
+			{
+				"genre": "alternative rock",
+				"hour": 13,
+				"listen_count": 9
+			},
+			{
+				"genre": "alternative rock",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "ambient",
+				"hour": 10,
+				"listen_count": 9
+			},
+			{
+				"genre": "ambient",
+				"hour": 12,
+				"listen_count": 5
+			},
+			{
+				"genre": "art rock",
+				"hour": 9,
+				"listen_count": 1
+			},
+			{
+				"genre": "blue-eyed soul",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "breakbeat",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "breakbeat hardcore",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "classic rock",
+				"hour": 9,
+				"listen_count": 1
+			},
+			{
+				"genre": "classic rock",
+				"hour": 13,
+				"listen_count": 3
+			},
+			{
+				"genre": "classic rock",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "dance",
+				"hour": 12,
+				"listen_count": 4
+			},
+			{
+				"genre": "dance",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "dance-pop",
+				"hour": 11,
+				"listen_count": 5
+			},
+			{
+				"genre": "dance-pop",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "dance-pop",
+				"hour": 21,
+				"listen_count": 1
+			},
+			{
+				"genre": "dance-rock",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "disco",
+				"hour": 11,
+				"listen_count": 5
+			},
+			{
+				"genre": "disco",
+				"hour": 21,
+				"listen_count": 1
+			},
+			{
+				"genre": "downtempo",
+				"hour": 10,
+				"listen_count": 6
+			},
+			{
+				"genre": "downtempo",
+				"hour": 11,
+				"listen_count": 6
+			},
+			{
+				"genre": "downtempo",
+				"hour": 12,
+				"listen_count": 5
+			},
+			{
+				"genre": "downtempo",
+				"hour": 14,
+				"listen_count": 3
+			},
+			{
+				"genre": "dub",
+				"hour": 14,
+				"listen_count": 3
+			},
+			{
+				"genre": "electro",
+				"hour": 10,
+				"listen_count": 6
+			},
+			{
+				"genre": "electronic",
+				"hour": 10,
+				"listen_count": 13
+			},
+			{
+				"genre": "electronic",
+				"hour": 11,
+				"listen_count": 12
+			},
+			{
+				"genre": "electronic",
+				"hour": 12,
+				"listen_count": 8
+			},
+			{
+				"genre": "electronic",
+				"hour": 13,
+				"listen_count": 9
+			},
+			{
+				"genre": "electronic",
+				"hour": 14,
+				"listen_count": 3
+			},
+			{
+				"genre": "electronic",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "electronica",
+				"hour": 10,
+				"listen_count": 6
+			},
+			{
+				"genre": "electronica",
+				"hour": 12,
+				"listen_count": 6
+			},
+			{
+				"genre": "electronica",
+				"hour": 14,
+				"listen_count": 3
+			},
+			{
+				"genre": "electronica",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "electropop",
+				"hour": 10,
+				"listen_count": 5
+			},
+			{
+				"genre": "experimental rock",
+				"hour": 13,
+				"listen_count": 3
+			},
+			{
+				"genre": "funky breaks",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "heavy metal",
+				"hour": 12,
+				"listen_count": 3
+			},
+			{
+				"genre": "hip hop",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "house",
+				"hour": 12,
+				"listen_count": 4
+			},
+			{
+				"genre": "indie rock",
+				"hour": 10,
+				"listen_count": 9
+			},
+			{
+				"genre": "indie rock",
+				"hour": 11,
+				"listen_count": 6
+			},
+			{
+				"genre": "industrial",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "instrumental",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "musical",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "new wave",
+				"hour": 13,
+				"listen_count": 6
+			},
+			{
+				"genre": "new wave",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "pop",
+				"hour": 11,
+				"listen_count": 9
+			},
+			{
+				"genre": "pop",
+				"hour": 12,
+				"listen_count": 4
+			},
+			{
+				"genre": "pop",
+				"hour": 13,
+				"listen_count": 6
+			},
+			{
+				"genre": "pop",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "pop",
+				"hour": 21,
+				"listen_count": 1
+			},
+			{
+				"genre": "pop rock",
+				"hour": 11,
+				"listen_count": 7
+			},
+			{
+				"genre": "pop rock",
+				"hour": 13,
+				"listen_count": 6
+			},
+			{
+				"genre": "pop rock",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "progressive rock",
+				"hour": 9,
+				"listen_count": 1
+			},
+			{
+				"genre": "psychedelic",
+				"hour": 13,
+				"listen_count": 3
+			},
+			{
+				"genre": "psychedelic rock",
+				"hour": 9,
+				"listen_count": 1
+			},
+			{
+				"genre": "psychedelic rock",
+				"hour": 13,
+				"listen_count": 6
+			},
+			{
+				"genre": "rock",
+				"hour": 9,
+				"listen_count": 1
+			},
+			{
+				"genre": "rock",
+				"hour": 10,
+				"listen_count": 8
+			},
+			{
+				"genre": "rock",
+				"hour": 11,
+				"listen_count": 16
+			},
+			{
+				"genre": "rock",
+				"hour": 12,
+				"listen_count": 10
+			},
+			{
+				"genre": "rock",
+				"hour": 13,
+				"listen_count": 12
+			},
+			{
+				"genre": "rock",
+				"hour": 15,
+				"listen_count": 3
+			},
+			{
+				"genre": "shoegaze",
+				"hour": 10,
+				"listen_count": 6
+			},
+			{
+				"genre": "synth-pop",
+				"hour": 10,
+				"listen_count": 6
+			},
+			{
+				"genre": "synth-pop",
+				"hour": 21,
+				"listen_count": 1
+			},
+			{
+				"genre": "techno",
+				"hour": 16,
+				"listen_count": 3
+			},
+			{
+				"genre": "trip hop",
+				"hour": 12,
+				"listen_count": 4
+			},
+			{
+				"genre": "trip hop",
+				"hour": 14,
+				"listen_count": 3
+			}
+		]
+	}
+}
