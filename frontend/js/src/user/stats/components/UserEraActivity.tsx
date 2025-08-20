@@ -123,7 +123,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
     queryFn: async () => {
       try {
         const response = await APIService.getUserEraActivity(user?.name, range);
-  
+
         return {
           data: {
             result: response.payload.era_activity,
@@ -138,7 +138,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
           hasError: false,
           errorMessage: "",
         };
-      } catch (error: any) {
+      } catch (error) {
         return {
           data: { result: [] },
           hasError: true,
@@ -147,7 +147,6 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
       }
     },
   });
-  
 
   const {
     data: rawData = { result: [] },
@@ -328,8 +327,8 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
                   width: "100%",
                   overflowX:
                     containerWidth >
-                      (scrollContainerRef.current?.parentElement?.offsetWidth ||
-                        0) -
+                    (scrollContainerRef.current?.parentElement?.offsetWidth ||
+                      0) -
                       40
                       ? "auto"
                       : "hidden",

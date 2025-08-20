@@ -530,7 +530,7 @@ def get_artist_activity(user_name: str):
 @stats_api_bp.get("/user/<user_name>/era-activity")
 @crossdomain
 @ratelimit()
-def get_listens_era_activity(user_name: str):
+def get_era_activity(user_name: str):
     user, stats_range = _validate_stats_user_params(user_name)
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
@@ -1361,7 +1361,7 @@ def get_sitewide_artist_activity():
 @stats_api_bp.get("/sitewide/era-activity")
 @crossdomain
 @ratelimit()
-def get_sitewide_listens_era_activity():
+def get_sitewide_era_activity():
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
