@@ -51,9 +51,16 @@ describe("ArtistEvolutionActivityStreamGraph", () => {
             return HttpResponse.json(userArtistEvolutionActivityResponse);
           case "empty":
             return HttpResponse.json({
-              result: [],
-              offset_year: 2020,
-            });
+              payload: {
+                artist_evolution_activity: [],
+                offset_year: 2020,
+                range,
+                from_ts: 0,
+                to_ts: 0,
+                last_updated: 0,
+                user_id: "foobar",
+              },
+            });            
           case "month":
             // This will trigger the error case
             return HttpResponse.json(
@@ -121,9 +128,16 @@ describe("ArtistEvolutionActivityStreamGraph", () => {
         
         if (range === "week") {
           return HttpResponse.json({
-            result: [],
-            offset_year: 2020,
-          });
+            payload: {
+              artist_evolution_activity: [],
+              offset_year: 2020,
+              range,
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+              user_id: "foobar",
+            },
+          });          
         }
         
         return HttpResponse.json(userArtistEvolutionActivityResponse);

@@ -2,142 +2,22 @@
   {
     "data": [
       {
-        "time_unit": 2025,
-        "artist_mbid": "f4abc0b5-3f7a-4eff-8f78-ac078dbce533",
-        "artist_name": "Billie Eilish",
-        "listen_count": 1
+        "id": "2020",
+        "David Bowie": 12,
+        "Boards of Canada": 5,
+        "Aphex Twin": 3
       },
       {
-        "time_unit": 2025,
-        "artist_mbid": "f27ec8db-af05-4f36-916e-3d57f91ecf5e",
-        "artist_name": "Michael Jackson",
-        "listen_count": 3
+        "id": "2021",
+        "David Bowie": 8,
+        "Boards of Canada": 0,
+        "Aphex Twin": 7
       },
       {
-        "time_unit": 2025,
-        "artist_mbid": "bd13909f-1c29-4c27-a874-d4aaf27c5b1a",
-        "artist_name": "Fleetwood Mac",
-        "listen_count": 1
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11",
-        "artist_name": "Portishead",
-        "listen_count": 7
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "8bfac288-ccc5-448d-9573-c33ea2aa5c30",
-        "artist_name": "Red Hot Chili Peppers",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "8970d868-0723-483b-a75b-51088913d3d4",
-        "artist_name": "Moby",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "87c5dedd-371d-4a53-9f7f-80522fb7f3cb",
-        "artist_name": "Björk",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "860b2707-6153-4e3a-aa57-74d2b42c55b5",
-        "artist_name": "Justice",
-        "listen_count": 1
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "8538e728-ca0b-4321-b7e5-cff6565dd4c0",
-        "artist_name": "Depeche Mode",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47",
-        "artist_name": "Pink Floyd",
-        "listen_count": 7
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "6f1a58bf-9b1b-49cf-a44a-6cefad7ae04f",
-        "artist_name": "Dua Lipa",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "6d7b7cd4-254b-4c25-83f6-dd20f98ceacd",
-        "artist_name": "M83",
-        "listen_count": 6
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "69ee3720-a7cb-4402-b48d-a02c366f2bcf",
-        "artist_name": "The Cure",
-        "listen_count": 5
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "69158f97-4c07-4c4e-baf8-4e4ab1ed666e",
-        "artist_name": "Boards of Canada",
-        "listen_count": 7
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3",
-        "artist_name": "Led Zeppelin",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "63aa26c3-d59b-4da4-84ac-716b54f1ef4d",
-        "artist_name": "Tame Impala",
-        "listen_count": 2
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
-        "artist_name": "Nirvana",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "5441c29d-3602-4898-b1a1-b77fa23b8e50",
-        "artist_name": "David Bowie",
-        "listen_count": 6
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "52074ba6-e495-4ef3-9bb4-0703888a9f68",
-        "artist_name": "Arcade Fire",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "4a4ee089-93b1-4470-af9a-6ff575d32704",
-        "artist_name": "The Prodigy",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "40f5d9e4-2de7-4f2d-ad41-e31a9a9fea27",
-        "artist_name": "The Smiths",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "309c62ba-7a22-4277-9f67-4a162526d18a",
-        "artist_name": "Beck",
-        "listen_count": 3
-      },
-      {
-        "time_unit": 2025,
-        "artist_mbid": "10adbe5e-a2c0-4bf3-8249-2b4cbf6e6ca8",
-        "artist_name": "Massive Attack",
-        "listen_count": 6
+        "id": "2022",
+        "David Bowie": 0,
+        "Boards of Canada": 10,
+        "Aphex Twin": 2
       }
     ],
     "user_id": 1

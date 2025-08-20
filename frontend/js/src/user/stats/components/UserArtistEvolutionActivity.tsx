@@ -20,7 +20,7 @@ export type StreamDataItem = {
 
 // Transform function to convert API response to stream chart format
 const transformArtistEvolutionActivityData = (
-  rawData: UserArtistEvolutionActivityResponse["result"]
+  rawData: UserArtistEvolutionActivityResponse["payload"]["artist_evolution_activity"]
 ) => {
   if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
     return { chartData: [], keys: [] };
@@ -252,11 +252,18 @@ export default function ArtistEvolutionActivityStreamGraph(
       } catch (error) {
         return {
           data: {
-            result: [],
-            offset_year: 2020,
+            payload: {
+              artist_evolution_activity: [],
+              offset_year: 2020,
+              range,
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+              user_id: user?.name ?? "",
+            },
           } as UserArtistEvolutionActivityResponse,
           hasError: true,
-          errorMessage: error.message,
+          errorMessage: (error as Error).message,
         };
       }
     },
@@ -264,8 +271,15 @@ export default function ArtistEvolutionActivityStreamGraph(
 
   const {
     data: rawData = {
-      result: [],
-      offset_year: 2020,
+      payload: {
+        artist_evolution_activity: [],
+        offset_year: 2020,
+        range,
+        from_ts: 0,
+        to_ts: 0,
+        last_updated: 0,
+        user_id: user?.name ?? "",
+      },
     } as UserArtistEvolutionActivityResponse,
     hasError = false,
     errorMessage = "",
@@ -287,10 +301,13 @@ export default function ArtistEvolutionActivityStreamGraph(
   }, [setIsMobile]);
 
   const { chartData = [], keys = [] } = transformArtistEvolutionActivityData(
-    rawData.result
+    rawData.payload.artist_evolution_activity
   );
 
-  const orderedTimeUnits = getOrderedTimeUnits(range, rawData.offset_year);
+  const orderedTimeUnits = getOrderedTimeUnits(
+    range,
+    rawData.payload.offset_year
+  );
 
   const tooltipRenderer = React.useCallback(
     (tooltipProps: TooltipProps) =>

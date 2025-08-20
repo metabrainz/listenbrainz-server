@@ -1,0 +1,103 @@
+[
+  {
+    "data": [
+      {
+        "id": "January",
+        "Taylor Swift": 25,
+        "Drake": 12,
+        "The Beatles": 8,
+        "Coldplay": 15,
+        "Adele": 6
+      },
+      {
+        "id": "February",
+        "Taylor Swift": 30,
+        "Drake": 18,
+        "The Beatles": 10,
+        "Coldplay": 20,
+        "Adele": 9
+      },
+      {
+        "id": "March",
+        "Taylor Swift": 22,
+        "Drake": 14,
+        "The Beatles": 5,
+        "Coldplay": 19,
+        "Adele": 11
+      },
+      {
+        "id": "April",
+        "Taylor Swift": 18,
+        "Drake": 20,
+        "The Beatles": 12,
+        "Coldplay": 14,
+        "Adele": 8
+      },
+      {
+        "id": "May",
+        "Taylor Swift": 35,
+        "Drake": 25,
+        "The Beatles": 9,
+        "Coldplay": 17,
+        "Adele": 13
+      },
+      {
+        "id": "June",
+        "Taylor Swift": 28,
+        "Drake": 21,
+        "The Beatles": 14,
+        "Coldplay": 16,
+        "Adele": 10
+      },
+      {
+        "id": "July",
+        "Taylor Swift": 40,
+        "Drake": 30,
+        "The Beatles": 11,
+        "Coldplay": 22,
+        "Adele": 14
+      },
+      {
+        "id": "August",
+        "Taylor Swift": 38,
+        "Drake": 27,
+        "The Beatles": 15,
+        "Coldplay": 24,
+        "Adele": 12
+      },
+      {
+        "id": "September",
+        "Taylor Swift": 32,
+        "Drake": 29,
+        "The Beatles": 13,
+        "Coldplay": 20,
+        "Adele": 15
+      },
+      {
+        "id": "October",
+        "Taylor Swift": 29,
+        "Drake": 24,
+        "The Beatles": 9,
+        "Coldplay": 18,
+        "Adele": 11
+      },
+      {
+        "id": "November",
+        "Taylor Swift": 34,
+        "Drake": 26,
+        "The Beatles": 14,
+        "Coldplay": 23,
+        "Adele": 10
+      },
+      {
+        "id": "December",
+        "Taylor Swift": 45,
+        "Drake": 31,
+        "The Beatles": 18,
+        "Coldplay": 28,
+        "Adele": 16
+      }
+    ],
+    "user_id": 1
+  }
+]

@@ -1,61 +1,68 @@
 {
-	"result": [
-		{
-			"id": "0",
-			"Taylor Swift": 120,
-			"Drake": 80,
-			"Coldplay": 150,
-			"Adele": 60,
-			"The Weeknd": 40
-		},
-		{
-			"id": "1",
-			"Taylor Swift": 50,
-			"Drake": 200,
-			"Coldplay": 90,
-			"Adele": 30,
-			"The Weeknd": 180
-		},
-		{
-			"id": "2",
-			"Taylor Swift": 300,
-			"Drake": 40,
-			"Coldplay": 20,
-			"Adele": 200,
-			"The Weeknd": 60
-		},
-		{
-			"id": "3",
-			"Taylor Swift": 180,
-			"Drake": 100,
-			"Coldplay": 300,
-			"Adele": 20,
-			"The Weeknd": 250
-		},
-		{
-			"id": "4",
-			"Taylor Swift": 400,
-			"Drake": 50,
-			"Coldplay": 280,
-			"Adele": 150,
-			"The Weeknd": 70
-		},
-		{
-			"id": "5",
-			"Taylor Swift": 90,
-			"Drake": 350,
-			"Coldplay": 100,
-			"Adele": 80,
-			"The Weeknd": 300
-		},
-		{
-			"id": "6",
-			"Taylor Swift": 500,
-			"Drake": 120,
-			"Coldplay": 30,
-			"Adele": 200,
-			"The Weeknd": 400
-		}
-	],
-	"offset_year": 2020
+	"payload": {
+		"artist_evolution_activity": [
+			{
+				"id": "0",
+				"Taylor Swift": 120,
+				"Drake": 80,
+				"Coldplay": 150,
+				"Adele": 60,
+				"The Weeknd": 40
+			},
+			{
+				"id": "1",
+				"Taylor Swift": 50,
+				"Drake": 200,
+				"Coldplay": 90,
+				"Adele": 30,
+				"The Weeknd": 180
+			},
+			{
+				"id": "2",
+				"Taylor Swift": 300,
+				"Drake": 40,
+				"Coldplay": 20,
+				"Adele": 200,
+				"The Weeknd": 60
+			},
+			{
+				"id": "3",
+				"Taylor Swift": 180,
+				"Drake": 100,
+				"Coldplay": 300,
+				"Adele": 20,
+				"The Weeknd": 250
+			},
+			{
+				"id": "4",
+				"Taylor Swift": 400,
+				"Drake": 50,
+				"Coldplay": 280,
+				"Adele": 150,
+				"The Weeknd": 70
+			},
+			{
+				"id": "5",
+				"Taylor Swift": 90,
+				"Drake": 350,
+				"Coldplay": 100,
+				"Adele": 80,
+				"The Weeknd": 300
+			},
+			{
+				"id": "6",
+				"Taylor Swift": 500,
+				"Drake": 120,
+				"Coldplay": 30,
+				"Adele": 200,
+				"The Weeknd": 400
+			}
+		],
+		"offset_year": 2020,
+		"range": "all_time",
+		"from_ts": 1609459200,
+		"to_ts": 1640995200,
+		"last_updated": 1640995200,
+		"user_id": "foobar"
+	}
 }
