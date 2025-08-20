@@ -3,7 +3,7 @@ from typing import Iterator, Optional, Dict
 
 from listenbrainz_spark.stats.incremental.incremental_stats_engine import IncrementalStatsEngine
 from listenbrainz_spark.stats.incremental.range_selector import StatsRangeListenRangeSelector
-from listenbrainz_spark.stats.incremental.user.artist_evolution import (
+from listenbrainz_spark.stats.incremental.user.artist_evolution_activity import (
     ArtistEvolutionUserStatsQueryEntity,
     ArtistEvolutionUserMessageCreator,
 )
