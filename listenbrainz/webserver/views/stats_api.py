@@ -13,7 +13,7 @@ from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
-from data.model.user_artist_evolution import ArtistEvolutionRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -670,7 +670,7 @@ def _transform_artist_evolution_data(raw_data, stats_range):
 @ratelimit()
 def get_artist_evolution_activity(user_name: str):
     user, stats_range = _validate_stats_user_params(user_name)
-    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionRecord)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionActivityRecord)
     if stats is None:
         raise APINoContent('')
 

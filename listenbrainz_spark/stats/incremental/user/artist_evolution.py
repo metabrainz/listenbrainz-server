@@ -8,7 +8,7 @@ from data.model.common_stat_spark import UserStatRecords
 from listenbrainz_spark.listens.cache import *
 from listenbrainz_spark.listens.metadata import *
 from listenbrainz_spark import config, hdfs_connection
-from data.model.user_artist_evolution import ArtistEvolutionRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector, StatsRangeListenRangeSelector
 from listenbrainz_spark.stats.incremental.user.entity import UserStatsQueryProvider, UserStatsMessageCreator
 from listenbrainz_spark.utils import read_files_from_HDFS
@@ -114,7 +114,7 @@ class ArtistEvolutionUserMessageCreator(UserStatsMessageCreator):
 
     def parse_row(self, entry: dict):
         try:
-            UserStatRecords[ArtistEvolutionRecord](
+            UserStatRecords[ArtistEvolutionActivityRecord](
                 user_id=entry["user_id"],
                 data=entry["artist_evolution_activity"]
             )
