@@ -591,7 +591,7 @@ def get_genre_activity(user_name: str):
     return jsonify({"result": genre_activity})
 
 
-def _transform_artist_evolution_data(raw_data, stats_range):
+def _transform_artist_evolution_activity_data(raw_data, stats_range):
     if not raw_data:
         return [], None
     
@@ -677,7 +677,7 @@ def get_artist_evolution_activity(user_name: str):
     stats_unprocessed = [x.dict() for x in stats.data.__root__]
 
     # Transform the raw data to the format expected by frontend
-    transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
+    transformed_data, offset_year = _transform_artist_evolution_activity_data(stats_unprocessed, stats_range)
 
     response = {"result": transformed_data}
     if offset_year is not None:
@@ -1444,7 +1444,7 @@ def get_sitewide_album_activity():
         raise APINoContent("")
     
     stats_unprocessed = stats["data"]
-    transformed_data, offset_year = _transform_artist_evolution_data(stats_unprocessed, stats_range)
+    transformed_data, offset_year = _transform_artist_evolution_activity_data(stats_unprocessed, stats_range)
     
     response = {"result": transformed_data}
     if offset_year is not None:

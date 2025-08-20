@@ -152,7 +152,7 @@ class UserStatsTestCase(StatsTestCase):
         self.assertTrue(messages[2]["database"].startswith(database_prefix))
 
         # Test time range validation for artist evolution data
-        time_units_received = run_query("SELECT DISTINCT time_unit FROM artist_evolution ORDER BY time_unit").toLocalIterator()
+        time_units_received = run_query("SELECT DISTINCT time_unit FROM artist_evolution_activity ORDER BY time_unit").toLocalIterator()
         received_years = [row[0] for row in time_units_received]
         for year in received_years:
             self.assertIsInstance(year, int)  # Just validate they are integers (years)
