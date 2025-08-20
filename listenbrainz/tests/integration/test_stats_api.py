@@ -81,6 +81,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_artist_evolution_activity_db_data_for_api_test.json')) as f:
             self.artist_evolution_activity_payload = json.load(f)
             self.artist_evolution_activity_payload[0]["user_id"] = self.user["id"]
+            self.artist_evolution_activity_payload[0]["from_ts"] = 0
+            self.artist_evolution_activity_payload[0]["to_ts"] = 5
         database = 'artist_evolution_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.artist_evolution_activity_payload)
 
@@ -361,7 +363,9 @@ class StatsAPITestCase(IntegrationTestCase):
                 with open(self.path_to_data_file(f'user_artist_evolution_activity_db_data_for_api_test_{range_}.json'),
                           'r') as f:
                     payload = json.load(f)
-                    payload[0]["user_id"] = self.user["id"]
+                    payload[0]["user_id"] = self.user["id"]                    
+                    payload[0]["from_ts"] = 0
+                    payload[0]["to_ts"] = 5
                 db_stats.insert(f"artist_evolution_activity_{range_}_20220718", 0, 5, payload)
                 response = self.client.get(
                     self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
