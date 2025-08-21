@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 
 from flask import Blueprint, current_app, jsonify, request
 from psycopg2 import DatabaseError
@@ -26,7 +27,8 @@ def _validate_datetime_param(param, default=None):
     try:
         value = datetime.fromisoformat(value)
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
+            value = value.replace(tzinfo=timezone.utc)
+        return value
     except (TypeError, ValueError):
         raise APIBadRequest(f"Invalid {param} format!")
 
@@ -65,19 +67,13 @@ def create_import_task():
     if not filename:
         raise APIBadRequest("Invalid file name!")
 
-    allowed_extensions = [".json", ".jsonl", ".csv", ".zip"]
+    allowed_extensions = [".zip"]
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
         raise APIBadRequest("File type not allowed!")
-    
-    if service == "spotify" and extension == ".zip":
-        pass
-    elif service == "listenbrainz" and extension == ".zip":
-        pass
-    else:
-        raise APIBadRequest("This combination of service and filetype is not supported!")
-    
-    saved_filename = secure_filename(filename)
+
+    # add a unique ID to the filename to avoid collisions
+    saved_filename = str(uuid.uuid4()) + secure_filename(filename)
     save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], saved_filename)
 
     try:
@@ -159,8 +155,8 @@ def get_import_task(import_id):
         "service": row.service,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
-        "to_date": row.to_date,
-        "from_date": row.from_date,
+        "to_date": row.to_date.isoformat(),
+        "from_date": row.from_date.isoformat(),
     })
 
 
@@ -181,8 +177,8 @@ def list_import_tasks():
         "service": row.service,
         "created": row.created.isoformat(),
         "metadata": row.metadata,
-        "to_date": row.to_date,
-        "from_date": row.from_date,
+        "to_date": row.to_date.isoformat(),
+        "from_date": row.from_date.isoformat(),
     } for row in rows])
 
 
@@ -190,7 +186,7 @@ def list_import_tasks():
 @web_listenstore_needed
 @crossdomain
 @ratelimit()
-def delete_export_archive(import_id):
+def delete_import_task(import_id):
     """ Cancel the specified import in progress """
     user = validate_auth_header()
     result = db_conn.execute(
