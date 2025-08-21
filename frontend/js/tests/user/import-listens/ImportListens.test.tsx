@@ -78,6 +78,35 @@ describe("ImportListensPage", () => {
     server.close();
   });
 
+  it("renders submission form correctly", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {},
+      { wrapper: ReactQueryWrapper },
+      false
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/start import from/i)).toBeInTheDocument();
+      
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
+      
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/select Service/i)).toBeInTheDocument();
+      
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/choose a File/i)).toBeInTheDocument();
+      
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /import listens/i })).toBeInTheDocument();
+      
+    });
+  });
+  
   it("renders imports with correct data", async () => {
     renderWithProviders(
       <RouterProvider router={router} />,
@@ -87,10 +116,6 @@ describe("ImportListensPage", () => {
     );
     await waitFor(() => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
-      screen.debug(undefined, Infinity);
       
     });
     await waitFor(() => {
