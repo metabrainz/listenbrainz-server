@@ -181,7 +181,7 @@ export default function PlaylistPage() {
     await new Promise((resolve) => {
       setTimeout(resolve, 1500);
     });
-    navigate(`/user/${currentUser?.name}/playlists`);
+    navigate(`/user/${encodeURIComponent(currentUser?.name)}/playlists`);
   };
 
   const onPlaylistSave = (newPlaylist: JSPFPlaylist) => {
@@ -426,7 +426,11 @@ export default function PlaylistPage() {
                     With the help of:&ensp;
                     {customFields.collaborators.map((collaborator, index) => (
                       <React.Fragment key={collaborator}>
-                        <Link to={sanitizeUrl(`/user/${collaborator}/`)}>
+                        <Link
+                          to={sanitizeUrl(
+                            `/user/${encodeURIComponent(collaborator)}/`
+                          )}
+                        >
                           {collaborator}
                         </Link>
                         {index < (customFields?.collaborators?.length ?? 0) - 1

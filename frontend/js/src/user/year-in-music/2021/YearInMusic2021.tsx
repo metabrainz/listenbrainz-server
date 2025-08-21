@@ -366,8 +366,13 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   Share your year with your friends
                   <p id="share-link">
-                    <Link to={`/user/${user.name}/year-in-music/2021/`}>
-                      https://listenbrainz.org/user/{user.name}
+                    <Link
+                      to={`/user/${encodeURIComponent(
+                        user.name
+                      )}/year-in-music/2021/`}
+                    >
+                      https://listenbrainz.org/user/
+                      {encodeURIComponent(user.name)}
                       /year-in-music/2021/
                     </Link>
                   </p>
@@ -389,13 +394,19 @@ export default class YearInMusic extends React.Component<
             <p>
               See profile on&nbsp;
               <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
-              <Link to={`/user/${user.name}/`}>ListenBrainz</Link>
+              <Link to={`/user/${encodeURIComponent(user.name)}/`}>
+                ListenBrainz
+              </Link>
               &nbsp;and&nbsp;
               <img
                 src="/static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
               />
-              <a href={`https://musicbrainz.org/user/${user.name}`}>
+              <a
+                href={`https://musicbrainz.org/user/${encodeURIComponent(
+                  user.name
+                )}`}
+              >
                 MusicBrainz
               </a>
             </p>

@@ -278,7 +278,11 @@ export default class YearInMusic extends React.Component<
         <div className="center-p">
           <object
             style={{ maxWidth: "100%" }}
-            data={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=${coverArtKey}`}
+            data={`${
+              APIService.APIBaseURI
+            }/art/year-in-music/2022/${encodeURIComponent(
+              user.name
+            )}?image=${coverArtKey}`}
           >{`SVG of cover art for Top Discovery Playlist for ${user.name}`}</object>
           <h4>
             <a
@@ -486,7 +490,9 @@ export default class YearInMusic extends React.Component<
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
-    const linkToThisPage = `https://listenbrainz.org/user/${user.name}/year-in-music/2022`;
+    const linkToThisPage = `https://listenbrainz.org/user/${encodeURIComponent(
+      user.name
+    )}/year-in-music/2022`;
     return (
       <div id="year-in-music" className="yim-2022">
         <SEO year={2022} userName={user?.name} />
@@ -621,7 +627,11 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=albums`}
+                svgURL={`${
+                  APIService.APIBaseURI
+                }/art/year-in-music/2022/${encodeURIComponent(
+                  user.name
+                )}?image=albums`}
                 shareUrl={`${linkToThisPage}#top-albums`}
                 // shareText="Check out my"
                 shareTitle="My top albums of 2022"
@@ -684,7 +694,11 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=tracks`}
+                    svgURL={`${
+                      APIService.APIBaseURI
+                    }/art/year-in-music/2022/${encodeURIComponent(
+                      user.name
+                    )}?image=tracks`}
                     shareUrl={`${linkToThisPage}#top-tracks`}
                     // shareText="Check out my"
                     shareTitle="My top tracks of 2022"
@@ -750,7 +764,11 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=artists`}
+                    svgURL={`${
+                      APIService.APIBaseURI
+                    }/art/year-in-music/2022/${encodeURIComponent(
+                      user.name
+                    )}?image=artists`}
                     shareUrl={`${linkToThisPage}#top-artists`}
                     // shareText="Check out my"
                     shareTitle="My top artists of 2022"
@@ -769,7 +787,11 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${user.name}?image=stats`}
+                svgURL={`${
+                  APIService.APIBaseURI
+                }/art/year-in-music/2022/${encodeURIComponent(
+                  user.name
+                )}?image=stats`}
                 shareUrl={`${linkToThisPage}#stats`}
                 shareTitle="My music listening in 2022"
                 fileName={`${user.name}-stats-2022`}
@@ -1214,7 +1236,11 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <Link to={`/user/${user.name}/year-in-music/2021/`}>2021</Link>
+            <Link
+              to={`/user/${encodeURIComponent(user.name)}/year-in-music/2021/`}
+            >
+              2021
+            </Link>
           </div>
           <div className="thanks-kc-green">
             With thanks to KC Green for the original &apos;this is fine&apos;

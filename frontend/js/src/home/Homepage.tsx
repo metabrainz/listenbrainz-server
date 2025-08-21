@@ -498,7 +498,9 @@ export function HomePageWrapper() {
     currentUser?.name &&
     (redirectParam === "true" || redirectParam === null)
   ) {
-    return <Navigate to={`/user/${currentUser.name}/`} replace />;
+    return (
+      <Navigate to={`/user/${encodeURIComponent(currentUser.name)}/`} replace />
+    );
   }
   return <HomePage />;
 }

@@ -49,7 +49,7 @@ function Navbar() {
           className="navbar-logo"
           to={
             currentUser?.name
-              ? `/user/${currentUser.name}/`
+              ? `/user/${encodeURIComponent(currentUser.name)}/`
               : "/?redirect=false"
           }
           onClick={toggleSidebar}
@@ -67,7 +67,7 @@ function Navbar() {
           className="navbar-logo"
           to={
             currentUser?.name
-              ? `/user/${currentUser.name}/`
+              ? `/user/${encodeURIComponent(currentUser.name)}/`
               : "/?redirect=false"
           }
           onClick={toggleSidebar}
@@ -84,7 +84,7 @@ function Navbar() {
                 Feed
               </NavLink>
               <NavLink
-                to={`/user/${currentUser.name}/`}
+                to={`/user/${encodeURIComponent(currentUser.name)}/`}
                 onClick={toggleSidebar}
               >
                 Dashboard
