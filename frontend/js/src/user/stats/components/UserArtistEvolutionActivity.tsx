@@ -1,13 +1,21 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
 import * as React from "react";
-import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
+import { toPairs } from "lodash";
+import {
+  getDaysInMonth,
+  eachYearOfInterval,
+  startOfYear,
+  endOfYear,
+  format,
+} from "date-fns";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_BLACK } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 
 export type UserArtistEvolutionActivityProps = {
   range: UserStatsAPIRange;
@@ -26,53 +34,35 @@ const transformArtistEvolutionActivityData = (
     return { chartData: [], keys: [] };
   }
 
-  // First, extract all unique artist names across all time units
-  // Exclude 'id' field which is metadata, not artist data
-  const allArtistNames = new Set<string>();
-  rawData.forEach((timeUnit) => {
-    if (timeUnit && typeof timeUnit === "object") {
-      Object.keys(timeUnit).forEach((key) => {
-        // Skip the 'id' field - it's metadata, not an artist
-        if (key !== "id") {
-          allArtistNames.add(key);
-        }
-      });
-    }
-  });
+  // Calculate total listens per artist to get top 10
+  const artistTotals = rawData
+    .flatMap(toPairs)
+    .reduce<Record<string, number>>((acc, [artist, count]) => {
+      // Skip the 'id' field and only process actual artist data
+      if (artist !== "id" && typeof count === "number") {
+        return { ...acc, [artist]: (acc[artist] || 0) + count };
+      }
+      return acc;
+    }, {});
 
-  // Calculate total listens per artist to get top 5
-  const artistTotals: Record<string, number> = {};
-  rawData.forEach((timeUnit) => {
-    if (timeUnit && typeof timeUnit === "object") {
-      Object.entries(timeUnit).forEach(([artist, count]) => {
-        // Skip the 'id' field and only process actual artist data
-        if (artist !== "id" && typeof count === "number") {
-          if (!artistTotals[artist]) {
-            artistTotals[artist] = 0;
-          }
-          artistTotals[artist] += count;
-        }
-      });
-    }
-  });
-
-  // Get top 5 artists by total listens
+  // Get top 10 artists by total listens
   const topArtists = Object.entries(artistTotals)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
+    .slice(0, 10)
     .map(([name]) => name);
 
   // Transform the data for the stream chart
   const chartData = rawData.map((timeUnit, index) => {
     const result: StreamDataItem = {
-      // Use the id from the backend data if available, otherwise fall back to index
-      id: (timeUnit && timeUnit.id) || index.toString(),
+      id: (timeUnit && (timeUnit as any).id) || index.toString(),
     };
 
-    // Add each top artist's data for this time unit
     topArtists.forEach((artist) => {
       result[artist] =
-        (timeUnit && typeof timeUnit === "object" && timeUnit[artist]) || 0;
+        (timeUnit &&
+          typeof timeUnit === "object" &&
+          (timeUnit as any)[artist]) ||
+        0;
     });
 
     return result;
@@ -81,7 +71,38 @@ const transformArtistEvolutionActivityData = (
   return { chartData, keys: topArtists };
 };
 
-// Format function for axis labels based on range with mobile responsiveness
+function getAllTimeYearLabels(opts: {
+  offsetYear?: number;
+  from_ts?: number;
+  to_ts?: number;
+}) {
+  const now = new Date();
+
+  let start;
+  if (opts.from_ts) {
+    start = startOfYear(new Date(opts.from_ts * 1000));
+  } else if (opts.offsetYear) {
+    start = startOfYear(new Date(opts.offsetYear, 0, 1));
+  } else {
+    start = startOfYear(now);
+  }
+
+  const end = opts.to_ts
+    ? endOfYear(new Date(opts.to_ts * 1000))
+    : endOfYear(now);
+
+  const minStart = opts.offsetYear
+    ? startOfYear(new Date(opts.offsetYear, 0, 1))
+    : start;
+
+  const clampedStart = start < minStart ? minStart : start;
+  const clampedEnd = end > now ? endOfYear(now) : end;
+
+  return eachYearOfInterval({ start: clampedStart, end: clampedEnd }).map((d) =>
+    format(d, "yyyy")
+  );
+}
+
 const getAxisFormatter = (
   timeRange: UserStatsAPIRange,
   orderedTimeUnits: string[],
@@ -98,26 +119,24 @@ const getAxisFormatter = (
         return timeUnit;
       case "year":
         return timeUnit.substring(0, 3);
-      case "all_time":
-        // For mobile, show only every 5th year
+      case "all_time": {
         if (isMobile) {
           const year = parseInt(timeUnit, 10);
-          if (year % 5 === 0) {
-            return timeUnit;
-          }
-          return "";
+          return year % 5 === 0 ? timeUnit : "";
         }
         return timeUnit;
+      }
       default:
         return timeUnit;
     }
   };
 };
 
-// Helper function to get ordered time units
 const getOrderedTimeUnits = (
   timeRange: UserStatsAPIRange,
-  offsetYear: number | undefined
+  offsetYear: number | undefined,
+  from_ts?: number,
+  to_ts?: number
 ) => {
   if (timeRange.includes("week")) {
     return [
@@ -131,7 +150,10 @@ const getOrderedTimeUnits = (
     ];
   }
   if (timeRange.includes("month")) {
-    return Array.from({ length: 30 }, (_, i) => (i + 1).toString());
+    const daysInCurrentMonth = getDaysInMonth(new Date());
+    return Array.from({ length: daysInCurrentMonth }, (_, i) =>
+      (i + 1).toString()
+    );
   }
   if (timeRange.includes("year")) {
     return [
@@ -150,17 +172,11 @@ const getOrderedTimeUnits = (
     ];
   }
   if (timeRange.includes("all_time")) {
-    const currentYear = new Date().getFullYear();
-    const safeOffsetYear = offsetYear || 2020;
-    const yearRange = currentYear - safeOffsetYear + 1;
-    return Array.from({ length: yearRange }, (_, i) =>
-      (safeOffsetYear + i).toString()
-    );
+    return getAllTimeYearLabels({ offsetYear, from_ts, to_ts });
   }
   return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
 };
 
-// Custom tooltip function moved outside of render
 const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
   const { slice } = tooltipProps;
 
@@ -195,7 +211,7 @@ const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
       }}
     >
       <div style={{ marginBottom: "4px", fontWeight: "bold" }}>
-        {orderedTimeUnits[slice.index] || `Time Unit ${slice.index + 1}`}
+        {orderedTimeUnits[slice.index] || `Period ${slice.index + 1}`}
       </div>
       {slice.stack &&
         slice.stack
@@ -223,25 +239,32 @@ const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
   );
 };
 
-// Helper function for rendering different legend texts
 const getLegendText = (timeRange: UserStatsAPIRange) => {
-  if (timeRange === "week") return "Days of Week";
-  if (timeRange === "month") return "Days of Month";
-  if (timeRange === "year") return "Months";
-  return "Years";
+  switch (timeRange) {
+    case "week":
+      return "Days of the week";
+    case "month":
+      return "Days of the month";
+    case "year":
+      return "Months";
+    default:
+      return "Years";
+  }
 };
+
+export const artistEvolutionQueryKey = (
+  userName: string | undefined,
+  range: UserStatsAPIRange
+) => ["userArtistEvolutionActivity", userName, range] as const;
 
 export default function ArtistEvolutionActivityStreamGraph(
   props: UserArtistEvolutionActivityProps
 ) {
   const { APIService } = React.useContext(GlobalAppContext);
-
-  // Props
   const { user, range } = props;
 
-  // API data fetching
   const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["userArtistEvolutionActivity", user?.name, range],
+    queryKey: artistEvolutionQueryKey(user?.name, range),
     queryFn: async () => {
       try {
         const queryData = (await APIService.getUserArtistEvolutionActivity(
@@ -285,20 +308,7 @@ export default function ArtistEvolutionActivityStreamGraph(
     errorMessage = "",
   } = loaderData || {};
 
-  // Mobile detection hook
-  const [isMobile, setIsMobile] = React.useState(false);
-
-  // Check for mobile screen size
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [setIsMobile]);
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   const { chartData = [], keys = [] } = transformArtistEvolutionActivityData(
     rawData.payload.artist_evolution_activity
@@ -306,7 +316,9 @@ export default function ArtistEvolutionActivityStreamGraph(
 
   const orderedTimeUnits = getOrderedTimeUnits(
     range,
-    rawData.payload.offset_year
+    rawData.payload.offset_year,
+    (rawData as any).payload.from_ts,
+    (rawData as any).payload.to_ts
   );
 
   const tooltipRenderer = React.useCallback(
@@ -384,11 +396,7 @@ export default function ArtistEvolutionActivityStreamGraph(
                     legendPosition: "middle",
                     tickRotation: isMobile ? -45 : 0,
                   }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                  }}
+                  axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
                   enableGridX
                   enableGridY
                   offsetType="diverging"
@@ -433,9 +441,7 @@ export default function ArtistEvolutionActivityStreamGraph(
                       effects: [
                         {
                           on: "hover",
-                          style: {
-                            itemTextColor: "#000000",
-                          },
+                          style: { itemTextColor: "#000000" },
                         },
                       ],
                     },
