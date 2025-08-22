@@ -1,0 +1,178 @@
+{
+  "album_type": "single",
+  "total_tracks": 2,
+  "is_playable": true,
+  "external_urls": {
+    "spotify": "https://open.spotify.com/album/1EGlv1JGCUPolWU4qv7bsK"
+  },
+  "href": "https://api.spotify.com/v1/albums/1EGlv1JGCUPolWU4qv7bsK?market=IN&locale=en-US%2Cen%3Bq%3D0.5",
+  "id": "1EGlv1JGCUPolWU4qv7bsK",
+  "images": [
+    {
+      "url": "https://i.scdn.co/image/ab67616d0000b27335aa8800b1c2e000c3ce07f6",
+      "height": 640,
+      "width": 640
+    },
+    {
+      "url": "https://i.scdn.co/image/ab67616d00001e0235aa8800b1c2e000c3ce07f6",
+      "height": 300,
+      "width": 300
+    },
+    {
+      "url": "https://i.scdn.co/image/ab67616d0000485135aa8800b1c2e000c3ce07f6",
+      "height": 64,
+      "width": 64
+    }
+  ],
+  "name": "Monsters (feat. Demi Lovato and blackbear)",
+  "release_date": "2020-12-04",
+  "release_date_precision": "day",
+  "type": "album",
+  "uri": "spotify:album:1EGlv1JGCUPolWU4qv7bsK",
+  "artists": [
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/46gyXjRIvN1NL1eCB8GBxo"
+      },
+      "href": "https://api.spotify.com/v1/artists/46gyXjRIvN1NL1eCB8GBxo",
+      "id": "46gyXjRIvN1NL1eCB8GBxo",
+      "name": "All Time Low",
+      "type": "artist",
+      "uri": "spotify:artist:46gyXjRIvN1NL1eCB8GBxo"
+    },
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/6S2OmqARrzebs0tKUEyXyp"
+      },
+      "href": "https://api.spotify.com/v1/artists/6S2OmqARrzebs0tKUEyXyp",
+      "id": "6S2OmqARrzebs0tKUEyXyp",
+      "name": "Demi Lovato",
+      "type": "artist",
+      "uri": "spotify:artist:6S2OmqARrzebs0tKUEyXyp"
+    },
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/2cFrymmkijnjDg9SS92EPM"
+      },
+      "href": "https://api.spotify.com/v1/artists/2cFrymmkijnjDg9SS92EPM",
+      "id": "2cFrymmkijnjDg9SS92EPM",
+      "name": "blackbear",
+      "type": "artist",
+      "uri": "spotify:artist:2cFrymmkijnjDg9SS92EPM"
+    }
+  ],
+  "tracks": {
+    "href": "https://api.spotify.com/v1/albums/1EGlv1JGCUPolWU4qv7bsK/tracks?offset=0&limit=50&market=IN&locale=en-US,en;q%3D0.5",
+    "limit": 50,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "total": 2,
+    "items": [
+      {
+        "artists": [
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/46gyXjRIvN1NL1eCB8GBxo"
+            },
+            "href": "https://api.spotify.com/v1/artists/46gyXjRIvN1NL1eCB8GBxo",
+            "id": "46gyXjRIvN1NL1eCB8GBxo",
+            "name": "All Time Low",
+            "type": "artist",
+            "uri": "spotify:artist:46gyXjRIvN1NL1eCB8GBxo"
+          },
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/6S2OmqARrzebs0tKUEyXyp"
+            },
+            "href": "https://api.spotify.com/v1/artists/6S2OmqARrzebs0tKUEyXyp",
+            "id": "6S2OmqARrzebs0tKUEyXyp",
+            "name": "Demi Lovato",
+            "type": "artist",
+            "uri": "spotify:artist:6S2OmqARrzebs0tKUEyXyp"
+          },
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2cFrymmkijnjDg9SS92EPM"
+            },
+            "href": "https://api.spotify.com/v1/artists/2cFrymmkijnjDg9SS92EPM",
+            "id": "2cFrymmkijnjDg9SS92EPM",
+            "name": "blackbear",
+            "type": "artist",
+            "uri": "spotify:artist:2cFrymmkijnjDg9SS92EPM"
+          }
+        ],
+        "disc_number": 1,
+        "duration_ms": 174424,
+        "explicit": true,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/50DMJJpAeQv4fIpxZvQz2e"
+        },
+        "href": "https://api.spotify.com/v1/tracks/50DMJJpAeQv4fIpxZvQz2e",
+        "id": "50DMJJpAeQv4fIpxZvQz2e",
+        "is_playable": true,
+        "name": "Monsters (feat. Demi Lovato and blackbear)",
+        "preview_url": null,
+        "track_number": 1,
+        "type": "track",
+        "uri": "spotify:track:50DMJJpAeQv4fIpxZvQz2e",
+        "is_local": false
+      },
+      {
+        "artists": [
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/46gyXjRIvN1NL1eCB8GBxo"
+            },
+            "href": "https://api.spotify.com/v1/artists/46gyXjRIvN1NL1eCB8GBxo",
+            "id": "46gyXjRIvN1NL1eCB8GBxo",
+            "name": "All Time Low",
+            "type": "artist",
+            "uri": "spotify:artist:46gyXjRIvN1NL1eCB8GBxo"
+          },
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/2cFrymmkijnjDg9SS92EPM"
+            },
+            "href": "https://api.spotify.com/v1/artists/2cFrymmkijnjDg9SS92EPM",
+            "id": "2cFrymmkijnjDg9SS92EPM",
+            "name": "blackbear",
+            "type": "artist",
+            "uri": "spotify:artist:2cFrymmkijnjDg9SS92EPM"
+          }
+        ],
+        "disc_number": 1,
+        "duration_ms": 174067,
+        "explicit": true,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/434dfr9k1ApCKG8KTCC7El"
+        },
+        "href": "https://api.spotify.com/v1/tracks/434dfr9k1ApCKG8KTCC7El",
+        "id": "434dfr9k1ApCKG8KTCC7El",
+        "is_playable": true,
+        "name": "Monsters (feat. blackbear)",
+        "preview_url": null,
+        "track_number": 2,
+        "type": "track",
+        "uri": "spotify:track:434dfr9k1ApCKG8KTCC7El",
+        "is_local": false
+      }
+    ]
+  },
+  "copyrights": [
+    {
+      "text": "A Fueled By Ramen release, © 2020 Elektra Records LLC.",
+      "type": "C"
+    },
+    {
+      "text": "A Fueled By Ramen release, ℗ 2020 Elektra Records LLC.",
+      "type": "P"
+    }
+  ],
+  "external_ids": {
+    "upc": "075679794758"
+  },
+  "genres": [],
+  "label": "Fueled By Ramen",
+  "popularity": 53
+}
