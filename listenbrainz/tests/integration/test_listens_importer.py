@@ -173,6 +173,38 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         data = response.json
         self.assertEqual(len(data), 0)
 
+    def test_api_existing_import(self):
+        from_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        to_date = datetime.now(tz=timezone.utc)
+        data = {
+            "service": "spotify",
+            "file": self.create_empty_zip(),
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+
+        data = {
+            "service": "spotify",
+            "file": self.create_empty_zip(),
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "An import task is already in progress!")
+
     def test_api_invalid_service(self):
         response = self.client.post(
             self.custom_url_for("import_listens_api_v1.create_import_task"),
