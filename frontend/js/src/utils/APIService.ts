@@ -32,7 +32,9 @@ export default class APIService {
     userNames: Array<string>,
     limit?: number
   ): Promise<Array<Listen>> => {
-    const userNamesForQuery: string = userNames.map(encodeURIComponent).join(",");
+    const userNamesForQuery: string = userNames
+      .map(encodeURIComponent)
+      .join(",");
 
     let query = `${this.APIBaseURI}/users/${userNamesForQuery}/recent-listens`;
 

@@ -1458,7 +1458,9 @@ export default class YearInMusic extends React.Component<
                     <Link
                       key={`follow-user-${followedUser}`}
                       className="buddy content-card card"
-                      to={`/user/${followedUser}/year-in-music/2024/`}
+                      to={`/user/${encodeURIComponent(
+                        followedUser
+                      )}/year-in-music/2024/`}
                     >
                       <div className="img-container">
                         <img

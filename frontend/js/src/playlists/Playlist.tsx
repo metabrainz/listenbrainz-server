@@ -413,7 +413,11 @@ export default function PlaylistPage() {
             <div>
               {customFields?.public ? "Public " : "Private "}
               playlist by{" "}
-              <Link to={sanitizeUrl(`/user/${playlist.creator}/playlists/`)}>
+              <Link
+                to={sanitizeUrl(
+                  `/user/${encodeURIComponent(playlist.creator)}/playlists/`
+                )}
+              >
                 {playlist.creator}
               </Link>
             </div>
