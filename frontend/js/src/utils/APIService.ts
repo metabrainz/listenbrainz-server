@@ -608,7 +608,9 @@ export default class APIService {
   ): Promise<UserArtistEvolutionActivityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/artist-evolution-activity`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/artist-evolution-activity`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/artist-evolution-activity`;
     }
