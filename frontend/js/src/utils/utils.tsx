@@ -250,7 +250,7 @@ const searchForFunkwhaleTrack = async (
         artistCredits = candidate.artist_credit;
         // For search purposes, combine artist credits (without joinphrases)
         candidateArtistName = candidate.artist_credit
-          .map((credit: any) => credit.credit || credit.name || "")
+          .map((credit: any) => credit.credit || credit.artist.name || "")
           .filter((name: string) => name.trim())
           .join(" ");
       } else if (
@@ -260,7 +260,9 @@ const searchForFunkwhaleTrack = async (
         // Single artist_credit object format
         artistCredits = [candidate.artist_credit];
         candidateArtistName =
-          candidate.artist_credit.credit || candidate.artist_credit.name || "";
+          candidate.artist_credit.credit ||
+          candidate.artist_credit.artist.name ||
+          "";
       } else if (candidate.artist?.name) {
         // Legacy artist format - convert to artist_credit-like structure
         artistCredits = [

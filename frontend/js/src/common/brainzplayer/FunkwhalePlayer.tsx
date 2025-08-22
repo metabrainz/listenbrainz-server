@@ -219,11 +219,12 @@ export default class FunkwhalePlayer
   };
 
   getTrackArtworkUrl = (track?: FunkwhaleTrack): string | null => {
-    if (!track?.album?.cover) return null;
+    if (!track?.album?.cover?.urls) return null;
     return (
-      track.album.cover.large ||
-      track.album.cover.medium ||
-      track.album.cover.small ||
+      track.album.cover.urls.large_square_crop ||
+      track.album.cover.urls.medium_square_crop ||
+      track.album.cover.urls.small_square_crop ||
+      track.album.cover.urls.original ||
       null
     );
   };
