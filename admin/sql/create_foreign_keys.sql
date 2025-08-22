@@ -151,4 +151,10 @@ ALTER TABLE user_data_export
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE user_data_import
+    ADD CONSTRAINT user_data_import_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;
