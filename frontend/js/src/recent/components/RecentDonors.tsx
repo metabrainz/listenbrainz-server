@@ -46,7 +46,9 @@ function RecentDonorsCard(props: RecentDonorsCardProps) {
                       />
                     ) : (
                       <Link
-                        to={`https://musicbrainz.org/user/${donor.musicbrainz_id}`}
+                        to={`https://musicbrainz.org/user/${encodeURIComponent(
+                          donor.musicbrainz_id
+                        )}`}
                         className="user-link"
                         target="_blank"
                         rel="noopener noreferrer"

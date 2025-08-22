@@ -408,9 +408,9 @@ export default function FreshReleases() {
                     NiceModal.show(SyndicationFeedModal, {
                       feedTitle: `${currentUser.name}'s Fresh Releases`,
                       options: [],
-                      baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                      baseUrl: `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
                         currentUser.name
-                      }/fresh-releases`,
+                      )}/fresh-releases`,
                     });
                   }
                 }}

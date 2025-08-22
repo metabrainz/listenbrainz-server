@@ -146,7 +146,9 @@ function Donors() {
                     />
                   ) : (
                     <Link
-                      to={`https://musicbrainz.org/user/${donor.musicbrainz_id}`}
+                      to={`https://musicbrainz.org/user/${encodeURIComponent(
+                        donor.musicbrainz_id
+                      )}`}
                       className="donor-name"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -173,7 +175,9 @@ function Donors() {
                   {donor.listenCount ? (
                     <Link
                       className="listen-item"
-                      to={`/user/${donor.musicbrainz_id}/stats/?range=all_time`}
+                      to={`/user/${encodeURIComponent(
+                        donor.musicbrainz_id
+                      )}/stats/?range=all_time`}
                     >
                       <FontAwesomeIcon icon={faMusic} />
                       {formatListenCount(donor.listenCount)} Listens
@@ -182,7 +186,9 @@ function Donors() {
                   {donor.playlistCount ? (
                     <Link
                       className="listen-item"
-                      to={`/user/${donor.musicbrainz_id}/playlists/`}
+                      to={`/user/${encodeURIComponent(
+                        donor.musicbrainz_id
+                      )}/playlists/`}
                     >
                       <FontAwesomeIcon icon={faListAlt} />
                       {formatListenCount(donor.playlistCount)} Playlists
