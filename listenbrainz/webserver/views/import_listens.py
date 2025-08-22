@@ -73,7 +73,7 @@ def create_import_task():
         raise APIBadRequest("File type not allowed!")
 
     # add a unique ID to the filename to avoid collisions
-    saved_filename = str(uuid.uuid4()) + secure_filename(filename)
+    saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)
     save_path = os.path.join(current_app.config["UPLOAD_FOLDER"], saved_filename)
 
     try:

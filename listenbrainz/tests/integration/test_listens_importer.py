@@ -1,6 +1,7 @@
 import io
 import json
 import os.path
+import shutil
 import zipfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -18,6 +19,10 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         super().setUp()
         self.user = db_user.get_or_create(self.db_conn, 1850, "listens-import")
         db_user.agree_to_gdpr(self.db_conn, self.user["musicbrainz_id"])
+
+    def tearDown(self):
+        shutil.rmtree(self.app.config["UPLOAD_FOLDER"], ignore_errors=True)
+        super().tearDown()
 
     def create_zip(self, name, items: list[tuple[str, str]]) -> io.BytesIO:
         buffer = io.BytesIO()
@@ -37,7 +42,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
         from listenbrainz.metadata_cache.store import insert
         insert(self.ts_conn.connection.cursor(), "spotify_cache", album, now, expires)
-        self.ts_conn.commit()
+        self.ts_conn.connection.commit()
 
     def create_empty_zip(self):
         return self.create_zip("empty.zip", [])
@@ -230,6 +235,43 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertTrue(
             os.path.abspath(response.json["file_path"])
             .startswith(self.app.config["UPLOAD_FOLDER"])
+        )
+
+    def test_same_name_file_does_not_override(self):
+        from_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        to_date = datetime.now(tz=timezone.utc)
+        data = {
+            "service": "spotify",
+            "file": self.create_empty_zip(),
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+
+        user2 = db_user.get_or_create(self.db_conn, 1851, "listens-import2")
+        data = {
+            "service": "spotify",
+            "file": self.create_empty_zip(),
+            "from_date": from_date.isoformat(),
+            "to_date": to_date.isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user2['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+
+        self.assertEqual(
+            len(list(Path(self.app.config["UPLOAD_FOLDER"]).iterdir())),
+            2
         )
 
     def test_import_task_auth(self):

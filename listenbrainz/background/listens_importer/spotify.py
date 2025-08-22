@@ -144,7 +144,7 @@ class SpotifyListensImporter(BaseListensImporter):
             WHERE t.track_id = '50DMJJpAeQv4fIpxZvQz2e';
         """
         result = self.ts_conn.execute(text(query), {"track_ids": spotify_track_ids})
-        return {r.track_id: dict(r) for r in result}
+        return {r.track_id: dict(r) for r in result.mappings()}
 
     def _get_spotify_data_from_api(self, spotify_track_ids: list[str]) -> dict[str, dict[str, Any]]:
         """Get Spotify track data from the API for multiple track IDs."""
