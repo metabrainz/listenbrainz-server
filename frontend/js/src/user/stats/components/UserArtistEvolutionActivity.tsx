@@ -76,9 +76,10 @@ function getAllTimeYearLabels(opts: {
   from_ts?: number;
   to_ts?: number;
 }) {
+  // Simpler + clearer: compute start/end with date-fns and cap end at the current year.
   const now = new Date();
 
-  let start;
+  let start: Date;
   if (opts.from_ts) {
     start = startOfYear(new Date(opts.from_ts * 1000));
   } else if (opts.offsetYear) {
@@ -87,20 +88,10 @@ function getAllTimeYearLabels(opts: {
     start = startOfYear(now);
   }
 
-  const end = opts.to_ts
-    ? endOfYear(new Date(opts.to_ts * 1000))
-    : endOfYear(now);
+  const endRaw = endOfYear(opts.to_ts ? new Date(opts.to_ts * 1000) : now);
+  const end = endRaw > now ? endOfYear(now) : endRaw;
 
-  const minStart = opts.offsetYear
-    ? startOfYear(new Date(opts.offsetYear, 0, 1))
-    : start;
-
-  const clampedStart = start < minStart ? minStart : start;
-  const clampedEnd = end > now ? endOfYear(now) : end;
-
-  return eachYearOfInterval({ start: clampedStart, end: clampedEnd }).map((d) =>
-    format(d, "yyyy")
-  );
+  return eachYearOfInterval({ start, end }).map((d) => format(d, "yyyy"));
 }
 
 const getAxisFormatter = (
@@ -378,6 +369,8 @@ export default function ArtistEvolutionActivityStreamGraph(
             <div className="col-xs-12">
               <div
                 style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
+                data-testid="artist-evolution-stream"
+                aria-label="artist-evolution-stream"
               >
                 <ResponsiveStream
                   data={chartData}
