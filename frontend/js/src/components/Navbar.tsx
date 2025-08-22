@@ -32,6 +32,7 @@ function Navbar() {
     toggleSidebar();
     navigate(`/search/?search_term=${encodeURIComponent(searchInput)}`);
   };
+  const encodedUsername = encodeURIComponent(currentUser.name);
 
   return (
     <nav role="navigation">
@@ -48,9 +49,7 @@ function Navbar() {
         <Link
           className="navbar-logo"
           to={
-            currentUser?.name
-              ? `/user/${currentUser.name}/`
-              : "/?redirect=false"
+            currentUser?.name ? `/user/${encodedUsername}/` : "/?redirect=false"
           }
           onClick={toggleSidebar}
         >
@@ -82,7 +81,7 @@ function Navbar() {
             className="navbar-logo"
             to={
               currentUser?.name
-                ? `/user/${currentUser.name}/`
+                ? `/user/${encodedUsername}/`
                 : "/?redirect=false"
             }
             onClick={toggleSidebar}
@@ -99,7 +98,7 @@ function Navbar() {
                   Feed
                 </NavLink>
                 <NavLink
-                  to={`/user/${currentUser.name}/`}
+                  to={`/user/${encodedUsername}/`}
                   onClick={toggleSidebar}
                 >
                   Dashboard

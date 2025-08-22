@@ -25,9 +25,17 @@ declare type FunkwhaleTrack = {
     title: string;
     mbid?: string;
     cover?: {
-      large?: string;
-      medium?: string;
-      small?: string;
+      uuid?: string;
+      size?: number;
+      mimetype?: string;
+      creation_date?: string;
+      urls?: {
+        source?: string | null;
+        original?: string;
+        small_square_crop?: string;
+        medium_square_crop?: string;
+        large_square_crop?: string;
+      };
     };
   };
   listen_url: string;
@@ -50,9 +58,17 @@ declare type FunkwhaleAlbum = {
   };
   mbid?: string;
   cover?: {
-    large?: string;
-    medium?: string;
-    small?: string;
+    uuid?: string;
+    size?: number;
+    mimetype?: string;
+    creation_date?: string;
+    urls?: {
+      source?: string | null;
+      original?: string;
+      small_square_crop?: string;
+      medium_square_crop?: string;
+      large_square_crop?: string;
+    };
   };
   creation_date: string;
   modification_date: string;

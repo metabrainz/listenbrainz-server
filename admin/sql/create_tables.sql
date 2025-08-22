@@ -243,6 +243,17 @@ CREATE TABLE user_data_export (
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_data_import (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    service             user_data_import_service_type NOT NULL,
+    metadata            JSONB,
+    file_path           TEXT NOT NULL,
+    from_date           TIMESTAMPTZ NOT NULL DEFAULT 'epoch',
+    to_date             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE funkwhale_servers (
     id                  INTEGER GENERATED ALWAYS AS IDENTITY,
     host_url            TEXT NOT NULL UNIQUE,

@@ -478,16 +478,20 @@ export default function Listen() {
                 updateFollowingList={updateFollowingList}
               />
             )}
-            <Link
-              to={`https://musicbrainz.org/user/${user?.name}`}
-              className="btn btn-info musicbrainz-profile-button"
-            >
-              <img
-                src="/static/img/musicbrainz-16.svg"
-                alt="MusicBrainz Logo"
-              />{" "}
-              MusicBrainz
-            </Link>
+            {user && (
+              <Link
+                to={`https://musicbrainz.org/user/${encodeURIComponent(
+                  user.name
+                )}`}
+                className="btn btn-info musicbrainz-profile-button"
+              >
+                <img
+                  src="/static/img/musicbrainz-16.svg"
+                  alt="MusicBrainz Logo"
+                />{" "}
+                MusicBrainz
+              </Link>
+            )}
             {user && !isCurrentUsersPage && (
               <ReportUserButton
                 user={user}
@@ -650,9 +654,11 @@ export default function Listen() {
                       ],
                     },
                   ],
-                  baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                    user?.name
-                  }/listens`,
+                  baseUrl: user?.name
+                    ? `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+                        user.name
+                      )}/listens`
+                    : "",
                 });
               }}
             >

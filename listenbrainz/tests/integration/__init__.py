@@ -76,7 +76,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         IntegrationTestCase.tearDown(self)
         TimescaleTestCase.tearDown(self)
 
-    def wait_for_query_to_have_items(self, url, num_items, **kwargs):
+    def wait_for_query_to_have_items(self, url, num_items, attempts=10, **kwargs):
         """Try the provided query in a loop until the required number of returned listens is available.
         In integration tests, we send data through a number of services before it hits the database,
         so we often have to wait. In some cases this takes longer than others, so we loop a few
@@ -90,7 +90,7 @@ class ListenAPIIntegrationTestCase(IntegrationTestCase, TimescaleTestCase):
         Returns the result from a flask client GET
         """
         count = 0
-        while count < 10:
+        while count < attempts:
             count += 1
 
             response = self.client.get(url, **kwargs)

@@ -150,9 +150,9 @@ export default function RecommendationPlaylistSettings({
                   NiceModal.show(SyndicationFeedModal, {
                     feedTitle: `Recommendations`,
                     options: [],
-                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${
+                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
                       userName ?? extension?.created_for
-                    }/recommendations?recommendation_type=${sourcePatch}`,
+                    )}/recommendations?recommendation_type=${sourcePatch}`,
                   });
                 }}
               >
