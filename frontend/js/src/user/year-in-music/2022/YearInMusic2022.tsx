@@ -490,9 +490,8 @@ export default class YearInMusic extends React.Component<
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
-    const linkToThisPage = `https://listenbrainz.org/user/${encodeURIComponent(
-      user.name
-    )}/year-in-music/2022`;
+    const encodedUsername = encodeURIComponent(user.name);
+    const linkToThisPage = `https://listenbrainz.org/user/${encodedUsername}/year-in-music/2022`;
     return (
       <div id="year-in-music" className="yim-2022">
         <SEO year={2022} userName={user?.name} />
@@ -627,11 +626,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`${
-                  APIService.APIBaseURI
-                }/art/year-in-music/2022/${encodeURIComponent(
-                  user.name
-                )}?image=albums`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=albums`}
                 shareUrl={`${linkToThisPage}#top-albums`}
                 // shareText="Check out my"
                 shareTitle="My top albums of 2022"
@@ -694,11 +689,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`${
-                      APIService.APIBaseURI
-                    }/art/year-in-music/2022/${encodeURIComponent(
-                      user.name
-                    )}?image=tracks`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=tracks`}
                     shareUrl={`${linkToThisPage}#top-tracks`}
                     // shareText="Check out my"
                     shareTitle="My top tracks of 2022"
@@ -764,11 +755,7 @@ export default class YearInMusic extends React.Component<
                 </div>
                 <div className="yim-share-button-container">
                   <MagicShareButton
-                    svgURL={`${
-                      APIService.APIBaseURI
-                    }/art/year-in-music/2022/${encodeURIComponent(
-                      user.name
-                    )}?image=artists`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=artists`}
                     shareUrl={`${linkToThisPage}#top-artists`}
                     // shareText="Check out my"
                     shareTitle="My top artists of 2022"
@@ -787,11 +774,7 @@ export default class YearInMusic extends React.Component<
             </div>
             <div className="yim-share-button-container">
               <MagicShareButton
-                svgURL={`${
-                  APIService.APIBaseURI
-                }/art/year-in-music/2022/${encodeURIComponent(
-                  user.name
-                )}?image=stats`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/2022/${encodedUsername}?image=stats`}
                 shareUrl={`${linkToThisPage}#stats`}
                 shareTitle="My music listening in 2022"
                 fileName={`${user.name}-stats-2022`}
@@ -1236,9 +1219,7 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <Link
-              to={`/user/${encodeURIComponent(user.name)}/year-in-music/2021/`}
-            >
+            <Link to={`/user/${encodedUsername}/year-in-music/2021/`}>
               2021
             </Link>
           </div>
