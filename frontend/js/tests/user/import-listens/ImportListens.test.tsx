@@ -1,5 +1,5 @@
 import * as React from "react";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { HttpResponse, http } from "msw";
@@ -87,25 +87,35 @@ describe("ImportListensPage", () => {
     );
     await waitFor(() => {
       expect(screen.getByText(/start import from/i)).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
       expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
       expect(screen.getByText(/select Service/i)).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
       expect(screen.getByText(/choose a File/i)).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
       expect(screen.getByRole("button", { name: /import listens/i })).toBeInTheDocument();
-      
     });
   });
+
+
+  it("enables the import button after a file is uploaded", async () => {
+    renderWithProviders(
+      <RouterProvider router={router} />,
+      {},
+      { wrapper: ReactQueryWrapper },
+      false
+    );
+    const importButton = screen.getByRole("button", { name: /import listens/i });
+    expect(importButton).toBeDisabled();
+
+    const file = new File(['{ "foo": "bar" }'], 'test.json', { type: 'application/json' });
+    const input = screen.getByLabelText(/choose a file/i);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      const importButtonAfter = screen.getByRole("button", { name: /import listens/i });
+      expect(importButtonAfter).not.toBeDisabled();
+    });
+  });
+
   
   it("renders imports with correct data", async () => {
     renderWithProviders(
@@ -116,15 +126,8 @@ describe("ImportListensPage", () => {
     );
     await waitFor(() => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
       expect(screen.getByText("August 11th, 2025")).toBeInTheDocument();
-      
-    });
-    await waitFor(() => {
       expect(screen.getByText("-")).toBeInTheDocument();
-      
     });
     
       

@@ -11,7 +11,7 @@ import {
   faChevronCircleRight,
   faRefresh,
 } from "@fortawesome/free-solid-svg-icons";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
@@ -75,13 +75,14 @@ function renderImport(
           </dd>
           <dt className="col-4">Start date</dt>
           <dd className="col-8">
-            {im.from_date && new Date(im.from_date).getTime() !== 0
+            {isValid(new Date(im.from_date)) &&
+            new Date(im.from_date).getTime() !== 0
               ? format(new Date(im.from_date), "PPP")
               : "-"}
           </dd>
           <dt className="col-4">End date</dt>
           <dd className="col-8">
-            {im.from_date ? format(im.to_date, "PPP") : "-"}
+            {isValid(new Date(im.to_date)) ? format(im.to_date, "PPP") : "-"}
           </dd>
         </dl>
       </details>
@@ -159,6 +160,7 @@ export default function ImportListens() {
 
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
+  const [fileSelected, setFileSelected] = React.useState<File | null>(null);
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -402,26 +404,32 @@ export default function ImportListens() {
           <form onSubmit={createImport}>
             <div className="flex flex-wrap" style={{ gap: "1em" }}>
               <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="datetime">
+                <label className="form-label" htmlFor="file-upload">
                   Choose a File:
                 </label>
                 <input
                   type="file"
+                  id="file-upload"
                   className="form-control"
                   name="file"
                   accept=".zip,.csv,.json,.jsonl"
                   required
+                  onChange={(e) => setFileSelected(e.target.files?.[0] ?? null)}
                 />
               </div>
 
               <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="datetime">
+                <label className="form-label" htmlFor="service">
                   Select Service:
                 </label>
-                <select className="form-select" name="service" required>
+                <select
+                  className="form-select"
+                  id="service"
+                  name="service"
+                  required
+                >
                   <option value="spotify">Spotify</option>
                   <option value="listenbrainz">Listenbrainz</option>
-                  <option value="applemusic">Apple Music</option>
                 </select>
               </div>
 
@@ -431,6 +439,7 @@ export default function ImportListens() {
                 </label>
                 <input
                   type="date"
+                  id="start-datetime"
                   className="form-control"
                   max={new Date().toISOString()}
                   name="from_date"
@@ -444,6 +453,7 @@ export default function ImportListens() {
                 </label>
                 <input
                   type="date"
+                  id="end-datetime"
                   className="form-control"
                   max={new Date().toISOString()}
                   name="to_date"
@@ -455,7 +465,7 @@ export default function ImportListens() {
                 <button
                   type="submit"
                   className="btn btn-success"
-                  disabled={hasAnImportInProgress}
+                  disabled={hasAnImportInProgress || !fileSelected}
                 >
                   Import Listens
                 </button>
