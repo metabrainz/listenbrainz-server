@@ -157,4 +157,16 @@ ALTER TABLE user_data_import
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE funkwhale_tokens
+    ADD CONSTRAINT funkwhale_tokens_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE funkwhale_tokens
+    ADD CONSTRAINT funkwhale_tokens_server_id_foreign_key
+    FOREIGN KEY (funkwhale_server_id)
+    REFERENCES funkwhale_servers (id)
+    ON DELETE CASCADE;
+
 COMMIT;

@@ -254,6 +254,24 @@ CREATE TABLE user_data_import (
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE funkwhale_servers (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    host_url            TEXT NOT NULL UNIQUE,
+    client_id           TEXT NOT NULL,
+    client_secret       TEXT NOT NULL,
+    scopes              TEXT NOT NULL,
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE funkwhale_tokens (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    funkwhale_server_id INTEGER NOT NULL,
+    access_token        TEXT NOT NULL,
+    refresh_token       TEXT NOT NULL,
+    token_expiry        TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
