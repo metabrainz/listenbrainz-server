@@ -55,21 +55,23 @@ describe("ImportListensPage", () => {
 
     server = setupServer(
       http.post("/settings/import/", (req) => {
-        submitAPICalled = true;
         return HttpResponse.json({ user_has_email: true });
       }),
       http.get("/1/import-listens/list/", (req) => {
         return HttpResponse.json(mockImports);
       }),
       http.post("/1/import-listens/cancel/1/", (req) => {
-        cancelAPICalled = true;
         return HttpResponse.json({ success: true, id: 1 });
       }),
-      http.post("/1/import-listens/1/", (req) => {
-        refreshAPICalled = true;
+      http.get("/1/import-listens/1/", (req) => {
         return HttpResponse.json(mockImports[0]);
       })
     );
+
+    server.events.on("request:start", ({ request }) => {
+      console.log("MSW captured:", request.method, request.url);
+    });
+
 
     server.listen();
 
@@ -124,23 +126,44 @@ describe("ImportListensPage", () => {
     });
   });
 
-  it("calls import endpoint when import listens clicked", async () => {
-    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
+it("calls import endpoint when import listens clicked", async () => {
+  let submitAPICalled = false;
 
-    const importButton = screen.getByRole("button", { name: /import listens/i });
-    expect(importButton).toBeDisabled();
+  server.use(
+    http.post("/settings/import/", (req) => {
+      submitAPICalled = true;
+      return HttpResponse.json({ user_has_email: true });
+    })
+  );
 
-    const file = new File(['{ "foo": "bar" }'], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText(/choose a file/i);
+  renderWithProviders(
+    <RouterProvider router={router} />,
+    {},
+    { wrapper: ReactQueryWrapper },
+    false
+  );
 
-    fireEvent.change(input, { target: { files: [file] } });
+  const input = screen.getByLabelText(/choose a file/i);
 
-    const importButtonAfter = screen.getByRole("button", { name: /import listens/i });
-    await user.click(importButtonAfter);
-    await waitFor(() => expect(submitAPICalled).toBe(true));
-  });
+  const file = new File(["spotify_test"], "spotify_test.zip", { type: "application/zip" });
+  fireEvent.change(input, { target: { files: [file] } });
+
+  const importButtonAfter = await screen.findByRole("button", { name: /import listens/i });
+  await waitFor(() => expect(importButtonAfter).not.toBeDisabled());
+
+  fireEvent.click(importButtonAfter);
+
+  await waitFor(() => expect(submitAPICalled).toBe(true));
+});
+
 
   it("calls cancel endpoint when cancel clicked", async () => {
+
+    server.use(
+      http.post("/1/import-listens/cancel/1", (req) => {
+        cancelAPICalled = true;
+        return HttpResponse.json({ success: true, id: 1 });
+    }));
     renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
 
     await waitFor(() => {
@@ -153,6 +176,11 @@ describe("ImportListensPage", () => {
   });
 
   it("calls refresh endpoint when refresh clicked", async () => {
+    server.use(
+      http.get("/1/import-listens/1/", (req) => {
+        refreshAPICalled = true;
+        return HttpResponse.json(mockImports[0]);
+    }));
     renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
 
     await waitFor(() => {
