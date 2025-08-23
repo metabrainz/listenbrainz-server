@@ -66,4 +66,14 @@ CREATE INDEX user_data_import_user_id_idx ON user_data_import (user_id);
 
 CREATE UNIQUE INDEX user_data_import_deduplicate_waiting_idx ON user_data_import (user_id, service) WHERE metadata->>'status' IN ('waiting', 'in_progress');
 
+CREATE INDEX host_url_ndx_funkwhale_servers ON funkwhale_servers (host_url);
+CREATE INDEX user_id_ndx_funkwhale_tokens ON funkwhale_tokens (user_id);
+CREATE INDEX server_id_ndx_funkwhale_tokens ON funkwhale_tokens (funkwhale_server_id);
+CREATE UNIQUE INDEX unique_user_server_funkwhale_tokens ON funkwhale_tokens (user_id, funkwhale_server_id);
+
+CREATE INDEX host_url_ndx_navidrome_servers ON navidrome_servers (host_url);
+CREATE INDEX user_id_ndx_navidrome_tokens ON navidrome_tokens (user_id);
+CREATE INDEX server_id_ndx_navidrome_tokens ON navidrome_tokens (navidrome_server_id);
+CREATE UNIQUE INDEX unique_user_server_navidrome_tokens ON navidrome_tokens (user_id, navidrome_server_id);
+
 COMMIT;

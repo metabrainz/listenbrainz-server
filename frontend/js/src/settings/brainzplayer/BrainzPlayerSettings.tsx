@@ -1,4 +1,5 @@
 import * as React from "react";
+import { union } from "lodash";
 import {
   faSpotify,
   faApple,
@@ -17,9 +18,12 @@ import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
+import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
+import faFunkwhale from "../../common/icons/faFunkwhale";
+import { faNavidrome } from "../../common/icons/faNavidrome";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -42,6 +46,16 @@ export const dataSourcesInfo = {
     icon: faApple,
     color: "#000000",
   },
+  funkwhale: {
+    name: "Funkwhale",
+    icon: faFunkwhale,
+    color: "#009FE3",
+  },
+  navidrome: {
+    name: "Navidrome",
+    icon: faNavidrome,
+    color: "#0084ff",
+  },
 } as const;
 
 export type DataSourceKey = keyof typeof dataSourcesInfo;
@@ -51,6 +65,8 @@ export const defaultDataSourcesPriority = [
   "spotify",
   "appleMusic",
   "soundcloud",
+  "funkwhale",
+  "navidrome",
   "youtube",
 ] as DataSourceKey[];
 
@@ -59,6 +75,8 @@ function BrainzPlayerSettings() {
     spotifyAuth,
     soundcloudAuth,
     appleAuth,
+    funkwhaleAuth,
+    navidromeAuth,
     APIService,
     currentUser,
   } = React.useContext(GlobalAppContext);
@@ -78,15 +96,26 @@ function BrainzPlayerSettings() {
     userPreferences?.brainzplayer?.appleMusicEnabled ??
       AppleMusicPlayer.hasPermissions(appleAuth)
   );
+  const [funkwhaleEnabled, setFunkwhaleEnabled] = React.useState(
+    userPreferences?.brainzplayer?.funkwhaleEnabled ??
+      FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+  );
+  const [navidromeEnabled, setNavidromeEnabled] = React.useState(
+    userPreferences?.brainzplayer?.navidromeEnabled ??
+      Boolean(navidromeAuth?.instance_url)
+  );
   const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
   );
 
+  // Combine saved priority list and default list to add any new music service at the end
   const [dataSourcesPriority, setDataSourcesPriority] = React.useState<
     DataSourceKey[]
   >(
-    userPreferences?.brainzplayer?.dataSourcesPriority ??
+    union(
+      userPreferences?.brainzplayer?.dataSourcesPriority ?? [],
       defaultDataSourcesPriority
+    )
   );
 
   const moveDataSource = (evt: any) => {
@@ -123,6 +152,8 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        funkwhaleEnabled,
+        navidromeEnabled,
         brainzplayerEnabled,
         dataSourcesPriority,
       });
@@ -136,6 +167,8 @@ function BrainzPlayerSettings() {
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          funkwhaleEnabled,
+          navidromeEnabled,
           brainzplayerEnabled,
           dataSourcesPriority,
         };
@@ -159,6 +192,8 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    funkwhaleEnabled,
+    navidromeEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
     APIService,
@@ -325,6 +360,95 @@ function BrainzPlayerSettings() {
           <br />
           <small>
             SoundCloud requires a free account.
+            <br />
+            Sign in on the{" "}
+            <Link to="/settings/music-services/details/">
+              &quot;connect services&quot; page
+            </Link>
+          </small>
+        </div>
+        <div
+          className="mb-4"
+          data-tip
+          data-tip-disable={
+            funkwhaleEnabled || FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+          }
+          data-for="login-first"
+        >
+          <Switch
+            id="enable-funkwhale"
+            value="funkwhale"
+            disabled={
+              !funkwhaleEnabled &&
+              !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+            }
+            checked={funkwhaleEnabled}
+            onChange={(e) => setFunkwhaleEnabled(!funkwhaleEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !funkwhaleEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faFunkwhale as IconProp}
+                    color={
+                      funkwhaleEnabled ? dataSourcesInfo.funkwhale.color : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Funkwhale</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Funkwhale is a federated audio platform. You will need to connect a
+            Funkwhale instance.
+            <br />
+            Sign in on the{" "}
+            <Link to="/settings/music-services/details/">
+              &quot;connect services&quot; page
+            </Link>
+          </small>
+        </div>
+        <div
+          className="mb-4"
+          data-tip
+          data-tip-disable={
+            navidromeEnabled || Boolean(navidromeAuth?.instance_url)
+          }
+          data-for="login-first"
+        >
+          <Switch
+            id="enable-navidrome"
+            value="navidrome"
+            disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
+            checked={navidromeEnabled}
+            onChange={(e) => setNavidromeEnabled(!navidromeEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !navidromeEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faNavidrome as IconProp}
+                    color={
+                      navidromeEnabled ? dataSourcesInfo.navidrome.color : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Navidrome</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Navidrome is a self-hosted music streaming server. You will need to
+            connect a Navidrome instance.
             <br />
             Sign in on the{" "}
             <Link to="/settings/music-services/details/">

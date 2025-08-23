@@ -11,6 +11,7 @@ import {
   cloneDeep,
   debounce,
   omit,
+  union,
 } from "lodash";
 import * as React from "react";
 import { toast } from "react-toastify";
@@ -30,6 +31,8 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
+import FunkwhalePlayer from "./FunkwhalePlayer";
+import NavidromePlayer from "./NavidromePlayer";
 import {
   DataSourceKey,
   defaultDataSourcesPriority,
@@ -55,7 +58,9 @@ export type DataSourceTypes =
   | SpotifyPlayer
   | YoutubePlayer
   | SoundcloudPlayer
-  | AppleMusicPlayer;
+  | AppleMusicPlayer
+  | FunkwhalePlayer
+  | NavidromePlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -107,6 +112,12 @@ function isListenFromDatasource(
   if (datasource instanceof AppleMusicPlayer) {
     return AppleMusicPlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof FunkwhalePlayer) {
+    return FunkwhalePlayer.isListenFromThisService(listen);
+  }
+  if (datasource instanceof NavidromePlayer) {
+    return NavidromePlayer.isListenFromThisService(listen);
+  }
   return undefined;
 }
 
@@ -114,21 +125,66 @@ export default function BrainzPlayer() {
   // Global App Context
   const globalAppContext = React.useContext(GlobalAppContext);
   const {
+    APIService,
     currentUser,
-    youtubeAuth,
     spotifyAuth,
+    youtubeAuth,
     soundcloudAuth,
     appleAuth,
+    funkwhaleAuth,
+    navidromeAuth,
     userPreferences,
-    APIService,
   } = globalAppContext;
 
   const {
     refreshSpotifyToken,
     refreshYoutubeToken,
     refreshSoundcloudToken,
+    refreshFunkwhaleToken: apiRefreshFunkwhaleToken,
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
+
+  // Wrapper for funkwhale token refresh that gets the host URL from context
+  const refreshFunkwhaleToken = React.useCallback(async () => {
+    const hostUrl = funkwhaleAuth?.instance_url;
+    if (!hostUrl) {
+      throw new Error("No Funkwhale instance URL found in context");
+    }
+    if (!currentUser?.auth_token) {
+      throw new Error("No user authentication token available");
+    }
+
+    try {
+      return await apiRefreshFunkwhaleToken(currentUser.auth_token, hostUrl);
+    } catch (error) {
+      // Check if this is an authentication error that requires reconnection
+      if (error.status === 401 || error.status === 403) {
+        const errorMessage = error.message || "";
+        if (
+          errorMessage.includes("no longer valid") ||
+          errorMessage.includes("reconnect") ||
+          errorMessage.includes("revoked authorization")
+        ) {
+          throw new Error(
+            "Funkwhale connection is no longer valid. Please reconnect to this server in your music service settings."
+          );
+        }
+        throw new Error(
+          "Funkwhale authentication failed. Please re-authenticate in your music service settings."
+        );
+      }
+      if (error.status === 503) {
+        throw new Error(
+          "Funkwhale service is temporarily unavailable. Please try again later."
+        );
+      }
+      throw new Error(`Token refresh failed: ${error.message}`);
+    }
+  }, [
+    apiRefreshFunkwhaleToken,
+    funkwhaleAuth?.instance_url,
+    currentUser?.auth_token,
+  ]);
 
   // Constants
   // By how much should we seek in the track?
@@ -143,6 +199,7 @@ export default function BrainzPlayer() {
     (userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
   // BrainzPlayerContext
@@ -164,6 +221,8 @@ export default function BrainzPlayer() {
   const {
     spotifyEnabled = true,
     appleMusicEnabled = true,
+    funkwhaleEnabled = true,
+    navidromeEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
     brainzplayerEnabled = true,
@@ -175,21 +234,32 @@ export default function BrainzPlayer() {
     appleMusicEnabled &&
       AppleMusicPlayer.hasPermissions(appleAuth) &&
       "appleMusic",
+    funkwhaleEnabled &&
+      FunkwhalePlayer.hasPermissions(funkwhaleAuth) &&
+      "funkwhale",
+    navidromeEnabled &&
+      NavidromePlayer.hasPermissions(navidromeAuth) &&
+      "navidrome",
     soundcloudEnabled &&
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
     youtubeEnabled && "youtube",
   ].filter(Boolean) as Array<DataSourceKey>;
 
-  const sortedDataSources = dataSourcesPriority.filter((key) =>
-    enabledDataSources.includes(key)
-  );
+  // Combine saved priority list and default list to add any new music service at the end
+  // then filter out disabled datasources (new ones will be enabled by default)
+  const sortedDataSources = union(
+    dataSourcesPriority,
+    defaultDataSourcesPriority
+  ).filter((key) => enabledDataSources.includes(key));
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
   const youtubePlayerRef = React.useRef<YoutubePlayer>(null);
   const soundcloudPlayerRef = React.useRef<SoundcloudPlayer>(null);
   const appleMusicPlayerRef = React.useRef<AppleMusicPlayer>(null);
+  const funkwhalePlayerRef = React.useRef<FunkwhalePlayer>(null);
+  const navidromePlayerRef = React.useRef<NavidromePlayer>(null);
   const dataSourceRefs: Array<React.RefObject<
     DataSourceTypes
   >> = React.useMemo(() => {
@@ -207,6 +277,12 @@ export default function BrainzPlayer() {
           break;
         case "appleMusic":
           dataSources.push(appleMusicPlayerRef);
+          break;
+        case "funkwhale":
+          dataSources.push(funkwhalePlayerRef);
+          break;
+        case "navidrome":
+          dataSources.push(navidromePlayerRef);
           break;
         default:
         // do nothing
@@ -968,6 +1044,12 @@ export default function BrainzPlayer() {
     ) {
       invalidateDataSource(soundcloudPlayerRef.current);
     }
+    if (
+      !NavidromePlayer.hasPermissions(navidromeAuth) &&
+      navidromePlayerRef?.current
+    ) {
+      invalidateDataSource(navidromePlayerRef.current);
+    }
     return () => {
       window.removeEventListener("storage", onLocalStorageEvent);
       window.removeEventListener("message", receiveBrainzPlayerMessage);
@@ -975,7 +1057,7 @@ export default function BrainzPlayer() {
       stopPlayerStateTimer();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spotifyAuth, soundcloudAuth]);
+  }, [spotifyAuth, soundcloudAuth, navidromeAuth]);
 
   const { pathname } = useLocation();
 
@@ -1084,6 +1166,53 @@ export default function BrainzPlayer() {
             onInvalidateDataSource={invalidateDataSource}
             ref={soundcloudPlayerRef}
             refreshSoundcloudToken={refreshSoundcloudToken}
+            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            onPlayerPausedChange={playerPauseChange}
+            onProgressChange={progressChange}
+            onDurationChange={durationChange}
+            onTrackInfoChange={throttledTrackInfoChange}
+            onTrackEnd={playNextTrack}
+            onTrackNotFound={failedToPlayTrack}
+            handleError={handleError}
+            handleWarning={handleWarning}
+            handleSuccess={handleSuccess}
+          />
+        )}
+        {userPreferences?.brainzplayer?.funkwhaleEnabled !== false && (
+          <FunkwhalePlayer
+            volume={brainzPlayerContextRef.current.volume}
+            show={
+              brainzPlayerContextRef.current.isActivated &&
+              dataSourceRefs[
+                brainzPlayerContextRef.current.currentDataSourceIndex
+              ]?.current instanceof FunkwhalePlayer
+            }
+            onInvalidateDataSource={invalidateDataSource}
+            ref={funkwhalePlayerRef}
+            refreshFunkwhaleToken={refreshFunkwhaleToken}
+            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            onPlayerPausedChange={playerPauseChange}
+            onProgressChange={progressChange}
+            onDurationChange={durationChange}
+            onTrackInfoChange={throttledTrackInfoChange}
+            onTrackEnd={playNextTrack}
+            onTrackNotFound={failedToPlayTrack}
+            handleError={handleError}
+            handleWarning={handleWarning}
+            handleSuccess={handleSuccess}
+          />
+        )}
+        {userPreferences?.brainzplayer?.navidromeEnabled !== false && (
+          <NavidromePlayer
+            volume={brainzPlayerContextRef.current.volume}
+            show={
+              brainzPlayerContextRef.current.isActivated &&
+              dataSourceRefs[
+                brainzPlayerContextRef.current.currentDataSourceIndex
+              ]?.current instanceof NavidromePlayer
+            }
+            onInvalidateDataSource={invalidateDataSource}
+            ref={navidromePlayerRef}
             playerPaused={brainzPlayerContextRef.current.playerPaused}
             onPlayerPausedChange={playerPauseChange}
             onProgressChange={progressChange}
