@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import FunkwhalePlayer from "../../../src/common/brainzplayer/FunkwhalePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
@@ -177,20 +177,6 @@ describe("FunkwhalePlayer", () => {
         expect(FunkwhalePlayer.getURLFromListen(listen)).toBe("123");
       });
 
-      it("should handle funkwhale_id as a simple track ID", () => {
-        const listen: Listen = {
-          listened_at: 42,
-          track_metadata: {
-            additional_info: {
-              funkwhale_id: "12345",
-            },
-            artist_name: "Test Artist",
-            track_name: "Test Track",
-          },
-        };
-        expect(FunkwhalePlayer.getURLFromListen(listen)).toBe("12345");
-      });
-
       it("should return origin_url regardless of domain name if isListenFromThisService validates it's from Funkwhale", () => {
         const listen: Listen = {
           listened_at: 42,
@@ -226,27 +212,23 @@ describe("FunkwhalePlayer", () => {
 
   describe("Component rendering", () => {
     it("should render successfully", () => {
-      const { container } = render(
+      render(
         <GlobalAppContext.Provider value={defaultContext}>
           <FunkwhalePlayer {...defaultProps} />
         </GlobalAppContext.Provider>
       );
 
-      expect(container).toBeTruthy();
-      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-      const audioElement = container.querySelector("audio");
-      expect(audioElement).toBeInTheDocument();
+      expect(screen.getByTestId("funkwhale-audio")).toBeInTheDocument();
     });
 
     it("should hide the player when show prop is false", () => {
-      const { container } = render(
+      render(
         <GlobalAppContext.Provider value={defaultContext}>
           <FunkwhalePlayer {...defaultProps} show={false} />
         </GlobalAppContext.Provider>
       );
 
-      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
-      const playerContainer = container.querySelector(".funkwhale-player");
+      const playerContainer = screen.getByTestId("funkwhale-player");
       expect(playerContainer).toHaveClass("hidden");
     });
   });

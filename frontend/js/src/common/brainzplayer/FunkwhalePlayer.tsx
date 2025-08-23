@@ -571,8 +571,16 @@ export default class FunkwhalePlayer
     const artworkUrl = this.getTrackArtworkUrl(currentTrack);
 
     return (
-      <div className={`funkwhale-player ${show ? "" : "hidden"}`}>
-        <audio ref={this.audioRef} crossOrigin="anonymous" preload="metadata">
+      <div
+        className={`funkwhale-player ${show ? "" : "hidden"}`}
+        data-testid="funkwhale-player"
+      >
+        <audio
+          data-testid="funkwhale-audio"
+          ref={this.audioRef}
+          crossOrigin="anonymous"
+          preload="metadata"
+        >
           <track kind="captions" />
         </audio>
         {artworkUrl && (
