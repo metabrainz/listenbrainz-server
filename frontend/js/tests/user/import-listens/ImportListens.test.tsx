@@ -4,10 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { HttpResponse, http } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
-import {
-  renderWithProviders,
-  textContentMatcher,
-} from "../../test-utils/rtl-test-utils";
+import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import getSettingsRoutes from "../../../src/settings/routes";
 import { ReactQueryWrapper } from "../../test-react-query";
 import { enableFetchMocks } from "jest-fetch-mock";
@@ -48,25 +45,32 @@ const mockImports = [
 describe("ImportListensPage", () => {
   let server: SetupServerApi;
   let router: ReturnType<typeof createMemoryRouter>;
+  let submitAPICalled = false;
+  let cancelAPICalled = false;
+  let refreshAPICalled = false;
 
   beforeAll(() => {
     window.scrollTo = jest.fn();
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
     server = setupServer(
-      http.post("/settings/import/", () => {
+      http.post("/settings/import/", (req) => {
+        submitAPICalled = true;
         return HttpResponse.json({ user_has_email: true });
       }),
-      http.get("/1/import-listens/list/", () => {
+      http.get("/1/import-listens/list/", (req) => {
         return HttpResponse.json(mockImports);
       }),
-      http.post("/1/import-listens/cancel/1/", () => {
+      http.post("/1/import-listens/cancel/1/", (req) => {
+        cancelAPICalled = true;
         return HttpResponse.json({ success: true, id: 1 });
       }),
-      http.post("/1/import-listens/1/", () => {
+      http.post("/1/import-listens/1/", (req) => {
+        refreshAPICalled = true;
         return HttpResponse.json(mockImports[0]);
       })
     );
+
     server.listen();
 
     router = createMemoryRouter(routes, {
@@ -74,17 +78,18 @@ describe("ImportListensPage", () => {
     });
   });
 
+  beforeEach(() => {
+    submitAPICalled = false;
+    cancelAPICalled = false;
+    refreshAPICalled = false;
+  });
+
   afterAll(() => {
     server.close();
   });
 
   it("renders submission form correctly", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      { wrapper: ReactQueryWrapper },
-      false
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
     await waitFor(() => {
       expect(screen.getByText(/start import from/i)).toBeInTheDocument();
       expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
@@ -94,14 +99,8 @@ describe("ImportListensPage", () => {
     });
   });
 
-
   it("enables the import button after a file is uploaded", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      { wrapper: ReactQueryWrapper },
-      false
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
     const importButton = screen.getByRole("button", { name: /import listens/i });
     expect(importButton).toBeDisabled();
 
@@ -116,52 +115,52 @@ describe("ImportListensPage", () => {
     });
   });
 
-  
   it("renders imports with correct data", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      { wrapper: ReactQueryWrapper },
-      false
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
     await waitFor(() => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
       expect(screen.getByText("August 11th, 2025")).toBeInTheDocument();
       expect(screen.getByText("-")).toBeInTheDocument();
     });
-    
-      
-    
+  });
+
+  it("calls import endpoint when import listens clicked", async () => {
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
+
+    const importButton = screen.getByRole("button", { name: /import listens/i });
+    expect(importButton).toBeDisabled();
+
+    const file = new File(['{ "foo": "bar" }'], 'test.json', { type: 'application/json' });
+    const input = screen.getByLabelText(/choose a file/i);
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    const importButtonAfter = screen.getByRole("button", { name: /import listens/i });
+    await user.click(importButtonAfter);
+    await waitFor(() => expect(submitAPICalled).toBe(true));
   });
 
   it("calls cancel endpoint when cancel clicked", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      { wrapper: ReactQueryWrapper },
-      false
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
 
     await waitFor(() => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
     });
+
     const cancelBtn = screen.getByRole("button", { name: "Cancel import" });
     await user.click(cancelBtn);
+    await waitFor(() => expect(cancelAPICalled).toBe(true));
   });
 
   it("calls refresh endpoint when refresh clicked", async () => {
-    renderWithProviders(
-      <RouterProvider router={router} />,
-      {},
-      { wrapper: ReactQueryWrapper },
-      false
-    );
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
 
     await waitFor(() => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
     });
+
     const refreshBtn = screen.getByRole("button", { name: "Refresh" });
     await user.click(refreshBtn);
-
+    await waitFor(() => expect(refreshAPICalled).toBe(true));
   });
 });
