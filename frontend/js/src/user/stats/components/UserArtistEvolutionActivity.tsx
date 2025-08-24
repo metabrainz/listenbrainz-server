@@ -12,6 +12,7 @@ import {
   endOfYear,
   format,
 } from "date-fns";
+import Slider from "rc-slider";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -28,27 +29,27 @@ export type StreamDataItem = {
 
 // Transform function to convert API response to stream chart format
 const transformArtistEvolutionActivityData = (
-  rawData: UserArtistEvolutionActivityResponse["payload"]["artist_evolution_activity"]
+  rawData: UserArtistEvolutionActivityResponse["payload"]["artist_evolution_activity"],
+  topN: number = 10
 ) => {
   if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
     return { chartData: [], keys: [] };
   }
 
-  // Calculate total listens per artist to get top 10
   const artistTotals = rawData
     .flatMap(toPairs)
     .reduce<Record<string, number>>((acc, [artist, count]) => {
       // Skip the 'id' field and only process actual artist data
       if (artist !== "id" && typeof count === "number") {
-        return { ...acc, [artist]: (acc[artist] || 0) + count };
+        acc[artist] = (acc[artist] || 0) + count;
       }
       return acc;
     }, {});
 
-  // Get top 10 artists by total listens
+  // Get topN artists by total listens
   const topArtists = Object.entries(artistTotals)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
+    .slice(0, topN)
     .map(([name]) => name);
 
   // Transform the data for the stream chart
@@ -174,11 +175,8 @@ const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
   if (!slice || typeof slice.index === "undefined") {
     return (
       <div
+        className="bg-white p-2 border rounded"
         style={{
-          background: "white",
-          padding: "9px 12px",
-          border: "1px solid #ccc",
-          borderRadius: "4px",
           fontSize: "12px",
           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           maxWidth: "200px",
@@ -191,27 +189,21 @@ const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
 
   return (
     <div
+      className="bg-white p-2 border rounded"
       style={{
-        background: "white",
-        padding: "9px 12px",
-        border: "1px solid #ccc",
-        borderRadius: "4px",
         fontSize: "12px",
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
         maxWidth: "200px",
       }}
     >
-      <div style={{ marginBottom: "4px", fontWeight: "bold" }}>
+      <div className="mb-1 fw-bold">
         {orderedTimeUnits[slice.index] || `Period ${slice.index + 1}`}
       </div>
       {slice.stack &&
         slice.stack
           .filter((point: any) => point.data && point.data.value > 0)
           .map((point: any) => (
-            <div
-              key={`${point.id}-${point.data.value}`}
-              style={{ marginBottom: "2px" }}
-            >
+            <div key={`${point.id}-${point.data.value}`} className="mb-1">
               <span
                 style={{
                   display: "inline-block",
@@ -222,8 +214,8 @@ const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
                   borderRadius: "2px",
                 }}
               />
-              <span style={{ fontWeight: "bold" }}>{point.id}:</span>{" "}
-              {point.data.value} listens
+              <span className="fw-bold">{point.id}:</span> {point.data.value}{" "}
+              listens
             </div>
           ))}
     </div>
@@ -301,8 +293,17 @@ export default function ArtistEvolutionActivityStreamGraph(
 
   const isMobile = useMediaQuery("(max-width: 767px)");
 
-  const { chartData = [], keys = [] } = transformArtistEvolutionActivityData(
-    rawData.payload.artist_evolution_activity
+  const [topN, setTopN] = React.useState<number>(10);
+  const onTopNChange = (v: number | number[]) =>
+    setTopN(Array.isArray(v) ? v[0] : v);
+
+  const { chartData = [], keys = [] } = React.useMemo(
+    () =>
+      transformArtistEvolutionActivityData(
+        rawData.payload.artist_evolution_activity,
+        topN
+      ),
+    [rawData.payload.artist_evolution_activity, topN]
   );
 
   const orderedTimeUnits = getOrderedTimeUnits(
@@ -327,12 +328,8 @@ export default function ArtistEvolutionActivityStreamGraph(
           </div>
         </div>
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "inherit",
-          }}
+          className="d-flex align-items-center justify-content-center"
+          style={{ minHeight: "inherit" }}
         >
           <span style={{ fontSize: 24 }}>
             <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
@@ -345,20 +342,32 @@ export default function ArtistEvolutionActivityStreamGraph(
 
   return (
     <Card className="user-stats-card" data-testid="artist-evolution">
-      <div className="row">
-        <div className="col-xs-10">
-          <h3 className="capitalize-bold">Artist Evolution</h3>
+      <div
+        className={`d-flex align-items-center justify-content-between ${
+          isMobile ? "mb-3" : ""
+        } flex-wrap mt-3`}
+      >
+        <h3 className="capitalize-bold m-0">Artist Evolution</h3>
+        <div className="d-flex align-items-center flex-shrink-0">
+          <span className="me-2">Top artists</span>
+          <div className="me-2" style={{ width: isMobile ? 140 : 220 }}>
+            <Slider
+              min={3}
+              max={15}
+              step={1}
+              value={topN}
+              onChange={onTopNChange}
+              aria-label="Top artists count"
+            />
+          </div>
+          <span className="fw-bold">{topN}</span>
         </div>
       </div>
       <Loader isLoading={loading}>
         {chartData.length === 0 ? (
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "300px",
-            }}
+            className="d-flex align-items-center justify-content-center"
+            style={{ minHeight: "300px" }}
           >
             <span style={{ fontSize: 18 }}>
               No artist evolution data available for this time period
