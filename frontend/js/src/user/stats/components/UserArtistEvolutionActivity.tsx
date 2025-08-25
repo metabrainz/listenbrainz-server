@@ -231,17 +231,18 @@ const transformArtistEvolutionActivityData = (
   const artistTotals: Record<string, number> = {};
   const artistMap: Record<string, string> = {};
 
-  for (const item of rawData) {
+  rawData.forEach((item) => {
     const timeUnit = String(item.time_unit);
     const name = item.artist_name;
     const count = item.listen_count || 0;
-
-    if (!groupedByTime[timeUnit]) groupedByTime[timeUnit] = {};
+    if (!groupedByTime[timeUnit]) {
+      groupedByTime[timeUnit] = {};
+    }
     groupedByTime[timeUnit][name] = count;
 
     artistTotals[name] = (artistTotals[name] || 0) + count;
     artistMap[name] = item.artist_mbid;
-  }
+  });
 
   const topArtists = Object.entries(artistTotals)
     .sort(([, a], [, b]) => b - a)
@@ -280,17 +281,20 @@ const transformArtistEvolutionActivityData = (
     ];
   } else {
     const nowYear = new Date().getFullYear();
-    const yearsWithData: number[] = [];
-    for (const item of rawData) {
+    const yearsWithData = rawData.reduce<number[]>((acc, item) => {
       const y = parseInt(String(item.time_unit), 10);
-      if (!Number.isNaN(y) && (item.listen_count || 0) > 0)
-        yearsWithData.push(y);
-    }
+      if (!Number.isNaN(y) && (item.listen_count || 0) > 0) {
+        acc.push(y);
+      }
+      return acc;
+    }, []);
     if (yearsWithData.length) {
       const firstYearWithData = Math.min(...yearsWithData);
       offsetYear = firstYearWithData - 1;
       const years: string[] = [];
-      for (let y = offsetYear; y <= nowYear; y++) years.push(String(y));
+      for (let y = offsetYear; y <= nowYear; y += 1) {
+        years.push(String(y));
+      }
       orderedTimeUnits = years;
     } else {
       orderedTimeUnits = [];
