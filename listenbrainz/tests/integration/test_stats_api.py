@@ -6,6 +6,7 @@ from brainzutils.ratelimit import set_rate_limits
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import couchdb
 from listenbrainz.spark.handlers import handle_entity_listener
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -360,20 +361,19 @@ class StatsAPITestCase(IntegrationTestCase):
             self.assertArtistEvolutionActivityEqual(payload, response)
 
         for range_ in ["week", "month", "year"]:
-            with self.subTest(f"test valid response is received for {range_} artist_evolution_activity stats", range_=range_):
-                with open(self.path_to_data_file(f'user_artist_evolution_activity_db_data_for_api_test_{range_}.json'),
-                          'r') as f:
-                    payload = json.load(f)
-                    payload[0]["user_id"] = self.user["id"]                    
-                    payload[0]["from_ts"] = 0
-                    payload[0]["to_ts"] = 5
-                    payload[0]["range"] = range_
-                db_stats.insert(f"artist_evolution_activity_{range_}_20220718", 0, 5, payload)
-                response = self.client.get(
-                    self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
-                    query_string={'range': range_}
-                )
-                self.assertArtistEvolutionActivityEqual(payload, response)
+            with open(self.path_to_data_file(f'user_artist_evolution_activity_db_data_for_api_test_{range_}.json'),
+                      'r') as f:
+                payload = json.load(f)
+                payload[0]["user_id"] = self.user["id"]
+                payload[0]["from_ts"] = 0
+                payload[0]["to_ts"] = 5
+                payload[0]["range"] = range_
+            db_stats.insert(f"artist_evolution_activity_{range_}_20220718", 0, 5, payload)
+            response = self.client.get(
+                self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                query_string={'range': range_}
+            )
+            self.assertArtistEvolutionActivityEqual(payload, response)
 
     def test_daily_activity_stat(self):
         endpoint = self.non_entity_endpoints["daily_activity"]["endpoint"]
