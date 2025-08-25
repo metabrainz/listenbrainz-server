@@ -201,6 +201,12 @@ COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.servi
 COPY ./docker/services/soundcloud_metadata_cache/soundcloud_metadata_cache.finish /etc/service/soundcloud_metadata_cache/finish
 RUN touch /etc/service/soundcloud_metadata_cache/down
 
+# Internet Archive Metadata Cache
+COPY ./docker/services/internetarchive_metadata_cache/consul-template-internetarchive-metadata-cache.conf /etc/consul-template-internetarchive-metadata-cache.conf
+COPY ./docker/services/internetarchive_metadata_cache/internetarchive_metadata_cache.service /etc/service/internetarchive_metadata_cache/run
+COPY ./docker/services/internetarchive_metadata_cache/internetarchive_metadata_cache.finish /etc/service/internetarchive_metadata_cache/finish
+RUN touch /etc/service/internetarchive_metadata_cache/down
+
 # uwsgi (website)
 COPY ./docker/services/uwsgi/uwsgi.ini.ctmpl /etc/uwsgi/uwsgi.ini.ctmpl
 COPY ./docker/services/uwsgi/consul-template-uwsgi.conf /etc/consul-template-uwsgi.conf
