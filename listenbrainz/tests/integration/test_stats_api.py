@@ -6,7 +6,6 @@ from brainzutils.ratelimit import set_rate_limits
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import couchdb
 from listenbrainz.spark.handlers import handle_entity_listener
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -18,8 +17,16 @@ class StatsAPITestCase(IntegrationTestCase):
     def setUpClass(cls) -> None:
         super(StatsAPITestCase, cls).setUpClass()
 
-        stats = ["artists", "releases", "recordings", "release_groups", "daily_activity", "listening_activity",
-                 "artist_map", "artist_evolution_activity"]
+        stats = [
+            "artists",
+            "releases",
+            "recordings",
+            "release_groups",
+            "daily_activity",
+            "listening_activity",
+            "artist_map",
+            "artist_evolution_activity",
+        ]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:

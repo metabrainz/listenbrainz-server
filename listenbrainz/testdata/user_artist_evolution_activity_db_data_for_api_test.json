@@ -1,25 +1,40 @@
 [
   {
+    "user_id": 0,
+    "from_ts": 0,
+    "to_ts": 5,
+    "range": "all_time",
     "data": [
       {
-        "id": "2020",
-        "David Bowie": 12,
-        "Boards of Canada": 5,
-        "Aphex Twin": 3
+        "time_unit": "2019",
+        "artist_mbid": "mbid-adele",
+        "artist_name": "Adele",
+        "listen_count": 10
       },
       {
-        "id": "2021",
-        "David Bowie": 8,
-        "Boards of Canada": 0,
-        "Aphex Twin": 7
+        "time_unit": "2019",
+        "artist_mbid": "mbid-ts",
+        "artist_name": "Taylor Swift",
+        "listen_count": 20
       },
       {
-        "id": "2022",
-        "David Bowie": 0,
-        "Boards of Canada": 10,
-        "Aphex Twin": 2
+        "time_unit": "2020",
+        "artist_mbid": "mbid-drake",
+        "artist_name": "Drake",
+        "listen_count": 15
+      },
+      {
+        "time_unit": "2021",
+        "artist_mbid": "mbid-coldplay",
+        "artist_name": "Coldplay",
+        "listen_count": 30
+      },
+      {
+        "time_unit": "2021",
+        "artist_mbid": "mbid-weeknd",
+        "artist_name": "The Weeknd",
+        "listen_count": 25
       }
-    ],
-    "user_id": 1
+    ]
   }
 ]

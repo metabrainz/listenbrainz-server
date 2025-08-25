@@ -10,9 +10,7 @@ import * as userArtistEvolutionActivityResponse from "../../__mocks__/userArtist
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
 const userProps: UserArtistEvolutionActivityProps = {
-  user: {
-    name: "foobar",
-  },
+  user: { name: "foobar" },
   range: "week",
 };
 
@@ -24,11 +22,7 @@ jest.mock("@nivo/stream", () => ({
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: false,
-      staleTime: 0,
-      gcTime: 0, // Changed from cacheTime to gcTime (React Query v4+)
-    },
+    queries: { retry: false, staleTime: 0, gcTime: 0 },
   },
 });
 
@@ -38,10 +32,10 @@ const reactQueryWrapper = ({ children }: any) => (
 
 describe("ArtistEvolutionActivityStreamGraph", () => {
   let server: SetupServerApi;
-  
+
   beforeAll(() => {
     const handlers = [
-      // Fixed: Use the correct endpoint that matches the API calls
+      // API now returns RAW rows; tests use that fixture
       http.get("/1/stats/user/foobar/artist-evolution-activity", async ({ request }) => {
         const url = new URL(request.url);
         const range = url.searchParams.get("range");
@@ -53,27 +47,23 @@ describe("ArtistEvolutionActivityStreamGraph", () => {
             return HttpResponse.json({
               payload: {
                 artist_evolution_activity: [],
-                offset_year: 2020,
                 range,
                 from_ts: 0,
                 to_ts: 0,
                 last_updated: 0,
                 user_id: "foobar",
               },
-            });            
+            });
           case "month":
-            // This will trigger the error case
-            return HttpResponse.json(
-              { message: "Failed to fetch data" },
-              { status: 500 }
-            );
+            // Trigger error case
+            return HttpResponse.json({ message: "Failed to fetch data" }, { status: 500 });
           default:
             return HttpResponse.json(userArtistEvolutionActivityResponse);
         }
       }),
     ];
     server = setupServer(...handlers);
-    server.listen({ onUnhandledRequest: 'error' });
+    server.listen({ onUnhandledRequest: "error" });
   });
 
   beforeEach(() => {
@@ -92,9 +82,7 @@ describe("ArtistEvolutionActivityStreamGraph", () => {
   it("renders correctly", async () => {
     await act(async () => {
       renderWithProviders(
-        <ArtistEvolutionActivityStreamGraph {...userProps} />, 
-        {},
-        { wrapper: reactQueryWrapper }
+        <ArtistEvolutionActivityStreamGraph {...userProps} />, {}, { wrapper: reactQueryWrapper }
       );
     });
 
@@ -106,54 +94,54 @@ describe("ArtistEvolutionActivityStreamGraph", () => {
   it("displays error message when API call fails", async () => {
     await act(async () => {
       renderWithProviders(
-        <ArtistEvolutionActivityStreamGraph {...{ ...userProps, range: "month" }} />, 
-        {},
-        { wrapper: reactQueryWrapper }
+        <ArtistEvolutionActivityStreamGraph {...{ ...userProps, range: "month" }} />, {}, { wrapper: reactQueryWrapper }
       );
     });
 
-    await waitFor(() => {
-      // The component shows an error icon when API call fails
-      const errorIcon = screen.getByRole('img', { hidden: true });
-      expect(errorIcon).toHaveAttribute('data-icon', 'circle-exclamation');
-    }, { timeout: 8000 });
+    await waitFor(
+      () => {
+        // Error icon from FontAwesome when hasError=true
+        const errorIcon = screen.getByRole("img", { hidden: true });
+        expect(errorIcon).toHaveAttribute("data-icon", "circle-exclamation");
+      },
+      { timeout: 8000 }
+    );
   }, 15000);
 
   it("displays no data message when chart data is empty", async () => {
-    // Override the server handler for this specific test
     server.use(
       http.get("/1/stats/user/foobar/artist-evolution-activity", async ({ request }) => {
         const url = new URL(request.url);
         const range = url.searchParams.get("range");
-        
         if (range === "week") {
           return HttpResponse.json({
             payload: {
               artist_evolution_activity: [],
-              offset_year: 2020,
               range,
               from_ts: 0,
               to_ts: 0,
               last_updated: 0,
               user_id: "foobar",
             },
-          });          
+          });
         }
-        
         return HttpResponse.json(userArtistEvolutionActivityResponse);
       })
     );
-  
+
     await act(async () => {
       renderWithProviders(
-        <ArtistEvolutionActivityStreamGraph {...userProps} />, // Uses "week" range
-        {},
-        { wrapper: reactQueryWrapper }
+        <ArtistEvolutionActivityStreamGraph {...userProps} />, {}, { wrapper: reactQueryWrapper }
       );
     });
-  
-    await waitFor(() => {
-      expect(screen.getByText("No artist evolution data available for this time period")).toBeInTheDocument();
-    }, { timeout: 8000 });
+
+    await waitFor(
+      () => {
+        expect(
+          screen.getByText("No artist evolution data available for this time period")
+        ).toBeInTheDocument();
+      },
+      { timeout: 8000 }
+    );
   }, 15000);
 });

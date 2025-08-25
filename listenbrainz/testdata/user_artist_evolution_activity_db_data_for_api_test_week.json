@@ -1,63 +1,52 @@
 [
   {
+    "user_id": 0,
+    "from_ts": 0,
+    "to_ts": 5,
+    "range": "week",
     "data": [
       {
-        "id": "Monday",
-        "Taylor Swift": 10,
-        "Drake": 5,
-        "The Beatles": 7,
-        "Coldplay": 3,
-        "Adele": 2
+        "time_unit": "Monday",
+        "artist_mbid": "mbid-ts",
+        "artist_name": "Taylor Swift",
+        "listen_count": 5
       },
       {
-        "id": "Tuesday",
-        "Taylor Swift": 15,
-        "Drake": 9,
-        "The Beatles": 6,
-        "Coldplay": 4,
-        "Adele": 3
+        "time_unit": "Monday",
+        "artist_mbid": "mbid-drake",
+        "artist_name": "Drake",
+        "listen_count": 3
       },
       {
-        "id": "Wednesday",
-        "Taylor Swift": 20,
-        "Drake": 11,
-        "The Beatles": 8,
-        "Coldplay": 6,
-        "Adele": 5
+        "time_unit": "Tuesday",
+        "artist_mbid": "mbid-coldplay",
+        "artist_name": "Coldplay",
+        "listen_count": 4
       },
       {
-        "id": "Thursday",
-        "Taylor Swift": 12,
-        "Drake": 8,
-        "The Beatles": 5,
-        "Coldplay": 7,
-        "Adele": 4
+        "time_unit": "Wednesday",
+        "artist_mbid": "mbid-adele",
+        "artist_name": "Adele",
+        "listen_count": 2
       },
       {
-        "id": "Friday",
-        "Taylor Swift": 25,
-        "Drake": 14,
-        "The Beatles": 10,
-        "Coldplay": 8,
-        "Adele": 6
+        "time_unit": "Thursday",
+        "artist_mbid": "mbid-weeknd",
+        "artist_name": "The Weeknd",
+        "listen_count": 6
       },
       {
-        "id": "Saturday",
-        "Taylor Swift": 30,
-        "Drake": 20,
-        "The Beatles": 12,
-        "Coldplay": 15,
-        "Adele": 9
+        "time_unit": "Friday",
+        "artist_mbid": "mbid-ts",
+        "artist_name": "Taylor Swift",
+        "listen_count": 8
       },
       {
-        "id": "Sunday",
-        "Taylor Swift": 22,
-        "Drake": 18,
-        "The Beatles": 11,
-        "Coldplay": 10,
-        "Adele": 7
+        "time_unit": "Sunday",
+        "artist_mbid": "mbid-drake",
+        "artist_name": "Drake",
+        "listen_count": 1
       }
-    ],
-    "user_id": 1
+    ]
   }
 ]

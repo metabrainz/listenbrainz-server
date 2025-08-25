@@ -675,18 +675,15 @@ def get_artist_evolution_activity(user_name: str):
         raise APINoContent('')
 
     stats_unprocessed = [x.dict() for x in stats.data.__root__]
-    transformed_data, offset_year = _transform_artist_evolution_activity_data(stats_unprocessed, stats_range)
 
     payload = {
         "user_id": user_name,
-        "artist_evolution_activity": transformed_data,
+        "artist_evolution_activity": stats_unprocessed,
         "range": stats_range,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "last_updated": stats.last_updated
     }
-    if offset_year is not None:
-        payload["offset_year"] = offset_year
 
     return jsonify({"payload": payload})
 

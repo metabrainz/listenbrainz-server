@@ -4,7 +4,6 @@ import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
-import { toPairs } from "lodash";
 import {
   getDaysInMonth,
   eachYearOfInterval,
@@ -27,73 +26,100 @@ export type StreamDataItem = {
   [key: string]: string | number;
 };
 
-// Transform function to convert API response to stream chart format
-const transformArtistEvolutionActivityData = (
-  rawData: UserArtistEvolutionActivityResponse["payload"]["artist_evolution_activity"],
-  topN: number = 10
-) => {
-  if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
-    return { chartData: [], keys: [] };
-  }
-
-  const artistTotals = rawData
-    .flatMap(toPairs)
-    .reduce<Record<string, number>>((acc, [artist, count]) => {
-      // Skip the 'id' field and only process actual artist data
-      if (artist !== "id" && typeof count === "number") {
-        acc[artist] = (acc[artist] || 0) + count;
-      }
-      return acc;
-    }, {});
-
-  // Get topN artists by total listens
-  const topArtists = Object.entries(artistTotals)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, topN)
-    .map(([name]) => name);
-
-  // Transform the data for the stream chart
-  const chartData = rawData.map((timeUnit, index) => {
-    const result: StreamDataItem = {
-      id: (timeUnit && (timeUnit as any).id) || index.toString(),
-    };
-
-    topArtists.forEach((artist) => {
-      result[artist] =
-        (timeUnit &&
-          typeof timeUnit === "object" &&
-          (timeUnit as any)[artist]) ||
-        0;
-    });
-
-    return result;
-  });
-
-  return { chartData, keys: topArtists };
+type RawRow = {
+  time_unit: string | number;
+  artist_mbid: string;
+  artist_name: string;
+  listen_count: number;
 };
 
-function getAllTimeYearLabels(opts: {
-  offsetYear?: number;
-  from_ts?: number;
-  to_ts?: number;
-}) {
-  // Simpler + clearer: compute start/end with date-fns and cap end at the current year.
-  const now = new Date();
+type UserArtistEvolutionActivityResponse = {
+  payload: {
+    user_id: string;
+    artist_evolution_activity: RawRow[];
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    offset_year?: number;
+  };
+};
 
-  let start: Date;
-  if (opts.from_ts) {
-    start = startOfYear(new Date(opts.from_ts * 1000));
-  } else if (opts.offsetYear) {
-    start = startOfYear(new Date(opts.offsetYear, 0, 1));
-  } else {
-    start = startOfYear(now);
+const getLegendText = (timeRange: UserStatsAPIRange) => {
+  switch (timeRange) {
+    case "week":
+      return "Days of the week";
+    case "month":
+      return "Days of the month";
+    case "year":
+      return "Months";
+    default:
+      return "Years";
+  }
+};
+
+const renderCustomTooltip = (
+  tooltipProps: any,
+  orderedTimeUnits: string[],
+  artistHref: (name: string) => string
+) => {
+  const { slice } = tooltipProps;
+
+  if (!slice || typeof slice.index === "undefined") {
+    return (
+      <div
+        className="bg-white p-2 border rounded"
+        style={{
+          fontSize: "12px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          maxWidth: "240px",
+        }}
+      >
+        <div>No data available</div>
+      </div>
+    );
   }
 
-  const endRaw = endOfYear(opts.to_ts ? new Date(opts.to_ts * 1000) : now);
-  const end = endRaw > now ? endOfYear(now) : endRaw;
-
-  return eachYearOfInterval({ start, end }).map((d) => format(d, "yyyy"));
-}
+  return (
+    <div
+      className="bg-white p-2 border rounded"
+      style={{
+        fontSize: "12px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        maxWidth: "240px",
+      }}
+    >
+      <div className="mb-1 fw-bold">
+        {orderedTimeUnits[slice.index] || `Period ${slice.index + 1}`}
+      </div>
+      {slice.stack &&
+        slice.stack
+          .filter((point: any) => point.data && point.data.value > 0)
+          .map((point: any) => (
+            <div key={`${point.id}-${point.data.value}`} className="mb-1">
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "12px",
+                  height: "12px",
+                  backgroundColor: point.color,
+                  marginRight: "6px",
+                  borderRadius: "2px",
+                }}
+              />
+              {/* Artist name clickable to /artist_<MBID> */}
+              <a
+                href={artistHref(point.id)}
+                className="fw-bold text-decoration-none"
+              >
+                {point.id}
+              </a>
+              : {point.data.value} listens
+            </div>
+          ))}
+    </div>
+  );
+};
 
 const getAxisFormatter = (
   timeRange: UserStatsAPIRange,
@@ -124,12 +150,31 @@ const getAxisFormatter = (
   };
 };
 
-const getOrderedTimeUnits = (
+function getAllTimeYearLabels(opts: {
+  offsetYear?: number;
+  from_ts?: number;
+  to_ts?: number;
+}) {
+  const now = new Date();
+  let start: Date;
+  if (opts.from_ts) {
+    start = startOfYear(new Date(opts.from_ts * 1000));
+  } else if (opts.offsetYear) {
+    start = startOfYear(new Date(opts.offsetYear, 0, 1));
+  } else {
+    start = startOfYear(now);
+  }
+  const endRaw = endOfYear(opts.to_ts ? new Date(opts.to_ts * 1000) : now);
+  const end = endRaw > now ? endOfYear(now) : endRaw;
+  return eachYearOfInterval({ start, end }).map((d) => format(d, "yyyy"));
+}
+
+function getOrderedTimeUnits(
   timeRange: UserStatsAPIRange,
   offsetYear: number | undefined,
   from_ts?: number,
   to_ts?: number
-) => {
+) {
   if (timeRange.includes("week")) {
     return [
       "Monday",
@@ -142,10 +187,7 @@ const getOrderedTimeUnits = (
     ];
   }
   if (timeRange.includes("month")) {
-    const daysInCurrentMonth = getDaysInMonth(new Date());
-    return Array.from({ length: daysInCurrentMonth }, (_, i) =>
-      (i + 1).toString()
-    );
+    return Array.from({ length: 31 }, (_, i) => String(i + 1));
   }
   if (timeRange.includes("year")) {
     return [
@@ -166,73 +208,111 @@ const getOrderedTimeUnits = (
   if (timeRange.includes("all_time")) {
     return getAllTimeYearLabels({ offsetYear, from_ts, to_ts });
   }
+
   return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
-};
+}
 
-const renderCustomTooltip = (tooltipProps: any, orderedTimeUnits: string[]) => {
-  const { slice } = tooltipProps;
-
-  if (!slice || typeof slice.index === "undefined") {
-    return (
-      <div
-        className="bg-white p-2 border rounded"
-        style={{
-          fontSize: "12px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          maxWidth: "200px",
-        }}
-      >
-        <div>No data available</div>
-      </div>
-    );
+const transformArtistEvolutionActivityData = (
+  rawData: RawRow[] | undefined,
+  statsRange: UserStatsAPIRange,
+  topN: number = 10
+): {
+  chartData: StreamDataItem[];
+  keys: string[];
+  orderedTimeUnits: string[];
+  offsetYear?: number;
+  artistMap: Record<string, string>;
+} => {
+  if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+    return { chartData: [], keys: [], orderedTimeUnits: [], artistMap: {} };
   }
 
-  return (
-    <div
-      className="bg-white p-2 border rounded"
-      style={{
-        fontSize: "12px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        maxWidth: "200px",
-      }}
-    >
-      <div className="mb-1 fw-bold">
-        {orderedTimeUnits[slice.index] || `Period ${slice.index + 1}`}
-      </div>
-      {slice.stack &&
-        slice.stack
-          .filter((point: any) => point.data && point.data.value > 0)
-          .map((point: any) => (
-            <div key={`${point.id}-${point.data.value}`} className="mb-1">
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "12px",
-                  height: "12px",
-                  backgroundColor: point.color,
-                  marginRight: "6px",
-                  borderRadius: "2px",
-                }}
-              />
-              <span className="fw-bold">{point.id}:</span> {point.data.value}{" "}
-              listens
-            </div>
-          ))}
-    </div>
-  );
-};
+  const groupedByTime: Record<string, Record<string, number>> = {};
+  const artistTotals: Record<string, number> = {};
+  const artistMap: Record<string, string> = {};
 
-const getLegendText = (timeRange: UserStatsAPIRange) => {
-  switch (timeRange) {
-    case "week":
-      return "Days of the week";
-    case "month":
-      return "Days of the month";
-    case "year":
-      return "Months";
-    default:
-      return "Years";
+  for (const item of rawData) {
+    const timeUnit = String(item.time_unit);
+    const name = item.artist_name;
+    const count = item.listen_count || 0;
+
+    if (!groupedByTime[timeUnit]) groupedByTime[timeUnit] = {};
+    groupedByTime[timeUnit][name] = count;
+
+    artistTotals[name] = (artistTotals[name] || 0) + count;
+    artistMap[name] = item.artist_mbid;
   }
+
+  const topArtists = Object.entries(artistTotals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, topN)
+    .map(([name]) => name);
+
+  let orderedTimeUnits: string[] = [];
+  let offsetYear: number | undefined;
+
+  if (statsRange.includes("week")) {
+    orderedTimeUnits = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+  } else if (statsRange.includes("month")) {
+    orderedTimeUnits = Array.from({ length: 31 }, (_, i) => String(i + 1));
+  } else if (statsRange.includes("year")) {
+    orderedTimeUnits = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+  } else {
+    const nowYear = new Date().getFullYear();
+    const yearsWithData: number[] = [];
+    for (const item of rawData) {
+      const y = parseInt(String(item.time_unit), 10);
+      if (!Number.isNaN(y) && (item.listen_count || 0) > 0)
+        yearsWithData.push(y);
+    }
+    if (yearsWithData.length) {
+      const firstYearWithData = Math.min(...yearsWithData);
+      offsetYear = firstYearWithData - 1;
+      const years: string[] = [];
+      for (let y = offsetYear; y <= nowYear; y++) years.push(String(y));
+      orderedTimeUnits = years;
+    } else {
+      orderedTimeUnits = [];
+    }
+  }
+
+  const chartData: StreamDataItem[] = orderedTimeUnits.map((tu) => {
+    const timeData = groupedByTime[tu] || {};
+    const row: StreamDataItem = { id: tu };
+    topArtists.forEach((artist) => {
+      row[artist] = timeData[artist] ?? 0;
+    });
+    return row;
+  });
+
+  return {
+    chartData,
+    keys: topArtists,
+    orderedTimeUnits,
+    offsetYear,
+    artistMap,
+  };
 };
 
 export const artistEvolutionQueryKey = (
@@ -279,7 +359,6 @@ export default function ArtistEvolutionActivityStreamGraph(
     data: rawData = {
       payload: {
         artist_evolution_activity: [],
-        offset_year: 2020,
         range,
         from_ts: 0,
         to_ts: 0,
@@ -297,26 +376,28 @@ export default function ArtistEvolutionActivityStreamGraph(
   const onTopNChange = (v: number | number[]) =>
     setTopN(Array.isArray(v) ? v[0] : v);
 
-  const { chartData = [], keys = [] } = React.useMemo(
+  const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
     () =>
       transformArtistEvolutionActivityData(
         rawData.payload.artist_evolution_activity,
+        range,
         topN
       ),
-    [rawData.payload.artist_evolution_activity, topN]
+    [rawData.payload.artist_evolution_activity, range, topN]
   );
 
-  const orderedTimeUnits = getOrderedTimeUnits(
-    range,
-    rawData.payload.offset_year,
-    (rawData as any).payload.from_ts,
-    (rawData as any).payload.to_ts
+  const artistHref = React.useCallback(
+    (name: string) => {
+      const mbid = artistMap[name];
+      return mbid ? `/artist_${mbid}` : "#";
+    },
+    [artistMap]
   );
 
   const tooltipRenderer = React.useCallback(
     (tooltipProps: TooltipProps) =>
-      renderCustomTooltip(tooltipProps, orderedTimeUnits),
-    [orderedTimeUnits]
+      renderCustomTooltip(tooltipProps as any, orderedTimeUnits, artistHref),
+    [orderedTimeUnits, artistHref]
   );
 
   if (hasError) {
@@ -446,7 +527,12 @@ export default function ArtistEvolutionActivityStreamGraph(
                           style: { itemTextColor: "#000000" },
                         },
                       ],
-                    },
+                      onClick: (datum: any) => {
+                        const name = datum.label;
+                        const mbid = artistMap[name];
+                        if (mbid) window.location.href = `/artist_${mbid}`;
+                      },
+                    } as any,
                   ]}
                   tooltip={tooltipRenderer}
                 />

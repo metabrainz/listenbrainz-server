@@ -1,247 +1,40 @@
 [
   {
+    "user_id": 0,
+    "from_ts": 0,
+    "to_ts": 5,
+    "range": "month",
     "data": [
       {
-        "id": "1",
-        "Taylor Swift": 5,
-        "Drake": 3,
-        "The Beatles": 1,
-        "Coldplay": 2,
-        "Adele": 1
+        "time_unit": "1",
+        "artist_mbid": "mbid-ts",
+        "artist_name": "Taylor Swift",
+        "listen_count": 2
       },
       {
-        "id": "2",
-        "Taylor Swift": 7,
-        "Drake": 4,
-        "The Beatles": 2,
-        "Coldplay": 3,
-        "Adele": 2
+        "time_unit": "2",
+        "artist_mbid": "mbid-adele",
+        "artist_name": "Adele",
+        "listen_count": 1
       },
       {
-        "id": "3",
-        "Taylor Swift": 10,
-        "Drake": 6,
-        "The Beatles": 4,
-        "Coldplay": 5,
-        "Adele": 3
+        "time_unit": "15",
+        "artist_mbid": "mbid-coldplay",
+        "artist_name": "Coldplay",
+        "listen_count": 3
       },
       {
-        "id": "4",
-        "Taylor Swift": 8,
-        "Drake": 5,
-        "The Beatles": 3,
-        "Coldplay": 4,
-        "Adele": 2
+        "time_unit": "20",
+        "artist_mbid": "mbid-weeknd",
+        "artist_name": "The Weeknd",
+        "listen_count": 2
       },
       {
-        "id": "5",
-        "Taylor Swift": 40,
-        "Drake": 20,
-        "The Beatles": 15,
-        "Coldplay": 25,
-        "Adele": 12
-      },
-      {
-        "id": "6",
-        "Taylor Swift": 12,
-        "Drake": 8,
-        "The Beatles": 5,
-        "Coldplay": 7,
-        "Adele": 4
-      },
-      {
-        "id": "7",
-        "Taylor Swift": 18,
-        "Drake": 12,
-        "The Beatles": 6,
-        "Coldplay": 8,
-        "Adele": 6
-      },
-      {
-        "id": "8",
-        "Taylor Swift": 22,
-        "Drake": 14,
-        "The Beatles": 9,
-        "Coldplay": 10,
-        "Adele": 7
-      },
-      {
-        "id": "9",
-        "Taylor Swift": 16,
-        "Drake": 11,
-        "The Beatles": 8,
-        "Coldplay": 9,
-        "Adele": 5
-      },
-      {
-        "id": "10",
-        "Taylor Swift": 90,
-        "Drake": 70,
-        "The Beatles": 30,
-        "Coldplay": 60,
-        "Adele": 25
-      },
-      {
-        "id": "11",
-        "Taylor Swift": 12,
-        "Drake": 9,
-        "The Beatles": 5,
-        "Coldplay": 8,
-        "Adele": 4
-      },
-      {
-        "id": "12",
-        "Taylor Swift": 15,
-        "Drake": 10,
-        "The Beatles": 6,
-        "Coldplay": 7,
-        "Adele": 5
-      },
-      {
-        "id": "13",
-        "Taylor Swift": 20,
-        "Drake": 14,
-        "The Beatles": 9,
-        "Coldplay": 12,
-        "Adele": 7
-      },
-      {
-        "id": "14",
-        "Taylor Swift": 8,
-        "Drake": 6,
-        "The Beatles": 3,
-        "Coldplay": 5,
-        "Adele": 3
-      },
-      {
-        "id": "15",
-        "Taylor Swift": 60,
-        "Drake": 40,
-        "The Beatles": 20,
-        "Coldplay": 35,
-        "Adele": 18
-      },
-      {
-        "id": "16",
-        "Taylor Swift": 11,
-        "Drake": 8,
-        "The Beatles": 4,
-        "Coldplay": 6,
-        "Adele": 3
-      },
-      {
-        "id": "17",
-        "Taylor Swift": 14,
-        "Drake": 10,
-        "The Beatles": 6,
-        "Coldplay": 9,
-        "Adele": 4
-      },
-      {
-        "id": "18",
-        "Taylor Swift": 19,
-        "Drake": 15,
-        "The Beatles": 8,
-        "Coldplay": 11,
-        "Adele": 6
-      },
-      {
-        "id": "19",
-        "Taylor Swift": 23,
-        "Drake": 18,
-        "The Beatles": 10,
-        "Coldplay": 15,
-        "Adele": 7
-      },
-      {
-        "id": "20",
-        "Taylor Swift": 5,
-        "Drake": 3,
-        "The Beatles": 2,
-        "Coldplay": 2,
-        "Adele": 1
-      },
-      {
-        "id": "21",
-        "Taylor Swift": 13,
-        "Drake": 9,
-        "The Beatles": 5,
-        "Coldplay": 8,
-        "Adele": 4
-      },
-      {
-        "id": "22",
-        "Taylor Swift": 17,
-        "Drake": 13,
-        "The Beatles": 7,
-        "Coldplay": 9,
-        "Adele": 6
-      },
-      {
-        "id": "23",
-        "Taylor Swift": 21,
-        "Drake": 16,
-        "The Beatles": 9,
-        "Coldplay": 14,
-        "Adele": 7
-      },
-      {
-        "id": "24",
-        "Taylor Swift": 19,
-        "Drake": 12,
-        "The Beatles": 8,
-        "Coldplay": 11,
-        "Adele": 6
-      },
-      {
-        "id": "25",
-        "Taylor Swift": 75,
-        "Drake": 50,
-        "The Beatles": 22,
-        "Coldplay": 45,
-        "Adele": 20
-      },
-      {
-        "id": "26",
-        "Taylor Swift": 15,
-        "Drake": 11,
-        "The Beatles": 6,
-        "Coldplay": 8,
-        "Adele": 5
-      },
-      {
-        "id": "27",
-        "Taylor Swift": 18,
-        "Drake": 14,
-        "The Beatles": 8,
-        "Coldplay": 10,
-        "Adele": 6
-      },
-      {
-        "id": "28",
-        "Taylor Swift": 22,
-        "Drake": 17,
-        "The Beatles": 10,
-        "Coldplay": 13,
-        "Adele": 8
-      },
-      {
-        "id": "29",
-        "Taylor Swift": 10,
-        "Drake": 8,
-        "The Beatles": 4,
-        "Coldplay": 6,
-        "Adele": 3
-      },
-      {
-        "id": "30",
-        "Taylor Swift": 95,
-        "Drake": 80,
-        "The Beatles": 28,
-        "Coldplay": 70,
-        "Adele": 30
+        "time_unit": "31",
+        "artist_mbid": "mbid-drake",
+        "artist_name": "Drake",
+        "listen_count": 4
       }
-    ],
-    "user_id": 1
+    ]
   }
 ]
