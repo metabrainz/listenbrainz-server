@@ -305,6 +305,20 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare type UserArtistEvolutionActivityResponse = {
+  payload: {
+    artist_evolution_activity: Array<{
+      [artistName: string]: number | string;
+    }>;
+    offset_year?: number;
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id?: string;
+  };
+};
+
 declare type GenreHourData = {
   genre: string;
   hour: number;
