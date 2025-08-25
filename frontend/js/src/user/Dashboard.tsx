@@ -676,7 +676,8 @@ export default function Listen() {
               >
                 {listens.map(getListenCard)}
               </div>
-              {listens.length < expectedListensPerPage && (
+              {listens.length < expectedListensPerPage &&
+                nextListenTs === oldestListenTs && (
                 <h5 className="text-center">No more listens to show</h5>
               )}
               <ul className="pagination" id="navigation">
