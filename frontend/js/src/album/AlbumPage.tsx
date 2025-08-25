@@ -14,8 +14,8 @@ import { Vibrant } from "node-vibrant/browser";
 import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
 import { toast } from "react-toastify";
+import { useSetAtom } from "jotai";
 import CBReview from "../cb-review/CBReview";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import ListenCard from "../common/listens/ListenCard";
 import Username from "../common/Username";
 import OpenInMusicBrainzButton from "../components/OpenInMusicBrainz";
@@ -32,6 +32,7 @@ import {
   ListeningStats,
   popularRecordingToListen,
 } from "./utils";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 // not the same format of tracks as what we get in the ArtistPage props
 type AlbumRecording = {
@@ -183,13 +184,10 @@ export default function AlbumPage(): JSX.Element {
     listensFromAlbumRecordings
   );
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listensFromAlbumsRecordingsFlattened,
-    });
+    setAmbientQueue(listensFromAlbumsRecordingsFlattened);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromAlbumsRecordingsFlattened]);
 

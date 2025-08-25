@@ -25,7 +25,6 @@ import {
   searchForYoutubeTrack,
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 
 export type YoutubePlayerProps = DataSourceProps & {
