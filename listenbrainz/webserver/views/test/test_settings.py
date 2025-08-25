@@ -260,6 +260,8 @@ class SettingsViewsTestCase(IntegrationTestCase):
             query_string={'code': 'auth_code', 'state': test_state}
         )
         self.assertStatus(response, 302)
+        mock_fetch_token.assert_called_once_with('auth_code')
+        mock_add_user.assert_called_once()
 
     @patch('listenbrainz.domain.funkwhale.FunkwhaleService.refresh_access_token')
     @patch('listenbrainz.domain.funkwhale.FunkwhaleService.user_oauth_token_has_expired')

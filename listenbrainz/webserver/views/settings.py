@@ -277,7 +277,7 @@ def music_services_callback(service_name: str):
                 error="Missing state parameter"
             ))
         
-        stored_state = session.get("funkwhale_state")
+        stored_state = session.get("state")
         if not stored_state or state != stored_state:
             current_app.logger.error("Invalid state parameter. Expected: %s, Got: %s", stored_state, state)
             return redirect(url_for(
@@ -379,7 +379,7 @@ def music_services_connect(service_name: str):
             raise APIBadRequest(str(e))
 
         state = base64.b64encode(os.urandom(32)).decode('utf-8')
-        session['funkwhale_state'] = state
+        session["state"] = state
         session['funkwhale_host_url'] = host_url
 
         try:
