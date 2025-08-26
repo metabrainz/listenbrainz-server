@@ -264,6 +264,9 @@ SOUNDCLOUD_REDIRECT_URI = '''{{template "KEY" "soundcloud/redirect_uri"}}'''
 # YOUTUBE
 YOUTUBE_API_KEY = '''{{template "KEY" "youtube/api_key"}}'''
 
+# FUNKWHALE
+FUNKWHALE_CALLBACK_URL = '''{{template "KEY" "funkwhale/redirect_uri"}}'''
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 TESTING = False
