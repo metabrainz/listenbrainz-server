@@ -252,7 +252,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         
         # Mock session within the request context
         with self.client.session_transaction() as sess:
-            sess['funkwhale_state'] = test_state
+            sess['state'] = test_state
             sess['funkwhale_host_url'] = 'https://demo.funkwhale.audio'
         
         response = self.client.get(
