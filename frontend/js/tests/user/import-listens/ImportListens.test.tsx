@@ -187,7 +187,7 @@ it("calls import endpoint when import listens clicked", async () => {
   await user.upload(input, file);
 
   const importButtonAfter = await screen.findByRole("button", { name: /import listens/i });
-  await waitFor(() => expect(importButtonAfter).not.toBeDisabled());
+  expect(importButtonAfter).not.toBeDisabled();
 
   fireEvent.submit(importButtonAfter);
 
