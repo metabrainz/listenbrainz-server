@@ -702,25 +702,6 @@ $alert-thumbnail-size: 60px;
   bottom: calc(1em + $brainzplayer-height);
 }
 
-// Custom styling for Internet Archive icon
-svg.fa-internetarchive,
-.fa-internetarchive {
-  // Default duotone colors for Internet Archive branding
-  --fa-primary-color: #6c757d; // Grey color matching the iconColor
-  --fa-secondary-color: #6c757d; // Same grey for consistency
-  --fa-primary-opacity: 1;
-  --fa-secondary-opacity: 1;
-}
-
-// When in a muted context, use currentColor to match other services
-.text-muted svg.fa-internetarchive,
-.text-muted .fa-internetarchive {
-  --fa-primary-color: currentColor !important;
-  --fa-secondary-color: currentColor !important;
-  --fa-primary-opacity: 1 !important;
-  --fa-secondary-opacity: 1 !important;
-}
-
 // Custom styling for Funkwhale icon
 svg.fa-funkwhale,
 .fa-funkwhale {
