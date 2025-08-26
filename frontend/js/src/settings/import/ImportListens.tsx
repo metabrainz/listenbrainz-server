@@ -3,21 +3,329 @@ import * as React from "react";
 import { Link, useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
 import ReactTooltip from "react-tooltip";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPersonDigging } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRightLong,
+  faCancel,
+  faChevronCircleRight,
+  faRefresh,
+} from "@fortawesome/free-solid-svg-icons";
+import { format } from "date-fns";
+import GlobalAppContext from "../../utils/GlobalAppContext";
+import { ToastMsg } from "../../notifications/Notifications";
+import Loader from "../../components/Loader";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
 };
 
+enum ImportStatus {
+  inProgress = "in_progress",
+  waiting = "waiting",
+  complete = "completed",
+  failed = "failed",
+  cancelled = "cancelled",
+}
+enum Services {
+  spotify = "spotify",
+  listenbrainz = "listenbrainz",
+  applemusic = "applemusic",
+}
+type Import = {
+  import_id: number;
+  created: string;
+  file_path: string;
+  metadata: { filename: string; progress: string; status: ImportStatus };
+  service: Services;
+  from_date: string;
+  to_date: string;
+};
+
+const API_PREFIX = "/1";
+
+function renderImport(
+  im: Import,
+  cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
+  fetchImport: (importId: number) => Promise<any>
+) {
+  const extraInfo = (
+    <p>
+      <details>
+        <summary>
+          <FontAwesomeIcon
+            icon={faChevronCircleRight}
+            size="sm"
+            className="summary-indicator"
+          />
+          Details
+        </summary>
+        <dl className="row">
+          <dt className="col-4">Progress</dt>
+          <dd className="col-8">{im.metadata.progress}</dd>
+          <dt className="col-4">Requested on</dt>
+          <dd className="col-8">{format(im.created, "PPp")}</dd>
+          <dt className="col-4">Import #</dt>
+          <dd className="col-8">{im.import_id}</dd>
+          <dt className="col-4">File name</dt>
+          <dd className="col-8">{im.metadata.filename}</dd>
+          <dt className="col-4">Start date</dt>
+          <dd className="col-8">{format(im.from_date, "PPP")}</dd>
+          <dt className="col-4">End date</dt>
+          <dd className="col-8">{format(im.to_date, "PPP")}</dd>
+        </dl>
+      </details>
+    </p>
+  );
+  if (im.metadata.status === ImportStatus.complete) {
+    return (
+      <div className="mt-4 alert alert-success" role="alert">
+        <h4 className="alert-heading">Import completed!</h4>
+
+        <p>
+          <b>
+            Note: the uploaded file(s) will be deleted automatically after the
+            import
+          </b>
+        </p>
+        {extraInfo}
+      </div>
+    );
+  }
+  if (im.metadata.status === ImportStatus.failed) {
+    return (
+      <div className="mt-4 alert alert-danger" role="alert">
+        <h4 className="alert-heading">Import failed</h4>
+        <p>
+          There was an error importing your data.
+          <br />
+          Please try again and contact us if the issue persists.
+        </p>
+        {extraInfo}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 alert alert-info" role="alert">
+      <h4 className="alert-heading">
+        Import in progress
+        <br />
+      </h4>
+      <p className="text-primary">
+        <FontAwesomeIcon icon={faArrowRightLong} />
+        &nbsp;{im.metadata.progress}
+        <button
+          type="button"
+          className="btn btn-sm btn-transparent"
+          onClick={() => {
+            fetchImport(im.import_id);
+          }}
+        >
+          <FontAwesomeIcon icon={faRefresh} />
+        </button>
+      </p>
+      <p>Feel free to close this page while we import your listens.</p>
+      <form
+        onSubmit={(e) => cancelImport(e, im.import_id)}
+        className="mt-3 mb-3"
+      >
+        <button type="submit" name="cancel_import" className="btn btn-warning">
+          <FontAwesomeIcon icon={faCancel} />
+          &nbsp;Cancel import
+        </button>
+      </form>
+      {extraInfo}
+    </div>
+  );
+}
+
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
   const { user_has_email: userHasEmail } = data;
 
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
+
+  const [loading, setLoading] = React.useState(false);
+  const [imports, setImports] = React.useState<Array<Import>>([]);
+
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+
+  if (currentUser?.auth_token) {
+    headers.append("Authorization", `Token ${currentUser.auth_token}`);
+  }
+
+  React.useEffect(() => {
+    // Fetch the list of imports in progress in background tasks or finished
+    async function getImportsInProgress() {
+      try {
+        const response = await fetch(`${API_PREFIX}/import-listens/list/`, {
+          method: "GET",
+          headers,
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of imports
+        const results = await response.json();
+        setImports(results);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error retrieving your imports in progress"
+            message={`Please try again and contact us if the issue persists.
+            Details: ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+    setLoading(true);
+    getImportsInProgress();
+  }, []);
+
+  const fetchImport = React.useCallback(
+    async function fetchImport(id: number) {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_PREFIX}/import-listens/${id}/`, {
+          method: "GET",
+          headers,
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        // Expecting an array of imports
+        const nexImport = await response.json();
+        setImports((prevImports) => {
+          // Replace item in imports array, or if not found there
+          // place the newly created one at the beginning
+          const existingImportIndex = prevImports.findIndex(
+            (im) => im.import_id === nexImport.import_id
+          );
+          if (existingImportIndex !== -1) {
+            const newArray = [...prevImports];
+            newArray.splice(existingImportIndex, 1, nexImport);
+            return newArray;
+          }
+          return [nexImport, ...prevImports];
+        });
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error getting your imports in progress."
+            message={`Please try again and contact us if the issue persists.
+        ${error}`}
+          />
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading]
+  );
+
+  const hasAnImportInProgress =
+    imports.findIndex(
+      (imp) => imp.metadata.status !== ImportStatus.complete
+    ) !== -1;
+
+  const createImport = React.useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      if (event) event.preventDefault();
+      try {
+        const form = event.target as HTMLFormElement;
+        const formData = new FormData(form);
+        const file = formData.get("file") as File;
+        const service = formData.get("service") as string;
+        const from_date = formData.get("from_date") as string | null;
+        const to_date = formData.get("to_date") as string | null;
+
+        if (!currentUser?.auth_token) {
+          toast.error(
+            <ToastMsg
+              title="There was an error in authorization"
+              message="No auth token was provided!"
+            />
+          );
+          return;
+        }
+        const response = await fetch(`${API_PREFIX}/import-listens/`, {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${currentUser?.auth_token}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+
+        const newImport: Import = await response.json();
+        setImports((prevImports) => [newImport, ...prevImports]);
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error creating an import of your data"
+            message={`Please try again and contact us if the issue persists.
+          ${error}`}
+          />
+        );
+      }
+    },
+    []
+  );
+
+  const cancelImport = React.useCallback(
+    async (event: React.SyntheticEvent, importToCancelId: number) => {
+      event.preventDefault();
+      try {
+        const response = await fetch(
+          `${API_PREFIX}/import-listens/cancel/${importToCancelId}`,
+          {
+            method: "POST",
+            headers,
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+        setImports((prevImports) =>
+          prevImports.filter(
+            (_import) => _import.import_id !== importToCancelId
+          )
+        );
+        toast.info(
+          <ToastMsg
+            title="Your data import has been cancelled"
+            message="You can request a new import at any time. If you are experiencing an issue please let us know."
+          />
+        );
+      } catch (error) {
+        toast.error(
+          <ToastMsg
+            title="There was an error cancelling your import"
+            message={`Please try again and contact us if the issue persists.
+           Details: ${error}`}
+          />
+        );
+      }
+    },
+    []
+  );
+
   return (
     <>
       <Helmet>
-        <title>Import listening history</title>
+        <title>Import listens for {currentUser?.name}</title>
       </Helmet>
       <h2 className="page-title">Import your listening history</h2>
       {!userHasEmail && (
@@ -73,14 +381,84 @@ export default function ImportListens() {
         avoid duplicates, be sure to set the appropriate limit date and time.
       </p>
 
-      <h3>
-        Coming soon
-        <FontAwesomeIcon icon={faPersonDigging} size="sm" className="ms-2" />
-      </h3>
+      <h3 className="card-title">Import from Listening History Files</h3>
+      <br />
       <p>
-        We are currently working on this feature as a matter of high priority,
-        please stay tuned.
+        Migrate your listens from different streaming services to Listenbrainz!
       </p>
+      <div className="card">
+        <div className="card-body">
+          <form onSubmit={createImport}>
+            <div className="flex flex-wrap" style={{ gap: "1em" }}>
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="datetime">
+                  Choose a File:
+                </label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="file"
+                  accept=".zip,.csv,.json,.jsonl"
+                  required
+                />
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="datetime">
+                  Select Service:
+                </label>
+                <select className="form-select" name="service" required>
+                  <option value="spotify">Spotify</option>
+                  <option value="listenbrainz">Listenbrainz</option>
+                  <option value="applemusic">Apple Music</option>
+                </select>
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="start-datetime">
+                  Start import from (optional):
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  name="from_date"
+                  title="Date and time to start import at"
+                />
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="end-datetime">
+                  End date for import (optional):
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString()}
+                  name="to_date"
+                  title="Date and time to end import at"
+                />
+              </div>
+
+              <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                  disabled={hasAnImportInProgress}
+                >
+                  Import Listens
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <section id="import-buttons">
+        <Loader isLoading={loading} style={{ margin: "0 1em" }} />
+        {imports &&
+          imports.map((im) => renderImport(im, cancelImport, fetchImport))}
+      </section>
     </>
   );
 }

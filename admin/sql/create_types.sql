@@ -19,10 +19,12 @@ CREATE TYPE user_stats_type AS ENUM('artists', 'releases', 'recordings', 'daily_
 
 CREATE TYPE do_not_recommend_entity_type AS ENUM ('artist', 'release', 'release_group', 'recording');
 
-CREATE TYPE background_tasks_type AS ENUM ('delete_listens', 'delete_user', 'export_all_user_data');
+CREATE TYPE background_tasks_type AS ENUM ('delete_listens', 'delete_user', 'export_all_user_data', 'import_listens');
 
 CREATE TYPE user_data_export_status_type AS ENUM ('in_progress', 'waiting', 'completed', 'failed');
 
 CREATE TYPE user_data_export_type_type AS ENUM ('export_all_user_data');
+
+CREATE TYPE user_data_import_service_type AS ENUM ('spotify', 'applemusic', 'listenbrainz');
 
 CREATE TYPE data_dump_type_type AS ENUM ('incremental', 'full');

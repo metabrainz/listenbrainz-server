@@ -47,12 +47,12 @@ function RecommendationsPageLayout() {
           </li>
           <NavItem
             label="Tracks you might like"
-            url={`/recommended/tracks/${userName}/`}
+            url={`/recommended/tracks/${encodeURIComponent(userName)}/`}
             isActive={activeSection === ""}
           />
           <NavItem
             label="Raw Recommendations"
-            url={`/recommended/tracks/${userName}/raw/`}
+            url={`/recommended/tracks/${encodeURIComponent(userName)}/raw/`}
             isActive={activeSection === "raw"}
           />
         </ul>

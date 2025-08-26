@@ -1,4 +1,5 @@
 import * as React from "react";
+import { union } from "lodash";
 import {
   faSpotify,
   faApple,
@@ -13,15 +14,16 @@ import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
 import { faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
-import { union } from "lodash";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
 import SoundcloudPlayer from "../../common/brainzplayer/SoundcloudPlayer";
+import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
+import faFunkwhale from "../../common/icons/faFunkwhale";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -49,6 +51,11 @@ export const dataSourcesInfo = {
     icon: faInternetArchive,
     color: "#6c757d",
   },
+  funkwhale: {
+    name: "Funkwhale",
+    icon: faFunkwhale,
+    color: "#009FE3",
+  },
 } as const;
 
 export type DataSourceKey = keyof typeof dataSourcesInfo;
@@ -58,6 +65,7 @@ export const defaultDataSourcesPriority = [
   "spotify",
   "appleMusic",
   "soundcloud",
+  "funkwhale",
   "youtube",
   "internetArchive",
 ] as DataSourceKey[];
@@ -67,6 +75,7 @@ function BrainzPlayerSettings() {
     spotifyAuth,
     soundcloudAuth,
     appleAuth,
+    funkwhaleAuth,
     APIService,
     currentUser,
   } = React.useContext(GlobalAppContext);
@@ -88,6 +97,10 @@ function BrainzPlayerSettings() {
   );
   const [internetArchiveEnabled, setInternetArchiveEnabled] = React.useState(
     userPreferences?.brainzplayer?.internetArchiveEnabled ?? true
+  );
+  const [funkwhaleEnabled, setFunkwhaleEnabled] = React.useState(
+    userPreferences?.brainzplayer?.funkwhaleEnabled ??
+      FunkwhalePlayer.hasPermissions(funkwhaleAuth)
   );
   const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
@@ -138,6 +151,7 @@ function BrainzPlayerSettings() {
         soundcloudEnabled,
         appleMusicEnabled,
         internetArchiveEnabled,
+        funkwhaleEnabled,
         brainzplayerEnabled,
         dataSourcesPriority,
       });
@@ -152,6 +166,7 @@ function BrainzPlayerSettings() {
           soundcloudEnabled,
           appleMusicEnabled,
           internetArchiveEnabled,
+          funkwhaleEnabled,
           brainzplayerEnabled,
           dataSourcesPriority,
         };
@@ -176,6 +191,7 @@ function BrainzPlayerSettings() {
     soundcloudEnabled,
     appleMusicEnabled,
     internetArchiveEnabled,
+    funkwhaleEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
     APIService,
@@ -349,6 +365,52 @@ function BrainzPlayerSettings() {
             </Link>
           </small>
         </div>
+        <div
+          className="mb-4"
+          data-tip
+          data-tip-disable={
+            funkwhaleEnabled || FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+          }
+          data-for="login-first"
+        >
+          <Switch
+            id="enable-funkwhale"
+            value="funkwhale"
+            disabled={
+              !funkwhaleEnabled &&
+              !FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+            }
+            checked={funkwhaleEnabled}
+            onChange={(e) => setFunkwhaleEnabled(!funkwhaleEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !funkwhaleEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faFunkwhale as IconProp}
+                    color={
+                      funkwhaleEnabled ? dataSourcesInfo.funkwhale.color : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Funkwhale</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Funkwhale is a federated audio platform. You will need to connect a
+            Funkwhale instance.
+            <br />
+            Sign in on the{" "}
+            <Link to="/settings/music-services/details/">
+              &quot;connect services&quot; page
+            </Link>
+          </small>
+        </div>
         <div className="mb-4">
           <Switch
             id="enable-youtube"
@@ -455,11 +517,11 @@ function BrainzPlayerSettings() {
                 </span>
                 <span>
                   <FontAwesomeIcon
-                    icon={item.info.icon}
-                    color={item.info.color}
+                    icon={item.info?.icon}
+                    color={item.info?.color}
                   />
                 </span>
-                <span>&nbsp;{item.info.name}</span>
+                <span>&nbsp;{item.info?.name}</span>
               </div>
             </Card>
           ))}

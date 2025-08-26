@@ -32,6 +32,7 @@ function Navbar() {
     toggleSidebar();
     navigate(`/search/?search_term=${encodeURIComponent(searchInput)}`);
   };
+  const encodedUsername = encodeURIComponent(currentUser.name);
 
   return (
     <nav role="navigation">
@@ -48,9 +49,7 @@ function Navbar() {
         <Link
           className="navbar-logo"
           to={
-            currentUser?.name
-              ? `/user/${currentUser.name}/`
-              : "/?redirect=false"
+            currentUser?.name ? `/user/${encodedUsername}/` : "/?redirect=false"
           }
           onClick={toggleSidebar}
         >
@@ -63,96 +62,98 @@ function Navbar() {
       </div>
 
       <div id="side-nav" className="collapse">
-        <Link
-          className="navbar-logo"
-          to={
-            currentUser?.name
-              ? `/user/${currentUser.name}/`
-              : "/?redirect=false"
-          }
-          onClick={toggleSidebar}
-        >
-          <img
-            src="/static/img/listenbrainz_logo_icon.svg"
-            alt="ListenBrainz"
+        <form className="search-bar" role="search" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="search_term"
+            className="form-control form-control-sm"
+            placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            required
           />
-        </Link>
-        <div className="main-nav">
-          {currentUser?.name ? (
-            <>
-              <NavLink to="/feed/" onClick={toggleSidebar}>
-                Feed
-              </NavLink>
-              <NavLink
-                to={`/user/${currentUser.name}/`}
-                onClick={toggleSidebar}
-              >
-                Dashboard
-              </NavLink>
-            </>
-          ) : (
-            <>
-              <NavLink to="/recent/" onClick={toggleSidebar}>
-                Feed
-              </NavLink>
-              <NavLink to="/statistics/" onClick={toggleSidebar}>
-                Dashboard
-              </NavLink>
-            </>
-          )}
-          <NavLink to="/explore/" onClick={toggleSidebar}>
-            Explore
-          </NavLink>
-        </div>
-
-        <div className="navbar-bottom">
-          {currentUser?.name ? (
-            <>
-              <Username
-                username={currentUser.name}
-                hideLink
-                elementType="div"
-                className="username"
-              />
-              <a href="/login/logout/">Logout</a>
-              <NavLink to="/settings/" onClick={toggleSidebar}>
-                Settings
-              </NavLink>
-            </>
-          ) : (
-            <Link to="/login/" onClick={toggleSidebar}>
-              Sign in
-            </Link>
-          )}
-          <NavLink to="/about/" onClick={toggleSidebar}>
-            About
-          </NavLink>
-          <NavLink to="/donors/" onClick={toggleSidebar}>
-            Donations
-          </NavLink>
-          <a
-            href="https://community.metabrainz.org/c/listenbrainz"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button type="submit">
+            <FontAwesomeIcon icon={faMagnifyingGlass} />
+          </button>
+        </form>
+        <div className="sidebar-nav">
+          <Link
+            className="navbar-logo"
+            to={
+              currentUser?.name
+                ? `/user/${encodedUsername}/`
+                : "/?redirect=false"
+            }
+            onClick={toggleSidebar}
           >
-            Community
-          </a>
-          <form className="search-bar" role="search" onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="search_term"
-              className="form-control form-control-sm"
-              placeholder="Search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              required
+            <img
+              src="/static/img/listenbrainz_logo_icon.svg"
+              alt="ListenBrainz"
             />
-            <button type="submit">
-              <FontAwesomeIcon icon={faMagnifyingGlass} />
-            </button>
-          </form>
+          </Link>
+          <div className="main-nav">
+            {currentUser?.name ? (
+              <>
+                <NavLink to="/feed/" onClick={toggleSidebar}>
+                  Feed
+                </NavLink>
+                <NavLink
+                  to={`/user/${encodedUsername}/`}
+                  onClick={toggleSidebar}
+                >
+                  Dashboard
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink to="/recent/" onClick={toggleSidebar}>
+                  Feed
+                </NavLink>
+                <NavLink to="/statistics/" onClick={toggleSidebar}>
+                  Dashboard
+                </NavLink>
+              </>
+            )}
+            <NavLink to="/explore/" onClick={toggleSidebar}>
+              Explore
+            </NavLink>
+          </div>
+
+          <div className="navbar-bottom">
+            {currentUser?.name ? (
+              <>
+                <Username
+                  username={currentUser.name}
+                  hideLink
+                  elementType="div"
+                  className="username"
+                />
+                <a href="/login/logout/">Logout</a>
+                <NavLink to="/settings/" onClick={toggleSidebar}>
+                  Settings
+                </NavLink>
+              </>
+            ) : (
+              <Link to="/login/" onClick={toggleSidebar}>
+                Sign in
+              </Link>
+            )}
+            <NavLink to="/about/" onClick={toggleSidebar}>
+              About
+            </NavLink>
+            <NavLink to="/donors/" onClick={toggleSidebar}>
+              Donations
+            </NavLink>
+            <a
+              href="https://community.metabrainz.org/c/listenbrainz"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Community
+            </a>
+          </div>
+          <div className="mobile-nav-fix" />
         </div>
-        <div className="mobile-nav-fix" />
       </div>
       <div
         id="side-nav-overlay"

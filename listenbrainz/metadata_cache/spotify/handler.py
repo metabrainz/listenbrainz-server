@@ -50,7 +50,7 @@ class SpotifyCrawlerHandler(AlbumHandler):
     @staticmethod
     def transform_album(album) -> Album:
         tracks = []
-        for track in album.pop("tracks"):
+        for track in album.pop("tracks")["items"]:
             track_artists = [
                 Artist(id=artist["id"], name=artist["name"], data=artist)
                 for artist in track.pop("artists")

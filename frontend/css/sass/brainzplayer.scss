@@ -720,3 +720,28 @@ svg.fa-internetarchive,
   --fa-primary-opacity: 1 !important;
   --fa-secondary-opacity: 1 !important;
 }
+
+// Custom styling for Funkwhale icon
+svg.fa-funkwhale,
+.fa-funkwhale {
+  width: 1.3em !important;
+  height: 1.3em !important;
+
+  // Match the vertical alignment used by other music service icons
+  vertical-align: text-bottom !important;
+
+  // Default duotone colors for Funkwhale branding
+  --fa-primary-color: #009fe3; // Blue arcs
+  --fa-secondary-color: #3c3c3b; // dark whale fluke
+  --fa-primary-opacity: 1;
+  --fa-secondary-opacity: 1;
+}
+
+// When in a muted context, use currentColor to match other services
+.text-muted svg.fa-funkwhale,
+.text-muted .fa-funkwhale {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 1 !important;
+  --fa-secondary-opacity: 1 !important;
+}

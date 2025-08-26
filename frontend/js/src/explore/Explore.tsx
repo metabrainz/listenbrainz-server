@@ -97,27 +97,35 @@ export default function ExplorePage() {
               name="Your Year in Music 2024"
               desc="Review"
               img_name="year-in-music-2024.png"
-              url={`/user/${currentUser.name}/year-in-music/2024/`}
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/2024/`}
             />
 
             <ExploreCard
               name="Your Year in Music 2023"
               desc="Review"
               img_name="year-in-music-2023.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2023/`}
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/2023/`}
             />
 
             <ExploreCard
               name="Your Year in Music 2022"
               desc="Review"
               img_name="year-in-music-2022.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2022/`}
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/2022/`}
             />
             <ExploreCard
               name="Your Year in Music 2021"
               desc="Review"
               img_name="year-in-music-2021.jpg"
-              url={`/user/${currentUser.name}/year-in-music/2021/`}
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/2021/`}
             />
           </div>
         </>

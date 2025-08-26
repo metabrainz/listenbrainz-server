@@ -107,7 +107,9 @@ export default function UserReports() {
               onClick={() => {
                 navigate(
                   `/user/${
-                    user?.name ?? currentUser?.name
+                    user?.name
+                      ? encodeURIComponent(user.name)
+                      : encodeURIComponent(currentUser.name)
                   }/stats/?range=${range}`
                 );
               }}
