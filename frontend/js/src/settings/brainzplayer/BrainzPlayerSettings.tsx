@@ -473,11 +473,11 @@ function BrainzPlayerSettings() {
                 </span>
                 <span>
                   <FontAwesomeIcon
-                    icon={item.info.icon}
-                    color={item.info.color}
+                    icon={item.info?.icon}
+                    color={item.info?.color}
                   />
                 </span>
-                <span>&nbsp;{item.info.name}</span>
+                <span>&nbsp;{item.info?.name}</span>
               </div>
             </Card>
           ))}
