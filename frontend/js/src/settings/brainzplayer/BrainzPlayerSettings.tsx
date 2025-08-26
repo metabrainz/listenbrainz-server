@@ -14,6 +14,7 @@ import ReactTooltip from "react-tooltip";
 import { ReactSortable } from "react-sortablejs";
 import { faGripLines } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition, IconProp } from "@fortawesome/fontawesome-svg-core";
+import { union } from "lodash";
 import Switch from "../../components/Switch";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import SpotifyPlayer from "../../common/brainzplayer/SpotifyPlayer";
@@ -24,6 +25,7 @@ import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
+import faInternetArchive from "../../common/icons/faInternetArchive";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -55,6 +57,11 @@ export const dataSourcesInfo = {
     name: "Funkwhale",
     icon: faFunkwhale,
     color: "#009FE3",
+  },
+  internetArchive: {
+    name: "Internet Archive",
+    icon: faInternetArchive,
+    color: "#6c757d",
   },
 } as const;
 
@@ -101,6 +108,9 @@ function BrainzPlayerSettings() {
   const [funkwhaleEnabled, setFunkwhaleEnabled] = React.useState(
     userPreferences?.brainzplayer?.funkwhaleEnabled ??
       FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+  );
+  const [internetArchiveEnabled, setInternetArchiveEnabled] = React.useState(
+    userPreferences?.brainzplayer?.internetArchiveEnabled ?? true
   );
   const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
@@ -152,6 +162,7 @@ function BrainzPlayerSettings() {
         appleMusicEnabled,
         internetArchiveEnabled,
         funkwhaleEnabled,
+        internetArchiveEnabled,
         brainzplayerEnabled,
         dataSourcesPriority,
       });
@@ -167,6 +178,7 @@ function BrainzPlayerSettings() {
           appleMusicEnabled,
           internetArchiveEnabled,
           funkwhaleEnabled,
+          internetArchiveEnabled,
           brainzplayerEnabled,
           dataSourcesPriority,
         };
@@ -192,6 +204,7 @@ function BrainzPlayerSettings() {
     appleMusicEnabled,
     internetArchiveEnabled,
     funkwhaleEnabled,
+    internetArchiveEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
     APIService,

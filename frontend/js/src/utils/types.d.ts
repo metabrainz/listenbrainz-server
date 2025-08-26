@@ -706,9 +706,15 @@ declare type BrainzPlayerSettings = {
   appleMusicEnabled?: boolean;
   internetArchiveEnabled?: boolean;
   funkwhaleEnabled?: boolean;
+  internetArchiveEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic" | "internetArchive" | "funkwhale"
+    | "spotify"
+    | "youtube"
+    | "soundcloud"
+    | "appleMusic"
+    | "funkwhale"
+    | "internetArchive"
   >;
 };
 

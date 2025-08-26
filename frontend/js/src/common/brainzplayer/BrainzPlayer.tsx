@@ -242,6 +242,7 @@ export default function BrainzPlayer() {
     internetArchiveEnabled && "internetArchive",
   ].filter(Boolean) as DataSourceKey[];
 
+  // Use the enabled sources to filter the priority list
   // Combine saved priority list and default list to add any new music service at the end
   // then filter out disabled datasources (new ones will be enabled by default)
   const sortedDataSources = union(
@@ -276,6 +277,7 @@ export default function BrainzPlayer() {
           break;
         case "internetArchive":
           dataSources.push(internetArchivePlayerRef);
+          break;
         case "funkwhale":
           dataSources.push(funkwhalePlayerRef);
           break;
