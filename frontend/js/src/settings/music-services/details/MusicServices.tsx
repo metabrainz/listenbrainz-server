@@ -68,6 +68,10 @@ export default function MusicServices() {
     username: navidromeAuth?.username || "",
   });
 
+  const navidromeEditButtonClass =
+    permissions.navidrome !== "listen"
+      ? "btn-default"
+      : (navidromeIsEditing && "btn-success") || "btn-warning";
   const handlePermissionChange = async (
     serviceName: string,
     newValue: string
@@ -293,6 +297,28 @@ export default function MusicServices() {
         throw Error(
           "Navidrome server URL, username, and password are required"
         );
+      }
+
+      // If we're in edit mode and already connected, disconnect first to avoid duplicates
+      if (navidromeIsEditing && permissions.navidrome === "listen") {
+        try {
+          const disconnectResponse = await fetch(
+            `/settings/music-services/navidrome/disconnect/`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${currentUser?.auth_token}`,
+              },
+            }
+          );
+        } catch (disconnectError) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            "Failed to disconnect before reconnecting:",
+            disconnectError
+          );
+        }
       }
 
       const response = await fetch(
@@ -842,19 +868,16 @@ export default function MusicServices() {
                     />
                   </div>
                 )}
-                {permissions.navidrome === "listen" && (
-                  <div style={{ flex: 0, alignSelf: "end" }}>
-                    <button
-                      type="button"
-                      className={`btn ${
-                        navidromeIsEditing ? "btn-success" : "btn-warning"
-                      }`}
-                      onClick={handleNavidromeEditToggle}
-                    >
-                      {navidromeIsEditing ? "Save" : "Edit"}
-                    </button>
-                  </div>
-                )}
+                <div style={{ flex: 0, alignSelf: "end" }}>
+                  <button
+                    disabled={permissions.navidrome !== "listen"}
+                    type="button"
+                    className={`btn ${navidromeEditButtonClass}`}
+                    onClick={handleNavidromeEditToggle}
+                  >
+                    {navidromeIsEditing ? "Save" : "Edit"}
+                  </button>
+                </div>
               </div>
               <br />
               <div className="music-service-selection">
