@@ -3,11 +3,31 @@ import { screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router";
 import { HttpResponse, http } from "msw";
+import { merge } from "lodash";
 import { SetupServerApi, setupServer } from "msw/node";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import getSettingsRoutes from "../../../src/settings/routes";
 import { ReactQueryWrapper } from "../../test-react-query";
 import { enableFetchMocks } from "jest-fetch-mock";
+
+/* 
+  Mocking FormData to resolve an error with msw/jest-fixed-jsdom
+  See https://github.com/mswjs/jest-fixed-jsdom/issues/32
+*/
+Object.defineProperty(window, "FormData", {
+  writable: true,
+  value: jest.fn().mockImplementation(function () {
+    const store: Record<string, any> = {};
+    return {
+      append: (key: string, value: any) => {
+        store[key] = value;
+      },
+      get: (key: string) => store[key],
+      entries: () => Object.entries(store),
+    };
+  }),
+});
+
 
 enableFetchMocks();
 jest.unmock("react-toastify");
@@ -68,11 +88,6 @@ describe("ImportListensPage", () => {
       })
     );
 
-    server.events.on("request:start", ({ request }) => {
-      console.log("MSW captured:", request.method, request.url);
-    });
-
-
     server.listen();
 
     router = createMemoryRouter(routes, {
@@ -130,9 +145,21 @@ it("calls import endpoint when import listens clicked", async () => {
   let submitAPICalled = false;
 
   server.use(
-    http.post("/settings/import/", (req) => {
+    http.post("/1/import-listens/", (req) => {
       submitAPICalled = true;
-      return HttpResponse.json({ user_has_email: true });
+      const newImport = {
+        import_id: 3,
+        service: "spotify",
+        created: "2025-08-12T10:00:00Z",
+        metadata: {
+          filename: "spotify_test.zip",
+          progress: "Your data import will start soon.",
+          status: "waiting",
+        },
+        from_date: "1970-01-01T00:00:00Z",
+        to_date: "2025-08-11T00:00:00Z",
+      };
+      return HttpResponse.json(newImport);
     })
   );
 
@@ -151,9 +178,11 @@ it("calls import endpoint when import listens clicked", async () => {
   const importButtonAfter = await screen.findByRole("button", { name: /import listens/i });
   await waitFor(() => expect(importButtonAfter).not.toBeDisabled());
 
-  fireEvent.click(importButtonAfter);
+  fireEvent.submit(importButtonAfter);
 
   await waitFor(() => expect(submitAPICalled).toBe(true));
+
+  expect(screen.getByText("spotify_test.zip")).toBeInTheDocument();
 });
 
 
@@ -172,14 +201,19 @@ it("calls import endpoint when import listens clicked", async () => {
 
     const cancelBtn = screen.getByRole("button", { name: "Cancel import" });
     await user.click(cancelBtn);
-    await waitFor(() => expect(cancelAPICalled).toBe(true));
+    expect(cancelAPICalled).toBe(true);
+    expect(screen.queryByText("spotify.zip")).not.toBeInTheDocument();
   });
 
   it("calls refresh endpoint when refresh clicked", async () => {
     server.use(
       http.get("/1/import-listens/1/", (req) => {
         refreshAPICalled = true;
-        return HttpResponse.json(mockImports[0]);
+        return HttpResponse.json(
+          merge(mockImports[0], {
+            metadata: { filename: "spotify-updated.zip" },
+          })
+        );
     }));
     renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
 
@@ -188,7 +222,13 @@ it("calls import endpoint when import listens clicked", async () => {
     });
 
     const refreshBtn = screen.getByRole("button", { name: "Refresh" });
+    await waitFor(() => {
+      expect(screen.getByText("spotify.zip")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("spotify-updated.zip")).not.toBeInTheDocument();
+
     await user.click(refreshBtn);
-    await waitFor(() => expect(refreshAPICalled).toBe(true));
+    expect(screen.getByText("spotify-updated.zip")).toBeInTheDocument();
+    expect(screen.queryByText("spotify.zip")).not.toBeInTheDocument();
   });
 });

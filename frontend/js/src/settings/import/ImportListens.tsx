@@ -160,7 +160,7 @@ export default function ImportListens() {
 
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
-  const [fileSelected, setFileSelected] = React.useState<File | null>(null);
+  const [fileSelected, setFileSelected] = React.useState(false);
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -251,12 +251,8 @@ export default function ImportListens() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       if (event) event.preventDefault();
       try {
-        const form = event.target as HTMLFormElement;
+        const form = event.currentTarget;
         const formData = new FormData(form);
-        const file = formData.get("file") as File;
-        const service = formData.get("service") as string;
-        const from_date = formData.get("from_date") as string | null;
-        const to_date = formData.get("to_date") as string | null;
 
         if (!currentUser?.auth_token) {
           toast.error(
@@ -414,7 +410,7 @@ export default function ImportListens() {
                   name="file"
                   accept=".zip,.csv,.json,.jsonl"
                   required
-                  onChange={(e) => setFileSelected(e.target.files?.[0] ?? null)}
+                  onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
               </div>
 
