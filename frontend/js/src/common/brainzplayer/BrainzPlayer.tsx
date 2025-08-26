@@ -250,15 +250,6 @@ export default function BrainzPlayer() {
     dataSourcesPriority,
     defaultDataSourcesPriority
   ).filter((key) => enabledDataSources.includes(key));
-  // Combine saved priority list and default list to add any new music service at the end
-  // then filter out disabled datasources (new ones will be enabled by default)
-  const sortedDataSources = union(dataSourcesPriority
-    ,
-    defaultDataSourcesPriority
-  ).filter((key) => enabledDataSources.includes(key))
-    .concat(
-      enabledDataSources.includes("internetArchive") ? ["internetArchive"] : []
-    );
 
   // Refs
   const spotifyPlayerRef = React.useRef<SpotifyPlayer>(null);
