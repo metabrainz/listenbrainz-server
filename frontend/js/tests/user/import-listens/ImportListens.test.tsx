@@ -142,7 +142,6 @@ describe("ImportListensPage", () => {
   });
 
 it("calls import endpoint when import listens clicked", async () => {
-  let submitAPICalled = false;
 
   server.use(
     http.post("/1/import-listens/", (req) => {
@@ -160,7 +159,19 @@ it("calls import endpoint when import listens clicked", async () => {
         to_date: "2025-08-11T00:00:00Z",
       };
       return HttpResponse.json(newImport);
-    })
+    }),
+    http.get("/1/import-listens/list/", () => {
+      return HttpResponse.json(
+        mockImports.map((imp) => ({
+          ...imp,
+          metadata: {
+            ...imp.metadata,
+            status: "completed",
+            progress: "Import completed!",
+          },
+        }))
+      );
+    }),
   );
 
   renderWithProviders(
@@ -173,26 +184,36 @@ it("calls import endpoint when import listens clicked", async () => {
   const input = screen.getByLabelText(/choose a file/i);
 
   const file = new File(["spotify_test"], "spotify_test.zip", { type: "application/zip" });
-  fireEvent.change(input, { target: { files: [file] } });
+  await user.upload(input, file);
 
   const importButtonAfter = await screen.findByRole("button", { name: /import listens/i });
   await waitFor(() => expect(importButtonAfter).not.toBeDisabled());
 
   fireEvent.submit(importButtonAfter);
 
-  await waitFor(() => expect(submitAPICalled).toBe(true));
-
-  expect(screen.getByText("spotify_test.zip")).toBeInTheDocument();
+  await waitFor(() => {
+    expect(submitAPICalled).toBe(true);
+    expect(screen.getByText("spotify_test.zip")).toBeInTheDocument();
+  });
 });
 
 
   it("calls cancel endpoint when cancel clicked", async () => {
 
     server.use(
+      http.get("/1/import-listens/list/", () => {
+        return HttpResponse.json([
+          merge(mockImports[0], {
+            metadata: { status: "waiting", progress: "Your data import will start soon." },
+          }),
+        ]);
+      }),
       http.post("/1/import-listens/cancel/1", (req) => {
         cancelAPICalled = true;
         return HttpResponse.json({ success: true, id: 1 });
-    }));
+      })
+    );
+
     renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
 
     await waitFor(() => {
