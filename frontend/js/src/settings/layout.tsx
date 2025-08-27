@@ -28,7 +28,7 @@ const sections: Section[] = [
     links: [
       { to: "./", label: "User settings" },
       {
-        to: "notification/",
+        to: "notifications/",
         label: "Notification settings",
       },
       { to: "select_timezone/", label: "Timezone" },
