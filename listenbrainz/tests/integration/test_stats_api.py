@@ -264,7 +264,7 @@ class StatsAPITestCase(IntegrationTestCase):
 
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
-        self.assertEqual(sent['data'], received['result'])
+        self.assertEqual(sent['data'], received['genre_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
     def assertArtistMapEqual(self, request, response):
