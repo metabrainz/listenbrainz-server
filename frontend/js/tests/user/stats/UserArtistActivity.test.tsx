@@ -1,104 +1,112 @@
-// frontend/js/tests/user/stats/UserArtistEvolutionActivity.test.tsx
 import * as React from "react";
+
 import { screen, waitFor } from "@testing-library/react";
+import { SetupServerApi, setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import GlobalAppContext from "../../../src/utils/GlobalAppContext";
-import ArtistEvolutionActivityStreamGraph from "../../../src/user/stats/components/UserArtistEvolutionActivity";
+import UserArtistActivity, {
+  UserArtistActivityProps,
+} from "../../../src/user/stats/components/UserArtistActivity";
+import * as userArtistActivityResponse from "../../__mocks__/userArtistActivity.json";
 import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 
-type Props = React.ComponentProps<typeof ArtistEvolutionActivityStreamGraph>;
-
-const userProps: Props = {
-  user: { name: "foobar" } as any,
-  range: "year" as UserStatsAPIRange,
+const userProps: UserArtistActivityProps = {
+  user: {
+    name: "foobar",
+  },
+  range: "week",
 };
 
-const sitewideProps: Props = {
-  range: "year" as UserStatsAPIRange,
+const sitewideProps: UserArtistActivityProps = {
+  range: "week",
 };
 
-// Mock the Nivo stream chart to avoid rendering a heavy SVG tree
-jest.mock("@nivo/stream", () => ({
-  ResponsiveStream: () => <div>Mock Stream Chart</div>,
+jest.mock("@nivo/bar", () => ({
+  ...jest.requireActual("@nivo/bar"),
+  ResponsiveBar: ({ children }: any) => children({ width: 400, height: 400 }),
 }));
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
 });
 
 const reactQueryWrapper = ({ children }: any) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-function withProviders(
-  ui: React.ReactElement,
-  APIService: any,
-) {
-  return renderWithProviders(
-    <GlobalAppContext.Provider value={{ APIService } as any}>
-      {ui}
-    </GlobalAppContext.Provider>,
-    {},
-    { wrapper: reactQueryWrapper }
-  );
-}
-
-// Base payload shape the component expects
-const basePayload = {
-  offset_year: 2020,
-  range: "year" as UserStatsAPIRange,
-  from_ts: 0,
-  to_ts: 0,
-  last_updated: 0,
-  user_id: "foobar",
-};
-
 describe.each([
   ["User Stats", userProps],
   ["Sitewide Stats", sitewideProps],
-])("%s", (_name, props) => {
+])("%s", (name, props) => {
+  let server: SetupServerApi;
+  beforeAll(() => {
+    const handlers = [
+      http.get("/1/stats/user/foobar/artist-activity", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistActivityResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
+      }),
+      http.get("/1/stats/sitewide/artist-activity", async ({ request }) => {
+        const url = new URL(request.url);
+        const range = url.searchParams.get("range");
+
+        switch (range) {
+          case "week":
+            return HttpResponse.json(userArtistActivityResponse);
+          default:
+            return HttpResponse.json(
+              { error: "Failed to fetch data" },
+              { status: 500 }
+            );
+        }
+      }),
+    ];
+    server = setupServer(...handlers);
+    server.listen();
+  });
   afterEach(() => {
     queryClient.cancelQueries();
     queryClient.clear();
-    jest.clearAllMocks();
+  });
+  afterAll(() => {
+    server.close();
   });
 
-  it("renders the chart when API returns data", async () => {
-    const APIService = {
-      getUserArtistEvolutionActivity: jest.fn().mockResolvedValue({
-        payload: {
-          ...basePayload,
-          range: props.range,
-          artist_evolution_activity: [
-            { id: "Jan", "Artist A": 5, "Artist B": 2 },
-            { id: "Feb", "Artist A": 3, "Artist B": 4 },
-          ],
-        },
-      } as UserArtistEvolutionActivityResponse),
-    };
+  it("renders correctly", async () => {
+    renderWithProviders(
+      <UserArtistActivity {...props} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
-    withProviders(<ArtistEvolutionActivityStreamGraph {...props} />, APIService);
-
-    // Mocked chart should render and empty-state should NOT be present
     await waitFor(() => {
-      expect(screen.getByText("Mock Stream Chart")).toBeInTheDocument();
+      expect(screen.getByTestId("user-artist-activity")).toBeInTheDocument();
     });
-    expect(
-      screen.getByTestId("artist-evolution-stream")
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByText("No artist evolution data available for this time period")
-    ).not.toBeInTheDocument();
   });
 
-  it("shows error message when API call fails", async () => {
-    const APIService = {
-      getUserArtistEvolutionActivity: jest
-        .fn()
-        .mockRejectedValue(new Error("Failed to fetch data")),
-    };
-
-    withProviders(<ArtistEvolutionActivityStreamGraph {...props} />, APIService);
+  it("displays error message when API call fails", async () => {
+    renderWithProviders(
+      <UserArtistActivity {...{ ...props, range: "month" }} />,
+      {},
+      {
+        wrapper: reactQueryWrapper,
+      }
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Failed to fetch data")).toBeInTheDocument();
