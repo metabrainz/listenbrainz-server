@@ -1,43 +1,25 @@
 import * as React from "react";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { useLoaderData } from "react-router";
 
 import Switch from "../../components/Switch";
 
-export default function NotificationSettings() {
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);
-  const [digestEnabled, setDigestEnabled] = React.useState(false);
-  const [digestAge, setDigestAge] = React.useState<number>(7);
-  const [initialDigestEnabled, setInitialDigestEnabled] = React.useState(false);
-  const [initialDigestAge, setInitialDigestAge] = React.useState<number | null>(
-    null
-  );
-  const [loading, setLoading] = React.useState(true);
-  const [saving, setSaving] = React.useState(false);
+type NotificationPreferenceLoaderData = {
+  digest: boolean;
+  digest_age: number;
+};
 
-  React.useEffect(() => {
-    async function fetchDigestSettings() {
-      try {
-        const response = await fetch("/settings/digest-setting/");
-        if (!response.ok) {
-          throw new Error(`${response.status} HTTP response.`);
-        }
-        const data = await response.json();
-        setDigestEnabled(data.digest);
-        setDigestAge(data.digest_age);
-        setInitialDigestEnabled(data.digest);
-        setInitialDigestAge(data.digest_age);
-        setNotificationsEnabled(data.digest);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Could not fetch notification settings.", error);
-        toast.error("Failed to load notification settings.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchDigestSettings();
-  }, []);
+export default function NotificationSettings() {
+  const loaderData = useLoaderData() as NotificationPreferenceLoaderData;
+
+  const [digestEnabled, setDigestEnabled] = React.useState(loaderData.digest);
+  const [digestAge, setDigestAge] = React.useState(loaderData.digest_age);
+  // change this when notifications API is added.
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(
+    loaderData.digest
+  );
+  const [saving, setSaving] = React.useState(false);
 
   const updateDigestSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,25 +35,28 @@ export default function NotificationSettings() {
           digest_age: digestAge,
         }),
       });
+      const responseData = await response.json();
       if (!response.ok) {
-        throw new Error(`${response.status} HTTP response.`);
+        throw new Error(responseData.error);
       }
       toast.success("Notification settings saved successfully");
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Could not update notification settings.", error);
-      toast.error("Failed to save notification settings. Please try again.");
+      toast.error(`Failed to save notification settings.${error}`);
     } finally {
       setSaving(false);
     }
   };
 
   const hasNoChanges =
-    digestEnabled === initialDigestEnabled && digestAge === initialDigestAge;
+    // change this when notifications API is added.
+    notificationsEnabled === loaderData.digest &&
+    digestEnabled === loaderData.digest &&
+    digestAge === loaderData.digest_age;
 
-  if (loading) {
-    return <div>Loading notification settings...</div>;
-  }
+  const isDigestAgeValid =
+    !notificationsEnabled ||
+    !digestEnabled ||
+    (notificationsEnabled && digestEnabled && digestAge);
 
   return (
     <>
@@ -131,10 +116,10 @@ export default function NotificationSettings() {
           />
           {digestEnabled && (
             <div className="mb-4">
-              Send digest emails every{" "}
+              Send digest emails every
               <input
                 type="number"
-                className="d-inline form-control"
+                className="d-inline form-control ms-2 me-2"
                 id="digest-age"
                 min={1}
                 max={100}
@@ -143,7 +128,7 @@ export default function NotificationSettings() {
                 onChange={(e) => {
                   setDigestAge(Number(e.target.value));
                 }}
-              />{" "}
+              />
               days
             </div>
           )}
@@ -152,7 +137,7 @@ export default function NotificationSettings() {
           <button
             className="btn btn-lg btn-info"
             type="submit"
-            disabled={saving || hasNoChanges || !digestAge}
+            disabled={saving || hasNoChanges || !isDigestAgeValid}
           >
             Save notification settings
           </button>
