@@ -12,6 +12,7 @@ import {
   format,
 } from "date-fns";
 import Slider from "rc-slider";
+import { useNavigate } from "react-router";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -107,7 +108,6 @@ const renderCustomTooltip = (
                   borderRadius: "2px",
                 }}
               />
-              {/* Artist name clickable to /artist_<MBID> */}
               <a
                 href={artistHref(point.id)}
                 className="fw-bold text-decoration-none"
@@ -329,6 +329,7 @@ export default function ArtistEvolutionActivityStreamGraph(
 ) {
   const { APIService } = React.useContext(GlobalAppContext);
   const { user, range } = props;
+  const navigate = useNavigate();
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: artistEvolutionQueryKey(user?.name, range),
@@ -393,7 +394,7 @@ export default function ArtistEvolutionActivityStreamGraph(
   const artistHref = React.useCallback(
     (name: string) => {
       const mbid = artistMap[name];
-      return mbid ? `/artist_${mbid}` : "#";
+      return mbid ? `/artist/${mbid}` : "#";
     },
     [artistMap]
   );
@@ -534,7 +535,7 @@ export default function ArtistEvolutionActivityStreamGraph(
                       onClick: (datum: any) => {
                         const name = datum.label;
                         const mbid = artistMap[name];
-                        if (mbid) window.location.href = `/artist_${mbid}`;
+                        if (mbid) navigate(`/artist/${mbid}`);
                       },
                     } as any,
                   ]}
