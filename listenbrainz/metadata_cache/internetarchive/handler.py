@@ -1,5 +1,6 @@
 import logging
 import json
+from datetime import datetime, timedelta
 from sqlalchemy import text
 import internetarchive
 from bs4 import BeautifulSoup
@@ -42,37 +43,35 @@ class InternetArchiveHandler(BaseHandler):
 
     def get_seed_ids(self, limit_per_collection=1000) -> list[str]:
         """Fetch identifiers for 78rpm and cylinder collections with date filtering."""
-        from datetime import datetime, timedelta
-        
-        # Use last 7 days instead of fixed limit 
-        last_week = datetime.now() - timedelta(days=7)
-        date_filter = last_week.strftime("%Y-%m-%d")
+        today = datetime.today().strftime("%Y-%m-%d")
+        last_week = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+        date_filter = f"[{last_week} TO {today}]"
         
         collections = [
             {
-                'name': '78rpm', 
-                'query': f'collection:78rpm AND mediatype:audio AND publicdate:[{date_filter} TO null]'
+                "name": "78rpm",
+                "query": f"collection:78rpm AND mediatype:audio AND publicdate:{date_filter}"
             },
             {
-                'name': 'cylinder', 
-                'query': f'cylinder AND mediatype:audio AND publicdate:[{date_filter} TO null]'
+                "name": "cylinder",
+                "query": f"collection:cylinder AND mediatype:audio AND publicdate:{date_filter}"
             }
         ]
         identifiers = []
         for collection in collections:
             try:
-                results = internetarchive.search_items(collection['query'])
+                results = internetarchive.search_items(collection["query"])
                 count = 0
                 for item in results:
                     if count >= limit_per_collection:
                         break
-                    identifier = item.get('identifier')
+                    identifier = item.get("identifier")
                     if identifier:
                         identifiers.append(identifier)
                         count += 1
-                logger.info("Found %d items from %s collection", count, collection['name'])
+                logger.info("Found %d items from %s collection", count, collection["name"])
             except Exception as e:
-                logger.error("Error searching %s collection: %s", collection['name'], str(e))
+                logger.error("Error searching %s collection: %s", collection["name"], str(e))
         return identifiers
 
     def discover_items_by_creator(self, creator_name) -> list[JobItem]:
@@ -80,11 +79,10 @@ class InternetArchiveHandler(BaseHandler):
         Discover more items by the same creator using IA Search API.
         
         """
-        new_items = []
         try:
             # Check cache to avoid querying same creators repeatedly
             if creator_name in self.discovered_creators:
-                return new_items
+                return []
             
             self.discovered_creators.add(creator_name)
             self.metrics["discovered_creators_count"] += 1
@@ -92,13 +90,14 @@ class InternetArchiveHandler(BaseHandler):
             # Use IA Search API to find items by creator
             query = f'creator:"{creator_name}" AND mediatype:audio'
             results = internetarchive.search_items(query)
-            
+
+            new_items = []
             count = 0
             for item in results:
                 if count >= 50:  # Limit to prevent excessive API calls
                     break
                     
-                identifier = item.get('identifier')
+                identifier = item.get("identifier")
                 if identifier and identifier not in self.discovered_items:
                     self.discovered_items.add(identifier)
                     self.metrics["discovered_items_count"] += 1
@@ -106,11 +105,10 @@ class InternetArchiveHandler(BaseHandler):
                     count += 1
             
             logger.info("Discovered %d items for creator: %s", count, creator_name)
-            
+            return new_items
         except Exception as e:
             logger.error("Error discovering items for creator %s: %s", creator_name, str(e), exc_info=True)
-        
-        return new_items
+            return []
 
     def process(self, item_ids):
         """Process a list of IA identifiers and discover more items from creators."""
@@ -119,7 +117,7 @@ class InternetArchiveHandler(BaseHandler):
         for identifier in item_ids:
             redis_key = f"ia_metadata_cache:{identifier}"
             if self.redis.get(redis_key):
-                logger.info("Skipping cached: %s", identifier)
+                logger.debug("Skipping cached: %s", identifier)
                 continue
                 
             try:
@@ -152,7 +150,7 @@ class InternetArchiveHandler(BaseHandler):
 
         try:
             soup = BeautifulSoup(description, "html.parser")
-            for element in soup.find_all(['div', 'p', 'span']):
+            for element in soup.find_all(["div", "p", "span"]):
                 _text = element.get_text(strip=True)
                 if _text.startswith(f"{field}:"):
                     return _text[len(field) + 1:].strip()
