@@ -128,7 +128,10 @@ const getSettingsRoutes = (): RouteObject[] => {
           lazy: {
             Component: async () => {
               return (await import("../notification-settings/NotificationSettings")).default;
-            },
+              },
+              loader: async () => {
+                  return RouteLoader;
+              }
           },
         },
       ],
