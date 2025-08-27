@@ -313,7 +313,7 @@ declare type GenreHourData = {
 
 declare type UserGenreActivityResponse = {
   payload: {
-    result: Array<GenreHourData>;
+    genre_activity: Array<GenreHourData>;
     from_ts: number;
     to_ts: number;
     last_updated: number;

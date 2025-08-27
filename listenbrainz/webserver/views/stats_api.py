@@ -589,7 +589,7 @@ def get_genre_activity(user_name: str):
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"payload": {
         "user_id": user_name,
-        "result": genre_activity,
+        "genre_activity": genre_activity,
         "from_ts": stats.from_ts,
         "to_ts": stats.to_ts,
         "range": stats_range,

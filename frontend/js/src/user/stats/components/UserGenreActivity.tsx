@@ -151,7 +151,6 @@ export default function UserGenreActivity({
   // Detect mobile screen size
   const isMobile = useMediaQuery("(max-width: 767px)");
 
-  // Replace your useQuery with this typed version
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: ["userGenreActivity", user?.name, range],
     queryFn: async () => {
@@ -166,7 +165,7 @@ export default function UserGenreActivity({
         return {
           data: {
             payload: {
-              result: [],
+              genre_activity: [],
               from_ts: 0,
               to_ts: 0,
               last_updated: 0,
@@ -185,7 +184,7 @@ export default function UserGenreActivity({
   const {
     data: rawData = {
       payload: {
-        result: [],
+        genre_activity: [],
         from_ts: 0,
         to_ts: 0,
         last_updated: 0,
@@ -199,9 +198,9 @@ export default function UserGenreActivity({
 
   const chartData = React.useMemo(() => {
     const { payload } = rawData as UserGenreActivityResponse;
-    const result: GenreHourData[] = payload?.result ?? [];
-    if (!result.length) return [];
-    const groupedData = groupDataByTimePeriod(result, timezoneOffset);
+    const genre_activity: GenreHourData[] = payload?.genre_activity ?? [];
+    if (!genre_activity.length) return [];
+    const groupedData = groupDataByTimePeriod(genre_activity, timezoneOffset);
 
     return groupedData.flatMap((timeframe) => {
       // Calculate the total number of listens for all genres in this time period.
@@ -335,7 +334,7 @@ export default function UserGenreActivity({
                   height: `${chartConfig.height}px`,
                   width: "100%",
                   margin: "0 auto",
-                  overflow: "hidden", // Prevent markers from causing horizontal scroll
+                  overflow: "hidden",
                 }}
               >
                 {timeMarkersConfig.map((marker, index) => (

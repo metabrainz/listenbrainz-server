@@ -5,7 +5,7 @@
 		"last_updated": 1700000000,
 		"from_ts": 1699400000,
 		"to_ts": 1700000000,
-		"result": [
+		"genre_activity": [
 			{
 				"genre": "alternative dance",
 				"hour": 14,
