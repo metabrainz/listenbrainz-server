@@ -177,6 +177,7 @@ EXTERNAL_SERVICES_EXCHANGE = '''{{template "KEY" "external_services_exchange"}}'
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_spotify_cache"}}'''
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
 EXTERNAL_SERVICES_SOUNDCLOUD_CACHE_QUEUE = '''{{template "KEY" "external_services_soundcloud_cache"}}'''
+EXTERNAL_SERVICES_IA_CACHE_QUEUE = '''{{template "KEY" "external_services_ia_cache"}}'''
 
 MUSICBRAINZ_BASE_URL = "https://musicbrainz.org"
 OAUTH_CLIENT_ID = '''{{template "KEY" "oauth/client_id"}}'''
