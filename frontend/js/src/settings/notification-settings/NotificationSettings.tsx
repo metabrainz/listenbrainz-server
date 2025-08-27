@@ -79,6 +79,13 @@ export default function NotificationSettings() {
         <title>Notification Settings</title>
       </Helmet>
       <h2 className="page-title">Notification settings</h2>
+      <p>
+        We will always email you right away about{" "}
+        <b>important account issues</b> (like problems with connected services).
+        <br />
+        For everything else, you can choose to turn off notifications or receive
+        them in a periodic digest.
+      </p>
       <form onSubmit={updateDigestSettings}>
         <Switch
           id="enable-notifications"
