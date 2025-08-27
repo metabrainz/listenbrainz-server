@@ -138,24 +138,19 @@ class InternetArchiveHandler(BaseHandler):
         return discovered_items
 
     @staticmethod
-    def extract_from_description(description, field):
+    def extract_from_description(soup: BeautifulSoup | None, field) -> str | None:
         """
         Extracts a field (e.g. 'Artist', 'Album') from the IA description HTML using BeautifulSoup.
         Handles both string and list input.
         """
-        if not description:
+        if not soup:
             return None
-        if isinstance(description, list):
-            description = " ".join(str(x) for x in description if x)
 
-        try:
-            soup = BeautifulSoup(description, "html.parser")
-            for element in soup.find_all(["div", "p", "span"]):
-                _text = element.get_text(strip=True)
-                if _text.startswith(f"{field}:"):
-                    return _text[len(field) + 1:].strip()
-        except Exception as e:
-            logger.error("Error parsing description HTML: %s", str(e))
+        for element in soup.find_all(["div", "p", "span"]):
+            _text = element.get_text(strip=True)
+            if _text.startswith(f"{field}:"):
+                return _text[len(field) + 1:].strip()
+
         return None
 
     def process_identifier(self, identifier, conn):
@@ -181,10 +176,18 @@ class InternetArchiveHandler(BaseHandler):
             if not artwork_url and fmt in {"jpeg", "jpg", "png"}:
                 artwork_url = f"https://archive.org/download/{identifier}/{f['name']}"
 
-        # Extract artist/creator information
+        description = meta.get("description", "")
+        if isinstance(description, list):
+            description = " ".join(str(x) for x in description if x)
+        try:
+            soup = BeautifulSoup(description, "html.parser")
+        except Exception as e:
+            logger.error("Error parsing description HTML: %s", str(e))
+            soup = None
+
         artist = meta.get("creator")
         if not artist:
-            artist = self.extract_from_description(meta.get("description", ""), "Artist")
+            artist = self.extract_from_description(soup, "Artist")
         if isinstance(artist, str):
             artist = [artist]
         elif artist is None:
@@ -192,9 +195,8 @@ class InternetArchiveHandler(BaseHandler):
 
         album = meta.get("album")
         if not album:
-            album = self.extract_from_description(meta.get("description", ""), "Album")
+            album = self.extract_from_description(soup, "Album")
 
-        # Store in database
         conn.execute(
             text("""
                 INSERT INTO internetarchive_cache.track
@@ -221,6 +223,4 @@ class InternetArchiveHandler(BaseHandler):
             }
         )
         logger.info("Processed and stored metadata for %s", identifier)
-        
-        
-        return artist if artist else []
+        return artist
