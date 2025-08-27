@@ -124,7 +124,7 @@ const getSettingsRoutes = (): RouteObject[] => {
           element: <Navigate to="../music-services/details/" replace />,
           },
         {
-          path: "notification-settings/",
+          path: "notification/",
           lazy: {
             Component: async () => {
               return (await import("../notification-settings/NotificationSettings")).default;
