@@ -706,7 +706,6 @@ declare type BrainzPlayerSettings = {
   appleMusicEnabled?: boolean;
   internetArchiveEnabled?: boolean;
   funkwhaleEnabled?: boolean;
-  internetArchiveEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
     | "spotify"
