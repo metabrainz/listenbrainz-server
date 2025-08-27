@@ -90,7 +90,7 @@ function renderImport(
   );
   if (im.metadata.status === ImportStatus.complete) {
     return (
-      <div className="mt-4 alert alert-success" role="alert">
+      <div key={im.import_id} className="mt-4 alert alert-success" role="alert">
         <h4 className="alert-heading">Import completed!</h4>
 
         <p>
@@ -105,7 +105,7 @@ function renderImport(
   }
   if (im.metadata.status === ImportStatus.failed) {
     return (
-      <div className="mt-4 alert alert-danger" role="alert">
+      <div key={im.import_id} className="mt-4 alert alert-danger" role="alert">
         <h4 className="alert-heading">Import failed</h4>
         <p>
           There was an error importing your data.
@@ -118,7 +118,7 @@ function renderImport(
   }
 
   return (
-    <div className="mt-4 alert alert-info" role="alert">
+    <div key={im.import_id} className="mt-4 alert alert-info" role="alert">
       <h4 className="alert-heading">
         Import in progress
         <br />
@@ -356,6 +356,12 @@ export default function ImportListens() {
         </span>{" "}
         from third-party music services by uploading backup files.
       </p>
+      <ReactTooltip id="info-tooltip" place="top">
+        Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
+        Last.fm, and we cannot use it.
+        <br />
+        Instead, we use the term <strong>listen</strong> for our data.
+      </ReactTooltip>
       <p className="alert alert-info">
         To connect to a music service and track{" "}
         <strong>
@@ -368,12 +374,6 @@ export default function ImportListens() {
         <Link to="/add-data/">Submitting data</Link> page.
       </p>
       <p>
-        <ReactTooltip id="info-tooltip" place="top">
-          Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
-          Last.fm, and we cannot use it.
-          <br />
-          Instead, we use the term <strong>listen</strong> for our data.
-        </ReactTooltip>
         For example if you{" "}
         <Link to="/settings/music-services/details/">connect to Spotify</Link>{" "}
         we are limited to retrieving your last 50 listens.
