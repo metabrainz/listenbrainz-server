@@ -4,14 +4,7 @@ import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
-import {
-  getDaysInMonth,
-  eachYearOfInterval,
-  startOfYear,
-  endOfYear,
-  format,
-} from "date-fns";
-import Slider from "rc-slider";
+import { eachYearOfInterval, startOfYear, endOfYear, format } from "date-fns";
 import { useNavigate } from "react-router";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
@@ -378,8 +371,9 @@ export default function ArtistEvolutionActivityStreamGraph(
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   const [topN, setTopN] = React.useState<number>(10);
-  const onTopNChange = (v: number | number[]) =>
-    setTopN(Array.isArray(v) ? v[0] : v);
+  const onTopNChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setTopN(parseInt(e.target.value, 10));
+  };
 
   const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
     () =>
@@ -434,19 +428,43 @@ export default function ArtistEvolutionActivityStreamGraph(
         } flex-wrap mt-3`}
       >
         <h3 className="capitalize-bold m-0">Artist Evolution</h3>
-        <div className="d-flex align-items-center flex-shrink-0">
-          <span className="me-2">Top artists</span>
-          <div className="me-2" style={{ width: isMobile ? 140 : 220 }}>
-            <Slider
-              min={3}
-              max={15}
-              step={1}
-              value={topN}
-              onChange={onTopNChange}
-              aria-label="Top artists count"
-            />
-          </div>
-          <span className="fw-bold">{topN}</span>
+        <div className="d-flex align-items-center flex-shrink-0 gap-2">
+          <span>Top</span>
+          <span className="dropdown">
+            <button
+              type="button"
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              aria-label="Select number of top artists to show"
+            >
+              {topN}
+            </button>
+            <div className="dropdown-menu" role="menu">
+              <button
+                type="button"
+                onClick={() => setTopN(5)}
+                className={`dropdown-item ${topN === 5 ? "active" : ""}`}
+              >
+                5
+              </button>
+              <button
+                type="button"
+                onClick={() => setTopN(10)}
+                className={`dropdown-item ${topN === 10 ? "active" : ""}`}
+              >
+                10
+              </button>
+              <button
+                type="button"
+                onClick={() => setTopN(15)}
+                className={`dropdown-item ${topN === 15 ? "active" : ""}`}
+              >
+                15
+              </button>
+            </div>
+          </span>
+          <span>artists</span>
         </div>
       </div>
       <Loader isLoading={loading}>
