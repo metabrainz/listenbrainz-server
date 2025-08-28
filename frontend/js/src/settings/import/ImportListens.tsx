@@ -42,8 +42,6 @@ type Import = {
   to_date: string;
 };
 
-const API_PREFIX = "/1";
-
 function renderImport(
   im: Import,
   cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
@@ -173,10 +171,13 @@ export default function ImportListens() {
     // Fetch the list of imports in progress in background tasks or finished
     async function getImportsInProgress() {
       try {
-        const response = await fetch(`${API_PREFIX}/import-listens/list/`, {
-          method: "GET",
-          headers,
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/import-listens/list/`,
+          {
+            method: "GET",
+            headers,
+          }
+        );
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);
@@ -204,10 +205,13 @@ export default function ImportListens() {
     async function fetchImport(id: number) {
       setLoading(true);
       try {
-        const response = await fetch(`${API_PREFIX}/import-listens/${id}/`, {
-          method: "GET",
-          headers,
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/import-listens/${id}/`,
+          {
+            method: "GET",
+            headers,
+          }
+        );
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);
@@ -263,13 +267,16 @@ export default function ImportListens() {
           );
           return;
         }
-        const response = await fetch(`${API_PREFIX}/import-listens/`, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${currentUser?.auth_token}`,
-          },
-          body: formData,
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/import-listens/`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${currentUser?.auth_token}`,
+            },
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -296,7 +303,7 @@ export default function ImportListens() {
       event.preventDefault();
       try {
         const response = await fetch(
-          `${API_PREFIX}/import-listens/cancel/${importToCancelId}`,
+          `${APIService.APIBaseURI}/import-listens/cancel/${importToCancelId}`,
           {
             method: "POST",
             headers,
