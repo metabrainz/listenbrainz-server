@@ -506,7 +506,7 @@ export default class FunkwhalePlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    return true; // record listens
+    return false; // record listens
   };
 
   getAuthenticatedAudioUrl = async (

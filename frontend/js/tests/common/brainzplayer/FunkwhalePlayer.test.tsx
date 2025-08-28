@@ -261,7 +261,7 @@ describe("FunkwhalePlayer", () => {
       expect(playerRef.current?.canSearchAndPlayTracks()).toBe(false);
     });
 
-    it("should return true for datasourceRecordsListens", () => {
+    it("should return false for datasourceRecordsListens", () => {
       const playerRef = React.createRef<FunkwhalePlayer>();
       render(
         <GlobalAppContext.Provider value={defaultContext}>
@@ -269,7 +269,7 @@ describe("FunkwhalePlayer", () => {
         </GlobalAppContext.Provider>
       );
 
-      expect(playerRef.current?.datasourceRecordsListens()).toBe(true);
+      expect(playerRef.current?.datasourceRecordsListens()).toBe(false);
     });
   });
 });
