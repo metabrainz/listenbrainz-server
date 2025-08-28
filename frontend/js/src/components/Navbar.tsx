@@ -32,7 +32,9 @@ function Navbar() {
     toggleSidebar();
     navigate(`/search/?search_term=${encodeURIComponent(searchInput)}`);
   };
-  const encodedUsername = encodeURIComponent(currentUser.name);
+  const encodedUsername = currentUser?.name
+    ? encodeURIComponent(currentUser.name)
+    : undefined;
 
   return (
     <nav role="navigation">
