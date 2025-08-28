@@ -395,6 +395,12 @@ export default function ImportListens() {
       <p>
         Migrate your listens from different streaming services to Listenbrainz!
       </p>
+      <div className="alert alert-warning fade show" role="alert">
+        The importer currently supports Spotify and ListenBrainz export files.
+        <br />
+        Please upload the complete <mark>ZIP</mark> archive as received, without
+        extracting the files within.
+      </div>
       <div className="card">
         <div className="card-body">
           <form onSubmit={createImport}>
@@ -408,7 +414,7 @@ export default function ImportListens() {
                   id="file-upload"
                   className="form-control"
                   name="file"
-                  accept=".zip,.csv,.json,.jsonl"
+                  accept=".zip"
                   required
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
