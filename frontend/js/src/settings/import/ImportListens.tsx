@@ -406,21 +406,6 @@ export default function ImportListens() {
           <form onSubmit={createImport}>
             <div className="flex flex-wrap" style={{ gap: "1em" }}>
               <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="file-upload">
-                  Choose a File:
-                </label>
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="form-control"
-                  name="file"
-                  accept=".zip"
-                  required
-                  onChange={(e) => setFileSelected(!!e.target.files?.length)}
-                />
-              </div>
-
-              <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="service">
                   Select Service:
                 </label>
@@ -433,6 +418,21 @@ export default function ImportListens() {
                   <option value="spotify">Spotify</option>
                   <option value="listenbrainz">Listenbrainz</option>
                 </select>
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="file-upload">
+                  Choose a File:
+                </label>
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="form-control"
+                  name="file"
+                  accept=".zip"
+                  required
+                  onChange={(e) => setFileSelected(!!e.target.files?.length)}
+                />
               </div>
 
               <div style={{ minWidth: "15em" }}>
