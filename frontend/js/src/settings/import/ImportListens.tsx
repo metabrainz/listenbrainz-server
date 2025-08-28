@@ -398,8 +398,8 @@ export default function ImportListens() {
       <div className="alert alert-warning fade show" role="alert">
         The importer currently supports Spotify and ListenBrainz export files.
         <br />
-        Please upload the complete <mark>ZIP</mark> archive as received, without
-        extracting the files within.
+        Please upload the complete <mark>.zip</mark> archive as received,
+        without extracting the files within.
       </div>
       <div className="card">
         <div className="card-body">
