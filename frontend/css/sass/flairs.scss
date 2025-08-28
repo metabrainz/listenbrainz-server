@@ -17,7 +17,9 @@
     overwrite styles for hover, visited, hover+visited
   */
   --text-color: #{$body-color};
-  &a {
+  // & char must appear at beginning of selector, so can't do `&a` which compiles to .flaira instead of a.flair
+  // Using at-root to escape nesting, then interpolating ampersand (#{&}) to end up with the correct structure
+  @at-root a#{&} {
     --text-color: #{$link-color};
     &:hover {
       --text-color: #{$link-hover-color};
