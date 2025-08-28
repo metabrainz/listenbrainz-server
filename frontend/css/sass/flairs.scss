@@ -16,16 +16,16 @@
     on the fly for hovering/visited links instead of having to
     overwrite styles for hover, visited, hover+visited
   */
-  --text-color: $body-color;
+  --text-color: #{$body-color};
   &a {
-    --text-color: $link-color;
+    --text-color: #{$link-color};
     &:hover {
-      --text-color: $link-hover-color;
+      --text-color: #{$link-hover-color};
     }
     &:visited {
-      --text-color: $link-visited-color;
+      --text-color: #{$link-visited-color};
       &:hover {
-        --text-color: $link-visited-hover-color;
+        --text-color: #{$link-visited-hover-color};
       }
     }
   }
