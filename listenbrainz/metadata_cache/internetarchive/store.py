@@ -1,4 +1,3 @@
-import json
 from sqlalchemy import text
 
 def search_ia_tracks(db_conn, artist=None, track=None, album=None):
@@ -6,24 +5,24 @@ def search_ia_tracks(db_conn, artist=None, track=None, album=None):
     Search the internetarchive_cache.track table for tracks matching the given parameters.
     Returns a list of dicts with all needed metadata.
     """
-    query = """
-        SELECT
-            id, track_id, name, artist, album, stream_urls, artwork_url, data, last_updated
-        FROM
-            internetarchive_cache.track
-        WHERE
-            1=1
+    query = """\
+        SELECT id, track_id, name, artist, album, stream_urls, artwork_url, data, last_updated
+        FROM internetarchive_cache.track
     """
+    filters = []
     params = {}
     if artist:
-        query += " AND :artist = ANY(artist)"  
-        params['artist'] = artist
+        filters.append("EXISTS (SELECT 1 FROM unnest(artist) a WHERE a ILIKE :artist)")
+        params["artist"] = f"%{artist}%"
     if track:
-        query += " AND name ILIKE :track"
-        params['track'] = f"%{track}%"
+        filters.append("name ILIKE :track")
+        params["track"] = f"%{track}%"
     if album:
-        query += " AND album ILIKE :album"
-        params['album'] = f"%{album}%"
+        filters.append("album ILIKE :album")
+        params["album"] = f"%{album}%"
+
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
 
     with db_conn.engine.connect() as conn:
         result = conn.execute(text(query), params)
