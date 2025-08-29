@@ -123,6 +123,16 @@ const getExploreRoutes = (): RouteObject[] => {
             },
           },
         },
+        {
+          path: "genre-explorer/:genreMBID",
+          lazy: async () => {
+            const GenreExplorer = await import(
+              "../genre-explorer/GenreExplorer"
+            );
+            return { Component: GenreExplorer.default };
+          },
+          loader: RouteQueryLoader("genre-explorer"),
+        },
       ],
     },
   ];
