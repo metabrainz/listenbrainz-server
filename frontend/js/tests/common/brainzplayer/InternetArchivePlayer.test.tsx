@@ -8,7 +8,7 @@ import GlobalAppContext, {
 } from "../../../src/utils/GlobalAppContext";
 import fetchMock from "jest-fetch-mock";
 
-// Mock HTMLMediaElement methods 
+// Mock HTMLMediaElement methods that JSDOM doesn't implement
 const mockPlay = jest.fn().mockResolvedValue(undefined);
 const mockPause = jest.fn().mockResolvedValue(undefined);
 
@@ -62,8 +62,6 @@ describe("InternetArchivePlayer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     fetchMock.resetMocks();
-    mockPlay.mockClear();
-    mockPause.mockClear();
   });
 
   describe("Static methods", () => {
@@ -74,7 +72,7 @@ describe("InternetArchivePlayer", () => {
     });
 
     describe("isListenFromThisService", () => {
-      it("should return true for listen with internet archive origin_url", () => {
+      it("should return true for listen with archive.org domain", () => {
         const listen: Listen = {
           listened_at: 42,
           track_metadata: {
@@ -83,20 +81,6 @@ describe("InternetArchivePlayer", () => {
             },
             artist_name: "Pérez Prado",
             track_name: "Los Norteños",
-          },
-        };
-        expect(InternetArchivePlayer.isListenFromThisService(listen)).toBe(true);
-      });
-
-      it("should return true for listen with archive.org domain", () => {
-        const listen: Listen = {
-          listened_at: 42,
-          track_metadata: {
-            additional_info: {
-              origin_url: "https://archive.org/download/test-track/test.mp3",
-            },
-            artist_name: "Test Artist",
-            track_name: "Test Track",
           },
         };
         expect(InternetArchivePlayer.isListenFromThisService(listen)).toBe(true);
@@ -178,7 +162,6 @@ describe("InternetArchivePlayer", () => {
         </GlobalAppContext.Provider>
       );
 
-      // Use getByTestId to find the audio element 
       const audioElement = screen.getByTestId("internet-archive-player").querySelector("audio");
       expect(audioElement).toBeInTheDocument();
       expect(audioElement).toHaveAttribute("autoplay");
@@ -254,7 +237,6 @@ describe("InternetArchivePlayer", () => {
       });
 
       await waitFor(() => {
-        
         expect(fetchMock).toHaveBeenCalledWith(
           "/1/internet_archive/search?track=Los+Norte%C3%B1os&artist=P%C3%A9rez+Prado+y+Orquesta+con+Hermanas+Montoya"
         );
@@ -271,6 +253,14 @@ describe("InternetArchivePlayer", () => {
       });
 
       expect(defaultProps.onPlayerPausedChange).toHaveBeenCalledWith(false);
+      expect(mockPlay).toHaveBeenCalled();
+      expect(defaultProps.onDurationChange).toHaveBeenCalled();
+      
+      const audioElement = screen.getByTestId("internet-archive-player").querySelector("audio");
+      expect(audioElement).toHaveAttribute(
+        "src",
+        "https://archive.org/download/00TtuloInttrprete66/Cuando Canta La Lluvia.m4a"
+      );
     });
 
     it("should handle search with no results", async () => {
@@ -297,6 +287,8 @@ describe("InternetArchivePlayer", () => {
 
       await waitFor(() => {
         expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
+        expect(defaultProps.onPlayerPausedChange).not.toHaveBeenCalled();
+        expect(mockPlay).not.toHaveBeenCalled();
       });
     });
 
@@ -328,6 +320,7 @@ describe("InternetArchivePlayer", () => {
           "Internet Archive search error"
         );
         expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
+        expect(mockPlay).not.toHaveBeenCalled();
       });
     });
 
@@ -356,6 +349,7 @@ describe("InternetArchivePlayer", () => {
         "Not enough info to search on Internet Archive"
       );
       expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
+      expect(mockPlay).not.toHaveBeenCalled();
     });
   });
 
@@ -368,18 +362,14 @@ describe("InternetArchivePlayer", () => {
         </GlobalAppContext.Provider>
       );
 
-      
       await act(async () => {
         playerRef.current?.togglePlay();
       });
 
-      
       expect(defaultProps.onPlayerPausedChange).toHaveBeenCalledWith(true);
 
-      
       defaultProps.onPlayerPausedChange.mockClear();
 
-      
       const pausedProps = { ...defaultProps, playerPaused: true };
       const pausedPlayerRef = React.createRef<InternetArchivePlayer>();
       render(
@@ -392,7 +382,6 @@ describe("InternetArchivePlayer", () => {
         pausedPlayerRef.current?.togglePlay();
       });
 
-      
       expect(defaultProps.onPlayerPausedChange).toHaveBeenCalledWith(false);
     });
 
@@ -404,10 +393,12 @@ describe("InternetArchivePlayer", () => {
         </GlobalAppContext.Provider>
       );
 
-      act(() => {
-        playerRef.current?.seekToPositionMs(30000); // 30 seconds
-      });
+      const audioElement = screen.getByTestId("internet-archive-player").querySelector("audio");
+      const initialTime = audioElement!.currentTime;
 
+      playerRef.current?.seekToPositionMs(30000); // 30 seconds
+
+      expect(audioElement!.currentTime).toBe(30);
       expect(defaultProps.onProgressChange).toHaveBeenCalledWith(30000);
     });
   });
@@ -422,10 +413,7 @@ describe("InternetArchivePlayer", () => {
 
       const audioElement = screen.getByTestId("internet-archive-player").querySelector("audio");
       
-      // Simulate the ended event
-      act(() => {
-        fireEvent.ended(audioElement!);
-      });
+      fireEvent.ended(audioElement!);
 
       expect(defaultProps.onTrackEnd).toHaveBeenCalled();
     });
@@ -439,13 +427,15 @@ describe("InternetArchivePlayer", () => {
 
       const audioElement = screen.getByTestId("internet-archive-player").querySelector("audio");
       
-      // Simulate the timeupdate event
-      act(() => {
-        fireEvent.timeUpdate(audioElement!);
+      // Mock currentTime for the test
+      Object.defineProperty(audioElement!, 'currentTime', {
+        writable: true,
+        value: 45.5,
       });
+      
+      fireEvent.timeUpdate(audioElement!);
 
-      // Should call onProgressChange with current time in milliseconds
-      expect(defaultProps.onProgressChange).toHaveBeenCalled();
+      expect(defaultProps.onProgressChange).toHaveBeenCalledWith(45500);
     });
 
     it("should handle loaded metadata event", () => {
@@ -458,19 +448,14 @@ describe("InternetArchivePlayer", () => {
 
       const audioElement = screen.getByTestId("internet-archive-player").querySelector("audio");
       
-      
       Object.defineProperty(audioElement!, 'duration', {
         writable: true,
-        value: 120.5, // 2 minutes and 30 seconds
+        value: 120.5,
       });
       
-      
-      act(() => {
-        playerRef.current?.handleLoadedMetadata();
-      });
+      playerRef.current?.handleLoadedMetadata();
 
-      
-      expect(defaultProps.onDurationChange).toHaveBeenCalledWith(120500); 
+      expect(defaultProps.onDurationChange).toHaveBeenCalledWith(120500);
     });
   });
 
@@ -513,7 +498,7 @@ describe("InternetArchivePlayer", () => {
       });
 
       await waitFor(() => {
-        const artwork = screen.getByAltText("Test Track");
+        const artwork = screen.getByRole("img");
         expect(artwork).toBeInTheDocument();
         expect(artwork).toHaveAttribute("src", "https://archive.org/download/test/artwork.jpg");
       });
@@ -528,7 +513,6 @@ describe("InternetArchivePlayer", () => {
             name: "Test Track",
             artist: ["Test Artist"],
             stream_urls: ["https://archive.org/download/test/test.mp3"],
-            // No artwork_url
             data: {},
             last_updated: "2024-01-01T00:00:00Z",
           },
@@ -557,7 +541,7 @@ describe("InternetArchivePlayer", () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByAltText("Test Track")).not.toBeInTheDocument();
+        expect(screen.queryByRole("img")).not.toBeInTheDocument();
       });
     });
   });
