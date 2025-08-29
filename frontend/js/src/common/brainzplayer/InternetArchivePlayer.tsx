@@ -1,4 +1,5 @@
 import React from "react";
+import { get as _get } from "lodash";
 import faInternetArchive from "../icons/faInternetArchive";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import { getTrackName, getArtistName } from "../../utils/utils";
@@ -19,6 +20,29 @@ type State = {
 export default class InternetArchivePlayer
   extends React.Component<DataSourceProps, State>
   implements DataSourceType {
+  static hasPermissions = () => {
+    // Internet Archive doesn't require authentication
+    return true;
+  };
+
+  static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && typeof originURL === 'string') {
+      return originURL.includes('archive.org');
+    }
+    return false;
+  }
+
+  static getURLFromListen = (
+    listen: Listen | JSPFTrack
+  ): string | undefined => {
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (originURL && typeof originURL === 'string' && originURL.includes('archive.org')) {
+      return originURL;
+    }
+    return undefined;
+  };
+
   public name = "internetArchive";
   public domainName = "archive.org";
   public icon = faInternetArchive;
@@ -176,7 +200,7 @@ export default class InternetArchivePlayer
     if (!show) return null;
 
     return (
-      <div className="internet-archive-player">
+      <div className="internet-archive-player" data-testid="internet-archive-player">
         {currentTrack?.artwork_url && (
           <img src={currentTrack.artwork_url} alt={currentTrack.name} />
         )}

@@ -116,6 +116,9 @@ function isListenFromDatasource(
   if (datasource instanceof FunkwhalePlayer) {
     return FunkwhalePlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof InternetArchivePlayer) {
+    return InternetArchivePlayer.isListenFromThisService(listen);
+  }
   return undefined;
 }
 
