@@ -248,7 +248,7 @@ export default function ImportListens() {
 
   const hasAnImportInProgress =
     imports.findIndex(
-      (imp) => imp.metadata.status === ImportStatus.inProgress
+      (imp) => imp.metadata.status === ImportStatus.inProgress || imp.metadata.status === ImportStatus.waiting
     ) !== -1;
 
   const createImport = React.useCallback(
