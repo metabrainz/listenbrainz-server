@@ -155,11 +155,7 @@ export default function UserGenreActivity({
     queryKey: ["userGenreActivity", user?.name, range],
     queryFn: async () => {
       try {
-        // Fix: Handle undefined user name
-        if (!user?.name) {
-          throw new Error("User name is required");
-        }
-
+        if (!user?.name) throw new Error("User name is required");
         const queryData = await APIService.getUserGenreActivity(
           user.name,
           range
@@ -167,24 +163,44 @@ export default function UserGenreActivity({
         return { data: queryData, hasError: false, errorMessage: "" };
       } catch (error) {
         return {
-          data: { result: [] } as UserGenreActivityResponse,
+          data: {
+            payload: {
+              genre_activity: [],
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+              user_id: user?.name ?? "",
+              range,
+            },
+          },
           hasError: true,
-          errorMessage: error.message,
+          errorMessage: error?.message ?? "Failed to load genre activity",
         };
       }
     },
-    enabled: !!user?.name, // Only run query if user name exists
+    enabled: !!user?.name,
   });
 
   const {
-    data: rawData = { result: [] },
+    data: rawData = {
+      payload: {
+        genre_activity: [],
+        from_ts: 0,
+        to_ts: 0,
+        last_updated: 0,
+        user_id: user?.name ?? "",
+        range,
+      },
+    },
     hasError = false,
     errorMessage = "",
   } = loaderData || {};
 
   const chartData = React.useMemo(() => {
-    if (!rawData?.result?.length) return [];
-    const groupedData = groupDataByTimePeriod(rawData.result, timezoneOffset);
+    const { payload } = rawData as UserGenreActivityResponse;
+    const genre_activity: GenreHourData[] = payload?.genre_activity ?? [];
+    if (!genre_activity.length) return [];
+    const groupedData = groupDataByTimePeriod(genre_activity, timezoneOffset);
 
     return groupedData.flatMap((timeframe) => {
       // Calculate the total number of listens for all genres in this time period.
@@ -318,7 +334,7 @@ export default function UserGenreActivity({
                   height: `${chartConfig.height}px`,
                   width: "100%",
                   margin: "0 auto",
-                  overflow: "hidden", // Prevent markers from causing horizontal scroll
+                  overflow: "hidden",
                 }}
               >
                 {timeMarkersConfig.map((marker, index) => (
