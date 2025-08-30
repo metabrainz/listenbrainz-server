@@ -126,6 +126,7 @@ brainzplayer_preferences_schema = {
         "soundcloudEnabled": {"type": "boolean"},
         "appleMusicEnabled": {"type": "boolean"},
         "funkwhaleEnabled": {"type": "boolean"},
+        "navidromeEnabled": {"type": "boolean"},
         "brainzplayerEnabled": {"type": "boolean"},
         "dataSourcesPriority": {"type": "array", "items": {"type": "string"}},
     },

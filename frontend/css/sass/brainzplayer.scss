@@ -726,3 +726,21 @@ svg.fa-funkwhale,
   --fa-primary-opacity: 1 !important;
   --fa-secondary-opacity: 1 !important;
 }
+
+// Custom styling for Navidrome icon
+svg.fa-navidrome,
+.fa-navidrome {
+  --fa-secondary-color: #0084ff; // Blue disc with transparent inner circle
+  --fa-primary-color: #000000; // Black decorative rings and arcs
+  --fa-secondary-opacity: 1;
+  --fa-primary-opacity: 1;
+}
+
+// // When in a muted context, use currentColor to match other services
+.text-muted svg.fa-navidrome,
+.text-muted .fa-navidrome {
+  --fa-primary-color: currentColor !important;
+  --fa-secondary-color: currentColor !important;
+  --fa-primary-opacity: 0.6 !important;
+  --fa-secondary-opacity: 1 !important;
+}

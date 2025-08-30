@@ -23,6 +23,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
 import faFunkwhale from "../../common/icons/faFunkwhale";
+import { faNavidrome } from "../../common/icons/faNavidrome";
 
 export const dataSourcesInfo = {
   youtube: {
@@ -50,6 +51,11 @@ export const dataSourcesInfo = {
     icon: faFunkwhale,
     color: "#009FE3",
   },
+  navidrome: {
+    name: "Navidrome",
+    icon: faNavidrome,
+    color: "#0084ff",
+  },
 } as const;
 
 export type DataSourceKey = keyof typeof dataSourcesInfo;
@@ -60,6 +66,7 @@ export const defaultDataSourcesPriority = [
   "appleMusic",
   "soundcloud",
   "funkwhale",
+  "navidrome",
   "youtube",
 ] as DataSourceKey[];
 
@@ -69,6 +76,7 @@ function BrainzPlayerSettings() {
     soundcloudAuth,
     appleAuth,
     funkwhaleAuth,
+    navidromeAuth,
     APIService,
     currentUser,
   } = React.useContext(GlobalAppContext);
@@ -91,6 +99,10 @@ function BrainzPlayerSettings() {
   const [funkwhaleEnabled, setFunkwhaleEnabled] = React.useState(
     userPreferences?.brainzplayer?.funkwhaleEnabled ??
       FunkwhalePlayer.hasPermissions(funkwhaleAuth)
+  );
+  const [navidromeEnabled, setNavidromeEnabled] = React.useState(
+    userPreferences?.brainzplayer?.navidromeEnabled ??
+      Boolean(navidromeAuth?.instance_url)
   );
   const [brainzplayerEnabled, setBrainzplayerEnabled] = React.useState(
     userPreferences?.brainzplayer?.brainzplayerEnabled ?? true
@@ -141,6 +153,7 @@ function BrainzPlayerSettings() {
         soundcloudEnabled,
         appleMusicEnabled,
         funkwhaleEnabled,
+        navidromeEnabled,
         brainzplayerEnabled,
         dataSourcesPriority,
       });
@@ -155,6 +168,7 @@ function BrainzPlayerSettings() {
           soundcloudEnabled,
           appleMusicEnabled,
           funkwhaleEnabled,
+          navidromeEnabled,
           brainzplayerEnabled,
           dataSourcesPriority,
         };
@@ -179,6 +193,7 @@ function BrainzPlayerSettings() {
     soundcloudEnabled,
     appleMusicEnabled,
     funkwhaleEnabled,
+    navidromeEnabled,
     brainzplayerEnabled,
     dataSourcesPriority,
     APIService,
@@ -391,6 +406,49 @@ function BrainzPlayerSettings() {
           <small>
             Funkwhale is a federated audio platform. You will need to connect a
             Funkwhale instance.
+            <br />
+            Sign in on the{" "}
+            <Link to="/settings/music-services/details/">
+              &quot;connect services&quot; page
+            </Link>
+          </small>
+        </div>
+        <div
+          className="mb-4"
+          data-tip
+          data-tip-disable={
+            navidromeEnabled || Boolean(navidromeAuth?.instance_url)
+          }
+          data-for="login-first"
+        >
+          <Switch
+            id="enable-navidrome"
+            value="navidrome"
+            disabled={!navidromeEnabled && !navidromeAuth?.instance_url}
+            checked={navidromeEnabled}
+            onChange={(e) => setNavidromeEnabled(!navidromeEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !navidromeEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={faNavidrome as IconProp}
+                    color={
+                      navidromeEnabled ? dataSourcesInfo.navidrome.color : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Navidrome</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Navidrome is a self-hosted music streaming server. You will need to
+            connect a Navidrome instance.
             <br />
             Sign in on the{" "}
             <Link to="/settings/music-services/details/">
