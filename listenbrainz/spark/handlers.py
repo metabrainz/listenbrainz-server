@@ -73,6 +73,11 @@ def handle_user_genre_activity(message):
     _handle_stats(message, "genre_activity", "user_id")
 
 
+def handle_user_era_activity(message):
+    """ Take daily activity stats for user and save it in database. """
+    _handle_stats(message, "era_activity", "user_id")
+
+
 def _handle_sitewide_stats(message, stat_type, has_count=False):
     try:
         stats = {
@@ -103,6 +108,10 @@ def handle_sitewide_artist_map(message):
 
 def handle_sitewide_listening_activity(message):
     _handle_sitewide_stats(message, "listening_activity")
+
+
+def handle_sitewide_era_activity(message):
+    _handle_sitewide_stats(message, "era_activity")
 
 
 def handle_dump_imported(data):
