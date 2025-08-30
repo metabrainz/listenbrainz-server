@@ -15,7 +15,7 @@ $yellow2022: #ffcc49;
 
 #year-in-music {
   // For coverflow arrow colors
-  --swiper-theme-color: $blue;
+  --swiper-theme-color: #{$blue};
 
   .accent {
     color: $orange;
@@ -192,7 +192,7 @@ $yellow2022: #ffcc49;
   &.yim-2022,
   &.yim-2024,
   &.yim-2023 {
-    --swiper-theme-color: $red2022;
+    --swiper-theme-color: #{$red2022};
     /* Main header section at the top with logo */
     #main-header {
       padding: 3em 2em;
@@ -320,7 +320,7 @@ $yellow2022: #ffcc49;
 
   /* Styles specific to YIM 2022 */
   &.yim-2022 {
-    --swiper-theme-color: $red2022;
+    --swiper-theme-color: #{$red2022};
     /* Main header section at the top with logo */
     #main-header {
       background: white;
