@@ -1,0 +1,40 @@
+[
+  {
+    "user_id": 0,
+    "from_ts": 0,
+    "to_ts": 5,
+    "range": "all_time",
+    "data": [
+      {
+        "time_unit": "2019",
+        "artist_mbid": "mbid-adele",
+        "artist_name": "Adele",
+        "listen_count": 10
+      },
+      {
+        "time_unit": "2019",
+        "artist_mbid": "mbid-ts",
+        "artist_name": "Taylor Swift",
+        "listen_count": 20
+      },
+      {
+        "time_unit": "2020",
+        "artist_mbid": "mbid-drake",
+        "artist_name": "Drake",
+        "listen_count": 15
+      },
+      {
+        "time_unit": "2021",
+        "artist_mbid": "mbid-coldplay",
+        "artist_name": "Coldplay",
+        "listen_count": 30
+      },
+      {
+        "time_unit": "2021",
+        "artist_mbid": "mbid-weeknd",
+        "artist_name": "The Weeknd",
+        "listen_count": 25
+      }
+    ]
+  }
+]
