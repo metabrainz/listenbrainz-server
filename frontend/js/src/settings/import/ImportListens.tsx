@@ -11,7 +11,7 @@ import {
   faChevronCircleRight,
   faRefresh,
 } from "@fortawesome/free-solid-svg-icons";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
@@ -28,9 +28,9 @@ enum ImportStatus {
   cancelled = "cancelled",
 }
 enum Services {
-  spotify = "spotify",
-  listenbrainz = "listenbrainz",
-  applemusic = "applemusic",
+  spotify = "Spotify",
+  listenbrainz = "Listenbrainz",
+  applemusic = "Apple Music",
 }
 type Import = {
   import_id: number;
@@ -42,15 +42,13 @@ type Import = {
   to_date: string;
 };
 
-const API_PREFIX = "/1";
-
 function renderImport(
   im: Import,
   cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
   fetchImport: (importId: number) => Promise<any>
 ) {
   const extraInfo = (
-    <p>
+    <div>
       <details>
         <summary>
           <FontAwesomeIcon
@@ -69,17 +67,28 @@ function renderImport(
           <dd className="col-8">{im.import_id}</dd>
           <dt className="col-4">File name</dt>
           <dd className="col-8">{im.metadata.filename}</dd>
+          <dt className="col-4">Service</dt>
+          <dd className="col-8">
+            {Services[(im.service as unknown) as keyof typeof Services]}
+          </dd>
           <dt className="col-4">Start date</dt>
-          <dd className="col-8">{format(im.from_date, "PPP")}</dd>
+          <dd className="col-8">
+            {isValid(new Date(im.from_date)) &&
+            new Date(im.from_date).getTime() !== 0
+              ? format(new Date(im.from_date), "PPP")
+              : "-"}
+          </dd>
           <dt className="col-4">End date</dt>
-          <dd className="col-8">{format(im.to_date, "PPP")}</dd>
+          <dd className="col-8">
+            {isValid(new Date(im.to_date)) ? format(im.to_date, "PPP") : "-"}
+          </dd>
         </dl>
       </details>
-    </p>
+    </div>
   );
   if (im.metadata.status === ImportStatus.complete) {
     return (
-      <div className="mt-4 alert alert-success" role="alert">
+      <div key={im.import_id} className="mt-4 alert alert-success" role="alert">
         <h4 className="alert-heading">Import completed!</h4>
 
         <p>
@@ -94,7 +103,7 @@ function renderImport(
   }
   if (im.metadata.status === ImportStatus.failed) {
     return (
-      <div className="mt-4 alert alert-danger" role="alert">
+      <div key={im.import_id} className="mt-4 alert alert-danger" role="alert">
         <h4 className="alert-heading">Import failed</h4>
         <p>
           There was an error importing your data.
@@ -107,7 +116,7 @@ function renderImport(
   }
 
   return (
-    <div className="mt-4 alert alert-info" role="alert">
+    <div key={im.import_id} className="mt-4 alert alert-info" role="alert">
       <h4 className="alert-heading">
         Import in progress
         <br />
@@ -118,6 +127,7 @@ function renderImport(
         <button
           type="button"
           className="btn btn-sm btn-transparent"
+          aria-label="Refresh"
           onClick={() => {
             fetchImport(im.import_id);
           }}
@@ -148,6 +158,7 @@ export default function ImportListens() {
 
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
+  const [fileSelected, setFileSelected] = React.useState(false);
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -160,10 +171,13 @@ export default function ImportListens() {
     // Fetch the list of imports in progress in background tasks or finished
     async function getImportsInProgress() {
       try {
-        const response = await fetch(`${API_PREFIX}/import-listens/list/`, {
-          method: "GET",
-          headers,
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/import-listens/list/`,
+          {
+            method: "GET",
+            headers,
+          }
+        );
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);
@@ -191,10 +205,13 @@ export default function ImportListens() {
     async function fetchImport(id: number) {
       setLoading(true);
       try {
-        const response = await fetch(`${API_PREFIX}/import-listens/${id}/`, {
-          method: "GET",
-          headers,
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/import-listens/${id}/`,
+          {
+            method: "GET",
+            headers,
+          }
+        );
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(errorText);
@@ -231,19 +248,15 @@ export default function ImportListens() {
 
   const hasAnImportInProgress =
     imports.findIndex(
-      (imp) => imp.metadata.status !== ImportStatus.complete
+      (imp) => imp.metadata.status === ImportStatus.inProgress || imp.metadata.status === ImportStatus.waiting
     ) !== -1;
 
   const createImport = React.useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       if (event) event.preventDefault();
       try {
-        const form = event.target as HTMLFormElement;
+        const form = event.currentTarget;
         const formData = new FormData(form);
-        const file = formData.get("file") as File;
-        const service = formData.get("service") as string;
-        const from_date = formData.get("from_date") as string | null;
-        const to_date = formData.get("to_date") as string | null;
 
         if (!currentUser?.auth_token) {
           toast.error(
@@ -254,13 +267,16 @@ export default function ImportListens() {
           );
           return;
         }
-        const response = await fetch(`${API_PREFIX}/import-listens/`, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${currentUser?.auth_token}`,
-          },
-          body: formData,
-        });
+        const response = await fetch(
+          `${APIService.APIBaseURI}/import-listens/`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${currentUser?.auth_token}`,
+            },
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -287,7 +303,7 @@ export default function ImportListens() {
       event.preventDefault();
       try {
         const response = await fetch(
-          `${API_PREFIX}/import-listens/cancel/${importToCancelId}`,
+          `${APIService.APIBaseURI}/import-listens/cancel/${importToCancelId}`,
           {
             method: "POST",
             headers,
@@ -347,6 +363,12 @@ export default function ImportListens() {
         </span>{" "}
         from third-party music services by uploading backup files.
       </p>
+      <ReactTooltip id="info-tooltip" place="top">
+        Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
+        Last.fm, and we cannot use it.
+        <br />
+        Instead, we use the term <strong>listen</strong> for our data.
+      </ReactTooltip>
       <p className="alert alert-info">
         To connect to a music service and track{" "}
         <strong>
@@ -359,12 +381,6 @@ export default function ImportListens() {
         <Link to="/add-data/">Submitting data</Link> page.
       </p>
       <p>
-        <ReactTooltip id="info-tooltip" place="top">
-          Fun Fact: The term <strong>scrobble</strong> is a trademarked term by
-          Last.fm, and we cannot use it.
-          <br />
-          Instead, we use the term <strong>listen</strong> for our data.
-        </ReactTooltip>
         For example if you{" "}
         <Link to="/settings/music-services/details/">connect to Spotify</Link>{" "}
         we are limited to retrieving your last 50 listens.
@@ -386,32 +402,44 @@ export default function ImportListens() {
       <p>
         Migrate your listens from different streaming services to Listenbrainz!
       </p>
+      <div className="alert alert-warning fade show" role="alert">
+        The importer currently supports Spotify and ListenBrainz export files.
+        <br />
+        Please upload the complete <mark>.zip</mark> archive as received,
+        without extracting the files within.
+      </div>
       <div className="card">
         <div className="card-body">
           <form onSubmit={createImport}>
             <div className="flex flex-wrap" style={{ gap: "1em" }}>
               <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="datetime">
+                <label className="form-label" htmlFor="service">
+                  Select Service:
+                </label>
+                <select
+                  className="form-select"
+                  id="service"
+                  name="service"
+                  required
+                >
+                  <option value="spotify">Spotify</option>
+                  <option value="listenbrainz">Listenbrainz</option>
+                </select>
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="file-upload">
                   Choose a File:
                 </label>
                 <input
                   type="file"
+                  id="file-upload"
                   className="form-control"
                   name="file"
-                  accept=".zip,.csv,.json,.jsonl"
+                  accept=".zip"
                   required
+                  onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
-              </div>
-
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="datetime">
-                  Select Service:
-                </label>
-                <select className="form-select" name="service" required>
-                  <option value="spotify">Spotify</option>
-                  <option value="listenbrainz">Listenbrainz</option>
-                  <option value="applemusic">Apple Music</option>
-                </select>
               </div>
 
               <div style={{ minWidth: "15em" }}>
@@ -420,6 +448,7 @@ export default function ImportListens() {
                 </label>
                 <input
                   type="date"
+                  id="start-datetime"
                   className="form-control"
                   max={new Date().toISOString()}
                   name="from_date"
@@ -433,6 +462,7 @@ export default function ImportListens() {
                 </label>
                 <input
                   type="date"
+                  id="end-datetime"
                   className="form-control"
                   max={new Date().toISOString()}
                   name="to_date"
@@ -444,7 +474,7 @@ export default function ImportListens() {
                 <button
                   type="submit"
                   className="btn btn-success"
-                  disabled={hasAnImportInProgress}
+                  disabled={hasAnImportInProgress || !fileSelected}
                 >
                   Import Listens
                 </button>
