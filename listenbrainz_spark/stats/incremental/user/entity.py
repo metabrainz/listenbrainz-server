@@ -15,6 +15,7 @@ from listenbrainz_spark.listens.cache import get_incremental_users_df
 from listenbrainz_spark.stats.incremental.message_creator import StatsMessageCreator
 from listenbrainz_spark.stats.incremental.query_provider import QueryProvider
 from listenbrainz_spark.stats.incremental.range_selector import ListenRangeSelector
+from listenbrainz_spark.utils import read_files_from_HDFS
 
 logger = logging.getLogger(__name__)
 
@@ -35,17 +36,25 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"user_{self.entity}_{self.stats_range}"
 
-    def get_filter_aggregate_query(self, aggregate, inc_listens_table, existing_created):
+    def get_filter_aggregate_query(self, aggregate, inc_users_table):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
+
+        Select users for whom the max listen created timestamp in the new incremental listens dump is greater
+        than the created timestamp recorded for that user in the bookkeeping metadata.
         """
-        inc_users_df = get_incremental_users_df()
-        inc_users_df.createOrReplaceTempView("inc_users_table")
-        return f"""
+        existing_inc_users_path = f"{self.get_bookkeeping_path()}/incremental_users"
+        read_files_from_HDFS(existing_inc_users_path).createOrReplaceTempView(
+            "existing_inc_users_table"
+        )
+        return f"""\
               WITH incremental_users AS (
-            SELECT user_id
-              FROM inc_users_table
-             WHERE created >= to_timestamp('{existing_created}')
+            SELECT l.user_id
+              FROM {inc_users_table} l
+         LEFT JOIN existing_inc_users_table ei
+                ON l.user_id = ei.user_id
+             WHERE l.created > ei.created
+                OR ei.created IS NULL
             )
             SELECT *
               FROM {aggregate} ea
