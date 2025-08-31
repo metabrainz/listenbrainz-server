@@ -145,6 +145,7 @@ class IncrementalStatsEngine:
               FROM {self.incremental_listens_table}
           GROUP BY user_id"""
         self.incremental_users_df = run_query(users_query)
+        self.incremental_users_df.createOrReplaceTempView(self.incremental_users_table)
 
         agg_query = self.provider.get_aggregate_query(self.incremental_listens_table)
         incremental_agg_df = run_query(agg_query)
