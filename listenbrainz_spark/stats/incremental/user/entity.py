@@ -57,7 +57,7 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
               FROM incremental_listens_max_created l
          LEFT JOIN stats_inc_users_table si
                 ON l.user_id = si.user_id
-             WHERE ai.created > si.created
+             WHERE l.created > si.created
                 OR si.created IS NULL
             )
             SELECT *
