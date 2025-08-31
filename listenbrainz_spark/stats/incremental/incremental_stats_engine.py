@@ -144,7 +144,7 @@ class IncrementalStatsEngine:
     def bookkeep_incremental_aggregate(self):
         metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental_users"
         query = f"""\
-            SELECT user_id, max(created) AS latest_created_at
+            SELECT user_id, max(created) AS created
               FROM {self.incremental_table}
           GROUP BY user_id"""
         run_query(query).write.mode("overwrite").parquet(metadata_path)
