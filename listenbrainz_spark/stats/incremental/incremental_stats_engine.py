@@ -53,7 +53,10 @@ class IncrementalStatsEngine:
         self.message_creator = message_creator
         self._only_inc = None
         self._final_table = None
-        self.incremental_table = None
+        self.incremental_listens_table = None
+        # table of user and max(created) timestamp to filter users with new listens
+        self.incremental_users_table = None
+        self.incremental_users_df = None
 
     @property
     def only_inc(self):
@@ -126,28 +129,31 @@ class IncrementalStatsEngine:
 
     def create_incremental_aggregate(self) -> DataFrame:
         """
-        Create an incremental aggregate from incremental listens.
-
-        Returns:
-            DataFrame: The generated incremental aggregate DataFrame.
+        Create the incremental aggregate from incremental listens and the users-timestamp
+        dataframe for bookkeeping.
         """
-        self.incremental_table = f"{self.provider.get_table_prefix()}_incremental_listens"
+        self.incremental_listens_table = f"{self.provider.get_table_prefix()}_incremental_listens"
 
         inc_listens_df = get_incremental_listens_df()
         inc_listens_df = filter_listens_by_range(inc_listens_df, self.provider.from_date, self.provider.to_date)
         inc_listens_df = filter_deleted_listens(inc_listens_df, get_listens_metadata().location)
-        inc_listens_df.createOrReplaceTempView(self.incremental_table)
+        inc_listens_df.createOrReplaceTempView(self.incremental_listens_table)
 
-        inc_query = self.provider.get_aggregate_query(self.incremental_table)
-        return run_query(inc_query)
+        self.incremental_users_table = f"{self.provider.get_table_prefix()}_incremental_users"
+        users_query = f"""\
+            SELECT user_id, max(created) AS created
+              FROM {self.incremental_listens_table}
+          GROUP BY user_id"""
+        self.incremental_users_df = run_query(users_query)
+
+        agg_query = self.provider.get_aggregate_query(self.incremental_listens_table)
+        incremental_agg_df = run_query(agg_query)
+
+        return incremental_agg_df
 
     def bookkeep_incremental_aggregate(self):
         metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental_users"
-        query = f"""\
-            SELECT user_id, max(created) AS created
-              FROM {self.incremental_table}
-          GROUP BY user_id"""
-        run_query(query).write.mode("overwrite").parquet(metadata_path)
+        self.incremental_users_df.write.mode("overwrite").parquet(metadata_path)
 
     def prepare_final_aggregate(self):
         prefix = self.provider.get_table_prefix()
@@ -184,7 +190,7 @@ class IncrementalStatsEngine:
             if self._only_inc:
                 filter_existing_query = self.provider.get_filter_aggregate_query(
                     partial_table,
-                    self.incremental_table,
+                    self.incremental_users_table,
                 )
                 filtered_existing_aggregate_df = run_query(filter_existing_query)
                 filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
@@ -192,7 +198,7 @@ class IncrementalStatsEngine:
 
                 filter_incremental_query = self.provider.get_filter_aggregate_query(
                     inc_table,
-                    self.incremental_table,
+                    self.incremental_users_table,
                 )
                 filtered_incremental_aggregate_df = run_query(filter_incremental_query)
                 filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"

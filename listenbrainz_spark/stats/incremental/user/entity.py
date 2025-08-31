@@ -36,29 +36,25 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"user_{self.entity}_{self.stats_range}"
 
-    def get_filter_aggregate_query(self, aggregate, inc_listens_table):
+    def get_filter_aggregate_query(self, aggregate, inc_users_table):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
 
         Select users for whom the max listen created timestamp in the new incremental listens dump is greater
         than the created timestamp recorded for that user in the bookkeeping metadata.
         """
-        stats_inc_users_path = f"{self.get_bookkeeping_path()}/incremental_users"
-        read_files_from_HDFS(stats_inc_users_path).createOrReplaceTempView(
-            "stats_inc_users_table"
+        existing_inc_users_path = f"{self.get_bookkeeping_path()}/incremental_users"
+        read_files_from_HDFS(existing_inc_users_path).createOrReplaceTempView(
+            "existing_inc_users_table"
         )
-        return f"""
-              WITH incremental_listens_max_created AS (
-            SELECT user_id, MAX(created) AS created
-              FROM {inc_listens_table}
-          GROUP BY user_id
-                ), incremental_users AS (
+        return f"""\
+              WITH incremental_users AS (
             SELECT l.user_id
-              FROM incremental_listens_max_created l
-         LEFT JOIN stats_inc_users_table si
-                ON l.user_id = si.user_id
-             WHERE l.created > si.created
-                OR si.created IS NULL
+              FROM {inc_users_table} l
+         LEFT JOIN existing_inc_users_table ei
+                ON l.user_id = ei.user_id
+             WHERE l.created > ei.created
+                OR ei.created IS NULL
             )
             SELECT *
               FROM {aggregate} ea
