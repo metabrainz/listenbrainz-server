@@ -68,7 +68,7 @@ class BaseListensImporter(ABC):
                     self.submit_listens(parsed_listens, user_id, user["musicbrainz_id"], import_id)
 
             self.update_import_progress_and_status(import_id, "completed", "Import completed!")
-        except ImportFailedError as e:
+        except Exception as e:
             self.update_import_progress_and_status(import_id, "failed", str(e))
         finally:
             Path(import_task["file_path"]).unlink(missing_ok=True)
