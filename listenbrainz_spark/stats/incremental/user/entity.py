@@ -51,7 +51,7 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
         inc_users_df.createOrReplaceTempView("inc_users_table")
         return f"""
               WITH incremental_users AS (
-            SELECT user_id
+            SELECT ai.user_id
               FROM inc_users_table ai
               JOIN stats_inc_users_table si
                 ON ai.user_id = si.user_id
