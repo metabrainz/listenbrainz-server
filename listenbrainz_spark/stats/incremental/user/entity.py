@@ -40,22 +40,25 @@ class UserStatsQueryProvider(QueryProvider, abc.ABC):
         """ Filter listens from existing aggregate to only include listens for entities having listens in the
         incremental dumps.
 
-        Select users for whom the max listen created timestamp in the incremental dumps is greater than the
-        created timestamp recorded for that user in the bookkeeping metadata.
+        Select users for whom the max listen created timestamp in the new incremental listens dump is greater
+        than the created timestamp recorded for that user in the bookkeeping metadata.
         """
         stats_inc_users_path = f"{self.get_bookkeeping_path()}/incremental_users"
         read_files_from_HDFS(stats_inc_users_path).createOrReplaceTempView(
             "stats_inc_users_table"
         )
-        inc_users_df = get_incremental_users_df()
-        inc_users_df.createOrReplaceTempView("inc_users_table")
         return f"""
-              WITH incremental_users AS (
-            SELECT ai.user_id
-              FROM inc_users_table ai
-              JOIN stats_inc_users_table si
-                ON ai.user_id = si.user_id
+              WITH incremental_listens_max_created AS (
+            SELECT user_id, MAX(created) AS created
+              FROM {inc_listens_table}
+          GROUP BY user_id
+                ), incremental_users AS (
+            SELECT l.user_id
+              FROM incremental_listens_max_created l
+         LEFT JOIN stats_inc_users_table si
+                ON l.user_id = si.user_id
              WHERE ai.created > si.created
+                OR si.created IS NULL
             )
             SELECT *
               FROM {aggregate} ea
