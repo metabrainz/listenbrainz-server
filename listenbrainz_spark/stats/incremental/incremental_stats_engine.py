@@ -142,27 +142,12 @@ class IncrementalStatsEngine:
         return run_query(inc_query)
 
     def bookkeep_incremental_aggregate(self):
-        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental"
-        query = f"SELECT max(created) AS latest_created_at FROM {self.incremental_table}"
-        latest_created_at = run_query(query).collect()[0]["latest_created_at"]
-        metadata_df = listenbrainz_spark.session.createDataFrame(
-            [(latest_created_at, datetime.now())],
-            schema=INCREMENTAL_BOOKKEEPING_SCHEMA
-        )
-        metadata_df.write.mode("overwrite").json(metadata_path)
-
-    def get_incremental_dumps_existing_created(self):
-        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental"
-        try:
-            metadata = listenbrainz_spark \
-                .session \
-                .read \
-                .schema(INCREMENTAL_BOOKKEEPING_SCHEMA) \
-                .json(f"{HDFS_CLUSTER_URI}{metadata_path}") \
-                .collect()[0]
-            return metadata["created"]
-        except AnalysisException:
-            return None
+        metadata_path = f"{self.provider.get_bookkeeping_path()}/incremental_users"
+        query = f"""\
+            SELECT user_id, max(created) AS latest_created_at
+              FROM {self.incremental_table}
+          GROUP BY user_id"""
+        run_query(query).write.mode("overwrite").parquet(metadata_path)
 
     def prepare_final_aggregate(self):
         prefix = self.provider.get_table_prefix()
@@ -197,12 +182,9 @@ class IncrementalStatsEngine:
             final_df = inc_df
         else:
             if self._only_inc:
-                existing_created = self.get_incremental_dumps_existing_created()
-
                 filter_existing_query = self.provider.get_filter_aggregate_query(
                     partial_table,
                     self.incremental_table,
-                    existing_created
                 )
                 filtered_existing_aggregate_df = run_query(filter_existing_query)
                 filtered_existing_table = f"{prefix}_filtered_existing_aggregate"
@@ -211,7 +193,6 @@ class IncrementalStatsEngine:
                 filter_incremental_query = self.provider.get_filter_aggregate_query(
                     inc_table,
                     self.incremental_table,
-                    existing_created
                 )
                 filtered_incremental_aggregate_df = run_query(filter_incremental_query)
                 filtered_incremental_table = f"{prefix}_filtered_incremental_aggregate"

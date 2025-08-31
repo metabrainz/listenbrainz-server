@@ -35,8 +35,7 @@ class SitewideStatsQueryProvider(QueryProvider, abc.ABC):
     def get_table_prefix(self) -> str:
         return f"sitewide_{self.entity}_{self.stats_range}"
 
-    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str,
-                                   existed_created: Optional[datetime]) -> str:
+    def get_filter_aggregate_query(self, existing_aggregate: str, incremental_aggregate: str) -> str:
         return f"SELECT * FROM {existing_aggregate}"
 
 

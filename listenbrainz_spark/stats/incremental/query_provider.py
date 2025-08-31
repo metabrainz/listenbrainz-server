@@ -62,14 +62,13 @@ class QueryProvider(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str, existing_created: datetime) -> str:
+    def get_filter_aggregate_query(self, aggregate: str, inc_listens_table: str) -> str:
         """
         Return the query to filter the aggregate based on the listens submitted since existing created timestamp.
 
         Args:
             aggregate: The table name for the aggregate to filter
             inc_listens_table: The table name for incremental listens.
-            existing_created: The max listen created value last time incremental stats for this query was run.
         """
         raise NotImplementedError()
 
