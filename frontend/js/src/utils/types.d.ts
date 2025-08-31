@@ -305,6 +305,20 @@ declare type UserArtistActivityResponse = {
   }>;
 };
 
+declare type UserEraActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+    era_activity: Array<{
+      year: number;
+      count: number;
+    }>;
+  };
+};
+
 declare type UserArtistEvolutionActivityResponse = {
   payload: {
     artist_evolution_activity: Array<{

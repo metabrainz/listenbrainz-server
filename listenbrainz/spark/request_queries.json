@@ -24,6 +24,11 @@
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
     "params": ["stats_range", "database"]
   },
+  "stats.user.era_activity": {
+    "name": "stats.user.era_activity",
+    "description": "Calculate number of listens for an user per year of release on each day of the requested stats_range.",
+    "params": ["stats_range", "database"]
+  },
   "stats.user.artist_evolution_activity": {
     "name": "stats.user.artist_evolution_activity",
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
@@ -48,6 +53,11 @@
     "name": "stats.sitewide.artist_evolution_activity",
     "description": "Calculate number of listens per hour on each day of the requested stats_range.",
     "params": ["stats_range"]
+  },
+  "stats.sitewide.era_activity": {
+    "name": "stats.sitewide.era_activity",
+    "description": "Calculate number of listens per year of release on each day of the requested stats_range.",
+    "params": ["stats_range", "database"]
   },
   "year_in_music.new_releases_of_top_artists": {
     "name": "year_in_music.new_releases_of_top_artists",
