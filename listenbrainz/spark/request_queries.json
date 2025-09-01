@@ -24,10 +24,15 @@
     "description": "Calculate number of listens for an user per hour on each day of the requested stats_range.",
     "params": ["stats_range", "database"]
   },
+  "stats.user.era_activity": {
+    "name": "stats.user.era_activity",
+    "description": "Calculate number of listens for an user per year of release on each day of the requested stats_range.",
+    "params": ["stats_range", "database"]
+  },
   "stats.user.genre_activity": {
-	"name": "stats.user.genre_activity",
-	"description": "Calculate the top genres listened to by the user in the requested stats_range grouped by time of the day",
-	"params": ["stats_range", "database"]
+    "name": "stats.user.genre_activity",
+    "description": "Calculate the top genres listened to by the user in the requested stats_range grouped by time of the day",
+    "params": ["stats_range", "database"]
   },
   "stats.sitewide.entity": {
     "name": "stats.sitewide.entity",
@@ -38,6 +43,11 @@
     "name": "stats.sitewide.listening_activity",
     "description": "Calculates number of listens in periods depending on the stats_range value. see the documentation in spark code for details.",
     "params": ["stats_range"]
+  },
+  "stats.sitewide.era_activity": {
+    "name": "stats.sitewide.era_activity",
+    "description": "Calculate number of listens per year of release on each day of the requested stats_range.",
+    "params": ["stats_range", "database"]
   },
   "year_in_music.new_releases_of_top_artists": {
     "name": "year_in_music.new_releases_of_top_artists",
