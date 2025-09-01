@@ -585,7 +585,12 @@ export default class FunkwhalePlayer
         </audio>
         {artworkUrl && (
           <div>
-            <img alt="coverart" className="img-fluid" src={artworkUrl} />
+            <img
+              alt="coverart"
+              className="img-fluid"
+              src={artworkUrl}
+              crossOrigin="anonymous"
+            />
           </div>
         )}
       </div>
