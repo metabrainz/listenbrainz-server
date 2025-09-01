@@ -332,6 +332,13 @@ declare type UserArtistEvolutionActivityResponse = {
   };
 };
 
+declare type RawRow = {
+  time_unit: string | number;
+  artist_mbid: string;
+  artist_name: string;
+  listen_count: number;
+};
+
 declare type GenreHourData = {
   genre: string;
   hour: number;

@@ -19,13 +19,6 @@ export type StreamDataItem = {
   [key: string]: string | number;
 };
 
-type RawRow = {
-  time_unit: string | number;
-  artist_mbid: string;
-  artist_name: string;
-  listen_count: number;
-};
-
 const getLegendText = (timeRange: UserStatsAPIRange) => {
   switch (timeRange) {
     case "week":
