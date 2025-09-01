@@ -162,49 +162,6 @@ function getAllTimeYearLabels(opts: {
   return eachYearOfInterval({ start, end }).map((d) => format(d, "yyyy"));
 }
 
-function getOrderedTimeUnits(
-  timeRange: UserStatsAPIRange,
-  offsetYear: number | undefined,
-  from_ts?: number,
-  to_ts?: number
-) {
-  if (timeRange.includes("week")) {
-    return [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ];
-  }
-  if (timeRange.includes("month")) {
-    return Array.from({ length: 31 }, (_, i) => String(i + 1));
-  }
-  if (timeRange.includes("year")) {
-    return [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-  }
-  if (timeRange.includes("all_time")) {
-    return getAllTimeYearLabels({ offsetYear, from_ts, to_ts });
-  }
-
-  return ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5"];
-}
-
 const transformArtistEvolutionActivityData = (
   rawData: RawRow[] | undefined,
   statsRange: UserStatsAPIRange,
@@ -429,41 +386,23 @@ export default function ArtistEvolutionActivityStreamGraph(
       >
         <h3 className="capitalize-bold m-0">Artist Evolution</h3>
         <div className="d-flex align-items-center flex-shrink-0 gap-2">
-          <span>Top</span>
-          <span className="dropdown">
-            <button
-              type="button"
-              className="dropdown-toggle btn-transparent capitalize-bold"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-              aria-label="Select number of top artists to show"
-            >
-              {topN}
-            </button>
-            <div className="dropdown-menu" role="menu">
-              <button
-                type="button"
-                onClick={() => setTopN(5)}
-                className={`dropdown-item ${topN === 5 ? "active" : ""}`}
-              >
-                5
-              </button>
-              <button
-                type="button"
-                onClick={() => setTopN(10)}
-                className={`dropdown-item ${topN === 10 ? "active" : ""}`}
-              >
-                10
-              </button>
-              <button
-                type="button"
-                onClick={() => setTopN(15)}
-                className={`dropdown-item ${topN === 15 ? "active" : ""}`}
-              >
-                15
-              </button>
-            </div>
-          </span>
+          <label htmlFor="top-n-select" className="m-0">
+            Top
+          </label>
+          <select
+            id="top-n-select"
+            className="form-select"
+            value={topN}
+            onChange={onTopNChange}
+            aria-label="Select number of top artists to show"
+            style={{ width: 80 }}
+          >
+            {[5, 10, 15].map((num) => (
+              <option key={num} value={num}>
+                {num}
+              </option>
+            ))}
+          </select>
           <span>artists</span>
         </div>
       </div>
@@ -490,8 +429,8 @@ export default function ArtistEvolutionActivityStreamGraph(
                   keys={keys}
                   margin={
                     isMobile
-                      ? { top: 20, right: 20, bottom: 120, left: 40 }
-                      : { top: 20, right: 100, bottom: 60, left: 60 }
+                      ? { top: 60, right: 20, bottom: 120, left: 40 }
+                      : { top: 60, right: 20, bottom: 60, left: 60 }
                   }
                   axisBottom={{
                     format: getAxisFormatter(range, orderedTimeUnits, isMobile),
@@ -531,19 +470,22 @@ export default function ArtistEvolutionActivityStreamGraph(
                         strokeWidth: 1,
                       },
                     },
+                    legends: { text: { fontSize: isMobile ? 10 : 12 } },
                   }}
                   legends={[
                     {
-                      anchor: isMobile ? "bottom" : "right",
+                      anchor: "top-left",
                       direction: isMobile ? "row" : "column",
-                      translateX: isMobile ? 0 : 100,
-                      translateY: isMobile ? 80 : 0,
-                      itemWidth: isMobile ? 60 : 80,
-                      itemHeight: 20,
+                      translateX: 10,
+                      translateY: 10,
+                      itemWidth: isMobile ? 70 : 90,
+                      itemHeight: 18,
                       itemTextColor: "#333333",
                       symbolSize: 12,
                       symbolShape: "circle",
-                      itemsSpacing: isMobile ? 5 : 0,
+                      itemsSpacing: isMobile ? 6 : 2,
+                      itemBackground: "rgba(255,255,255,0.75)",
+                      itemOpacity: 1,
                       effects: [
                         {
                           on: "hover",
