@@ -26,6 +26,7 @@ class StatsAPITestCase(IntegrationTestCase):
             "listening_activity",
             "artist_map",
             "artist_evolution_activity",
+            "era_activity"
         ]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
@@ -102,6 +103,13 @@ class StatsAPITestCase(IntegrationTestCase):
         database = 'daily_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.daily_activity_payload)
 
+        # Insert era activity data
+        with open(self.path_to_data_file('user_era_activity_db_data_for_api_test.json')) as f:
+            self.era_activity_payload = json.load(f)
+            self.era_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'era_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.era_activity_payload)
+
         # Insert artist map data
         with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
             self.artist_map_payload = json.load(f)
@@ -142,6 +150,10 @@ class StatsAPITestCase(IntegrationTestCase):
             "daily_activity": {
                 "endpoint": "stats_api_v1.get_daily_activity",
                 "payload": self.daily_activity_payload
+            },
+            "era_activity": {
+                "endpoint": "stats_api_v1.get_era_activity",
+                "payload": self.era_activity_payload
             },
             "artist_evolution_activity": {
                 "endpoint": "stats_api_v1.get_artist_evolution_activity",
@@ -267,6 +279,16 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(sent['data'], received['listening_activity'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+
+    def assertEraActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+
+        self.assertEqual(sent['from_ts'], received['from_ts'])
+        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(sent['data'], received['era_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
     def assertArtistEvolutionActivityEqual(self, request, response):
@@ -403,6 +425,23 @@ class StatsAPITestCase(IntegrationTestCase):
                     expected = json.load(f)["payload"]
                     expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
+
+    def test_era_activity_stat(self):
+        endpoint = self.non_entity_endpoints["era_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for era_activity stats"):
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            payload = self.non_entity_endpoints["era_activity"]["payload"]
+            self.assertEraActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with self.subTest(f"test valid response is received for {range_} era_activity stats", range_=range_):
+                with open(self.path_to_data_file(f'user_era_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
+                    payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
+                db_stats.insert(f"era_activity_{range_}_20220718", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'range': range_})
+                self.assertEraActivityEqual(payload, response)
 
     def test_artist_map_stat(self):
         endpoint = self.non_entity_endpoints["artist_map"]["endpoint"]
