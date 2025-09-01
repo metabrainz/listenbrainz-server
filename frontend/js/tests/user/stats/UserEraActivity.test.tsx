@@ -113,7 +113,7 @@ describe.each([
     });
   });
 
-  it("displays Era Activity title", async () => {
+  it("displays Music by decade title", async () => {
     renderWithProviders(
       <UserEraActivity {...props} />,
       {},
@@ -123,7 +123,7 @@ describe.each([
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Era Activity")).toBeInTheDocument();
+      expect(screen.getByText("Music by decade")).toBeInTheDocument();
     });
   });
 });

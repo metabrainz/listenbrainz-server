@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { ResponsiveBar } from "@nivo/bar";
-import { useMediaQuery } from "react-responsive";
 import { BasicTooltip } from "@nivo/tooltip";
 import {
   faExclamationCircle,
@@ -13,7 +12,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
-import { COLOR_LB_ORANGE, COLOR_LB_GREEN } from "../../../utils/constants";
+import { COLOR_LB_ORANGE } from "../../../utils/constants";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 // Constants
@@ -263,7 +262,7 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
       <div className="d-flex align-items-start justify-content-between mb-3 mt-3">
         <div className="flex-grow-1 min-w-0">
           <h3 style={{ margin: 0, marginBottom: "5px" }}>
-            <span className="capitalize-bold">Era Activity</span>
+            <span className="capitalize-bold">Music by decade</span>
           </h3>
           <div className="small text-secondary lh-sm">
             {selectedDecade && (
@@ -279,16 +278,13 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
           </div>
         </div>
         {!isLoading && !hasError && chartData.length > 0 && (
-          <div className="d-flex gap-1 ms-3 flex-shrink-0">
+          <div className="btn-group btn-group-lg">
             <button
               type="button"
               onClick={handleZoomIn}
               disabled={selectedDecade !== null || firstDecade === null}
-              className="lb-icon-btn"
+              className="btn btn-outline-primary"
               title="Zoom in to first decade"
-              style={{
-                color: COLOR_LB_ORANGE,
-              }}
             >
               <FontAwesomeIcon icon={faSearchPlus as IconProp} />
             </button>
@@ -296,11 +292,8 @@ export default function UserEraActivity({ user, range }: UserEraActivityProps) {
               type="button"
               onClick={handleZoomOut}
               disabled={selectedDecade === null}
-              className="lb-icon-btn"
+              className="btn btn-outline-primary"
               title="Zoom out to decades view"
-              style={{
-                color: COLOR_LB_ORANGE,
-              }}
             >
               <FontAwesomeIcon icon={faSearchMinus as IconProp} />
             </button>
