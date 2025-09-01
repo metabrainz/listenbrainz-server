@@ -322,15 +322,13 @@ declare type UserEraActivityResponse = {
 
 declare type UserArtistEvolutionActivityResponse = {
   payload: {
-    artist_evolution_activity: Array<{
-      [artistName: string]: number | string;
-    }>;
-    offset_year?: number;
+    user_id: string;
+    artist_evolution_activity: RawRow[];
     range: UserStatsAPIRange;
     from_ts: number;
     to_ts: number;
     last_updated: number;
-    user_id?: string;
+    offset_year?: number;
   };
 };
 
