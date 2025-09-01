@@ -124,7 +124,7 @@ const getAxisFormatter = (
 };
 
 const transformArtistEvolutionActivityData = (
-  rawData: RawRow[] | undefined,
+  rawData: RawUserArtistEvolutionRow[] | undefined,
   statsRange: UserStatsAPIRange,
   topN: number = 10
 ): {
