@@ -350,6 +350,7 @@ export default class YearInMusic extends React.Component<
         We were not able to calculate this data for {youOrUsername}
       </div>
     );
+    const encodedUsername = encodeURIComponent(user.name);
     return (
       <div role="main" id="year-in-music">
         <SEO year={2021} userName={user?.name} />
@@ -366,8 +367,9 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   Share your year with your friends
                   <p id="share-link">
-                    <Link to={`/user/${user.name}/year-in-music/2021/`}>
-                      https://listenbrainz.org/user/{user.name}
+                    <Link to={`/user/${encodedUsername}/year-in-music/2021/`}>
+                      https://listenbrainz.org/user/
+                      {encodedUsername}
                       /year-in-music/2021/
                     </Link>
                   </p>
@@ -389,13 +391,13 @@ export default class YearInMusic extends React.Component<
             <p>
               See profile on&nbsp;
               <img src="/static/img/favicon-16.png" alt="ListenBrainz Logo" />
-              <Link to={`/user/${user.name}/`}>ListenBrainz</Link>
+              <Link to={`/user/${encodedUsername}/`}>ListenBrainz</Link>
               &nbsp;and&nbsp;
               <img
                 src="/static/img/musicbrainz-16.svg"
                 alt="MusicBrainz Logo"
               />
-              <a href={`https://musicbrainz.org/user/${user.name}`}>
+              <a href={`https://musicbrainz.org/user/${encodedUsername}`}>
                 MusicBrainz
               </a>
             </p>

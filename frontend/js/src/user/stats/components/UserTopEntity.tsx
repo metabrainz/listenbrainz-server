@@ -65,7 +65,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
 
   let statsUrl;
   if (user) {
-    statsUrl = `/user/${user.name}/stats`;
+    statsUrl = `/user/${encodeURIComponent(user.name)}/stats`;
   } else {
     statsUrl = `/statistics`;
   }
