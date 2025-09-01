@@ -342,10 +342,12 @@ export default function ArtCreator() {
       options: [],
       baseUrl:
         style.type === "grid"
-          ? `${getBaseUrl()}/syndication-feed/user/${userName}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
-          : `${getBaseUrl()}/syndication-feed/user/${userName}/stats/art/custom?custom_name=${
-              style.name
-            }&range=${timeRange}`,
+          ? `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+              userName
+            )}/stats/art/grid?dimension=${gridSize}&layout=${gridLayout}&range=${timeRange}`
+          : `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+              userName
+            )}/stats/art/custom?custom_name=${style.name}&range=${timeRange}`,
     });
   }, [userName, style, gridSize, gridLayout, timeRange]);
 
@@ -362,11 +364,15 @@ export default function ArtCreator() {
       ) => {
         if (styleArg.type === "grid") {
           setPreviewUrl(
-            `${APIService.APIBaseURI}/art/grid-stats/${userNameArg}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/grid-stats/${encodeURIComponent(
+              userNameArg
+            )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
           );
         } else {
           setPreviewUrl(
-            `${APIService.APIBaseURI}/art/${styleArg.name}/${userNameArg}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
+            `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
+              userNameArg
+            )}/${timeRangeArg}/${DEFAULT_IMAGE_SIZE}`
           );
         }
       },

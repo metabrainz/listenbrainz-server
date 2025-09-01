@@ -532,6 +532,45 @@ def get_artist_activity(user_name: str):
 @crossdomain
 @ratelimit()
 def get_era_activity(user_name: str):
+    """
+    Get the release-year activity for user ``user_name``. Each entry represents the number of listens
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1971, "listen_count": 3},
+                    {"year": 1997, "listen_count": 9},
+                    {"year": 2024, "listen_count": 1}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "week",
+                "last_updated": 1735603200,
+                "user_id": "John Doe"
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; multiple listens to different tracks from the same year are aggregated.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted (only years with > 0 listens are returned for the selected range).
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
     user, stats_range = _validate_stats_user_params(user_name)
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
@@ -1501,6 +1540,43 @@ def get_sitewide_artist_activity():
 @crossdomain
 @ratelimit()
 def get_sitewide_era_activity():
+    """
+    Get sitewide release-year activity. Each entry represents the number of listens across all users
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1973, "listen_count": 1043},
+                    {"year": 1997, "listen_count": 3877},
+                    {"year": 2011, "listen_count": 2610}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "year",
+                "last_updated": 1735603200
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; counts are aggregated across the entire ListenBrainz userbase.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted.
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
