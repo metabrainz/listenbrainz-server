@@ -11,7 +11,7 @@ from listenbrainz.background.listens_importer.base import BaseListensImporter
 
 SKIP_REASONS = [
     "fwdbtn", "backbtn", "clickrow", "clickside", "playbtn", "remote", "logout",
-    "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused"
+    "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused", "unknown"
 ]
 
 
