@@ -6,11 +6,17 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router";
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import { Helmet } from "react-helmet";
 
 import Tooltip from "react-tooltip";
 import NiceModal from "@ebay/nice-modal-react";
+import { Card } from "react-bootstrap";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
@@ -37,7 +43,7 @@ export default function UserReports() {
   const { user = undefined } = props ?? {};
 
   // Context
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
   // Router
   const navigate = useNavigate();
@@ -80,6 +86,9 @@ export default function UserReports() {
     </button>
   );
 
+  const encodedUserOrCurrentUserName = user?.name
+    ? encodeURIComponent(user.name)
+    : encodeURIComponent(currentUser.name);
   return (
     <div data-testid="User Reports">
       <Helmet>
@@ -107,11 +116,7 @@ export default function UserReports() {
               type="button"
               onClick={() => {
                 navigate(
-                  `/user/${
-                    user?.name
-                      ? encodeURIComponent(user.name)
-                      : encodeURIComponent(currentUser.name)
-                  }/stats/?range=${range}`
+                  `/user/${encodedUserOrCurrentUserName}/stats/?range=${range}`
                 );
               }}
               className={`pill secondary ${user ? "active" : ""}`}
@@ -138,7 +143,26 @@ export default function UserReports() {
       <section id="top-entity">
         {statsExplanationModalButton}
         <div className="row">
-          <div className="col-md-4">
+          <div className="col-md-8 col-sm-6 d-flex">
+            <Card className="flex-grow-1" data-testid="top-release-group">
+              <h3 className="capitalize-bold text-center">Top albums</h3>
+              <object
+                className="p-4 w-auto mt-auto mb-auto"
+                width="auto"
+                aria-label="Album cover grid"
+                data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/750`}
+              />
+              <div className="mb-4 text-center">
+                <Link
+                  to="/explore/art-creator/"
+                  className="btn btn-outline-info"
+                >
+                  More album grids…
+                </Link>
+              </div>
+            </Card>
+          </div>
+          <div className="col-md-4 col-sm-6 d-flex">
             <UserTopEntity
               range={range}
               entity="artist"
@@ -146,20 +170,13 @@ export default function UserReports() {
               terminology="artist"
             />
           </div>
-          <div className="col-md-4">
-            <UserTopEntity
-              range={range}
-              entity="release-group"
-              user={user}
-              terminology="album"
-            />
-          </div>
-          <div className="col-md-4">
+          <div className="col-12">
             <UserTopEntity
               range={range}
               entity="recording"
               user={user}
               terminology="track"
+              contentCssClassName="top-entity-listencards"
             />
           </div>
         </div>
