@@ -1,5 +1,28 @@
 [
     {
+        "ts": "2017-12-04T20:50:34Z",
+        "username": "MyUsername",
+        "platform": "Android",
+        "ms_played": 24437,
+        "conn_country": "DE",
+        "ip_addr_decrypted": null,
+        "user_agent_decrypted": null,
+        "master_metadata_track_name": "I Knew You Were Trouble",
+        "master_metadata_album_artist_name": "Taylor Swift",
+        "master_metadata_album_album_name": "Red",
+        "spotify_track_uri": "spotify:track:6RjKVXi31fui9m4dbiGRrL",
+        "episode_name": null,
+        "episode_show_name": null,
+        "spotify_episode_uri": null,
+        "reason_start": "clickrow",
+        "reason_end": null,
+        "shuffle": false,
+        "skipped": null,
+        "offline": false,
+        "offline_timestamp": 1512420608296,
+        "incognito_mode": false
+    },
+    {
         "ts": "2018-01-31T21:56:27Z",
         "username": "MyUsername",
         "platform": "Some OS",
