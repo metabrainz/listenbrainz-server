@@ -9,6 +9,11 @@ from sqlalchemy import text
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 
+SKIP_REASONS = [
+    "fwdbtn", "backbtn", "clickrow", "clickside", "playbtn", "remote", "logout",
+    "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused"
+]
+
 
 class SpotifyListensImporter(BaseListensImporter):
     """Spotify-specific listens importer."""
@@ -30,11 +35,12 @@ class SpotifyListensImporter(BaseListensImporter):
         items = []
         for item in batch:
             try:
-                if item["skipped"] or item["incognito_mode"]:
+                if (
+                    item["skipped"] or item["incognito_mode"] or
+                    (item["ms_played"] < 30000 and item["reason_end"] in SKIP_REASONS)
+                ):
                     continue
-                if item["ms_played"] < 30000:
-                    if item["reason_end"] in ["fwdbtn", "backbtn", "clickrow", "clickside", "playbtn", "remote", "logout", "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused"]:
-                        continue
+
                 items.append({
                     "artist_name": item.get("master_metadata_album_artist_name"),
                     "track_name": item.get("master_metadata_track_name"),
