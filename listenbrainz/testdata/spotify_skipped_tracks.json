@@ -200,7 +200,7 @@
         "reason_start": "trackdone",
         "reason_end": "unknown",
         "shuffle": false,
-        "skipped": null,
+        "skipped": true,
         "offline": false,
         "offline_timestamp": 1571130026045,
         "incognito_mode": false
