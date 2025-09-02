@@ -33,7 +33,7 @@ class SpotifyListensImporter(BaseListensImporter):
                 if item["skipped"] or item["incognito_mode"]:
                     continue
                 if item["ms_played"] < 30000:
-                    if item["reason_end"] in ["fwdbtn", "clickrow", "playbtn", "remote"]:
+                    if item["reason_end"] in ["fwdbtn", "backbtn", "clickrow", "clickside", "playbtn", "remote", "logout", "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused"]:
                         continue
                 items.append({
                     "artist_name": item.get("master_metadata_album_artist_name"),
