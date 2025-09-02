@@ -142,6 +142,7 @@ class StatsAPITestCase(IntegrationTestCase):
             "genre_activity": {
                 "endpoint": "stats_api_v1.get_genre_activity",
                 "payload": self.genre_activity_payload
+            },
             "era_activity": {
                 "endpoint": "stats_api_v1.get_era_activity",
                 "payload": self.era_activity_payload
