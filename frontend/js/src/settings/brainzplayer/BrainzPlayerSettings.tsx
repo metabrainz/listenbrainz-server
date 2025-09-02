@@ -22,6 +22,7 @@ import FunkwhalePlayer from "../../common/brainzplayer/FunkwhalePlayer";
 import { ToastMsg } from "../../notifications/Notifications";
 import AppleMusicPlayer from "../../common/brainzplayer/AppleMusicPlayer";
 import Card from "../../components/Card";
+import faInternetArchive from "../../common/icons/faInternetArchive";
 import faFunkwhale from "../../common/icons/faFunkwhale";
 import { faNavidrome } from "../../common/icons/faNavidrome";
 
@@ -46,6 +47,11 @@ export const dataSourcesInfo = {
     icon: faApple,
     color: "#000000",
   },
+  internetArchive: {
+    name: "Internet Archive",
+    icon: faInternetArchive,
+    color: "#6c757d",
+  },
   funkwhale: {
     name: "Funkwhale",
     icon: faFunkwhale,
@@ -68,6 +74,7 @@ export const defaultDataSourcesPriority = [
   "funkwhale",
   "navidrome",
   "youtube",
+  "internetArchive",
 ] as DataSourceKey[];
 
 function BrainzPlayerSettings() {
@@ -95,6 +102,9 @@ function BrainzPlayerSettings() {
   const [appleMusicEnabled, setAppleMusicEnabled] = React.useState(
     userPreferences?.brainzplayer?.appleMusicEnabled ??
       AppleMusicPlayer.hasPermissions(appleAuth)
+  );
+  const [internetArchiveEnabled, setInternetArchiveEnabled] = React.useState(
+    userPreferences?.brainzplayer?.internetArchiveEnabled ?? true
   );
   const [funkwhaleEnabled, setFunkwhaleEnabled] = React.useState(
     userPreferences?.brainzplayer?.funkwhaleEnabled ??
@@ -152,6 +162,7 @@ function BrainzPlayerSettings() {
         spotifyEnabled,
         soundcloudEnabled,
         appleMusicEnabled,
+        internetArchiveEnabled,
         funkwhaleEnabled,
         navidromeEnabled,
         brainzplayerEnabled,
@@ -167,6 +178,7 @@ function BrainzPlayerSettings() {
           spotifyEnabled,
           soundcloudEnabled,
           appleMusicEnabled,
+          internetArchiveEnabled,
           funkwhaleEnabled,
           navidromeEnabled,
           brainzplayerEnabled,
@@ -192,6 +204,7 @@ function BrainzPlayerSettings() {
     spotifyEnabled,
     soundcloudEnabled,
     appleMusicEnabled,
+    internetArchiveEnabled,
     funkwhaleEnabled,
     navidromeEnabled,
     brainzplayerEnabled,
@@ -503,6 +516,37 @@ function BrainzPlayerSettings() {
                 </a>
               </li>
             </ul>
+          </small>
+        </div>
+        <div className="mb-4">
+          <Switch
+            id="enable-internet-archive"
+            value="internetArchive"
+            checked={internetArchiveEnabled}
+            onChange={() => setInternetArchiveEnabled(!internetArchiveEnabled)}
+            switchLabel={
+              <span
+                className={`text-brand ${
+                  !internetArchiveEnabled ? "text-muted" : ""
+                }`}
+              >
+                <span>
+                  <FontAwesomeIcon
+                    icon={dataSourcesInfo.internetArchive.icon}
+                    color={
+                      internetArchiveEnabled
+                        ? dataSourcesInfo.internetArchive.color
+                        : ""
+                    }
+                  />
+                </span>
+                <span>&nbsp;Internet Archive</span>
+              </span>
+            }
+          />
+          <br />
+          <small>
+            Internet Archive is a free, public domain audio archive.
           </small>
         </div>
         <h3 className="mt-4">Music services priority</h3>

@@ -31,9 +31,11 @@ import SoundcloudPlayer from "./SoundcloudPlayer";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
 import AppleMusicPlayer from "./AppleMusicPlayer";
+import InternetArchivePlayer from "./InternetArchivePlayer";
 import FunkwhalePlayer from "./FunkwhalePlayer";
 import NavidromePlayer from "./NavidromePlayer";
 import {
+  dataSourcesInfo,
   DataSourceKey,
   defaultDataSourcesPriority,
 } from "../../settings/brainzplayer/BrainzPlayerSettings";
@@ -59,6 +61,7 @@ export type DataSourceTypes =
   | YoutubePlayer
   | SoundcloudPlayer
   | AppleMusicPlayer
+  | InternetArchivePlayer
   | FunkwhalePlayer
   | NavidromePlayer;
 
@@ -117,6 +120,9 @@ function isListenFromDatasource(
   }
   if (datasource instanceof NavidromePlayer) {
     return NavidromePlayer.isListenFromThisService(listen);
+  }
+  if (datasource instanceof InternetArchivePlayer) {
+    return InternetArchivePlayer.isListenFromThisService(listen);
   }
   return undefined;
 }
@@ -199,6 +205,7 @@ export default function BrainzPlayer() {
     (userPreferences?.brainzplayer?.spotifyEnabled === false &&
       userPreferences?.brainzplayer?.youtubeEnabled === false &&
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
+      userPreferences?.brainzplayer?.internetArchiveEnabled === false &&
       userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
@@ -225,6 +232,7 @@ export default function BrainzPlayer() {
     navidromeEnabled = true,
     soundcloudEnabled = true,
     youtubeEnabled = true,
+    internetArchiveEnabled = true,
     brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
@@ -244,8 +252,10 @@ export default function BrainzPlayer() {
       SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
       "soundcloud",
     youtubeEnabled && "youtube",
-  ].filter(Boolean) as Array<DataSourceKey>;
+    internetArchiveEnabled && "internetArchive",
+  ].filter(Boolean) as DataSourceKey[];
 
+  // Use the enabled sources to filter the priority list
   // Combine saved priority list and default list to add any new music service at the end
   // then filter out disabled datasources (new ones will be enabled by default)
   const sortedDataSources = union(
@@ -258,6 +268,7 @@ export default function BrainzPlayer() {
   const youtubePlayerRef = React.useRef<YoutubePlayer>(null);
   const soundcloudPlayerRef = React.useRef<SoundcloudPlayer>(null);
   const appleMusicPlayerRef = React.useRef<AppleMusicPlayer>(null);
+  const internetArchivePlayerRef = React.useRef<InternetArchivePlayer>(null);
   const funkwhalePlayerRef = React.useRef<FunkwhalePlayer>(null);
   const navidromePlayerRef = React.useRef<NavidromePlayer>(null);
   const dataSourceRefs: Array<React.RefObject<
@@ -277,6 +288,9 @@ export default function BrainzPlayer() {
           break;
         case "appleMusic":
           dataSources.push(appleMusicPlayerRef);
+          break;
+        case "internetArchive":
+          dataSources.push(internetArchivePlayerRef);
           break;
         case "funkwhale":
           dataSources.push(funkwhalePlayerRef);
@@ -1246,6 +1260,30 @@ export default function BrainzPlayer() {
             handleError={handleError}
             handleWarning={handleWarning}
             handleSuccess={handleSuccess}
+          />
+        )}
+
+        {userPreferences?.brainzplayer?.internetArchiveEnabled !== false && (
+          <InternetArchivePlayer
+            volume={brainzPlayerContextRef.current.volume}
+            show={
+              brainzPlayerContextRef.current.isActivated &&
+              dataSourceRefs[
+                brainzPlayerContextRef.current.currentDataSourceIndex
+              ]?.current instanceof InternetArchivePlayer
+            }
+            ref={internetArchivePlayerRef}
+            playerPaused={brainzPlayerContextRef.current.playerPaused}
+            onPlayerPausedChange={playerPauseChange}
+            onProgressChange={progressChange}
+            onDurationChange={durationChange}
+            onTrackInfoChange={throttledTrackInfoChange}
+            onTrackEnd={playNextTrack}
+            onTrackNotFound={failedToPlayTrack}
+            handleError={handleError}
+            handleWarning={handleWarning}
+            handleSuccess={handleSuccess}
+            onInvalidateDataSource={invalidateDataSource}
           />
         )}
       </BrainzPlayerUI>
