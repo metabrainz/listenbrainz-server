@@ -387,7 +387,7 @@ export default class NavidromePlayer
   };
 
   datasourceRecordsListens = (): boolean => {
-    return true; // record listens
+    return false; // record listens
   };
 
   setAudioSrc = (audioElement: HTMLAudioElement, src: string): void => {
