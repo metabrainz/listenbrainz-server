@@ -59,6 +59,14 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             )
         ])
 
+    def create_spotify_skipped_tracks_zip(self):
+        return self.create_zip("spotify.zip", [
+            (
+                self.path_to_data_file("spotify_skipped_tracks.json"),
+                "Spotify Extended Streaming History/Streaming_History_Audio_2023.json"
+            )
+        ])
+
     def create_listenbrainz_export_zip(self):
         return self.create_zip("listenbrainz_export.zip", [
             (
@@ -362,9 +370,10 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=7, attempts=20)
+        # Some tracks will be skipped,only expecting 6 tracks 
+        response = self.wait_for_query_to_have_items(url, num_items=6, attempts=20)
         listens = response.json["payload"]["listens"]
-        self.assertEqual(len(listens), 7)
+        self.assertEqual(len(listens), 6)
 
         self.assertEqual(listens[0]["listened_at"], 1679250697)
         track_metadata = listens[0]["track_metadata"]
@@ -376,6 +385,28 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["origin_url"], "https://open.spotify.com/track/50DMJJpAeQv4fIpxZvQz2e")
         self.assertEqual(additional_info["music_service"], "spotify.com")
         self.assertEqual(additional_info["spotify_album_id"], "https://open.spotify.com/album/1EGlv1JGCUPolWU4qv7bsK")
+    
+    def test_skip_import_spotify(self):
+        # Listens should get skipped for a variety of reasons (manually skipped, errors, etc.)
+        data = {
+            "service": "spotify",
+            "file": self.create_spotify_skipped_tracks_zip(),
+            "from_date": datetime(2012, 1, 1).isoformat(),
+            "to_date": datetime(2024, 1, 1).isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        # All tracks except one will be skipped, only expecting 1 track to ensure all were processed
+        response = self.wait_for_query_to_have_items(url, num_items=1, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 1)
+
 
     def test_import_listenbrainz(self):
         data = {
