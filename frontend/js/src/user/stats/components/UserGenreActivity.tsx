@@ -104,11 +104,12 @@ const groupDataByTimePeriod = (
 };
 
 function CustomTooltip({ datum }: { datum: any }) {
+  const formattedValue = new Intl.NumberFormat().format(datum.data.actualValue);
   return (
     <div className="custom-tooltip-genre-stats">
       <strong>{datum.data.displayName}</strong>
       <br />
-      {datum.data.actualValue} plays
+      {formattedValue} plays
       <br />
       {datum.data.timeRange}
     </div>
