@@ -36,8 +36,10 @@ class SpotifyListensImporter(BaseListensImporter):
         for item in batch:
             try:
                 if (
-                    item["skipped"] or item["incognito_mode"] or
-                    (item["ms_played"] < 30000 and item["reason_end"] in SKIP_REASONS)
+                    item["incognito_mode"] or
+                    (item["ms_played"] < 30000 and
+                     (item["skipped"] or item["reason_end"] in SKIP_REASONS)
+                    )
                 ):
                     continue
 
