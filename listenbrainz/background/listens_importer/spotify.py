@@ -10,7 +10,7 @@ from sqlalchemy import text
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 
 SKIP_REASONS = [
-    "fwdbtn", "backbtn", "clickrow", "clickside", "playbtn", "remote", "logout",
+    "fwdbtn", "backbtn", "clickrow", "clickside", "endplay", "playbtn", "remote", "logout",
     "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused", "unknown"
 ]
 
