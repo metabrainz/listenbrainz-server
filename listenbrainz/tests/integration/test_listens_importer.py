@@ -402,10 +402,10 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        # All tracks except one will be skipped, only expecting 1 track to ensure all were processed
-        response = self.wait_for_query_to_have_items(url, num_items=1, attempts=20)
+        # all tracks except two will be skipped
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
         listens = response.json["payload"]["listens"]
-        self.assertEqual(len(listens), 1)
+        self.assertEqual(len(listens), 2)
 
 
     def test_import_listenbrainz(self):
