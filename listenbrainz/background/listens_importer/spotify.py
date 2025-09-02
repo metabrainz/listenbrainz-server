@@ -30,6 +30,11 @@ class SpotifyListensImporter(BaseListensImporter):
         items = []
         for item in batch:
             try:
+                if item["skipped"] or item["incognito_mode"]:
+                    continue
+                if item["ms_played"] < 30000:
+                    if item["reason_end"] in ["fwdbtn", "clickrow", "playbtn", "remote"]:
+                        continue
                 items.append({
                     "artist_name": item.get("master_metadata_album_artist_name"),
                     "track_name": item.get("master_metadata_track_name"),
