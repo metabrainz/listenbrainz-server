@@ -88,6 +88,15 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://mpv.io/">MPV</a>
+          </em>
+          , cross-platform multimedia player:{" "}
+          <a href="https://github.com/madeindjs/dotfiles/blob/62aa5fe49a23188f74c07454afff8a7866357d88/mpv/.config/mpv/scripts/listenbrainz.js">
+            <code>MPV Listenbrainz plugin</code>
+          </a>
+        </li>
+        <li>
+          <em>
             <a href="https://getmusicbee.com/">MusicBee</a>
           </em>
           , a music manager and player for Windows:{" "}
