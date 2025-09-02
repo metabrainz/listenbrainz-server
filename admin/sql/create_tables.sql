@@ -243,6 +243,35 @@ CREATE TABLE user_data_export (
     created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_data_import (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    service             user_data_import_service_type NOT NULL,
+    metadata            JSONB,
+    file_path           TEXT NOT NULL,
+    from_date           TIMESTAMPTZ NOT NULL DEFAULT 'epoch',
+    to_date             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE funkwhale_servers (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    host_url            TEXT NOT NULL UNIQUE,
+    client_id           TEXT NOT NULL,
+    client_secret       TEXT NOT NULL,
+    scopes              TEXT NOT NULL,
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE funkwhale_tokens (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    funkwhale_server_id INTEGER NOT NULL,
+    access_token        TEXT NOT NULL,
+    refresh_token       TEXT NOT NULL,
+    token_expiry        TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;

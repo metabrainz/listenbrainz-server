@@ -35,6 +35,7 @@ interface AdditionalInfo {
   track_mbid?: string | null;
   tracknumber?: string | number | null;
   work_mbids?: Array<string> | null;
+  funkwhale_id?: string | null;
 }
 
 declare type MBIDMappingArtist = {
@@ -303,6 +304,20 @@ declare type UserArtistActivityResponse = {
       release_group_mbid: string;
     }>;
   }>;
+};
+
+declare type UserEraActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+    era_activity: Array<{
+      year: number;
+      count: number;
+    }>;
+  };
 };
 
 declare type GenreHourData = {
@@ -710,9 +725,16 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  internetArchiveEnabled?: boolean;
+  funkwhaleEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic"
+    | "spotify"
+    | "youtube"
+    | "soundcloud"
+    | "appleMusic"
+    | "funkwhale"
+    | "internetArchive"
   >;
 };
 

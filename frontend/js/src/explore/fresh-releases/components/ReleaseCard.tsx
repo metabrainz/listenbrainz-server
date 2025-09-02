@@ -147,7 +147,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
   } else if (releaseMBID) {
     linkToEntity = `/release/${releaseMBID}/`;
   } else {
-    linkToEntity = `/search/?search_type=album&search_term=${releaseName}+${artistCreditName}`;
+    linkToEntity = `/search/?search_type=album&search_term=${encodeURIComponent(
+      releaseName
+    )}+${encodeURIComponent(artistCreditName)}`;
   }
 
   const coverArtElement = coverartSrc ? (
@@ -256,7 +258,9 @@ export default function ReleaseCard(props: ReleaseCardProps) {
             to={
               artistMBIDs.length
                 ? `/artist/${artistMBIDs[0]}/`
-                : `/search/?search_type=artist&search_term=${artistCreditName}`
+                : `/search/?search_type=artist&search_term=${encodeURIComponent(
+                    artistCreditName
+                  )}`
             }
           >
             {artistCreditName}

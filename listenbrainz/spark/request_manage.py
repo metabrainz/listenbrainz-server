@@ -89,7 +89,7 @@ def send_request_to_spark_cluster(query, **params):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'genre_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'daily_activity', 'era_activity', 'genre_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -108,7 +108,7 @@ def request_user_stats(type_, range_, entity, database):
 
 
 @cli.command(name="request_sitewide_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity', 'era_activity']),
               help="Type of statistics to calculate", required=True)
 @click.option("--range", 'range_', type=click.Choice(ALLOWED_STATISTICS_RANGE),
               help="Time range of statistics to calculate", required=True)
@@ -525,13 +525,13 @@ def cron_request_all_stats(ctx):
         for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_user_stats, type_="entity", range_=stats_range, entity=entity)
 
-        for stat in ["listening_activity", "daily_activity"]:
+        for stat in ["listening_activity", "daily_activity", "genre_activity", "era_activity"]:
             ctx.invoke(request_user_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "releases", "recordings", "release_groups"]:
             ctx.invoke(request_sitewide_stats, type_="entity", range_=stats_range, entity=entity)
 
-        for stat in ["listening_activity"]:
+        for stat in ["listening_activity", "era_activity"]:
             ctx.invoke(request_sitewide_stats, type_=stat, range_=stats_range)
 
         for entity in ["artists", "release_groups"]:
