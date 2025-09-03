@@ -14,6 +14,10 @@ class NavidromeServiceTestCase(IntegrationTestCase):
     def setUp(self):
         super().setUp()
         self.app = create_app()
+        # hardcode encryption key for tests
+        with self.app.app_context():
+            if not self.app.config.get('NAVIDROME_ENCRYPTION_KEY'):
+                self.app.config['NAVIDROME_ENCRYPTION_KEY'] = 'cpoJ8jX49UZD7XhUxF9d8wV4_CkyCcHpIlzG-PawZds='
 
     def test_generate_auth_params(self):
         """Test MD5 authentication parameter generation"""
