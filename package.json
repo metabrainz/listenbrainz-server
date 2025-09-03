@@ -50,6 +50,7 @@
     "@nivo/heatmap": "^0.81.0",
     "@nivo/legends": "^0.81.0",
     "@nivo/network": "^0.81.0",
+    "@nivo/stream": "^0.81.0",
     "@nivo/pie": "^0.81.0",
     "@nivo/tooltip": "^0.81.0",
     "@nivo/treemap": "^0.81.0",

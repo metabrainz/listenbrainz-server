@@ -1,0 +1,40 @@
+[
+  {
+    "user_id": 0,
+    "from_ts": 0,
+    "to_ts": 5,
+    "range": "year",
+    "data": [
+      {
+        "time_unit": "January",
+        "artist_mbid": "mbid-ts",
+        "artist_name": "Taylor Swift",
+        "listen_count": 7
+      },
+      {
+        "time_unit": "March",
+        "artist_mbid": "mbid-coldplay",
+        "artist_name": "Coldplay",
+        "listen_count": 5
+      },
+      {
+        "time_unit": "June",
+        "artist_mbid": "mbid-adele",
+        "artist_name": "Adele",
+        "listen_count": 4
+      },
+      {
+        "time_unit": "September",
+        "artist_mbid": "mbid-weeknd",
+        "artist_name": "The Weeknd",
+        "listen_count": 6
+      },
+      {
+        "time_unit": "December",
+        "artist_mbid": "mbid-drake",
+        "artist_name": "Drake",
+        "listen_count": 3
+      }
+    ]
+  }
+]
