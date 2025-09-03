@@ -243,7 +243,6 @@ export default function AddData() {
             <a href="https://lyrion.org/">Lyrion</a>
           </em>
           , open-source server software to control Squeezebox audio players
-          </a>
         </li>
         <li>
           <em>
@@ -259,7 +258,6 @@ export default function AddData() {
             <a href="https://koito.io/">Koito</a>
           </em>
           , a self-hosted themeable LB-compatible scrobbler
-          </a>
         </li>
         <li>
           <em>
