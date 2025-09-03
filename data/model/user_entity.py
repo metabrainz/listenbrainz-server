@@ -12,7 +12,7 @@ from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRec
 from data.model.user_genre_activity import GenreActivityRecord
 
 EntityRecord = Union[
-    RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, ArtistEvolutionActivityRecord, GenreActivityRecord, EraActivityRecord, ArtistEvolutionActivityRecord
+    RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, GenreActivityRecord, EraActivityRecord, ArtistEvolutionActivityRecord
 ]
 
 
