@@ -14,6 +14,7 @@ from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_era_activity import EraActivityRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -657,6 +658,70 @@ def get_genre_activity(user_name: str):
         "range": stats_range,
         "last_updated": stats.last_updated
     }})
+
+@stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_artist_evolution_activity(user_name: str):
+    """
+    Get the artist evolution activity for a specific user. Over the selected time range, this
+    returns raw rows of listen counts per artist per time unit (e.g., weekday, day-of-month,
+    month, or year). The structure mirrors the sitewide endpoint.
+
+    A sample response may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_evolution_activity": [
+              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "Monday",    "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 80  },
+              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+            ],
+            "range": "week",
+            "from_ts": 1609459200,
+            "to_ts": 1640995200,
+            "last_updated": 1640995200,
+            "user_id": "foobar"
+          }
+        }
+
+    .. note::
+        - ``time_unit`` depends on the stats range:
+            * ``week``  → weekday names (Monday..Sunday)
+            * ``month`` → day numbers as strings ("1".."31")
+            * ``year``  → month names (January..December)
+            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+        - ``artist_mbid`` may be null/omitted if unavailable.
+
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
+    :statuscode 200: Successful query.
+    :statuscode 204: Statistics not available.
+    :statuscode 400: Bad request.
+    :statuscode 404: User not found.
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+
+    return jsonify({
+        "payload": {
+            "user_id": user_name,
+            "artist_evolution_activity": stats_unprocessed,
+            "range": stats_range,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
+            "last_updated": stats.last_updated
+        }
+    })
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1447,11 +1512,11 @@ def get_sitewide_era_activity():
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")
-    
+
     stats = db_stats.get_sitewide_stats("era_activity", stats_range)
     if stats is None:
         raise APINoContent("")
-        
+
     return jsonify({
         "payload": {
             "era_activity": stats["data"],
@@ -1459,6 +1524,71 @@ def get_sitewide_era_activity():
             "to_ts": stats["to_ts"],
             "range": stats_range,
             "last_updated": stats["last_updated"],
+        }
+    })
+
+
+@stats_api_bp.get("/sitewide/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_artist_evolution_activity():
+    """
+    Get the sitewide artist evolution activity. Over the selected time range, this returns raw rows
+    of listen counts per artist per time unit (e.g., weekday, day-of-month, month, or year).
+    The structure mirrors the user endpoint.
+
+    A sample response may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_evolution_activity": [
+              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "Tuesday",   "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 200 },
+              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+            ],
+            "range": "week",
+            "from_ts": 1609459200,
+            "to_ts": 1640995200,
+            "last_updated": 1640995200
+          }
+        }
+
+    .. note::
+        - ``time_unit`` depends on the stats range:
+            * ``week``  → weekday names (Monday..Sunday)
+            * ``month`` → day numbers as strings ("1".."31")
+            * ``year``  → month names (January..December)
+            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+        - ``artist_mbid`` may be null/omitted if unavailable.
+        - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
+
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
+    :statuscode 200: Successful query.
+    :statuscode 204: Statistics not available.
+    :statuscode 400: Bad request.
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats("artist_evolution_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    stats_unprocessed = stats["data"]
+
+    return jsonify({
+        "payload": {
+            "artist_evolution_activity": stats_unprocessed,
+            "range": stats_range,
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "last_updated": stats["last_updated"]
         }
     })
 

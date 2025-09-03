@@ -9,6 +9,11 @@ from sqlalchemy import text
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 
+SKIP_REASONS = [
+    None, "fwdbtn", "backbtn", "clickrow", "clickside", "endplay", "playbtn", "remote", "logout",
+    "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused", "unknown"
+]
+
 
 class SpotifyListensImporter(BaseListensImporter):
     """Spotify-specific listens importer."""
@@ -25,11 +30,32 @@ class SpotifyListensImporter(BaseListensImporter):
             entry["timestamp"] = timestamp
             yield timestamp, entry
 
+    @staticmethod
+    def _skip_item(item) -> bool:
+        """ Whether a spotify play should not be imported. """
+        if item.get("incognito_mode", False):
+            return True
+
+        if (
+            item.get("ms_played", 0) < 30000 and
+            (
+                item.get("skipped", False) or
+                ("reason_end" in item and item["reason_end"] in SKIP_REASONS)
+            )
+        ):
+            return True
+
+        return False
+
+
     def _parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Parse Spotify listen batch."""
         items = []
         for item in batch:
             try:
+                if self._skip_item(item):
+                    continue
+
                 items.append({
                     "artist_name": item.get("master_metadata_album_artist_name"),
                     "track_name": item.get("master_metadata_track_name"),
