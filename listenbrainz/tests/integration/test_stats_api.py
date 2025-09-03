@@ -26,7 +26,7 @@ class StatsAPITestCase(IntegrationTestCase):
             "listening_activity",
             "artist_map",
             "artist_evolution_activity",
-            "genre_activity"
+            "genre_activity",
             "era_activity"
         ]
         ranges = ["week", "month", "year", "all_time"]
