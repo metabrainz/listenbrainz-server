@@ -103,6 +103,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
                 const listen = userChartEntityToListen(interchangeFormat);
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  artist.listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-artist-${getListenCardKey(listen)}`}
@@ -112,7 +115,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showUsername={false}
                     additionalActions={
                       <span className="badge bg-info">
-                        {artist.listen_count}
+                        {formattedListenCount}
                       </span>
                     }
                     // no thumbnail for artist entities
@@ -148,6 +151,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
                 const listen = userChartEntityToListen(interchangeFormat);
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  release.listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-release-${getListenCardKey(listen)}`}
@@ -157,7 +163,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showUsername={false}
                     additionalActions={
                       <span className="badge bg-info">
-                        {release.listen_count}
+                        {formattedListenCount}
                       </span>
                     }
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -202,6 +208,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     },
                   },
                 };
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-recording-${getListenCardKey(
@@ -211,7 +220,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showTimestamp={false}
                     showUsername={false}
                     additionalActions={
-                      <span className="badge bg-info">{listen_count}</span>
+                      <span className="badge bg-info">
+                        {formattedListenCount}
+                      </span>
                     }
                     // Disabling the feedback component here because of display issues with the badge
                     // eslint-disable-next-line react/jsx-no-useless-fragment
@@ -240,6 +251,9 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                 };
                 const listenDetails = getChartEntityDetails(interchangeFormat);
                 const listen = userChartEntityToListen(interchangeFormat);
+                const formattedListenCount = new Intl.NumberFormat().format(
+                  releaseGroup.listen_count
+                );
                 return (
                   <ListenCard
                     key={`top-release-group-${getListenCardKey(listen)}`}
@@ -249,7 +263,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
                     showUsername={false}
                     additionalActions={
                       <span className="badge bg-info">
-                        {releaseGroup.listen_count}
+                        {formattedListenCount}
                       </span>
                     }
                     // eslint-disable-next-line react/jsx-no-useless-fragment
