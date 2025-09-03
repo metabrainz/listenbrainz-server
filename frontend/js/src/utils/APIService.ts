@@ -2176,6 +2176,25 @@ export default class APIService {
     return htmlParagraphs?.textContent || "No wiki data found.";
   };
 
+  getGenreWikipediaExtract = async (genreMBID: string): Promise<string> => {
+    const url = `https://musicbrainz.org/genre/${genreMBID}/wikipedia-extract`;
+    const response = await fetch(url);
+    const { wikipediaExtract } = await response.json();
+
+    if (!wikipediaExtract || !wikipediaExtract.content) {
+      return "No wiki data found.";
+    }
+
+    const htmlParser = new DOMParser();
+    const htmlData = htmlParser.parseFromString(
+      wikipediaExtract.content,
+      "text/html"
+    );
+    const htmlParagraphs = htmlData.querySelector("p:not(.mw-empty-elt)");
+
+    return htmlParagraphs?.textContent || "No wiki data found.";
+  };
+
   getTopRecordingsForArtist = async (
     artistMBID: string
   ): Promise<RecordingType[]> => {
