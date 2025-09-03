@@ -723,14 +723,10 @@ declare type BrainzPlayerSettings = {
   navidromeEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    | | "spotify"
-   
+    | "spotify"
     | "youtube"
-   
     | "soundcloud"
-   
     | "appleMusic"
-   
     | "funkwhale"
     | "navidrome"
     | "internetArchive"
