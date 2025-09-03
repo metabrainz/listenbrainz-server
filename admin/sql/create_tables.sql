@@ -287,7 +287,6 @@ CREATE TABLE navidrome_tokens (
     created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;

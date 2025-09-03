@@ -295,3 +295,100 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         data = response.json
         self.assertEqual(data['status'], 'ok')
+
+    # Navidrome tests
+    def _create_navidrome_server(self):
+        """Helper to create a Navidrome server"""
+        import listenbrainz.db.navidrome as db_navidrome
+        return db_navidrome.get_or_create_server(
+            self.db_conn, 'https://demo.navidrome.org'
+        )
+
+    def _create_navidrome_user_token(self, server_id=None):
+        """Helper to create a Navidrome user token"""
+        import listenbrainz.db.navidrome as db_navidrome
+        from cryptography.fernet import Fernet
+        
+        # Generate key and encrypt test password
+        key = Fernet.generate_key()
+        cipher_suite = Fernet(key)
+        encrypted_password = cipher_suite.encrypt(b'test_password').decode()
+        
+        # Save the user token
+        return db_navidrome.save_user_token(
+            self.db_conn, 
+            user_id=self.user['id'], 
+            host_url='https://demo.navidrome.org',
+            username='test_user', 
+            encrypted_password=encrypted_password
+        )
+
+    @patch('listenbrainz.domain.navidrome.NavidromeService.connect_user')
+    def test_navidrome_connect(self, mock_connect):
+        """Test Navidrome connect success"""
+        mock_connect.return_value = {
+            'success': True,
+            'host_url': 'https://demo.navidrome.org',
+            'username': 'test_user',
+            'server_version': '0.49.3',
+            'token_id': 123
+        }
+        
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='navidrome'),
+            json={
+                "host_url": "https://demo.navidrome.org",
+                "username": "test_user",
+                "password": "test_password"
+            }
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertTrue(data['success'])
+        self.assertEqual(data['host_url'], 'https://demo.navidrome.org')
+        self.assertEqual(data['username'], 'test_user')
+        
+        # Verify connect_user was called with correct parameters
+        mock_connect.assert_called_once_with(
+            self.user['id'], 
+            "https://demo.navidrome.org", 
+            "test_user", 
+            "test_password"
+        )
+
+    def test_navidrome_connect_missing_host_url(self):
+        """Test Navidrome connect without host_url"""
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='navidrome'),
+            json={"username": "test_user", "password": "test_password"}
+        )
+        self.assert400(response)
+
+    def test_navidrome_connect_missing_credentials(self):
+        """Test Navidrome connect without username/password"""
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_connect', service_name='navidrome'),
+            json={"host_url": "https://demo.navidrome.org"}
+        )
+        self.assert400(response)
+
+    @patch('listenbrainz.domain.navidrome.NavidromeService.remove_user')
+    def test_navidrome_disconnect(self, mock_remove):
+        """Test Navidrome disconnect"""
+        # Create a user token first
+        self._create_navidrome_user_token()
+        
+        self.temporary_login(self.user['login_id'])
+        response = self.client.post(
+            self.custom_url_for('settings.music_services_disconnect', service_name='navidrome'),
+            json={"action": "disable"}
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertEqual(data['status'], 'ok')
+        self.assertIn('Successfully disconnected', data['message'])
+        
+        mock_remove.assert_called_once_with(self.user['id'])
