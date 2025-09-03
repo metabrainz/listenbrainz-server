@@ -147,26 +147,26 @@ export default function BarDualTone(props: BarDualToneProps) {
     const { id, data: datum, color, value } = elem;
 
     let dateString: string;
-    let listenCount: number;
     if (id === "lastRangeCount") {
       const lastRangeDate = new Date((datum.lastRangeTs ?? 0) * 1000);
       dateString = lastRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
-      listenCount = datum.lastRangeCount!;
     } else {
       const thisRangeDate = new Date((datum?.thisRangeTs ?? 0) * 1000);
       dateString = thisRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
-      listenCount = datum.thisRangeCount!;
     }
+    const formattedValue = new Intl.NumberFormat().format(value);
     return (
       <BasicTooltip
         id={dateString}
-        value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+        value={`${formattedValue} ${
+          Number(value) === 1 ? "listen" : "listens"
+        }`}
         color={color}
       />
     );

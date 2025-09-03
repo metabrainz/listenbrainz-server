@@ -9,6 +9,7 @@ from data.model.user_cf_recommendations_recording_message import (UserRecommenda
 from data.model.user_daily_activity import DailyActivityRecord
 from data.model.user_era_activity import EraActivityRecord
 from data.model.user_genre_activity import GenreActivityRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
@@ -21,7 +22,9 @@ from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity, handle_user_genre_activity,
-    handle_user_listening_activity, handle_user_era_activity,
+    handle_user_era_activity,
+    handle_user_listening_activity,
+    handle_user_artist_evolution_activity,
     notify_mapping_import,
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete)
@@ -460,7 +463,88 @@ class HandlersTestCase(DatabaseTestCase):
         ))
 
 
-    
+
+    def test_handle_user_artist_evolution_activity(self):
+        data = {
+            'type': 'artist_evolution_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1009843200,
+            'to_ts': 1753749386,
+            'data': [
+                {
+                    'user_id': self.user1['id'],
+                    'data': [
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': 'f59c5520-5f46-4d2c-b2c4-822eabf53419',
+                            'artist_name': 'Linkin Park',
+                            'listen_count': 17
+                        },
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': 'd15721d8-56b4-453d-b506-fc915b14cba2',
+                            'artist_name': 'The Black Keys',
+                            'listen_count': 2
+                        },
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': 'b7ffd2af-418f-4be2-bdd1-22f8b48613da',
+                            'artist_name': 'Nine Inch Nails',
+                            'listen_count': 1
+                        },
+                        {
+                            'time_unit': 2025,
+                            'artist_mbid': '9c9f1380-2516-4fc9-a3e6-f9f61941d090',
+                            'artist_name': 'Muse',
+                            'listen_count': 7
+                        }
+                    ]
+                }
+            ],
+            'database': 'artist_evolution_activity_all_time_20220718'
+        }
+
+        CouchDbDataset.handle_start({"database": "artist_evolution_activity_all_time_20220718"})
+        handle_user_artist_evolution_activity(data)
+
+        received = db_stats.get(self.user1['id'], 'artist_evolution_activity', 'all_time', ArtistEvolutionActivityRecord)
+        self.assertEqual(received, StatApi[ArtistEvolutionActivityRecord](
+            user_id=self.user1['id'],
+            to_ts=1753749386,
+            from_ts=1009843200,
+            stats_range='all_time',
+            data=StatRecordList[ArtistEvolutionActivityRecord](
+                __root__=[
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='f59c5520-5f46-4d2c-b2c4-822eabf53419',
+                        artist_name='Linkin Park',
+                        listen_count=17,
+                    ),
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='d15721d8-56b4-453d-b506-fc915b14cba2',
+                        artist_name='The Black Keys',
+                        listen_count=2,
+                    ),
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='b7ffd2af-418f-4be2-bdd1-22f8b48613da',
+                        artist_name='Nine Inch Nails',
+                        listen_count=1,
+                    ),
+                    ArtistEvolutionActivityRecord(
+                        time_unit=2025,
+                        artist_mbid='9c9f1380-2516-4fc9-a3e6-f9f61941d090',
+                        artist_name='Muse',
+                        listen_count=7,
+                    )
+                ]
+            ),
+            last_updated=received.last_updated
+        ))
+
+
     def test_handle_sitewide_artists(self):
         data = {
             'type': 'sitewide_entity',

@@ -292,9 +292,9 @@ export default function CustomChoropleth(props: ChoroplethProps) {
           >
             <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
             <span>
-              {"My Listens: "}
+              Listens:
               <strong>
-                {value} {suffix}
+                {selectedCountry.formattedValue} {suffix}
               </strong>
             </span>
           </div>
@@ -319,7 +319,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
                         style={{ marginRight: "4px" }}
                         icon={faHeadphones as IconProp}
                       />
-                      {artist.listen_count}
+                      {new Intl.NumberFormat().format(artist.listen_count)}
                     </span>
                     <Link to={`/artist/${artist.artist_mbid}/`}>
                       {artist.artist_name}

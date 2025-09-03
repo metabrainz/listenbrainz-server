@@ -240,12 +240,24 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://lyrion.org/">Lyrion</a>
+          </em>
+          , open-source server software to control Squeezebox audio players
+        </li>
+        <li>
+          <em>
             <a href="https://kodi.tv/">Kodi</a>
           </em>
           , a free and open source media center:{" "}
           <a href="https://kodi.tv/addons/matrix/service.listenbrainz">
             <code>ListenBrainz add-on</code>
           </a>
+        </li>
+        <li>
+          <em>
+            <a href="https://koito.io/">Koito</a>
+          </em>
+          , a self-hosted themeable LB-compatible scrobbler
         </li>
         <li>
           <em>

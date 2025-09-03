@@ -5,13 +5,14 @@ from pydantic import constr, NonNegativeInt
 from data.model.common_stat_spark import StatMessage, UserStatRecords
 from data.model.user_artist_stat import ArtistRecord
 from data.model.user_era_activity import EraActivityRecord
-from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_recording_stat import RecordingRecord
 from data.model.user_release_group_stat import ReleaseGroupRecord
 from data.model.user_release_stat import ReleaseRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
+from data.model.user_genre_activity import GenreActivityRecord
 
 EntityRecord = Union[
-    RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, GenreActivityRecord, EraActivityRecord
+    RecordingRecord, ReleaseGroupRecord, ReleaseRecord, ArtistRecord, GenreActivityRecord, EraActivityRecord, ArtistEvolutionActivityRecord
 ]
 
 

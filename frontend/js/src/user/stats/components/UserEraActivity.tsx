@@ -34,10 +34,11 @@ function CustomTooltip({
   value: number;
   formatLabel: (decade: number) => string;
 }) {
+  const formattedValue = new Intl.NumberFormat().format(value);
   return (
     <BasicTooltip
       id={formatLabel(Number(indexValue))}
-      value={`${value} ${Number(value) === 1 ? "listen" : "listens"}`}
+      value={`${formattedValue} ${Number(value) === 1 ? "listen" : "listens"}`}
     />
   );
 }
