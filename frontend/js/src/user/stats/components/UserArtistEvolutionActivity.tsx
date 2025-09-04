@@ -444,7 +444,8 @@ export default function ArtistEvolutionActivityStreamGraph(
                   axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
                   enableGridX
                   enableGridY
-                  offsetType="diverging"
+                  offsetType="none"
+                  order="none"
                   colors={{ scheme: "nivo" }}
                   fillOpacity={0.85}
                   borderColor={{ theme: "background" }}
