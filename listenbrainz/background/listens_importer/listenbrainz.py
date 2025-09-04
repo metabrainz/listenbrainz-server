@@ -4,16 +4,17 @@ from datetime import datetime, timezone
 from io import TextIOWrapper
 from typing import Iterator, Any
 
-from listenbrainz.background.listens_importer.base import BaseListensImporter, IMPORTER_NAME
+from listenbrainz.background.listens_importer.base import IMPORTER_NAME
+from listenbrainz.background.listens_importer.zip_base import ZipBaseListensImporter
 
 
-class ListenBrainzListensImporter(BaseListensImporter):
+class ListenBrainzListensImporter(ZipBaseListensImporter):
     """ListenBrainz-specific listens importer."""
 
-    def _filter_zip_files(self, file: str) -> bool:
+    def filter_zip_file(self, file: str) -> bool:
         return os.path.basename(file).lower().endswith(".jsonl")
 
-    def _process_file_contents(self, file: TextIOWrapper) -> Iterator[tuple[datetime, Any]]:
+    def process_file_contents(self, file: TextIOWrapper) -> Iterator[tuple[datetime, Any]]:
         for line in file:
             if not line.strip():
                 continue
@@ -24,7 +25,7 @@ class ListenBrainzListensImporter(BaseListensImporter):
             except (ValueError, TypeError, KeyError):
                 continue
 
-    def _parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
         items = []
         for item in batch:
             try:
