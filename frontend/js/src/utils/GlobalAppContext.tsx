@@ -10,6 +10,7 @@ export type GlobalAppContextT = {
   spotifyAuth?: SpotifyUser;
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
+  funkwhaleAuth?: FunkwhaleUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
   appleAuth?: AppleMusicUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
@@ -29,6 +30,7 @@ export const defaultGlobalContext: GlobalAppContextT = {
   spotifyAuth: {},
   youtubeAuth: {},
   soundcloudAuth: {},
+  funkwhaleAuth: undefined,
   appleAuth: {},
   critiquebrainzAuth: {},
   musicbrainzAuth: {

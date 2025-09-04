@@ -146,7 +146,9 @@ export default function PlaylistSearch(props: PlayListSearchProps) {
                   />
                   <td>
                     <Link
-                      to={`https://musicbrainz.org/user/${playlist?.creator}`}
+                      to={`https://musicbrainz.org/user/${encodeURIComponent(
+                        playlist.creator
+                      )}`}
                       target="_blank"
                       rel="noreferrer"
                     >

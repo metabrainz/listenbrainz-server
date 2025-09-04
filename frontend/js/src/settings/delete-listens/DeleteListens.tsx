@@ -57,7 +57,7 @@ export default function DeleteListens() {
       );
 
       setTimeout(() => {
-        navigate(`/user/${name}/`);
+        navigate(`/user/${encodeURIComponent(name)}/`);
       }, 3000);
     } catch (error) {
       toast.error(

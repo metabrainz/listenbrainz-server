@@ -34,6 +34,7 @@ function DashboardLayout() {
   const userName = sitewide
     ? currentUser?.name
     : decodeURIComponent(locationArr[2]);
+  const escapedUserName = encodeURIComponent(userName);
 
   const [activeSection, setActiveSection] = React.useState<string>(
     sitewide ? locationArr[2] : locationArr[3]
@@ -51,7 +52,7 @@ function DashboardLayout() {
             {userName ? (
               <Link
                 className="nav-link"
-                to={userName ? `/user/${userName}/` : "#"}
+                to={userName ? `/user/${escapedUserName}/` : "#"}
               >
                 {userName}
               </Link>
@@ -65,30 +66,30 @@ function DashboardLayout() {
           </li>
           <NavItem
             label="Listens"
-            url={userName ? `/user/${userName}/` : "#"}
+            url={userName ? `/user/${escapedUserName}/` : "#"}
             isActive={activeSection === "" && !sitewide}
             isDisabled={!userName}
           />
           <NavItem
             label="Stats"
-            url={userName ? `/user/${userName}/stats/` : "/statistics/"}
+            url={userName ? `/user/${escapedUserName}/stats/` : "/statistics/"}
             isActive={activeSection === "stats" || sitewide}
           />
           <NavItem
             label="Taste"
-            url={userName ? `/user/${userName}/taste/` : "#"}
+            url={userName ? `/user/${escapedUserName}/taste/` : "#"}
             isActive={activeSection === "taste"}
             isDisabled={!userName}
           />
           <NavItem
             label="Playlists"
-            url={userName ? `/user/${userName}/playlists/` : "#"}
+            url={userName ? `/user/${escapedUserName}/playlists/` : "#"}
             isActive={activeSection === "playlists"}
             isDisabled={!userName}
           />
           <NavItem
             label="Created for you"
-            url={userName ? `/user/${userName}/recommendations/` : "#"}
+            url={userName ? `/user/${escapedUserName}/recommendations/` : "#"}
             isActive={activeSection === "recommendations"}
             isDisabled={!userName}
           />

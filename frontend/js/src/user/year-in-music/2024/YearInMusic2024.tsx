@@ -266,12 +266,13 @@ export default class YearInMusic extends React.Component<
     const { selectedSeasonName } = this.state;
     const selectedSeason = YIM2024Seasons[selectedSeasonName];
     const { user } = this.props;
+    const encodedUsername = encodeURIComponent(user.name);
     return (
       <div className="card content-card mb-3" id={`${coverArtKey}`}>
         <div className="center-p heading">
           <object
             className="img-header"
-            data={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=${coverArtKey}&branding=False&season=${selectedSeasonName}`}
+            data={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}&branding=False&season=${selectedSeasonName}`}
           >{`SVG of cover art for ${topLevelPlaylist.title}`}</object>
           <h3>
             <a
@@ -331,8 +332,8 @@ export default class YearInMusic extends React.Component<
         </div>
         <div className="yim-share-button-container">
           <ImageShareButtons
-            svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=${coverArtKey}&season=${selectedSeasonName}`}
-            shareUrl={`https://listenbrainz.org/user/${user.name}/year-in-music/2024#top-albums`}
+            svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}&season=${selectedSeasonName}`}
+            shareUrl={`https://listenbrainz.org/user/${encodedUsername}/year-in-music/2024#top-albums`}
             // shareText="Check out my"
             shareTitle="My 2024 ListenBrainz playlists"
             fileName={`${user.name}-${coverArtKey}-2024`}
@@ -430,6 +431,7 @@ export default class YearInMusic extends React.Component<
     const youOrUsername = isCurrentUser ? "you" : `${user.name}`;
     const yourOrUsersName = isCurrentUser ? "your" : `${user.name}'s`;
     const hasOrHave = isCurrentUser ? "have" : "has";
+    const encodedUsername = encodeURIComponent(user.name);
 
     /* Most listened years */
     let mostListenedYearDataForGraph;
@@ -499,7 +501,7 @@ export default class YearInMusic extends React.Component<
         .filter(Boolean);
     }
 
-    const linkToUserProfile = `https://listenbrainz.org/user/${user.name}`;
+    const linkToUserProfile = `https://listenbrainz.org/user/${encodedUsername}`;
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2024`;
     const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
     const buddiesImages = [
@@ -539,7 +541,7 @@ export default class YearInMusic extends React.Component<
             />
           )}
           <Link
-            to={`/user/${user.name}/`}
+            to={`/user/${encodedUsername}/`}
             role="button"
             className="btn btn-info"
           >
@@ -665,14 +667,14 @@ export default class YearInMusic extends React.Component<
                 <div className="d-flex justify-content-center">
                   <object
                     className="card"
-                    data={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=overview&season=${selectedSeasonName}`}
+                    data={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=overview&season=${selectedSeasonName}`}
                   >
                     Overview
                   </object>
                 </div>
                 <div className="yim-share-button-container">
                   <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=overview&season=${selectedSeasonName}`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=overview&season=${selectedSeasonName}`}
                     shareUrl={linkToThisPage}
                     shareText="Check out my ListenBrainz stats for 2024"
                     shareTitle="My year in music"
@@ -763,7 +765,7 @@ export default class YearInMusic extends React.Component<
                   </div>
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=albums&season=${selectedSeasonName}`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=albums&season=${selectedSeasonName}`}
                       shareUrl={`${linkToThisPage}#top-albums`}
                       // shareText="Check out my"
                       shareTitle="My top albums of 2024"
@@ -832,7 +834,7 @@ export default class YearInMusic extends React.Component<
                     </div>
                     <div className="yim-share-button-container">
                       <ImageShareButtons
-                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=tracks&season=${selectedSeasonName}`}
+                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=tracks&season=${selectedSeasonName}`}
                         shareUrl={`${linkToThisPage}#top-tracks`}
                         // shareText="Check out my"
                         shareTitle="My top tracks of 2024"
@@ -896,7 +898,7 @@ export default class YearInMusic extends React.Component<
                     </div>
                     <div className="yim-share-button-container">
                       <ImageShareButtons
-                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=artists&season=${selectedSeasonName}`}
+                        svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=artists&season=${selectedSeasonName}`}
                         shareUrl={`${linkToThisPage}#top-artists`}
                         // shareText="Check out my"
                         shareTitle="My top artists of 2024"
@@ -1195,7 +1197,7 @@ export default class YearInMusic extends React.Component<
                 )}
                 <div className="yim-share-button-container">
                   <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${user.name}?image=stats&season=${selectedSeasonName}`}
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=stats&season=${selectedSeasonName}`}
                     shareUrl={`${linkToThisPage}#stats`}
                     shareTitle="My music listening in 2024"
                     fileName={`${user.name}-stats-2024`}
@@ -1422,7 +1424,9 @@ export default class YearInMusic extends React.Component<
                     <Link
                       key={`follow-user-${followedUser}`}
                       className="buddy content-card card"
-                      to={`/user/${followedUser}/year-in-music/2024/`}
+                      to={`/user/${encodeURIComponent(
+                        followedUser
+                      )}/year-in-music/2024/`}
                     >
                       <div className="img-container">
                         <img
@@ -1572,7 +1576,9 @@ export default class YearInMusic extends React.Component<
             <br />
             <br />
             Feeling nostalgic? See your previous Year in Music:{" "}
-            <Link to={`/user/${user.name}/year-in-music/2023/`}>2023</Link>
+            <Link to={`/user/${encodedUsername}/year-in-music/2023/`}>
+              2023
+            </Link>
           </div>
         </div>
         {/* Trick to load the font files for use with the SVG render */}

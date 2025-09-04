@@ -4,7 +4,6 @@ import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
-import { eachYearOfInterval, startOfYear, endOfYear, format } from "date-fns";
 import { useNavigate } from "react-router";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
@@ -18,25 +17,6 @@ export type UserArtistEvolutionActivityProps = {
 
 export type StreamDataItem = {
   [key: string]: string | number;
-};
-
-type RawRow = {
-  time_unit: string | number;
-  artist_mbid: string;
-  artist_name: string;
-  listen_count: number;
-};
-
-type UserArtistEvolutionActivityResponse = {
-  payload: {
-    user_id: string;
-    artist_evolution_activity: RawRow[];
-    range: UserStatsAPIRange;
-    from_ts: number;
-    to_ts: number;
-    last_updated: number;
-    offset_year?: number;
-  };
 };
 
 const getLegendText = (timeRange: UserStatsAPIRange) => {
@@ -143,27 +123,8 @@ const getAxisFormatter = (
   };
 };
 
-function getAllTimeYearLabels(opts: {
-  offsetYear?: number;
-  from_ts?: number;
-  to_ts?: number;
-}) {
-  const now = new Date();
-  let start: Date;
-  if (opts.from_ts) {
-    start = startOfYear(new Date(opts.from_ts * 1000));
-  } else if (opts.offsetYear) {
-    start = startOfYear(new Date(opts.offsetYear, 0, 1));
-  } else {
-    start = startOfYear(now);
-  }
-  const endRaw = endOfYear(opts.to_ts ? new Date(opts.to_ts * 1000) : now);
-  const end = endRaw > now ? endOfYear(now) : endRaw;
-  return eachYearOfInterval({ start, end }).map((d) => format(d, "yyyy"));
-}
-
 const transformArtistEvolutionActivityData = (
-  rawData: RawRow[] | undefined,
+  rawData: RawUserArtistEvolutionRow[] | undefined,
   statsRange: UserStatsAPIRange,
   topN: number = 10
 ): {

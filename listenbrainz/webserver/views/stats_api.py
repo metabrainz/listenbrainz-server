@@ -532,6 +532,45 @@ def get_artist_activity(user_name: str):
 @crossdomain
 @ratelimit()
 def get_era_activity(user_name: str):
+    """
+    Get the release-year activity for user ``user_name``. Each entry represents the number of listens
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1971, "listen_count": 3},
+                    {"year": 1997, "listen_count": 9},
+                    {"year": 2024, "listen_count": 1}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "week",
+                "last_updated": 1735603200,
+                "user_id": "John Doe"
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; multiple listens to different tracks from the same year are aggregated.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted (only years with > 0 listens are returned for the selected range).
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
     user, stats_range = _validate_stats_user_params(user_name)
     offset = get_non_negative_param("offset", default=0)
     count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
@@ -612,80 +651,6 @@ def get_genre_activity(user_name: str):
     
     genre_activity = [x.dict() for x in stats.data.__root__]
     return jsonify({"result": genre_activity})
-
-
-def _transform_artist_evolution_activity_data(raw_data, stats_range):
-    if not raw_data:
-        return [], None
-    
-    # Group data by time_unit
-    grouped_by_time = {}
-    for item in raw_data:
-        time_unit = str(item['time_unit'])
-        artist_name = item['artist_name']
-        listen_count = item['listen_count']
-        
-        if time_unit not in grouped_by_time:
-            grouped_by_time[time_unit] = {}
-        
-        grouped_by_time[time_unit][artist_name] = listen_count
-    # Calculate total listens per artist across all time units
-    artist_totals = {}
-    for item in raw_data:
-        artist_name = item['artist_name']
-        listen_count = item['listen_count']
-        
-        if artist_name not in artist_totals:
-            artist_totals[artist_name] = 0
-        artist_totals[artist_name] += listen_count
-    
-    # Get top 5 artists by total listens
-    top_artists = sorted(artist_totals.items(), key=lambda x: x[1], reverse=True)[:5]
-    top_artist_names = [artist[0] for artist in top_artists]
-    
-    # Get all possible time units based on stats range
-    def get_all_time_units_and_offset(stats_range):
-        if 'week' in stats_range:
-            return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], None
-        elif 'month' in stats_range:
-            return [str(i) for i in range(1, 32)], None  # Days 1-31
-        elif 'year' in stats_range:
-            return ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December'], None
-        else:  # all_time
-            from datetime import datetime
-            current_year = datetime.now().year
-            
-            # Get years with non-zero counts
-            years_with_data = []
-            for item in raw_data:
-                try:
-                    year = int(item['time_unit'])
-                    if item['listen_count'] > 0:
-                        years_with_data.append(year)
-                except (ValueError, TypeError):
-                    continue
-            if not years_with_data:
-                return [], None
-            first_year_with_data = min(years_with_data)
-            offset_year = first_year_with_data - 1
-            all_years = list(range(offset_year, current_year + 1))
-            
-            return sorted(all_years), offset_year
-
-    all_time_units, offset_year = get_all_time_units_and_offset(stats_range)
-    
-    result = []
-    for time_unit in all_time_units:
-        time_data = grouped_by_time.get(str(time_unit), {})
-        result_item = {"id": str(time_unit)}
-        
-        for artist in top_artist_names:
-            result_item[artist] = time_data.get(artist, 0)
-        
-        result.append(result_item)
-    
-    return result, offset_year
 
 
 @stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
@@ -1501,6 +1466,43 @@ def get_sitewide_artist_activity():
 @crossdomain
 @ratelimit()
 def get_sitewide_era_activity():
+    """
+    Get sitewide release-year activity. Each entry represents the number of listens across all users
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1973, "listen_count": 1043},
+                    {"year": 1997, "listen_count": 3877},
+                    {"year": 2011, "listen_count": 2610}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "year",
+                "last_updated": 1735603200
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; counts are aggregated across the entire ListenBrainz userbase.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted.
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
     stats_range = request.args.get("range", default="all_time")
     if not _is_valid_range(stats_range):
         raise APIBadRequest(f"Invalid range: {stats_range}")

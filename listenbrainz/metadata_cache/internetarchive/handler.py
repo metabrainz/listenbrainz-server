@@ -1,5 +1,6 @@
 import logging
 import json
+from datetime import datetime, timedelta
 from sqlalchemy import text
 import internetarchive
 from bs4 import BeautifulSoup
@@ -17,79 +18,145 @@ AUDIO_KEYWORDS = [
     "ra", "rm", "vox", "dts", "ac3", "atrac", "pcm", "adpcm", "gsm", "mmf", "3ga", "8svx"
 ]
 
+DISCOVERED_ITEM_PRIORITY = 3
+INCOMING_ITEM_PRIORITY = 0
+
 
 class InternetArchiveHandler(BaseHandler):
     def __init__(self, app):
         super().__init__(
             name="listenbrainz-internetarchive-metadata-cache",
-            external_service_queue=app.config.get("EXTERNAL_SERVICES_IA_CACHE_QUEUE", "ia_metadata_seed")
+            external_service_queue=app.config["EXTERNAL_SERVICES_IA_CACHE_QUEUE"]
         )
         self.app = app
         self.database = timescale.engine
         self.redis = cache._r
+        # Cache to avoid querying same artists repeatedly 
+        self.discovered_creators = set()
+        self.discovered_items = set()
 
     def get_items_from_listen(self, listen):
         return []
 
     def get_items_from_seeder(self, message):
-        return [JobItem(0, identifier) for identifier in message.get("ia_identifiers", [])]
+        return [JobItem(INCOMING_ITEM_PRIORITY, identifier) for identifier in message.get("ia_identifiers", [])]
 
     def get_seed_ids(self, limit_per_collection=1000) -> list[str]:
-        """Fetch identifiers for 78rpm and cylinder collections."""
+        """Fetch identifiers for 78rpm and cylinder collections with date filtering."""
+        today = datetime.today().strftime("%Y-%m-%d")
+        last_week = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+        date_filter = f"[{last_week} TO {today}]"
+        
         collections = [
-            {'name': '78rpm', 'query': 'collection:78rpm AND mediatype:audio'},
-            {'name': 'cylinder', 'query': 'cylinder mediatype:audio'}
+            {
+                "name": "78rpm",
+                "query": f"collection:78rpm AND mediatype:audio AND publicdate:{date_filter}"
+            },
+            {
+                "name": "cylinder",
+                "query": f"collection:cylinder AND mediatype:audio AND publicdate:{date_filter}"
+            }
         ]
         identifiers = []
         for collection in collections:
-            results = internetarchive.search_items(collection['query'])
-            count = 0
-            for item in results:
-                if count >= limit_per_collection:
-                    break
-                identifier = item.get('identifier')
-                if identifier:
-                    identifiers.append(identifier)
-                    count += 1
+            try:
+                results = internetarchive.search_items(collection["query"])
+                count = 0
+                for item in results:
+                    if count >= limit_per_collection:
+                        break
+                    identifier = item.get("identifier")
+                    if identifier:
+                        identifiers.append(identifier)
+                        count += 1
+                logger.info("Found %d items from %s collection", count, collection["name"])
+            except Exception as e:
+                logger.error("Error searching %s collection: %s", collection["name"], str(e))
         return identifiers
 
+    def discover_items_by_creator(self, creator_name) -> list[JobItem]:
+        """
+        Discover more items by the same creator using IA Search API.
+        
+        """
+        try:
+            # Check cache to avoid querying same creators repeatedly
+            if creator_name in self.discovered_creators:
+                return []
+            
+            self.discovered_creators.add(creator_name)
+            self.metrics["discovered_creators_count"] += 1
+
+            # Use IA Search API to find items by creator
+            query = f'creator:"{creator_name}" AND mediatype:audio'
+            results = internetarchive.search_items(query)
+
+            new_items = []
+            count = 0
+            for item in results:
+                if count >= 50:  # Limit to prevent excessive API calls
+                    break
+                    
+                identifier = item.get("identifier")
+                if identifier and identifier not in self.discovered_items:
+                    self.discovered_items.add(identifier)
+                    self.metrics["discovered_items_count"] += 1
+                    new_items.append(JobItem(DISCOVERED_ITEM_PRIORITY, identifier))
+                    count += 1
+            
+            logger.info("Discovered %d items for creator: %s", count, creator_name)
+            return new_items
+        except Exception as e:
+            logger.error("Error discovering items for creator %s: %s", creator_name, str(e), exc_info=True)
+            return []
+
     def process(self, item_ids):
-        """Process a list of IA identifiers."""
+        """Process a list of IA identifiers and discover more items from creators."""
+        discovered_items = []
+        
         for identifier in item_ids:
             redis_key = f"ia_metadata_cache:{identifier}"
             if self.redis.get(redis_key):
-                logger.info("Skipping cached: %s", identifier)
+                logger.debug("Skipping cached: %s", identifier)
                 continue
+                
             try:
                 with self.database.begin() as conn:
-                    self.process_identifier(identifier, conn)
+                    # Process the item and get creator info
+                    creator_names = self.process_identifier(identifier, conn)
                     self.redis.setex(redis_key, 86400, "1")
+                    
+                    # Discover more items by the same creators 
+                    for creator_name in creator_names:
+                        if creator_name and creator_name.strip():
+                            discovered_items_for_creator = self.discover_items_by_creator(creator_name.strip())
+                            discovered_items.extend(discovered_items_for_creator)
+                            
             except Exception as e:
                 logger.error("Error processing %s: %s", identifier, str(e), exc_info=True)
-        return []
+        
+        return discovered_items
 
     @staticmethod
-    def extract_from_description(description, field):
+    def extract_from_description(soup: BeautifulSoup | None, field) -> str | None:
         """
         Extracts a field (e.g. 'Artist', 'Album') from the IA description HTML using BeautifulSoup.
         Handles both string and list input.
         """
-        if not description:
+        if not soup:
             return None
-        if isinstance(description, list):
-            description = " ".join(str(x) for x in description if x)
 
-        try:
-            soup = BeautifulSoup(description, "html.parser")
-            for element in soup.find_all(['div', 'p', 'span']):
-                _text = element.get_text(strip=True)
-                if _text.startswith(f"{field}:"):
-                    return _text[len(field) + 1:].strip()
-        except Exception as e:
-            logger.error("Error parsing description HTML: %s", str(e))
+        for element in soup.find_all(["div", "p", "span"]):
+            _text = element.get_text(strip=True)
+            if _text.startswith(f"{field}:"):
+                return _text[len(field) + 1:].strip()
+
         return None
 
     def process_identifier(self, identifier, conn):
+        """
+        Process a single identifier and return list of creator names for discovery.
+        """
         try:
             item = internetarchive.get_item(identifier)
             item_metadata = item.item_metadata
@@ -97,7 +164,7 @@ class InternetArchiveHandler(BaseHandler):
             files = item_metadata.get("files", [])
         except Exception as e:
             logger.error("Failed to fetch %s: %s", identifier, str(e))
-            return
+            return []
 
         stream_urls = []
         artwork_url = None
@@ -109,9 +176,18 @@ class InternetArchiveHandler(BaseHandler):
             if not artwork_url and fmt in {"jpeg", "jpg", "png"}:
                 artwork_url = f"https://archive.org/download/{identifier}/{f['name']}"
 
+        description = meta.get("description", "")
+        if isinstance(description, list):
+            description = " ".join(str(x) for x in description if x)
+        try:
+            soup = BeautifulSoup(description, "html.parser")
+        except Exception as e:
+            logger.error("Error parsing description HTML: %s", str(e))
+            soup = None
+
         artist = meta.get("creator")
         if not artist:
-            artist = self.extract_from_description(meta.get("description", ""), "Artist")
+            artist = self.extract_from_description(soup, "Artist")
         if isinstance(artist, str):
             artist = [artist]
         elif artist is None:
@@ -119,7 +195,7 @@ class InternetArchiveHandler(BaseHandler):
 
         album = meta.get("album")
         if not album:
-            album = self.extract_from_description(meta.get("description", ""), "Album")
+            album = self.extract_from_description(soup, "Album")
 
         conn.execute(
             text("""
@@ -147,3 +223,4 @@ class InternetArchiveHandler(BaseHandler):
             }
         )
         logger.info("Processed and stored metadata for %s", identifier)
+        return artist

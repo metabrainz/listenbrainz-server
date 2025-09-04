@@ -11,7 +11,7 @@ export default function Login() {
   // If the user is already logged in, redirect them to their profile page
   React.useEffect(() => {
     if (currentUser?.name) {
-      navigate(`/user/${currentUser.name}`);
+      navigate(`/user/${encodeURIComponent(currentUser.name)}`);
     }
   }, [currentUser, navigate]);
 
