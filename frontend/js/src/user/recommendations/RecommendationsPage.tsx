@@ -347,6 +347,19 @@ export default function RecommendationsPage() {
             Oh no. Either something’s gone wrong, or you need to submit more
             listens before we can prepare delicious fresh produce just for you.
           </p>
+          <p>
+            If you recently imported your listens, it may take up to a week.
+            <br />
+            We generate weekly playlists on monday mornings (
+            <a
+              href="https://listenbrainz.readthedocs.io/en/latest/general/data-update-intervals.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              more details
+            </a>
+            )
+          </p>
           <div>
             <button
               type="button"
