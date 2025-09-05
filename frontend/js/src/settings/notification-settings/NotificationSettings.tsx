@@ -21,11 +21,11 @@ export default function NotificationSettings() {
   );
   const [saving, setSaving] = React.useState(false);
 
-  const updateDigestSettings = async (e: React.FormEvent) => {
+  const updateNotificationSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await fetch("/settings/digest-setting/", {
+      const response = await fetch("/settings/set-notification-settings/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +71,7 @@ export default function NotificationSettings() {
         For everything else, you can choose to turn off notifications or receive
         them in a periodic digest.
       </p>
-      <form onSubmit={updateDigestSettings}>
+      <form onSubmit={updateNotificationSettings}>
         <Switch
           id="enable-notifications"
           checked={notificationsEnabled}
