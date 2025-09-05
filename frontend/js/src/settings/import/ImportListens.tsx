@@ -31,9 +31,15 @@ enum ImportStatus {
 enum Services {
   spotify = "Spotify",
   listenbrainz = "Listenbrainz",
-  applemusic = "Apple Music",
+  // applemusic = "Apple Music",
   librefm = "Libre.fm",
 }
+const acceptedFileTypes = {
+  [Services.spotify]: ".zip",
+  [Services.listenbrainz]: ".zip",
+  // [Services.applemusic]: ".zip",
+  [Services.librefm]: ".csv",
+};
 type Import = {
   import_id: number;
   created: string;
@@ -161,6 +167,7 @@ export default function ImportListens() {
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
   const [fileSelected, setFileSelected] = React.useState(false);
+  const [selectedService, setSelectedService] = React.useState<Services>();
 
   const headers = useMemo((): Headers => {
     const obj = new Headers();
@@ -427,10 +434,17 @@ export default function ImportListens() {
                   id="service"
                   name="service"
                   required
+                  onChange={(e) =>
+                    setSelectedService(
+                      Services[e.currentTarget.value as keyof typeof Services]
+                    )
+                  }
                 >
-                  <option value="spotify">Spotify</option>
-                  <option value="listenbrainz">Listenbrainz</option>
-                  <option value="librefm">Libre.fm</option>
+                  {Object.keys(Services).map((serv) => (
+                    <option value={serv}>
+                      {Services[serv as keyof typeof Services]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -443,7 +457,11 @@ export default function ImportListens() {
                   id="file-upload"
                   className="form-control"
                   name="file"
-                  accept=".zip,.csv"
+                  accept={
+                    selectedService
+                      ? acceptedFileTypes[selectedService]
+                      : ".zip"
+                  }
                   required
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
