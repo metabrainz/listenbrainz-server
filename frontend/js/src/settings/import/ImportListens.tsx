@@ -167,7 +167,9 @@ export default function ImportListens() {
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
   const [fileSelected, setFileSelected] = React.useState(false);
-  const [selectedService, setSelectedService] = React.useState<Services>();
+  const [selectedService, setSelectedService] = React.useState<
+    keyof typeof Services
+  >("spotify");
 
   const headers = useMemo((): Headers => {
     const obj = new Headers();
@@ -434,15 +436,16 @@ export default function ImportListens() {
                   id="service"
                   name="service"
                   required
+                  value={selectedService}
                   onChange={(e) =>
                     setSelectedService(
-                      Services[e.currentTarget.value as keyof typeof Services]
+                      e.currentTarget.value as keyof typeof Services
                     )
                   }
                 >
-                  {Object.keys(Services).map((serv) => (
-                    <option value={serv}>
-                      {Services[serv as keyof typeof Services]}
+                  {Object.entries(Services).map(([key, value], idx) => (
+                    <option value={key} key={key}>
+                      {value}
                     </option>
                   ))}
                 </select>
@@ -459,7 +462,7 @@ export default function ImportListens() {
                   name="file"
                   accept={
                     selectedService
-                      ? acceptedFileTypes[selectedService]
+                      ? acceptedFileTypes[Services[selectedService]]
                       : ".zip"
                   }
                   required
