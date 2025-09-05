@@ -91,7 +91,7 @@ export default function AddData() {
             <a href="https://mpv.io/">MPV</a>
           </em>
           , cross-platform multimedia player:{" "}
-          <a href="https://github.com/madeindjs/dotfiles/blob/62aa5fe49a23188f74c07454afff8a7866357d88/mpv/.config/mpv/scripts/listenbrainz.js">
+          <a href="https://gist.github.com/madeindjs/f33225cf4d8fdc9f61e0fe3ebe2dcce7">
             <code>MPV Listenbrainz plugin</code>
           </a>
         </li>
