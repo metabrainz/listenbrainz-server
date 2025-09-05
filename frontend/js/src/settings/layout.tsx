@@ -29,7 +29,7 @@ const sections: Section[] = [
       { to: "./", label: "User settings" },
       {
         to: "notifications/",
-        label: "Notification settings",
+        label: "Notifications",
       },
       { to: "select_timezone/", label: "Timezone" },
       { to: "troi/", label: "Playlist preferences" },
