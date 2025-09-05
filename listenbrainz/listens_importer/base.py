@@ -8,7 +8,7 @@ from psycopg2 import DatabaseError
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 
-from listenbrainz.domain.notification_sender import send_notification
+from listenbrainz.domain.metabrainz_notifications import send_notification
 
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain.external_service import ExternalServiceError
