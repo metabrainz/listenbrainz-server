@@ -33,7 +33,15 @@ class BaseListensImporter(ABC):
         self.importer_name = IMPORTER_NAME
 
     def import_listens(self, user_id: int, import_task: dict[str, Any]) -> None:
-        """Main entry point for importing listens."""
+        """Main entry point for importing listens.
+
+        Retrieves import task from database, processes the import file, parses the items into
+        listens, validates them and submits them to the database.
+
+        Args:
+            user_id: the user whose listens are to be submitted
+            import_task: the import task dict
+        """
         user = db_user.get(self.db_conn, user_id)
         if user is None:
             current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
@@ -68,16 +76,35 @@ class BaseListensImporter(ABC):
 
     @abstractmethod
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
-        """Process the import file."""
+        """Process the service specific import file.
+
+        Args:
+            import_task: the import task dict
+
+        Returns: iterator of batches of raw entries from service import file
+        """
         pass
 
     @abstractmethod
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Parse a batch of raw entries into listen format."""
+        """Parse a batch of raw entries into listen format.
+
+        Args:
+            batch: a list of raw entries from service import file
+
+        Returns: a list of parsed listens
+        """
         pass
 
     def submit_listens(self, listens: list[dict[str, Any]], user_id: int, username: str, import_id: int) -> None:
-        """Submit parsed listens to the database."""
+        """Submit parsed listens to the database.
+
+        Args:
+            listens: a batch of parsed listens
+            user_id: the user whose listens are to be submitted
+            username: the user's musicbrainz username
+            import_id: the import task ID
+        """
         if not listens:
             return
 

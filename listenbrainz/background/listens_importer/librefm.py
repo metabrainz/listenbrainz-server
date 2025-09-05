@@ -10,6 +10,7 @@ class LibrefmListensImporter(BaseListensImporter):
 
 
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
+        """Processes the libre.fm csv archive file and returns a generator of batches of items."""
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8") as file:
             # the first three lines are comments, fourth line is header
             for _ in range(3):
@@ -19,6 +20,7 @@ class LibrefmListensImporter(BaseListensImporter):
             yield from chunked(reader, self.batch_size)
 
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Parse libre.fm items to a listens batch."""
         listens = []
         for item in batch:
             listen = {

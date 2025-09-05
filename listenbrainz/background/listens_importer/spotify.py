@@ -48,7 +48,11 @@ class SpotifyListensImporter(ZipBaseListensImporter):
         return False
 
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Parse Spotify listen batch."""
+        """Parse Spotify listen batch.
+
+        Filters the items to submit as listens and retrieves additional track metadata from Spotify
+        cache and API.
+        """
         items = []
         for item in batch:
             try:

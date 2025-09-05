@@ -15,6 +15,7 @@ class ListenBrainzListensImporter(ZipBaseListensImporter):
         return os.path.basename(file).lower().endswith(".jsonl")
 
     def process_file_contents(self, file: TextIOWrapper) -> Iterator[tuple[datetime, Any]]:
+        """Process the contents of the jsonl files in the ListenBrainz export archive."""
         for line in file:
             if not line.strip():
                 continue
@@ -26,6 +27,10 @@ class ListenBrainzListensImporter(ZipBaseListensImporter):
                 continue
 
     def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Parse items from ListenBrainz export to a listens batch.
+
+        Remove mbid_mapping, recording_msid, and update additional_info.submission_client field.
+        """
         items = []
         for item in batch:
             try:
