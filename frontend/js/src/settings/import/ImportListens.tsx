@@ -460,11 +460,7 @@ export default function ImportListens() {
                   id="file-upload"
                   className="form-control"
                   name="file"
-                  accept={
-                    selectedService
-                      ? acceptedFileTypes[Services[selectedService]]
-                      : ".zip"
-                  }
+                  accept={acceptedFileTypes[Services[selectedService]]}
                   required
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
