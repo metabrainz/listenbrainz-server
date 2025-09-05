@@ -375,7 +375,7 @@ def link_listens():
     return jsonify(data)
 
 
-@settings_bp.post("/notification-setting/")
+@settings_bp.post("/notifications/")
 @api_login_required
 def get_digest_setting():
     """Returns the current digest setting of the user."""
