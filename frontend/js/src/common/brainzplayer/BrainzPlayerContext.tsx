@@ -2,7 +2,7 @@ import * as React from "react";
 import { faRepeat } from "@fortawesome/free-solid-svg-icons";
 import { isEqual, isNil } from "lodash";
 import { faRepeatOnce } from "../../utils/icons";
-import { listenOrJSPFTrackToQueueItem } from "./utils";
+import { listenOrJSPFTrackToQueueItem, shuffleQueue } from "./utils";
 
 export const QueueRepeatModes = {
   off: {
@@ -50,6 +50,7 @@ export type BrainzPlayerContextT = {
   queue: BrainzPlayerQueue;
   ambientQueue: BrainzPlayerQueue;
   queueRepeatMode: QueueRepeatMode;
+  shuffleMode: boolean;
 };
 
 export const initialValue: BrainzPlayerContextT = {
@@ -68,6 +69,7 @@ export const initialValue: BrainzPlayerContextT = {
   queue: [],
   ambientQueue: [],
   queueRepeatMode: QueueRepeatModes.off,
+  shuffleMode: false,
 };
 
 export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
@@ -85,7 +87,8 @@ export type BrainzPlayerActionType = Partial<BrainzPlayerContextT> & {
     | "ADD_LISTEN_TO_TOP_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_QUEUE"
     | "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
-    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE";
+    | "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE"
+    | "TOGGLE_SHUFFLE_MODE";
   data?: any;
 };
 
@@ -323,6 +326,12 @@ function valueReducer(
       return {
         ...state,
         ambientQueue: [...ambientQueue, ...tracksToAdd],
+      };
+    }
+    case "TOGGLE_SHUFFLE_MODE": {
+      return {
+        ...state,
+        shuffleMode: !state.shuffleMode,
       };
     }
     default: {
