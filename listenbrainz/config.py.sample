@@ -228,5 +228,7 @@ SERVICE_MONITOR_TELEGRAM_CHAT_ID = ""
 FUNKWHALE_CALLBACK_URL = 'http://localhost:8100/settings/music-services/funkwhale/callback/'
 
 # Navidrome configuration
-#Generate key : from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
-NAVIDROME_ENCRYPTION_KEY = 'Set to a base64 encoded key for encryption/decryption of passwords'
+# Set to a base64 encoded key for encryption/decryption of passwords. For example, a key can
+# be generated as follows:
+# from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
+NAVIDROME_ENCRYPTION_KEY = ""

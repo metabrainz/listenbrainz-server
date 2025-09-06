@@ -233,9 +233,8 @@ def music_services_details():
     librefm_user = librefm_service.get_user(current_user.id)
     current_librefm_permissions = "import" if librefm_user else "disable"
 
-    # Check Navidrome connection
     navidrome_service = NavidromeService()
-    navidrome_connection = navidrome_service.get_user_connection(current_user.id)
+    navidrome_connection = navidrome_service.get_user(current_user.id, include_token=False)
     current_navidrome_permissions = "listen" if navidrome_connection else "disable"
 
     data: dict[str, Any] = {
@@ -261,7 +260,7 @@ def music_services_details():
         }
     if navidrome_connection:
         data["current_navidrome_settings"] = {
-            "instance_url": navidrome_connection["host_url"],
+            "instance_url": navidrome_connection["instance_url"],
             "username": navidrome_connection["username"],
         }
 
@@ -404,31 +403,24 @@ def music_services_connect(service_name: str):
             current_app.logger.error("Failed to get authorization URL: %s", str(e), exc_info=True)
             raise APIInternalServerError(f"Failed to connect to Funkwhale server: {str(e)}")
 
-        return jsonify({"url": auth_url, "status": "ok"})
-    
+        return jsonify({"url": auth_url})
+
     if service_name.lower() == "navidrome":
-        # Navidrome expects host_url, username, and password in request body
         data = request.get_json() or {}
         host_url = data.get("host_url")
         username = data.get("username") 
         password = data.get("password")
-        
-        current_app.logger.debug(f"Navidrome connect request - host_url: '{host_url}', username: '{username}'")
-        
+
         if not all([host_url, username, password]):
-            raise APIBadRequest("Missing 'host_url', 'username', or 'password' in request body for Navidrome connect.")
+            raise APIBadRequest("Missing 'host_url', 'username', or 'password' for Navidrome connect.")
+
+        if not (host_url.startswith("http://") or host_url.startswith("https://")):
+            raise APIBadRequest(f"Invalid host_url '{host_url}' for Navidrome connect.")
 
         try:
             service = NavidromeService()
-            result = service.connect_user(current_user.id, host_url, username, password)
-            
-            return jsonify({
-                "success": True,
-                "host_url": result['host_url'],
-                "username": result['username'],
-                "server_version": result.get('server_version')
-            })
-            
+            service.connect_user(current_user.id, host_url, username, password)
+            return jsonify({})
         except (ExternalServiceError, ExternalServiceAPIError) as e:
             raise APIBadRequest(str(e))
         except Exception as e:
@@ -486,7 +478,7 @@ def music_services_connect(service_name: str):
     except Exception:
         current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
 
-    return jsonify({"success": True, "totalLfmListens": total_listens})
+    return jsonify({"totalLfmListens": total_listens})
 
 
 @settings_bp.post('/music-services/<service_name>/disconnect/')

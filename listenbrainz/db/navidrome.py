@@ -4,21 +4,17 @@ from typing import Optional, Dict, Any
 
 def get_or_create_server(db_conn, host_url: str) -> int:
     """Get or create a Navidrome server entry"""
-    # First, try to get existing server
     existing_server = get_server_by_host_url(db_conn, host_url)
     if existing_server:
         return existing_server['id']
     
-    # If no server exists, create it
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO navidrome_servers (host_url)
         VALUES (:host_url)
         ON CONFLICT (host_url) DO UPDATE SET
             host_url = EXCLUDED.host_url
         RETURNING id
-    """), {
-        'host_url': host_url
-    })
+    """), {'host_url': host_url})
     db_conn.commit()
     return result.fetchone().id
 
@@ -34,10 +30,8 @@ def get_server_by_host_url(db_conn, host_url: str) -> Optional[Dict[str, Any]]:
 
 def save_user_token(db_conn, user_id: int, host_url: str, username: str, encrypted_password: str) -> int:
     """Save encrypted password for Navidrome (one connection per user)"""
-    # Get or create server
     server_id = get_or_create_server(db_conn, host_url)
     
-    # Save/update user encrypted password 
     result = db_conn.execute(sqlalchemy.text("""
         INSERT INTO navidrome_tokens (user_id, navidrome_server_id, username, encrypted_password)
         VALUES (:user_id, :navidrome_server_id, :username, :encrypted_password)
