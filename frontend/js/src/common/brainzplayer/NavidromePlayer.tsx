@@ -175,11 +175,9 @@ export default class NavidromePlayer
   getTrackArtworkUrl = (track?: NavidromeTrack): string | null => {
     if (!track?.albumId) return null;
 
-    // Navidrome uses getCoverArt endpoint for artwork
     const instanceURL = this.getNavidromeInstanceURL();
     const authParams = this.getAuthParamsString();
 
-    // If auth not available, return null
     if (!authParams) return null;
 
     return `${instanceURL}/rest/getCoverArt?id=${track.albumId}&${authParams}`;
@@ -251,12 +249,12 @@ export default class NavidromePlayer
       !navidromeUser?.md5_auth_token ||
       !navidromeUser?.salt
     ) {
-      return null; // Return null instead of throwing error
+      return null;
     }
 
     return {
       u: navidromeUser.username,
-      t: navidromeUser.md5_auth_token, // This is the MD5 hash token
+      t: navidromeUser.md5_auth_token,
       s: navidromeUser.salt,
       v: "1.16.1",
       c: "listenbrainz",
@@ -267,7 +265,7 @@ export default class NavidromePlayer
   getAuthParamsString = (): string => {
     const params = this.getAuthParams();
     if (!params) {
-      return ""; // Return empty string if auth not available
+      return "";
     }
     return new URLSearchParams(params).toString();
   };
@@ -276,7 +274,6 @@ export default class NavidromePlayer
     const instanceURL = this.getNavidromeInstanceURL();
     const authParams = this.getAuthParamsString();
 
-    // If auth not available, return empty string
     if (!authParams) return "";
 
     return `${instanceURL}/rest/stream?id=${trackId}&${authParams}`;
