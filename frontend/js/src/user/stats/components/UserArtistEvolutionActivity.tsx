@@ -158,6 +158,7 @@ const transformArtistEvolutionActivityData = (
   const topArtists = Object.entries(artistTotals)
     .sort(([, a], [, b]) => b - a)
     .slice(0, topN)
+    .reverse()
     .map(([name]) => name);
 
   let orderedTimeUnits: string[] = [];
@@ -406,7 +407,8 @@ export default function ArtistEvolutionActivityStreamGraph(
                   enableGridX
                   enableGridY
                   offsetType="none"
-                  order="none"
+                  order="ascending"
+                  curve="basis"
                   colors={{ scheme: "nivo" }}
                   fillOpacity={0.85}
                   borderColor={{ theme: "background" }}
