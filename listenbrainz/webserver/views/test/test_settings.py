@@ -4,6 +4,7 @@ import requests_mock
 import spotipy
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.funkwhale as db_funkwhale
 import listenbrainz.db.navidrome as db_navidrome
 import time
 
@@ -190,13 +191,9 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
     def _create_funkwhale_user(self):
         """Helper to create a Funkwhale user with token"""
-        import listenbrainz.db.funkwhale as db_funkwhale
-        from datetime import datetime, timezone
-        import time
-        
-        self.host_url = 'https://demo.funkwhale.audio'
+        host_url = 'https://demo.funkwhale.audio'
         server_id = db_funkwhale.get_or_create_server(
-            self.db_conn, self.host_url, 'client_id', 'client_secret', 'read'
+            self.db_conn, host_url, 'client_id', 'client_secret', 'read'
         )
         expires_at = int(time.time()) + 3600
         token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
@@ -240,8 +237,6 @@ class SettingsViewsTestCase(IntegrationTestCase):
         }
         mock_add_user.return_value = True
         
-        # Create server
-        import listenbrainz.db.funkwhale as db_funkwhale
         db_funkwhale.get_or_create_server(
             self.db_conn, 'https://demo.funkwhale.audio', 'client_id', 'client_secret', 'read'
         )
@@ -297,6 +292,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
     @requests_mock.Mocker()
     def test_navidrome_connect_and_disconnect(self, mock_requests):
         """Test Navidrome connect success"""
+        self.app.config["NAVIDROME_ENCRYPTION_KEY"] = "nB9WKue4CGLZjEjV_w75RqRUImbpht2HjMj5spVwiKw="
         mock_requests.get(
             "https://demo.navidrome.org/rest/ping",
             status_code=200,
