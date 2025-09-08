@@ -2,7 +2,6 @@ import hashlib
 import json
 import time
 from typing import Optional
-from urllib.parse import urljoin
 from cryptography.fernet import Fernet
 
 import requests
@@ -52,7 +51,8 @@ class NavidromeService:
             token, salt = self.generate_token(password)
 
             # Test authentication with a ping request
-            ping_url = urljoin(host_url, "/rest/ping")
+            base_url = host_url.rstrip('/')
+            ping_url = f"{base_url}/rest/ping"
             params = {
                 "u": username,
                 "t": token,
