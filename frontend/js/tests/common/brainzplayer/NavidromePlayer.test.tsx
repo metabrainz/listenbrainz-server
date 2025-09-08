@@ -1,5 +1,5 @@
 import * as React from "react";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import NavidromePlayer from "../../../src/common/brainzplayer/NavidromePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
@@ -18,7 +18,6 @@ const defaultContext: GlobalAppContextT = {
     instance_url: "https://test.navidrome.com",
     salt: "test-salt",
     username: "test-user",
-    user_id: "test-user-id",
   },
   recordingFeedbackManager: new RecordingFeedbackManager(
     new APIService("foo"),
@@ -59,7 +58,6 @@ describe("NavidromePlayer", () => {
           instance_url: "https://test.navidrome.com",
           salt: "test-salt",
           username: "test-user",
-          user_id: "test-user-id",
         };
         expect(NavidromePlayer.hasPermissions(navidromeUser)).toBe(true);
       });
@@ -69,7 +67,6 @@ describe("NavidromePlayer", () => {
           instance_url: "https://test.navidrome.com",
           salt: "test-salt",
           username: "test-user",
-          user_id: "test-user-id",
         };
         expect(NavidromePlayer.hasPermissions(navidromeUser)).toBe(false);
       });
@@ -79,7 +76,6 @@ describe("NavidromePlayer", () => {
           md5_auth_token: "test-token",
           instance_url: "https://test.navidrome.com",
           username: "test-user",
-          user_id: "test-user-id",
         };
         expect(NavidromePlayer.hasPermissions(navidromeUser)).toBe(true);
       });
@@ -237,7 +233,6 @@ describe("NavidromePlayer", () => {
         navidromeAuth: {
           instance_url: "https://test.navidrome.com",
           username: "test-user",
-          user_id: "test-user-id",
         },
       };
 

@@ -299,6 +299,10 @@ export default function MusicServices() {
         );
       }
 
+      if (!(hostUrl.startsWith("http://") || hostUrl.startsWith("https://"))) {
+        throw Error("Navidrome server URL must start with http:// or https://");
+      }
+
       // If we're in edit mode and already connected, disconnect first to avoid duplicates
       if (navidromeIsEditing && permissions.navidrome === "listen") {
         try {

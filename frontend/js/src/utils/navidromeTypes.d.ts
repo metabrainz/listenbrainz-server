@@ -1,9 +1,8 @@
 declare type NavidromeUser = {
-  md5_auth_token?: string; // MD5 hash token for authentication
+  md5_auth_token?: string;
   instance_url: string;
-  salt?: string; // Random salt for authentication
+  salt?: string;
   username: string;
-  user_id: string;
 };
 
 declare type NavidromeTrack = {

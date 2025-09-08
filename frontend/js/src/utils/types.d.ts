@@ -749,6 +749,7 @@ declare type BrainzPlayerSettings = {
     | "funkwhale"
     | "navidrome"
     | "internetArchive"
+    | "navidrome"
   >;
 };
 

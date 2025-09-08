@@ -130,25 +130,11 @@ def get_current_funkwhale_user():
 
 def get_current_navidrome_user():
     """Returns the navidrome access token and instance URL for the current user.
-    If the user has not linked a Navidrome account, returns empty dict."""
+       If the user has not linked a Navidrome account, returns empty dict.
+    """
     if not current_user.is_authenticated:
         return {}
-    
-    connection = db_navidrome.get_user_token(db_conn, current_user.id)
-    if not connection:
-        return {}
-    
-    # Get fresh auth parameters for this user
+
     navidrome_service = NavidromeService()
-    auth_params = navidrome_service.get_auth_params_for_user(current_user.id)
-    
-    if not auth_params:
-        return {}
-    
-    return {
-        'md5_auth_token': auth_params['token'],      # Fresh MD5 hash
-        'salt': auth_params['salt'],                 # Fresh random salt  
-        'instance_url': connection['host_url'],
-        'username': connection['username'],
-        'user_id': str(current_user.id)
-    }
+    details = navidrome_service.get_user(current_user.id)
+    return details or {}

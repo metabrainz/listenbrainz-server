@@ -124,6 +124,9 @@ function isListenFromDatasource(
   if (datasource instanceof InternetArchivePlayer) {
     return InternetArchivePlayer.isListenFromThisService(listen);
   }
+  if (datasource instanceof NavidromePlayer) {
+    return NavidromePlayer.isListenFromThisService(listen);
+  }
   return undefined;
 }
 
