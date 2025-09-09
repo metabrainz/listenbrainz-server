@@ -2,7 +2,11 @@ import * as React from "react";
 import { get as _get, isString, throttle as _throttle } from "lodash";
 import { Link } from "react-router";
 import { faNavidrome } from "../icons/faNavidrome";
-import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
+import {
+  DataSourceProps,
+  DataSourceType,
+  DataSourceTypes,
+} from "./BrainzPlayer";
 import {
   getArtistName,
   getTrackName,
@@ -38,7 +42,6 @@ export default class NavidromePlayer
   }
 
   public name = "navidrome";
-  public domainName = "navidrome";
   public icon = faNavidrome;
   public iconColor = dataSourcesInfo.navidrome.color;
 
@@ -54,7 +57,7 @@ export default class NavidromePlayer
     };
     this.audioRef = React.createRef();
 
-    this.debouncedOnTrackEnd = _throttle(this.onTrackEnd, 700, {
+    this.debouncedOnTrackEnd = _throttle(this.handleTrackEnd, 700, {
       leading: true,
       trailing: false,
     });
@@ -74,7 +77,7 @@ export default class NavidromePlayer
       if (show) {
         this.setupAudioListeners();
       } else {
-        this.audioRef.current?.pause()
+        this.audioRef.current?.pause();
       }
     }
     if (prevProps.volume !== volume) {
@@ -114,33 +117,34 @@ export default class NavidromePlayer
     audioElement.removeEventListener("canplay", this.onCanPlay);
   };
 
-  onLoadedMetadata = (): void => {
+  onLoadedMetadata = (event: Event): void => {
     const { onDurationChange } = this.props;
-    const audioElement = this.audioRef.current;
-    if (audioElement) {
-      onDurationChange(audioElement.duration * 1000);
-    }
+    const audioElement = event.target as HTMLAudioElement;
+    onDurationChange(audioElement.duration * 1000);
   };
 
-  onTimeUpdate = (): void => {
+  onTimeUpdate = (event: Event): void => {
     const { onProgressChange } = this.props;
-    const audioElement = this.audioRef.current;
-    if (audioElement) {
-      onProgressChange(audioElement.currentTime * 1000);
-    }
+    const audioElement = event.target as HTMLAudioElement;
+    onProgressChange(audioElement.currentTime * 1000);
   };
 
-  onPlay = (): void => {
+  onPlay = (event: Event): void => {
     const { onPlayerPausedChange } = this.props;
     onPlayerPausedChange(false);
   };
 
-  onPause = (): void => {
+  onPause = (event: Event): void => {
     const { onPlayerPausedChange } = this.props;
     onPlayerPausedChange(true);
   };
 
-  onTrackEnd = (): void => {
+  onTrackEnd = (event: Event): void => {
+    const { onTrackEnd } = this.props;
+    onTrackEnd();
+  };
+
+  handleTrackEnd = (): void => {
     const { onTrackEnd } = this.props;
     onTrackEnd();
   };
@@ -165,7 +169,7 @@ export default class NavidromePlayer
     handleError(errorMessage, "Navidrome playback error");
   };
 
-  onCanPlay = (): void => {
+  onCanPlay = (event: Event): void => {
     const { currentTrack } = this.state;
     if (currentTrack) {
       this.updateTrackInfo();
@@ -252,6 +256,9 @@ export default class NavidromePlayer
       return null;
     }
 
+    // https://www.subsonic.org/pages/api.jsp
+    // frontend/js/src/utils/navidromeTypes.d.ts -> NavidromeAuthParams
+    // https://www.navidrome.org/docs/api/
     return {
       u: navidromeUser.username,
       t: navidromeUser.md5_auth_token,
@@ -345,7 +352,7 @@ export default class NavidromePlayer
     const { onInvalidateDataSource } = this.props;
 
     onInvalidateDataSource(
-      this as any,
+      this as DataSourceTypes,
       <span>
         Please{" "}
         <Link to="/settings/music-services/details/">

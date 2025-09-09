@@ -303,8 +303,8 @@ export default function MusicServices() {
         throw Error("Navidrome server URL must start with http:// or https://");
       }
 
-      // If we're in edit mode and already connected, disconnect first to avoid duplicates
-      if (navidromeIsEditing && permissions.navidrome === "listen") {
+      // If already connected, disconnect first to avoid duplicates
+      if (permissions.navidrome === "listen") {
         try {
           const disconnectResponse = await fetch(
             `/settings/music-services/navidrome/disconnect/`,
@@ -398,13 +398,6 @@ export default function MusicServices() {
       setNavidromeIsEditing(true);
     }
   };
-
-  React.useEffect(() => {
-    setNavidromeEditValues({
-      hostUrl: navidromeAuth?.instance_url || "",
-      username: navidromeAuth?.username || "",
-    });
-  }, [navidromeAuth?.instance_url, navidromeAuth?.username]);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -885,48 +878,33 @@ export default function MusicServices() {
               </div>
               <br />
               <div className="music-service-selection">
-                {permissions.navidrome !== "listen" && (
-                  <button
-                    type="submit"
-                    className="music-service-option"
-                    style={{ width: "100%" }}
-                  >
-                    <input
-                      readOnly
-                      type="radio"
-                      id="navidrome_listen"
-                      name="navidrome"
-                      value="listen"
-                      checked={false}
-                    />
-                    <label htmlFor="navidrome_listen">
-                      <div className="title">Connect to Navidrome</div>
-                      <div className="details">
-                        Connect to your Navidrome server to play music on
-                        ListenBrainz.
-                      </div>
-                    </label>
-                  </button>
-                )}
-                {permissions.navidrome === "listen" && (
-                  <div className="music-service-option connected">
-                    <input
-                      readOnly
-                      type="radio"
-                      id="navidrome_connected"
-                      name="navidrome"
-                      value="listen"
-                      checked
-                    />
-                    <label htmlFor="navidrome_connected">
-                      <div className="title">Connected to Navidrome</div>
-                      <div className="details">
-                        Your Navidrome server is connected and ready to play
-                        music on ListenBrainz.
-                      </div>
-                    </label>
-                  </div>
-                )}
+                <button
+                  type="submit"
+                  className="music-service-option"
+                  style={{ width: "100%" }}
+                  disabled={permissions.navidrome === "listen"}
+                >
+                  <input
+                    readOnly
+                    type="radio"
+                    id="navidrome_listen"
+                    name="navidrome"
+                    value="listen"
+                    checked={permissions.navidrome === "listen"}
+                  />
+                  <label htmlFor="navidrome_listen">
+                    <div className="title">
+                      {permissions.navidrome === "listen"
+                        ? "Connected to"
+                        : "Connect to"}{" "}
+                      Navidrome
+                    </div>
+                    <div className="details">
+                      Connect to your Navidrome server to play music on
+                      ListenBrainz.
+                    </div>
+                  </label>
+                </button>
                 <ServicePermissionButton
                   service="navidrome"
                   current={permissions.navidrome}
