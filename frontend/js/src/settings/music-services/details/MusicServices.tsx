@@ -299,7 +299,7 @@ export default function MusicServices() {
         );
       }
 
-      if (!(hostUrl.startsWith("http://") || hostUrl.startsWith("https://"))) {
+      if (!hostUrl.startsWith("http://") && !hostUrl.startsWith("https://")) {
         throw Error("Navidrome server URL must start with http:// or https://");
       }
 
