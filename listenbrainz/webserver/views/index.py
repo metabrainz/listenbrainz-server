@@ -58,7 +58,7 @@ Allow: /explore/art-creator/
 """
 
 
-@index_bp.get("/robots.txt")
+@index_bp.get("/robots.txt/")
 def robots_txt():
     return Response(ROBOTS_TXT_CONTENT, mimetype='text/plain')
 
