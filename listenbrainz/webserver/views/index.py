@@ -6,7 +6,7 @@ from typing import List
 
 from brainzutils import cache
 from dateutil.relativedelta import relativedelta
-from flask import Blueprint, render_template, current_app, request, jsonify
+from flask import Blueprint, render_template, current_app, request, jsonify, Response
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import Unauthorized, NotFound
@@ -36,6 +36,31 @@ CACHE_TIME = 10 * 60  # time in seconds we cache the stats
 NUMBER_OF_RECENT_LISTENS = 50
 
 SEARCH_USER_LIMIT = 100  # max number of users to return in search username results
+
+ROBOTS_TXT_CONTENT = """User-agent: *
+Disallow: /admin/
+Disallow: /login/
+Disallow: /player/
+Disallow: /listening-now/
+Disallow: /settings/
+Disallow: /profile
+Disallow: /explore/
+Disallow: /artist/
+Disallow: /album/
+Disallow: /release/
+Disallow: /release-group/
+Disallow: /recording/
+Disallow: /track/
+Allow: /explore/fresh-releases/
+Allow: /explore/huesound/
+Allow: /explore/cover-art-collage/
+Allow: /explore/art-creator/
+"""
+
+
+@index_bp.get("/robots.txt")
+def robots_txt():
+    return Response(ROBOTS_TXT_CONTENT, mimetype='text/plain')
 
 
 @index_bp.post("/")
@@ -83,8 +108,7 @@ def current_status():
         try:
             day_listen_count = _redis.get_listen_count_for_day(day)
         except:
-            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'),
-                                     exc_info=True)
+            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
@@ -127,9 +151,7 @@ def recent_listens():
         recent_donors = []
 
     # Get MusicBrainz IDs for donors who are ListenBrainz users
-    musicbrainz_ids = [donor["musicbrainz_id"]
-                       for donor in recent_donors
-                       if donor.get('is_listenbrainz_user')]
+    musicbrainz_ids = [donor["musicbrainz_id"] for donor in recent_donors if donor.get('is_listenbrainz_user')]
 
     # Fetch donor info only if there are valid MusicBrainz IDs
     donors_info = db_user.get_many_users_by_mb_id(db_conn, musicbrainz_ids) if musicbrainz_ids else {}
@@ -142,8 +164,7 @@ def recent_listens():
         if pinned_recordings:
             pinned_recordings_metadata = fetch_track_metadata_for_items(ts_conn, pinned_recordings)
             # Map recordings by user_id for quick lookup
-            pinned_recordings_data = {recording.user_id: dict(recording)
-                                      for recording in pinned_recordings_metadata}
+            pinned_recordings_data = {recording.user_id: dict(recording) for recording in pinned_recordings_metadata}
 
     # Add pinned recordings to recent donors
     for donor in recent_donors:
@@ -185,10 +206,7 @@ def search():
     else:
         users = []
 
-    return jsonify({
-        "searchTerm": search_term,
-        "users": users
-    })
+    return jsonify({"searchTerm": search_term, "users": users})
 
 
 @index_bp.post("/feed/")
@@ -203,11 +221,13 @@ def feed():
         "musicbrainz_id": current_user.musicbrainz_id,
     }
 
-    users_following = db_user_relationship.get_following_for_user(
-        db_conn, user_id)
+    users_following = db_user_relationship.get_following_for_user(db_conn, user_id)
 
-    user_events = get_feed_events_for_user(
-        user=current_user_data, followed_users=users_following, min_ts=min_ts, max_ts=max_ts, count=count)
+    user_events = get_feed_events_for_user(user=current_user_data,
+                                           followed_users=users_following,
+                                           min_ts=min_ts,
+                                           max_ts=max_ts,
+                                           count=count)
 
     user_events = user_events[:count]
 
