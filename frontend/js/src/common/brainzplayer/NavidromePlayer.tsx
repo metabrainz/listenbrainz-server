@@ -403,7 +403,7 @@ export default class NavidromePlayer
 
   pauseAudio = (): void => {
     const audioElement = this.audioRef.current;
-    if (audioElement && !audioElement.paused) {
+    if (audioElement) {
       audioElement.pause();
     }
   };
