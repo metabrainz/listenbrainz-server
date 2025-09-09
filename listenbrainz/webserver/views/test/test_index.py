@@ -21,6 +21,10 @@ class IndexViewsTestCase(IntegrationTestCase):
         resp = self.client.get(self.custom_url_for('index.index_pages', page=''))
         self.assert200(resp)
 
+    def test_robots_txt(self):
+        resp = self.client.get(self.custom_url_for('index.robots_txt', page=''))
+        self.assert200(resp)
+
     def test_data(self):
         resp = self.client.get(self.custom_url_for('index.index_pages', path='data'))
         self.assert200(resp)
