@@ -74,7 +74,7 @@ export default class NavidromePlayer
       if (show) {
         this.setupAudioListeners();
       } else {
-        this.pauseAudio();
+        this.audioRef.current?.pause()
       }
     }
     if (prevProps.volume !== volume) {
