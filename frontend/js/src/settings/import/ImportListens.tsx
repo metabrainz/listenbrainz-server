@@ -418,10 +418,10 @@ export default function ImportListens() {
         Migrate your listens from different streaming services to Listenbrainz!
       </p>
       <div className="alert alert-warning fade show" role="alert">
-        The importer currently supports Spotify and ListenBrainz export files.
-        <br />
-        Please upload the complete <mark>.zip</mark> archive as received,
-        without extracting the files within.
+        The importer currently supports Spotify, ListenBrainz and Libre.fm
+        export files. For Spotify and ListenBrainz, please upload the complete{" "}
+        <mark>.zip</mark> archive as received, without extracting the files
+        within. For Libre.fm, please upload the <mark>.csv</mark> file directly.
       </div>
       <div className="card">
         <div className="card-body">
