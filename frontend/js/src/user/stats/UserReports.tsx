@@ -147,10 +147,11 @@ export default function UserReports() {
             <Card className="flex-grow-1" data-testid="top-release-group">
               <h3 className="capitalize-bold text-center">Top albums</h3>
               <object
-                className="p-4 w-auto mt-auto mb-auto"
+                className="p-5 m-auto"
                 width="auto"
+                style={{ maxWidth: "600px" }}
                 aria-label="Album cover grid"
-                data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/750`}
+                data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
               />
               <div className="mb-4 text-center">
                 <Link
