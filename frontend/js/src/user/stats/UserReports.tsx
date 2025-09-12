@@ -155,8 +155,11 @@ export default function UserReports() {
               <h3 className="capitalize-bold text-center">Top albums</h3>
               <object
                 className="p-5 m-auto"
-                width="auto"
-                style={{ maxWidth: "600px" }}
+                width="100%"
+                style={{
+                  maxWidth: "600px",
+                  width: "-webkit-fill-available",
+                }}
                 aria-label="Album cover grid"
                 data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
               />
