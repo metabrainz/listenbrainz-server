@@ -18,6 +18,7 @@ export type UserTopEntityProps = {
   user?: ListenBrainzUser;
   terminology: string;
   contentCssClassName?: string;
+  numberOfEntities?: number;
 };
 
 export type UserTopEntityState = {
@@ -30,7 +31,14 @@ export type UserTopEntityState = {
 export default function UserTopEntity(props: UserTopEntityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
 
-  const { range, entity, user, terminology, contentCssClassName } = props;
+  const {
+    range,
+    entity,
+    user,
+    terminology,
+    contentCssClassName,
+    numberOfEntities = 10,
+  } = props;
 
   // Loader Data
   const { data: loaderData, isLoading: loading } = useQuery({
@@ -42,7 +50,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
           entity,
           range,
           0,
-          10
+          numberOfEntities
         );
         return {
           data: queryData,

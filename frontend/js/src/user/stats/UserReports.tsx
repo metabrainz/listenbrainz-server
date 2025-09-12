@@ -183,6 +183,7 @@ export default function UserReports() {
           </div>
           <div className="col-12">
             <UserTopEntity
+              numberOfEntities={12}
               range={range}
               entity="recording"
               user={user}
