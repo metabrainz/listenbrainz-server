@@ -739,6 +739,7 @@ declare type BrainzPlayerSettings = {
   appleMusicEnabled?: boolean;
   internetArchiveEnabled?: boolean;
   funkwhaleEnabled?: boolean;
+  navidromeEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
     | "spotify"
@@ -746,6 +747,7 @@ declare type BrainzPlayerSettings = {
     | "soundcloud"
     | "appleMusic"
     | "funkwhale"
+    | "navidrome"
     | "internetArchive"
   >;
 };

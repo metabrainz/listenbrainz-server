@@ -8,7 +8,7 @@ from flask_login import current_user
 from listenbrainz.webserver import db_conn, meb_conn
 from listenbrainz.webserver.views.views_utils import get_current_spotify_user, get_current_youtube_user, \
     get_current_critiquebrainz_user, get_current_musicbrainz_user, get_current_soundcloud_user, get_current_apple_music_user, \
-    get_current_funkwhale_user
+    get_current_funkwhale_user, get_current_navidrome_user
 import listenbrainz.db.user_setting as db_usersetting
 import listenbrainz.db.donation as db_donation
 
@@ -94,6 +94,7 @@ def get_global_props():
         "soundcloud": get_current_soundcloud_user(),
         "appleMusic": get_current_apple_music_user(),
         "funkwhale": get_current_funkwhale_user(),
+        "navidrome": get_current_navidrome_user(),
         "sentry_traces_sample_rate": sentry_config.get("traces_sample_rate", 0.0),
     }
 

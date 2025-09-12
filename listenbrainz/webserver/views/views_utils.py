@@ -8,6 +8,8 @@ from listenbrainz.domain.critiquebrainz import CritiqueBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.funkwhale import FunkwhaleService
 from listenbrainz.db import funkwhale as db_funkwhale
+from listenbrainz.domain.navidrome import NavidromeService
+import listenbrainz.db.navidrome as db_navidrome
 from listenbrainz.webserver import db_conn
 
 
@@ -124,3 +126,15 @@ def get_current_funkwhale_user():
         "refresh_token": user["refresh_token"],
         "funkwhale_server_id": user["funkwhale_server_id"]
     }
+
+
+def get_current_navidrome_user():
+    """Returns the navidrome access token and instance URL for the current user.
+       If the user has not linked a Navidrome account, returns empty dict.
+    """
+    if not current_user.is_authenticated:
+        return {}
+
+    navidrome_service = NavidromeService()
+    details = navidrome_service.get_user(current_user.id)
+    return details or {}

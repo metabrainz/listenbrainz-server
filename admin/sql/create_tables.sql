@@ -272,6 +272,21 @@ CREATE TABLE funkwhale_tokens (
     token_expiry        TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
+CREATE TABLE navidrome_servers (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    host_url            TEXT NOT NULL UNIQUE,
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE navidrome_tokens (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY,
+    user_id             INTEGER NOT NULL,
+    navidrome_server_id INTEGER NOT NULL,
+    username            TEXT NOT NULL,
+    encrypted_password  TEXT NOT NULL,   
+    created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- The following line is now executed by the init-db action from manage.py. If you create a DB without the init-db function
 -- you will need to execute the following GRANT in order to complete your DB setup.
 --GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
