@@ -1,11 +1,6 @@
-{
-	"payload": {
-		"user_id": "foobar",
-		"range": "week",
-		"last_updated": 1700000000,
-		"from_ts": 1699400000,
-		"to_ts": 1700000000,
-		"genre_activity": [
+[
+  {
+    "data": [
 			{
 				"genre": "alternative dance",
 				"hour": 14,
@@ -381,6 +376,7 @@
 				"hour": 14,
 				"listen_count": 3
 			}
-		]
-	}
-}
+		],
+    "user_id": 1
+  }
+]
