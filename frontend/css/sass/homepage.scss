@@ -34,6 +34,7 @@ $homepage-background-inverted: linear-gradient(
     scroll-snap-align: start;
     scroll-snap-stop: always;
     min-height: 100%;
+    overflow: hidden;
 
     @media (max-width: map.get($grid-breakpoints, "md")) {
       min-height: calc(var(--vh, 1vh) * 100 - $navbar-height);
