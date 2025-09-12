@@ -89,6 +89,13 @@ export default function UserReports() {
   const encodedUserOrCurrentUserName = user?.name
     ? encodeURIComponent(user.name)
     : encodeURIComponent(currentUser.name);
+  let albumStatsUrl = "";
+  if (user) {
+    albumStatsUrl = `/user/${encodeURIComponent(user.name)}/stats`;
+  } else {
+    albumStatsUrl = `/statistics`;
+  }
+  albumStatsUrl += `/top-albums/?range=${range}`;
   return (
     <div data-testid="User Reports">
       <Helmet>
@@ -153,7 +160,10 @@ export default function UserReports() {
                 aria-label="Album cover grid"
                 data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
               />
-              <div className="mb-4 text-center">
+              <div className="flex-center gap-3 mb-4">
+                <Link to={albumStatsUrl} className="btn btn-outline-info">
+                  View more...
+                </Link>
                 <Link
                   to="/explore/art-creator/"
                   className="btn btn-outline-info"
