@@ -58,7 +58,7 @@ $homepage-background-inverted: linear-gradient(
       height: 12vh;
       gap: 2vh;
 
-      @media (max-width: map.get($grid-breakpoints, "xs")) {
+      @media (max-width: map.get($grid-breakpoints, "sm")) {
         display: none;
       }
     }
@@ -565,6 +565,7 @@ $homepage-background-inverted: linear-gradient(
       }
       .listen-container {
         top: 8vh;
+        padding: 0 25px;
       }
 
       .homepage-upper-vector-3 {
@@ -574,6 +575,11 @@ $homepage-background-inverted: linear-gradient(
       .homepage-upper-headphone {
         height: min(41%, 375px);
         top: 25%;
+      }
+
+      .homepage-info {
+        padding: 0 25px;
+        width: 100%;
       }
     }
 
@@ -596,6 +602,11 @@ $homepage-background-inverted: linear-gradient(
 
       .listen-container {
         top: 3vh;
+      }
+
+      .homepage-info {
+        padding: 0 25px;
+        width: 100%;
       }
     }
 
@@ -620,7 +631,7 @@ $homepage-background-inverted: linear-gradient(
     }
   }
 
-  @media (max-width: map.get($grid-breakpoints, "xs")) {
+  @media (max-width: map.get($grid-breakpoints, "sm")) {
     .homepage-upper {
       .homepage-upper-vector-3 {
         height: 7%;
@@ -696,11 +707,11 @@ $homepage-background-inverted: linear-gradient(
   }
 }
 
-@media (max-width: map.get($grid-breakpoints, "xs")) {
+@media (max-width: map.get($grid-breakpoints, "sm")) {
   #homepage-container {
     .homepage-upper,
     .homepage-lower {
-      padding-left: 25px;
+      padding-left: 0;
     }
   }
 }
