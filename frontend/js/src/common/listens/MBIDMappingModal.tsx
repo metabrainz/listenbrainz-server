@@ -11,6 +11,7 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import Tooltip from "react-tooltip";
 import { Link } from "react-router";
+import { merge } from "lodash";
 import ListenCard from "./ListenCard";
 import ListenControl from "./ListenControl";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -42,7 +43,6 @@ function getListenFromSelectedRecording(
 
 export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
   const modal = useModal();
-  const { resolve, visible } = modal;
   const [copyTextClickCounter, setCopyTextClickCounter] = React.useState(0);
   const [selectedRecording, setSelectedRecording] = React.useState<
     TrackMetadata
@@ -78,6 +78,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
       if (!listenToMap || !selectedRecording || !auth_token) {
         return;
       }
+      let resolvedValue: TrackMetadata = selectedRecording;
       const selectedRecordingToListen = getListenFromSelectedRecording(
         selectedRecording
       );
@@ -96,8 +97,36 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
           handleError(error, "Error while linking listen");
           return;
         }
-
-        resolve(selectedRecording);
+        try {
+          // Try to get more metadata for the selected recodring (such as artist mbids)
+          const response = await APIService.getRecordingMetadata([
+            recordingMBID,
+          ]);
+          const metadata = response?.[recordingMBID];
+          if (metadata) {
+            resolvedValue = merge(selectedRecording, {
+              artist_name: metadata?.artist?.name,
+              additional_info: {
+                duration_ms: metadata?.recording?.length,
+              },
+              mbid_mapping: {
+                artist_mbids: metadata?.artist?.artists?.map(
+                  (ar) => ar.artist_mbid
+                ),
+                artists: metadata?.artist?.artists,
+                release_mbid: metadata?.release?.mbid,
+                caa_id: metadata?.release?.caa_id,
+                caa_release_mbid: metadata?.release?.caa_release_mbid,
+                year: metadata?.release?.year,
+                release_artist_name: metadata?.release?.album_artist_name,
+                release_group_mbid: metadata?.release?.release_group_mbid,
+              },
+            });
+          }
+        } catch (error) {
+          // Ignore this failure, it is only cosmetic
+        }
+        modal.resolve(resolvedValue);
 
         toast.success(
           <ToastMsg
@@ -111,15 +140,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
         modal.hide();
       }
     },
-    [
-      listenToMap,
-      auth_token,
-      modal,
-      resolve,
-      APIService,
-      selectedRecording,
-      handleError,
-    ]
+    [listenToMap, auth_token, modal, APIService, selectedRecording, handleError]
   );
 
   const copyTextToSearchField = React.useCallback(() => {
