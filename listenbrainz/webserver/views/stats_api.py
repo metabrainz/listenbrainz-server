@@ -648,10 +648,16 @@ def get_genre_activity(user_name: str):
     stats = db_stats.get(user['id'], "genre_activity", stats_range, GenreActivityRecord)
     if stats is None:
         raise APINoContent('')
-    
-    genre_activity = [x.dict() for x in stats.data.__root__]
-    return jsonify({"result": genre_activity})
 
+    genre_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "genre_activity": genre_activity,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated
+    }})
 
 @stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
 @crossdomain
