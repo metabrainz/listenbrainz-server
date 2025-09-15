@@ -24,18 +24,6 @@ type ProcessedTimeframeData = {
   }>;
 };
 
-// Define the chart data item type for better type safety
-type ChartDataItem = {
-  id: string;
-  label: string;
-  displayName: string;
-  actualValue: number;
-  value: number;
-  color: string;
-  timeRange: string;
-  hour: number;
-};
-
 const TIME_PERIODS = [
   { timeRange: "Night", timeOfDay: "12AM-6AM", hour: 3, from: 0, to: 5 },
   { timeRange: "Morning", timeOfDay: "6AM-12PM", hour: 9, from: 6, to: 11 },

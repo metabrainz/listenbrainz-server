@@ -307,7 +307,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert200(response)
         received = json.loads(response.data)['payload']
         sent = request[0]
-    
+
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(sent['data'], received['era_activity'])

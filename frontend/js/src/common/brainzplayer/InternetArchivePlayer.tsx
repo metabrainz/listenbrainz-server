@@ -27,8 +27,8 @@ export default class InternetArchivePlayer
 
   static isListenFromThisService(listen: Listen | JSPFTrack): boolean {
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (originURL && typeof originURL === 'string') {
-      return originURL.includes('archive.org');
+    if (originURL && typeof originURL === "string") {
+      return originURL.includes("archive.org");
     }
     return false;
   }
@@ -37,7 +37,11 @@ export default class InternetArchivePlayer
     listen: Listen | JSPFTrack
   ): string | undefined => {
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
-    if (originURL && typeof originURL === 'string' && originURL.includes('archive.org')) {
+    if (
+      originURL &&
+      typeof originURL === "string" &&
+      originURL.includes("archive.org")
+    ) {
       return originURL;
     }
     return undefined;
@@ -144,7 +148,7 @@ export default class InternetArchivePlayer
     if (this.audioRef.current && currentTrack) {
       const [firstUrl] = currentTrack.stream_urls;
       this.audioRef.current.src = firstUrl;
-      // Set volume when loading new track 
+      // Set volume when loading new track
       this.audioRef.current.volume = (volume ?? 100) / 100;
       try {
         await this.audioRef.current.play();
@@ -200,7 +204,10 @@ export default class InternetArchivePlayer
     if (!show) return null;
 
     return (
-      <div className="internet-archive-player" data-testid="internet-archive-player">
+      <div
+        className="internet-archive-player"
+        data-testid="internet-archive-player"
+      >
         {currentTrack?.artwork_url && (
           <img src={currentTrack.artwork_url} alt={currentTrack.name} />
         )}
