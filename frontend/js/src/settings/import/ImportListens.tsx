@@ -12,6 +12,7 @@ import {
   faRefresh,
 } from "@fortawesome/free-solid-svg-icons";
 import { format, isValid } from "date-fns";
+import { useMemo } from "react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
@@ -30,8 +31,15 @@ enum ImportStatus {
 enum Services {
   spotify = "Spotify",
   listenbrainz = "Listenbrainz",
-  applemusic = "Apple Music",
+  // applemusic = "Apple Music",
+  librefm = "Libre.fm",
 }
+const acceptedFileTypes = {
+  [Services.spotify]: ".zip",
+  [Services.listenbrainz]: ".zip",
+  // [Services.applemusic]: ".zip",
+  [Services.librefm]: ".csv",
+};
 type Import = {
   import_id: number;
   created: string;
@@ -159,13 +167,18 @@ export default function ImportListens() {
   const [loading, setLoading] = React.useState(false);
   const [imports, setImports] = React.useState<Array<Import>>([]);
   const [fileSelected, setFileSelected] = React.useState(false);
+  const [selectedService, setSelectedService] = React.useState<
+    keyof typeof Services
+  >("spotify");
 
-  const headers = new Headers();
-  headers.append("Content-Type", "application/json");
-
-  if (currentUser?.auth_token) {
-    headers.append("Authorization", `Token ${currentUser.auth_token}`);
-  }
+  const headers = useMemo((): Headers => {
+    const obj = new Headers();
+    obj.append("Content-Type", "application/json");
+    if (currentUser?.auth_token) {
+      obj.append("Authorization", `Token ${currentUser.auth_token}`);
+    }
+    return obj;
+  }, [currentUser]);
 
   React.useEffect(() => {
     // Fetch the list of imports in progress in background tasks or finished
@@ -199,7 +212,7 @@ export default function ImportListens() {
     }
     setLoading(true);
     getImportsInProgress();
-  }, []);
+  }, [APIService.APIBaseURI, headers]);
 
   const fetchImport = React.useCallback(
     async function fetchImport(id: number) {
@@ -243,7 +256,7 @@ export default function ImportListens() {
         setLoading(false);
       }
     },
-    [setLoading]
+    [APIService.APIBaseURI, headers]
   );
 
   const hasAnImportInProgress =
@@ -297,7 +310,7 @@ export default function ImportListens() {
         );
       }
     },
-    []
+    [APIService.APIBaseURI, currentUser?.auth_token]
   );
 
   const cancelImport = React.useCallback(
@@ -337,7 +350,7 @@ export default function ImportListens() {
         );
       }
     },
-    []
+    [APIService.APIBaseURI, headers]
   );
 
   return (
@@ -423,9 +436,18 @@ export default function ImportListens() {
                   id="service"
                   name="service"
                   required
+                  value={selectedService}
+                  onChange={(e) =>
+                    setSelectedService(
+                      e.currentTarget.value as keyof typeof Services
+                    )
+                  }
                 >
-                  <option value="spotify">Spotify</option>
-                  <option value="listenbrainz">Listenbrainz</option>
+                  {Object.entries(Services).map(([key, value], idx) => (
+                    <option value={key} key={key}>
+                      {value}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -438,7 +460,7 @@ export default function ImportListens() {
                   id="file-upload"
                   className="form-control"
                   name="file"
-                  accept=".zip"
+                  accept={acceptedFileTypes[Services[selectedService]]}
                   required
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />

@@ -7,7 +7,7 @@ from flask import current_app
 from spotipy import Spotify, SpotifyClientCredentials, SpotifyOauthError
 from sqlalchemy import text
 
-from listenbrainz.background.listens_importer.base import BaseListensImporter
+from listenbrainz.background.listens_importer.zip_base import ZipBaseListensImporter
 
 SKIP_REASONS = [
     None, "fwdbtn", "backbtn", "clickrow", "clickside", "endplay", "playbtn", "remote", "logout",
@@ -15,14 +15,14 @@ SKIP_REASONS = [
 ]
 
 
-class SpotifyListensImporter(BaseListensImporter):
+class SpotifyListensImporter(ZipBaseListensImporter):
     """Spotify-specific listens importer."""
 
-    def _filter_zip_files(self, file: str) -> bool:
+    def filter_zip_file(self, file: str) -> bool:
         filename = os.path.basename(file).lower()
         return filename.endswith(".json") and ("audio" in filename or "endsong" in filename)
 
-    def _process_file_contents(self, contents: str) -> Iterator[tuple[datetime, Any]]:
+    def process_file_contents(self, contents: str) -> Iterator[tuple[datetime, Any]]:
         for entry in ijson.items(contents, "item"):
             timestamp = datetime.strptime(
                 entry["ts"], "%Y-%m-%dT%H:%M:%SZ"
@@ -47,9 +47,12 @@ class SpotifyListensImporter(BaseListensImporter):
 
         return False
 
+    def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Parse Spotify listen batch.
 
-    def _parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Parse Spotify listen batch."""
+        Filters the items to submit as listens and retrieves additional track metadata from Spotify
+        cache and API.
+        """
         items = []
         for item in batch:
             try:

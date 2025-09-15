@@ -3,6 +3,7 @@ import { get as _get } from "lodash";
 import faInternetArchive from "../icons/faInternetArchive";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import { getTrackName, getArtistName } from "../../utils/utils";
+import GlobalAppContext from "../../utils/GlobalAppContext";
 
 type IARecording = {
   track_id: string;
@@ -20,6 +21,8 @@ type State = {
 export default class InternetArchivePlayer
   extends React.Component<DataSourceProps, State>
   implements DataSourceType {
+  static contextType = GlobalAppContext;
+
   static hasPermissions = () => {
     // Internet Archive doesn't require authentication
     return true;
@@ -52,6 +55,7 @@ export default class InternetArchivePlayer
   public icon = faInternetArchive;
   public iconColor = "#6c757d";
   audioRef: React.RefObject<HTMLAudioElement>;
+  declare context: React.ContextType<typeof GlobalAppContext>;
 
   constructor(props: DataSourceProps) {
     super(props);
@@ -95,6 +99,7 @@ export default class InternetArchivePlayer
     const { onTrackNotFound, handleError, handleWarning } = this.props;
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
+    const { APIService } = this.context;
 
     if (!trackName && !artistName) {
       handleWarning(
@@ -113,7 +118,7 @@ export default class InternetArchivePlayer
       if (artistName) params.append("artist", artistName);
 
       const response = await fetch(
-        `/1/internet_archive/search?${params.toString()}`
+        `${APIService.APIBaseURI}/internet_archive/search?${params.toString()}`
       );
       const data = await response.json();
 
