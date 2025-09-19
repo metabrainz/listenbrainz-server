@@ -1,9 +1,17 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import current_user
 from sqlalchemy import text
+import psycopg2
+from collections import defaultdict
+from psycopg2.extras import DictCursor
+
+from brainzutils import cache
 
 from listenbrainz.db.similar_users import get_top_similar_users
+from listenbrainz.db.genre import load_genre_with_subgenres
 from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver.views.user import TAG_HEIRARCHY_CACHE_KEY, TAG_HEIRARCHY_CACHE_EXPIRY
+from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 explore_bp = Blueprint('explore', __name__)
 
@@ -52,6 +60,92 @@ def ai_brainz():
     """ Explore your love of Rick """
 
     return render_template("index.html")
+
+
+def process_genre_explorer_data(data: list, name: str) -> tuple[dict, list[dict], dict, list[dict]]:
+    adj_matrix = defaultdict(list)
+    name_id_map = {}
+    parent_map = defaultdict(set)
+
+    # Build the graph
+    for row in data:
+        genre_name = row["genre"]
+        name_id_map[genre_name] = row.get("genre_gid")
+        
+        # Initialize parent_map entry for genre_id if not exists
+        if genre_name not in parent_map:
+            parent_map[genre_name] = set()
+
+        subgenre_name = row["subgenre"]
+        if subgenre_name:
+            name_id_map[subgenre_name] = row.get("subgenre_gid")
+            # Add parent relationship
+            parent_map[subgenre_name].add(genre_name)
+            adj_matrix[genre_name].append(subgenre_name)
+        else:
+            adj_matrix[genre_name] = []
+
+    if name not in name_id_map:
+        return None, None, None, None
+
+    # 1. Current genre
+    current_genre = {"id": name_id_map[name], "name": name}
+
+    # 2. Get children
+    children = [
+        {"id": name_id_map[child_name], "name": child_name}
+        for child_name in adj_matrix[name]
+    ]
+
+    # 3. Get immediate parents only
+    parent_nodes = []
+    parent_edges = []
+    
+    # Get immediate parents of the current genre
+    for parent_name in parent_map[name]:
+        parent_nodes.append({"id": name_id_map[parent_name], "name": parent_name})
+        parent_edges.append({"source": name_id_map[parent_name], "target": name_id_map[name]})
+
+    parent_graph = {
+        "nodes": parent_nodes,
+        "edges": parent_edges
+    }
+
+    # 4. Get siblings (keeping this as is)
+    siblings = set()
+    for parent in parent_map[name]:
+        siblings.update(adj_matrix[parent])
+    siblings.discard(name)
+    siblings_list = [{"id": name_id_map[genre], "name": genre} for genre in siblings]
+
+    return current_genre, children, parent_graph, siblings_list
+
+
+@explore_bp.post("/genre-explorer/<genre_name>/")
+def genre_explorer(genre_name):
+    """ Get genre explorer data """
+    try:
+        data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
+        if not data:
+            with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,\
+                    mb_conn.cursor(cursor_factory=DictCursor) as mb_curs:
+                data = load_genre_with_subgenres(mb_curs)
+                data = [dict(row) for row in data] if data else []
+            cache.set(TAG_HEIRARCHY_CACHE_KEY, data, expirein=TAG_HEIRARCHY_CACHE_EXPIRY)
+    except Exception as e:
+        current_app.logger.error("Error loading genre explorer data: %s", e)
+        return jsonify({"error": "Failed to load genre explorer data"}), 500
+
+    genre, children, parents, siblings = process_genre_explorer_data(data, genre_name)
+    if not genre:
+        return jsonify({"error": "Genre not found"}), 404
+
+    return jsonify({
+        "children": children,
+        "parents": parents,
+        "siblings": siblings,
+        "genre": genre
+    })
 
 
 @explore_bp.post("/lb-radio/")
