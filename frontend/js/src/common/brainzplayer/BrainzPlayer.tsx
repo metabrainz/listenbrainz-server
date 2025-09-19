@@ -517,7 +517,10 @@ export default function BrainzPlayer() {
     // wait for isActive to be true
     const intervalID = setInterval(() => {
       // Wait for isActivated to be true
-      if (getIsActivated()) {
+      if (
+        getIsActivated() &&
+        getCurrentDataSourceIndex() === selectedDatasourceIndex
+      ) {
         datasource.playListen(listen);
         clearInterval(intervalID);
       }
