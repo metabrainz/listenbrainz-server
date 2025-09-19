@@ -10,8 +10,11 @@ import listenbrainz.db.user as db_user
 from data.model.common_stat import StatApi, StatisticsRange
 from data.model.user_artist_map import UserArtistMapRecord
 from data.model.user_daily_activity import DailyActivityRecord
+from data.model.user_genre_activity import GenreActivityRecord
 from data.model.user_entity import EntityRecord
 from data.model.user_listening_activity import ListeningActivityRecord
+from data.model.user_era_activity import EraActivityRecord
+from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
 from listenbrainz.webserver import db_conn, ts_conn
@@ -523,7 +526,202 @@ def get_artist_activity(user_name: str):
     release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
-    
+
+
+@stats_api_bp.get("/user/<user_name>/era-activity")
+@crossdomain
+@ratelimit()
+def get_era_activity(user_name: str):
+    """
+    Get the release-year activity for user ``user_name``. Each entry represents the number of listens
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1971, "listen_count": 3},
+                    {"year": 1997, "listen_count": 9},
+                    {"year": 2024, "listen_count": 1}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "week",
+                "last_updated": 1735603200,
+                "user_id": "John Doe"
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; multiple listens to different tracks from the same year are aggregated.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted (only years with > 0 listens are returned for the selected range).
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    offset = get_non_negative_param("offset", default=0)
+    count = get_non_negative_param("count", default=DEFAULT_ITEMS_PER_GET)
+    stats = db_stats.get(user["id"], "era_activity", stats_range, EraActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    era_activity_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
+
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "era_activity": era_activity_list,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated,
+    }})
+
+@stats_api_bp.get("/user/<user_name>/genre-activity")
+@crossdomain
+@ratelimit()
+def get_genre_activity(user_name: str):
+    """
+    Get the genre activity for user ``user_name``. The genre activity shows the total number of listens
+    for each genre broken down by hour of the day.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "result": [
+                {
+                    "genre": "alternative dance",
+                    "hour": 14,
+                    "listen_count": 3
+                },
+                {
+                    "genre": "alternative punk",
+                    "hour": 11,
+                    "listen_count": 6
+                },
+                {
+                    "genre": "alternative rock",
+                    "hour": 11,
+                    "listen_count": 8
+                },
+                {
+                    "genre": "electronic",
+                    "hour": 10,
+                    "listen_count": 13
+                },
+                {
+                    "genre": "rock",
+                    "hour": 11,
+                    "listen_count": 16
+                }
+            ]
+        }
+
+    .. note::
+
+        - The example above shows genre activity data with listening patterns across different hours.
+        - Each entry represents the number of times a genre was listened to during a specific hour of the day.
+        - Hours are in 24-hour format (0-23).
+        - The statistics help identify when users prefer to listen to different genres throughout the day.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "genre_activity", stats_range, GenreActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    genre_activity = [x.dict() for x in stats.data.__root__]
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "genre_activity": genre_activity,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "range": stats_range,
+        "last_updated": stats.last_updated
+    }})
+
+@stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_artist_evolution_activity(user_name: str):
+    """
+    Get the artist evolution activity for a specific user. Over the selected time range, this
+    returns raw rows of listen counts per artist per time unit (e.g., weekday, day-of-month,
+    month, or year). The structure mirrors the sitewide endpoint.
+
+    A sample response may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_evolution_activity": [
+              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "Monday",    "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 80  },
+              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+            ],
+            "range": "week",
+            "from_ts": 1609459200,
+            "to_ts": 1640995200,
+            "last_updated": 1640995200,
+            "user_id": "foobar"
+          }
+        }
+
+    .. note::
+        - ``time_unit`` depends on the stats range:
+            * ``week``  → weekday names (Monday..Sunday)
+            * ``month`` → day numbers as strings ("1".."31")
+            * ``year``  → month names (January..December)
+            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+        - ``artist_mbid`` may be null/omitted if unavailable.
+
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
+    :statuscode 200: Successful query.
+    :statuscode 204: Statistics not available.
+    :statuscode 400: Bad request.
+    :statuscode 404: User not found.
+    :resheader Content-Type: *application/json*
+    """
+    user, stats_range = _validate_stats_user_params(user_name)
+    stats = db_stats.get(user['id'], "artist_evolution_activity", stats_range, ArtistEvolutionActivityRecord)
+    if stats is None:
+        raise APINoContent('')
+
+    stats_unprocessed = [x.dict() for x in stats.data.__root__]
+
+    return jsonify({
+        "payload": {
+            "user_id": user_name,
+            "artist_evolution_activity": stats_unprocessed,
+            "range": stats_range,
+            "from_ts": stats.from_ts,
+            "to_ts": stats.to_ts,
+            "last_updated": stats.last_updated
+        }
+    })
+
 
 @stats_api_bp.get("/user/<user_name>/daily-activity")
 @crossdomain
@@ -1268,6 +1466,131 @@ def get_sitewide_artist_activity():
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
     return jsonify({"result": result})
+
+
+@stats_api_bp.get("/sitewide/era-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_era_activity():
+    """
+    Get sitewide release-year activity. Each entry represents the number of listens across all users
+    to recordings whose **original release year** equals the listed ``year``. (Frontends may group
+    these years into decades to present a classic “era” visualization.)
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "payload": {
+                "era_activity": [
+                    {"year": 1973, "listen_count": 1043},
+                    {"year": 1997, "listen_count": 3877},
+                    {"year": 2011, "listen_count": 2610}
+                ],
+                "from_ts": 315532800,
+                "to_ts": 1735603200,
+                "range": "year",
+                "last_updated": 1735603200
+            }
+        }
+
+    .. note::
+        - ``year`` is the recording's release year; counts are aggregated across the entire ListenBrainz userbase.
+        - Clients may bucket by decade (e.g. 1970s, 1990s) if they want true "era" bars.
+        - Empty years are omitted.
+
+    :param range: Optional, time interval for which statistics should be returned,
+        possible values are :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`,
+        defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats("era_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    return jsonify({
+        "payload": {
+            "era_activity": stats["data"],
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "range": stats_range,
+            "last_updated": stats["last_updated"],
+        }
+    })
+
+
+@stats_api_bp.get("/sitewide/artist-evolution-activity")
+@crossdomain
+@ratelimit()
+def get_sitewide_artist_evolution_activity():
+    """
+    Get the sitewide artist evolution activity. Over the selected time range, this returns raw rows
+    of listen counts per artist per time unit (e.g., weekday, day-of-month, month, or year).
+    The structure mirrors the user endpoint.
+
+    A sample response may look like:
+
+    .. code-block:: json
+
+        {
+          "payload": {
+            "artist_evolution_activity": [
+              { "time_unit": "Monday",    "artist_mbid": "mbid_taylor",  "artist_name": "Taylor Swift", "listen_count": 120 },
+              { "time_unit": "Tuesday",   "artist_mbid": "mbid_drake",   "artist_name": "Drake",        "listen_count": 200 },
+              { "time_unit": "Sunday",    "artist_mbid": "mbid_weeknd",  "artist_name": "The Weeknd",   "listen_count": 400 }
+            ],
+            "range": "week",
+            "from_ts": 1609459200,
+            "to_ts": 1640995200,
+            "last_updated": 1640995200
+          }
+        }
+
+    .. note::
+        - ``time_unit`` depends on the stats range:
+            * ``week``  → weekday names (Monday..Sunday)
+            * ``month`` → day numbers as strings ("1".."31")
+            * ``year``  → month names (January..December)
+            * ``all_time`` → calendar years as strings ("2019", "2020", ...)
+        - ``artist_mbid`` may be null/omitted if unavailable.
+        - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
+
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
+    :statuscode 200: Successful query.
+    :statuscode 204: Statistics not available.
+    :statuscode 400: Bad request.
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get("range", default="all_time")
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest(f"Invalid range: {stats_range}")
+
+    stats = db_stats.get_sitewide_stats("artist_evolution_activity", stats_range)
+    if stats is None:
+        raise APINoContent("")
+
+    stats_unprocessed = stats["data"]
+
+    return jsonify({
+        "payload": {
+            "artist_evolution_activity": stats_unprocessed,
+            "range": stats_range,
+            "from_ts": stats["from_ts"],
+            "to_ts": stats["to_ts"],
+            "last_updated": stats["last_updated"]
+        }
+    })
 
 
 @stats_api_bp.get("/sitewide/artist-map")

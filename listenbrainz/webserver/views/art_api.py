@@ -324,7 +324,7 @@ def _cover_art_yim_stats(user_name, stats, year, yim24):
 
     if year == 2022:
         return render_template(
-            "art/svg-templates/yim-2022.svg",
+            "art/svg-templates/year-in-music/2022/yim-2022.svg",
             user_name=user_name,
             most_played_day_message=Markup(most_played_day_message),
             most_listened_year=most_listened_year,
@@ -337,7 +337,7 @@ def _cover_art_yim_stats(user_name, stats, year, yim24):
 
     if year == 2023:
         return render_template(
-            "art/svg-templates/yim-2023-stats.svg",
+            "art/svg-templates/year-in-music/2023/yim-2023-stats.svg",
             user_name=user_name,
             most_played_day_message=Markup(most_played_day_message),
             most_listened_year=most_listened_year,
@@ -348,7 +348,7 @@ def _cover_art_yim_stats(user_name, stats, year, yim24):
 
     if year == 2024:
         return render_template(
-            "art/svg-templates/year-in-music-2024/yim-2024-stats.svg",
+            "art/svg-templates/year-in-music/2024/yim-2024-stats.svg",
             user_name=user_name,
             most_played_day_message=Markup(most_played_day_message),
             most_listened_year=most_listened_year,
@@ -381,7 +381,7 @@ def _cover_art_yim_albums_2022(user_name, stats):
     image_urls = _repeat_images(image_urls)
 
     return render_template(
-        "art/svg-templates/yim-2022-albums.svg",
+        "art/svg-templates/year-in-music/2022/yim-2022-albums.svg",
         user_name=user_name,
         image_urls=image_urls,
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
@@ -416,7 +416,7 @@ def _cover_art_yim_albums_2023(user_name, stats):
     images = _repeat_images(images)
 
     return render_template(
-        "art/svg-templates/yim-2023-albums.svg",
+        "art/svg-templates/year-in-music/2023/yim-2023-albums.svg",
         user_name=user_name,
         images=images,
     )
@@ -449,7 +449,7 @@ def _cover_art_yim_albums_2024(user_name, stats, yim24):
     images = _repeat_images(images)
 
     return render_template(
-        "art/svg-templates/year-in-music-2024/yim-2024-albums.svg",
+        "art/svg-templates/year-in-music/2024/yim-2024-albums.svg",
         user_name=user_name,
         images=images,
         **yim24,
@@ -475,7 +475,7 @@ def _cover_art_yim_tracks(user_name, stats, year, yim24):
 
     if year == 2022:
         return render_template(
-            "art/svg-templates/yim-2022-tracks.svg",
+            "art/svg-templates/year-in-music/2022/yim-2022-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
             bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
@@ -484,14 +484,14 @@ def _cover_art_yim_tracks(user_name, stats, year, yim24):
 
     if year == 2023:
         return render_template(
-            "art/svg-templates/yim-2023-tracks.svg",
+            "art/svg-templates/year-in-music/2023/yim-2023-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
         )
 
     if year == 2024:
         return render_template(
-            "art/svg-templates/year-in-music-2024/yim-2024-tracks.svg",
+            "art/svg-templates/year-in-music/2024/yim-2024-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
             **yim24,
@@ -505,7 +505,7 @@ def _cover_art_yim_artists(user_name, stats, year, yim24):
 
     if year == 2022:
         return render_template(
-            "art/svg-templates/yim-2022-artists.svg",
+            "art/svg-templates/year-in-music/2022/yim-2022-artists.svg",
             user_name=user_name,
             artists=stats["top_artists"],
             total_artists_count=stats["total_artists_count"],
@@ -514,7 +514,7 @@ def _cover_art_yim_artists(user_name, stats, year, yim24):
 
     if year == 2023:
         return render_template(
-            "art/svg-templates/yim-2023-artists.svg",
+            "art/svg-templates/year-in-music/2023/yim-2023-artists.svg",
             user_name=user_name,
             artists=stats["top_artists"],
             total_artists_count=stats["total_artists_count"],
@@ -522,7 +522,7 @@ def _cover_art_yim_artists(user_name, stats, year, yim24):
 
     if year == 2024:
         return render_template(
-            "art/svg-templates/year-in-music-2024/yim-2024-artists.svg",
+            "art/svg-templates/year-in-music/2024/yim-2024-artists.svg",
             user_name=user_name,
             artists=stats["top_artists"],
             total_artists_count=stats["total_artists_count"],
@@ -556,7 +556,7 @@ def _cover_art_yim_playlist_2022(user_name, stats, key):
             image_urls.append(next(repeater))
 
     return render_template(
-        "art/svg-templates/yim-2022-playlists.svg",
+        "art/svg-templates/year-in-music/2022/yim-2022-playlists.svg",
         user_name=user_name,
         image_urls=image_urls,
         bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
@@ -597,9 +597,9 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
 
     match key:
         case "playlist-top-discoveries-for-year":
-            target_svg = "art/svg-templates/yim-2023-playlist-hug.svg"
+            target_svg = "art/svg-templates/year-in-music/2023/yim-2023-playlist-hug.svg"
         case "playlist-top-missed-recordings-for-year":
-            target_svg = "art/svg-templates/yim-2023-playlist-arrows.svg"
+            target_svg = "art/svg-templates/year-in-music/2023/yim-2023-playlist-arrows.svg"
         case other:
             raise APIBadRequest(f"Invalid playlist type {key}. Playlist type should be one of (playlist-top-discoveries-for-year, playlist-top-missed-recordings-for-year)")
 
@@ -644,9 +644,9 @@ def _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24):
 
     match key:
         case "playlist-top-discoveries-for-year":
-            target_svg = "art/svg-templates/year-in-music-2024/yim-2024-discovery-playlist.svg"
+            target_svg = "art/svg-templates/year-in-music/2024/yim-2024-discovery-playlist.svg"
         case "playlist-top-missed-recordings-for-year":
-            target_svg = "art/svg-templates/year-in-music-2024/yim-2024-missed-tracks-playlist.svg"
+            target_svg = "art/svg-templates/year-in-music/2024/yim-2024-missed-tracks-playlist.svg"
         case other:
             raise APIBadRequest(f"Invalid playlist type {key}. Playlist type should be one of (playlist-top-discoveries-for-year, playlist-top-missed-recordings-for-year)")
 
@@ -720,10 +720,10 @@ def _cover_art_yim_overview(user_name, stats, year, yim24):
     }
 
     if year == 2023:
-        return render_template("art/svg-templates/yim-2023.svg", **props)
+        return render_template("art/svg-templates/year-in-music/20232023/yim-2023.svg", **props)
 
     if year == 2024:
-        return render_template("art/svg-templates/year-in-music-2024/yim-2024-overview.svg", **props, **yim24)
+        return render_template("art/svg-templates/year-in-music/2024/yim-2024-overview.svg", **props, **yim24)
 
 
 @art_api_bp.get("/year-in-music/<int:year>/<user_name>")

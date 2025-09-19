@@ -17,6 +17,8 @@ from listenbrainz.spark.handlers import (
     handle_missing_musicbrainz_data,
     cf_recording_recommendations_complete,
     handle_sitewide_listening_activity,
+    handle_sitewide_era_activity,
+    handle_sitewide_artist_evolution_activity,
     handle_similar_users,
     handle_yim_new_releases_of_top_artists,
     handle_yim_similar_users,
@@ -38,7 +40,8 @@ from listenbrainz.spark.handlers import (
     handle_sitewide_artist_map
 )
 from listenbrainz.spark.spark_dataset import CouchDbDataset, UserEntityStatsDataset, DailyActivityStatsDataset, \
-    ListeningActivityStatsDataset, EntityListenerStatsDataset
+    ListeningActivityStatsDataset, GenreActivityStatsDataset, EntityListenerStatsDataset, EraStatsDataset, \
+    ArtistEvolutionActivityStatsDataset
 from listenbrainz.db.popularity import get_all_popularity_datasets
 from listenbrainz.db.similarity import SimilarRecordingsDataset, SimilarArtistsDataset, MlhdSimilarRecordingsDataset
 from listenbrainz.db.tags import TagsDataset
@@ -80,7 +83,10 @@ class BackgroundJobProcessor:
             UserEntityStatsDataset,
             DailyActivityStatsDataset,
             ListeningActivityStatsDataset,
+            EraStatsDataset,
+            GenreActivityStatsDataset,
             EntityListenerStatsDataset,
+            ArtistEvolutionActivityStatsDataset,
             SimilarRecordingsDataset,
             SimilarArtistsDataset,
             MlhdSimilarRecordingsDataset,
@@ -144,7 +150,9 @@ class BackgroundJobProcessor:
             "echo": handle_echo,
             "sitewide_entity": handle_sitewide_entity,
             "sitewide_listening_activity": handle_sitewide_listening_activity,
+            "sitewide_era_activity": handle_sitewide_era_activity,
             "sitewide_artist_map": handle_sitewide_artist_map,
+            "sitewide_artist_evolution_activity": handle_sitewide_artist_evolution_activity,
             "fresh_releases": handle_fresh_releases,
             "import_full_dump": handle_dump_imported,
             "import_incremental_dump": handle_dump_imported,

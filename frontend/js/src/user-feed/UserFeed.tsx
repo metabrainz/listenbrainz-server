@@ -785,7 +785,7 @@ export default function UserFeedPage() {
                     },
                   ],
                   baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                    currentUser?.name
+                    encodeURIComponent(currentUser.name)
                   }/events`,
                 });
               }}

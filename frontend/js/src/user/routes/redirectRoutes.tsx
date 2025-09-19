@@ -7,6 +7,7 @@ const getRedirectRoutes = (musicbrainzID?: string): RouteObject[] => {
   if (!musicbrainzID) {
     return [];
   }
+  const encodedMusicBrainzID = encodeURIComponent(musicbrainzID);
 
   const routes = [
     {
@@ -15,38 +16,51 @@ const getRedirectRoutes = (musicbrainzID?: string): RouteObject[] => {
       children: [
         {
           path: "listens/",
-          element: <Navigate to={`/user/${musicbrainzID}/`} replace />,
+          element: <Navigate to={`/user/${encodedMusicBrainzID}/`} replace />,
         },
         {
           path: "stats/",
-          element: <Navigate to={`/user/${musicbrainzID}/stats/`} replace />,
+          element: (
+            <Navigate to={`/user/${encodedMusicBrainzID}/stats/`} replace />
+          ),
         },
         {
           path: "playlists/",
           element: (
-            <Navigate to={`/user/${musicbrainzID}/playlists/`} replace />
+            <Navigate to={`/user/${encodedMusicBrainzID}/playlists/`} replace />
           ),
         },
         {
           path: "recommendations/",
           element: (
-            <Navigate to={`/user/${musicbrainzID}/recommendations/`} replace />
+            <Navigate
+              to={`/user/${encodedMusicBrainzID}/recommendations/`}
+              replace
+            />
           ),
         },
         {
           path: "redirect_recommendations/",
           element: (
-            <Navigate to={`/user/${musicbrainzID}/recommendations/`} replace />
+            <Navigate
+              to={`/user/${encodedMusicBrainzID}/recommendations/`}
+              replace
+            />
           ),
         },
         {
           path: "taste/",
-          element: <Navigate to={`/user/${musicbrainzID}/taste/`} replace />,
+          element: (
+            <Navigate to={`/user/${encodedMusicBrainzID}/taste/`} replace />
+          ),
         },
         {
           path: "year-in-music/",
           element: (
-            <Navigate to={`/user/${musicbrainzID}/year-in-music/`} replace />
+            <Navigate
+              to={`/user/${encodedMusicBrainzID}/year-in-music/`}
+              replace
+            />
           ),
         },
       ],

@@ -29,6 +29,7 @@ function CustomTooltip({
   value: number;
   color: string;
 }) {
+  const formattedValue = new Intl.NumberFormat().format(value);
   return (
     <div
       style={{
@@ -40,7 +41,7 @@ function CustomTooltip({
       }}
     >
       <strong>
-        {id}: {value}
+        {id}: {formattedValue}
       </strong>
     </div>
   );

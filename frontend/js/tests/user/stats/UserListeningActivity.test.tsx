@@ -184,7 +184,7 @@ describe.each([
     expect(screen.getByTestId("listening-activity")).toBeInTheDocument();
 
     // Expect the total listens and average listens per month to be displayed
-    expect(screen.getByText("3580")).toBeInTheDocument();
+    expect(screen.getByText("3,580")).toBeInTheDocument();
     expect(screen.getByText("597")).toBeInTheDocument();
   });
 
@@ -212,7 +212,7 @@ describe.each([
     expect(screen.getByTestId("listening-activity")).toBeInTheDocument();
 
     // Expect the total listens and average listens per year to be displayed
-    expect(screen.getByText("3845")).toBeInTheDocument();
+    expect(screen.getByText("3,845")).toBeInTheDocument();
     expect(screen.getByText("161")).toBeInTheDocument();
   });
 

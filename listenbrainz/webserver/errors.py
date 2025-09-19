@@ -281,3 +281,12 @@ class ListenValidationError(Exception):
     def __init__(self, message, payload=None):
         self.message = message
         self.payload = payload
+
+class ImportFailedError(Exception):
+    """
+    Error class for raising when the listens import fails.
+    """
+
+    def __init__(self, message, payload=None):
+        self.message = message
+        self.payload = payload

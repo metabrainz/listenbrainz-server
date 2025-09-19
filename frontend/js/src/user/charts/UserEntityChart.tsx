@@ -330,9 +330,11 @@ export default function UserEntityChart() {
                         min: 1,
                       },
                     ],
-                    baseUrl: `${getBaseUrl()}/syndication-feed/user/${
-                      user?.name
-                    }/stats/top-${terminology}s`,
+                    baseUrl: user?.name
+                      ? `${getBaseUrl()}/syndication-feed/user/${encodeURIComponent(
+                          user.name
+                        )}/stats/top-${terminology}s`
+                      : "",
                   });
                 }}
               >

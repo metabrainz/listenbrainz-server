@@ -32,7 +32,9 @@ export default class APIService {
     userNames: Array<string>,
     limit?: number
   ): Promise<Array<Listen>> => {
-    const userNamesForQuery: string = userNames.join(",");
+    const userNamesForQuery: string = userNames
+      .map(encodeURIComponent)
+      .join(",");
 
     let query = `${this.APIBaseURI}/users/${userNamesForQuery}/recent-listens`;
 
@@ -61,7 +63,9 @@ export default class APIService {
       );
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/listens`;
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/listens`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -105,7 +109,9 @@ export default class APIService {
       throw new SyntaxError("User token missing");
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events/listens/following`;
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/listens/following`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -152,7 +158,9 @@ export default class APIService {
       throw new SyntaxError("User token missing");
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events/listens/similar`;
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/listens/similar`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -194,7 +202,9 @@ export default class APIService {
       throw new SyntaxError("User token missing");
     }
 
-    let query: string = `${this.APIBaseURI}/user/${userName}/feed/events`;
+    let query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events`;
 
     const queryParams: Array<string> = [];
     if (maxTs) {
@@ -227,7 +237,9 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const query: string = `${this.APIBaseURI}/user/${userName}/listen-count`;
+    const query: string = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/listen-count`;
 
     const response = await fetch(query, {
       method: "GET",
@@ -258,6 +270,29 @@ export default class APIService {
     return this.refreshAccessToken("musicbrainz");
   };
 
+  refreshFunkwhaleToken = async (
+    userToken: string,
+    hostUrl?: string
+  ): Promise<string> => {
+    if (!hostUrl) {
+      throw new Error("Host URL is required for Funkwhale token refresh");
+    }
+    const response = await fetch(
+      `/settings/music-services/funkwhale/refresh/`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ host_url: hostUrl }),
+      }
+    );
+    await this.checkStatus(response);
+    const result = await response.json();
+    return result.access_token;
+  };
+
   refreshAccessToken = async (service: string): Promise<string> => {
     const response = await fetch(
       `/settings/music-services/${service}/refresh/`,
@@ -280,12 +315,15 @@ export default class APIService {
     if (!userToken) {
       throw new SyntaxError("User token missing");
     }
-    const response = await fetch(`${this.APIBaseURI}/user/${userName}/follow`, {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${userToken}`,
-      },
-    });
+    const response = await fetch(
+      `${this.APIBaseURI}/user/${encodeURIComponent(userName)}/follow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${userToken}`,
+        },
+      }
+    );
     return { status: response.status };
   };
 
@@ -300,7 +338,7 @@ export default class APIService {
       throw new SyntaxError("User token missing");
     }
     const response = await fetch(
-      `${this.APIBaseURI}/user/${userName}/unfollow`,
+      `${this.APIBaseURI}/user/${encodeURIComponent(userName)}/unfollow`,
       {
         method: "POST",
         headers: {
@@ -333,39 +371,45 @@ export default class APIService {
   };
 
   getFollowersOfUser = async (
-    username: string
+    userName: string
   ): Promise<{ followers: Array<string> }> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/followers`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/followers`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   getFollowingForUser = async (
-    username: string
+    userName: string
   ): Promise<{ following: Array<string> }> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/following`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/following`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   getPlayingNowForUser = async (
-    username: string
+    userName: string
   ): Promise<Listen | undefined> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/playing-now`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playing-now`;
     const response = await fetch(url);
     await this.checkStatus(response);
     const result = await response.json();
@@ -473,9 +517,11 @@ export default class APIService {
     userName: string,
     service: ImportService
   ): Promise<LatestImportResponse> => {
-    const url = encodeURI(
-      `${this.APIBaseURI}/latest-import?user_name=${userName}&service=${service}`
-    );
+    const url = `${
+      this.APIBaseURI
+    }/latest-import?user_name=${encodeURIComponent(
+      userName
+    )}&service=${service}`;
     const response = await fetch(url, {
       method: "GET",
     });
@@ -515,7 +561,7 @@ export default class APIService {
   ): Promise<UserEntityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(userName)}/`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/`;
     }
@@ -543,7 +589,9 @@ export default class APIService {
   ): Promise<UserListeningActivityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/listening-activity`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/listening-activity`;
     }
@@ -564,7 +612,9 @@ export default class APIService {
     userName: string,
     range: UserStatsAPIRange = "all_time"
   ): Promise<UserDailyActivityResponse> => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/daily-activity?range=${range}`;
+    const url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+      userName
+    )}/daily-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
@@ -584,11 +634,81 @@ export default class APIService {
   ): Promise<UserArtistActivityResponse> => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/artist-activity`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/artist-activity`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/artist-activity`;
     }
     url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserEraActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserEraActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${userName}/era-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/era-activity`;
+    }
+    url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserArtistEvolutionActivity = async (
+    userName?: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserArtistEvolutionActivityResponse> => {
+    let url;
+    if (userName) {
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(
+        userName
+      )}/artist-evolution-activity`;
+    } else {
+      url = `${this.APIBaseURI}/stats/sitewide/artist-evolution-activity`;
+    }
+    url += `?range=${range}`;
+    const response = await fetch(url);
+    await this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(
+        "There are no statistics available for this user for this period"
+      );
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    return response.json();
+  };
+
+  getUserGenreActivity = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserGenreActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/genre-activity?range=${range}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     if (response.status === 204) {
@@ -609,7 +729,7 @@ export default class APIService {
   ) => {
     let url;
     if (userName) {
-      url = `${this.APIBaseURI}/stats/user/${userName}/`;
+      url = `${this.APIBaseURI}/stats/user/${encodeURIComponent(userName)}/`;
     } else {
       url = `${this.APIBaseURI}/stats/sitewide/`;
     }
@@ -738,7 +858,9 @@ export default class APIService {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    let queryURL = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback`;
+    let queryURL = `${this.APIBaseURI}/feedback/user/${encodeURIComponent(
+      userName
+    )}/get-feedback`;
     const queryParams: Array<string> = ["metadata=true"];
     if (!isUndefined(offset)) {
       queryParams.push(`offset=${offset}`);
@@ -765,7 +887,9 @@ export default class APIService {
     if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings`;
+    const url = `${this.APIBaseURI}/feedback/user/${encodeURIComponent(
+      userName
+    )}/get-feedback-for-recordings`;
     const requestBody: FeedbackForUserForRecordingsRequestBody = {
       recording_mbids,
     };
@@ -872,9 +996,11 @@ export default class APIService {
       };
     }
 
-    const url = `${this.APIBaseURI}/user/${userName}/playlists${
-      createdFor ? "/createdfor" : ""
-    }${collaborator ? "/collaborator" : ""}?offset=${offset}&count=${count}`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/playlists${createdFor ? "/createdfor" : ""}${
+      collaborator ? "/collaborator" : ""
+    }?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -1059,7 +1185,11 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/recommendation/feedback/user/${userName}/recordings?mbids=${recordings}`;
+    const url = `${
+      this.APIBaseURI
+    }/recommendation/feedback/user/${encodeURIComponent(
+      userName
+    )}/recordings?mbids=${recordings}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1070,7 +1200,9 @@ export default class APIService {
     authToken: string,
     metadata: UserTrackRecommendationMetadata
   ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recording`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/recording`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1084,15 +1216,17 @@ export default class APIService {
   };
 
   getSimilarUsersForUser = async (
-    username: string
+    userName: string
   ): Promise<{
     payload: Array<{ user_name: string; similarity: number }>;
   }> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${username}/similar-users`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/similar-users`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1108,20 +1242,25 @@ export default class APIService {
       throw new SyntaxError("One username missing");
     }
 
-    const url = `${this.APIBaseURI}/user/${userName}/similar-to/${otherUserName}`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/similar-to/${encodeURIComponent(otherUserName)}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
   };
 
   reportUser = async (userName: string, optionalContext?: string) => {
-    const response = await fetch(`/user/${userName}/report-user/`, {
-      method: "POST",
-      body: JSON.stringify({ reason: optionalContext }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(
+      `/user/${encodeURIComponent(userName)}/report-user/`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason: optionalContext }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     await this.checkStatus(response);
   };
 
@@ -1220,7 +1359,9 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const query = `${this.APIBaseURI}/${userName}/pins?offset=${offset}&count=${count}`;
+    const query = `${this.APIBaseURI}/${encodeURIComponent(
+      userName
+    )}/pins?offset=${offset}&count=${count}`;
 
     const response = await fetch(query, {
       method: "GET",
@@ -1235,7 +1376,9 @@ export default class APIService {
     userToken: string,
     review: CritiqueBrainzReview
   ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/review`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/review`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1420,13 +1563,15 @@ export default class APIService {
 
   getFeedEvent = async (
     eventId: number,
-    username: string,
+    userName: string,
     userToken: string
   ): Promise<TimelineEvent<EventMetadata>> => {
     if (!eventId) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/${eventId}`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/${eventId}`;
     const response = await fetch(query, {
       method: "GET",
       headers: {
@@ -1440,14 +1585,16 @@ export default class APIService {
 
   deleteFeedEvent = async (
     eventType: string,
-    username: string,
+    userName: string,
     userToken: string,
     id: number
   ): Promise<any> => {
     if (!id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/delete`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/delete`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1462,14 +1609,16 @@ export default class APIService {
 
   hideFeedEvent = async (
     eventType: string,
-    username: string,
+    userName: string,
     userToken: string,
     event_id: number
   ): Promise<any> => {
     if (!event_id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/hide`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/hide`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1484,14 +1633,16 @@ export default class APIService {
 
   unhideFeedEvent = async (
     eventType: string,
-    username: string,
+    userName: string,
     userToken: string,
     event_id: number
   ): Promise<any> => {
     if (!event_id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/feed/events/unhide`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/feed/events/unhide`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1508,13 +1659,15 @@ export default class APIService {
     event_id: number | undefined,
     eventType: EventTypeT,
     userToken: string,
-    username: string,
+    userName: string,
     blurb_content: string
   ): Promise<any> => {
     if (!event_id) {
       throw new SyntaxError("Event ID not present");
     }
-    const query = `${this.APIBaseURI}/user/${username}/timeline-event/create/thanks`;
+    const query = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/thanks`;
     const response = await fetch(query, {
       method: "POST",
       headers: {
@@ -1607,7 +1760,9 @@ export default class APIService {
     userName: string,
     metadata: UserTrackPersonalRecommendationMetadata
   ) => {
-    const url = `${this.APIBaseURI}/user/${userName}/timeline-event/create/recommend-personal`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/timeline-event/create/recommend-personal`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -1828,15 +1983,17 @@ export default class APIService {
   };
 
   fetchUserFreshReleases = async (
-    username: string,
+    userName: string,
     past?: boolean,
     future?: boolean,
     sort?: SortOption
   ): Promise<any> => {
-    if (!username) {
+    if (!userName) {
       throw new SyntaxError("Username missing");
     }
-    let url = `${this.APIBaseURI}/user/${username}/fresh_releases`;
+    let url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      userName
+    )}/fresh_releases`;
 
     const queryParams: Array<string> = [];
     if (sort) {
@@ -1949,7 +2106,9 @@ export default class APIService {
     offset: number = 0,
     count: number = 25
   ): Promise<ArtistTypeSearchResult> => {
-    const url = `${this.MBBaseURI}/artist?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const url = `${this.MBBaseURI}/artist?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1960,7 +2119,9 @@ export default class APIService {
     offset: number = 0,
     count: number = 25
   ): Promise<AlbumTypeSearchResult> => {
-    const url = `${this.MBBaseURI}/release-group?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const url = `${this.MBBaseURI}/release-group?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1971,7 +2132,9 @@ export default class APIService {
     offset: number = 0,
     count: number = 25
   ): Promise<TrackTypeSearchResult> => {
-    const url = `${this.MBBaseURI}/recording?query=${searchQuery}&fmt=json&offset=${offset}&limit=${count}`;
+    const url = `${this.MBBaseURI}/recording?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json&offset=${offset}&limit=${count}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1986,7 +2149,9 @@ export default class APIService {
       MusicBrainzRelease & WithReleaseGroup & WithArtistCredits & WithMedia
     >;
   }> => {
-    const url = `${this.MBBaseURI}/release?query=${searchQuery}&fmt=json`;
+    const url = `${this.MBBaseURI}/release?query=${encodeURIComponent(
+      searchQuery
+    )}&fmt=json`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -2035,7 +2200,11 @@ export default class APIService {
     count: number = 25,
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
-    const url = `${this.APIBaseURI}/user/${musicbrainzID}/playlists/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const url = `${this.APIBaseURI}/user/${encodeURIComponent(
+      musicbrainzID
+    )}/playlists/search?query=${encodeURIComponent(
+      searchQuery
+    )}&count=${count}&offset=${offset}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -2046,7 +2215,9 @@ export default class APIService {
     count: number = 25,
     offset: number = 0
   ): Promise<PlaylistTypeSearchResult> => {
-    const url = `${this.APIBaseURI}/playlist/search?query=${searchQuery}&count=${count}&offset=${offset}`;
+    const url = `${this.APIBaseURI}/playlist/search?query=${encodeURIComponent(
+      searchQuery
+    )}&count=${count}&offset=${offset}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();

@@ -124,7 +124,9 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         return;
       }
       try {
-        const baseURL = `${listenBrainzAPIBaseURI}/feedback/user/${currentUser.name}/get-feedback-for-recordings?`;
+        const baseURL = `${listenBrainzAPIBaseURI}/feedback/user/${encodeURIComponent(
+          currentUser.name
+        )}/get-feedback-for-recordings?`;
         // get feedback by either MBID or MSID
         const params = [];
         if (recordingMBID) {

@@ -575,7 +575,11 @@ export class ListenCard extends React.Component<
                         title="Open in MusicBrainz"
                         text="Open in MusicBrainz"
                         key="Open in MusicBrainz"
-                        link={`/track/${recordingMBID}`}
+                        link={`https://musicbrainz.org/recording/${recordingMBID}`}
+                        anchorTagAttributes={{
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                        }}
                       />
                     )}
                     {renderBrainzplayer && (

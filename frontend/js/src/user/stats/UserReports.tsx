@@ -17,6 +17,9 @@ import UserTopEntity from "./components/UserTopEntity";
 import UserDailyActivity from "./components/UserDailyActivity";
 import UserArtistMap from "./components/UserArtistMap";
 import UserArtistActivity from "./components/UserArtistActivity";
+import UserEraActivity from "./components/UserEraActivity";
+import UserArtistEvolutionActivity from "./components/UserArtistEvolutionActivity";
+import UserGenreActivity from "./components/UserGenreActivity";
 import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
@@ -106,7 +109,9 @@ export default function UserReports() {
               onClick={() => {
                 navigate(
                   `/user/${
-                    user?.name ?? currentUser?.name
+                    user?.name
+                      ? encodeURIComponent(user.name)
+                      : encodeURIComponent(currentUser.name)
                   }/stats/?range=${range}`
                 );
               }}
@@ -170,6 +175,20 @@ export default function UserReports() {
         {statsExplanationModalButton}
         <UserArtistActivity range={range} user={user} />
       </section>
+      <section id="era-activity">
+        {statsExplanationModalButton}
+        <UserEraActivity range={range} user={user} />
+      </section>
+      <section id="album-activity">
+        {statsExplanationModalButton}
+        <UserArtistEvolutionActivity range={range} user={user} />
+      </section>
+      {user && (
+        <section id="genre-activity">
+          {statsExplanationModalButton}
+          <UserGenreActivity range={range} user={user} />
+        </section>
+      )}
       <section id="artist-origin">
         {statsExplanationModalButton}
         <UserArtistMap range={range} user={user} />

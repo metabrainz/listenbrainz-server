@@ -1,11 +1,15 @@
 import calendar
 import itertools
 import json
+import datetime
 
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats.user.daily_activity import get_daily_activity
+from listenbrainz_spark.stats.user.era_activity import get_era_activity
 from listenbrainz_spark.stats.user.entity import get_entity_stats
 from listenbrainz_spark.stats.user.listening_activity import get_listening_activity
+from listenbrainz_spark.stats.user.genre_activity import get_genre_activity
+from listenbrainz_spark.stats.user.artist_evolution_activity import get_artist_evolution_activity
 from listenbrainz_spark.stats.user.tests import StatsTestCase
 
 
@@ -63,3 +67,126 @@ class UserStatsTestCase(StatsTestCase):
         time_range_expected = itertools.product(calendar.day_name, range(0, 24))
         time_range_received = run_query("SELECT * FROM time_range").toLocalIterator()
         self.assertListEqual(list(time_range_expected), list(time_range_received))
+        
+    def test_get_era_activity(self):
+        messages = list(get_era_activity("all_time"))
+        with open(self.path_to_data_file("user_era_activity_all_time.json")) as f:
+            expected = json.load(f)
+        
+        database_prefix = "era_activity_all_time"
+        self.assertEqual(messages[0]["type"], "couchdb_data_start")
+        self.assertTrue(messages[0]["database"].startswith(database_prefix))
+        
+        self.assertEqual(messages[1]["type"], expected[0]["type"])
+        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
+        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
+        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+        
+        for actual_user, expected_user in zip(messages[1]["data"], expected[0]["data"]):
+            self.assertEqual(actual_user["user_id"], expected_user["user_id"])
+            
+            actual_data = actual_user["data"]
+            self.assertIsInstance(actual_data, list)
+            
+            for era_entry in actual_data:
+                self.assertIn("year", era_entry)
+                self.assertIsInstance(era_entry["year"], int)
+                self.assertGreaterEqual(era_entry["year"], 1900)
+                self.assertLessEqual(era_entry["year"], 2024)
+                
+                self.assertIn("listen_count", era_entry)
+                self.assertIsInstance(era_entry["listen_count"], int)
+                self.assertGreaterEqual(era_entry["listen_count"], 0)
+        
+        self.assertTrue(messages[1]["database"].startswith(database_prefix))
+        
+        self.assertEqual(messages[2]["type"], "couchdb_data_end")
+        self.assertTrue(messages[2]["database"].startswith(database_prefix))
+
+    def test_get_genre_activity(self):
+        messages = list(get_genre_activity("all_time"))
+        with open(self.path_to_data_file("user_genre_activity_all_time.json")) as f:
+            expected = json.load(f)
+
+        database_prefix = "genre_activity_all_time"
+        self.assertEqual(messages[0]["type"], "couchdb_data_start")
+        self.assertTrue(messages[0]["database"].startswith(database_prefix))
+
+        self.assertEqual(messages[1]["type"], expected[0]["type"])
+        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
+        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
+        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+
+        for actual_user, expected_user in zip(messages[1]["data"], expected[0]["data"]):
+            self.assertEqual(actual_user["user_id"], expected_user["user_id"])
+
+            actual_data = actual_user["data"]
+            self.assertIsInstance(actual_data, list)
+
+            for genre_entry in actual_data:
+                self.assertIn("genre", genre_entry)
+                self.assertIsInstance(genre_entry["genre"], str)
+
+                self.assertIn("hour", genre_entry)
+                self.assertIsInstance(genre_entry["hour"], int)
+                self.assertGreaterEqual(genre_entry["hour"], 0)
+                self.assertLessEqual(genre_entry["hour"], 23)
+
+                self.assertIn("listen_count", genre_entry)
+                self.assertIsInstance(genre_entry["listen_count"], int)
+                self.assertGreaterEqual(genre_entry["listen_count"], 0)
+        self.assertTrue(messages[1]["database"].startswith(database_prefix))
+
+        self.assertEqual(messages[2]["type"], "couchdb_data_end")
+        self.assertTrue(messages[2]["database"].startswith(database_prefix))
+
+
+        time_range_expected = itertools.product(calendar.day_name, range(0, 24))
+        time_range_received = run_query("SELECT * FROM time_range").toLocalIterator()
+        self.assertListEqual(list(time_range_expected), list(time_range_received))
+
+    def test_get_artist_evolution_activity(self):
+        messages = list(get_artist_evolution_activity("all_time"))
+        with open(self.path_to_data_file("user_artist_evolution_activity_all_time.json")) as f:
+            expected = json.load(f)
+
+        database_prefix = "artist_evolution_activity_all_time"
+        self.assertEqual(messages[0]["type"], "couchdb_data_start")
+        self.assertTrue(messages[0]["database"].startswith(database_prefix))
+
+        # Compare high-level metadata
+        self.assertEqual(messages[1]["type"], expected[0]["type"])
+        self.assertEqual(messages[1]["stats_range"], expected[0]["stats_range"])
+        self.assertEqual(messages[1]["from_ts"], expected[0]["from_ts"])
+        self.assertEqual(messages[1]["to_ts"], expected[0]["to_ts"])
+        self.assertEqual(messages[1]["entity"], expected[0]["entity"])
+
+        # Compare user-level data
+        for actual_user, expected_user in zip(messages[1]["data"], expected[0]["data"]):
+            self.assertEqual(actual_user["user_id"], expected_user["user_id"])
+            actual_data = actual_user["data"]
+            self.assertIsInstance(actual_data, list)
+
+            for artist_entry, expected_artist in zip(actual_data, expected_user["data"]):
+                self.assertIn("time_unit", artist_entry)
+                self.assertIsInstance(artist_entry["time_unit"], int)
+
+                self.assertIn("artist_mbid", artist_entry)
+                self.assertIsInstance(artist_entry["artist_mbid"], str)
+
+                self.assertIn("artist_name", artist_entry)
+                self.assertIsInstance(artist_entry["artist_name"], str)
+
+                self.assertIn("listen_count", artist_entry)
+                self.assertIsInstance(artist_entry["listen_count"], int)
+                self.assertGreaterEqual(artist_entry["listen_count"], 0)
+
+                # Check against expected values
+                self.assertEqual(artist_entry["time_unit"], expected_artist["time_unit"])
+                self.assertEqual(artist_entry["artist_mbid"], expected_artist["artist_mbid"])
+                self.assertEqual(artist_entry["artist_name"], expected_artist["artist_name"])
+                self.assertEqual(artist_entry["listen_count"], expected_artist["listen_count"])
+
+        self.assertTrue(messages[1]["database"].startswith(database_prefix))
+        self.assertEqual(messages[2]["type"], "couchdb_data_end")
+        self.assertTrue(messages[2]["database"].startswith(database_prefix))
