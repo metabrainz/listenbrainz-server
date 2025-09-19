@@ -102,7 +102,7 @@ export type ListenCardState = {
   isCurrentlyPlaying: boolean;
 };
 
-type ListenCardPropsWithDispatch = ListenCardProps & {
+type ListenCardPropsWithActions = ListenCardProps & {
   thumbnailSrc?: string;
   isMobile: boolean;
   addListenToBottomOfQueue: (listen: Listen) => void;
@@ -110,13 +110,13 @@ type ListenCardPropsWithDispatch = ListenCardProps & {
 };
 
 export class ListenCard extends React.Component<
-  ListenCardPropsWithDispatch,
+  ListenCardPropsWithActions,
   ListenCardState
 > {
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-  constructor(props: ListenCardPropsWithDispatch) {
+  constructor(props: ListenCardPropsWithActions) {
     super(props);
     this.state = {
       listen: props.listen,
