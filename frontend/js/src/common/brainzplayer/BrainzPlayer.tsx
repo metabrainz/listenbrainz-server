@@ -49,7 +49,6 @@ import {
   queueRepeatModeAtom,
   listenSubmittedAtom,
   continuousPlaybackTimeAtom,
-  isActivatedAtom,
   currentTrackNameAtom,
   currentTrackArtistAtom,
   currentTrackAlbumAtom,
@@ -169,6 +168,10 @@ export default function BrainzPlayer() {
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
 
+  // Refs for local state
+  const isActivatedRef = React.useRef(false);
+  const currentDataSourceIndexRef = React.useRef(0);
+
   // Context Atoms - Values
   const volume = useAtomValue(volumeAtom);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
@@ -204,9 +207,6 @@ export default function BrainzPlayer() {
   const getContinuousPlaybackTime = () => store.get(continuousPlaybackTimeAtom);
   const getProgressMs = () => store.get(progressMsAtom);
   const getListenSubmitted = () => store.get(listenSubmittedAtom);
-  const getIsActivated = () => store.get(isActivatedAtom);
-  const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
-  const currentDataSourceIndexRef = React.useRef(0);
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);
   const getCurrentListenIndex = () => store.get(currentListenIndexAtom);
@@ -340,8 +340,6 @@ export default function BrainzPlayer() {
     });
     return dataSources;
   }, [sortedDataSources]);
-  const currentDataSource =
-    dataSourceRefs[currentDataSourceIndexRef.current]?.current;
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -404,7 +402,7 @@ export default function BrainzPlayer() {
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ): void => {
-    let dataSourceIndex = getCurrentDataSourceIndex();
+    let dataSourceIndex = currentDataSourceIndexRef.current;
     if (dataSource) {
       dataSourceIndex = dataSourceRefs.findIndex(
         (source) => source.current === dataSource
@@ -468,9 +466,9 @@ export default function BrainzPlayer() {
     nextListenIndex: number,
     datasourceIndex: number = 0
   ): Promise<void> => {
+    isActivatedRef.current = true;
     setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
-    store.set(isActivatedAtom, true);
     setContinuousPlaybackTime(0);
     setListenSubmitted(false);
 
@@ -515,18 +513,7 @@ export default function BrainzPlayer() {
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
     currentDataSourceIndexRef.current = selectedDatasourceIndex;
-
-    // wait for isActive to be true
-    const intervalID = setInterval(() => {
-      // Wait for isActivated to be true
-      if (
-        getIsActivated() &&
-        getCurrentDataSourceIndex() === selectedDatasourceIndex
-      ) {
-        datasource.playListen(listen);
-        clearInterval(intervalID);
-      }
-    }, 200);
+    await datasource.playListen(listen);
   };
 
   const stopPlayerStateTimer = (): void => {
@@ -538,7 +525,7 @@ export default function BrainzPlayer() {
   };
 
   const playNextTrack = (invert: boolean = false): void => {
-    if (!getIsActivated()) {
+    if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
     }
@@ -623,11 +610,12 @@ export default function BrainzPlayer() {
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
-    if (!getIsActivated()) {
+    if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+    const dataSource =
+      dataSourceRefs[currentDataSourceIndexRef.current]?.current;
     if (!dataSource) {
       invalidateDataSource();
       return;
@@ -653,7 +641,7 @@ export default function BrainzPlayer() {
 
   const activatePlayerAndPlay = (): void => {
     overwriteMediaSession(mediaSessionHandlers);
-    store.set(isActivatedAtom, true);
+    isActivatedRef.current = true;
     playNextTrack();
   };
 
@@ -672,7 +660,8 @@ export default function BrainzPlayer() {
 
   const togglePlay = async (): Promise<void> => {
     try {
-      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+      const dataSource =
+        dataSourceRefs[currentDataSourceIndexRef.current]?.current;
       if (!dataSource) {
         invalidateDataSource();
         return;
@@ -701,20 +690,17 @@ export default function BrainzPlayer() {
 
   /* Listeners for datasource events */
   const failedToPlayTrack = (): void => {
-    if (!getIsActivated()) {
+    if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
     }
-
-    if (
-      currentListen &&
-      getCurrentDataSourceIndex() < dataSourceRefs.length - 1
-    ) {
+    const { current: currentDataSourceIndex } = currentDataSourceIndexRef;
+    if (currentListen && currentDataSourceIndex < dataSourceRefs.length - 1) {
       // Try playing the listen with the next dataSource
       playListen(
         currentListen,
         getCurrentListenIndex(),
-        getCurrentDataSourceIndex() + 1
+        currentDataSourceIndex + 1
       );
     } else {
       handleWarning(
@@ -841,7 +827,7 @@ export default function BrainzPlayer() {
 
   const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
     // 1. Clear the items in the queue after the current playing track
-    store.set(isActivatedAtom, true);
+    isActivatedRef.current = true;
     clearQueueAfterCurrentAndSetAmbientQueue(tracks);
 
     // 2. Play the first item in the ambient queue
@@ -927,12 +913,15 @@ export default function BrainzPlayer() {
   // Hide the player if user is on homepage and the player is not activated, and there are nothing in both the queue
   if (
     pathname === "/" &&
-    !getIsActivated() &&
+    !isActivatedRef.current &&
     getQueue().length === 0 &&
     getAmbientQueue().length === 0
   ) {
     return null;
   }
+
+  const currentDataSource =
+    dataSourceRefs[currentDataSourceIndexRef.current]?.current;
 
   return (
     <div
@@ -955,19 +944,18 @@ export default function BrainzPlayer() {
         disabled={brainzPlayerDisabled}
         playPreviousTrack={playPreviousTrack}
         playNextTrack={playNextTrack}
-        togglePlay={getIsActivated() ? togglePlay : activatePlayerAndPlay}
+        togglePlay={isActivatedRef.current ? togglePlay : activatePlayerAndPlay}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
-        currentDataSource={dataSourceRefs[getCurrentDataSourceIndex()]?.current}
+        currentDataSource={currentDataSource}
         clearQueue={clearQueue}
       >
-        {userPreferences?.brainzplayer?.spotifyEnabled !== false && (
+        {spotifyEnabled !== false && (
           <SpotifyPlayer
             volume={volume}
             show={
-              getIsActivated() &&
-              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
-                SpotifyPlayer
+              isActivatedRef.current &&
+              currentDataSource instanceof SpotifyPlayer
             }
             refreshSpotifyToken={refreshSpotifyToken}
             onInvalidateDataSource={invalidateDataSource}
@@ -984,13 +972,12 @@ export default function BrainzPlayer() {
             handleSuccess={handleSuccess}
           />
         )}
-        {userPreferences?.brainzplayer?.youtubeEnabled !== false && (
+        {youtubeEnabled !== false && (
           <YoutubePlayer
             volume={volume}
             show={
-              getIsActivated() &&
-              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
-                YoutubePlayer
+              isActivatedRef.current &&
+              currentDataSource instanceof YoutubePlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={youtubePlayerRef}
@@ -1008,13 +995,12 @@ export default function BrainzPlayer() {
             handleSuccess={handleSuccess}
           />
         )}
-        {userPreferences?.brainzplayer?.soundcloudEnabled !== false && (
+        {soundcloudEnabled !== false && (
           <SoundcloudPlayer
             volume={volume}
             show={
-              getIsActivated() &&
-              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
-                SoundcloudPlayer
+              isActivatedRef.current &&
+              currentDataSource instanceof SoundcloudPlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={soundcloudPlayerRef}
@@ -1031,13 +1017,12 @@ export default function BrainzPlayer() {
             handleSuccess={handleSuccess}
           />
         )}
-        {userPreferences?.brainzplayer?.funkwhaleEnabled !== false && (
+        {funkwhaleEnabled !== false && (
           <FunkwhalePlayer
             volume={volume}
             show={
-              getIsActivated() &&
-              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
-                FunkwhalePlayer
+              isActivatedRef.current &&
+              currentDataSource instanceof FunkwhalePlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={funkwhalePlayerRef}
@@ -1054,13 +1039,12 @@ export default function BrainzPlayer() {
             handleSuccess={handleSuccess}
           />
         )}
-        {userPreferences?.brainzplayer?.appleMusicEnabled !== false && (
+        {appleMusicEnabled !== false && (
           <AppleMusicPlayer
             volume={volume}
             show={
-              getIsActivated() &&
-              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
-                AppleMusicPlayer
+              isActivatedRef.current &&
+              currentDataSource instanceof AppleMusicPlayer
             }
             onInvalidateDataSource={invalidateDataSource}
             ref={appleMusicPlayerRef}
@@ -1077,13 +1061,12 @@ export default function BrainzPlayer() {
           />
         )}
 
-        {userPreferences?.brainzplayer?.internetArchiveEnabled !== false && (
+        {internetArchiveEnabled !== false && (
           <InternetArchivePlayer
             volume={volume}
             show={
-              getIsActivated() &&
-              dataSourceRefs[getCurrentDataSourceIndex()]?.current instanceof
-                InternetArchivePlayer
+              isActivatedRef.current &&
+              currentDataSource instanceof InternetArchivePlayer
             }
             ref={internetArchivePlayerRef}
             playerPaused={playerPaused}
