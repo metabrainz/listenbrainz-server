@@ -206,6 +206,7 @@ export default function BrainzPlayer() {
   const getListenSubmitted = () => store.get(listenSubmittedAtom);
   const getIsActivated = () => store.get(isActivatedAtom);
   const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
+  const currentDataSourceIndexRef = React.useRef(0);
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);
   const getCurrentListenIndex = () => store.get(currentListenIndexAtom);
@@ -339,6 +340,8 @@ export default function BrainzPlayer() {
     });
     return dataSources;
   }, [sortedDataSources]);
+  const currentDataSource =
+    dataSourceRefs[currentDataSourceIndexRef.current]?.current;
 
   const playerStateTimerID = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -423,8 +426,6 @@ export default function BrainzPlayer() {
     updateWindowTitleWithTrackName,
     reinitializeWindowTitle,
   } = useWindowTitle();
-
-  const { stopOtherBrainzPlayers } = useCrossTabSync(dataSourceRefs);
 
   const { submitCurrentListen, submitNowPlaying } = useListenSubmission({
     currentUser,
@@ -513,6 +514,7 @@ export default function BrainzPlayer() {
     }
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
+    currentDataSourceIndexRef.current = selectedDatasourceIndex;
 
     // wait for isActive to be true
     const intervalID = setInterval(() => {
@@ -654,6 +656,19 @@ export default function BrainzPlayer() {
     store.set(isActivatedAtom, true);
     playNextTrack();
   };
+
+  // Create a callback function to pause playback for current source, used for cross-tab syncing
+  const pauseCurrentPlayback = async (): Promise<void> => {
+    try {
+      const dataSource =
+        dataSourceRefs[currentDataSourceIndexRef.current]?.current;
+      await dataSource?.togglePlay();
+    } catch (error) {
+      handleError(error, "Could not pause playback");
+    }
+  };
+
+  const { stopOtherBrainzPlayers } = useCrossTabSync(pauseCurrentPlayback);
 
   const togglePlay = async (): Promise<void> => {
     try {

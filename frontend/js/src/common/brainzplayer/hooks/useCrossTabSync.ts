@@ -8,11 +8,10 @@ import {
 /**
  * This hook is used to handle cross-tab synchronization for the BrainzPlayer.
  */
-export default function useCrossTabSync(dataSourceManager: any) {
-  const store = useStore();
+export default function useCrossTabSync(
+  pausePlaybackFunction: () => Promise<void>
+) {
   const playerPaused = useAtomValue(playerPausedAtom);
-
-  const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
 
   // Handle incoming storage events from other tabs
   /** We use LocalStorage events as a form of communication between BrainzPlayers
@@ -24,15 +23,12 @@ export default function useCrossTabSync(dataSourceManager: any) {
       if (event.storageArea !== localStorage) return;
 
       if (event.key === "BrainzPlayer_stop") {
-        const dataSource =
-          dataSourceManager.dataSourceRefs[getCurrentDataSourceIndex()]
-            ?.current;
-        if (dataSource && !playerPaused) {
-          await dataSource.togglePlay();
+        if (!playerPaused) {
+          await pausePlaybackFunction();
         }
       }
     },
-    [dataSourceManager, getCurrentDataSourceIndex, playerPaused]
+    [pausePlaybackFunction, playerPaused]
   );
 
   // Tell other tabs to stop playing
