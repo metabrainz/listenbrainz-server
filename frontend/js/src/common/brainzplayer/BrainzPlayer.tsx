@@ -171,6 +171,9 @@ export default function BrainzPlayer() {
 
   // Refs for local state
   const isActivatedRef = React.useRef(false);
+  const activatePlayer = () => {
+    isActivatedRef.current = true;
+  };
 
   // Context Atoms - Values
   const volume = useAtomValue(volumeAtom);
@@ -215,6 +218,7 @@ export default function BrainzPlayer() {
   const getCurrentListenIndex = () => store.get(currentListenIndexAtom);
   const getCurrentListen = () => store.get(currentListenAtom);
   const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
+  const getPlayerPaused = () => store.get(playerPausedAtom);
   // Wrapper for funkwhale token refresh that gets the host URL from context
   const refreshFunkwhaleToken = React.useCallback(async () => {
     const hostUrl = funkwhaleAuth?.instance_url;
@@ -482,7 +486,11 @@ export default function BrainzPlayer() {
     nextListenIndex: number,
     datasourceIndex: number = 0
   ): Promise<void> => {
-    isActivatedRef.current = true;
+    // Stop playback on the previous datasource, if playing
+    let dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+    if (dataSource && !getPlayerPaused()) {
+      dataSource.stop();
+    }
     setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
     setContinuousPlaybackTime(0);
@@ -512,24 +520,24 @@ export default function BrainzPlayer() {
       selectedDatasourceIndex = datasourceIndex;
     }
 
-    const datasource = dataSourceRefs[selectedDatasourceIndex]?.current;
-    if (!datasource) {
+    dataSource = dataSourceRefs[selectedDatasourceIndex]?.current;
+    if (!dataSource) {
       return;
     }
     // Check if we can play the listen with the selected datasource
     // otherwise skip to the next datasource without trying or setting currentDataSourceIndex
     // This prevents rendering datasource iframes when we can't use the datasource
     if (
-      !isListenFromDatasource(listen, datasource) &&
-      !datasource.canSearchAndPlayTracks()
+      !isListenFromDatasource(listen, dataSource) &&
+      !dataSource.canSearchAndPlayTracks()
     ) {
       playListen(listen, nextListenIndex, datasourceIndex + 1);
       return;
     }
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
-    setCurrentDataSourceName(datasource.name);
-    await datasource.playListen(getCurrentListen() ?? listen);
+    setCurrentDataSourceName(dataSource.name);
+    await dataSource.playListen(getCurrentListen() ?? listen);
   };
 
   const stopPlayerStateTimer = (): void => {
@@ -539,16 +547,10 @@ export default function BrainzPlayer() {
     }
     playerStateTimerID.current = null;
   };
-
   const playNextTrack = (invert: boolean = false): void => {
     if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
-    }
-    // Stop playback on the previous datasource, if playing
-    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-    if (dataSource && !playerPaused) {
-      dataSource.stop();
     }
     debouncedCheckProgressAndSubmitListen.flush();
 
@@ -660,8 +662,8 @@ export default function BrainzPlayer() {
   ];
 
   const activatePlayerAndPlay = (): void => {
+    activatePlayer();
     overwriteMediaSession(mediaSessionHandlers);
-    isActivatedRef.current = true;
     playNextTrack();
   };
 
@@ -834,7 +836,6 @@ export default function BrainzPlayer() {
 
   const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
     // 1. Clear the items in the queue after the current playing track
-    isActivatedRef.current = true;
     clearQueueAfterCurrentAndSetAmbientQueue(tracks);
 
     // 2. Play the first item in the ambient queue
@@ -876,6 +877,7 @@ export default function BrainzPlayer() {
         return;
       }
     }
+    activatePlayer();
     switch (brainzplayer_event) {
       case "play-listen":
         playListenEventHandler(payload);
@@ -955,7 +957,7 @@ export default function BrainzPlayer() {
         currentDataSource={currentDataSource}
         clearQueue={clearQueue}
       >
-        {isActivatedRef && (
+        {Boolean(isActivatedRef.current) && (
           <>
             {spotifyEnabled !== false && (
               <SpotifyPlayer
