@@ -419,10 +419,6 @@ export default class FunkwhalePlayer
         }
       }
 
-      handleWarning(
-        `"${trackName}" by ${artistName} is not available on your Funkwhale server`,
-        "Track not available on Funkwhale"
-      );
       onTrackNotFound();
     } catch (errorObject) {
       if (errorObject.status === 401) {
