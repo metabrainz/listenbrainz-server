@@ -20,6 +20,7 @@ import {
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
@@ -142,13 +143,9 @@ export default class SpotifyPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
+    const { volume } = this.props;
     if (prevProps.volume !== volume && this.spotifyPlayer?.setVolume) {
       this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
-    }
-
-    if (prevProps.show === true && show === false) {
-      this.stopAndClear();
     }
   }
 
@@ -320,8 +317,9 @@ export default class SpotifyPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
-    const { show } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
       return;
     }
     if (SpotifyPlayer.getURLFromListen(listen)) {
@@ -340,7 +338,7 @@ export default class SpotifyPlayer
     });
   };
 
-  stopAndClear = (): void => {
+  stop = (): void => {
     this.setState({ currentSpotifyTrack: undefined });
     if (this.spotifyPlayer) {
       this.spotifyPlayer.pause();
@@ -509,8 +507,9 @@ export default class SpotifyPlayer
   };
 
   handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {
-    const { show } = this.props;
-    if (!playerState || !show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!playerState || !isCurrentDataSource) {
       return;
     }
     const {
@@ -611,8 +610,10 @@ export default class SpotifyPlayer
   };
 
   render() {
-    const { show } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+
+    if (!isCurrentDataSource) {
       return null;
     }
     return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;

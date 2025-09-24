@@ -1,4 +1,4 @@
-import { atom, useAtom } from "jotai";
+import { atom, getDefaultStore, useAtom } from "jotai";
 import { atomWithReset, atomWithStorage } from "jotai/utils";
 import { faRepeat } from "@fortawesome/free-solid-svg-icons";
 import { isEqual } from "lodash";
@@ -52,12 +52,14 @@ export type BrainzPlayerContextT = {
   ambientQueue: BrainzPlayerQueue;
   queueRepeatMode: QueueRepeatMode;
 };
+export const store = getDefaultStore();
 
 export const currentListenAtom = atomWithReset<
   BrainzPlayerQueueItem | undefined
 >(undefined);
 export const currentListenIndexAtom = atomWithReset<number>(-1);
 export const currentDataSourceIndexAtom = atomWithReset<number>(0);
+export const currentDataSourceNameAtom = atomWithReset<string>("");
 export const currentTrackNameAtom = atomWithReset<string>("");
 export const currentTrackArtistAtom = atomWithReset<string | undefined>("");
 export const currentTrackAlbumAtom = atomWithReset<string | undefined>(

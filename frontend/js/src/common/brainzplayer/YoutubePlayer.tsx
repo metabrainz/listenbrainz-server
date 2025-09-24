@@ -26,6 +26,7 @@ import {
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type YoutubePlayerProps = DataSourceProps & {
   youtubeUser?: YoutubeUser;
@@ -129,20 +130,21 @@ export default class YoutubePlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume, playerPaused } = this.props;
+    const { volume, playerPaused } = this.props;
     if (prevProps.volume !== volume && this.youtubePlayer?.setVolume) {
       this.youtubePlayer?.setVolume(volume ?? 100);
-    }
-    if (prevProps.show && !show && this.youtubePlayer) {
-      this.youtubePlayer.stopVideo();
-      // Clear playlist
-      this.youtubePlayer.cueVideoById("");
     }
     if (prevProps.playerPaused && !playerPaused) {
       // Show player if playing music
       this.setState({ hidePlayer: false });
     }
   }
+
+  stop = () => {
+    this.youtubePlayer?.stopVideo();
+    // Clear playlist
+    this.youtubePlayer?.cueVideoById("");
+  };
 
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
@@ -176,9 +178,10 @@ export default class YoutubePlayer
       onDurationChange,
       onProgressChange,
       onTrackInfoChange,
-      show,
     } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
       return;
     }
     if (state === YouTube.PlayerState.ENDED) {
@@ -310,8 +313,8 @@ export default class YoutubePlayer
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
-    const { show } = this.props;
-    if (!show) {
+    const curName = store.get(currentDataSourceNameAtom);
+    if (curName !== this.name) {
       return;
     }
     const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
@@ -375,7 +378,6 @@ export default class YoutubePlayer
   };
 
   render() {
-    const { show } = this.props;
     const { hidePlayer } = this.state;
     const options: Options = {
       playerVars: {
@@ -399,8 +401,9 @@ export default class YoutubePlayer
     const handleHide = () => {
       this.setState({ hidePlayer: true }, this.togglePlay);
     };
-
-    const isPlayerVisible = show && !hidePlayer;
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    const isPlayerVisible = isCurrentDataSource && !hidePlayer;
 
     return (
       <Draggable

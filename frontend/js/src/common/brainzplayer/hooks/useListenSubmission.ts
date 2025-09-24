@@ -174,7 +174,6 @@ const useListenSubmission = ({
       getCurrentDataSourceIndex,
       currentUser,
       listenBrainzAPIBaseURI,
-      onError,
       onWarning,
     ]
   );

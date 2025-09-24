@@ -55,6 +55,7 @@ import {
   currentTrackURLAtom,
   currentTrackCoverURLAtom,
   currentDataSourceIndexAtom,
+  currentDataSourceNameAtom,
   currentListenAtom,
   queueAtom,
   ambientQueueAtom,
@@ -74,6 +75,7 @@ export type DataSourceType = {
   iconColor: string;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
+  stop: () => void;
   seekToPositionMs: (msTimecode: number) => void;
   canSearchAndPlayTracks: () => boolean;
   datasourceRecordsListens: () => boolean;
@@ -88,7 +90,6 @@ export type DataSourceTypes =
   | FunkwhalePlayer;
 
 export type DataSourceProps = {
-  show: boolean;
   volume?: number;
   playerPaused: boolean;
   onPlayerPausedChange: (paused: boolean) => void;
@@ -170,7 +171,6 @@ export default function BrainzPlayer() {
 
   // Refs for local state
   const isActivatedRef = React.useRef(false);
-  const currentDataSourceIndexRef = React.useRef(0);
 
   // Context Atoms - Values
   const volume = useAtomValue(volumeAtom);
@@ -186,14 +186,17 @@ export default function BrainzPlayer() {
   const setCurrentTrackArtist = useSetAtom(currentTrackArtistAtom);
   const setCurrentTrackAlbum = useSetAtom(currentTrackAlbumAtom);
   const setCurrentTrackURL = useSetAtom(currentTrackURLAtom);
-  const setCurrentDataSourceIndex = useSetAtom(currentDataSourceIndexAtom);
+  const setCurrentDataSourceName = useSetAtom(currentDataSourceNameAtom);
   const setQueue = useSetAtom(queueAtom);
   const setAmbientQueue = useSetAtom(ambientQueueAtom);
   const setCurrentListenIndex = useSetAtom(currentListenIndexAtom);
+  const setCurrentListen = useSetAtom(currentListenAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
-  const [currentListen, setCurrentListen] = useAtom(currentListenAtom);
+  const [currentDataSourceIndex, setCurrentDataSourceIndex] = useAtom(
+    currentDataSourceIndexAtom
+  );
 
   // Action Atoms
   const setPlaybackTimer = useSetAtom(setPlaybackTimerAtom);
@@ -210,6 +213,8 @@ export default function BrainzPlayer() {
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);
   const getCurrentListenIndex = () => store.get(currentListenIndexAtom);
+  const getCurrentListen = () => store.get(currentListenAtom);
+  const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
   // Wrapper for funkwhale token refresh that gets the host URL from context
   const refreshFunkwhaleToken = React.useCallback(async () => {
     const hostUrl = funkwhaleAuth?.instance_url;
@@ -402,7 +407,7 @@ export default function BrainzPlayer() {
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ): void => {
-    let dataSourceIndex = currentDataSourceIndexRef.current;
+    let dataSourceIndex = getCurrentDataSourceIndex();
     if (dataSource) {
       dataSourceIndex = dataSourceRefs.findIndex(
         (source) => source.current === dataSource
@@ -432,6 +437,17 @@ export default function BrainzPlayer() {
     onWarning: handleWarning,
     dataSourceRefs,
   });
+
+  // Create a callback function to pause playback for current source, used for cross-tab syncing
+  const pauseCurrentPlayback = async (): Promise<void> => {
+    try {
+      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+      await dataSource?.togglePlay();
+    } catch (error) {
+      handleError(error, "Could not pause playback");
+    }
+  };
+  const { stopOtherBrainzPlayers } = useCrossTabSync(pauseCurrentPlayback);
 
   const checkProgressAndSubmitListen = async () => {
     if (!currentUser?.auth_token || getListenSubmitted()) {
@@ -512,8 +528,8 @@ export default function BrainzPlayer() {
     }
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
-    currentDataSourceIndexRef.current = selectedDatasourceIndex;
-    await datasource.playListen(listen);
+    setCurrentDataSourceName(datasource.name);
+    await datasource.playListen(getCurrentListen() ?? listen);
   };
 
   const stopPlayerStateTimer = (): void => {
@@ -528,6 +544,11 @@ export default function BrainzPlayer() {
     if (!isActivatedRef.current) {
       // Player has not been activated by the user, do nothing.
       return;
+    }
+    // Stop playback on the previous datasource, if playing
+    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
+    if (dataSource && !playerPaused) {
+      dataSource.stop();
     }
     debouncedCheckProgressAndSubmitListen.flush();
 
@@ -562,7 +583,7 @@ export default function BrainzPlayer() {
     // If nextListenIndex is within the queue length, play the next track
     if (nextListenIndex < currentQueue.length) {
       const nextListen = currentQueue[nextListenIndex];
-      playListen(nextListen, nextListenIndex, 0);
+      playListen(nextListen, nextListenIndex);
       return;
     }
 
@@ -577,7 +598,7 @@ export default function BrainzPlayer() {
         addListenToBottomOfQueue(ambientQueueTop);
         const nextListen = getQueue()[currentQueueLength];
         setAmbientQueue(currentAmbientQueue);
-        playListen(nextListen, currentQueueLength, 0);
+        playListen(nextListen, currentQueueLength);
         return;
       }
     } else if (queueRepeatMode === QueueRepeatModes.off) {
@@ -597,7 +618,7 @@ export default function BrainzPlayer() {
       );
       return;
     }
-    playListen(nextListen, nextListenIndex, 0);
+    playListen(nextListen, nextListenIndex);
   };
 
   const playPreviousTrack = (): void => {
@@ -614,8 +635,7 @@ export default function BrainzPlayer() {
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const dataSource =
-      dataSourceRefs[currentDataSourceIndexRef.current]?.current;
+    const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
     if (!dataSource) {
       invalidateDataSource();
       return;
@@ -645,23 +665,9 @@ export default function BrainzPlayer() {
     playNextTrack();
   };
 
-  // Create a callback function to pause playback for current source, used for cross-tab syncing
-  const pauseCurrentPlayback = async (): Promise<void> => {
-    try {
-      const dataSource =
-        dataSourceRefs[currentDataSourceIndexRef.current]?.current;
-      await dataSource?.togglePlay();
-    } catch (error) {
-      handleError(error, "Could not pause playback");
-    }
-  };
-
-  const { stopOtherBrainzPlayers } = useCrossTabSync(pauseCurrentPlayback);
-
   const togglePlay = async (): Promise<void> => {
     try {
-      const dataSource =
-        dataSourceRefs[currentDataSourceIndexRef.current]?.current;
+      const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
       if (!dataSource) {
         invalidateDataSource();
         return;
@@ -694,13 +700,14 @@ export default function BrainzPlayer() {
       // Player has not been activated by the user, do nothing.
       return;
     }
-    const { current: currentDataSourceIndex } = currentDataSourceIndexRef;
-    if (currentListen && currentDataSourceIndex < dataSourceRefs.length - 1) {
+    const currDataSourceIndex = getCurrentDataSourceIndex();
+    const currentListenFresh = getCurrentListen();
+    if (currentListenFresh && currDataSourceIndex < dataSourceRefs.length - 1) {
       // Try playing the listen with the next dataSource
       playListen(
-        currentListen,
+        currentListenFresh,
         getCurrentListenIndex(),
-        currentDataSourceIndex + 1
+        currDataSourceIndex + 1
       );
     } else {
       handleWarning(
@@ -743,7 +750,7 @@ export default function BrainzPlayer() {
     if (durationMs > 0) {
       startPlayerStateTimer();
     }
-  }, [durationMs]);
+  }, [durationMs, startPlayerStateTimer]);
 
   const trackInfoChange = (
     title: string,
@@ -814,10 +821,10 @@ export default function BrainzPlayer() {
     setCurrentListenIndex(0);
   };
 
-  const playNextListenFromQueue = (datasourceIndex: number = 0): void => {
+  const playNextListenFromQueue = (): void => {
     const currentPlayingListenIndex = getCurrentListenIndex();
     const nextTrack = getQueue()[currentPlayingListenIndex + 1];
-    playListen(nextTrack, currentPlayingListenIndex + 1, datasourceIndex);
+    playListen(nextTrack, currentPlayingListenIndex + 1);
   };
 
   const playListenEventHandler = (listen: Listen | JSPFTrack) => {
@@ -910,7 +917,7 @@ export default function BrainzPlayer() {
 
   const { pathname } = useLocation();
 
-  // Hide the player if user is on homepage and the player is not activated, and there are nothing in both the queue
+  // Hide the player if user is on homepage and the player is not activated, and there is nothing in either queues
   if (
     pathname === "/" &&
     !isActivatedRef.current &&
@@ -919,9 +926,7 @@ export default function BrainzPlayer() {
   ) {
     return null;
   }
-
-  const currentDataSource =
-    dataSourceRefs[currentDataSourceIndexRef.current]?.current;
+  const currentDataSource = dataSourceRefs[currentDataSourceIndex]?.current;
 
   return (
     <div
@@ -950,137 +955,117 @@ export default function BrainzPlayer() {
         currentDataSource={currentDataSource}
         clearQueue={clearQueue}
       >
-        {spotifyEnabled !== false && (
-          <SpotifyPlayer
-            volume={volume}
-            show={
-              isActivatedRef.current &&
-              currentDataSource instanceof SpotifyPlayer
-            }
-            refreshSpotifyToken={refreshSpotifyToken}
-            onInvalidateDataSource={invalidateDataSource}
-            ref={spotifyPlayerRef}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={playerPauseChange}
-            onProgressChange={progressChange}
-            onDurationChange={durationChange}
-            onTrackInfoChange={throttledTrackInfoChange}
-            onTrackEnd={playNextTrack}
-            onTrackNotFound={failedToPlayTrack}
-            handleError={handleError}
-            handleWarning={handleWarning}
-            handleSuccess={handleSuccess}
-          />
-        )}
-        {youtubeEnabled !== false && (
-          <YoutubePlayer
-            volume={volume}
-            show={
-              isActivatedRef.current &&
-              currentDataSource instanceof YoutubePlayer
-            }
-            onInvalidateDataSource={invalidateDataSource}
-            ref={youtubePlayerRef}
-            youtubeUser={youtubeAuth}
-            refreshYoutubeToken={refreshYoutubeToken}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={playerPauseChange}
-            onProgressChange={progressChange}
-            onDurationChange={durationChange}
-            onTrackInfoChange={throttledTrackInfoChange}
-            onTrackEnd={playNextTrack}
-            onTrackNotFound={failedToPlayTrack}
-            handleError={handleError}
-            handleWarning={handleWarning}
-            handleSuccess={handleSuccess}
-          />
-        )}
-        {soundcloudEnabled !== false && (
-          <SoundcloudPlayer
-            volume={volume}
-            show={
-              isActivatedRef.current &&
-              currentDataSource instanceof SoundcloudPlayer
-            }
-            onInvalidateDataSource={invalidateDataSource}
-            ref={soundcloudPlayerRef}
-            refreshSoundcloudToken={refreshSoundcloudToken}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={playerPauseChange}
-            onProgressChange={progressChange}
-            onDurationChange={durationChange}
-            onTrackInfoChange={throttledTrackInfoChange}
-            onTrackEnd={playNextTrack}
-            onTrackNotFound={failedToPlayTrack}
-            handleError={handleError}
-            handleWarning={handleWarning}
-            handleSuccess={handleSuccess}
-          />
-        )}
-        {funkwhaleEnabled !== false && (
-          <FunkwhalePlayer
-            volume={volume}
-            show={
-              isActivatedRef.current &&
-              currentDataSource instanceof FunkwhalePlayer
-            }
-            onInvalidateDataSource={invalidateDataSource}
-            ref={funkwhalePlayerRef}
-            refreshFunkwhaleToken={refreshFunkwhaleToken}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={playerPauseChange}
-            onProgressChange={progressChange}
-            onDurationChange={durationChange}
-            onTrackInfoChange={throttledTrackInfoChange}
-            onTrackEnd={playNextTrack}
-            onTrackNotFound={failedToPlayTrack}
-            handleError={handleError}
-            handleWarning={handleWarning}
-            handleSuccess={handleSuccess}
-          />
-        )}
-        {appleMusicEnabled !== false && (
-          <AppleMusicPlayer
-            volume={volume}
-            show={
-              isActivatedRef.current &&
-              currentDataSource instanceof AppleMusicPlayer
-            }
-            onInvalidateDataSource={invalidateDataSource}
-            ref={appleMusicPlayerRef}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={playerPauseChange}
-            onProgressChange={progressChange}
-            onDurationChange={durationChange}
-            onTrackInfoChange={throttledTrackInfoChange}
-            onTrackEnd={playNextTrack}
-            onTrackNotFound={failedToPlayTrack}
-            handleError={handleError}
-            handleWarning={handleWarning}
-            handleSuccess={handleSuccess}
-          />
-        )}
+        {isActivatedRef && (
+          <>
+            {spotifyEnabled !== false && (
+              <SpotifyPlayer
+                volume={volume}
+                refreshSpotifyToken={refreshSpotifyToken}
+                onInvalidateDataSource={invalidateDataSource}
+                ref={spotifyPlayerRef}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+              />
+            )}
+            {youtubeEnabled !== false && (
+              <YoutubePlayer
+                volume={volume}
+                onInvalidateDataSource={invalidateDataSource}
+                ref={youtubePlayerRef}
+                youtubeUser={youtubeAuth}
+                refreshYoutubeToken={refreshYoutubeToken}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+              />
+            )}
+            {soundcloudEnabled !== false && (
+              <SoundcloudPlayer
+                volume={volume}
+                onInvalidateDataSource={invalidateDataSource}
+                ref={soundcloudPlayerRef}
+                refreshSoundcloudToken={refreshSoundcloudToken}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+              />
+            )}
+            {funkwhaleEnabled !== false && (
+              <FunkwhalePlayer
+                volume={volume}
+                onInvalidateDataSource={invalidateDataSource}
+                ref={funkwhalePlayerRef}
+                refreshFunkwhaleToken={refreshFunkwhaleToken}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+              />
+            )}
+            {appleMusicEnabled !== false && (
+              <AppleMusicPlayer
+                volume={volume}
+                onInvalidateDataSource={invalidateDataSource}
+                ref={appleMusicPlayerRef}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+              />
+            )}
 
-        {internetArchiveEnabled !== false && (
-          <InternetArchivePlayer
-            volume={volume}
-            show={
-              isActivatedRef.current &&
-              currentDataSource instanceof InternetArchivePlayer
-            }
-            ref={internetArchivePlayerRef}
-            playerPaused={playerPaused}
-            onPlayerPausedChange={playerPauseChange}
-            onProgressChange={progressChange}
-            onDurationChange={durationChange}
-            onTrackInfoChange={throttledTrackInfoChange}
-            onTrackEnd={playNextTrack}
-            onTrackNotFound={failedToPlayTrack}
-            handleError={handleError}
-            handleWarning={handleWarning}
-            handleSuccess={handleSuccess}
-            onInvalidateDataSource={invalidateDataSource}
-          />
+            {internetArchiveEnabled !== false && (
+              <InternetArchivePlayer
+                volume={volume}
+                ref={internetArchivePlayerRef}
+                playerPaused={playerPaused}
+                onPlayerPausedChange={playerPauseChange}
+                onProgressChange={progressChange}
+                onDurationChange={durationChange}
+                onTrackInfoChange={throttledTrackInfoChange}
+                onTrackEnd={playNextTrack}
+                onTrackNotFound={failedToPlayTrack}
+                handleError={handleError}
+                handleWarning={handleWarning}
+                handleSuccess={handleSuccess}
+                onInvalidateDataSource={invalidateDataSource}
+              />
+            )}
+          </>
         )}
       </BrainzPlayerUI>
     </div>

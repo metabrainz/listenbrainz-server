@@ -11,6 +11,7 @@ import {
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type FunkwhalePlayerState = {
   currentTrack?: FunkwhaleTrack;
@@ -109,14 +110,7 @@ export default class FunkwhalePlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
-    if (prevProps.show !== show) {
-      if (show) {
-        this.setupAudioListeners();
-      } else {
-        this.pauseAudio();
-      }
-    }
+    const { volume } = this.props;
     if (prevProps.volume !== volume) {
       this.updateVolume();
     }
@@ -131,6 +125,10 @@ export default class FunkwhalePlayer
       URL.revokeObjectURL(this.currentBlobUrl);
     }
   }
+
+  stop = () => {
+    this.pauseAudio();
+  };
 
   setupAudioListeners = (): void => {
     const audioElement = this.audioRef.current;
@@ -566,13 +564,13 @@ export default class FunkwhalePlayer
   };
 
   render() {
-    const { show } = this.props;
     const { currentTrack } = this.state;
     const artworkUrl = this.getTrackArtworkUrl(currentTrack);
-
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
     return (
       <div
-        className={`funkwhale-player ${show ? "" : "hidden"}`}
+        className={`funkwhale-player ${isCurrentDataSource ? "" : "hidden"}`}
         data-testid="funkwhale-player"
       >
         <audio
