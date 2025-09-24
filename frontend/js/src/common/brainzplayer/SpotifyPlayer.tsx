@@ -332,9 +332,10 @@ export default class SpotifyPlayer
   };
 
   togglePlay = (): void => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     this.spotifyPlayer.togglePlay().catch((error: Response) => {
       handleError(error, "Spotify playback error");
+      onTrackNotFound();
     });
   };
 
