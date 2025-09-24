@@ -377,6 +377,16 @@ export default class YoutubePlayer
     onTrackNotFound();
   };
 
+  // Handle hide button click
+  handleHide = () => {
+    const { playerPaused } = this.props;
+    this.setState({ hidePlayer: true }, () => {
+      if (!playerPaused) {
+        this.togglePlay();
+      }
+    });
+  };
+
   render() {
     const { hidePlayer } = this.state;
     const options: Options = {
@@ -397,10 +407,6 @@ export default class YoutubePlayer
     const leftBound =
       document.body.clientWidth - draggableBoundPadding * 2 - 350;
 
-    // Handle hide button click
-    const handleHide = () => {
-      this.setState({ hidePlayer: true }, this.togglePlay);
-    };
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
     const isPlayerVisible = isCurrentDataSource && !hidePlayer;
@@ -427,7 +433,7 @@ export default class YoutubePlayer
           <button
             className="btn btn-sm youtube-button"
             type="button"
-            onClick={handleHide}
+            onClick={this.handleHide}
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
