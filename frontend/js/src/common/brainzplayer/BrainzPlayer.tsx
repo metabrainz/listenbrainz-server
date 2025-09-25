@@ -63,6 +63,7 @@ import {
   addListenToTopOfQueueAtom,
   addListenToBottomOfQueueAtom,
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
+  isActivatedAtom,
 } from "./BrainzPlayerAtoms";
 
 import useWindowTitle from "./hooks/useWindowTitle";
@@ -169,15 +170,10 @@ export default function BrainzPlayer() {
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
 
-  // Refs for local state
-  const isActivatedRef = React.useRef(false);
-  const activatePlayer = () => {
-    isActivatedRef.current = true;
-  };
-
   // Context Atoms - Values
   const volume = useAtomValue(volumeAtom);
   const queueRepeatMode = useAtomValue(queueRepeatModeAtom);
+  const isActivated = useAtomValue(isActivatedAtom);
 
   // Context Atoms - Setters
   const setUpdateTime = useSetAtom(updateTimeAtom);
@@ -194,6 +190,7 @@ export default function BrainzPlayer() {
   const setAmbientQueue = useSetAtom(ambientQueueAtom);
   const setCurrentListenIndex = useSetAtom(currentListenIndexAtom);
   const setCurrentListen = useSetAtom(currentListenAtom);
+  const setIsActivated = useSetAtom(isActivatedAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
   const [durationMs, setDurationMs] = useAtom(durationMsAtom);
@@ -219,6 +216,7 @@ export default function BrainzPlayer() {
   const getCurrentListen = () => store.get(currentListenAtom);
   const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
   const getPlayerPaused = () => store.get(playerPausedAtom);
+  const getIsActivated = () => store.get(isActivatedAtom);
   // Wrapper for funkwhale token refresh that gets the host URL from context
   const refreshFunkwhaleToken = React.useCallback(async () => {
     const hostUrl = funkwhaleAuth?.instance_url;
@@ -424,6 +422,15 @@ export default function BrainzPlayer() {
       dataSourceRefs.splice(dataSourceIndex, 1);
     }
   };
+  const waitForPlayerToBeActivate = async () => {
+    while (getIsActivated() === false) {
+      setIsActivated(true);
+      // eslint-disable-next-line no-await-in-loop -- legitimate use of await in loop
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+    }
+  };
 
   // Hooks
   const {
@@ -547,10 +554,9 @@ export default function BrainzPlayer() {
     }
     playerStateTimerID.current = null;
   };
-  const playNextTrack = (invert: boolean = false): void => {
-    if (!isActivatedRef.current) {
-      // Player has not been activated by the user, do nothing.
-      return;
+  const playNextTrack = async (invert: boolean = false) => {
+    if (!getIsActivated()) {
+      await waitForPlayerToBeActivate();
     }
     debouncedCheckProgressAndSubmitListen.flush();
 
@@ -633,8 +639,7 @@ export default function BrainzPlayer() {
   };
 
   const seekToPositionMs = (msTimecode: number): void => {
-    if (!isActivatedRef.current) {
-      // Player has not been activated by the user, do nothing.
+    if (!getCurrentListen()) {
       return;
     }
     const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
@@ -660,12 +665,6 @@ export default function BrainzPlayer() {
     { action: "seekbackward", handler: seekBackward },
     { action: "seekforward", handler: seekForward },
   ];
-
-  const activatePlayerAndPlay = (): void => {
-    activatePlayer();
-    overwriteMediaSession(mediaSessionHandlers);
-    playNextTrack();
-  };
 
   const togglePlay = async (): Promise<void> => {
     try {
@@ -697,17 +696,16 @@ export default function BrainzPlayer() {
   };
 
   /* Listeners for datasource events */
-  const failedToPlayTrack = (): void => {
-    if (!isActivatedRef.current) {
-      // Player has not been activated by the user, do nothing.
-      return;
+  const failedToPlayTrack = async () => {
+    if (!getIsActivated()) {
+      await waitForPlayerToBeActivate();
     }
     const currDataSourceIndex = getCurrentDataSourceIndex();
-    const currentListenFresh = getCurrentListen();
-    if (currentListenFresh && currDataSourceIndex < dataSourceRefs.length - 1) {
+    const currentListen = getCurrentListen();
+    if (currentListen && currDataSourceIndex < dataSourceRefs.length - 1) {
       // Try playing the listen with the next dataSource
       playListen(
-        currentListenFresh,
+        currentListen,
         getCurrentListenIndex(),
         currDataSourceIndex + 1
       );
@@ -848,7 +846,7 @@ export default function BrainzPlayer() {
     trailing: true,
   });
 
-  const receiveBrainzPlayerMessage = (event: MessageEvent) => {
+  const receiveBrainzPlayerMessage = async (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
       // Received postMessage from different origin, ignoring it
       return;
@@ -877,7 +875,7 @@ export default function BrainzPlayer() {
         return;
       }
     }
-    activatePlayer();
+    await waitForPlayerToBeActivate();
     switch (brainzplayer_event) {
       case "play-listen":
         playListenEventHandler(payload);
@@ -922,7 +920,7 @@ export default function BrainzPlayer() {
   // Hide the player if user is on homepage and the player is not activated, and there is nothing in either queues
   if (
     pathname === "/" &&
-    !isActivatedRef.current &&
+    !isActivated &&
     getQueue().length === 0 &&
     getAmbientQueue().length === 0
   ) {
@@ -951,13 +949,13 @@ export default function BrainzPlayer() {
         disabled={brainzPlayerDisabled}
         playPreviousTrack={playPreviousTrack}
         playNextTrack={playNextTrack}
-        togglePlay={isActivatedRef.current ? togglePlay : activatePlayerAndPlay}
+        togglePlay={isActivated ? togglePlay : playNextTrack}
         seekToPositionMs={seekToPositionMs}
         listenBrainzAPIBaseURI={listenBrainzAPIBaseURI}
         currentDataSource={currentDataSource}
         clearQueue={clearQueue}
       >
-        {Boolean(isActivatedRef.current) && (
+        {Boolean(isActivated) && (
           <>
             {spotifyEnabled !== false && (
               <SpotifyPlayer
