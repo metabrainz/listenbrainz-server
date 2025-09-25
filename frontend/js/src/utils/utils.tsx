@@ -326,6 +326,59 @@ const searchForFunkwhaleTrack = async (
   }
 };
 
+const searchForNavidromeTrack = async (
+  instanceURL: string,
+  authParams: string,
+  trackName?: string,
+  artistName?: string
+): Promise<NavidromeTrack | null> => {
+  if (!instanceURL || !authParams) {
+    throw new Error(
+      "Missing Navidrome instance URL or authentication parameters"
+    );
+  }
+
+  const query = `${trackName || ""} ${artistName || ""}`.trim();
+  if (!query) {
+    throw new Error("No search terms provided");
+  }
+
+  try {
+    const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+      query
+    )}&songCount=1&${authParams}`;
+
+    const response = await fetch(searchUrl);
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const error = new Error(errorBody.detail || response.statusText);
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    const data = await response.json();
+    const searchResult = data["subsonic-response"]?.searchResult3;
+
+    if (searchResult?.song && searchResult.song.length > 0) {
+      return searchResult.song[0];
+    }
+
+    return null;
+  } catch (error) {
+    if (
+      error.message ===
+        "Missing Navidrome instance URL or authentication parameters" ||
+      error.message === "No search terms provided"
+    ) {
+      throw error;
+    }
+    const newError = new Error(`Navidrome search failed: ${error.message}`);
+    (newError as any).status = error.status || 500;
+    throw newError;
+  }
+};
+
 const getAdditionalContent = (metadata: EventMetadata): string =>
   _.get(metadata, "blurb_content") ?? _.get(metadata, "text") ?? "";
 
@@ -701,6 +754,7 @@ type GlobalAppProps = {
   musicbrainz?: MetaBrainzProjectUser;
   appleMusic?: AppleMusicUser;
   funkwhale?: FunkwhaleUser;
+  navidrome?: NavidromeUser;
   user_preferences?: UserPreferences;
   flair?: Flair;
 };
@@ -750,6 +804,7 @@ const getPageProps = async (): Promise<{
       musicbrainz,
       appleMusic,
       funkwhale,
+      navidrome,
       sentry_traces_sample_rate,
       sentry_dsn,
       user_preferences,
@@ -782,6 +837,7 @@ const getPageProps = async (): Promise<{
       critiquebrainzAuth: critiquebrainz,
       appleAuth: appleMusic,
       funkwhaleAuth: funkwhale,
+      navidromeAuth: navidrome,
       musicbrainzAuth: {
         ...musicbrainz,
         refreshMBToken: async function refreshMBToken() {
@@ -1278,6 +1334,7 @@ export {
   searchForSpotifyTrack,
   searchForSoundcloudTrack,
   searchForFunkwhaleTrack,
+  searchForNavidromeTrack,
   getMBIDMappingArtistLink,
   getStatsArtistLink,
   getArtistLink,

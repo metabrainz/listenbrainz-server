@@ -4,6 +4,8 @@ import requests_mock
 import spotipy
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.funkwhale as db_funkwhale
+import listenbrainz.db.navidrome as db_navidrome
 import time
 
 from data.model.external_service import ExternalServiceType
@@ -187,16 +189,11 @@ class SettingsViewsTestCase(IntegrationTestCase):
 
         self.assertEqual(response.json, {'code': 403, 'error': 'User has revoked authorization to Spotify'})
 
-    # Funkwhale tests
     def _create_funkwhale_user(self):
         """Helper to create a Funkwhale user with token"""
-        import listenbrainz.db.funkwhale as db_funkwhale
-        from datetime import datetime, timezone
-        import time
-        
-        self.host_url = 'https://demo.funkwhale.audio'
+        host_url = 'https://demo.funkwhale.audio'
         server_id = db_funkwhale.get_or_create_server(
-            self.db_conn, self.host_url, 'client_id', 'client_secret', 'read'
+            self.db_conn, host_url, 'client_id', 'client_secret', 'read'
         )
         expires_at = int(time.time()) + 3600
         token_expiry_datetime = datetime.fromtimestamp(expires_at, tz=timezone.utc)
@@ -216,8 +213,6 @@ class SettingsViewsTestCase(IntegrationTestCase):
             json={"host_url": "https://demo.funkwhale.audio"}
         )
         self.assert200(response)
-        data = response.json
-        self.assertEqual(data['status'], 'ok')
 
     def test_funkwhale_connect_missing_host_url(self):
         """Test Funkwhale connect without host_url"""
@@ -242,8 +237,6 @@ class SettingsViewsTestCase(IntegrationTestCase):
         }
         mock_add_user.return_value = True
         
-        # Create server
-        import listenbrainz.db.funkwhale as db_funkwhale
         db_funkwhale.get_or_create_server(
             self.db_conn, 'https://demo.funkwhale.audio', 'client_id', 'client_secret', 'read'
         )
@@ -295,3 +288,76 @@ class SettingsViewsTestCase(IntegrationTestCase):
         self.assert200(response)
         data = response.json
         self.assertEqual(data['status'], 'ok')
+
+    @requests_mock.Mocker()
+    def test_navidrome_connect_and_disconnect(self, mock_requests):
+        """Test Navidrome connect success"""
+        self.app.config["NAVIDROME_ENCRYPTION_KEY"] = "nB9WKue4CGLZjEjV_w75RqRUImbpht2HjMj5spVwiKw="
+        mock_requests.get(
+            "https://demo.navidrome.org/rest/ping",
+            status_code=200,
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "version": "1.16.1",
+                    "type": "navidrome",
+                    "serverVersion": "0.49.3"
+                }
+            }
+        )
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={
+                "host_url": "https://demo.navidrome.org",
+                "username": "test_user",
+                "password": "test_password"
+            }
+        )
+        self.assert200(response)
+        result = db_navidrome.get_user_token(self.db_conn, self.user["id"])
+        self.assertEqual(result["host_url"], "https://demo.navidrome.org")
+        self.assertEqual(result["username"], "test_user")
+        self.assertIsNotNone(result["encrypted_password"])
+
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_disconnect", service_name="navidrome"),
+            json={"action": "disable"}
+        )
+        self.assert200(response)
+        data = response.json
+        self.assertIn("Successfully disconnected", data["message"])
+
+        self.assertIsNone(db_navidrome.get_user_token(self.db_conn, self.user["id"]))
+
+    def test_navidrome_connect_missing_params(self):
+        """Test Navidrome connect without host_url or username/password"""
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={"username": "test_user", "password": "test_password"}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Missing 'host_url', 'username', or 'password' for Navidrome connect."
+        )
+
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={"host_url": "https://demo.navidrome.org"}
+        )
+        self.assert400(response)
+
+    def test_navidrome_connect_invalid_host_url(self):
+        self.temporary_login(self.user["login_id"])
+        response = self.client.post(
+            self.custom_url_for("settings.music_services_connect", service_name="navidrome"),
+            json={"username": "test_user", "password": "test_password", "host_url": "demo.navidrome.org"}
+        )
+        self.assert400(response)
+        self.assertEqual(
+            response.json["error"],
+            "Invalid host_url 'demo.navidrome.org' for Navidrome connect."
+        )

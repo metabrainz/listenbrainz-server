@@ -296,3 +296,7 @@ REJECT_NEW_USERS_WITHOUT_EMAIL = {{template "KEY_JSON" "reject_new_users_without
 
 # base directory for user data exports
 USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
+
+# Navidrome configuration
+# Set to a base64 encoded key for encryption/decryption of passwords.
+NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
