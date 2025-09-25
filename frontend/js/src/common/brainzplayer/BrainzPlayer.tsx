@@ -604,9 +604,10 @@ export default function BrainzPlayer() {
       if (ambientQueueTop) {
         const currentQueueLength = currentQueue.length;
         addListenToBottomOfQueue(ambientQueueTop);
-        const nextListen = getQueue()[currentQueueLength];
         setAmbientQueue(currentAmbientQueue);
-        playListen(nextListen, currentQueueLength);
+        // Not enough time for the queue to be updated,
+        // use the listen we just added to the bottom of the queue
+        playListen(ambientQueueTop, currentQueueLength);
         return;
       }
     } else if (queueRepeatMode === QueueRepeatModes.off) {
