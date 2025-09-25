@@ -29,6 +29,7 @@ import { useQuery } from "@tanstack/react-query";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { Link } from "react-router";
 import { toast } from "react-toastify";
+import { useSetAtom } from "jotai";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -57,10 +58,6 @@ import PinRecordingModal from "../../pins/PinRecordingModal";
 import { millisecondsToStr } from "../../playlists/utils";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import {
-  BrainzPlayerActionType,
-  useBrainzPlayerDispatch,
-} from "../brainzplayer/BrainzPlayerContext";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
@@ -71,6 +68,10 @@ import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
 import MBIDMappingModal from "./MBIDMappingModal";
+import {
+  addListenToBottomOfQueueAtom,
+  addListenToTopOfQueueAtom,
+} from "../brainzplayer/BrainzPlayerAtoms";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -101,20 +102,21 @@ export type ListenCardState = {
   isCurrentlyPlaying: boolean;
 };
 
-type ListenCardPropsWithDispatch = ListenCardProps & {
+type ListenCardPropsWithActions = ListenCardProps & {
   thumbnailSrc?: string;
-  dispatch: (action: BrainzPlayerActionType, callback?: () => void) => void;
   isMobile: boolean;
+  addListenToBottomOfQueue: (listen: Listen) => void;
+  addListenToTopOfQueue: (listen: Listen) => void;
 };
 
 export class ListenCard extends React.Component<
-  ListenCardPropsWithDispatch,
+  ListenCardPropsWithActions,
   ListenCardState
 > {
   static coverartPlaceholder = "/static/img/cover-art-placeholder.jpg";
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
-  constructor(props: ListenCardPropsWithDispatch) {
+  constructor(props: ListenCardPropsWithActions) {
     super(props);
     this.state = {
       listen: props.listen,
@@ -235,15 +237,15 @@ export class ListenCard extends React.Component<
   };
 
   addToTopOfQueue = () => {
-    const { dispatch } = this.props;
+    const { addListenToTopOfQueue } = this.props;
     const { listen } = this.state;
-    dispatch({ type: "ADD_LISTEN_TO_TOP_OF_QUEUE", data: listen });
+    addListenToTopOfQueue(listen);
   };
 
   addToBottomOfQueue = () => {
-    const { dispatch } = this.props;
+    const { addListenToBottomOfQueue } = this.props;
     const { listen } = this.state;
-    dispatch({ type: "ADD_LISTEN_TO_BOTTOM_OF_QUEUE", data: listen });
+    addListenToBottomOfQueue(listen);
   };
 
   render() {
@@ -260,8 +262,9 @@ export class ListenCard extends React.Component<
       feedbackComponent,
       additionalMenuItems,
       additionalActions,
+      addListenToTopOfQueue,
+      addListenToBottomOfQueue,
       listen: listenFromProps,
-      dispatch: dispatchProp,
       thumbnailSrc,
       isMobile,
       ...otherProps
@@ -752,10 +755,7 @@ export class ListenCard extends React.Component<
 }
 
 export default function ListenCardWrapper(props: ListenCardProps) {
-  const dispatch = useBrainzPlayerDispatch();
-  const { spotifyAuth, APIService, userPreferences } = React.useContext(
-    GlobalAppContext
-  );
+  const { spotifyAuth, userPreferences } = React.useContext(GlobalAppContext);
   const { listen, customThumbnail } = props;
 
   const albumArtQueryKey = React.useMemo(
@@ -790,12 +790,16 @@ export default function ListenCardWrapper(props: ListenCardProps) {
 
   const isMobile = useMediaQuery("(max-width: 480px)");
 
+  const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
+  const addListenToTopOfQueue = useSetAtom(addListenToTopOfQueueAtom);
+
   return (
     <ListenCard
       {...props}
-      dispatch={dispatch}
       thumbnailSrc={thumbnailSrc}
       isMobile={isMobile}
+      addListenToBottomOfQueue={addListenToBottomOfQueue}
+      addListenToTopOfQueue={addListenToTopOfQueue}
     />
   );
 }

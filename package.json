@@ -79,6 +79,7 @@
     "highlight.js": "^11.6.0",
     "humanize-duration": "^3.31.0",
     "jest-mock": "^25.2.3",
+    "jotai": "^2.12.5",
     "lobes5": "^5.0.0",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",

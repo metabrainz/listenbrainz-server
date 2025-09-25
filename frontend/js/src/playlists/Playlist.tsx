@@ -21,6 +21,7 @@ import { Helmet } from "react-helmet";
 import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { formatDuration, intervalToDuration } from "date-fns";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSetAtom } from "jotai";
 import Card from "../components/Card";
 import { ToastMsg } from "../notifications/Notifications";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -36,10 +37,15 @@ import {
   PLAYLIST_TRACK_URI_PREFIX,
   PLAYLIST_URI_PREFIX,
 } from "./utils";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SyndicationFeedModal from "../components/SyndicationFeedModal";
 import { getBaseUrl } from "../utils/utils";
 import DuplicateTrackModal from "./components/DuplicateTrackModal";
+import {
+  addListenToBottomOfAmbientQueueAtom,
+  moveAmbientQueueItemAtom,
+  removeTrackFromAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export type PlaylistPageProps = {
   playlist: JSPFObject & {
@@ -72,7 +78,17 @@ export default function PlaylistPage() {
   const { currentUser, APIService, websocketsUrl } = React.useContext(
     GlobalAppContext
   );
-  const dispatch = useBrainzPlayerDispatch();
+
+  // BrainzPlayer Atoms
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const addListenToBottomOfAmbientQueue = useSetAtom(
+    addListenToBottomOfAmbientQueueAtom
+  );
+  const removeTrackFromAmbientQueue = useSetAtom(
+    removeTrackFromAmbientQueueAtom
+  );
+  const moveAmbientQueueItem = useSetAtom(moveAmbientQueueItemAtom);
+
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   // Loader data
@@ -244,10 +260,8 @@ export default function PlaylistPage() {
         getPlaylistId(playlist),
         [jspfTrack]
       );
-      dispatch({
-        type: "ADD_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
-        data: jspfTrack,
-      });
+      addListenToBottomOfAmbientQueue(jspfTrack);
+
       toast.success(
         <ToastMsg
           title="Added Track"
@@ -291,12 +305,9 @@ export default function PlaylistPage() {
           ...playlist,
           track: [...tracks],
         };
-        dispatch({
-          type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-          data: {
-            track: trackToDelete,
-            index: -1,
-          },
+        removeTrackFromAmbientQueue({
+          track: trackToDelete,
+          index: -1,
         });
         emitPlaylistChanged(newPlaylist);
         revalidator.revalidate();
@@ -324,10 +335,7 @@ export default function PlaylistPage() {
         evt.newIndex,
         1
       );
-      dispatch({
-        type: "MOVE_AMBIENT_QUEUE_ITEM",
-        data: evt,
-      });
+      moveAmbientQueueItem(evt);
       emitPlaylistChanged(playlist);
       revalidator.revalidate();
     } catch (error) {
@@ -356,10 +364,7 @@ export default function PlaylistPage() {
   const customFields = getPlaylistExtension(playlist);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: tracks,
-    });
+    setAmbientQueue(tracks);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playlistProps]);
 

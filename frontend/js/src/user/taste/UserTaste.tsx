@@ -4,11 +4,12 @@ import * as React from "react";
 
 import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 import UserPins from "./components/UserPins";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { getListenablePin } from "../../utils/utils";
 import UserFeedback from "./components/UserFeedback";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type UserTasteProps = {
   feedback?: Array<FeedbackResponseWithTrackMetadata>;
@@ -82,13 +83,10 @@ export function UserTastesWrapper() {
   });
   const listenables = [...listensFromFeedback, ...listensFromPins];
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listenables,
-    });
+    setAmbientQueue(listenables);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listenables]);
 

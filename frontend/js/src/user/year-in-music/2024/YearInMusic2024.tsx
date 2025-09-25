@@ -37,6 +37,7 @@ import tinycolor from "tinycolor2";
 import humanizeDuration from "humanize-duration";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 import {
@@ -55,8 +56,8 @@ import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
 import SEO, { YIMYearMetaTags } from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
-import { useBrainzPlayerDispatch } from "../../../common/brainzplayer/BrainzPlayerContext";
 import { YearInMusicProps } from "../2023/YearInMusic2023";
+import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
 
 type Node = {
   id: string;
@@ -1681,9 +1682,9 @@ export function YearInMusicWrapper() {
     });
   }
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   React.useEffect(() => {
-    dispatch({ type: "SET_AMBIENT_QUEUE", data: listens });
+    setAmbientQueue(listens);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listens]);
 

@@ -1,5 +1,8 @@
 import * as React from "react";
 import { Link } from "react-router";
+import fetchMock from "jest-fetch-mock";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { Provider as JotaiProvider } from "jotai";
 import SpotifyPlayer, {
   SpotifyPlayerProps,
 } from "../../../src/common/brainzplayer/SpotifyPlayer";
@@ -8,10 +11,12 @@ import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
-import { act, render, screen, waitFor } from "@testing-library/react";
 import * as utils from "../../../src/utils/utils";
-import fetchMock from "jest-fetch-mock";
 import { ReactQueryWrapper } from "../../test-react-query";
+import {
+  currentDataSourceNameAtom,
+  store,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 // Create a new instance of GlobalAppContext
 const defaultContext = {
@@ -31,7 +36,6 @@ const defaultContext = {
 
 const props = {
   refreshSpotifyToken: new APIService("base-uri").refreshSpotifyToken,
-  show: true,
   playerPaused: false,
   onPlayerPausedChange: jest.fn(),
   onProgressChange: jest.fn(),
@@ -86,25 +90,27 @@ describe("SpotifyPlayer", () => {
     propsOverride?: Partial<SpotifyPlayerProps>,
     globalPropsOverride?: Partial<GlobalAppContextT>
   ) => {
-    let spotifyPlayerInstance: SpotifyPlayer | null;
+    let playerInstance: SpotifyPlayer | null;
     render(
       <GlobalAppContext.Provider
         value={{ ...defaultContext, ...globalPropsOverride }}
       >
         <ReactQueryWrapper>
-          <SpotifyPlayer
-            {...props}
-            {...propsOverride}
-            ref={(ref) => {
-              spotifyPlayerInstance = ref;
-            }}
-          />
+          <JotaiProvider store={store}>
+            <SpotifyPlayer
+              {...props}
+              {...propsOverride}
+              ref={(ref) => {
+                playerInstance = ref;
+              }}
+            />
+          </JotaiProvider>
         </ReactQueryWrapper>
       </GlobalAppContext.Provider>
     );
     // Wait for the ref to be available
-    return waitFor(() => expect(spotifyPlayerInstance).not.toBeNull()).then(
-      () => spotifyPlayerInstance!
+    return waitFor(() => expect(playerInstance).not.toBeNull()).then(
+      () => playerInstance!
     );
   };
 
@@ -126,6 +132,7 @@ describe("SpotifyPlayer", () => {
       Player: jest.fn(() => mockSpotifyPlayer),
     };
     fetchMock.enableMocks();
+    store.set(currentDataSourceNameAtom, "spotify");
   });
   afterAll(() => {
     fetchMock.disableMocks();
@@ -159,9 +166,9 @@ describe("SpotifyPlayer", () => {
     // Verify that the Spotify SDK was attempted to be loaded and connected
     await waitFor(() => {
       expect(loadScriptAsyncMock).toHaveBeenCalledTimes(1);
-      expect(window.Spotify.Player).toHaveBeenCalledTimes(1);
-      expect(mockSpotifyPlayer.connect).toHaveBeenCalledTimes(1);
     });
+    expect(window.Spotify.Player).toHaveBeenCalledTimes(1);
+    expect(mockSpotifyPlayer.connect).toHaveBeenCalledTimes(1);
   });
 
   it("should play from spotify_id if it exists on the listen", async () => {
@@ -212,27 +219,26 @@ describe("SpotifyPlayer", () => {
 
     // Now, directly call the playListen method on the instance
     await act(() => {
-      console.log("calling playListen");
       instance.playListen(spotifyListen);
     });
 
     // Assert on the side effect: the fetch call made by playSpotifyURI
     await waitFor(() => {
       expect(fetchMock.mock.calls.length).toEqual(1);
-      expect(fetchMock).toBeCalledWith(
-        "https://api.spotify.com/v1/me/player/play?device_id=test-device-id",
-        expect.objectContaining({
-          method: "PUT",
-          body: JSON.stringify({
-            uris: ["spotify:track:surprise!"],
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer FNORD",
-          },
-        })
-      );
     });
+    expect(fetchMock).toBeCalledWith(
+      "https://api.spotify.com/v1/me/player/play?device_id=test-device-id",
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({
+          uris: ["spotify:track:surprise!"],
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer FNORD",
+        },
+      })
+    );
 
     // Ensure searchAndPlayTrack was NOT called
     expect(searchForSpotifyTrackMock).not.toHaveBeenCalled();
@@ -246,12 +252,12 @@ describe("SpotifyPlayer", () => {
       // The componentDidMount hook should trigger handleAccountError due to insufficient permissions
       await waitFor(() => {
         expect(onInvalidateDataSource).toHaveBeenCalledTimes(1);
-        expect(onInvalidateDataSource).toHaveBeenCalledWith(
-          // Pass the instance
-          expect.any(SpotifyPlayer),
-          permissionsErrorMessage
-        );
       });
+      expect(onInvalidateDataSource).toHaveBeenCalledWith(
+        // Pass the instance
+        expect.any(SpotifyPlayer),
+        permissionsErrorMessage
+      );
     });
 
     it("calls onInvalidateDataSource if permissions insufficient", async () => {
@@ -271,11 +277,11 @@ describe("SpotifyPlayer", () => {
 
       await waitFor(() => {
         expect(mockOnInvalidateDataSource).toHaveBeenCalledTimes(1);
-        expect(mockOnInvalidateDataSource).toHaveBeenCalledWith(
-          expect.any(SpotifyPlayer),
-          permissionsErrorMessage
-        );
       });
+      expect(mockOnInvalidateDataSource).toHaveBeenCalledWith(
+        expect.any(SpotifyPlayer),
+        permissionsErrorMessage
+      );
     });
 
     it("should not call onInvalidateDataSource if permissions are accurate", async () => {
@@ -320,11 +326,11 @@ describe("SpotifyPlayer", () => {
 
       await waitFor(() => {
         expect(mockOnInvalidateDataSource).toHaveBeenCalledTimes(1);
-        expect(mockOnInvalidateDataSource).toHaveBeenCalledWith(
-          expect.any(SpotifyPlayer),
-          permissionsErrorMessage
-        );
       });
+      expect(mockOnInvalidateDataSource).toHaveBeenCalledWith(
+        expect.any(SpotifyPlayer),
+        permissionsErrorMessage
+      );
     });
   });
 
@@ -422,8 +428,8 @@ describe("SpotifyPlayer", () => {
       });
       await waitFor(() => {
         expect(onPlayerPausedChangeMock).toHaveBeenCalledTimes(1);
-        expect(onPlayerPausedChangeMock).toHaveBeenCalledWith(true);
       });
+      expect(onPlayerPausedChangeMock).toHaveBeenCalledWith(true);
       onPlayerPausedChangeMock.mockClear();
 
       // Simulate prop change (as if parent component handled onPlayerPausedChange)
@@ -450,8 +456,8 @@ describe("SpotifyPlayer", () => {
       });
       await waitFor(() => {
         expect(onPlayerPausedChangeMock).toHaveBeenCalledTimes(1);
-        expect(onPlayerPausedChangeMock).toHaveBeenCalledWith(false);
       });
+      expect(onPlayerPausedChangeMock).toHaveBeenCalledWith(false);
       jest.useRealTimers();
     });
 
@@ -517,14 +523,14 @@ describe("SpotifyPlayer", () => {
 
       await waitFor(() => {
         expect(onTrackInfoChange).toHaveBeenCalledTimes(1);
-        expect(onTrackInfoChange).toHaveBeenCalledWith(
-          "Track name",
-          "https://open.spotify.com/track/mySpotifyTrackId",
-          "Track artist 1, Track artist 2",
-          "Album name",
-          [{ src: "url/to/album-art.jpg", sizes: "200x100" }]
-        );
       });
+      expect(onTrackInfoChange).toHaveBeenCalledWith(
+        "Track name",
+        "https://open.spotify.com/track/mySpotifyTrackId",
+        "Track artist 1, Track artist 2",
+        "Album name",
+        [{ src: "url/to/album-art.jpg", sizes: "200x100" }]
+      );
 
       // Verify internal state change by calling another method that depends on it
       // For durationMs, we can see if onDurationChange reflects it later
@@ -563,8 +569,8 @@ describe("SpotifyPlayer", () => {
       });
       await waitFor(() => {
         expect(onDurationChange).toHaveBeenCalledWith(1000);
-        expect(onProgressChange).not.toHaveBeenCalled();
       });
+      expect(onProgressChange).not.toHaveBeenCalled();
       onDurationChange.mockClear();
       onProgressChange.mockClear();
 
@@ -578,10 +584,10 @@ describe("SpotifyPlayer", () => {
       });
       await waitFor(() => {
         expect(onDurationChange).toHaveBeenCalledTimes(1);
-        expect(onDurationChange).toHaveBeenCalledWith(1234);
-        expect(onProgressChange).toHaveBeenCalledTimes(1);
-        expect(onProgressChange).toHaveBeenCalledWith(123);
       });
+      expect(onDurationChange).toHaveBeenCalledWith(1234);
+      expect(onProgressChange).toHaveBeenCalledTimes(1);
+      expect(onProgressChange).toHaveBeenCalledWith(123);
     });
   });
 });
