@@ -262,6 +262,7 @@ export class ListenCard extends React.Component<
       feedbackComponent,
       additionalMenuItems,
       additionalActions,
+      addListenToTopOfQueue,
       addListenToBottomOfQueue,
       listen: listenFromProps,
       thumbnailSrc,
