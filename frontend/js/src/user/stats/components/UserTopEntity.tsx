@@ -17,6 +17,8 @@ export type UserTopEntityProps = {
   entity: Entity;
   user?: ListenBrainzUser;
   terminology: string;
+  contentCssClassName?: string;
+  numberOfEntities?: number;
 };
 
 export type UserTopEntityState = {
@@ -29,7 +31,14 @@ export type UserTopEntityState = {
 export default function UserTopEntity(props: UserTopEntityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
 
-  const { range, entity, user, terminology } = props;
+  const {
+    range,
+    entity,
+    user,
+    terminology,
+    contentCssClassName,
+    numberOfEntities = 10,
+  } = props;
 
   // Loader Data
   const { data: loaderData, isLoading: loading } = useQuery({
@@ -41,7 +50,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
           entity,
           range,
           0,
-          10
+          numberOfEntities
         );
         return {
           data: queryData,
@@ -74,7 +83,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   const entityTextOnCard = `${terminology}s`;
   if (hasError) {
     return (
-      <Card className="mt-4" data-testid="error-message">
+      <Card data-testid="error-message">
         <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
         <div className="text-center">
           <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
@@ -85,10 +94,14 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   }
 
   return (
-    <Card className="mt-4" data-testid={`top-${entity}`}>
+    <Card className="flex-grow-1" data-testid={`top-${entity}`}>
       <h3 className="capitalize-bold text-center">Top {entityTextOnCard}</h3>
       <Loader isLoading={loading}>
-        <div style={{ padding: "1em" }} data-testid={`top-${entity}-list`}>
+        <div
+          style={{ padding: "1em" }}
+          data-testid={`top-${entity}-list`}
+          className={contentCssClassName}
+        >
           {entity === "artist" &&
             Object.keys(data).length > 0 &&
             (data as UserArtistsResponse).payload.artists.map(
