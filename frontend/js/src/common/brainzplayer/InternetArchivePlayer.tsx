@@ -4,6 +4,7 @@ import faInternetArchive from "../icons/faInternetArchive";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import { getTrackName, getArtistName } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 type IARecording = {
   track_id: string;
@@ -66,15 +67,15 @@ export default class InternetArchivePlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
+    const { volume } = this.props;
     if (prevProps.volume !== volume && this.audioRef.current) {
       this.audioRef.current.volume = (volume ?? 100) / 100;
     }
-
-    if (prevProps.show && !show && this.audioRef.current) {
-      this.audioRef.current.pause();
-    }
   }
+
+  stop = () => {
+    this.audioRef?.current?.pause();
+  };
 
   handleAudioEnded = () => {
     const { onTrackEnd } = this.props;
@@ -204,9 +205,10 @@ export default class InternetArchivePlayer
   datasourceRecordsListens = () => false;
 
   render() {
-    const { show } = this.props;
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
     const { currentTrack } = this.state;
-    if (!show) return null;
+    if (!isCurrentDataSource) return null;
 
     return (
       <div

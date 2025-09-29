@@ -6,13 +6,19 @@ import {
   waitFor,
   fireEvent,
 } from "@testing-library/react";
+import fetchMock from "jest-fetch-mock";
+import { Provider as JotaiProvider } from "jotai";
 import InternetArchivePlayer from "../../../src/common/brainzplayer/InternetArchivePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
-import fetchMock from "jest-fetch-mock";
+import {
+  currentDataSourceNameAtom,
+  store,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { DataSourceProps } from "../../../src/common/brainzplayer/BrainzPlayer";
 
 // Mock HTMLMediaElement methods that JSDOM doesn't implement
 const mockPlay = jest.fn().mockResolvedValue(undefined);
@@ -55,7 +61,26 @@ const defaultProps = {
   handleSuccess: jest.fn(),
   onInvalidateDataSource: jest.fn(),
 };
-
+const setupComponent = (propsOverride?: Partial<DataSourceProps>) => {
+  let playerInstance: InternetArchivePlayer | null;
+  render(
+    <GlobalAppContext.Provider value={defaultContext}>
+      <JotaiProvider store={store}>
+        <InternetArchivePlayer
+          {...defaultProps}
+          {...propsOverride}
+          ref={(ref) => {
+            playerInstance = ref;
+          }}
+        />
+      </JotaiProvider>
+    </GlobalAppContext.Provider>
+  );
+  // Wait for the ref to be available
+  return waitFor(() => expect(playerInstance).not.toBeNull()).then(
+    () => playerInstance!
+  );
+};
 describe("InternetArchivePlayer", () => {
   beforeAll(() => {
     fetchMock.enableMocks();
@@ -66,6 +91,7 @@ describe("InternetArchivePlayer", () => {
   });
 
   beforeEach(() => {
+    store.set(currentDataSourceNameAtom, "internetArchive");
     jest.clearAllMocks();
     fetchMock.resetMocks();
   });
@@ -145,34 +171,24 @@ describe("InternetArchivePlayer", () => {
   });
 
   describe("Component rendering", () => {
-    it("should render successfully", () => {
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} />
-        </GlobalAppContext.Provider>
-      );
+    it("should render successfully", async () => {
+      await setupComponent();
 
       expect(screen.getByTestId("internet-archive-player")).toBeInTheDocument();
     });
 
-    it("should hide the player when show prop is false", () => {
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} show={false} />
-        </GlobalAppContext.Provider>
-      );
+    it("should hide the player when not currently selected datasource", async () => {
+      // Set the datasource name in jotai state to simulate spotify selected in BrainzPlayer
+      store.set(currentDataSourceNameAtom, "spotify");
+      await setupComponent();
 
       expect(
         screen.queryByTestId("internet-archive-player")
       ).not.toBeInTheDocument();
     });
 
-    it("should render audio element", () => {
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} />
-        </GlobalAppContext.Provider>
-      );
+    it("should render audio element", async () => {
+      await setupComponent();
 
       const audioElement = screen
         .getByTestId("internet-archive-player")
@@ -184,26 +200,16 @@ describe("InternetArchivePlayer", () => {
   });
 
   describe("Permissions and capabilities", () => {
-    it("should return true for canSearchAndPlayTracks", () => {
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+    it("should return true for canSearchAndPlayTracks", async () => {
+      const playerRef = await setupComponent();
 
-      expect(playerRef.current?.canSearchAndPlayTracks()).toBe(true);
+      expect(playerRef.canSearchAndPlayTracks()).toBe(true);
     });
 
-    it("should return false for datasourceRecordsListens", () => {
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+    it("should return false for datasourceRecordsListens", async () => {
+      const playerRef = await setupComponent();
 
-      expect(playerRef.current?.datasourceRecordsListens()).toBe(false);
+      expect(playerRef.datasourceRecordsListens()).toBe(false);
     });
   });
 
@@ -231,12 +237,7 @@ describe("InternetArchivePlayer", () => {
 
       fetchMock.mockResponseOnce(JSON.stringify(mockSearchResponse));
 
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       const listen: Listen = {
         listened_at: 42,
@@ -248,7 +249,7 @@ describe("InternetArchivePlayer", () => {
       };
 
       await act(async () => {
-        playerRef.current?.playListen(listen);
+        playerRef.playListen(listen);
       });
 
       await waitFor(() => {
@@ -288,12 +289,7 @@ describe("InternetArchivePlayer", () => {
     it("should handle search with no results", async () => {
       fetchMock.mockResponseOnce(JSON.stringify({ results: [] }));
 
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       const listen: Listen = {
         listened_at: 42,
@@ -304,25 +300,20 @@ describe("InternetArchivePlayer", () => {
       };
 
       await act(async () => {
-        playerRef.current?.playListen(listen);
+        playerRef.playListen(listen);
       });
 
       await waitFor(() => {
         expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
-        expect(defaultProps.onPlayerPausedChange).not.toHaveBeenCalled();
-        expect(mockPlay).not.toHaveBeenCalled();
       });
+      expect(defaultProps.onPlayerPausedChange).not.toHaveBeenCalled();
+      expect(mockPlay).not.toHaveBeenCalled();
     });
 
     it("should handle search error", async () => {
       fetchMock.mockRejectOnce(new Error("Network error"));
 
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       const listen: Listen = {
         listened_at: 42,
@@ -333,7 +324,7 @@ describe("InternetArchivePlayer", () => {
       };
 
       await act(async () => {
-        playerRef.current?.playListen(listen);
+        playerRef.playListen(listen);
       });
 
       await waitFor(() => {
@@ -341,18 +332,13 @@ describe("InternetArchivePlayer", () => {
           expect.any(Error),
           "Internet Archive search error"
         );
-        expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
-        expect(mockPlay).not.toHaveBeenCalled();
       });
+      expect(defaultProps.onTrackNotFound).toHaveBeenCalled();
+      expect(mockPlay).not.toHaveBeenCalled();
     });
 
     it("should handle missing track and artist info", async () => {
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       const listen: Listen = {
         listened_at: 42,
@@ -363,7 +349,7 @@ describe("InternetArchivePlayer", () => {
       };
 
       await act(async () => {
-        playerRef.current?.playListen(listen);
+        playerRef.playListen(listen);
       });
 
       expect(defaultProps.handleWarning).toHaveBeenCalledWith(
@@ -377,15 +363,10 @@ describe("InternetArchivePlayer", () => {
 
   describe("Playback controls", () => {
     it("should toggle play/pause correctly", async () => {
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       await act(async () => {
-        playerRef.current?.togglePlay();
+        playerRef.togglePlay();
       });
 
       expect(defaultProps.onPlayerPausedChange).toHaveBeenCalledWith(true);
@@ -393,34 +374,24 @@ describe("InternetArchivePlayer", () => {
       defaultProps.onPlayerPausedChange.mockClear();
 
       const pausedProps = { ...defaultProps, playerPaused: true };
-      const pausedPlayerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...pausedProps} ref={pausedPlayerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const pausedPlayerRef = await setupComponent(pausedProps);
 
       await act(async () => {
-        pausedPlayerRef.current?.togglePlay();
+        pausedPlayerRef.togglePlay();
       });
 
       expect(defaultProps.onPlayerPausedChange).toHaveBeenCalledWith(false);
     });
 
-    it("should seek to position correctly", () => {
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+    it("should seek to position correctly", async () => {
+      const playerRef = await setupComponent();
 
       const audioElement = screen
         .getByTestId("internet-archive-player")
         .querySelector("audio");
       const initialTime = audioElement!.currentTime;
 
-      playerRef.current?.seekToPositionMs(30000); // 30 seconds
+      playerRef.seekToPositionMs(30000); // 30 seconds
 
       expect(audioElement!.currentTime).toBe(30);
       expect(defaultProps.onProgressChange).toHaveBeenCalledWith(30000);
@@ -428,12 +399,8 @@ describe("InternetArchivePlayer", () => {
   });
 
   describe("Audio event handlers", () => {
-    it("should handle audio ended event", () => {
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} />
-        </GlobalAppContext.Provider>
-      );
+    it("should handle audio ended event", async () => {
+      await setupComponent();
 
       const audioElement = screen
         .getByTestId("internet-archive-player")
@@ -444,12 +411,8 @@ describe("InternetArchivePlayer", () => {
       expect(defaultProps.onTrackEnd).toHaveBeenCalled();
     });
 
-    it("should handle time update event", () => {
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} />
-        </GlobalAppContext.Provider>
-      );
+    it("should handle time update event", async () => {
+      await setupComponent();
 
       const audioElement = screen
         .getByTestId("internet-archive-player")
@@ -466,14 +429,8 @@ describe("InternetArchivePlayer", () => {
       expect(defaultProps.onProgressChange).toHaveBeenCalledWith(45500);
     });
 
-    it("should handle loaded metadata event", () => {
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
-
+    it("should handle loaded metadata event", async () => {
+      const playerRef = await setupComponent();
       const audioElement = screen
         .getByTestId("internet-archive-player")
         .querySelector("audio");
@@ -483,7 +440,7 @@ describe("InternetArchivePlayer", () => {
         value: 120.5,
       });
 
-      playerRef.current?.handleLoadedMetadata();
+      playerRef.handleLoadedMetadata();
 
       expect(defaultProps.onDurationChange).toHaveBeenCalledWith(120500);
     });
@@ -508,12 +465,7 @@ describe("InternetArchivePlayer", () => {
 
       fetchMock.mockResponseOnce(JSON.stringify(mockSearchResponse));
 
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       const listen: Listen = {
         listened_at: 42,
@@ -524,13 +476,11 @@ describe("InternetArchivePlayer", () => {
       };
 
       await act(async () => {
-        playerRef.current?.playListen(listen);
+        playerRef.playListen(listen);
       });
 
       await waitFor(() => {
-        const artwork = screen.getByRole("img");
-        expect(artwork).toBeInTheDocument();
-        expect(artwork).toHaveAttribute(
+        expect(screen.getByRole("img")).toHaveAttribute(
           "src",
           "https://archive.org/download/test/artwork.jpg"
         );
@@ -554,12 +504,7 @@ describe("InternetArchivePlayer", () => {
 
       fetchMock.mockResponseOnce(JSON.stringify(mockSearchResponse));
 
-      const playerRef = React.createRef<InternetArchivePlayer>();
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <InternetArchivePlayer {...defaultProps} ref={playerRef} />
-        </GlobalAppContext.Provider>
-      );
+      const playerRef = await setupComponent();
 
       const listen: Listen = {
         listened_at: 42,
@@ -570,7 +515,7 @@ describe("InternetArchivePlayer", () => {
       };
 
       await act(async () => {
-        playerRef.current?.playListen(listen);
+        playerRef.playListen(listen);
       });
 
       await waitFor(() => {

@@ -10,8 +10,8 @@ import {
 } from "../../utils/utils";
 import { DataSourceProps, DataSourceType } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type AppleMusicPlayerProps = DataSourceProps;
 
@@ -149,19 +149,19 @@ export default class AppleMusicPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
-    const player = this.appleMusicPlayer;
-    if (prevProps.volume !== volume && player) {
-      player.volume = (volume ?? 100) / 100;
-    }
-    if (prevProps.show && !show) {
-      this.stopAndClear();
+    const { volume } = this.props;
+    if (this.appleMusicPlayer && prevProps.volume !== volume) {
+      this.appleMusicPlayer.volume = (volume ?? 100) / 100;
     }
   }
 
   componentWillUnmount(): void {
     this.disconnectAppleMusicPlayer();
   }
+
+  stop = () => {
+    this.appleMusicPlayer?.pause();
+  };
 
   playAppleMusicId = async (
     appleMusicId: string,
@@ -260,8 +260,9 @@ export default class AppleMusicPlayer
   };
 
   playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const { show } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
       return;
     }
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
@@ -471,8 +472,9 @@ export default class AppleMusicPlayer
   };
 
   render() {
-    const { show } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
       return null;
     }
     return <div>{this.getAlbumArt()}</div>;

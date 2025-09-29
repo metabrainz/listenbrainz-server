@@ -1,5 +1,6 @@
 import * as React from "react";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
+import { Provider as JotaiProvider } from "jotai";
 import SoundcloudPlayer, {
   SoundCloudPlayerProps,
 } from "../../../src/common/brainzplayer/SoundcloudPlayer";
@@ -8,6 +9,10 @@ import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManage
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
+import {
+  currentDataSourceNameAtom,
+  store,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 // Store event handlers that the component binds to the mock widget
 const boundEventHandlers = new Map<string, Function>();
@@ -43,7 +48,6 @@ const defaultContext: GlobalAppContextT = {
 };
 
 const defaultProps: SoundCloudPlayerProps = {
-  show: true,
   volume: 100,
   playerPaused: false,
   refreshSoundcloudToken: jest.fn().mockResolvedValue("new-token"),
@@ -58,9 +62,29 @@ const defaultProps: SoundCloudPlayerProps = {
   handleSuccess: jest.fn(),
   onInvalidateDataSource: jest.fn(),
 };
-
+const setupComponent = (propsOverride?: Partial<SoundCloudPlayerProps>) => {
+  let playerInstance: SoundcloudPlayer | null;
+  render(
+    <GlobalAppContext.Provider value={defaultContext}>
+      <JotaiProvider store={store}>
+        <SoundcloudPlayer
+          {...defaultProps}
+          {...propsOverride}
+          ref={(ref) => {
+            playerInstance = ref;
+          }}
+        />
+      </JotaiProvider>
+    </GlobalAppContext.Provider>
+  );
+  // Wait for the ref to be available
+  return waitFor(() => expect(playerInstance).not.toBeNull()).then(
+    () => playerInstance!
+  );
+};
 describe("SoundcloudPlayer", () => {
   beforeEach(() => {
+    store.set(currentDataSourceNameAtom, "soundcloud");
     // Attach  fake SoundCloud widget to the global window object.
     (window as any).SC = {
       Widget: jest.fn().mockReturnValue(mockSoundcloudWidget),
@@ -70,19 +94,15 @@ describe("SoundcloudPlayer", () => {
     boundEventHandlers.clear();
   });
 
-  it("renders the iframe", () => {
-    render(
-      <GlobalAppContext.Provider value={defaultContext}>
-        <SoundcloudPlayer {...defaultProps} />
-      </GlobalAppContext.Provider>
-    );
+  it("renders the iframe", async () => {
+    await setupComponent();
     // Containing element
     expect(screen.getByTestId("soundcloud")).toBeInTheDocument();
     // iframe element
     expect(screen.getByTitle("Soundcloud player")).toBeInTheDocument();
   });
 
-  it("should play a listen with a soundcloud origin_url", () => {
+  it("should play a listen with a soundcloud origin_url", async () => {
     const soundcloudListen: Listen = {
       listened_at: 42,
       track_metadata: {
@@ -95,15 +115,10 @@ describe("SoundcloudPlayer", () => {
       },
     };
 
-    const playerRef = React.createRef<SoundcloudPlayer>();
-    render(
-      <GlobalAppContext.Provider value={defaultContext}>
-        <SoundcloudPlayer {...defaultProps} ref={playerRef} />
-      </GlobalAppContext.Provider>
-    );
+    const playerRef = await setupComponent();
 
-    act(() => {
-      playerRef.current?.playListen(soundcloudListen);
+    await act(() => {
+      playerRef.playListen(soundcloudListen);
     });
 
     expect(mockSoundcloudWidget.load).toHaveBeenCalledTimes(1);
@@ -129,11 +144,7 @@ describe("SoundcloudPlayer", () => {
       callback(sound)
     );
 
-    render(
-      <GlobalAppContext.Provider value={defaultContext}>
-        <SoundcloudPlayer {...defaultProps} />
-      </GlobalAppContext.Provider>
-    );
+    await setupComponent();
     // First, simulate the widget becoming ready.
     // This triggers the binding of other events like "play" used below
     act(() => {
@@ -167,31 +178,21 @@ describe("SoundcloudPlayer", () => {
     expect(albumArt).toHaveAttribute("src", "some/url/to/artwork.jpg");
   });
 
-  it("should call the widget's toggle method when togglePlay is called", () => {
-    const playerRef = React.createRef<SoundcloudPlayer>();
-    render(
-      <GlobalAppContext.Provider value={defaultContext}>
-        <SoundcloudPlayer {...defaultProps} ref={playerRef} />
-      </GlobalAppContext.Provider>
-    );
+  it("should call the widget's toggle method when togglePlay is called", async () => {
+    const playerRef = await setupComponent();
 
     act(() => {
-      playerRef.current?.togglePlay();
+      playerRef.togglePlay();
     });
 
     expect(mockSoundcloudWidget.toggle).toHaveBeenCalledTimes(1);
   });
 
-  it("should call the widget's seekTo method when seekToPositionMs is called", () => {
-    const playerRef = React.createRef<SoundcloudPlayer>();
-    render(
-      <GlobalAppContext.Provider value={defaultContext}>
-        <SoundcloudPlayer {...defaultProps} ref={playerRef} />
-      </GlobalAppContext.Provider>
-    );
+  it("should call the widget's seekTo method when seekToPositionMs is called", async () => {
+    const playerRef = await setupComponent();
 
     act(() => {
-      playerRef.current?.seekToPositionMs(1234);
+      playerRef.seekToPositionMs(1234);
     });
 
     expect(mockSoundcloudWidget.seekTo).toHaveBeenCalledTimes(1);

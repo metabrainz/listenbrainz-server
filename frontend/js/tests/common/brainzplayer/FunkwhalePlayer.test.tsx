@@ -1,11 +1,16 @@
 import * as React from "react";
 import { render, screen } from "@testing-library/react";
+import { getDefaultStore } from "jotai";
 import FunkwhalePlayer from "../../../src/common/brainzplayer/FunkwhalePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
+import {
+  currentDataSourceNameAtom,
+  store,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 const defaultContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
@@ -44,6 +49,7 @@ const defaultProps = {
 
 describe("FunkwhalePlayer", () => {
   beforeEach(() => {
+    store.set(currentDataSourceNameAtom, "funkwhale");
     jest.clearAllMocks();
   });
 
@@ -221,10 +227,12 @@ describe("FunkwhalePlayer", () => {
       expect(screen.getByTestId("funkwhale-audio")).toBeInTheDocument();
     });
 
-    it("should hide the player when show prop is false", () => {
+    it("should hide the player when not currently selected datasource", () => {
+      // Set the datasource name in jotai state to simulate spotify selected in BrainzPlayer
+      store.set(currentDataSourceNameAtom, "spotify");
       render(
         <GlobalAppContext.Provider value={defaultContext}>
-          <FunkwhalePlayer {...defaultProps} show={false} />
+          <FunkwhalePlayer {...defaultProps} />
         </GlobalAppContext.Provider>
       );
 

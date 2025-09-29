@@ -1,8 +1,13 @@
 import * as React from "react";
 import { render, screen, act, waitFor } from "@testing-library/react";
+import { Provider as JotaiProvider } from "jotai";
 import YoutubePlayer, {
   YoutubePlayerProps,
 } from "../../../src/common/brainzplayer/YoutubePlayer";
+import {
+  currentDataSourceNameAtom,
+  store,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 // Store the props passed to the mocked YouTube component to trigger them in tests
 let mockYoutubeProps: {
@@ -54,7 +59,6 @@ const mockPlayer: YT.Player = {
 };
 
 const props: YoutubePlayerProps = {
-  show: true,
   playerPaused: false,
   volume: 100,
   youtubeUser: {
@@ -73,26 +77,46 @@ const props: YoutubePlayerProps = {
   onInvalidateDataSource: jest.fn(),
 };
 
+const setupComponent = (propsOverride?: Partial<YoutubePlayerProps>) => {
+  let playerInstance: YoutubePlayer | null;
+  render(
+    <JotaiProvider store={store}>
+      <YoutubePlayer
+        {...props}
+        {...propsOverride}
+        ref={(ref) => {
+          playerInstance = ref;
+        }}
+      />
+    </JotaiProvider>
+  );
+  // Wait for the ref to be available
+  return waitFor(() => expect(playerInstance).not.toBeNull()).then(
+    () => playerInstance!
+  );
+};
+
 describe("YoutubePlayer", () => {
   beforeEach(() => {
+    store.set(currentDataSourceNameAtom, "youtube");
     jest.clearAllMocks();
     mockYoutubeProps = {};
   });
 
-  it("renders the youtube player wrapper", () => {
-    render(<YoutubePlayer {...props} />);
+  it("renders the youtube player wrapper", async () => {
+    await setupComponent();
     expect(screen.getByTestId("youtube-wrapper")).toBeInTheDocument();
     expect(screen.getByTestId("youtube-player")).toBeInTheDocument();
   });
 
   describe("Player State Changes", () => {
-    it("calls onPlayerPausedChange when player state changes to PAUSED", () => {
-      render(<YoutubePlayer {...props} />);
+    it("calls onPlayerPausedChange when player state changes to PAUSED", async () => {
+      await setupComponent();
       // Simulate the player becoming ready
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onStateChange?.({
           data: YT.PlayerState.PAUSED,
           target: mockPlayer,
@@ -101,13 +125,13 @@ describe("YoutubePlayer", () => {
       expect(props.onPlayerPausedChange).toHaveBeenCalledWith(true);
     });
 
-    it("calls onPlayerPausedChange when player state changes to PLAYING", () => {
-      render(<YoutubePlayer {...props} />);
+    it("calls onPlayerPausedChange when player state changes to PLAYING", async () => {
+      await setupComponent();
       // Simulate the player becoming ready
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onStateChange?.({
           data: YT.PlayerState.PLAYING,
           target: mockPlayer,
@@ -116,13 +140,13 @@ describe("YoutubePlayer", () => {
       expect(props.onPlayerPausedChange).toHaveBeenCalledWith(false);
     });
 
-    it("calls onTrackEnd when player state changes to ENDED", () => {
-      render(<YoutubePlayer {...props} />);
+    it("calls onTrackEnd when player state changes to ENDED", async () => {
+      await setupComponent();
       // Simulate the player becoming ready
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onStateChange?.({
           data: YT.PlayerState.ENDED,
           target: mockPlayer,
@@ -131,21 +155,23 @@ describe("YoutubePlayer", () => {
       expect(props.onTrackEnd).toHaveBeenCalledTimes(1);
     });
 
-    it("updates track info when a new track is unstarted", () => {
-      render(<YoutubePlayer {...props} />);
+    it("updates track info when a new track is unstarted", async () => {
+      jest.useFakeTimers();
+      await setupComponent();
 
       // Simulate the player becoming ready
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onReady?.({ target: mockPlayer });
       });
 
-      act(() => {
+      await act(() => {
         mockYoutubeProps.onStateChange?.({
           data: YT.PlayerState.UNSTARTED,
           target: mockPlayer,
         });
       });
-      waitFor(() => {
+      jest.advanceTimersByTime(2000);
+      await waitFor(() => {
         expect(props.onTrackInfoChange).toHaveBeenCalledWith(
           "Never Gonna Give You Up",
           "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -169,51 +195,68 @@ describe("YoutubePlayer", () => {
             },
           ]
         );
-        // 180s * 1000
-        expect(props.onDurationChange).toHaveBeenCalledWith(180000);
       });
+      // 180s * 1000
+      expect(props.onDurationChange).toHaveBeenCalledWith(180000);
     });
   });
 
-  it("toggles play/pause when togglePlay is called", () => {
-    const playerRef = React.createRef<YoutubePlayer>();
-    const { rerender } = render(<YoutubePlayer {...props} ref={playerRef} />);
-
+  it("toggles play/pause when togglePlay is called", async () => {
+    let youtubePlayerInstance: YoutubePlayer | null;
+    const { rerender } = render(
+      <JotaiProvider store={store}>
+        <YoutubePlayer
+          {...props}
+          ref={(ref) => {
+            youtubePlayerInstance = ref;
+          }}
+        />
+      </JotaiProvider>
+    );
     // Simulate the player becoming ready
-    act(() => {
+    await act(() => {
       mockYoutubeProps.onReady?.({ target: mockPlayer });
     });
-
+    await waitFor(() => expect(youtubePlayerInstance).not.toBeNull());
     // Call togglePlay while playing
-    act(() => {
-      playerRef.current?.togglePlay();
+    await act(() => {
+      youtubePlayerInstance?.togglePlay();
     });
     expect(mockPlayer.pauseVideo).toHaveBeenCalledTimes(1);
     expect(props.onPlayerPausedChange).toHaveBeenCalledWith(true);
 
     // Rerender with playerPaused = true
-    rerender(<YoutubePlayer {...props} playerPaused ref={playerRef} />);
-
+    rerender(
+      <JotaiProvider store={store}>
+        <YoutubePlayer
+          {...props}
+          playerPaused
+          ref={(ref) => {
+            youtubePlayerInstance = ref;
+          }}
+        />
+      </JotaiProvider>
+    );
+    await waitFor(() => expect(youtubePlayerInstance).not.toBeNull());
     // Call togglePlay while paused
-    act(() => {
-      playerRef.current?.togglePlay();
+    await act(() => {
+      youtubePlayerInstance?.togglePlay();
     });
     expect(mockPlayer.playVideo).toHaveBeenCalledTimes(1);
     expect(props.onPlayerPausedChange).toHaveBeenCalledWith(false);
   });
-  it("does nothing if it's not the currently selected datasource", () => {
+  it("does nothing if it's not the currently selected datasource", async () => {
     jest.useFakeTimers();
-    render(
-      // Set the prop show>false to simulate anothr datasource selected in BrainzPlayer
-      <YoutubePlayer {...props} show={false} />
-    );
+    await setupComponent();
+    // Set the datasource name in jotai state to simulate spotify selected in BrainzPlayer
+    store.set(currentDataSourceNameAtom, "spotify");
 
     // Simulate the player becoming ready
-    act(() => {
+    await act(() => {
       mockYoutubeProps.onReady?.({ target: mockPlayer });
     });
 
-    act(() => {
+    await act(() => {
       mockYoutubeProps.onStateChange?.({
         data: YT.PlayerState.UNSTARTED,
         target: mockPlayer,
@@ -228,12 +271,11 @@ describe("YoutubePlayer", () => {
     jest.useRealTimers();
   });
 
-  it("plays a track from a listen with a youtube URL", () => {
-    const playerRef = React.createRef<YoutubePlayer>();
-    render(<YoutubePlayer {...props} ref={playerRef} />);
+  it("plays a track from a listen with a youtube URL", async () => {
+    const playerRef = await setupComponent();
 
     // Simulate the player becoming ready
-    act(() => {
+    await act(() => {
       mockYoutubeProps.onReady?.({ target: mockPlayer });
     });
 
@@ -248,8 +290,8 @@ describe("YoutubePlayer", () => {
       },
     };
 
-    act(() => {
-      playerRef.current?.playListen(youtubeListen);
+    await act(() => {
+      playerRef.playListen(youtubeListen);
     });
 
     expect(mockPlayer.loadVideoById).toHaveBeenCalledWith("dQw4w9WgXcQ");
