@@ -25,16 +25,13 @@ const TOOLTIP_TOP_OFFSET: number = 39;
 
 // Originally by ford04 - https://stackoverflow.com/a/62017005
 const useThrottle = (callback: any, delay: number | undefined) => {
+  const options = { leading: true, trailing: false };
   const callbackRef = React.useRef(callback);
   React.useEffect(() => {
     callbackRef.current = callback;
   });
   return React.useCallback(
-    () =>
-      throttle((...args: any) => callbackRef.current(...args), delay, {
-        leading: true,
-        trailing: false,
-      }),
+    throttle((...args: any) => callbackRef.current(...args), delay, options),
     [delay]
   );
 };
