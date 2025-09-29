@@ -42,19 +42,18 @@ const useListenSubmission = ({
   const setListenSubmitted = useSetAtom(listenSubmittedAtom);
 
   // Store getters
-  const getCurrentDataSourceIndex = () => store.get(currentDataSourceIndexAtom);
-  const getCurrentTrackName = () => store.get(currentTrackNameAtom);
-  const getCurrentTrackArtist = () => store.get(currentTrackArtistAtom);
-  const getCurrentTrackAlbum = () => store.get(currentTrackAlbumAtom);
-  const getCurrentTrackURL = () => store.get(currentTrackURLAtom);
+  const getCurrentDataSourceIndex = React.useCallback(
+    () => store.get(currentDataSourceIndexAtom),
+    [store]
+  );
 
   const getListenMetadataToSubmit = React.useCallback((): BaseListenFormat => {
     const dataSource = dataSourceRefs[getCurrentDataSourceIndex()];
 
     const brainzplayer_metadata = {
-      artist_name: getCurrentTrackArtist(),
-      release_name: getCurrentTrackAlbum(),
-      track_name: getCurrentTrackName(),
+      artist_name: store.get(currentTrackArtistAtom),
+      release_name: store.get(currentTrackAlbumAtom),
+      track_name: store.get(currentTrackNameAtom),
     };
 
     // Create a new listen and augment it with the existing listen and datasource's metadata
@@ -69,7 +68,7 @@ const useListenSubmission = ({
     let musicServiceDomain = dataSource?.current?.domainName;
 
     // Best effort try to get domain from URL
-    const currentTrackURL = getCurrentTrackURL();
+    const currentTrackURL = store.get(currentTrackURLAtom);
     if (!musicServiceDomain && currentTrackURL) {
       try {
         musicServiceDomain = new URL(currentTrackURL).hostname;
@@ -97,10 +96,7 @@ const useListenSubmission = ({
   }, [
     dataSourceRefs,
     getCurrentDataSourceIndex,
-    getCurrentTrackArtist,
-    getCurrentTrackAlbum,
-    getCurrentTrackName,
-    getCurrentTrackURL,
+    store,
     currentListen,
     durationMs,
   ]);

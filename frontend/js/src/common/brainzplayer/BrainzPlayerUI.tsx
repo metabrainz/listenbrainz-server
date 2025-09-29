@@ -160,13 +160,13 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
     window.addEventListener("resize", handleResize);
   }, []);
 
+  const recordingMSID = getRecordingMSID(currentListen as Listen);
+  const recordingMBID = getRecordingMBID(currentListen as Listen);
+
   const submitFeedback = React.useCallback(
     async (score: ListenFeedBack) => {
       if (currentUser?.auth_token) {
         setCurrentListenFeedback(score);
-
-        const recordingMSID = getRecordingMSID(currentListen as Listen);
-        const recordingMBID = getRecordingMBID(currentListen as Listen);
 
         try {
           const url = `${listenBrainzAPIBaseURI}/feedback/recording-feedback`;
@@ -198,12 +198,16 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
         }
       }
     },
-    [currentUser.auth_token, listenBrainzAPIBaseURI]
+    [
+      currentUser.auth_token,
+      listenBrainzAPIBaseURI,
+      recordingMBID,
+      recordingMSID,
+    ]
   );
 
   const isPlayingATrack = Boolean(currentListen);
-  const recordingMSID = getRecordingMSID(currentListen as Listen);
-  const recordingMBID = getRecordingMBID(currentListen as Listen);
+
   const showFeedback =
     (Boolean(recordingMSID) || Boolean(recordingMBID)) && isPlayingATrack;
   const playbackDisabledText = "Playback disabled in preferences";
