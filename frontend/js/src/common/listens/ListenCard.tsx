@@ -347,29 +347,31 @@ export default function ListenCard(props: ListenCardProps) {
       <div className="main-content">
         {beforeThumbnailContent}
         {thumbnail}
-        {listenDetails || (
-          <div className="listen-details">
-            <div className="title-duration">
-              <div
-                title={trackName ?? releaseName}
-                className={compact ? "ellipsis" : "ellipsis-2-lines"}
-              >
-                {trackName
-                  ? getTrackLink(displayListen)
-                  : getAlbumLink(displayListen)}
-              </div>
-              {trackDurationMs && (
-                <div className="small text-muted" title="Duration">
-                  {isNumber(trackDurationMs) &&
-                    millisecondsToStr(trackDurationMs)}
+        <div className="listen-details">
+          {listenDetails || (
+            <>
+              <div className="title-duration">
+                <div
+                  title={trackName ?? releaseName}
+                  className={compact ? "ellipsis" : "ellipsis-2-lines"}
+                >
+                  {trackName
+                    ? getTrackLink(displayListen)
+                    : getAlbumLink(displayListen)}
                 </div>
-              )}
-            </div>
-            <div className="small text-muted ellipsis" title={artistName}>
-              {getArtistLink(displayListen)}
-            </div>
-          </div>
-        )}
+                {trackDurationMs && (
+                  <div className="small text-muted" title="Duration">
+                    {isNumber(trackDurationMs) &&
+                      millisecondsToStr(trackDurationMs)}
+                  </div>
+                )}
+              </div>
+              <div className="small text-muted ellipsis" title={artistName}>
+                {getArtistLink(displayListen)}
+              </div>
+            </>
+          )}
+        </div>
         <div className="right-section">
           {(showUsername || showTimestamp) && (
             <div className="username-and-timestamp">
