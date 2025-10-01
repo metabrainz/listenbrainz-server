@@ -105,7 +105,9 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
           const metadata = response?.[recordingMBID];
           if (metadata) {
             resolvedValue = merge(selectedRecording, {
+              track_name: metadata.recording?.name,
               artist_name: metadata?.artist?.name,
+              recording_mbid: recordingMBID,
               additional_info: {
                 duration_ms: metadata?.recording?.length,
               },
@@ -113,7 +115,12 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 artist_mbids: metadata?.artist?.artists?.map(
                   (ar) => ar.artist_mbid
                 ),
-                artists: metadata?.artist?.artists,
+                artists: metadata?.artist?.artists?.map((artistCredit) => {
+                  // Expects "artist_credit_name" instead of "name" prop
+                  const { name, ...others } = artistCredit;
+                  return { ...others, artist_credit_name: name };
+                }),
+                recording_mbid: recordingMBID,
                 release_mbid: metadata?.release?.mbid,
                 caa_id: metadata?.release?.caa_id,
                 caa_release_mbid: metadata?.release?.caa_release_mbid,
@@ -121,7 +128,7 @@ export default NiceModal.create(({ listenToMap }: MBIDMappingModalProps) => {
                 release_artist_name: metadata?.release?.album_artist_name,
                 release_group_mbid: metadata?.release?.release_group_mbid,
               },
-            });
+            } as TrackMetadata);
           }
         } catch (error) {
           // Ignore this failure, it is only cosmetic
