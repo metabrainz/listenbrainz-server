@@ -3,7 +3,7 @@ import { isEmpty, isNil, intersectionBy } from "lodash";
 import { toast } from "react-toastify";
 import Card from "../../../components/Card";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import FollowerFollowingModal from "./FollowerFollowingModal";
+import FollowerFollowingCards from "./FollowerFollowingCards";
 import SimilarUsersModal from "./SimilarUsersModal";
 import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
@@ -214,7 +214,6 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         />
       )}
       <Card className="d-none d-md-block">
-        <FollowerFollowingModal
           user={profileUser}
           followerList={followerList}
           followingList={followingList}
@@ -233,6 +232,7 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
           updateFollowingList={updateFollowingList}
         />
       </Card>
+            <FollowerFollowingCards
     </>
   );
 }
