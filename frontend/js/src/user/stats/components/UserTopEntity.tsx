@@ -19,6 +19,7 @@ export type UserTopEntityProps = {
   terminology: string;
   contentCssClassName?: string;
   numberOfEntities?: number;
+  extraButtons?: JSX.Element[];
 };
 
 export type UserTopEntityState = {
@@ -38,6 +39,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
     terminology,
     contentCssClassName,
     numberOfEntities = 10,
+    extraButtons,
   } = props;
 
   // Loader Data
@@ -273,10 +275,11 @@ export default function UserTopEntity(props: UserTopEntityProps) {
               }
             )}
         </div>
-        <div className="mb-4 text-center">
+        <div className="mb-4 d-flex gap-2 flex-wrap justify-content-around">
           <Link to={statsUrl} className="btn btn-outline-info">
             View more…
           </Link>
+          {extraButtons}
         </div>
       </Loader>
     </Card>

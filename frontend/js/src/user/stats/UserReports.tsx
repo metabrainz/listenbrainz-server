@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import {
+  faBorderAll,
   faGlobe,
   faInfoCircle,
   faUser,
@@ -163,9 +164,13 @@ export default function UserReports() {
               />
               <Link
                 to="/explore/art-creator/"
-                className="mb-4 btn btn-outline-info"
+                className="mb-4 btn btn-info"
+                style={
+                  { "--bs-btn-border-radius": "0.5rem" } as React.CSSProperties
+                }
               >
-                More album grids…
+                Visualize & share{" "}
+                <FontAwesomeIcon icon={faBorderAll} size="lg" />
               </Link>
             </Card>
           </div>
@@ -188,6 +193,20 @@ export default function UserReports() {
               entity="release-group"
               user={user}
               terminology="album"
+              extraButtons={[
+                <Link
+                  to="/explore/art-creator/"
+                  className="btn btn-info"
+                  style={
+                    {
+                      "--bs-btn-border-radius": "0.5rem",
+                    } as React.CSSProperties
+                  }
+                >
+                  Visualize & share{" "}
+                  <FontAwesomeIcon icon={faBorderAll} size="lg" />
+                </Link>,
+              ]}
             />
           </div>
           <div className="col-md-4">
