@@ -145,16 +145,14 @@ export default function UserReports() {
       </div>
       <section id="listening-activity">
         {statsExplanationModalButton}
-        <UserListeningActivity range={range} user={user} />
-      </section>
-      <section id="top-entity">
-        {statsExplanationModalButton}
-        <div className="row">
-          <div className="col-md-8 col-sm-6 d-flex">
-            <Card className="flex-grow-1" data-testid="top-release-group">
-              <h3 className="capitalize-bold text-center">Top albums</h3>
+        <div className="row d-flex">
+          <div className="col-md-8">
+            <UserListeningActivity range={range} user={user} />
+          </div>
+          <div className="col-md-4 flex">
+            <Card className="flex-center" data-testid="top-release-group">
               <object
-                className="p-5 m-auto"
+                className="p-4 m-auto"
                 width="100%"
                 style={{
                   maxWidth: "600px",
@@ -163,20 +161,20 @@ export default function UserReports() {
                 aria-label="Album cover grid"
                 data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
               />
-              <div className="flex-center gap-3 mb-4">
-                <Link to={albumStatsUrl} className="btn btn-outline-info">
-                  View more...
-                </Link>
-                <Link
-                  to="/explore/art-creator/"
-                  className="btn btn-outline-info"
-                >
-                  More album grids…
-                </Link>
-              </div>
+              <Link
+                to="/explore/art-creator/"
+                className="mb-4 btn btn-outline-info"
+              >
+                More album grids…
+              </Link>
             </Card>
           </div>
-          <div className="col-md-4 col-sm-6 d-flex">
+        </div>
+      </section>
+      <section id="top-entity">
+        {statsExplanationModalButton}
+        <div className="row">
+          <div className="col-md-4">
             <UserTopEntity
               range={range}
               entity="artist"
@@ -184,14 +182,20 @@ export default function UserReports() {
               terminology="artist"
             />
           </div>
-          <div className="col-12">
+          <div className="col-md-4">
             <UserTopEntity
-              numberOfEntities={12}
+              range={range}
+              entity="release-group"
+              user={user}
+              terminology="album"
+            />
+          </div>
+          <div className="col-md-4">
+            <UserTopEntity
               range={range}
               entity="recording"
               user={user}
               terminology="track"
-              contentCssClassName="top-entity-listencards"
             />
           </div>
         </div>

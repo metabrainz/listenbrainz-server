@@ -430,11 +430,7 @@ export default function UserListeningActivity(
   const { perRange } = rangeMap[range] || {};
 
   return (
-    <Card
-      className="user-stats-card"
-      style={{ marginTop: 20, minHeight: 400 }}
-      data-testid="listening-activity"
-    >
+    <Card className="user-stats-card" data-testid="listening-activity">
       <div className="d-flex align-items-baseline">
         <h3 className="capitalize-bold">Listening Activity</h3>
         <a
