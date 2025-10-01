@@ -428,6 +428,8 @@ export default function UserListeningActivity(
   }, [rawData]);
 
   const { perRange } = rangeMap[range] || {};
+  const formattedTotalListens = new Intl.NumberFormat().format(totalListens);
+  const formattedAvgListens = new Intl.NumberFormat().format(avgListens);
 
   return (
     <Card className="user-stats-card" data-testid="listening-activity">
@@ -474,7 +476,7 @@ export default function UserListeningActivity(
                       fontWeight: "bold",
                     }}
                   >
-                    {totalListens}
+                    {formattedTotalListens}
                   </span>
                   <span>
                     <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
@@ -487,7 +489,7 @@ export default function UserListeningActivity(
                       fontWeight: "bold",
                     }}
                   >
-                    {avgListens}
+                    {formattedAvgListens}
                   </span>
                   <span style={{ fontSize: 24 }}>
                     &nbsp;Listens per {perRange}
@@ -509,7 +511,7 @@ export default function UserListeningActivity(
                             fontWeight: "bold",
                           }}
                         >
-                          {totalListens}
+                          {formattedTotalListens}
                         </td>
                         <td>
                           <span style={{ fontSize: 22, textAlign: "start" }}>
@@ -526,7 +528,7 @@ export default function UserListeningActivity(
                             fontWeight: "bold",
                           }}
                         >
-                          {avgListens}
+                          {formattedAvgListens}
                         </td>
                         <td>
                           <span style={{ fontSize: 22, textAlign: "start" }}>

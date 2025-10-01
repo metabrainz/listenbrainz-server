@@ -7,17 +7,22 @@ from flask import current_app
 from spotipy import Spotify, SpotifyClientCredentials, SpotifyOauthError
 from sqlalchemy import text
 
-from listenbrainz.background.listens_importer.base import BaseListensImporter
+from listenbrainz.background.listens_importer.zip_base import ZipBaseListensImporter
+
+SKIP_REASONS = [
+    None, "fwdbtn", "backbtn", "clickrow", "clickside", "endplay", "playbtn", "remote", "logout",
+    "popup", "trackerror", "unexpected-exit", "unexpected-exit-while-paused", "unknown"
+]
 
 
-class SpotifyListensImporter(BaseListensImporter):
+class SpotifyListensImporter(ZipBaseListensImporter):
     """Spotify-specific listens importer."""
 
-    def _filter_zip_files(self, file: str) -> bool:
+    def filter_zip_file(self, file: str) -> bool:
         filename = os.path.basename(file).lower()
         return filename.endswith(".json") and ("audio" in filename or "endsong" in filename)
 
-    def _process_file_contents(self, contents: str) -> Iterator[tuple[datetime, Any]]:
+    def process_file_contents(self, contents: str) -> Iterator[tuple[datetime, Any]]:
         for entry in ijson.items(contents, "item"):
             timestamp = datetime.strptime(
                 entry["ts"], "%Y-%m-%dT%H:%M:%SZ"
@@ -25,11 +30,35 @@ class SpotifyListensImporter(BaseListensImporter):
             entry["timestamp"] = timestamp
             yield timestamp, entry
 
-    def _parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Parse Spotify listen batch."""
+    @staticmethod
+    def _skip_item(item) -> bool:
+        """ Whether a spotify play should not be imported. """
+        if item.get("incognito_mode", False):
+            return True
+
+        if (
+            item.get("ms_played", 0) < 30000 and
+            (
+                item.get("skipped", False) or
+                ("reason_end" in item and item["reason_end"] in SKIP_REASONS)
+            )
+        ):
+            return True
+
+        return False
+
+    def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Parse Spotify listen batch.
+
+        Filters the items to submit as listens and retrieves additional track metadata from Spotify
+        cache and API.
+        """
         items = []
         for item in batch:
             try:
+                if self._skip_item(item):
+                    continue
+
                 items.append({
                     "artist_name": item.get("master_metadata_album_artist_name"),
                     "track_name": item.get("master_metadata_track_name"),

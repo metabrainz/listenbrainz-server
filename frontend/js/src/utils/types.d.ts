@@ -320,15 +320,41 @@ declare type UserEraActivityResponse = {
   };
 };
 
+declare type UserArtistEvolutionActivityResponse = {
+  payload: {
+    user_id: string;
+    artist_evolution_activity: RawUserArtistEvolutionRow[];
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    offset_year?: number;
+  };
+};
+
+declare type RawUserArtistEvolutionRow = {
+  time_unit: string | number;
+  artist_mbid: string;
+  artist_name: string;
+  listen_count: number;
+};
+
 declare type GenreHourData = {
   genre: string;
   hour: number;
   listen_count: number;
-}
+};
 
 declare type UserGenreActivityResponse = {
-  result: Array<GenreHourData>;
-}
+  payload: {
+    genre_activity: Array<GenreHourData>;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+  };
+};
 
 declare type UserArtistMapArtist = {
   artist_name: string;
@@ -718,10 +744,16 @@ declare type BrainzPlayerSettings = {
   spotifyEnabled?: boolean;
   soundcloudEnabled?: boolean;
   appleMusicEnabled?: boolean;
+  internetArchiveEnabled?: boolean;
   funkwhaleEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
-    "spotify" | "youtube" | "soundcloud" | "appleMusic" | "funkwhale"
+    | "spotify"
+    | "youtube"
+    | "soundcloud"
+    | "appleMusic"
+    | "funkwhale"
+    | "internetArchive"
   >;
 };
 

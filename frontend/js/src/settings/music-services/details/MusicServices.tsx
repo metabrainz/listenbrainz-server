@@ -611,6 +611,18 @@ export default function MusicServices() {
             </p>
           </div>
         </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">InternetArchive</h3>
+          </div>
+          <div className="card-body">
+            <p>
+              Playing music using InternetArchive on ListenBrainz does not
+              require an account to be connected.
+            </p>
+          </div>
+        </div>
       </div>
     </>
   );

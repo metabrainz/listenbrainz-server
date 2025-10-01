@@ -17,8 +17,18 @@ class StatsAPITestCase(IntegrationTestCase):
     def setUpClass(cls) -> None:
         super(StatsAPITestCase, cls).setUpClass()
 
-        stats = ["artists", "releases", "recordings", "release_groups", "daily_activity", "listening_activity",
-                 "artist_map", "era_activity"]
+        stats = [
+            "artists",
+            "releases",
+            "recordings",
+            "release_groups",
+            "daily_activity",
+            "listening_activity",
+            "artist_map",
+            "artist_evolution_activity",
+            "genre_activity",
+            "era_activity"
+        ]
         ranges = ["week", "month", "year", "all_time"]
         for stat in stats:
             for range_ in ranges:
@@ -77,12 +87,29 @@ class StatsAPITestCase(IntegrationTestCase):
         database = 'listening_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.listening_activity_payload)
 
+        # Insert artist evolution activity data
+        with open(self.path_to_data_file('user_artist_evolution_activity_db_data_for_api_test.json')) as f:
+            self.artist_evolution_activity_payload = json.load(f)
+            self.artist_evolution_activity_payload[0]["user_id"] = self.user["id"]
+            self.artist_evolution_activity_payload[0]["from_ts"] = 0
+            self.artist_evolution_activity_payload[0]["to_ts"] = 5
+            self.artist_evolution_activity_payload[0]["range"] = "all_time"
+        database = 'artist_evolution_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.artist_evolution_activity_payload)
+
         # Insert daily activity data
         with open(self.path_to_data_file('user_daily_activity_db_data_for_api_test.json')) as f:
             self.daily_activity_payload = json.load(f)
             self.daily_activity_payload[0]["user_id"] = self.user["id"]
         database = 'daily_activity_all_time_20220718'
         db_stats.insert(database, 0, 5, self.daily_activity_payload)
+
+        # Insert genre activity data
+        with open(self.path_to_data_file('user_genre_activity_db_data_for_api_test.json')) as f:
+            self.genre_activity_payload = json.load(f)
+            self.genre_activity_payload[0]["user_id"] = self.user["id"]
+        database = 'genre_activity_all_time_20220718'
+        db_stats.insert(database, 0, 5, self.genre_activity_payload)
 
         # Insert era activity data
         with open(self.path_to_data_file('user_era_activity_db_data_for_api_test.json')) as f:
@@ -132,9 +159,17 @@ class StatsAPITestCase(IntegrationTestCase):
                 "endpoint": "stats_api_v1.get_daily_activity",
                 "payload": self.daily_activity_payload
             },
+            "genre_activity": {
+                "endpoint": "stats_api_v1.get_genre_activity",
+                "payload": self.genre_activity_payload
+            },
             "era_activity": {
                 "endpoint": "stats_api_v1.get_era_activity",
                 "payload": self.era_activity_payload
+            },
+            "artist_evolution_activity": {
+                "endpoint": "stats_api_v1.get_artist_evolution_activity",
+                "payload": self.artist_evolution_activity_payload
             },
             "artist_map": {
                 "endpoint": "stats_api_v1.get_artist_map",
@@ -258,6 +293,16 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['data'], received['listening_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
+    def assertGenreActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+    
+        self.assertEqual(sent['from_ts'], received['from_ts'])
+        self.assertEqual(sent['to_ts'], received['to_ts'])
+        self.assertEqual(sent['data'], received['genre_activity'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+    
     def assertEraActivityEqual(self, request, response):
         self.assert200(response)
         received = json.loads(response.data)['payload']
@@ -266,6 +311,16 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(sent['from_ts'], received['from_ts'])
         self.assertEqual(sent['to_ts'], received['to_ts'])
         self.assertEqual(sent['data'], received['era_activity'])
+        self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
+
+    def assertArtistEvolutionActivityEqual(self, request, response):
+        self.assert200(response)
+        received = json.loads(response.data)['payload']
+        sent = request[0]
+
+        self.assertEqual(0, received['from_ts'])
+        self.assertEqual(5, received['to_ts'])
+        self.assertEqual(sent['data'], received['artist_evolution_activity'])
         self.assertEqual(self.user['musicbrainz_id'], received['user_id'])
 
     def assertArtistMapEqual(self, request, response):
@@ -349,6 +404,28 @@ class StatsAPITestCase(IntegrationTestCase):
                                            query_string={'range': range_})
                 self.assertListeningActivityEqual(payload, response)
 
+    def test_artist_evolution_activity_stat(self):
+        endpoint = self.non_entity_endpoints["artist_evolution_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for artist_evolution_activity stats"):
+            payload = self.non_entity_endpoints["artist_evolution_activity"]["payload"]
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            self.assertArtistEvolutionActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with open(self.path_to_data_file(f'user_artist_evolution_activity_db_data_for_api_test_{range_}.json'),
+                      'r') as f:
+                payload = json.load(f)
+                payload[0]["user_id"] = self.user["id"]
+                payload[0]["from_ts"] = 0
+                payload[0]["to_ts"] = 5
+                payload[0]["range"] = range_
+            db_stats.insert(f"artist_evolution_activity_{range_}_20220718", 0, 5, payload)
+            response = self.client.get(
+                self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                query_string={'range': range_}
+            )
+            self.assertArtistEvolutionActivityEqual(payload, response)
+
     def test_daily_activity_stat(self):
         endpoint = self.non_entity_endpoints["daily_activity"]["endpoint"]
         with self.subTest(f"test valid response is received for daily_activity stats"):
@@ -370,6 +447,23 @@ class StatsAPITestCase(IntegrationTestCase):
                     expected = json.load(f)["payload"]
                     expected["user_id"] = self.user["id"]
                 self.assertDailyActivityEqual(expected, response)
+
+    def test_genre_activity_stat(self):
+        endpoint = self.non_entity_endpoints["genre_activity"]["endpoint"]
+        with self.subTest(f"test valid response is received for genre_activity stats"):
+            response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']))
+            payload = self.non_entity_endpoints["genre_activity"]["payload"]
+            self.assertGenreActivityEqual(payload, response)
+
+        for range_ in ["week", "month", "year"]:
+            with self.subTest(f"test valid response is received for {range_} genre_activity stats", range_=range_):
+                with open(self.path_to_data_file(f'user_genre_activity_db_data_for_api_test_{range_}.json'), 'r') as f:
+                    payload = json.load(f)
+                    payload[0]["user_id"] = self.user["id"]
+                db_stats.insert(f"genre_activity_{range_}_20220718", 0, 5, payload)
+                response = self.client.get(self.custom_url_for(endpoint, user_name=self.user['musicbrainz_id']),
+                                           query_string={'range': range_})
+                self.assertGenreActivityEqual(payload, response)
 
     def test_era_activity_stat(self):
         endpoint = self.non_entity_endpoints["era_activity"]["endpoint"]
