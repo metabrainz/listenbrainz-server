@@ -529,7 +529,7 @@ export default function BrainzPlayer() {
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
     setCurrentDataSourceName(dataSource.name);
-    await dataSource.playListen(getCurrentListen() ?? listen);
+    dataSource.playListen(getCurrentListen() ?? listen);
   };
 
   const stopPlayerStateTimer = React.useCallback((): void => {
