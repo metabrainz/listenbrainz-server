@@ -164,7 +164,8 @@ WHITELISTED_AUTH_TOKENS = []
 # SPOTIFY
 SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
 SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
-SPOTIFY_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/spotify/callback/'
+# Note: Spotify now requires the redirect url to use 127.0.0.1 instead of 'localhost', not using SERVER_ROOT_URL for that reason
+SPOTIFY_CALLBACK_URL = 'http://127.0.0.1:8100/settings/music-services/spotify/callback/'
 
 # SPOTIFY-CACHE
 SPOTIFY_CACHE_CLIENT_ID = 'needs a non empty default value for tests, change this'
