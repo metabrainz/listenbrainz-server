@@ -42,6 +42,7 @@ export default class NavidromePlayer
   }
 
   public name = "navidrome";
+  public domainName = false;
   public icon = faNavidrome;
   public iconColor = dataSourcesInfo.navidrome.color;
 
