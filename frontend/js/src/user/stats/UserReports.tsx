@@ -164,11 +164,8 @@ export default function UserReports() {
                 data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
               />
               <Link
-                to="/explore/art-creator/"
-                className="mb-4 btn btn-info"
-                style={
-                  { "--bs-btn-border-radius": "0.5rem" } as React.CSSProperties
-                }
+                to={`/explore/art-creator/?range=${range}&style=grid-stats-alt`}
+                className="mb-4 btn btn-info btn-small-rounding"
               >
                 Visualize & share{" "}
                 <FontAwesomeIcon icon={faBorderAll} size="lg" />
@@ -186,6 +183,15 @@ export default function UserReports() {
               entity="artist"
               user={user}
               terminology="artist"
+              extraButtons={[
+                <Link
+                  to={`/explore/art-creator/?range=${range}&style=designer-top-10`}
+                  className="btn btn-info btn-small-rounding"
+                  title="Visualize & share"
+                >
+                  <FontAwesomeIcon icon={faBorderAll} size="lg" />
+                </Link>,
+              ]}
             />
           </div>
           <div className="col-md-4 flex">
@@ -196,13 +202,8 @@ export default function UserReports() {
               terminology="album"
               extraButtons={[
                 <Link
-                  to="/explore/art-creator/"
-                  className="btn btn-info"
-                  style={
-                    {
-                      "--bs-btn-border-radius": "0.5rem",
-                    } as React.CSSProperties
-                  }
+                  to={`/explore/art-creator/?range=${range}&style=grid-stats`}
+                  className="btn btn-info btn-small-rounding"
                   title="Visualize & share"
                 >
                   <FontAwesomeIcon icon={faBorderAll} size="lg" />
