@@ -43,7 +43,15 @@ export default class FunkwhalePlayer
   static getURLFromListen = (
     listen: Listen | JSPFTrack
   ): string | undefined => {
-    // Check for funkwhale_id
+    const funkwhaleListenUrl = _get(
+      listen,
+      "track_metadata.additional_info.funkwhale_listen_url"
+    );
+    if (funkwhaleListenUrl) {
+      return funkwhaleListenUrl;
+    }
+
+    // Check for legacy funkwhale_id
     const funkwhaleId = _get(
       listen,
       "track_metadata.additional_info.funkwhale_id"
@@ -273,102 +281,10 @@ export default class FunkwhalePlayer
   };
 
   playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const listenFromFunkwhale = FunkwhalePlayer.isListenFromThisService(listen);
-
-    if (listenFromFunkwhale) {
-      const funkwhaleURL = FunkwhalePlayer.getURLFromListen(listen);
-      if (funkwhaleURL) {
-        await this.playFunkwhaleURL(funkwhaleURL);
-        return;
-      }
-    }
-
-    // If not a direct Funkwhale URL, search for the track
+    // For Funkwhale, we always search for tracks by name since
+    // listens from history may contain federation URLs or library URLs
+    // that don't work well for direct playback
     await this.searchAndPlayTrack(listen);
-  };
-
-  playFunkwhaleURL = async (url: string): Promise<void> => {
-    const audioElement = this.audioRef.current;
-    if (!audioElement) return;
-
-    try {
-      // Check if this looks like a track ID rather than a full URL
-      const isTrackId = /^\d+$/.test(url);
-      let trackId: string | null = null;
-
-      if (isTrackId) {
-        // This is a funkwhale_id (just a track ID)
-        trackId = url;
-      } else {
-        // This is a full URL, try to extract track ID from it
-        trackId = this.extractTrackIdFromURL(url);
-      }
-
-      if (trackId) {
-        const track = await this.fetchTrackInfo(trackId);
-        if (track && track.listen_url) {
-          // Get authenticated audio URL
-          const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(
-            track.listen_url
-          );
-          if (authenticatedAudioUrl) {
-            this.setAudioSrc(audioElement, authenticatedAudioUrl);
-            this.setState({ currentTrack: track });
-            await audioElement.play();
-          } else {
-            throw new Error(
-              "Unable to access audio stream from Funkwhale server"
-            );
-          }
-        } else {
-          throw new Error("Track not found on Funkwhale server");
-        }
-      } else {
-        // Direct audio URL -> try to authenticate it as well
-        const authenticatedAudioUrl = await this.getAuthenticatedAudioUrl(url);
-        if (authenticatedAudioUrl) {
-          this.setAudioSrc(audioElement, authenticatedAudioUrl);
-          await audioElement.play();
-        } else {
-          throw new Error(
-            "Unable to access the audio file from Funkwhale server"
-          );
-        }
-      }
-    } catch (error) {
-      const { handleError } = this.props;
-      handleError(
-        error.message || "Failed to play Funkwhale track",
-        "Funkwhale Error"
-      );
-    }
-  };
-
-  extractTrackIdFromURL = (url: string): string | null => {
-    const trackMatch = url.match(/\/tracks\/(\d+)/);
-    return trackMatch ? trackMatch[1] : null;
-  };
-
-  fetchTrackInfo = async (trackId: string): Promise<FunkwhaleTrack | null> => {
-    if (!this.accessToken) return null;
-
-    try {
-      const instanceURL = this.getFunkwhaleInstanceURL();
-      const response = await fetch(`${instanceURL}/api/v1/tracks/${trackId}/`, {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      return null;
-    }
   };
 
   getFunkwhaleInstanceURL = (): string => {
