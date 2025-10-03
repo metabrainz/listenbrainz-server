@@ -40,4 +40,8 @@ ALTER TABLE funkwhale_servers ADD CONSTRAINT funkwhale_servers_id_pkey PRIMARY K
 
 ALTER TABLE funkwhale_tokens ADD CONSTRAINT funkwhale_tokens_id_pkey PRIMARY KEY (id);
 
+ALTER TABLE navidrome_servers ADD CONSTRAINT navidrome_servers_id_pkey PRIMARY KEY (id);
+
+ALTER TABLE navidrome_tokens ADD CONSTRAINT navidrome_tokens_id_pkey PRIMARY KEY (id);
+
 COMMIT;
