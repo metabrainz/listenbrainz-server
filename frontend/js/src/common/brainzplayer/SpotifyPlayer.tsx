@@ -198,6 +198,7 @@ export default class SpotifyPlayer
           errorObject.message ?? errorObject,
           "Error searching on Spotify"
         );
+        onTrackNotFound();
       }
       if (errorObject.status === 401) {
         // Handle token error and try again if fixed
@@ -377,6 +378,7 @@ export default class SpotifyPlayer
     }
     this.authenticationRetries += 1;
     // Reconnect spotify player; user token will be refreshed in the process
+    this.disconnectSpotifyPlayer();
     this.connectSpotifyPlayer(callbackFunction);
   };
 
