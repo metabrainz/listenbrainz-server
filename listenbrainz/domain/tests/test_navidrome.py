@@ -63,7 +63,7 @@ class NavidromeServiceTestCase(IntegrationTestCase):
             service = NavidromeService()
             with self.assertRaises(ExternalServiceError) as context:
                 service.authenticate(
-                    "https://demo.navidrome.org/rest/ping",
+                    "https://demo.navidrome.org",
                     "testuser",
                     "wrongpassword"
                 )
@@ -164,3 +164,35 @@ class NavidromeServiceTestCase(IntegrationTestCase):
 
             service.remove_user(self.user["id"])
             self.assertIsNone(service.get_user(self.user["id"]))
+
+    @requests_mock.Mocker()
+    def test_url_normalization_trailing_slash(self, mock_requests):
+        """Test that URLs with trailing slashes are properly normalized"""
+        mock_requests.get(
+            "https://demo.navidrome.org/rest/ping",
+            status_code=200,
+            json={
+                "subsonic-response": {
+                    "status": "ok",
+                    "version": "1.16.1",
+                    "type": "navidrome",
+                    "serverVersion": "0.49.3"
+                }
+            }
+        )
+        with self.app.app_context():
+            service = NavidromeService()
+            
+            service.connect_user(
+                self.user["id"],
+                "https://demo.navidrome.org/",  # Note the trailing slash
+                "testuser",
+                "testpassword"
+            )
+            
+            result = service.get_user(self.user["id"])
+            self.assertIsNotNone(result)
+            self.assertEqual(result["instance_url"], "https://demo.navidrome.org")  # No trailing slash
+            
+            db_result = db_navidrome.get_user_token(self.db_conn, user_id=self.user["id"])
+            self.assertEqual(db_result["host_url"], "https://demo.navidrome.org")  # No trailing slash
