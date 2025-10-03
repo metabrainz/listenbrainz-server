@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSearchParams } from "react-router";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -118,6 +119,7 @@ const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
 
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const [params] = useSearchParams();
   // Add images for the gallery, don't compose them on the fly
   const [userName, setUserName] = useState(currentUser?.name);
   const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
@@ -156,10 +158,27 @@ export default function ArtCreator() {
     },
     [setStyle]
   );
+
+  React.useEffect(() => {
+    // On load, check URL params for custom style and range
+    if (params.get("style")) {
+      const styleParam = params.get("style") as TemplateNameEnum;
+      if (styleParam in TemplateEnum) {
+        updateStyleButtonCallback(styleParam);
+      }
+    }
+    if (params.get("range")) {
+      const rangeParam = params.get("range") as keyof typeof TimeRangeOptions;
+      if (rangeParam in TimeRangeOptions) {
+        setTimeRange(rangeParam);
+      }
+    }
+  }, []);
+
   const updateStyleCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setStyle(TemplateEnum[event.target.value as TemplateNameEnum]),
-    [setStyle]
+      updateStyleButtonCallback(event.target.value as TemplateNameEnum),
+    [updateStyleButtonCallback]
   );
 
   const updateTimeRangeCallback = useCallback(
