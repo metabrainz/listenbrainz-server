@@ -22,20 +22,6 @@ import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
-// Fix for LB-447 (Player does not play any sound)
-// https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
-const fixSpotifyPlayerStyleIssue = () => {
-  const iframe = document.querySelector(
-    'iframe[src="https://sdk.scdn.co/embedded/index.html"]'
-  ) as any; // TODO: this is hacky, but this whole function seems hacky tbh
-  if (iframe) {
-    iframe.style.display = "block";
-    iframe.style.position = "absolute";
-    iframe.style.top = "-1000px";
-    iframe.style.left = "-1000px";
-  }
-};
-
 export type SpotifyPlayerProps = DataSourceProps & {
   refreshSpotifyToken: () => Promise<string>;
 };
@@ -507,9 +493,6 @@ export default class SpotifyPlayer
         this.deviceId = device_id;
         if (callbackFunction) {
           callbackFunction();
-        }
-        if (fixSpotifyPlayerStyleIssue) {
-          fixSpotifyPlayerStyleIssue();
         }
       }
     );
