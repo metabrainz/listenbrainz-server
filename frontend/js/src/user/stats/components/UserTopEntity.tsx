@@ -289,7 +289,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
               }
             )}
         </div>
-        <div className="mb-4 d-flex gap-2 flex-wrap justify-content-around">
+        <div className="mb-4 mt-auto d-flex gap-2 flex-wrap justify-content-around">
           <Link
             to={statsUrl}
             className="btn btn-outline-info"
