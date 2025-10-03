@@ -86,11 +86,12 @@ class NavidromeService:
     def connect_user(self, user_id: int, host_url: str, username: str, password: str) -> int:
         """Connect a user to Navidrome (one connection per user)"""
         try:
-            encrypted_password = self.authenticate(host_url, username, password)
+            normalized_host_url = host_url.rstrip('/')
+            encrypted_password = self.authenticate(normalized_host_url, username, password)
             token_id = db_navidrome.save_user_token(
                 db_conn,
                 user_id=user_id,
-                host_url=host_url,
+                host_url=normalized_host_url,
                 username=username,
                 encrypted_password=encrypted_password
             )
@@ -116,10 +117,12 @@ class NavidromeService:
             else:
                 token, salt = None, None
 
+            instance_url = connection["host_url"].rstrip('/')
+
             return {
                 "md5_auth_token": token,
                 "salt": salt,
-                "instance_url": connection["host_url"],
+                "instance_url": instance_url,
                 "username": connection["username"],
             }
         except Exception as e:

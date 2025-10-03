@@ -207,6 +207,7 @@ export default function BrainzPlayer() {
       userPreferences?.brainzplayer?.soundcloudEnabled === false &&
       userPreferences?.brainzplayer?.internetArchiveEnabled === false &&
       userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
+      userPreferences?.brainzplayer?.navidromeEnabled === false &&
       userPreferences?.brainzplayer?.appleMusicEnabled === false);
 
   // BrainzPlayerContext

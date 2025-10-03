@@ -338,26 +338,42 @@ const searchForNavidromeTrack = async (
     );
   }
 
+  // Ensure no trailing slash to prevent double slash in URL construction
+  let normalizedInstanceURL = instanceURL;
+  if (normalizedInstanceURL.endsWith("/")) {
+    normalizedInstanceURL = normalizedInstanceURL.slice(0, -1);
+  }
+
   const query = `${trackName || ""} ${artistName || ""}`.trim();
   if (!query) {
     throw new Error("No search terms provided");
   }
 
   try {
-    const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+    const searchUrl = `${normalizedInstanceURL}/rest/search3?query=${encodeURIComponent(
       query
     )}&songCount=1&${authParams}`;
 
     const response = await fetch(searchUrl);
 
     if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
+      let errorBody: any = {};
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        errorBody = await response.json().catch(() => ({}));
+      }
       const error = new Error(errorBody.detail || response.statusText);
       (error as any).status = response.status;
       throw error;
     }
 
-    const data = await response.json();
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      throw new Error("Server returned non-JSON response");
+    }
     const searchResult = data["subsonic-response"]?.searchResult3;
 
     if (searchResult?.song && searchResult.song.length > 0) {

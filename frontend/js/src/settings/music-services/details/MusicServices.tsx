@@ -289,7 +289,7 @@ export default function MusicServices() {
     evt.preventDefault();
     try {
       const formData = new FormData(evt.currentTarget);
-      const hostUrl = formData.get("navidromeHostUrl") as string;
+      let hostUrl = formData.get("navidromeHostUrl") as string;
       const username = formData.get("navidromeUsername") as string;
       const password = formData.get("navidromePassword") as string;
 
@@ -301,6 +301,11 @@ export default function MusicServices() {
 
       if (!hostUrl.startsWith("http://") && !hostUrl.startsWith("https://")) {
         throw Error("Navidrome server URL must start with http:// or https://");
+      }
+
+      // Normalize URL by removing trailing slash to prevent double slash issues
+      if (hostUrl.endsWith("/")) {
+        hostUrl = hostUrl.slice(0, -1);
       }
 
       // If already connected, disconnect first to avoid duplicates

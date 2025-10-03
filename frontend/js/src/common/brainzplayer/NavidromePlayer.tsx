@@ -244,7 +244,13 @@ export default class NavidromePlayer
         "No Navidrome instance URL available - user not connected"
       );
     }
-    return navidromeUser?.instance_url || "";
+
+    let instanceURL = navidromeUser.instance_url;
+    if (instanceURL.endsWith("/")) {
+      instanceURL = instanceURL.slice(0, -1);
+    }
+
+    return instanceURL;
   };
 
   getAuthParams = (): NavidromeAuthParams | null => {
@@ -346,6 +352,7 @@ export default class NavidromePlayer
         errorObject.message ?? errorObject,
         "Error searching on Navidrome"
       );
+      onTrackNotFound();
     }
   };
 
