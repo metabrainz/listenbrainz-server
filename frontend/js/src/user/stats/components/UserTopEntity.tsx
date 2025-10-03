@@ -290,7 +290,11 @@ export default function UserTopEntity(props: UserTopEntityProps) {
             )}
         </div>
         <div className="mb-4 d-flex gap-2 flex-wrap justify-content-around">
-          <Link to={statsUrl} className="btn btn-outline-info">
+          <Link
+            to={statsUrl}
+            className="btn btn-outline-info"
+            title={`View more ${entityTextOnCard}`}
+          >
             View more…
           </Link>
           {extraButtons}

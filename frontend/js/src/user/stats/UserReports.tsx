@@ -15,7 +15,6 @@ import {
 } from "react-router";
 import { Helmet } from "react-helmet";
 
-import Tooltip from "react-tooltip";
 import NiceModal from "@ebay/nice-modal-react";
 import { Card } from "react-bootstrap";
 import Pill from "../../components/Pill";
@@ -153,6 +152,7 @@ export default function UserReports() {
           </div>
           <div className="col-md-4 flex">
             <Card className="flex-center" data-testid="top-release-group">
+              <h3 className="capitalize-bold text-center">Album collage</h3>
               <object
                 className="p-4 m-auto"
                 width="100%"
@@ -203,8 +203,8 @@ export default function UserReports() {
                       "--bs-btn-border-radius": "0.5rem",
                     } as React.CSSProperties
                   }
+                  title="Visualize & share"
                 >
-                  Visualize & share{" "}
                   <FontAwesomeIcon icon={faBorderAll} size="lg" />
                 </Link>,
               ]}
