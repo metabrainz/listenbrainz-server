@@ -171,8 +171,14 @@ export default function BrainzPlayer() {
 
   // Refs for local state
   const isActivatedRef = React.useRef(false);
-  const activatePlayer = () => {
+  const activatePlayer = async () => {
+    if (isActivatedRef.current === true) {
+      return;
+    }
     isActivatedRef.current = true;
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
   };
 
   // Context Atoms - Values
@@ -426,7 +432,7 @@ export default function BrainzPlayer() {
   const pauseCurrentPlayback = async (): Promise<void> => {
     try {
       const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-      await dataSource?.togglePlay();
+      dataSource?.togglePlay();
     } catch (error) {
       handleError(error, "Could not pause playback");
     }
@@ -506,6 +512,10 @@ export default function BrainzPlayer() {
 
     dataSource = dataSourceRefs[selectedDatasourceIndex]?.current;
     if (!dataSource) {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 200);
+      });
+      playListen(listen, nextListenIndex, datasourceIndex);
       return;
     }
     // Check if we can play the listen with the selected datasource
@@ -711,13 +721,13 @@ export default function BrainzPlayer() {
     { action: "seekforward", handler: seekForward },
   ];
 
-  const activatePlayerAndPlay = (): void => {
-    activatePlayer();
+  const activatePlayerAndPlay = async () => {
+    await activatePlayer();
     overwriteMediaSession(mediaSessionHandlers);
     playNextTrack();
   };
 
-  const togglePlay = async (): Promise<void> => {
+  const togglePlay = () => {
     try {
       const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
       if (!dataSource) {
@@ -727,7 +737,7 @@ export default function BrainzPlayer() {
       if (playerPaused) {
         stopOtherBrainzPlayers();
       }
-      await dataSource.togglePlay();
+      dataSource.togglePlay();
     } catch (error) {
       handleError(error, "Could not play");
     }
@@ -856,7 +866,7 @@ export default function BrainzPlayer() {
     trailing: true,
   });
 
-  const receiveBrainzPlayerMessage = (event: MessageEvent) => {
+  const receiveBrainzPlayerMessage = async (event: MessageEvent) => {
     if (event.origin !== window.location.origin) {
       // Received postMessage from different origin, ignoring it
       return;
@@ -885,7 +895,15 @@ export default function BrainzPlayer() {
         return;
       }
     }
-    activatePlayer();
+    if (
+      !["play-listen", "force-play", "play-ambient-queue"].includes(
+        brainzplayer_event
+      )
+    ) {
+      // Ignore events that are not related to playing a track
+      return;
+    }
+    await activatePlayer();
     switch (brainzplayer_event) {
       case "play-listen":
         playListenEventHandler(payload);
