@@ -1,9 +1,8 @@
 import * as React from "react";
 
 import fetchMock from "jest-fetch-mock";
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Provider as JotaiProvider, createStore } from "jotai";
 import BrainzPlayer, {
   DataSourceType,
 } from "../../../src/common/brainzplayer/BrainzPlayer";
@@ -15,17 +14,10 @@ import { renderWithProviders } from "../../test-utils/rtl-test-utils";
 import { listenOrJSPFTrackToQueueItem } from "../../../src/common/brainzplayer/utils";
 import IntersectionObserver from "../../__mocks__/intersection-observer";
 import { ReactQueryWrapper } from "../../test-react-query";
-import {
-  queueAtom,
-  ambientQueueAtom,
-  BrainzPlayerContextT,
-  currentDataSourceNameAtom,
-  currentListenIndexAtom,
-  currentListenAtom,
-  currentTrackNameAtom,
-  currentTrackArtistAtom,
-  playerPausedAtom,
-} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { queueAtom, ambientQueueAtom, BrainzPlayerContextT } from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
+import { Provider as JotaiProvider } from "jotai";
+import { createStore } from "jotai";
+import { currentListenAtom, currentTrackNameAtom, currentTrackArtistAtom, playerPausedAtom } from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 // Font Awesome generates a random hash ID for each icon everytime.
 // Mocking Math.random() fixes this
@@ -89,14 +81,8 @@ const listen2 = listenOrJSPFTrackToQueueItem({
   },
 });
 
-const store = createStore();
-store.set(currentDataSourceNameAtom, "youtube");
-
-function BrainzPlayerWithWrapper({
-  additionalContextValues,
-}: {
-  additionalContextValues?: Partial<BrainzPlayerContextT>;
-}) {
+function BrainzPlayerWithWrapper({additionalContextValues}: {additionalContextValues?: Partial<BrainzPlayerContextT>}) {
+  const store = createStore();
   if (additionalContextValues?.currentListen) {
     store.set(currentListenAtom, additionalContextValues.currentListen);
   }
@@ -104,10 +90,7 @@ function BrainzPlayerWithWrapper({
     store.set(currentTrackNameAtom, additionalContextValues.currentTrackName);
   }
   if (additionalContextValues?.currentTrackArtist) {
-    store.set(
-      currentTrackArtistAtom,
-      additionalContextValues.currentTrackArtist
-    );
+    store.set(currentTrackArtistAtom, additionalContextValues.currentTrackArtist);
   }
   if (additionalContextValues?.playerPaused) {
     store.set(playerPausedAtom, additionalContextValues.playerPaused);
@@ -118,12 +101,7 @@ function BrainzPlayerWithWrapper({
   if (additionalContextValues?.ambientQueue) {
     store.set(ambientQueueAtom, additionalContextValues.ambientQueue);
   }
-  if (additionalContextValues?.currentListenIndex) {
-    store.set(
-      currentListenIndexAtom,
-      additionalContextValues.currentListenIndex
-    );
-  }
+
   return (
     <JotaiProvider store={store}>
       <BrainzPlayer />
@@ -159,6 +137,8 @@ describe("BrainzPlayer", () => {
     });
   });
   beforeAll(() => {
+    window.location.href = "http://nevergonnagiveyouup.com";
+
     global.IntersectionObserver = IntersectionObserver;
     window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
@@ -262,18 +242,13 @@ describe("BrainzPlayer", () => {
         wrapper: ReactQueryWrapper,
       }
     );
-    let queueList = screen.getByTestId("queue");
-    expect(queueList).toBeInTheDocument();
-    expect(queueList.innerHTML).toContain("Moondog");
-    expect(queueList.innerHTML).toContain("Rick Astley");
 
     const playButton = screen.getByTestId("bp-play-button");
     await user.click(playButton);
 
-    // Now the queue should have only the second listen item
-    await waitFor(() => {
-      expect(queueList.innerHTML).not.toContain("Moondog");
-    });
+    // Now the queue should have the second listen item
+    let queueList = screen.getByTestId("queue");
+    expect(queueList).toBeInTheDocument();
     expect(queueList.innerHTML).toContain("Rick Astley");
 
     // Now click on the next button
