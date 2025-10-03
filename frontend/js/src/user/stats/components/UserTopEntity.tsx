@@ -274,7 +274,7 @@ export default function UserTopEntity(props: UserTopEntityProps) {
               }
             )}
         </div>
-        <div className="mb-4 text-center">
+        <div className="mb-4 mt-auto text-center">
           <Link to={statsUrl} className="btn btn-outline-info">
             View more…
           </Link>
