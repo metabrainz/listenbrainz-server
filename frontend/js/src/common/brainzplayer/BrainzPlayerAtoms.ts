@@ -249,6 +249,28 @@ export const addListenToTopOfQueueAtom = atom(
   }
 );
 
+export const addToTopOfQueueAndClearAmbientQueueBeforeListenAtom = atom(
+  null,
+  (get, set, trackData: any) => {
+    // Set the track we want to play next to the top of the queue
+    set(addListenToTopOfQueueAtom, trackData);
+
+    const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
+    const ambientQueue = get(ambientQueueAtom);
+    const indexOfListenInAmbientQueue = ambientQueue.findIndex(
+      (item) => item.id === trackToAdd.id
+    );
+    if (indexOfListenInAmbientQueue === -1) {
+      return;
+    }
+
+    const updatedAmbientQueue = [...ambientQueue];
+    // Remove all the items up to and including the track we want to play
+    updatedAmbientQueue.splice(0, indexOfListenInAmbientQueue + 1);
+    set(ambientQueueAtom, updatedAmbientQueue);
+  }
+);
+
 export const addListenToBottomOfQueueAtom = atom(
   null,
   (get, set, trackData: any) => {
@@ -341,6 +363,7 @@ export const useBrainzPlayerAtoms = () => ({
   removeTrackFromQueueAtom,
   removeTrackFromAmbientQueueAtom,
   addListenToTopOfQueueAtom,
+  addToTopOfQueueAndClearAmbientQueueBeforeListenAtom,
   addListenToBottomOfQueueAtom,
   addListenToBottomOfAmbientQueueAtom,
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
