@@ -3,7 +3,7 @@ import { isEmpty, isNil, intersectionBy } from "lodash";
 import { toast } from "react-toastify";
 import Card from "../../../components/Card";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
-import FollowerFollowingModal from "./FollowerFollowingModal";
+import FollowerFollowingCards from "./FollowerFollowingCards";
 import SimilarUsersModal from "./SimilarUsersModal";
 import CompatibilityCard from "./CompatibilityCard";
 import { ToastMsg } from "../../../notifications/Notifications";
@@ -213,26 +213,32 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
           similarArtists={similarArtists}
         />
       )}
-      <Card className="d-none d-md-block">
-        <FollowerFollowingModal
-          user={profileUser}
-          followerList={followerList}
-          followingList={followingList}
-          loggedInUserFollowsUser={loggedInUserFollowsUser}
-          updateFollowingList={updateFollowingList}
-        />
-      </Card>
-      {isAnotherUser && (
-        <FlairsExplanationButton className="d-none d-md-block" />
-      )}
-      <Card className="mt-4 card-user-sn d-none d-md-block">
-        <SimilarUsersModal
-          user={profileUser}
-          similarUsersList={similarUsersList}
-          loggedInUserFollowsUser={loggedInUserFollowsUser}
-          updateFollowingList={updateFollowingList}
-        />
-      </Card>
+      <div className="row">
+        <div className="col-6 col-lg-12 d-none d-sm-block">
+          <Card>
+            <FollowerFollowingCards
+              user={profileUser}
+              followerList={followerList}
+              followingList={followingList}
+              loggedInUserFollowsUser={loggedInUserFollowsUser}
+              updateFollowingList={updateFollowingList}
+            />
+          </Card>
+        </div>
+        {isAnotherUser && (
+          <FlairsExplanationButton className="d-none d-md-block" />
+        )}
+        <div className="col-6 col-lg-12 d-none d-sm-block">
+          <Card className="card-user-sn">
+            <SimilarUsersModal
+              user={profileUser}
+              similarUsersList={similarUsersList}
+              loggedInUserFollowsUser={loggedInUserFollowsUser}
+              updateFollowingList={updateFollowingList}
+            />
+          </Card>
+        </div>
+      </div>
     </>
   );
 }

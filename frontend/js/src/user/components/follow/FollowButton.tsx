@@ -65,7 +65,7 @@ class FollowButton extends React.Component<
 
   componentDidUpdate(prevProps: FollowButtonProps) {
     const { loggedInUserFollowsUser } = this.props;
-    // FollowerFollowingModal will update this prop and we need to update the state accordingly
+    // FollowerFollowingCards will update this prop and we need to update the state accordingly
     if (prevProps.loggedInUserFollowsUser !== loggedInUserFollowsUser) {
       this.setState({ loggedInUserFollowsUser });
     }

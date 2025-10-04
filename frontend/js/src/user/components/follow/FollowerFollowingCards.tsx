@@ -5,7 +5,7 @@ import Pill from "../../../components/Pill";
 import UserListModalEntry from "./UserListModalEntry";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
-export type FollowerFollowingModalProps = {
+export type FollowerFollowingCardsProps = {
   user: ListenBrainzUser;
   followerList: Array<string>;
   followingList: Array<string>;
@@ -16,18 +16,18 @@ export type FollowerFollowingModalProps = {
   ) => void;
 };
 
-type FollowerFollowingModalState = {
+type FollowerFollowingCardsState = {
   activeMode: "follower" | "following";
 };
 
-export default class FollowerFollowingModal extends React.Component<
-  FollowerFollowingModalProps,
-  FollowerFollowingModalState
+export default class FollowerFollowingCards extends React.Component<
+  FollowerFollowingCardsProps,
+  FollowerFollowingCardsState
 > {
   static contextType = GlobalAppContext;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
-  constructor(props: FollowerFollowingModalProps) {
+  constructor(props: FollowerFollowingCardsProps) {
     super(props);
     this.state = {
       activeMode: "following",
@@ -102,10 +102,11 @@ export default class FollowerFollowingModal extends React.Component<
     }
 
     return (
-      <div data-testid="follower-following-modal">
-        <div className="text-center follower-following-pills">
+      <div data-testid="follower-following-cards">
+        <div className="text-center follower-following-pills py-3">
           <div className="btn-group center-block" role="group">
             <Pill
+              className="mx-2 my-0"
               active={activeMode === "follower"}
               type="secondary"
               onClick={() => this.updateMode("follower")}
@@ -113,6 +114,7 @@ export default class FollowerFollowingModal extends React.Component<
               Followers ({followerList.length})
             </Pill>
             <Pill
+              className="mx-2 my-0"
               active={activeMode === "following"}
               type="secondary"
               onClick={() => this.updateMode("following")}
