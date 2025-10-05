@@ -1,4 +1,4 @@
-import { cloneDeep, has } from "lodash";
+import { cloneDeep, has, shuffle } from "lodash";
 import { JSPFTrackToListen } from "../../playlists/utils";
 import {
   getArtistMBIDs,
@@ -39,6 +39,30 @@ export function listenOrJSPFTrackToQueueItem(
     id: `queue-item-${getBrainzPlayerQueueItemKey(listenTrack)}`,
   };
   return queueItem;
+}
+
+// eslint-disable-next-line import/prefer-default-export
+export function shuffleQueue(
+  queue: BrainzPlayerQueue,
+  currentListenIndex: number
+): BrainzPlayerQueue {
+  if (!queue || queue.length === 0) {
+    return [];
+  }
+  if (currentListenIndex >= queue.length - 1) {
+    return [...queue];
+  }
+
+  const newQueue = [...queue]; // Create a shallow copy to not modify the original
+  const shuffleStartIndex = currentListenIndex + 1;
+  if (shuffleStartIndex >= newQueue.length) {
+    return newQueue;
+  }
+
+  const partToKeep = newQueue.slice(0, shuffleStartIndex);
+  const partToShuffle = newQueue.slice(shuffleStartIndex);
+  const shuffledPart = shuffle(partToShuffle); // Lodash shuffle returns a new shuffled array
+  return [...partToKeep, ...shuffledPart];
 }
 
 export enum FeedbackValue {

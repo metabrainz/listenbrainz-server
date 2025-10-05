@@ -10,6 +10,7 @@ import {
   faVolumeUp,
   faEllipsisVertical,
   faCompactDisc,
+  faShuffle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
@@ -113,6 +114,7 @@ type MusicPlayerProps = {
   toggleShowVolume: () => void;
   seekToPositionMs: (msTimeCode: number) => void;
   toggleRepeatMode: () => void;
+  toggleShuffleMode: () => void;
   submitFeedback: (score: ListenFeedBack) => Promise<void>;
   currentListenFeedback: number;
   musicPlayerCoverArtRef: React.RefObject<HTMLImageElement>;
@@ -166,6 +168,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     toggleShowVolume,
     seekToPositionMs,
     toggleRepeatMode,
+    toggleShuffleMode,
     submitFeedback,
     currentListenFeedback,
     musicPlayerCoverArtRef,
@@ -184,6 +187,7 @@ function MusicPlayer(props: MusicPlayerProps) {
     queueRepeatMode,
     queue,
     ambientQueue,
+    shuffleMode,
   } = useBrainzPlayerContext();
 
   // Global App Context
@@ -346,6 +350,14 @@ function MusicPlayer(props: MusicPlayerProps) {
           action={toggleQueue}
           title="Queue"
           icon={faBarsStaggered}
+          size="xl"
+        />
+        <PlaybackControlButton
+          className="shuffle-mode"
+          action={toggleShuffleMode}
+          title={shuffleMode ? "Shuffle Off" : "Shuffle On"}
+          icon={faShuffle}
+          color={shuffleMode ? "green" : undefined}
           size="xl"
         />
         <PlaybackControlButton
