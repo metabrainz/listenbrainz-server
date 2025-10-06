@@ -338,19 +338,13 @@ const searchForNavidromeTrack = async (
     );
   }
 
-  // Ensure no trailing slash to prevent double slash in URL construction
-  let normalizedInstanceURL = instanceURL;
-  if (normalizedInstanceURL.endsWith("/")) {
-    normalizedInstanceURL = normalizedInstanceURL.slice(0, -1);
-  }
-
   const query = `${trackName || ""} ${artistName || ""}`.trim();
   if (!query) {
     throw new Error("No search terms provided");
   }
 
   try {
-    const searchUrl = `${normalizedInstanceURL}/rest/search3?query=${encodeURIComponent(
+    const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
       query
     )}&songCount=1&${authParams}`;
 
