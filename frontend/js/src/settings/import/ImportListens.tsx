@@ -422,7 +422,8 @@ export default function ImportListens() {
         export files. For Spotify and ListenBrainz, please upload the complete{" "}
         <mark>.zip</mark> archive as received, without extracting the files
         within.
-        <br/>For Libre.fm, please upload the <mark>.csv</mark> file directly.
+        <br />
+        For Libre.fm, please upload the <mark>.csv</mark> file directly.
       </div>
       <div className="card">
         <div className="card-body">
