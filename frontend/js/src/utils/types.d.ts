@@ -343,11 +343,18 @@ declare type GenreHourData = {
   genre: string;
   hour: number;
   listen_count: number;
-}
+};
 
 declare type UserGenreActivityResponse = {
-  result: Array<GenreHourData>;
-}
+  payload: {
+    genre_activity: Array<GenreHourData>;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+  };
+};
 
 declare type UserArtistMapArtist = {
   artist_name: string;
@@ -739,6 +746,7 @@ declare type BrainzPlayerSettings = {
   appleMusicEnabled?: boolean;
   internetArchiveEnabled?: boolean;
   funkwhaleEnabled?: boolean;
+  navidromeEnabled?: boolean;
   brainzplayerEnabled?: boolean;
   dataSourcesPriority?: Array<
     | "spotify"
@@ -746,6 +754,7 @@ declare type BrainzPlayerSettings = {
     | "soundcloud"
     | "appleMusic"
     | "funkwhale"
+    | "navidrome"
     | "internetArchive"
   >;
 };

@@ -139,7 +139,7 @@ export default function UserReports() {
       <section id="top-entity">
         {statsExplanationModalButton}
         <div className="row">
-          <div className="col-md-4">
+          <div className="col-md-4 flex">
             <UserTopEntity
               range={range}
               entity="artist"
@@ -147,7 +147,7 @@ export default function UserReports() {
               terminology="artist"
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-md-4 flex">
             <UserTopEntity
               range={range}
               entity="release-group"
@@ -155,7 +155,7 @@ export default function UserReports() {
               terminology="album"
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-md-4 flex">
             <UserTopEntity
               range={range}
               entity="recording"

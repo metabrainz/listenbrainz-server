@@ -33,7 +33,15 @@ class BaseListensImporter(ABC):
         self.importer_name = IMPORTER_NAME
 
     def import_listens(self, user_id: int, import_task: dict[str, Any]) -> None:
-        """Main entry point for importing listens."""
+        """Main entry point for importing listens.
+
+        Retrieves import task from database, processes the import file, parses the items into
+        listens, validates them and submits them to the database.
+
+        Args:
+            user_id: the user whose listens are to be submitted
+            import_task: the import task dict
+        """
         user = db_user.get(self.db_conn, user_id)
         if user is None:
             current_app.logger.error("User with id: %s does not exist, skipping import.", user_id)
@@ -47,25 +55,18 @@ class BaseListensImporter(ABC):
         self.update_import_progress_and_status(import_id, "in_progress", "Importing user listens")
 
         try:
-            with zipfile.ZipFile(import_task["file_path"]) as zf:
-                self._validate_zip_file(zf, import_id)
-                for batch in self._process_zip_file(
-                    zf,
-                    import_id,
-                    import_task["from_date"],
-                    import_task["to_date"],
-                ):
-                    parsed_listens = self._parse_listen_batch(batch)
+            for batch in self.process_import_file(import_task):
+                parsed_listens = self.parse_listen_batch(batch)
 
-                    validated_listens = []
-                    for listen in parsed_listens:
-                        try:
-                            validate_listen(listen, LISTEN_TYPE_IMPORT)
-                            validated_listens.append(listen)
-                        except ListenValidationError as e:
-                            current_app.logger.error("Invalid listen: %s", e)
+                validated_listens = []
+                for listen in parsed_listens:
+                    try:
+                        validate_listen(listen, LISTEN_TYPE_IMPORT)
+                        validated_listens.append(listen)
+                    except ListenValidationError as e:
+                        current_app.logger.error("Invalid listen: %s", e)
 
-                    self.submit_listens(parsed_listens, user_id, user["musicbrainz_id"], import_id)
+                self.submit_listens(parsed_listens, user_id, user["musicbrainz_id"], import_id)
 
             self.update_import_progress_and_status(import_id, "completed", "Import completed!")
         except Exception as e:
@@ -74,74 +75,36 @@ class BaseListensImporter(ABC):
             Path(import_task["file_path"]).unlink(missing_ok=True)
 
     @abstractmethod
-    def _filter_zip_files(self, file: str) -> bool:
-        """ Whether the file with the given path in the zip archive should be processed. """
-        pass
+    def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
+        """Process the service specific import file.
 
-    @abstractmethod
-    def _process_file_contents(self, contents: TextIOWrapper) -> Iterator[tuple[datetime, Any]]:
-        """ Process the contents of a single file in the zip archive. """
-        pass
-
-    def _process_zip_file(self, zip_file, import_id: int, from_date: datetime, to_date: datetime) -> Iterator[list[dict[str, Any]]]:
-        """Common zip file processing logic.
-        
         Args:
-            zip_file: The ZipFile object to process
-            import_id: ID of the import task
-            from_date: Only process entries after this date
-            to_date: Only process entries before this date
-            
-        Yields:
-            Batches of processed entries
+            import_task: the import task dict
+
+        Returns: iterator of batches of raw entries from service import file
         """
-        import_files = []
-        for file in zip_file.namelist():
-            if self._filter_zip_files(file):
-                info = zip_file.getinfo(file)
-                self._validate_file_size(info, import_id)
-                import_files.append(file)
-
-        for filename in import_files:
-            self.update_import_progress_and_status(import_id, "in_progress", f"Importing {filename}")
-            with (
-                zip_file.open(filename) as file,
-                TextIOWrapper(file, encoding="utf-8") as contents
-            ):
-                batch = []
-                for timestamp, item in self._process_file_contents(contents):
-                    if item is not None and from_date <= timestamp <= to_date:
-                        batch.append(item)
-                        if len(batch) >= self.batch_size:
-                            yield batch
-                            batch = []
-                if batch:
-                    yield batch
-
-    @abstractmethod
-    def _parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Parse a batch of raw entries into listen format."""
         pass
 
-    def _validate_zip_file(self, zip_file: ZipFile, import_id: int) -> None:
-        """Validate zip file against potential zip bomb attacks."""
-        if len(zip_file.namelist()) > 500:
-            self.update_import_progress_and_status(import_id, "failed", "Import failed due to an error")
-            current_app.logger.error("Potential zip bomb attack")
-            raise ImportFailedError("Import failed!")
-            
-    def _validate_file_size(self, file_info, import_id: int) -> None:
-        """Validate that a single file in the zip is not too large."""
-        if file_info.file_size > self.file_size_limit:
-            self.update_import_progress_and_status(
-                import_id,
-                "failed",
-                f"File {file_info.filename} is too large. Maximum allowed size is {self.file_size_limit} bytes.",
-            )
-            raise ImportFailedError(f"File {file_info.filename} is too large")
+    @abstractmethod
+    def parse_listen_batch(self, batch: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Parse a batch of raw entries into listen format.
+
+        Args:
+            batch: a list of raw entries from service import file
+
+        Returns: a list of parsed listens
+        """
+        pass
 
     def submit_listens(self, listens: list[dict[str, Any]], user_id: int, username: str, import_id: int) -> None:
-        """Submit parsed listens to the database."""
+        """Submit parsed listens to the database.
+
+        Args:
+            listens: a batch of parsed listens
+            user_id: the user whose listens are to be submitted
+            username: the user's musicbrainz username
+            import_id: the import task ID
+        """
         if not listens:
             return
 
