@@ -398,22 +398,7 @@ const searchForNavidromeTrack = async (
   }
 
   try {
-    // Try searching with track name only (most reliable)
-    // This avoids issues with featuring artists being in different places
-    if (trackName) {
-      const trackOnlyQuery = trackName.trim();
-      const result = await performNavidromeSearch(
-        instanceURL,
-        authParams,
-        trackOnlyQuery
-      );
-      if (result) {
-        return result;
-      }
-    }
-
     // Try with track name and main artist (without featuring artists)
-    // This helps disambiguate when track name alone returns multiple results
     if (trackName && artistName) {
       const cleanedArtistName = removeFeaturingArtists(artistName);
       const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
@@ -435,6 +420,20 @@ const searchForNavidromeTrack = async (
         instanceURL,
         authParams,
         fullQuery
+      );
+      if (result) {
+        return result;
+      }
+    }
+
+    // Try track name only as last resort
+    // Only if we don't have artist name, to avoid matching wrong tracks
+    if (trackName && !artistName) {
+      const trackOnlyQuery = trackName.trim();
+      const result = await performNavidromeSearch(
+        instanceURL,
+        authParams,
+        trackOnlyQuery
       );
       if (result) {
         return result;
