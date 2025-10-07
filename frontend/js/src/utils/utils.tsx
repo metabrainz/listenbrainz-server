@@ -326,6 +326,61 @@ const searchForFunkwhaleTrack = async (
   }
 };
 
+/**
+ * Remove featuring artists from artist name to improve search matching.
+ * Handles various formats: "feat.", "ft.", "featuring", "feat", "ft"
+ * Also removes content in parentheses at the end of artist names.
+ */
+const removeFeaturingArtists = (artistName: string): string => {
+  if (!artistName) return artistName;
+
+  let cleaned = artistName.replace(/\s+(?:feat\.?|ft\.?|featuring)\s+.+$/i, "");
+  cleaned = cleaned.replace(
+    /\s*\([^)]*(?:feat\.?|ft\.?|featuring)[^)]*\)\s*$/i,
+    ""
+  );
+
+  return cleaned.trim();
+};
+
+const performNavidromeSearch = async (
+  instanceURL: string,
+  authParams: string,
+  query: string
+): Promise<NavidromeTrack | null> => {
+  const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+    query
+  )}&songCount=5&${authParams}`;
+
+  const response = await fetch(searchUrl);
+
+  if (!response.ok) {
+    let errorBody: any = {};
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      errorBody = await response.json().catch(() => ({}));
+    }
+    const error = new Error(errorBody.detail || response.statusText);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    throw new Error("Server returned non-JSON response");
+  }
+
+  const searchResult = data["subsonic-response"]?.searchResult3;
+  if (searchResult?.song && searchResult.song.length > 0) {
+    return searchResult.song[0];
+  }
+
+  return null;
+};
+
 const searchForNavidromeTrack = async (
   instanceURL: string,
   authParams: string,
@@ -338,40 +393,64 @@ const searchForNavidromeTrack = async (
     );
   }
 
-  const query = `${trackName || ""} ${artistName || ""}`.trim();
-  if (!query) {
+  if (!trackName && !artistName) {
     throw new Error("No search terms provided");
   }
 
   try {
-    const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
-      query
-    )}&songCount=1&${authParams}`;
-
-    const response = await fetch(searchUrl);
-
-    if (!response.ok) {
-      let errorBody: any = {};
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        errorBody = await response.json().catch(() => ({}));
+    // Try searching with track name only (most reliable)
+    // This avoids issues with featuring artists being in different places
+    if (trackName) {
+      const trackOnlyQuery = trackName.trim();
+      const result = await performNavidromeSearch(
+        instanceURL,
+        authParams,
+        trackOnlyQuery
+      );
+      if (result) {
+        return result;
       }
-      const error = new Error(errorBody.detail || response.statusText);
-      (error as any).status = response.status;
-      throw error;
     }
 
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      throw new Error("Server returned non-JSON response");
+    // Try with track name and main artist (without featuring artists)
+    // This helps disambiguate when track name alone returns multiple results
+    if (trackName && artistName) {
+      const cleanedArtistName = removeFeaturingArtists(artistName);
+      const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+      const result = await performNavidromeSearch(
+        instanceURL,
+        authParams,
+        cleanedQuery
+      );
+      if (result) {
+        return result;
+      }
     }
-    const searchResult = data["subsonic-response"]?.searchResult3;
 
-    if (searchResult?.song && searchResult.song.length > 0) {
-      return searchResult.song[0];
+    // Try with full artist name as fallback
+    // In case the featuring artist is actually needed for disambiguation
+    if (trackName && artistName) {
+      const fullQuery = `${trackName} ${artistName}`.trim();
+      const result = await performNavidromeSearch(
+        instanceURL,
+        authParams,
+        fullQuery
+      );
+      if (result) {
+        return result;
+      }
+    }
+
+    // Artist name only
+    if (artistName && !trackName) {
+      const result = await performNavidromeSearch(
+        instanceURL,
+        authParams,
+        artistName
+      );
+      if (result) {
+        return result;
+      }
     }
 
     return null;
