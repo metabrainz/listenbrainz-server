@@ -9,6 +9,10 @@ $long-description-lines: 8;
   gap: 1rem;
 }
 
+.playlist-info .description {
+  white-space: pre-line;
+}
+
 #playlists-container {
   display: flex;
   flex-wrap: wrap;
