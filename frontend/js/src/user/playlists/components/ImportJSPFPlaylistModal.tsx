@@ -1,19 +1,29 @@
 import * as React from "react";
 import NiceModal, { useModal, bootstrapDialog } from "@ebay/nice-modal-react";
-import { Modal } from "react-bootstrap";
+import { Button, Form, Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
 
 import { Link } from "react-router";
+import { set } from "lodash";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { ToastMsg } from "../../../notifications/Notifications";
+import { MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION } from "../../../playlists/utils";
+
+const acceptExtensions = ["jspf", "json", "xspf"];
+const acceptExtensionsWithDot = acceptExtensions
+  .map((ext) => `.${ext}`)
+  .join(", ");
 
 export default NiceModal.create(() => {
   const modal = useModal();
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
-  const [fileError, setFileError] = React.useState<string | null>(null);
+  const [fileError, setFileError] = React.useState<string | JSX.Element | null>(
+    null
+  );
   const [fileContent, setFileContent] = React.useState<JSPFObject | null>(null);
+  const [makePrivate, setMakePrivate] = React.useState(false);
 
   const createPlaylist = React.useCallback(async (): Promise<
     JSPFPlaylist | undefined
@@ -32,6 +42,18 @@ export default NiceModal.create(() => {
 
     try {
       if (fileContent) {
+        set(
+          fileContent,
+          `playlist.extension["${MUSICBRAINZ_JSPF_PLAYLIST_EXTENSION}"].public`,
+          !makePrivate
+        );
+        // @ts-expect-error: We know this field is wrongly named when parsing XSPF files
+        if (fileContent.playlist.tracks && !fileContent.playlist.track) {
+          // @ts-expect-error
+          fileContent.playlist.track = fileContent.playlist.tracks;
+          // @ts-expect-error
+          delete fileContent.playlist.tracks;
+        }
         const newPlaylistId = await APIService.createPlaylist(
           currentUser?.auth_token,
           fileContent
@@ -76,20 +98,36 @@ export default NiceModal.create(() => {
       );
       return undefined;
     }
-  }, [currentUser, fileContent, APIService]);
+  }, [currentUser.auth_token, fileContent, makePrivate, APIService]);
 
-  const checkFileContent = (selectedFile: File | undefined): void => {
+  const checkFileContent = (
+    selectedFile: File | undefined,
+    fileExtension: string
+  ): void => {
     // Checks if the file is a valid JSON file
     // Note: This function does not check if the file is a valid JSPF file
     const reader = new FileReader();
 
-    reader.onload = (e: ProgressEvent<FileReader>): void => {
+    reader.onload = async (e: ProgressEvent<FileReader>) => {
       try {
+        let jsonData;
+        if (fileExtension === "xspf") {
+          const { parse } = await import("xspf-js");
+          jsonData = parse(e.target?.result);
+        } else {
+          jsonData = JSON.parse(e.target?.result as string);
+        }
         // If valid JSON, set the new playlist state
-        const jsonData = JSON.parse(e.target?.result as string);
         setFileContent(jsonData);
       } catch (error) {
-        setFileError("Error parsing JSON: Please select a valid JSON file.");
+        setFileError(
+          <>
+            Error parsing file: Please select a valid file (
+            {acceptExtensionsWithDot}).
+            <br />
+            {error.toString()}
+          </>
+        );
       }
     };
     if (selectedFile) {
@@ -108,17 +146,20 @@ export default NiceModal.create(() => {
     // Check if the file has a valid extension
     if (selectedFile) {
       const fileExtension = selectedFile?.name.split(".").pop()?.toLowerCase();
-      if (fileExtension !== "jspf" && fileExtension !== "json") {
-        setFileError("Invalid file format. Please select a valid file.");
+      if (!fileExtension || !acceptExtensions.includes(fileExtension)) {
+        setFileError(
+          `Invalid file format. Please select a valid file (${acceptExtensionsWithDot}).`
+        );
 
         return;
       }
       // Check if the file content is in valid JSON format and set the new playlist state
-      checkFileContent(selectedFile);
+      checkFileContent(selectedFile, fileExtension);
     }
   };
 
   const onSubmit = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
     try {
       const newPlaylist = await createPlaylist();
       if (!newPlaylist) {
@@ -147,44 +188,52 @@ export default NiceModal.create(() => {
       <Modal.Header closeButton>
         <Modal.Title id="ImportPlaylistModalLabel">Import playlist</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <div>
-          <label className="form-label" htmlFor="playlistFile">
-            Choose or drop a file with .json or .jspf extension
-          </label>
-          <input
-            type="file"
-            className="form-control"
-            id="playlistFile"
-            accept=".jspf, .json"
-            onChange={handleFileChange}
-          />
-        </div>
-        {fileError && <div className="has-error">{fileError}</div>}
-        <p className="form-text">
-          For information on the JSPF playlist format, please visit{" "}
-          <a href="https://musicbrainz.org/doc/jspf">
-            musicbrainz.org/doc/jspf
-          </a>
-        </p>
-      </Modal.Body>
-      <Modal.Footer>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={modal.hide}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={!currentUser?.auth_token || fileContent === null}
-          onClick={onSubmit}
-        >
-          Import
-        </button>
-      </Modal.Footer>
+      <Form validated={fileContent !== null} onSubmit={onSubmit}>
+        <Modal.Body>
+          <Form.Group className="mb-3" controlId="playlistFile">
+            <Form.Label>
+              Choose or drop a file with .json, .jspf or .xspf extension
+            </Form.Label>
+            <Form.Control
+              type="file"
+              className="form-control"
+              accept={acceptExtensionsWithDot}
+              onChange={handleFileChange}
+              required
+              isInvalid={fileError !== null}
+            />
+            <Form.Control.Feedback type="invalid">
+              {fileError}
+            </Form.Control.Feedback>
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="makePrivate">
+            <Form.Check
+              type="checkbox"
+              checked={makePrivate}
+              onChange={() => setMakePrivate(!makePrivate)}
+              label="Make the playlist private"
+            />
+          </Form.Group>
+          <Form.Text>
+            For information on the JSPF playlist format, please visit{" "}
+            <a href="https://musicbrainz.org/doc/jspf">
+              musicbrainz.org/doc/jspf
+            </a>
+          </Form.Text>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type="button" variant="secondary" onClick={modal.hide}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!currentUser?.auth_token || fileContent === null}
+          >
+            Import
+          </Button>
+        </Modal.Footer>
+      </Form>
     </Modal>
   );
 });
