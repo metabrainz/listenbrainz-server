@@ -42,15 +42,23 @@ export type UserReportsState = {
 
 function getLinkToArtCreator(
   range: string,
-  style: TemplateNameEnum
+  style: TemplateNameEnum,
+  encodedUserName: string,
+  hideButtonText: boolean = false
 ): JSX.Element {
+  const buttonText = "Visualize & share";
   return (
     <Link
-      to={`/explore/art-creator/?range=${range}&style=${style}`}
+      to={`/explore/art-creator/?user=${encodedUserName}&range=${range}&style=${style}`}
       className="btn btn-info btn-small-rounding"
-      title="Visualize & share"
+      title={buttonText}
     >
-      <FontAwesomeIcon icon={faBorderAll} size="lg" />
+      {hideButtonText ? null : buttonText}
+      <FontAwesomeIcon
+        icon={faBorderAll}
+        size="lg"
+        className={hideButtonText ? undefined : "ms-3"}
+      />
     </Link>
   );
 }
@@ -180,13 +188,13 @@ export default function UserReports() {
                   aria-label="Album cover grid"
                   data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
                 />
-                <Link
-                  to={`/explore/art-creator/?range=${range}&style=grid-stats-alt`}
-                  className="mb-4 btn btn-info btn-small-rounding"
-                >
-                  Visualize & share{" "}
-                  <FontAwesomeIcon icon={faBorderAll} size="lg" />
-                </Link>
+                <div className="mb-4">
+                  {getLinkToArtCreator(
+                    range,
+                    TemplateNameEnum.gridStatsSpecial,
+                    encodedUserOrCurrentUserName
+                  )}
+                </div>
               </Card>
             </div>
           )}
@@ -203,7 +211,14 @@ export default function UserReports() {
               terminology="artist"
               extraButtons={
                 user
-                  ? [getLinkToArtCreator(range, TemplateNameEnum.designerTop5)]
+                  ? [
+                      getLinkToArtCreator(
+                        range,
+                        TemplateNameEnum.designerTop5,
+                        encodedUserOrCurrentUserName,
+                        true
+                      ),
+                    ]
                   : undefined
               }
             />
@@ -216,7 +231,14 @@ export default function UserReports() {
               terminology="album"
               extraButtons={
                 user
-                  ? [getLinkToArtCreator(range, TemplateNameEnum.gridStats)]
+                  ? [
+                      getLinkToArtCreator(
+                        range,
+                        TemplateNameEnum.gridStats,
+                        encodedUserOrCurrentUserName,
+                        true
+                      ),
+                    ]
                   : undefined
               }
             />
