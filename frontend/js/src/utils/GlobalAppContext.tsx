@@ -11,6 +11,7 @@ export type GlobalAppContextT = {
   youtubeAuth?: YoutubeUser;
   soundcloudAuth?: SoundCloudUser;
   funkwhaleAuth?: FunkwhaleUser;
+  navidromeAuth?: NavidromeUser;
   critiquebrainzAuth?: MetaBrainzProjectUser;
   appleAuth?: AppleMusicUser;
   musicbrainzAuth?: MetaBrainzProjectUser & {
@@ -31,6 +32,7 @@ export const defaultGlobalContext: GlobalAppContextT = {
   youtubeAuth: {},
   soundcloudAuth: {},
   funkwhaleAuth: undefined,
+  navidromeAuth: undefined,
   appleAuth: {},
   critiquebrainzAuth: {},
   musicbrainzAuth: {
