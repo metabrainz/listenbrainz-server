@@ -49,7 +49,7 @@ function getLinkToArtCreator(
   const buttonText = "Visualize & share";
   return (
     <Link
-      to={`/explore/art-creator/?user=${encodedUserName}&range=${range}&style=${style}`}
+      to={`/explore/art-creator/?username=${encodedUserName}&range=${range}&style=${style}`}
       className="btn btn-info btn-small-rounding"
       title={buttonText}
     >
