@@ -29,6 +29,7 @@ import UserGenreActivity from "./components/UserGenreActivity";
 import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
+import { TemplateNameEnum } from "../../explore/art-creator/ArtCreator";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
@@ -38,6 +39,21 @@ export type UserReportsState = {
   range: UserStatsAPIRange;
   user?: ListenBrainzUser;
 };
+
+function getLinkToArtCreator(
+  range: string,
+  style: TemplateNameEnum
+): JSX.Element {
+  return (
+    <Link
+      to={`/explore/art-creator/?range=${range}&style=${style}`}
+      className="btn btn-info btn-small-rounding"
+      title="Visualize & share"
+    >
+      <FontAwesomeIcon icon={faBorderAll} size="lg" />
+    </Link>
+  );
+}
 
 export default function UserReports() {
   const props = useLoaderData() as UserReportsProps;
@@ -146,32 +162,34 @@ export default function UserReports() {
       </div>
       <section id="listening-activity">
         {statsExplanationModalButton}
-        <div className="row d-flex">
-          <div className="col-md-8">
+        <div className="row">
+          <div className={`col ${user ? "col-md-8" : ""}`}>
             <UserListeningActivity range={range} user={user} />
           </div>
-          <div className="col-md-4 flex">
-            <Card className="flex-center" data-testid="top-release-group">
-              <h3 className="capitalize-bold text-center">Album collage</h3>
-              <object
-                className="p-4 m-auto"
-                width="100%"
-                style={{
-                  maxWidth: "600px",
-                  width: "-webkit-fill-available",
-                }}
-                aria-label="Album cover grid"
-                data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
-              />
-              <Link
-                to={`/explore/art-creator/?range=${range}&style=grid-stats-alt`}
-                className="mb-4 btn btn-info btn-small-rounding"
-              >
-                Visualize & share{" "}
-                <FontAwesomeIcon icon={faBorderAll} size="lg" />
-              </Link>
-            </Card>
-          </div>
+          {user && (
+            <div className="col-md-4 flex">
+              <Card className="flex-center" data-testid="top-release-group">
+                <h3 className="capitalize-bold text-center">Album collage</h3>
+                <object
+                  className="p-4 m-auto"
+                  width="100%"
+                  style={{
+                    maxWidth: "600px",
+                    width: "-webkit-fill-available",
+                  }}
+                  aria-label="Album cover grid"
+                  data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
+                />
+                <Link
+                  to={`/explore/art-creator/?range=${range}&style=grid-stats-alt`}
+                  className="mb-4 btn btn-info btn-small-rounding"
+                >
+                  Visualize & share{" "}
+                  <FontAwesomeIcon icon={faBorderAll} size="lg" />
+                </Link>
+              </Card>
+            </div>
+          )}
         </div>
       </section>
       <section id="top-entity">
@@ -183,15 +201,11 @@ export default function UserReports() {
               entity="artist"
               user={user}
               terminology="artist"
-              extraButtons={[
-                <Link
-                  to={`/explore/art-creator/?range=${range}&style=designer-top-5`}
-                  className="btn btn-info btn-small-rounding"
-                  title="Visualize & share"
-                >
-                  <FontAwesomeIcon icon={faBorderAll} size="lg" />
-                </Link>,
-              ]}
+              extraButtons={
+                user
+                  ? [getLinkToArtCreator(range, TemplateNameEnum.designerTop5)]
+                  : undefined
+              }
             />
           </div>
           <div className="col-md-4 flex">
@@ -200,15 +214,11 @@ export default function UserReports() {
               entity="release-group"
               user={user}
               terminology="album"
-              extraButtons={[
-                <Link
-                  to={`/explore/art-creator/?range=${range}&style=grid-stats`}
-                  className="btn btn-info btn-small-rounding"
-                  title="Visualize & share"
-                >
-                  <FontAwesomeIcon icon={faBorderAll} size="lg" />
-                </Link>,
-              ]}
+              extraButtons={
+                user
+                  ? [getLinkToArtCreator(range, TemplateNameEnum.gridStats)]
+                  : undefined
+              }
             />
           </div>
           <div className="col-md-4 flex">
