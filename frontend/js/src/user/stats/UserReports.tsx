@@ -185,7 +185,7 @@ export default function UserReports() {
               terminology="artist"
               extraButtons={[
                 <Link
-                  to={`/explore/art-creator/?range=${range}&style=designer-top-10`}
+                  to={`/explore/art-creator/?range=${range}&style=designer-top-5`}
                   className="btn btn-info btn-small-rounding"
                   title="Visualize & share"
                 >
