@@ -9,6 +9,7 @@ class NotApiPathConverter(PathConverter):
         return path
 
 class UsernameConverter(PathConverter):
-    # MusicBrainz usernames can contain slashes,
-    # which should be allowed if properly URLEncoded
+    """ Matches MusicBrainz usernames, which can contain slashes
+        (should be allowed if properly URLEncoded)
+    """
     regex = '[^/].*?[^/]+'
