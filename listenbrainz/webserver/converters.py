@@ -7,3 +7,8 @@ class NotApiPathConverter(PathConverter):
         if path.startswith('1/'):
             raise ValidationError()
         return path
+
+class UsernameConverter(PathConverter):
+    # MusicBrainz usernames can contain slashes,
+    # which should be allowed if properly URLEncoded
+    regex = '[^/].*?[^/]+'
