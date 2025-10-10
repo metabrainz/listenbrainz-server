@@ -121,7 +121,7 @@ def delete_recommendation_feedback():
     return jsonify({'status': 'ok'})
 
 
-@recommendation_feedback_api_bp.get("/user/<user_name>")
+@recommendation_feedback_api_bp.get("/user/<mb_username:user_name>")
 @crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
@@ -198,7 +198,7 @@ def get_feedback_for_user(user_name):
     })
 
 
-@recommendation_feedback_api_bp.get("/user/<user_name>/recordings")
+@recommendation_feedback_api_bp.get("/user/<mb_username:user_name>/recordings")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):

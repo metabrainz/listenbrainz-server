@@ -71,7 +71,7 @@ def recording_feedback():
     return jsonify({'status': 'ok'})
 
 
-@feedback_api_bp.get("/user/<user_name>/get-feedback")
+@feedback_api_bp.get("/user/<mb_username:user_name>/get-feedback")
 @crossdomain
 @ratelimit()
 def get_feedback_for_user(user_name):
@@ -229,7 +229,7 @@ def _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, rec
     })
 
 
-@feedback_api_bp.post("/user/<user_name>/get-feedback-for-recordings")
+@feedback_api_bp.post("/user/<mb_username:user_name>/get-feedback-for-recordings")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user_post(user_name):
@@ -256,7 +256,7 @@ def get_feedback_for_recordings_for_user_post(user_name):
     return _get_feedback_for_recordings_for_user_helper(user_name, recording_msids, recording_mbids)
 
 
-@feedback_api_bp.get("/user/<user_name>/get-feedback-for-recordings")
+@feedback_api_bp.get("/user/<mb_username:user_name>/get-feedback-for-recordings")
 @crossdomain
 @ratelimit()
 def get_feedback_for_recordings_for_user_get(user_name):

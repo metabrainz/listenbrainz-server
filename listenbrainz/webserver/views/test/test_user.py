@@ -3,7 +3,7 @@ import logging
 import time
 from datetime import datetime, timezone
 from unittest import mock
-
+from urllib.parse import quote_plus
 import orjson
 from sqlalchemy import text
 
@@ -31,7 +31,8 @@ class UserViewsTestCase(IntegrationTestCase):
         user = db_user.get(self.db_conn, user['id'])
         self.user = User.from_dbrow(user)
 
-        weirduser = db_user.get_or_create(self.db_conn, 2, 'weird\\user name')
+        weirduser = db_user.get_or_create(
+            self.db_conn, 2, '</weird?\\user_name>')
         self.weirduser = User.from_dbrow(weirduser)
 
         abuser = db_user.get_or_create(self.db_conn, 3, 'abuser')
@@ -147,6 +148,27 @@ class UserViewsTestCase(IntegrationTestCase):
         self.assertContext('user', self.user)
         self.assert200(response1)
         self.assert200(response2)
+    
+    def test_weird_usernames(self):
+        """Tests that the username parsing allows the full range of MusicBrainz usernames
+        This includes encoded slashes (%2F), question marks (%3F)"""
+        encoded_username = quote_plus(
+            self.weirduser.musicbrainz_id)
+        # First test get request
+        response = self.client.get(self.custom_url_for('user.index', path="", user_name=self.weirduser.musicbrainz_id))
+        self.assert200(response)
+        self.assertContext('user', self.weirduser)
+        # Now the same with encoded username
+        response = self.client.get(f"/user/{encoded_username}/")
+        self.assert200(response)
+        self.assertContext('user', self.weirduser)
+        # Then test post request to get user data
+        response = self.client.post(f"/user/{encoded_username}/")
+        self.assert200(response)
+        parsed_response = orjson.loads(response.data)
+        # Check username is equal to unencoded name
+        self.assertDictEqual(parsed_response['user'], {
+                             'id': self.weirduser.id, 'name': self.weirduser.musicbrainz_id})
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):

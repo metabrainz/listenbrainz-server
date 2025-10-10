@@ -164,7 +164,7 @@ def _init_feed(id, title, alternate_url, self_url):
     return fg
 
 
-@atom_bp.get("/user/<user_name>/listens")
+@atom_bp.get("/user/<mb_username:user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -331,7 +331,7 @@ def get_fresh_releases():
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/fresh-releases")
+@atom_bp.get("/user/<mb_username:user_name>/fresh-releases")
 @crossdomain
 @ratelimit()
 def get_user_fresh_releases(user_name):
@@ -424,7 +424,7 @@ def _get_entity_stats(user_id: str, entity: str, range: str, count: int):
     return entity_list, stats.to_ts, stats.last_updated
 
 
-@atom_bp.get("/user/<user_name>/stats/top-artists")
+@atom_bp.get("/user/<mb_username:user_name>/stats/top-artists")
 @crossdomain
 @ratelimit()
 def get_artist_stats(user_name):
@@ -505,7 +505,7 @@ def get_artist_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/top-albums")
+@atom_bp.get("/user/<mb_username:user_name>/stats/top-albums")
 @crossdomain
 @ratelimit()
 def get_release_group_stats(user_name):
@@ -587,7 +587,7 @@ def get_release_group_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/top-tracks")
+@atom_bp.get("/user/<mb_username:user_name>/stats/top-tracks")
 @crossdomain
 @ratelimit()
 def get_recording_stats(user_name):
@@ -740,7 +740,7 @@ def get_playlist_recordings(playlist_mbid):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/recommendations")
+@atom_bp.get("/user/<mb_username:user_name>/recommendations")
 @crossdomain
 @api_listenstore_needed
 @ratelimit()
@@ -830,7 +830,7 @@ def get_recommendation(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/art/grid")
+@atom_bp.get("/user/<mb_username:user_name>/stats/art/grid")
 @crossdomain
 @ratelimit()
 def get_cover_art_grid_stats(user_name):
@@ -933,7 +933,7 @@ def get_cover_art_grid_stats(user_name):
     return Response(atomfeed, mimetype="application/atom+xml")
 
 
-@atom_bp.get("/user/<user_name>/stats/art/custom")
+@atom_bp.get("/user/<mb_username:user_name>/stats/art/custom")
 @crossdomain
 @ratelimit()
 def get_cover_art_custom_stats(user_name):
@@ -1078,7 +1078,7 @@ def _generate_event_title(event):
 
 # Commented out as new OAuth is not merged yet. Once merged, update this function to use the new OAuth API to 
 # authenticate the user and then fetch the user's events feed.
-# @atom_bp.get("/user/<user_name>/events")
+# @atom_bp.get("/user/<mb_username:user_name>/events")
 # @crossdomain
 # @ratelimit()
 # @api_listenstore_needed
