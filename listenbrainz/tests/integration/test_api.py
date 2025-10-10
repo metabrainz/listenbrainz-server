@@ -87,6 +87,18 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.client.get(url)
         self.assertStatus(response, 503)
 
+    def test_get_listens_invalid_ua(self):
+        url = self.custom_url_for('api_v1.get_listens',
+                                  user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, headers={"User-Agent": "foobar (lovable.dev)"})
+        self.assert400(response)
+        self.assertEqual(
+            response.json["message"],
+            "Please contact support@metabrainz.org for assistance."
+        )
+        response = self.client.get(url, headers={"User-Agent": "foobar"})
+        self.assert200(response)
+
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
         """
