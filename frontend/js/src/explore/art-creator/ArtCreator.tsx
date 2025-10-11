@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSearchParams } from "react-router";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -15,7 +16,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
-import { getBaseUrl } from "../../utils/utils";
+import { getBaseUrl, getObjectForURLSearchParams } from "../../utils/utils";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -118,8 +119,11 @@ const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
 
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
   // Add images for the gallery, don't compose them on the fly
-  const [userName, setUserName] = useState(currentUser?.name);
+  const [userName, setUserName] = useState(
+    searchParams.get("username") ?? currentUser?.name
+  );
   const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
   const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
     "this_month"
@@ -139,27 +143,41 @@ export default function ArtCreator() {
   );
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
-  const updateStyleButtonCallback = useCallback(
-    (name: TemplateNameEnum) => {
-      const selectedStyle = TemplateEnum[name];
-      setStyle(selectedStyle);
-      if (selectedStyle.type === "grid") {
-        setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
-        setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
-      } else if (selectedStyle.type === "text") {
-        setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
-        setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
-        setSecondBgColor(
-          (selectedStyle as TextTemplateOption).defaultColors[2]
-        );
+  const updateStyleButtonCallback = useCallback((name: TemplateNameEnum) => {
+    const selectedStyle = TemplateEnum[name];
+    setStyle(selectedStyle);
+    if (selectedStyle.type === "grid") {
+      setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
+      setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
+    } else if (selectedStyle.type === "text") {
+      setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
+      setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
+      setSecondBgColor((selectedStyle as TextTemplateOption).defaultColors[2]);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    // On load, validate URL params for custom style and range
+    if (searchParams.has("style")) {
+      const styleParam = searchParams.get("style") as TemplateNameEnum;
+      if (styleParam in TemplateEnum) {
+        updateStyleButtonCallback(styleParam);
       }
-    },
-    [setStyle]
-  );
+    }
+    if (searchParams.has("range")) {
+      const rangeParam = searchParams.get(
+        "range"
+      ) as keyof typeof TimeRangeOptions;
+      if (rangeParam in TimeRangeOptions) {
+        setTimeRange(rangeParam);
+      }
+    }
+  }, []);
+
   const updateStyleCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setStyle(TemplateEnum[event.target.value as TemplateNameEnum]),
-    [setStyle]
+      updateStyleButtonCallback(event.target.value as TemplateNameEnum),
+    [updateStyleButtonCallback]
   );
 
   const updateTimeRangeCallback = useCallback(
@@ -380,7 +398,20 @@ export default function ArtCreator() {
       { leading: false }
     );
   }, [setPreviewUrl, APIService.APIBaseURI]);
+
   React.useEffect(() => {
+    // Update the URL search params
+    setSearchParams(
+      (prevParams) => ({
+        ...getObjectForURLSearchParams(prevParams),
+        style: style.name,
+        range: timeRange,
+        username: userName,
+      }),
+      {
+        preventScrollReset: true,
+      }
+    );
     if (!userName) {
       return;
     }
@@ -392,6 +423,7 @@ export default function ArtCreator() {
     gridSize,
     gridLayout,
     debouncedSetPreviewUrl,
+    setSearchParams,
   ]);
 
   return (

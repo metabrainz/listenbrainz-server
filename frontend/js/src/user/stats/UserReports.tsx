@@ -1,16 +1,22 @@
 import * as React from "react";
 
 import {
+  faBorderAll,
   faGlobe,
   faInfoCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router";
+import {
+  Link,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import { Helmet } from "react-helmet";
 
-import Tooltip from "react-tooltip";
 import NiceModal from "@ebay/nice-modal-react";
+import { Card } from "react-bootstrap";
 import Pill from "../../components/Pill";
 import UserListeningActivity from "./components/UserListeningActivity";
 import UserTopEntity from "./components/UserTopEntity";
@@ -23,6 +29,7 @@ import UserGenreActivity from "./components/UserGenreActivity";
 import { getAllStatRanges, isInvalidStatRange } from "./utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
+import { TemplateNameEnum } from "../../explore/art-creator/ArtCreator";
 
 export type UserReportsProps = {
   user?: ListenBrainzUser;
@@ -33,12 +40,35 @@ export type UserReportsState = {
   user?: ListenBrainzUser;
 };
 
+function getLinkToArtCreator(
+  range: string,
+  style: TemplateNameEnum,
+  encodedUserName: string,
+  hideButtonText: boolean = false
+): JSX.Element {
+  const buttonText = "Visualize & share";
+  return (
+    <Link
+      to={`/explore/art-creator/?username=${encodedUserName}&range=${range}&style=${style}`}
+      className="btn btn-info btn-small-rounding"
+      title={buttonText}
+    >
+      {hideButtonText ? null : buttonText}
+      <FontAwesomeIcon
+        icon={faBorderAll}
+        size="lg"
+        className={hideButtonText ? undefined : "ms-3"}
+      />
+    </Link>
+  );
+}
+
 export default function UserReports() {
   const props = useLoaderData() as UserReportsProps;
   const { user = undefined } = props ?? {};
 
   // Context
-  const { currentUser } = React.useContext(GlobalAppContext);
+  const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
   // Router
   const navigate = useNavigate();
@@ -81,6 +111,16 @@ export default function UserReports() {
     </button>
   );
 
+  const encodedUserOrCurrentUserName = user?.name
+    ? encodeURIComponent(user.name)
+    : encodeURIComponent(currentUser.name);
+  let albumStatsUrl = "";
+  if (user) {
+    albumStatsUrl = `/user/${encodeURIComponent(user.name)}/stats`;
+  } else {
+    albumStatsUrl = `/statistics`;
+  }
+  albumStatsUrl += `/top-albums/?range=${range}`;
   return (
     <div data-testid="User Reports">
       <Helmet>
@@ -108,11 +148,7 @@ export default function UserReports() {
               type="button"
               onClick={() => {
                 navigate(
-                  `/user/${
-                    user?.name
-                      ? encodeURIComponent(user.name)
-                      : encodeURIComponent(currentUser.name)
-                  }/stats/?range=${range}`
+                  `/user/${encodedUserOrCurrentUserName}/stats/?range=${range}`
                 );
               }}
               className={`pill secondary ${user ? "active" : ""}`}
@@ -134,7 +170,35 @@ export default function UserReports() {
       </div>
       <section id="listening-activity">
         {statsExplanationModalButton}
-        <UserListeningActivity range={range} user={user} />
+        <div className="row">
+          <div className={`col ${user ? "col-md-8" : ""}`}>
+            <UserListeningActivity range={range} user={user} />
+          </div>
+          {user && (
+            <div className="col-md-4 flex">
+              <Card className="flex-center" data-testid="top-release-group">
+                <h3 className="capitalize-bold text-center">Album collage</h3>
+                <object
+                  className="p-4 m-auto"
+                  width="100%"
+                  style={{
+                    maxWidth: "600px",
+                    width: "-webkit-fill-available",
+                  }}
+                  aria-label="Album cover grid"
+                  data={`${APIService.APIBaseURI}/art/grid-stats/${encodedUserOrCurrentUserName}/${range}/5/1/600`}
+                />
+                <div className="mb-4">
+                  {getLinkToArtCreator(
+                    range,
+                    TemplateNameEnum.gridStatsSpecial,
+                    encodedUserOrCurrentUserName
+                  )}
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
       </section>
       <section id="top-entity">
         {statsExplanationModalButton}
@@ -145,6 +209,18 @@ export default function UserReports() {
               entity="artist"
               user={user}
               terminology="artist"
+              extraButtons={
+                user
+                  ? [
+                      getLinkToArtCreator(
+                        range,
+                        TemplateNameEnum.designerTop5,
+                        encodedUserOrCurrentUserName,
+                        true
+                      ),
+                    ]
+                  : undefined
+              }
             />
           </div>
           <div className="col-md-4 flex">
@@ -153,6 +229,18 @@ export default function UserReports() {
               entity="release-group"
               user={user}
               terminology="album"
+              extraButtons={
+                user
+                  ? [
+                      getLinkToArtCreator(
+                        range,
+                        TemplateNameEnum.gridStats,
+                        encodedUserOrCurrentUserName,
+                        true
+                      ),
+                    ]
+                  : undefined
+              }
             />
           </div>
           <div className="col-md-4 flex">
