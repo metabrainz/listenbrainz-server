@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from unittest import mock
 
 import orjson
+from brainzutils import cache
 from sqlalchemy import text
 
 import listenbrainz.db.user as db_user
@@ -155,28 +156,30 @@ class UserViewsTestCase(IntegrationTestCase):
         timescale.return_value = ([], EPOCH, EPOCH)
 
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call(user, limit=25)
+        req_call = mock.call(user, None, None, 25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # max_ts query param -> to_ts timescale param
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=datetime.fromtimestamp(1520946000, timezone.utc)) 
+        req_call = mock.call(user, None, datetime.fromtimestamp(1520946000, timezone.utc), 25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
         # min_ts query param -> from_ts timescale param
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000})
-        req_call = mock.call(user, limit=25, from_ts=datetime.fromtimestamp(1520941000, timezone.utc))
+        req_call = mock.call(user, datetime.fromtimestamp(1520941000, timezone.utc), None, 25)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
+        # clear listens cache
+        cache._r.flushdb()
         # If max_ts and min_ts set, only max_ts is used
         self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        req_call = mock.call(user, limit=25, to_ts=datetime.fromtimestamp(1520946000, timezone.utc))
+        req_call = mock.call(user, None, datetime.fromtimestamp(1520946000, timezone.utc), 25)
         timescale.assert_has_calls([req_call])
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
@@ -187,12 +190,12 @@ class UserViewsTestCase(IntegrationTestCase):
         response = self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                                    query_string={'max_ts': 'a'})
         self.assert400(response)
-        self.assertIn(b'Incorrect timestamp argument max_ts: a', response.data)
+        self.assertIn("Incorrect max_ts timestamp argument: a", response.json["error"])
 
         response = self.client.post(self.custom_url_for('user.profile', user_name='iliekcomputers'),
                                    query_string={'min_ts': 'b'})
         self.assert400(response)
-        self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
+        self.assertIn("Incorrect min_ts timestamp argument: b", response.json["error"])
 
         timescale.assert_not_called()
 

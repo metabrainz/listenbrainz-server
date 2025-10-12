@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 import timeago
 from math import ceil
 from collections import defaultdict
@@ -24,7 +24,7 @@ from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
-from listenbrainz.webserver.views.api_tools import get_non_negative_param
+from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg
 
 from brainzutils import cache
 
@@ -61,35 +61,14 @@ def profile(user_name):
     user_name = user.musicbrainz_id
 
     # Getting data for current page
-    max_ts = request.args.get("max_ts")
-    if max_ts is not None:
-        try:
-            max_ts = int(max_ts)
-        except ValueError:
-            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" %
-                            request.args.get("max_ts")}), 400
-
-    min_ts = request.args.get("min_ts")
-    if min_ts is not None:
-        try:
-            min_ts = int(min_ts)
-        except ValueError:
-            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" %
-                            request.args.get("min_ts")}), 400
-
-    args = {}
-    if max_ts:
-        args['to_ts'] = datetime.fromtimestamp(max_ts, timezone.utc)
-    elif min_ts:
-        args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
-    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
-        user.to_dict(), limit=LISTENS_PER_PAGE, **args)
-    min_ts_per_user = int(min_ts_per_user.timestamp())
-    max_ts_per_user = int(max_ts_per_user.timestamp())
-
-    listens = []
-    for listen in data:
-        listens.append(listen.to_api())
+    args = {"limit": LISTENS_PER_PAGE}
+    if max_ts := _parse_datetime_arg("max_ts"):
+        args["to_ts"] = max_ts
+    elif min_ts := _parse_datetime_arg("min_ts"):
+        args["from_ts"] = min_ts
+    data = ts_conn.fetch_listens_with_cache(
+        user.to_dict(), **args
+    )
 
     playing_now = playing_now_conn.get_playing_now(user.id)
     if playing_now:
@@ -108,10 +87,10 @@ def profile(user_name):
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "listens": listens,
-        "latestListenTs": max_ts_per_user,
-        "oldestListenTs": min_ts_per_user,
-        "profile_url": url_for('user.index', path="", user_name=user_name),
+        "listens": data["listens"],
+        "latestListenTs": data["latest_listen_ts"],
+        "oldestListenTs": data["oldest_listen_ts"],
+        "profile_url": url_for("user.index", path="", user_name=user_name),
         "userPinnedRecording": pin,
         "playingNow": playing_now,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),

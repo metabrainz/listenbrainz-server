@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 from urllib.parse import urlparse
 
@@ -444,6 +444,17 @@ def _parse_bool_arg(name, default=None):
         return default
 
 
+def _parse_datetime_arg(name, default=None):
+    value = request.args.get(name)
+    if value is not None:
+        try:
+            return datetime.fromtimestamp(int(value), timezone.utc)
+        except (ValueError, TypeError):
+            raise APIBadRequest("Incorrect %s timestamp argument: %s" % (name, value))
+    else:
+        return default
+
+
 def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
 
@@ -452,13 +463,33 @@ def _validate_get_endpoint_params() -> Tuple[int, int, int]:
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
-    if max_ts and min_ts:
-        if max_ts < min_ts:
-            log_raise_400("max_ts should be greater than min_ts")
+    if max_ts and min_ts and max_ts < min_ts:
+        log_raise_400("max_ts should be greater than min_ts")
 
     # Validate requested listen count is positive
-    count = min(_parse_int_arg(
-        "count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    count = min(
+        _parse_int_arg("count", DEFAULT_ITEMS_PER_GET),
+        MAX_ITEMS_PER_GET
+    )
+    if count < 0:
+        log_raise_400("Number of items requested should be positive")
+
+    return min_ts, max_ts, count
+
+
+def _validate_get_listens_endpoint_params() -> Tuple[datetime, datetime, int]:
+    """ Validates parameters for /listens endpoint"""
+    max_ts = _parse_datetime_arg("max_ts")
+    min_ts = _parse_datetime_arg("min_ts")
+
+    if max_ts and min_ts and max_ts < min_ts:
+        log_raise_400("max_ts should be greater than min_ts")
+
+    # Validate requested listen count is positive
+    count = min(
+        _parse_int_arg("count", DEFAULT_ITEMS_PER_GET),
+        MAX_ITEMS_PER_GET
+    )
     if count < 0:
         log_raise_400("Number of items requested should be positive")
 
