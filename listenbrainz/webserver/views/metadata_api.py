@@ -12,6 +12,7 @@ from listenbrainz.labs_api.labs.api.artist_credit_recording_release_lookup impor
 from listenbrainz.labs_api.labs.api.mbid_mapping import MBIDMappingQuery, MBIDMappingInput
 from listenbrainz.mbid_mapping_writer.mbid_mapper import MBIDMapper
 from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.utils import parse_boolean_arg
@@ -488,6 +489,8 @@ def submit_manual_mapping():
     )
 
     create_mbid_manual_mapping(ts_conn, mapping)
+
+    invalidate_user_listen_caches(user["id"])
 
     return jsonify({"status": "ok"})
 
