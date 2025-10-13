@@ -14,6 +14,7 @@ import {
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type NavidromePlayerState = {
   currentTrack?: NavidromeTrack;
@@ -73,14 +74,7 @@ export default class NavidromePlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
-    if (prevProps.show !== show) {
-      if (show) {
-        this.setupAudioListeners();
-      } else {
-        this.audioRef.current?.pause();
-      }
-    }
+    const { volume } = this.props;
     if (prevProps.volume !== volume) {
       this.updateVolume();
     }
@@ -89,6 +83,10 @@ export default class NavidromePlayer
   componentWillUnmount(): void {
     this.cleanupAudioListeners();
   }
+
+  stop = () => {
+    this.audioRef.current?.pause();
+  };
 
   setupAudioListeners = (): void => {
     const audioElement = this.audioRef.current;
@@ -424,12 +422,17 @@ export default class NavidromePlayer
   };
 
   render() {
-    const { show } = this.props;
     const { currentTrack } = this.state;
     const artworkUrl = this.getTrackArtworkUrl(currentTrack);
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+
+    if (!isCurrentDataSource) {
+      return null;
+    }
 
     return (
-      <div className={`navidrome-player ${show ? "" : "hidden"}`}>
+      <div className="navidrome-player">
         <audio ref={this.audioRef} crossOrigin="anonymous" preload="metadata">
           <track kind="captions" />
         </audio>
