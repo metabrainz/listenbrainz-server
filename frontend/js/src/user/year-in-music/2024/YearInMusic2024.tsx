@@ -8,6 +8,7 @@ import {
   EffectCube,
 } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css/bundle";
 /* eslint-enable import/no-unresolved */
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
 import { ResponsiveTreeMap } from "@nivo/treemap";

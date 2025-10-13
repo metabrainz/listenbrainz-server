@@ -270,6 +270,18 @@ def create_web_app(debug=None):
         # redirect them to agree to terms page.
         elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
+
+    @app.before_request
+    def block_vibe_coding_ua():
+        user_agent = request.headers.get('User-Agent', '').lower()
+        if "lovable.dev" in user_agent:
+            from flask import jsonify
+            return jsonify({
+                "code": 400,
+                "message": "Please contact support@metabrainz.org for assistance."
+            }), 400
+        return None
+
     app.logger.info("Flask application created!")
     return app
 

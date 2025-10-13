@@ -75,7 +75,7 @@ export default class FunkwhalePlayer
   };
 
   public name = "funkwhale";
-  public domainName = "funkwhale";
+  public domainName = false;
   public icon = faFunkwhale; // Custom Funkwhale FontAwesome icon
   public iconColor = dataSourcesInfo.funkwhale.color;
 
@@ -444,7 +444,7 @@ export default class FunkwhalePlayer
 
     if (!funkwhaleUser?.instance_url) {
       onInvalidateDataSource(
-        this as any,
+        this,
         <span>
           Please{" "}
           <Link to="/settings/music-services/details/">
@@ -460,7 +460,7 @@ export default class FunkwhalePlayer
       callbackFunction();
     } catch (refreshError) {
       onInvalidateDataSource(
-        this as any,
+        this,
         <span>
           Please{" "}
           <Link to="/settings/music-services/details/">

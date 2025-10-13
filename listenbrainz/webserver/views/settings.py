@@ -19,7 +19,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.db.missing_musicbrainz_data import get_user_missing_musicbrainz_data
 from listenbrainz.domain.apple import AppleService
 from listenbrainz.domain.critiquebrainz import CritiqueBrainzService, CRITIQUEBRAINZ_SCOPES
-from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError
+from listenbrainz.domain.external_service import ExternalService, ExternalServiceInvalidGrantError, ExternalServiceError, ExternalServiceAPIError
 from listenbrainz.domain.lastfm import LastfmService
 from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
@@ -31,6 +31,7 @@ from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, AP
     APIBadRequest
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.domain.funkwhale import FunkwhaleService
+from listenbrainz.domain.navidrome import NavidromeService
 from listenbrainz.db import funkwhale as db_funkwhale
 
 
@@ -160,7 +161,7 @@ def delete_listens():
         raise APIInternalServerError(f"Error while deleting listens for user: {current_user.musicbrainz_id}")
 
 
-def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) -> ExternalService:
+def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False, exclude_navidrome=False) -> ExternalService:
     """Returns the music service for the given name and raise 404 if
     service is not found
 
@@ -185,6 +186,8 @@ def _get_service_or_raise_404(name: str, include_mb=False, exclude_apple=False) 
             return MusicBrainzService()
         elif service == ExternalServiceType.FUNKWHALE:
             return FunkwhaleService()
+        elif not exclude_navidrome and service == ExternalServiceType.NAVIDROME:
+            return NavidromeService()
     except KeyError:
         raise NotFound("Service %s is invalid." % (name,))
 
@@ -230,6 +233,10 @@ def music_services_details():
     librefm_user = librefm_service.get_user(current_user.id)
     current_librefm_permissions = "import" if librefm_user else "disable"
 
+    navidrome_service = NavidromeService()
+    navidrome_connection = navidrome_service.get_user(current_user.id, include_token=False)
+    current_navidrome_permissions = "listen" if navidrome_connection else "disable"
+
     data: dict[str, Any] = {
         "current_spotify_permissions": current_spotify_permissions,
         "current_critiquebrainz_permissions": current_critiquebrainz_permissions,
@@ -238,6 +245,7 @@ def music_services_details():
         "current_lastfm_permissions": current_lastfm_permissions,
         "current_funkwhale_permission": current_funkwhale_permission,
         "funkwhale_host_urls": funkwhale_host_urls,
+        "current_navidrome_permissions": current_navidrome_permissions,
         "current_librefm_permissions": current_librefm_permissions,
     }
     if lastfm_user:
@@ -250,6 +258,11 @@ def music_services_details():
             "external_user_id": librefm_user["external_user_id"],
             "latest_listened_at": librefm_user["latest_listened_at"],
         }
+    if navidrome_connection:
+        data["current_navidrome_settings"] = {
+            "instance_url": navidrome_connection["instance_url"],
+            "username": navidrome_connection["username"],
+        }
 
     return jsonify(data)
 
@@ -257,7 +270,7 @@ def music_services_details():
 @settings_bp.get('/music-services/<service_name>/callback/')
 @login_required
 def music_services_callback(service_name: str):
-    service = _get_service_or_raise_404(service_name, exclude_apple=True)
+    service = _get_service_or_raise_404(service_name, exclude_apple=True, exclude_navidrome=True)
 
     # Check for error parameter first
     error = request.args.get("error")
@@ -319,7 +332,7 @@ def music_services_callback(service_name: str):
 @settings_bp.post('/music-services/<service_name>/refresh/')
 @api_login_required
 def refresh_service_token(service_name: str):
-    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True)
+    service = _get_service_or_raise_404(service_name, include_mb=True, exclude_apple=True, exclude_navidrome=True)
 
     if isinstance(service, FunkwhaleService):
         data = request.get_json() or {}
@@ -390,7 +403,29 @@ def music_services_connect(service_name: str):
             current_app.logger.error("Failed to get authorization URL: %s", str(e), exc_info=True)
             raise APIInternalServerError(f"Failed to connect to Funkwhale server: {str(e)}")
 
-        return jsonify({"url": auth_url, "status": "ok"})
+        return jsonify({"url": auth_url})
+
+    if service_name.lower() == "navidrome":
+        data = request.get_json() or {}
+        host_url = data.get("host_url")
+        username = data.get("username") 
+        password = data.get("password")
+
+        if not all([host_url, username, password]):
+            raise APIBadRequest("Missing 'host_url', 'username', or 'password' for Navidrome connect.")
+
+        if not (host_url.startswith("http://") or host_url.startswith("https://")):
+            raise APIBadRequest(f"Invalid host_url '{host_url}' for Navidrome connect.")
+
+        try:
+            service = NavidromeService()
+            service.connect_user(current_user.id, host_url, username, password)
+            return jsonify({})
+        except (ExternalServiceError, ExternalServiceAPIError) as e:
+            raise APIBadRequest(str(e))
+        except Exception as e:
+            current_app.logger.error("Unexpected error during Navidrome connection for user %s: %s", current_user.id, str(e), exc_info=True)
+            raise APIBadRequest("An unexpected error occurred while connecting to Navidrome")
     
     if service_name.lower() not in {"lastfm", "librefm"}:
         raise APINotFound("Service %s is invalid." % (service_name,))
@@ -443,7 +478,7 @@ def music_services_connect(service_name: str):
     except Exception:
         current_app.logger.error(f"Unable to fetch {service_name} user data:", exc_info=True)
 
-    return jsonify({"success": True, "totalLfmListens": total_listens})
+    return jsonify({"totalLfmListens": total_listens})
 
 
 @settings_bp.post('/music-services/<service_name>/disconnect/')
@@ -461,6 +496,19 @@ def music_services_disconnect(service_name: str):
         except Exception as e:
             current_app.logger.error("Error in disconnect_funkwhale: %s", str(e), exc_info=True)
             raise APIInternalServerError("An error occurred while disconnecting from Funkwhale")
+    
+    if service_name.lower() == 'navidrome':
+        # remove all Navidrome tokens for user
+        try:
+            service = NavidromeService()
+            service.remove_user(current_user.id)
+            return jsonify({
+                'status': 'ok',
+                'message': 'Successfully disconnected from Navidrome'
+            })
+        except Exception as e:
+            current_app.logger.error("Error in disconnect_navidrome: %s", str(e), exc_info=True)
+            raise APIInternalServerError("An error occurred while disconnecting from Navidrome")
 
     # Handle other services
     service = _get_service_or_raise_404(service_name)
