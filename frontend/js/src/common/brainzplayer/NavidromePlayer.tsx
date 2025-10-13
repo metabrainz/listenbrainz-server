@@ -432,7 +432,7 @@ export default class NavidromePlayer
     }
 
     return (
-      <div className="navidrome-player">
+      <div className="navidrome-player" data-testid="navidrome-player">
         <audio ref={this.audioRef} crossOrigin="anonymous" preload="metadata">
           <track kind="captions" />
         </audio>
