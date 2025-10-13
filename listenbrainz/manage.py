@@ -120,6 +120,27 @@ def init_db(force, create_db):
         print('PG: Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
+        print("Done!")\
+
+@cli.command(name="update_db")
+@click.argument('filename', type=click.Path(exists=True, dir_okay=False))
+def update_db(filename):
+    """Updates the datbase by running the specified SQL file at FILENAME
+    """
+    from listenbrainz import config
+    if "PYTHON_TESTS_RUNNING" in os.environ:
+        db_connect = db.create_test_database_connect_strings()
+        db.init_db_connection(db_connect["DB_CONNECT_ADMIN"])
+        config.PYTHON_TESTS_RUNNING = True
+    else:
+        db_connect = {"DB_NAME": "listenbrainz", "DB_USER": "listenbrainz"}
+        db.init_db_connection(config.POSTGRES_ADMIN_URI)
+
+    application = webserver.create_app()
+    with application.app_context():
+        print('PG: Running DB migration script %s...' % filename)
+        db.run_sql_script(filename)
+
         print("Done!")
 
 
