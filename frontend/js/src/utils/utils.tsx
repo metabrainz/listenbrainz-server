@@ -328,15 +328,22 @@ const searchForFunkwhaleTrack = async (
 
 /**
  * Remove featuring artists from artist name to improve search matching.
- * Handles various formats: "feat.", "ft.", "featuring", "feat", "ft"
- * Also removes content in parentheses at the end of artist names.
+ * Based on MusicBrainz's battle-tested regex pattern:
+ * https://github.com/metabrainz/musicbrainz-server/blob/master/root/static/scripts/edit/utility/guessFeat.js
  */
 const removeFeaturingArtists = (artistName: string): string => {
   if (!artistName) return artistName;
 
-  let cleaned = artistName.replace(/\s+(?:feat\.?|ft\.?|featuring)\s+.+$/i, "");
+  // MusicBrainz-based regex for featuring artists
+  // Matches: feat./ft./featuring with optional punctuation and fullwidth variants
+  const featRegex = /(?:^\s*|[,，－-]\s*|\s+)((?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ)(?=\s))\s*.+$/i;
+
+  let cleaned = artistName.replace(featRegex, "");
+
+  // Also handle featuring artists in brackets/parentheses at the end
+  // e.g., "Artist (feat. Guest)" or "Artist [ft. Someone]"
   cleaned = cleaned.replace(
-    /\s*\([^)]*(?:feat\.?|ft\.?|featuring)[^)]*\)\s*$/i,
+    /\s*[[（(].*?(?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ).*?[\]）)\s]*$/i,
     ""
   );
 
@@ -393,63 +400,32 @@ const searchForNavidromeTrack = async (
     );
   }
 
-  if (!trackName && !artistName) {
-    throw new Error("No search terms provided");
+  if (!trackName || !artistName) {
+    throw new Error("Both track name and artist name are required for search");
   }
 
   try {
     // Try with track name and main artist (without featuring artists)
-    if (trackName && artistName) {
-      const cleanedArtistName = removeFeaturingArtists(artistName);
-      const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
-      const result = await performNavidromeSearch(
-        instanceURL,
-        authParams,
-        cleanedQuery
-      );
-      if (result) {
-        return result;
-      }
+    const cleanedArtistName = removeFeaturingArtists(artistName);
+    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+    const result = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      cleanedQuery
+    );
+    if (result) {
+      return result;
     }
 
     // Try with full artist name as fallback
-    // In case the featuring artist is actually needed for disambiguation
-    if (trackName && artistName) {
-      const fullQuery = `${trackName} ${artistName}`.trim();
-      const result = await performNavidromeSearch(
-        instanceURL,
-        authParams,
-        fullQuery
-      );
-      if (result) {
-        return result;
-      }
-    }
-
-    // Try track name only as last resort
-    // Only if we don't have artist name, to avoid matching wrong tracks
-    if (trackName && !artistName) {
-      const trackOnlyQuery = trackName.trim();
-      const result = await performNavidromeSearch(
-        instanceURL,
-        authParams,
-        trackOnlyQuery
-      );
-      if (result) {
-        return result;
-      }
-    }
-
-    // Artist name only
-    if (artistName && !trackName) {
-      const result = await performNavidromeSearch(
-        instanceURL,
-        authParams,
-        artistName
-      );
-      if (result) {
-        return result;
-      }
+    const fullQuery = `${trackName} ${artistName}`.trim();
+    const fallbackResult = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      fullQuery
+    );
+    if (fallbackResult) {
+      return fallbackResult;
     }
 
     return null;
