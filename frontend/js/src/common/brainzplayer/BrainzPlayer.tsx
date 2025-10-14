@@ -64,6 +64,7 @@ import {
   addListenToTopOfQueueAtom,
   addListenToBottomOfQueueAtom,
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
+  isActivatedAtom,
 } from "./BrainzPlayerAtoms";
 
 import useWindowTitle from "./hooks/useWindowTitle";
@@ -175,13 +176,16 @@ export default function BrainzPlayer() {
     APIBaseURI: listenBrainzAPIBaseURI,
   } = APIService;
 
+  const store = useStore();
+
   // Refs for local state
-  const isActivatedRef = React.useRef(false);
+  const isActivatedRef = React.useRef(useAtomValue(isActivatedAtom));
   const activatePlayer = async () => {
     if (isActivatedRef.current === true) {
       return;
     }
     isActivatedRef.current = true;
+    store.set(isActivatedAtom, true);
     await new Promise((resolve) => {
       setTimeout(resolve, 100);
     });
@@ -221,7 +225,6 @@ export default function BrainzPlayer() {
     clearQueueAfterCurrentAndSetAmbientQueueAtom
   );
 
-  const store = useStore();
   const getProgressMs = () => store.get(progressMsAtom);
   const getQueue = () => store.get(queueAtom);
   const getAmbientQueue = () => store.get(ambientQueueAtom);

@@ -70,6 +70,7 @@ export const currentTrackCoverURLAtom = atomWithReset<string | undefined>(
   undefined
 );
 export const playerPausedAtom = atomWithReset<boolean>(true);
+export const isActivatedAtom = atomWithReset<boolean>(false);
 export const volumeAtom = atomWithStorage<number>("brainzplayer-volume", 100);
 export const durationMsAtom = atomWithReset<number>(0);
 export const progressMsAtom = atomWithReset<number>(0);
