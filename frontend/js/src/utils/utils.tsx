@@ -405,24 +405,24 @@ const searchForNavidromeTrack = async (
   }
 
   try {
-    // Try with track name and main artist (without featuring artists)
-    const cleanedArtistName = removeFeaturingArtists(artistName);
-    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+    // Try with full artist name first to avoid unnecessary regex processing
+    const fullQuery = `${trackName} ${artistName}`.trim();
     const result = await performNavidromeSearch(
       instanceURL,
       authParams,
-      cleanedQuery
+      fullQuery
     );
     if (result) {
       return result;
     }
 
-    // Try with full artist name as fallback
-    const fullQuery = `${trackName} ${artistName}`.trim();
+    // Fall back to cleaned artist name (without featuring artists)
+    const cleanedArtistName = removeFeaturingArtists(artistName);
+    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
     const fallbackResult = await performNavidromeSearch(
       instanceURL,
       authParams,
-      fullQuery
+      cleanedQuery
     );
     if (fallbackResult) {
       return fallbackResult;
