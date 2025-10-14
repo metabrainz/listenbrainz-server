@@ -63,7 +63,7 @@
    </text>
    {% endfor %}
   </g>
-  <g id="lines" stroke="#FAFF5B">
+  <g id="lines" class="accent-color-stroke">
     {% for _ in releases[:10] %}
       <line
        x1="0"

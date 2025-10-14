@@ -68,21 +68,25 @@ const Preview = React.forwardRef(function PreviewComponent(
         <style>
           {textColor
             ? `
-            text > tspan {
+            text > tspan,
+            .accent-color {
             fill: ${textColor};
-          }`
+          }
+          .accent-color-stroke {
+            stroke: ${textColor};
+          }
+            `
             : ""}
           {bgColor1
             ? `
-            stop:first-child {
-            stop-color: ${bgColor1};
-          }`
+            stop:first-child { stop-color: ${bgColor1}; }
+            .bg-color-1 { fill: ${bgColor1}; }
+          `
             : ""}
           {bgColor2
             ? `
-            stop:nth-child(2) {
-            stop-color: ${bgColor2};
-          }`
+            stop:nth-child(2) { stop-color: ${bgColor2}; }
+            .bg-color-2 { fill: ${bgColor2}; }`
             : ""}
         </style>
       )}
