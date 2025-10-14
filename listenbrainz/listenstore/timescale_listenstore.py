@@ -20,6 +20,7 @@ from listenbrainz.listen import Listen
 from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION, LISTEN_MINIMUM_DATE
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
 from listenbrainz.webserver import ts_conn
+from listenbrainz.webserver.listens_cache import get_listens_from_cache, set_listens_in_cache
 
 # Append the user name for both of these keys
 REDIS_USER_LISTEN_COUNT = "lc."
@@ -645,6 +646,38 @@ class TimescaleListenStore:
         zstd.stdout.close()
 
         return total_imported
+
+    def fetch_listens_with_cache(
+        self, user: dict, from_ts: datetime = None,
+        to_ts: datetime = None, limit: int = DEFAULT_LISTENS_PER_FETCH
+    ):
+        """ Fetch listens for a user, using a cache to avoid unnecessary queries. If a database query is necessary,
+            the result is cached.
+        """
+        key_parts = {
+            "user_id": user["id"],
+            "min_ts": int(from_ts.timestamp()) if from_ts else None,
+            "max_ts": int(to_ts.timestamp()) if to_ts else None,
+            "count": limit
+        }
+        cached_data = get_listens_from_cache(**key_parts)
+        if cached_data is not None:
+            return cached_data
+
+        listens, min_ts_per_user, max_ts_per_user = self.fetch_listens(user, from_ts, to_ts, limit)
+        listen_data = []
+        for listen in listens:
+            listen_data.append(listen.to_api())
+        data = {
+            "count": len(listen_data),
+            "listens": listen_data,
+            "latest_listen_ts": int(max_ts_per_user.timestamp()),
+            "oldest_listen_ts": int(min_ts_per_user.timestamp()),
+        }
+
+        set_listens_in_cache(data, **key_parts)
+
+        return data
 
     def delete(self, user_id, created=None):
         """ Delete all listens for user with specified user ID.

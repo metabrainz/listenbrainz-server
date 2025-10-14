@@ -16,6 +16,7 @@ from listenbrainz import messybrainz
 from listenbrainz.listen import Listen
 from listenbrainz.utils import get_fallback_connection_name
 from listenbrainz.webserver import create_app, redis_connection, timescale_connection
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
@@ -145,8 +146,10 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
         unique = []
         inserted_index = {}
+        user_ids_to_invalidate = set()
         for inserted in rows_inserted:
             inserted_index['%d-%s-%s' % (int(inserted[0].timestamp()), inserted[1], inserted[2])] = 1
+            user_ids_to_invalidate.add(inserted[1])
 
         for listen in data:
             k = '%d-%s-%s' % (listen.ts_since_epoch, listen.user_id, listen.recording_msid)
@@ -155,6 +158,13 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
         if not unique:
             return len(data)
+
+        if user_ids_to_invalidate:
+            try:
+                for user_id in user_ids_to_invalidate:
+                    invalidate_user_listen_caches(user_id)
+            except Exception:
+                current_app.logger.error("Unable to invalidate listen cache:", exc_info=True)
 
         redis_connection._redis.update_recent_listens(unique)
         self.unique_listens += len(unique)

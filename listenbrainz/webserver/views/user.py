@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 import timeago
 from math import ceil
 from collections import defaultdict
@@ -24,7 +24,7 @@ from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.login import User, api_login_required
 from listenbrainz.webserver.views.api import DEFAULT_NUMBER_OF_PLAYLISTS_PER_CALL
 from listenbrainz.webserver.utils import number_readable
-from listenbrainz.webserver.views.api_tools import get_non_negative_param
+from listenbrainz.webserver.views.api_tools import get_non_negative_param, _parse_datetime_arg
 
 from brainzutils import cache
 
@@ -45,7 +45,7 @@ def index(path):
     return render_template("index.html", user=current_user)
 
 
-@user_bp.post("/<user_name>/")
+@user_bp.post("/<mb_username:user_name>/")
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -61,35 +61,14 @@ def profile(user_name):
     user_name = user.musicbrainz_id
 
     # Getting data for current page
-    max_ts = request.args.get("max_ts")
-    if max_ts is not None:
-        try:
-            max_ts = int(max_ts)
-        except ValueError:
-            return jsonify({"error": "Incorrect timestamp argument max_ts: %s" %
-                            request.args.get("max_ts")}), 400
-
-    min_ts = request.args.get("min_ts")
-    if min_ts is not None:
-        try:
-            min_ts = int(min_ts)
-        except ValueError:
-            return jsonify({"error": "Incorrect timestamp argument min_ts: %s" %
-                            request.args.get("min_ts")}), 400
-
-    args = {}
-    if max_ts:
-        args['to_ts'] = datetime.fromtimestamp(max_ts, timezone.utc)
-    elif min_ts:
-        args['from_ts'] = datetime.fromtimestamp(min_ts, timezone.utc)
-    data, min_ts_per_user, max_ts_per_user = ts_conn.fetch_listens(
-        user.to_dict(), limit=LISTENS_PER_PAGE, **args)
-    min_ts_per_user = int(min_ts_per_user.timestamp())
-    max_ts_per_user = int(max_ts_per_user.timestamp())
-
-    listens = []
-    for listen in data:
-        listens.append(listen.to_api())
+    args = {"limit": LISTENS_PER_PAGE}
+    if max_ts := _parse_datetime_arg("max_ts"):
+        args["to_ts"] = max_ts
+    elif min_ts := _parse_datetime_arg("min_ts"):
+        args["from_ts"] = min_ts
+    data = ts_conn.fetch_listens_with_cache(
+        user.to_dict(), **args
+    )
 
     playing_now = playing_now_conn.get_playing_now(user.id)
     if playing_now:
@@ -108,10 +87,10 @@ def profile(user_name):
             "id": user.id,
             "name": user.musicbrainz_id,
         },
-        "listens": listens,
-        "latestListenTs": max_ts_per_user,
-        "oldestListenTs": min_ts_per_user,
-        "profile_url": url_for('user.index', path="", user_name=user_name),
+        "listens": data["listens"],
+        "latestListenTs": data["latest_listen_ts"],
+        "oldestListenTs": data["oldest_listen_ts"],
+        "profile_url": url_for("user.index", path="", user_name=user_name),
         "userPinnedRecording": pin,
         "playingNow": playing_now,
         "logged_in_user_follows_user": logged_in_user_follows_user(user),
@@ -121,9 +100,9 @@ def profile(user_name):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/stats/top-artists/")
-@user_bp.post("/<user_name>/stats/top-albums/")
-@user_bp.post("/<user_name>/stats/top-tracks/")
+@user_bp.post("/<mb_username:user_name>/stats/top-artists/")
+@user_bp.post("/<mb_username:user_name>/stats/top-albums/")
+@user_bp.post("/<mb_username:user_name>/stats/top-tracks/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -143,7 +122,7 @@ def charts(user_name):
     return jsonify(props)
 
 
-@user_bp.post("/<user_name>/stats/")
+@user_bp.post("/<mb_username:user_name>/stats/")
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -163,7 +142,7 @@ def stats(user_name: str):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/playlists/")
+@user_bp.post("/<mb_username:user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
@@ -209,7 +188,7 @@ def playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/recommendations/")
+@user_bp.post("/<mb_username:user_name>/recommendations/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -250,7 +229,7 @@ def recommendation_playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/report-user/")
+@user_bp.post("/<mb_username:user_name>/report-user/")
 @api_login_required
 def report_abuse(user_name):
     data = request.json
@@ -294,7 +273,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.post("/<user_name>/taste/")
+@user_bp.post("/<mb_username:user_name>/taste/")
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -416,8 +395,8 @@ def process_genre_data(yim_top_genre: list, data: list, user_name: str):
     }
 
 
-@user_bp.post("/<user_name>/year-in-music/")
-@user_bp.post("/<user_name>/year-in-music/<int:year>/")
+@user_bp.post("/<mb_username:user_name>/year-in-music/")
+@user_bp.post("/<mb_username:user_name>/year-in-music/<int:year>/")
 def year_in_music(user_name, year: int = 2024):
     """ Year in Music """
     if year not in (2021, 2022, 2023, 2024):
@@ -462,7 +441,7 @@ def year_in_music(user_name, year: int = 2024):
 # Embedable widgets, return HTML page to embed in an iframe
 
 
-@user_bp.get("/<user_name>/embed/playing-now/")
+@user_bp.get("/<mb_username:user_name>/embed/playing-now/")
 def embed_playing_now(user_name):
     """ Returns either the HTML page that load the current playing-now for a user
      or the HTMX fragment consisting only in the playing-now card HTML markup 
@@ -572,7 +551,7 @@ def render_playing_now_card(user):
     )
 
 
-@user_bp.get("/<user_name>/embed/pin/")
+@user_bp.get("/<mb_username:user_name>/embed/pin/")
 def embed_pin(user_name):
     """ Returns either the HTML page that load the current pin for a user
      or the HTMX fragment consisting only in the pin HTML markup
@@ -681,8 +660,8 @@ def embed_pin(user_name):
     )
 
 
-@user_bp.get("/<user_name>/",  defaults={'path': ''})
-@user_bp.get('/<user_name>/<path:path>/')
+@user_bp.get("/<mb_username:user_name>/",  defaults={'path': ''})
+@user_bp.get('/<mb_username:user_name>/<path:path>/')
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)

@@ -12,7 +12,7 @@ recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __na
 SERVER_URL = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
 
 
-@recommendations_cf_recording_bp.post("/<user_name>/")
+@recommendations_cf_recording_bp.post("/<mb_username:user_name>/")
 def info(user_name):
     """ Show info about the recommended tracks
     """
@@ -29,7 +29,7 @@ def info(user_name):
     })
 
 
-@recommendations_cf_recording_bp.post("/<user_name>/raw/")
+@recommendations_cf_recording_bp.post("/<mb_username:user_name>/raw/")
 def raw(user_name: str):
     """ Show raw track recommendations """
     user = _get_user(user_name)

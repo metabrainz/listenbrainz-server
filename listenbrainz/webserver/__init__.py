@@ -14,7 +14,7 @@ from flask_htmx import HTMX
 from listenbrainz import db
 from listenbrainz.db import create_test_database_connect_strings, timescale, donation
 from listenbrainz.db.timescale import create_test_timescale_connect_strings
-from listenbrainz.webserver.converters import NotApiPathConverter
+from listenbrainz.webserver.converters import NotApiPathConverter, UsernameConverter
 
 API_PREFIX = '/1'
 
@@ -108,6 +108,7 @@ def create_app(debug=None):
         logger.setLevel(logging.DEBUG)
 
     app.url_map.converters["not_api_path"] = NotApiPathConverter
+    app.url_map.converters["mb_username"] = UsernameConverter
 
     # initialize Flask-DebugToolbar if the debug option is True
     if app.debug and app.config['SECRET_KEY']:
@@ -270,6 +271,18 @@ def create_web_app(debug=None):
         # redirect them to agree to terms page.
         elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
+
+    @app.before_request
+    def block_vibe_coding_ua():
+        user_agent = request.headers.get('User-Agent', '').lower()
+        if "lovable.dev" in user_agent:
+            from flask import jsonify
+            return jsonify({
+                "code": 400,
+                "message": "Please contact support@metabrainz.org for assistance."
+            }), 400
+        return None
+
     app.logger.info("Flask application created!")
     return app
 

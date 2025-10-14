@@ -173,7 +173,7 @@ def cover_art_grid_post():
                            }
 
 
-@art_api_bp.get("/grid-stats/<user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>")
+@art_api_bp.get("/grid-stats/<mb_username:user_name>/<time_range>/<int:dimension>/<int:layout>/<int:image_size>")
 @crossdomain
 @ratelimit()
 def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
@@ -234,7 +234,7 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            }
 
 
-@art_api_bp.get("/<custom_name>/<user_name>/<time_range>/<int:image_size>")
+@art_api_bp.get("/<custom_name>/<mb_username:user_name>/<time_range>/<int:image_size>")
 @crossdomain
 @ratelimit()
 def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
@@ -726,7 +726,7 @@ def _cover_art_yim_overview(user_name, stats, year, yim24):
         return render_template("art/svg-templates/year-in-music/2024/yim-2024-overview.svg", **props, **yim24)
 
 
-@art_api_bp.get("/year-in-music/<int:year>/<user_name>")
+@art_api_bp.get("/year-in-music/<int:year>/<mb_username:user_name>")
 @crossdomain
 @ratelimit()
 def cover_art_yim(user_name, year: int = 2024):

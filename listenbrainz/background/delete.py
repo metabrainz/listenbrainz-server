@@ -6,6 +6,7 @@ from data.model.external_service import ExternalServiceType
 from listenbrainz.listenstore.timescale_listenstore import REDIS_USER_LISTEN_COUNT
 from listenbrainz.webserver import timescale_connection
 from listenbrainz.db import user as db_user, listens_importer
+from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 
 
 def delete_user(db_conn, user_id: int, created: datetime):
@@ -30,5 +31,6 @@ def delete_listens_history(db_conn, user_id: int, created: datetime):
     """
     timescale_connection._ts.delete(user_id, created)
     cache.delete(REDIS_USER_LISTEN_COUNT + str(user_id))
+    invalidate_user_listen_caches(user_id)
     listens_importer.update_latest_listened_at(db_conn, user_id, ExternalServiceType.LASTFM, 0)
     db_conn.commit()

@@ -470,7 +470,7 @@ export default function PlaylistPage() {
             )}
           </div>
           {playlist.annotation && (
-            <div>
+            <div className="description">
               <div
                 className={`${isLongDescription ? "text-summary long" : ""} ${
                   showMore ? "expanded" : ""
