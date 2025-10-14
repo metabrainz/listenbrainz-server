@@ -115,19 +115,35 @@ const DEFAULT_IMAGE_SIZE = 750;
 
 // const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
-const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
+const defaultStyleOnLoad = TemplateEnum[
+  TemplateNameEnum.designerTop5
+] as TextTemplateOption;
+
+const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();
-  // Add images for the gallery, don't compose them on the fly
-  const [userName, setUserName] = useState(
-    searchParams.get("username") ?? currentUser?.name
+  const userName = searchParams.get("username") ?? currentUser?.name;
+  const setUserNameCallback = useCallback(
+    (newUsername: string) => {
+      setSearchParams((prevParams) => {
+        prevParams.set("username", newUsername);
+        return prevParams;
+      });
+    },
+    [setSearchParams]
   );
-  const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
-  const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
-    "this_month"
-  );
+  const style: TemplateOption =
+    searchParams.get("style")! in TemplateEnum
+      ? TemplateEnum[searchParams.get("style") as TemplateNameEnum]
+      : defaultStyleOnLoad;
+
+  const timeRange =
+    searchParams.get("range")! in TimeRangeOptions
+      ? (searchParams.get("range") as keyof typeof TimeRangeOptions)
+      : defaultTimeRangeOnLoad;
+
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -143,34 +159,48 @@ export default function ArtCreator() {
   );
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
-  const updateStyleButtonCallback = useCallback((name: TemplateNameEnum) => {
-    const selectedStyle = TemplateEnum[name];
-    setStyle(selectedStyle);
-    if (selectedStyle.type === "grid") {
-      setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
-      setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
-    } else if (selectedStyle.type === "text") {
-      setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
-      setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
-      setSecondBgColor((selectedStyle as TextTemplateOption).defaultColors[2]);
-    }
-  }, []);
+  const updateStyleButtonCallback = useCallback(
+    (name: TemplateNameEnum) => {
+      const selectedStyle: TemplateOption = TemplateEnum[name];
+      setSearchParams((prevParams) => {
+        return {
+          ...getObjectForURLSearchParams(prevParams),
+          style: selectedStyle.name,
+        };
+      });
+      if (selectedStyle.type === "grid") {
+        setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
+        setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
+      } else if (selectedStyle.type === "text") {
+        setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
+        setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
+        setSecondBgColor(
+          (selectedStyle as TextTemplateOption).defaultColors[2]
+        );
+      }
+    },
+    [setSearchParams]
+  );
 
   React.useEffect(() => {
-    // On load, validate URL params for custom style and range
+    // On page load, validate URL params and set defaults if invalid
     if (searchParams.has("style")) {
-      const styleParam = searchParams.get("style") as TemplateNameEnum;
-      if (styleParam in TemplateEnum) {
-        updateStyleButtonCallback(styleParam);
+      let validStyleOrDefault: TemplateNameEnum;
+      if (!(searchParams.get("style")! in TemplateEnum)) {
+        validStyleOrDefault = defaultStyleOnLoad.name;
+      } else {
+        validStyleOrDefault = searchParams.get("style") as TemplateNameEnum;
       }
+      updateStyleButtonCallback(validStyleOrDefault);
     }
-    if (searchParams.has("range")) {
-      const rangeParam = searchParams.get(
-        "range"
-      ) as keyof typeof TimeRangeOptions;
-      if (rangeParam in TimeRangeOptions) {
-        setTimeRange(rangeParam);
-      }
+    if (
+      searchParams.has("range") &&
+      !(searchParams.get("range")! in TimeRangeOptions)
+    ) {
+      setSearchParams((prevParams) => {
+        prevParams.set("range", defaultTimeRangeOnLoad);
+        return prevParams;
+      });
     }
   }, []);
 
@@ -181,9 +211,13 @@ export default function ArtCreator() {
   );
 
   const updateTimeRangeCallback = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setTimeRange(event.target.value as keyof typeof TimeRangeOptions),
-    [setTimeRange]
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setSearchParams((prevParams) => {
+        prevParams.set("range", event.target.value);
+        return prevParams;
+      });
+    },
+    [setSearchParams]
   );
 
   const updateTextColorCallback = useCallback(
@@ -400,18 +434,6 @@ export default function ArtCreator() {
   }, [setPreviewUrl, APIService.APIBaseURI]);
 
   React.useEffect(() => {
-    // Update the URL search params
-    setSearchParams(
-      (prevParams) => ({
-        ...getObjectForURLSearchParams(prevParams),
-        style: style.name,
-        range: timeRange,
-        username: userName,
-      }),
-      {
-        preventScrollReset: true,
-      }
-    );
     if (!userName) {
       return;
     }
@@ -423,7 +445,6 @@ export default function ArtCreator() {
     gridSize,
     gridLayout,
     debouncedSetPreviewUrl,
-    setSearchParams,
   ]);
 
   return (
@@ -480,7 +501,7 @@ export default function ArtCreator() {
                 </label>
                 <UserSearch
                   initialValue={userName}
-                  onSelectUser={setUserName}
+                  onSelectUser={setUserNameCallback}
                   placeholder="Search for a user…"
                 />
               </div>
