@@ -124,20 +124,23 @@ const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();
-  const userName = searchParams.get("username") ?? currentUser?.name;
-  const setUserNameCallback = useCallback(
-    (newUsername: string) => {
-      setSearchParams((prevParams) => {
-        prevParams.set("username", newUsername);
-        return prevParams;
-      });
+  const updateSearchParam = useCallback(
+    (param: string, value: string) => {
+      setSearchParams((prevParams) => ({
+        ...getObjectForURLSearchParams(prevParams),
+        [param]: value,
+      }));
     },
     [setSearchParams]
   );
+  const userName = searchParams.get("username") ?? currentUser?.name;
+  const setUserNameCallback = useCallback(
+    (newUsername: string) => updateSearchParam("username", newUsername),
+    [updateSearchParam]
+  );
   const style: TemplateOption =
-    searchParams.get("style")! in TemplateEnum
-      ? TemplateEnum[searchParams.get("style") as TemplateNameEnum]
-      : defaultStyleOnLoad;
+    TemplateEnum[searchParams.get("style") as TemplateNameEnum] ??
+    defaultStyleOnLoad;
 
   const timeRange =
     searchParams.get("range")! in TimeRangeOptions
@@ -162,12 +165,7 @@ export default function ArtCreator() {
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
       const selectedStyle: TemplateOption = TemplateEnum[name];
-      setSearchParams((prevParams) => {
-        return {
-          ...getObjectForURLSearchParams(prevParams),
-          style: selectedStyle.name,
-        };
-      });
+      updateSearchParam("style", selectedStyle.name);
       if (selectedStyle.type === "grid") {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
@@ -179,28 +177,17 @@ export default function ArtCreator() {
         );
       }
     },
-    [setSearchParams]
+    [updateSearchParam]
   );
 
   React.useEffect(() => {
     // On page load, validate URL params and set defaults if invalid
-    if (searchParams.has("style")) {
-      let validStyleOrDefault: TemplateNameEnum;
-      if (!(searchParams.get("style")! in TemplateEnum)) {
-        validStyleOrDefault = defaultStyleOnLoad.name;
-      } else {
-        validStyleOrDefault = searchParams.get("style") as TemplateNameEnum;
-      }
-      updateStyleButtonCallback(validStyleOrDefault);
-    }
-    if (
-      searchParams.has("range") &&
-      !(searchParams.get("range")! in TimeRangeOptions)
-    ) {
-      setSearchParams((prevParams) => {
-        prevParams.set("range", defaultTimeRangeOnLoad);
-        return prevParams;
-      });
+    const validStyleOrDefault: TemplateNameEnum =
+      TemplateEnum[searchParams.get("style") as TemplateNameEnum]?.name ??
+      defaultStyleOnLoad.name;
+    updateStyleButtonCallback(validStyleOrDefault);
+    if (!(searchParams.get("range")! in TimeRangeOptions)) {
+      updateSearchParam("range", defaultTimeRangeOnLoad);
     }
   }, []);
 
@@ -212,12 +199,9 @@ export default function ArtCreator() {
 
   const updateTimeRangeCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) => {
-      setSearchParams((prevParams) => {
-        prevParams.set("range", event.target.value);
-        return prevParams;
-      });
+      updateSearchParam("range", event.target.value);
     },
-    [setSearchParams]
+    [updateSearchParam]
   );
 
   const updateTextColorCallback = useCallback(
