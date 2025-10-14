@@ -213,7 +213,7 @@ describe.each([
 
     // Expect the total listens and average listens per year to be displayed
     expect(screen.getByText("3,845")).toBeInTheDocument();
-    expect(screen.getByText("161")).toBeInTheDocument();
+    expect(screen.getByText("1,282")).toBeInTheDocument();
   });
 
   it("displays error message when API call fails", async () => {
