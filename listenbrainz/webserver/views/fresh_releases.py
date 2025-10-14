@@ -15,7 +15,7 @@ from listenbrainz.webserver.views.api_tools import _parse_bool_arg
 fresh_releases_bp = Blueprint('fresh_releases_v1', __name__)
 
 
-@fresh_releases_bp.get("/user/<user_name>/fresh_releases")
+@fresh_releases_bp.get("/user/<mb_username:user_name>/fresh_releases")
 @crossdomain
 @ratelimit()
 def get_releases(user_name):

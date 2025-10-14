@@ -138,7 +138,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.get("/user/<user_name>/listens")
+@api_bp.get("/user/<mb_username:user_name>/listens")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -172,7 +172,7 @@ def get_listens(user_name):
     return jsonify({"payload": data})
 
 
-@api_bp.get("/user/<user_name>/listen-count")
+@api_bp.get("/user/<mb_username:user_name>/listen-count")
 @crossdomain
 @ratelimit()
 @api_listenstore_needed
@@ -202,7 +202,7 @@ def get_listen_count(user_name):
     }})
 
 
-@api_bp.get("/user/<user_name>/playing-now")
+@api_bp.get("/user/<mb_username:user_name>/playing-now")
 @crossdomain
 @ratelimit()
 def get_playing_now(user_name):
@@ -240,7 +240,7 @@ def get_playing_now(user_name):
     })
 
 
-@api_bp.get("/user/<user_name>/similar-users")
+@api_bp.get("/user/<mb_username:user_name>/similar-users")
 @crossdomain
 @ratelimit()
 def get_similar_users(user_name):
@@ -276,7 +276,7 @@ def get_similar_users(user_name):
     })
 
 
-@api_bp.get("/user/<user_name>/similar-to/<other_user_name>")
+@api_bp.get("/user/<mb_username:user_name>/similar-to/<mb_username:other_user_name>")
 @crossdomain
 @ratelimit()
 def get_similar_to_user(user_name, other_user_name):
@@ -694,7 +694,7 @@ def search_user_playlist(playlist_user_name):
     return jsonify(serialize_playlists(playlists, playlist_count, count, offset))
 
 
-@api_bp.get("/user/<user_name>/services")
+@api_bp.get("/user/<mb_username:user_name>/services")
 @crossdomain
 @ratelimit()
 def get_service_details(user_name):

@@ -45,7 +45,7 @@ def index(path):
     return render_template("index.html", user=current_user)
 
 
-@user_bp.post("/<user_name>/")
+@user_bp.post("/<mb_username:user_name>/")
 @web_listenstore_needed
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -100,9 +100,9 @@ def profile(user_name):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/stats/top-artists/")
-@user_bp.post("/<user_name>/stats/top-albums/")
-@user_bp.post("/<user_name>/stats/top-tracks/")
+@user_bp.post("/<mb_username:user_name>/stats/top-artists/")
+@user_bp.post("/<mb_username:user_name>/stats/top-albums/")
+@user_bp.post("/<mb_username:user_name>/stats/top-tracks/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -122,7 +122,7 @@ def charts(user_name):
     return jsonify(props)
 
 
-@user_bp.post("/<user_name>/stats/")
+@user_bp.post("/<mb_username:user_name>/stats/")
 def stats(user_name: str):
     """ Show user stats """
     user = _get_user(user_name)
@@ -142,7 +142,7 @@ def stats(user_name: str):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/playlists/")
+@user_bp.post("/<mb_username:user_name>/playlists/")
 @web_listenstore_needed
 def playlists(user_name: str):
     """ Show user playlists """
@@ -188,7 +188,7 @@ def playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/recommendations/")
+@user_bp.post("/<mb_username:user_name>/recommendations/")
 @web_listenstore_needed
 def recommendation_playlists(user_name: str):
     """ Show playlists created for user """
@@ -229,7 +229,7 @@ def recommendation_playlists(user_name: str):
     return jsonify(data)
 
 
-@user_bp.post("/<user_name>/report-user/")
+@user_bp.post("/<mb_username:user_name>/report-user/")
 @api_login_required
 def report_abuse(user_name):
     data = request.json
@@ -273,7 +273,7 @@ def logged_in_user_follows_user(user):
     return None
 
 
-@user_bp.post("/<user_name>/taste/")
+@user_bp.post("/<mb_username:user_name>/taste/")
 @web_listenstore_needed
 def taste(user_name: str):
     """ Show user feedback(love/hate) and pins.
@@ -395,8 +395,8 @@ def process_genre_data(yim_top_genre: list, data: list, user_name: str):
     }
 
 
-@user_bp.post("/<user_name>/year-in-music/")
-@user_bp.post("/<user_name>/year-in-music/<int:year>/")
+@user_bp.post("/<mb_username:user_name>/year-in-music/")
+@user_bp.post("/<mb_username:user_name>/year-in-music/<int:year>/")
 def year_in_music(user_name, year: int = 2024):
     """ Year in Music """
     if year not in (2021, 2022, 2023, 2024):
@@ -441,7 +441,7 @@ def year_in_music(user_name, year: int = 2024):
 # Embedable widgets, return HTML page to embed in an iframe
 
 
-@user_bp.get("/<user_name>/embed/playing-now/")
+@user_bp.get("/<mb_username:user_name>/embed/playing-now/")
 def embed_playing_now(user_name):
     """ Returns either the HTML page that load the current playing-now for a user
      or the HTMX fragment consisting only in the playing-now card HTML markup 
@@ -551,7 +551,7 @@ def render_playing_now_card(user):
     )
 
 
-@user_bp.get("/<user_name>/embed/pin/")
+@user_bp.get("/<mb_username:user_name>/embed/pin/")
 def embed_pin(user_name):
     """ Returns either the HTML page that load the current pin for a user
      or the HTMX fragment consisting only in the pin HTML markup
@@ -660,8 +660,8 @@ def embed_pin(user_name):
     )
 
 
-@user_bp.get("/<user_name>/",  defaults={'path': ''})
-@user_bp.get('/<user_name>/<path:path>/')
+@user_bp.get("/<mb_username:user_name>/",  defaults={'path': ''})
+@user_bp.get('/<mb_username:user_name>/<path:path>/')
 @web_listenstore_needed
 def index(user_name, path):
     user = _get_user(user_name)

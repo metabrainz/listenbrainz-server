@@ -29,7 +29,7 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
-@stats_api_bp.get("/user/<user_name>/artists")
+@stats_api_bp.get("/user/<mb_username:user_name>/artists")
 @crossdomain
 @ratelimit()
 def get_artist(user_name):
@@ -92,7 +92,7 @@ def get_artist(user_name):
     return _get_entity_stats(user_name, "artists", "total_artist_count")
 
 
-@stats_api_bp.get("/user/<user_name>/releases")
+@stats_api_bp.get("/user/<mb_username:user_name>/releases")
 @crossdomain
 @ratelimit()
 def get_release(user_name):
@@ -160,7 +160,7 @@ def get_release(user_name):
     return _get_entity_stats(user_name, "releases", "total_release_count")
 
 
-@stats_api_bp.get("/user/<user_name>/release-groups")
+@stats_api_bp.get("/user/<mb_username:user_name>/release-groups")
 @crossdomain
 @ratelimit()
 def get_release_group(user_name):
@@ -231,7 +231,7 @@ def get_release_group(user_name):
     return _get_entity_stats(user_name, "release_groups", "total_release_group_count")
 
 
-@stats_api_bp.get("/user/<user_name>/recordings")
+@stats_api_bp.get("/user/<mb_username:user_name>/recordings")
 @crossdomain
 @ratelimit()
 def get_recording(user_name):
@@ -330,7 +330,7 @@ def get_entity_stats_last_updated(user_name: str, entity: str, count_key: str):
     return stats.last_updated
 
 
-@stats_api_bp.get("/user/<user_name>/listening-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/listening-activity")
 @crossdomain
 @ratelimit()
 def get_listening_activity(user_name: str):
@@ -472,7 +472,7 @@ def _get_artist_activity(release_groups_list):
     return top_results
 
 
-@stats_api_bp.get("/user/<user_name>/artist-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/artist-activity")
 @crossdomain
 @ratelimit()
 def get_artist_activity(user_name: str):
@@ -528,7 +528,7 @@ def get_artist_activity(user_name: str):
     return jsonify({"result": result})
 
 
-@stats_api_bp.get("/user/<user_name>/era-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/era-activity")
 @crossdomain
 @ratelimit()
 def get_era_activity(user_name: str):
@@ -589,7 +589,7 @@ def get_era_activity(user_name: str):
         "last_updated": stats.last_updated,
     }})
 
-@stats_api_bp.get("/user/<user_name>/genre-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/genre-activity")
 @crossdomain
 @ratelimit()
 def get_genre_activity(user_name: str):
@@ -659,7 +659,7 @@ def get_genre_activity(user_name: str):
         "last_updated": stats.last_updated
     }})
 
-@stats_api_bp.get("/user/<user_name>/artist-evolution-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/artist-evolution-activity")
 @crossdomain
 @ratelimit()
 def get_artist_evolution_activity(user_name: str):
@@ -723,7 +723,7 @@ def get_artist_evolution_activity(user_name: str):
     })
 
 
-@stats_api_bp.get("/user/<user_name>/daily-activity")
+@stats_api_bp.get("/user/<mb_username:user_name>/daily-activity")
 @crossdomain
 @ratelimit()
 def get_daily_activity(user_name: str):
@@ -805,7 +805,7 @@ def get_daily_activity(user_name: str):
     }})
 
 
-@stats_api_bp.get("/user/<user_name>/artist-map")
+@stats_api_bp.get("/user/<mb_username:user_name>/artist-map")
 @crossdomain
 @ratelimit()
 def get_artist_map(user_name: str):
@@ -1657,8 +1657,8 @@ def get_sitewide_artist_map():
     })
 
 
-@stats_api_bp.get("/user/<user_name>/year-in-music")
-@stats_api_bp.get("/user/<user_name>/year-in-music/<int:year>")
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music")
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
 def year_in_music(user_name: str, year: int = 2024):
     """ Get data for year in music stuff """
