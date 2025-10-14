@@ -346,7 +346,7 @@ export default function UserListeningActivity(
   ): UserListeningActivityData => {
     const { dateFormat } = rangeMap.all_time;
     let totalListensForAllTime = 0;
-    let totalYears = 0;
+    let totalActiveYears = 0;
     const allTimeData = [];
     const currYear = new Date().getFullYear();
     let encounteredNonEmptyYear: boolean = false;
@@ -355,9 +355,9 @@ export default function UserListeningActivity(
       const yearData = unprocessedData.payload.listening_activity.filter(
         (year) => year.time_range === String(i)
       )[0];
-      totalYears += 1;
 
       if (yearData) {
+        totalActiveYears += 1;
         if (encounteredNonEmptyYear === false) {
           if (yearData.listen_count > 0) {
             encounteredNonEmptyYear = true;
@@ -388,7 +388,7 @@ export default function UserListeningActivity(
 
     setAvgListens(
       totalListensForAllTime > 0
-        ? Math.ceil(totalListensForAllTime / totalYears)
+        ? Math.ceil(totalListensForAllTime / totalActiveYears)
         : 0
     );
     setTotalListens(totalListensForAllTime);
