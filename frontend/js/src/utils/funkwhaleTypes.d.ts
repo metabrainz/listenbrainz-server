@@ -9,6 +9,7 @@ declare type FunkwhaleUser = {
 declare type FunkwhaleTrack = {
   id: number;
   title: string;
+  // Funkwhale API versions use artist_credit
   artist_credit?: Array<{
     artist: {
       id: number;
@@ -20,6 +21,13 @@ declare type FunkwhaleTrack = {
     joinphrase: string;
     index: number;
   }>;
+  // Funkwhale API versions use artist directly
+  artist?: {
+    id: number;
+    name: string;
+    mbid?: string;
+    fid?: string;
+  };
   album?: {
     id: number;
     title: string;
