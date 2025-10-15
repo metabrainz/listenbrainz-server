@@ -21,7 +21,7 @@ declare type FunkwhaleTrack = {
     joinphrase: string;
     index: number;
   }>;
-  // Funkwhale API versions use artist directly
+  // Funkwhale API version 1 uses artist object
   artist?: {
     id: number;
     name: string;
