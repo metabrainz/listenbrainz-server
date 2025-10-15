@@ -245,7 +245,7 @@ export default class FunkwhalePlayer
     }
 
     // Fallback to older API format with direct artist field
-    if (track.artist && track.artist.name) {
+    if (track.artist?.name) {
       return track.artist.name;
     }
 
