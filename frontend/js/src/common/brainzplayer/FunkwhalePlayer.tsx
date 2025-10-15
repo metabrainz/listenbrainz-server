@@ -231,7 +231,7 @@ export default class FunkwhalePlayer
 
   getArtistNamesFromTrack = (track: FunkwhaleTrack): string => {
     // Handle API format with artist_credit
-    if (track.artist_credit && track.artist_credit.length > 0) {
+    if (track.artist_credit?.length) {
       // Build artist name string using credits and joinphrases
       return track.artist_credit
         .map((credit, index) => {
