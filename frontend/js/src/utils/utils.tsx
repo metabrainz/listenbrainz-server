@@ -326,6 +326,68 @@ const searchForFunkwhaleTrack = async (
   }
 };
 
+/**
+ * Remove featuring artists from artist name to improve search matching.
+ * Based on MusicBrainz's battle-tested regex pattern:
+ * https://github.com/metabrainz/musicbrainz-server/blob/master/root/static/scripts/edit/utility/guessFeat.js
+ */
+const removeFeaturingArtists = (artistName: string): string => {
+  if (!artistName) return artistName;
+
+  // MusicBrainz-based regex for featuring artists
+  // Matches: feat./ft./featuring with optional punctuation and fullwidth variants
+  const featRegex = /(?:^\s*|[,，－-]\s*|\s+)((?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ)(?=\s))\s*.+$/i;
+
+  let cleaned = artistName.replace(featRegex, "");
+
+  // Also handle featuring artists in brackets/parentheses at the end
+  // e.g., "Artist (feat. Guest)" or "Artist [ft. Someone]"
+  cleaned = cleaned.replace(
+    /\s*[[（(].*?(?:ft|feat|ｆｔ|ｆｅａｔ)(?:[.．]|(?=\s))|(?:featuring|ｆｅａｔｕｒｉｎｇ).*?[\]）)\s]*$/i,
+    ""
+  );
+
+  return cleaned.trim();
+};
+
+const performNavidromeSearch = async (
+  instanceURL: string,
+  authParams: string,
+  query: string
+): Promise<NavidromeTrack | null> => {
+  const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
+    query
+  )}&songCount=1&${authParams}`;
+
+  const response = await fetch(searchUrl);
+
+  if (!response.ok) {
+    let errorBody: any = {};
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      errorBody = await response.json().catch(() => ({}));
+    }
+    const error = new Error(errorBody.detail || response.statusText);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    throw new Error("Server returned non-JSON response");
+  }
+
+  const searchResult = data["subsonic-response"]?.searchResult3;
+  if (searchResult?.song && searchResult.song.length > 0) {
+    return searchResult.song[0];
+  }
+
+  return null;
+};
+
 const searchForNavidromeTrack = async (
   instanceURL: string,
   authParams: string,
@@ -338,40 +400,32 @@ const searchForNavidromeTrack = async (
     );
   }
 
-  const query = `${trackName || ""} ${artistName || ""}`.trim();
-  if (!query) {
-    throw new Error("No search terms provided");
+  if (!trackName || !artistName) {
+    throw new Error("Both track name and artist name are required for search");
   }
 
   try {
-    const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
-      query
-    )}&songCount=1&${authParams}`;
-
-    const response = await fetch(searchUrl);
-
-    if (!response.ok) {
-      let errorBody: any = {};
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        errorBody = await response.json().catch(() => ({}));
-      }
-      const error = new Error(errorBody.detail || response.statusText);
-      (error as any).status = response.status;
-      throw error;
+    // Try with full artist name first to avoid unnecessary regex processing
+    const fullQuery = `${trackName} ${artistName}`.trim();
+    const result = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      fullQuery
+    );
+    if (result) {
+      return result;
     }
 
-    let data;
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      throw new Error("Server returned non-JSON response");
-    }
-    const searchResult = data["subsonic-response"]?.searchResult3;
-
-    if (searchResult?.song && searchResult.song.length > 0) {
-      return searchResult.song[0];
+    // Fall back to cleaned artist name (without featuring artists)
+    const cleanedArtistName = removeFeaturingArtists(artistName);
+    const cleanedQuery = `${trackName} ${cleanedArtistName}`.trim();
+    const fallbackResult = await performNavidromeSearch(
+      instanceURL,
+      authParams,
+      cleanedQuery
+    );
+    if (fallbackResult) {
+      return fallbackResult;
     }
 
     return null;
