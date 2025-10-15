@@ -357,7 +357,7 @@ const performNavidromeSearch = async (
 ): Promise<NavidromeTrack | null> => {
   const searchUrl = `${instanceURL}/rest/search3?query=${encodeURIComponent(
     query
-  )}&songCount=5&${authParams}`;
+  )}&songCount=1&${authParams}`;
 
   const response = await fetch(searchUrl);
 
