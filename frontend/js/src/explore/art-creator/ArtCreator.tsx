@@ -5,6 +5,7 @@ import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSearchParams } from "react-router";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import ColorPicker from "./components/ColorPicker";
 import Gallery from "./components/Gallery";
@@ -15,7 +16,7 @@ import { ToastMsg } from "../../notifications/Notifications";
 import UserSearch from "../../common/UserSearch";
 import Sidebar from "../../components/Sidebar";
 import SyndicationFeedModal from "../../components/SyndicationFeedModal";
-import { getBaseUrl } from "../../utils/utils";
+import { getBaseUrl, getObjectForURLSearchParams } from "../../utils/utils";
 
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
@@ -114,16 +115,38 @@ const DEFAULT_IMAGE_SIZE = 750;
 
 // const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
-const defaultStyleOnLoad = TemplateEnum["designer-top-5"] as TextTemplateOption;
+const defaultStyleOnLoad = TemplateEnum[
+  TemplateNameEnum.designerTop5
+] as TextTemplateOption;
+
+const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  // Add images for the gallery, don't compose them on the fly
-  const [userName, setUserName] = useState(currentUser?.name);
-  const [style, setStyle] = useState<TemplateOption>(defaultStyleOnLoad);
-  const [timeRange, setTimeRange] = useState<keyof typeof TimeRangeOptions>(
-    "this_month"
+  const [searchParams, setSearchParams] = useSearchParams();
+  const updateSearchParam = useCallback(
+    (param: string, value: string) => {
+      setSearchParams((prevParams) => ({
+        ...getObjectForURLSearchParams(prevParams),
+        [param]: value,
+      }));
+    },
+    [setSearchParams]
   );
+  const userName = searchParams.get("username") ?? currentUser?.name;
+  const setUserNameCallback = useCallback(
+    (newUsername: string) => updateSearchParam("username", newUsername),
+    [updateSearchParam]
+  );
+  const style: TemplateOption =
+    TemplateEnum[searchParams.get("style") as TemplateNameEnum] ??
+    defaultStyleOnLoad;
+
+  const timeRange =
+    searchParams.get("range")! in TimeRangeOptions
+      ? (searchParams.get("range") as keyof typeof TimeRangeOptions)
+      : defaultTimeRangeOnLoad;
+
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -141,8 +164,8 @@ export default function ArtCreator() {
 
   const updateStyleButtonCallback = useCallback(
     (name: TemplateNameEnum) => {
-      const selectedStyle = TemplateEnum[name];
-      setStyle(selectedStyle);
+      const selectedStyle: TemplateOption = TemplateEnum[name];
+      updateSearchParam("style", selectedStyle.name);
       if (selectedStyle.type === "grid") {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
@@ -154,18 +177,31 @@ export default function ArtCreator() {
         );
       }
     },
-    [setStyle]
+    [updateSearchParam]
   );
+
+  React.useEffect(() => {
+    // On page load, validate URL params and set defaults if invalid
+    const validStyleOrDefault: TemplateNameEnum =
+      TemplateEnum[searchParams.get("style") as TemplateNameEnum]?.name ??
+      defaultStyleOnLoad.name;
+    updateStyleButtonCallback(validStyleOrDefault);
+    if (!(searchParams.get("range")! in TimeRangeOptions)) {
+      updateSearchParam("range", defaultTimeRangeOnLoad);
+    }
+  }, []);
+
   const updateStyleCallback = useCallback(
     (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setStyle(TemplateEnum[event.target.value as TemplateNameEnum]),
-    [setStyle]
+      updateStyleButtonCallback(event.target.value as TemplateNameEnum),
+    [updateStyleButtonCallback]
   );
 
   const updateTimeRangeCallback = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) =>
-      setTimeRange(event.target.value as keyof typeof TimeRangeOptions),
-    [setTimeRange]
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      updateSearchParam("range", event.target.value);
+    },
+    [updateSearchParam]
   );
 
   const updateTextColorCallback = useCallback(
@@ -380,6 +416,7 @@ export default function ArtCreator() {
       { leading: false }
     );
   }, [setPreviewUrl, APIService.APIBaseURI]);
+
   React.useEffect(() => {
     if (!userName) {
       return;
@@ -448,7 +485,7 @@ export default function ArtCreator() {
                 </label>
                 <UserSearch
                   initialValue={userName}
-                  onSelectUser={setUserName}
+                  onSelectUser={setUserNameCallback}
                   placeholder="Search for a user…"
                 />
               </div>
