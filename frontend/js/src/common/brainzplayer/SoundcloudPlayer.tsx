@@ -9,8 +9,8 @@ import {
   searchForSoundcloudTrack,
 } from "../../utils/utils";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { BrainzPlayerContext } from "./BrainzPlayerContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 require("../../../lib/soundcloud-player-api");
 
@@ -153,13 +153,9 @@ export default class SoundcloudPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
+    const { volume } = this.props;
     if (prevProps.volume !== volume && this.soundcloudPlayer?.setVolume) {
       this.soundcloudPlayer?.setVolume((volume ?? 100) / 100);
-    }
-
-    if (prevProps.show && !show && this.soundcloudPlayer) {
-      this.soundcloudPlayer.pause();
     }
   }
 
@@ -177,6 +173,10 @@ export default class SoundcloudPlayer
       // eslint-disable-next-line no-empty
     } catch (error) {}
   }
+
+  stop = () => {
+    this.soundcloudPlayer?.pause();
+  };
 
   onReady = (): void => {
     if (!this.soundcloudPlayer) {
@@ -315,8 +315,9 @@ export default class SoundcloudPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
-    const { show, onTrackNotFound } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
       return;
     }
     if (SoundcloudPlayer.isListenFromThisService(listen)) {
@@ -409,11 +410,12 @@ export default class SoundcloudPlayer
   };
 
   render() {
-    const { show } = this.props;
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
 
     return (
       <div
-        className={`soundcloud ${!show ? "hidden" : ""}`}
+        className={`soundcloud ${!isCurrentDataSource ? "hidden" : ""}`}
         data-testid="soundcloud"
       >
         <iframe

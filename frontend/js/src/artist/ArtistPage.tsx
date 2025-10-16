@@ -19,6 +19,7 @@ import {
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
+import { useSetAtom } from "jotai";
 import { getReviewEventContent } from "../utils/utils";
 import TagsComponent from "../tags/TagsComponent";
 import ListenCard from "../common/listens/ListenCard";
@@ -35,12 +36,12 @@ import type {
 } from "../album/utils";
 import ReleaseCard from "../explore/fresh-releases/components/ReleaseCard";
 import { RouteQuery } from "../utils/Loader";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
 import SimilarArtistComponent from "../explore/music-neighborhood/components/SimilarArtist";
 import Pill from "../components/Pill";
 import HorizontalScrollContainer from "../components/HorizontalScrollContainer";
 import Username from "../common/Username";
 import CBReview from "../cb-review/CBReview";
+import { setAmbientQueueAtom } from "../common/brainzplayer/BrainzPlayerAtoms";
 
 export function SortingButtons({
   sort,
@@ -239,13 +240,10 @@ export default function ArtistPage(): JSX.Element {
   const listensFromPopularRecordings =
     popularRecordings?.map(popularRecordingToListen) ?? [];
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: listensFromPopularRecordings,
-    });
+    setAmbientQueue(listensFromPopularRecordings);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listensFromPopularRecordings]);
 

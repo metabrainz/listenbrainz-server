@@ -1,11 +1,15 @@
 import * as React from "react";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import NavidromePlayer from "../../../src/common/brainzplayer/NavidromePlayer";
 import APIService from "../../../src/utils/APIService";
 import RecordingFeedbackManager from "../../../src/utils/RecordingFeedbackManager";
 import GlobalAppContext, {
   GlobalAppContextT,
 } from "../../../src/utils/GlobalAppContext";
+import {
+  currentDataSourceNameAtom,
+  store,
+} from "../../../src/common/brainzplayer/BrainzPlayerAtoms";
 
 const defaultContext: GlobalAppContextT = {
   APIService: new APIService("foo"),
@@ -47,7 +51,7 @@ global.fetch = jest.fn();
 describe("NavidromePlayer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (global.fetch as jest.Mock).mockClear();
+    store.set(currentDataSourceNameAtom, "navidrome");
   });
 
   describe("Static methods", () => {
@@ -151,22 +155,18 @@ describe("NavidromePlayer", () => {
           </GlobalAppContext.Provider>
         );
       }).not.toThrow();
+      screen.getByTestId("navidrome-player");
     });
 
-    it("should hide the player when show prop is false", () => {
+    it("should hide the player when not the current selected datasource", () => {
+      // Set the datasource name in jotai state to simulate spotify selected in BrainzPlayer
+      store.set(currentDataSourceNameAtom, "spotify");
       render(
         <GlobalAppContext.Provider value={defaultContext}>
-          <NavidromePlayer {...defaultProps} show={false} />
+          <NavidromePlayer {...defaultProps} />
         </GlobalAppContext.Provider>
       );
-    });
-
-    it("should show the player when show prop is true", () => {
-      render(
-        <GlobalAppContext.Provider value={defaultContext}>
-          <NavidromePlayer {...defaultProps} show />
-        </GlobalAppContext.Provider>
-      );
+      expect(screen.queryByTestId("navidrome-player")).toBeNull();
     });
   });
 

@@ -5,6 +5,7 @@ import * as React from "react";
 import { useState } from "react";
 import { useLoaderData } from "react-router";
 import { Helmet } from "react-helmet";
+import { useSetAtom } from "jotai";
 import Loader from "../../components/Loader";
 import {
   JSPFTrackToListen,
@@ -14,7 +15,7 @@ import {
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { LBRadioFeedback, Playlist } from "./components/Playlist";
 import Prompt, { Modes } from "./components/Prompt";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 type LBRadioLoaderData = {
   mode: Modes;
@@ -110,13 +111,12 @@ export default function LBRadio() {
     [setJspfPlaylist, setFeedback, APIService]
   );
 
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen),
-    });
+    setAmbientQueue(
+      jspfPlaylist?.playlist?.track?.map(JSPFTrackToListen) ?? []
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jspfPlaylist?.playlist?.track]);
 

@@ -36,7 +36,7 @@ import {
 } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { faCalendarPlus } from "@fortawesome/free-regular-svg-icons";
-import { useBrainzPlayerDispatch } from "../common/brainzplayer/BrainzPlayerContext";
+import { useSetAtom } from "jotai";
 import ListenCard from "../common/listens/ListenCard";
 import ListenControl from "../common/listens/ListenControl";
 import Username from "../common/Username";
@@ -55,6 +55,10 @@ import ThanksModal from "./ThanksModal";
 import type { FeedFetchParams } from "./types";
 import { EventType } from "./types";
 import Card from "../components/Card";
+import {
+  addListenToBottomOfAmbientQueueAtom,
+  setAmbientQueueAtom,
+} from "../common/brainzplayer/BrainzPlayerAtoms";
 
 enum EventTypeinMessage {
   personal_recording_recommendation = "personally recommending a track",
@@ -150,7 +154,10 @@ function getEventTypePhrase(event: TimelineEvent<EventMetadata>): string {
 type UserFeedLoaderData = UserFeedPageProps;
 export default function UserFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
+  const addListenToBottomOfAmbientQueue = useSetAtom(
+    addListenToBottomOfAmbientQueueAtom
+  );
 
   const prevListens = React.useRef<Listen[]>([]);
 
@@ -267,18 +274,12 @@ export default function UserFeedPage() {
     // But on first load, we need to add replace the entire queue with the listens
 
     if (!prevListens.current?.length) {
-      dispatch({
-        type: "SET_AMBIENT_QUEUE",
-        data: listens,
-      });
+      setAmbientQueue(listens);
     } else {
       const newListens = listens.filter(
         (listen) => !prevListens.current?.includes(listen)
       );
-      dispatch({
-        type: "ADD_MULTIPLE_LISTEN_TO_BOTTOM_OF_AMBIENT_QUEUE",
-        data: newListens,
-      });
+      addListenToBottomOfAmbientQueue(newListens);
     }
 
     prevListens.current = listens;

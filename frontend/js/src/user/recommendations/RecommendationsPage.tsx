@@ -11,6 +11,7 @@ import { ReactSortable } from "react-sortablejs";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import NiceModal from "@ebay/nice-modal-react";
+import { useSetAtom } from "jotai";
 import PlaylistItemCard from "../../playlists/components/PlaylistItemCard";
 import {
   getPlaylistExtension,
@@ -20,9 +21,9 @@ import {
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { preciseTimestamp } from "../../utils/utils";
 import RecommendationPlaylistSettings from "./components/RecommendationPlaylistSettings";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import HorizontalScrollContainer from "../../components/HorizontalScrollContainer";
 import StatsExplanationsModal from "../../common/stats/StatsExplanationsModal";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type RecommendationsPageProps = {
   playlists?: JSPFObject[];
@@ -89,8 +90,7 @@ function getPlaylistInfo(
 export default function RecommendationsPage() {
   // Context
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
-
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   // Loader
   const props = useLoaderData() as RecommendationsPageLoaderData;
   const { playlists: loaderPlaylists = [], user } = props;
@@ -319,10 +319,7 @@ export default function RecommendationsPage() {
   React.useEffect(() => {
     if (selectedPlaylist) {
       const listensFromJSPFTracks = selectedPlaylist?.track ?? [];
-      dispatch({
-        type: "SET_AMBIENT_QUEUE",
-        data: listensFromJSPFTracks,
-      });
+      setAmbientQueue(listensFromJSPFTracks);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlaylist]);

@@ -20,20 +20,7 @@ import {
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
-
-// Fix for LB-447 (Player does not play any sound)
-// https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
-const fixSpotifyPlayerStyleIssue = () => {
-  const iframe = document.querySelector(
-    'iframe[src="https://sdk.scdn.co/embedded/index.html"]'
-  ) as any; // TODO: this is hacky, but this whole function seems hacky tbh
-  if (iframe) {
-    iframe.style.display = "block";
-    iframe.style.position = "absolute";
-    iframe.style.top = "-1000px";
-    iframe.style.left = "-1000px";
-  }
-};
+import { currentDataSourceNameAtom, store } from "./BrainzPlayerAtoms";
 
 export type SpotifyPlayerProps = DataSourceProps & {
   refreshSpotifyToken: () => Promise<string>;
@@ -43,8 +30,9 @@ export type SpotifyPlayerState = {
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
-  device_id?: string;
 };
+
+const MAX_RETRY_COUNT = 5;
 
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
@@ -109,6 +97,7 @@ export default class SpotifyPlayer
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
+  private deviceId = "";
   private authenticationRetries = 0;
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
@@ -142,13 +131,9 @@ export default class SpotifyPlayer
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
-    const { show, volume } = this.props;
+    const { volume } = this.props;
     if (prevProps.volume !== volume && this.spotifyPlayer?.setVolume) {
       this.spotifyPlayer?.setVolume((volume ?? 100) / 100);
-    }
-
-    if (prevProps.show === true && show === false) {
-      this.stopAndClear();
     }
   }
 
@@ -213,6 +198,7 @@ export default class SpotifyPlayer
           errorObject.message ?? errorObject,
           "Error searching on Spotify"
         );
+        onTrackNotFound();
       }
       if (errorObject.status === 401) {
         // Handle token error and try again if fixed
@@ -232,23 +218,26 @@ export default class SpotifyPlayer
     spotifyURI: string,
     retryCount = 0
   ): Promise<void> => {
-    const { device_id } = this.state;
-    const { handleError, onTrackNotFound } = this.props;
-    if (retryCount > 5) {
-      handleError("Could not play Spotify track", "Playback error");
-      onTrackNotFound();
+    const { handleError } = this.props;
+    if (!this.checkRetries(retryCount)) {
       return;
     }
-    if (!this.spotifyPlayer || !device_id) {
+    if (!this.spotifyPlayer) {
       this.connectSpotifyPlayer(
-        this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1),
-        retryCount + 1
+        this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1)
       );
+      return;
+    }
+    if (!this.deviceId) {
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+      this.playSpotifyURI.bind(this, spotifyURI, retryCount + 1);
       return;
     }
     try {
       const response = await fetch(
-        `https://api.spotify.com/v1/me/player/play?device_id=${device_id}`,
+        `https://api.spotify.com/v1/me/player/play?device_id=${this.deviceId}`,
         {
           method: "PUT",
           body: JSON.stringify({ uris: [spotifyURI] }),
@@ -319,9 +308,30 @@ export default class SpotifyPlayer
     );
   };
 
-  playListen = (listen: Listen | JSPFTrack): void => {
-    const { show } = this.props;
-    if (!show) {
+  checkRetries = (retryCount: number) => {
+    if (retryCount > MAX_RETRY_COUNT) {
+      const { handleError, onTrackNotFound } = this.props;
+      handleError("Could not play Spotify track", "Playback error");
+      onTrackNotFound();
+      return false;
+    }
+    return true;
+  };
+
+  playListen = (listen: Listen | JSPFTrack, retryCount = 0): void => {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
+      return;
+    }
+    if (!this.checkRetries(retryCount)) {
+      return;
+    }
+    if (!this.spotifyPlayer || !this.deviceId) {
+      // Device is not ready yet, give it a second and retry
+      setTimeout(() => {
+        this.playListen(listen, retryCount + 1);
+      }, 1000);
       return;
     }
     if (SpotifyPlayer.getURLFromListen(listen)) {
@@ -334,13 +344,14 @@ export default class SpotifyPlayer
   };
 
   togglePlay = (): void => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     this.spotifyPlayer.togglePlay().catch((error: Response) => {
       handleError(error, "Spotify playback error");
+      onTrackNotFound();
     });
   };
 
-  stopAndClear = (): void => {
+  stop = (): void => {
     this.setState({ currentSpotifyTrack: undefined });
     if (this.spotifyPlayer) {
       this.spotifyPlayer.pause();
@@ -356,7 +367,7 @@ export default class SpotifyPlayer
       return;
     }
     const { onInvalidateDataSource } = this.props;
-    if (this.authenticationRetries > 5) {
+    if (this.authenticationRetries > MAX_RETRY_COUNT) {
       const { handleError } = this.props;
       handleError(
         isString(error) ? error : error?.message,
@@ -367,6 +378,7 @@ export default class SpotifyPlayer
     }
     this.authenticationRetries += 1;
     // Reconnect spotify player; user token will be refreshed in the process
+    this.disconnectSpotifyPlayer();
     this.connectSpotifyPlayer(callbackFunction);
   };
 
@@ -426,11 +438,8 @@ export default class SpotifyPlayer
     callbackFunction?: () => void,
     retryCount = 0
   ): void => {
-    const { handleError, onInvalidateDataSource } = this.props;
-    this.disconnectSpotifyPlayer();
-    if (retryCount > 5) {
-      handleError("Could not connect to Spotify", "Spotify error");
-      onInvalidateDataSource();
+    const { handleError } = this.props;
+    if (!this.checkRetries(retryCount)) {
       return;
     }
     if (!window.Spotify) {
@@ -442,7 +451,9 @@ export default class SpotifyPlayer
     }
     const { refreshSpotifyToken, volume } = this.props;
     const { spotifyAuth: spotifyUser = undefined } = this.context;
-
+    if (this.spotifyPlayer) {
+      this.disconnectSpotifyPlayer();
+    }
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
       getOAuthToken: async (authCallback) => {
@@ -481,12 +492,9 @@ export default class SpotifyPlayer
     this.spotifyPlayer.addListener(
       "ready",
       ({ device_id }: { device_id: string }) => {
-        this.setState({ device_id });
+        this.deviceId = device_id;
         if (callbackFunction) {
           callbackFunction();
-        }
-        if (fixSpotifyPlayerStyleIssue) {
-          fixSpotifyPlayerStyleIssue();
         }
       }
     );
@@ -509,8 +517,9 @@ export default class SpotifyPlayer
   };
 
   handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {
-    const { show } = this.props;
-    if (!playerState || !show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!playerState || !isCurrentDataSource) {
       return;
     }
     const {
@@ -611,8 +620,10 @@ export default class SpotifyPlayer
   };
 
   render() {
-    const { show } = this.props;
-    if (!show) {
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+
+    if (!isCurrentDataSource) {
       return null;
     }
     return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;

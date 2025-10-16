@@ -8,6 +8,7 @@ import { useLocation, useParams, useSearchParams } from "react-router";
 
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import Loader from "../../components/Loader";
 import {
@@ -22,8 +23,8 @@ import ListenCard from "../../common/listens/ListenCard";
 import RecommendationFeedbackComponent from "../../common/listens/RecommendationFeedbackComponent";
 import { ToastMsg } from "../../notifications/Notifications";
 import { RouteQuery } from "../../utils/Loader";
-import { useBrainzPlayerDispatch } from "../../common/brainzplayer/BrainzPlayerContext";
 import Pagination from "../../common/Pagination";
+import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 
 export type RecommendationsProps = {
   recommendations?: Array<Recommendation>;
@@ -48,7 +49,7 @@ export default function Recommendations() {
 
   // Context
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
+  const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
 
   // Loader Data
   const location = useLocation();
@@ -195,10 +196,7 @@ export default function Recommendations() {
   }, [currentUser]);
 
   React.useEffect(() => {
-    dispatch({
-      type: "SET_AMBIENT_QUEUE",
-      data: recommendations,
-    });
+    setAmbientQueue(recommendations);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recommendations]);
 

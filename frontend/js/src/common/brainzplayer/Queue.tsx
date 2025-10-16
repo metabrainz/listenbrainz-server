@@ -3,15 +3,22 @@ import { ReactSortable } from "react-sortablejs";
 import NiceModal from "@ebay/nice-modal-react";
 import { faChevronDown, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useAtomValue, useSetAtom } from "jotai";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import { listenToJSPFTrack } from "../../playlists/utils";
 import { getListenCardKey } from "../../utils/utils";
 import {
-  useBrainzPlayerContext,
-  useBrainzPlayerDispatch,
-} from "./BrainzPlayerContext";
+  queueAtom,
+  ambientQueueAtom,
+  currentListenAtom,
+  moveAmbientQueueItemsToQueueAtom,
+  removeTrackFromAmbientQueueAtom,
+  moveQueueItemAtom,
+  removeTrackFromQueueAtom,
+  currentListenIndexAtom,
+} from "./BrainzPlayerAtoms";
 
 type BrainzPlayerQueueProps = {
   clearQueue: () => void;
@@ -21,58 +28,23 @@ type BrainzPlayerQueueProps = {
 const MAX_AMBIENT_QUEUE_ITEMS = 15;
 
 function Queue(props: BrainzPlayerQueueProps) {
-  const dispatch = useBrainzPlayerDispatch();
-  const {
-    queue,
-    ambientQueue,
-    currentListen,
-    currentListenIndex = -1,
-  } = useBrainzPlayerContext();
+  const currentListen = useAtomValue(currentListenAtom);
+  const ambientQueue = useAtomValue(ambientQueueAtom);
+  const queue = useAtomValue(queueAtom);
+
+  // Functional Atoms
+  const moveAmbientQueueItemsToQueue = useSetAtom(
+    moveAmbientQueueItemsToQueueAtom
+  );
+  const removeTrackFromAmbientQueue = useSetAtom(
+    removeTrackFromAmbientQueueAtom
+  );
+  const moveQueueItem = useSetAtom(moveQueueItemAtom);
+  const removeTrackFromQueue = useSetAtom(removeTrackFromQueueAtom);
+
+  const currentListenIndex = useAtomValue(currentListenIndexAtom);
 
   const { clearQueue, onHide } = props;
-
-  const removeTrackFromQueue = React.useCallback(
-    (track: BrainzPlayerQueueItem, index: number) => {
-      dispatch({
-        type: "REMOVE_TRACK_FROM_QUEUE",
-        data: {
-          track,
-          index,
-        },
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  const removeTrackFromAmbientQueue = React.useCallback(
-    (track: BrainzPlayerQueueItem, index: number) => {
-      dispatch({
-        type: "REMOVE_TRACK_FROM_AMBIENT_QUEUE",
-        data: {
-          track,
-          index,
-        },
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  const moveQueueItem = React.useCallback((evt: any) => {
-    dispatch({
-      type: "MOVE_QUEUE_ITEM",
-      data: evt,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const moveAmbientQueueItemsToQueue = React.useCallback(() => {
-    dispatch({
-      type: "MOVE_AMBIENT_QUEUE_ITEMS_TO_QUEUE",
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
 
@@ -148,7 +120,12 @@ function Queue(props: BrainzPlayerQueueProps) {
           <ReactSortable
             handle=".drag-handle"
             list={queueNextUp}
-            onEnd={moveQueueItem}
+            onEnd={(evt) =>
+              moveQueueItem({
+                oldIndex: evt.oldIndex ?? 0,
+                newIndex: evt.newIndex ?? 0,
+              })
+            }
             setList={() => {}}
           >
             {queueNextUp.map(
@@ -161,10 +138,10 @@ function Queue(props: BrainzPlayerQueueProps) {
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem
                     ) =>
-                      removeTrackFromQueue(
-                        trackToDelete,
-                        index + currentListenIndex + 1
-                      )
+                      removeTrackFromQueue({
+                        track: trackToDelete,
+                        index: index + currentListenIndex + 1,
+                      })
                     }
                   />
                 );
@@ -205,7 +182,12 @@ function Queue(props: BrainzPlayerQueueProps) {
                     track={queueItem}
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem
-                    ) => removeTrackFromAmbientQueue(trackToDelete, index)}
+                    ) =>
+                      removeTrackFromAmbientQueue({
+                        track: trackToDelete,
+                        index,
+                      })
+                    }
                     hideDragHandle
                   />
                 );

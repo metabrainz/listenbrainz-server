@@ -29,7 +29,7 @@ import { useQuery } from "@tanstack/react-query";
 import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { Link } from "react-router";
 import { toast } from "react-toastify";
-
+import { useSetAtom } from "jotai";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -58,7 +58,6 @@ import PinRecordingModal from "../../pins/PinRecordingModal";
 import { millisecondsToStr } from "../../playlists/utils";
 import { dataSourcesInfo } from "../../settings/brainzplayer/BrainzPlayerSettings";
 import GlobalAppContext from "../../utils/GlobalAppContext";
-import { useBrainzPlayerDispatch } from "../brainzplayer/BrainzPlayerContext";
 import SoundcloudPlayer from "../brainzplayer/SoundcloudPlayer";
 import SpotifyPlayer from "../brainzplayer/SpotifyPlayer";
 import YoutubePlayer from "../brainzplayer/YoutubePlayer";
@@ -69,6 +68,10 @@ import ListenControl from "./ListenControl";
 import ListenFeedbackComponent from "./ListenFeedbackComponent";
 import ListenPayloadModal from "./ListenPayloadModal";
 import MBIDMappingModal from "./MBIDMappingModal";
+import {
+  addListenToBottomOfQueueAtom,
+  addListenToTopOfQueueAtom,
+} from "../brainzplayer/BrainzPlayerAtoms";
 
 export type ListenCardProps = {
   listen: Listen;
@@ -121,7 +124,6 @@ export default function ListenCard(props: ListenCardProps) {
     userPreferences,
     spotifyAuth,
   } = React.useContext(GlobalAppContext);
-  const dispatch = useBrainzPlayerDispatch();
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const albumArtQueryKey = React.useMemo(
@@ -226,14 +228,6 @@ export default function ListenCard(props: ListenCardProps) {
     }
   }, [currentUser, APIService, displayListen]);
 
-  const addToTopOfQueue = React.useCallback(() => {
-    dispatch({ type: "ADD_LISTEN_TO_TOP_OF_QUEUE", data: displayListen });
-  }, [dispatch, displayListen]);
-
-  const addToBottomOfQueue = React.useCallback(() => {
-    dispatch({ type: "ADD_LISTEN_TO_BOTTOM_OF_QUEUE", data: displayListen });
-  }, [dispatch, displayListen]);
-
   const openMBIDMappingModal = React.useCallback(async () => {
     try {
       const linkedTrackMetadata: TrackMetadata = await NiceModal.show(
@@ -333,6 +327,9 @@ export default function ListenCard(props: ListenCardProps) {
       openMBIDMappingModal
     );
 
+  const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
+  const addListenToTopOfQueue = useSetAtom(addListenToTopOfQueueAtom);
+
   return (
     <Card
       {...otherProps}
@@ -428,13 +425,13 @@ export default function ListenCard(props: ListenCardProps) {
                         text="Play Next"
                         icon={faPlay}
                         title="Play Next"
-                        action={addToTopOfQueue}
+                        action={addListenToTopOfQueue}
                       />
                       <ListenControl
                         text="Add to Queue"
                         icon={faPlusCircle}
                         title="Add to Queue"
-                        action={addToBottomOfQueue}
+                        action={addListenToBottomOfQueue}
                       />
                     </>
                   )}
