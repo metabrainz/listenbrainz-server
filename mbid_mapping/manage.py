@@ -6,7 +6,7 @@ import subprocess
 
 import click
 
-from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data
+from mapping.canonical_musicbrainz_data import create_canonical_musicbrainz_data, update_canonical_release_data, create_canonical_musicbrainz_data_release_support
 from mapping.mb_artist_metadata_cache import create_mb_artist_metadata_cache, \
     incremental_update_mb_artist_metadata_cache
 from mapping.soundcloud_metadata_index import create_soundcloud_metadata_index
@@ -44,6 +44,12 @@ def create_all():
     create_canonical_musicbrainz_data(True)
     action_build_index()
 
+@cli.command()
+def create_relases():
+    """
+       Create release support
+    """
+    create_canonical_musicbrainz_data_release_support()
 
 @cli.command()
 @click.option("--use-lb-conn/--use-mb-conn", default=True, help="whether to create the tables in LB or MB")

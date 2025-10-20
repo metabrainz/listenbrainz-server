@@ -5,9 +5,7 @@ from functools import wraps
 import sys
 
 import click
-import sentry_sdk
-from sentry_sdk.crons import capture_checkin
-from sentry_sdk.crons.consts import MonitorStatus
+import requests
 
 
 import config
@@ -25,21 +23,23 @@ from similar.tag_similarity import create_tag_similarity
 from mapping.utils import log
 
 
+def check_in(slug):
+    """ Call heathchecks.io cron check-in with the given slug """
+
+    url = "https://hc-ping.com/{config.PING_KEY/{slug}"
+    r = requests.get(url)
+    r.raise_for_status()
+
+
 def cron(slug):
     """ Cron decorator making it easy to monitor a cron job. The slug argument defines the sentry cron job identifier. """
     def wrapper(func):
-        if not config.LOG_SENTRY:
-            return func
-
         @wraps(func)
         def wrapped_f(*args, **kwargs):
-            sentry_sdk.init(**config.LOG_SENTRY)
-            check_in_id = capture_checkin(monitor_slug=slug, status=MonitorStatus.IN_PROGRESS)
             try:
                 func(*args, **kwargs)
-                capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.OK)
+                check_in(slug)
             except Exception:
-                capture_checkin(monitor_slug=slug, check_in_id=check_in_id, status=MonitorStatus.ERROR)
                 sys.exit(-1)
 
         return wrapped_f

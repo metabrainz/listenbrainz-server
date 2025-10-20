@@ -97,3 +97,4 @@ DATASETS_SENTRY_DSN = '''{{template "KEY" "sentry/datasets_dsn"}}'''
 # For monitoring cron jobs
 SERVICE_MONITOR_TELEGRAM_BOT_TOKEN = '''{{template "KEY" "service_monitor_telegram_bot_token"}}'''
 SERVICE_MONITOR_TELEGRAM_CHAT_ID = '''{{template "KEY" "service_monitor_telegram_chat_id"}}'''
+PING_KEY = '''{{template "KEY" "service_monitor_hc_ping_key"}}'''

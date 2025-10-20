@@ -127,12 +127,37 @@ def create_canonical_musicbrainz_data(use_lb_conn: bool):
 
         log("canonical_musicbrainz_data: done done done!")
 
+def create_canonical_musicbrainz_data_release_support():
+    """
+        Main function for creating the MBID mapping and its related tables.
+
+        Arguments:
+            use_lb_conn: whether to use LB conn or not
+    """
+    mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
+
+    with psycopg2.connect(mb_uri) as mb_conn:
+
+        lb_conn = None
+        releases = CanonicalRelease(mb_conn, unlogged=False)
+        mapping_release = CanonicalMusicBrainzDataReleaseSupport(mb_conn, lb_conn, unlogged=False)
+
+        releases.run(no_swap=True)
+        mapping_release.run(no_swap=True)
+
+        releases.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+        mapping_release.swap_into_production(no_swap_transaction=True, swap_conn=mb_conn)
+
+        mb_conn.commit()
+
+    log("canonical_musicbrainz_data_release_support: done done done!")
+
 
 def update_canonical_release_data(use_lb_conn: bool):
     """
-        Run only the canonical release data, apart from the other tables.
+    Run only the canonical release data, apart from the other tables.
 
-        Arguments:
+    Arguments:
             use_lb_conn: whether to use LB conn or not
     """
     mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
