@@ -228,20 +228,26 @@ export default class FunkwhalePlayer
   };
 
   getArtistNamesFromTrack = (track: FunkwhaleTrack): string => {
-    if (!track.artist_credit || track.artist_credit.length === 0) {
-      return "";
+    // Handle API format with artist_credit
+    if (track.artist_credit?.length) {
+      // Build artist name string using credits and joinphrases
+      return track.artist_credit
+        .map((credit, index) => {
+          const name = credit.credit || credit.artist.name;
+          const isLastItem = index === track.artist_credit!.length - 1;
+          const joinphrase =
+            !isLastItem && credit.joinphrase ? credit.joinphrase : "";
+          return name + joinphrase;
+        })
+        .join("");
     }
 
-    // Build artist name string using credits and joinphrases
-    return track.artist_credit
-      .map((credit, index) => {
-        const name = credit.credit || credit.artist.name;
-        const isLastItem = index === track.artist_credit!.length - 1;
-        const joinphrase =
-          !isLastItem && credit.joinphrase ? credit.joinphrase : "";
-        return name + joinphrase;
-      })
-      .join("");
+    // Fallback to older API format with direct artist field
+    if (track.artist?.name) {
+      return track.artist.name;
+    }
+
+    return "";
   };
 
   updateTrackInfo = (): void => {
