@@ -88,7 +88,7 @@ function IconTray(props: IconTrayProps) {
             <button
               type="button"
               onClick={onClickCopyURL}
-              className="btn btn-info btn-sm"
+              className="btn btn-info btn-icon"
             >
               <FontAwesomeIcon icon={faLink} fixedWidth />
             </button>

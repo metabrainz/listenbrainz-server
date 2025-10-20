@@ -6,7 +6,9 @@
      role="img"
      viewBox="0 0 {{ width }} {{ height }}"
      width="{{ width }}"
-     height="{{ height }}">
+     height="{{ height }}"
+     preserveAspectRatio="xMinYMin meet"
+>
 
      {% if title is defined %}
           <title>{{ title }}</title>

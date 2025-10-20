@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router";
+import { useMediaQuery } from "react-responsive";
 import Card from "../../../components/Card";
 import Loader from "../../../components/Loader";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
@@ -50,6 +51,7 @@ function CustomTooltip({
 export default function UserArtistActivity(props: UserArtistActivityProps) {
   const { APIService } = React.useContext(GlobalAppContext);
   const navigate = useNavigate();
+  const isMobile = useMediaQuery({ maxWidth: 767 });
 
   // Props
   const { user, range } = props;
@@ -190,7 +192,12 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     )
                   )}
                   indexBy="label"
-                  margin={{ top: 20, right: 80, bottom: 100, left: 120 }}
+                  margin={{
+                    top: 20,
+                    right: isMobile ? 0 : 80,
+                    bottom: 100,
+                    left: isMobile ? 20 : 120,
+                  }}
                   padding={0.2}
                   layout="vertical"
                   colors={{ scheme: "nivo" }}
