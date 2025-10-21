@@ -21,6 +21,7 @@ import { getBaseUrl, getObjectForURLSearchParams } from "../../utils/utils";
 export enum TemplateNameEnum {
   designerTop5 = "designer-top-5",
   designerTop10 = "designer-top-10",
+  designerTop10Alt = "designer-top-10-alt",
   lPsOnTheFloor = "lps-on-the-floor",
   gridStats = "grid-stats",
   gridStatsSpecial = "grid-stats-special",
@@ -66,6 +67,13 @@ export const TemplateEnum: TemplateEnumType = {
     image: "/static/img/explore/stats-art/template-designer-top-10.png",
     type: "text",
     defaultColors: ["#FAFF5B", "#00A2CC", "#FF29A5"],
+  },
+  [TemplateNameEnum.designerTop10Alt]: {
+    name: TemplateNameEnum.designerTop10Alt,
+    displayName: "Designer top 10 (alt)",
+    image: "/static/img/explore/stats-art/template-designer-top-10-alt.png",
+    type: "text",
+    defaultColors: ["#006D39", "#083B2B", "#111820"],
   },
   [TemplateNameEnum.lPsOnTheFloor]: {
     name: TemplateNameEnum.lPsOnTheFloor,

@@ -26,10 +26,9 @@
     }
   </style>
  <defs id="defs42">
-  <linearGradient id="gradient" x1="-588.5" y1="-729" x2="1241.5" y2="1235" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#006D39"/>
-    <stop offset="0.274676" stop-color="#0A3A2A"/>
-    <stop offset="0.647633" stop-color="#0F2223"/>
+    <linearGradient id="gradient" x1="-20%" y1="-20%" x2="100%" y2="100%"
+      gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#083b2b"/>
     <stop offset="1" stop-color="#111820"/>
   </linearGradient>
   <clipPath id="clip">
