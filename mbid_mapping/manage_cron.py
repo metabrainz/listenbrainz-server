@@ -26,7 +26,7 @@ from mapping.utils import log
 def check_in(slug):
     """ Call heathchecks.io cron check-in with the given slug """
 
-    url = "https://hc-ping.com/{config.PING_KEY/{slug}"
+    url = f"https://hc-ping.com/{config.PING_KEY}/{slug}"
     r = requests.get(url)
     r.raise_for_status()
 
@@ -37,8 +37,8 @@ def cron(slug):
         @wraps(func)
         def wrapped_f(*args, **kwargs):
             try:
-                func(*args, **kwargs)
                 check_in(slug)
+                func(*args, **kwargs)
             except Exception:
                 sys.exit(-1)
 
@@ -50,7 +50,6 @@ def cron(slug):
 @click.group()
 def cli():
     pass
-
 
 @cli.command()
 @cron("canonical-data-typesense-index")
