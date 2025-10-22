@@ -383,9 +383,9 @@ class MusicBrainzMetadataCache(MusicBrainzEntityMetadataCache):
                               FROM musicbrainz.recording r
                               JOIN musicbrainz.artist_credit ac
                                 ON r.artist_credit = ac.id
-                         LEFT JOIN recording_first_release_date rfdr
+                         LEFT JOIN musicbrainz.recording_first_release_date rfdr
                                 ON rfdr.recording = r.id
-                         LEFT JOIN isrc
+                         LEFT JOIN musicbrainz.isrc
                                 ON isrc.recording = r.id
                          LEFT JOIN artist_data ard
                                 ON ard.gid = r.gid
@@ -646,7 +646,6 @@ def cleanup_mbid_mapping_table():
                  WHERE mbc.recording_mbid = mm.recording_mbid 
                )
     """
-    log("cleanup_mbid_mapping_table running")
     with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn, lb_conn.cursor() as lb_curs:
         lb_curs.execute(query)
         log(f"mbid mapping: invalidated {lb_curs.rowcount} rows")

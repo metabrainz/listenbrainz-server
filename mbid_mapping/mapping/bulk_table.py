@@ -393,7 +393,11 @@ class BulkInsertTable:
                     if vals:
                         execute_values(curs, query, vals, page_size=len(vals))
                     else:
-                        curs.execute(query)
+                        try:
+                            curs.execute(query)
+                        except Exception as err:
+                            log(str(err))
+                            raise
 
                     row_count = 0
                     inserted = 0
