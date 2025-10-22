@@ -87,18 +87,14 @@ def cron_build_all_mb_caches():
      databases. After building the cache, cleanup mbid_mapping table.
     """
 
-    # We only want this cron job to run the fist week of the month:
-    dt = datetime.datetime.now(datetime.timezone.utc)
-    if dt.day <= 7:
-        log("day %d: Running cron job" % dt.day)
-        create_mb_metadata_cache(True)
-        cleanup_mbid_mapping_table()
-        create_mb_artist_metadata_cache(True)
-        create_mb_release_group_cache(True)
-
-    else:
-        log("day %d: skipping cron job" % dt.day)
-
+    log("create mb metadata cache")
+    create_mb_metadata_cache(True)
+    log("cleanup mbid mapping table")
+    cleanup_mbid_mapping_table()
+    log("create artist metadata cache")
+    create_mb_artist_metadata_cache(True)
+    log("create release group metadata cache")
+    create_mb_release_group_cache(True)
 
 @cli.command()
 @cron("update-all-mb-caches")

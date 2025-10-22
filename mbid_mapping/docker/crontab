@@ -16,8 +16,7 @@
 # Rebuild similar tag data at 6am sundays
 0 6 * * 0 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-build-tag-similarity >> /code/mapper/cron-tag-similarity.log 2>&1
 
-# Build the mb entity caches from scratch on first thursday of every month, MB dumps run on Wed and Sat so avoid those days
-# NOTE: This cron job files every thursday, but the python script ensures that it only runs during the first week of the month
+# Build the mb entity caches from scratch on every thursday, MB dumps run on Wed and Sat so avoid those days
 0 15 * * 4 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron-build-all-mb-caches >> /code/mapper/cron-mb-entity-cache.log 2>&1
 
 # Update the mb entity caches incrementally every 4 hours
