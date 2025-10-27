@@ -259,10 +259,9 @@ export default class SoundcloudPlayer
           errorObject.message,
           this.searchAndPlayTrack.bind(this, listen)
         );
+        return;
       }
-      if (errorObject.code === 400) {
-        onTrackNotFound();
-      }
+      onTrackNotFound();
       handleError(
         errorObject.message ?? errorObject,
         "Error searching on Soundcloud"
@@ -276,7 +275,7 @@ export default class SoundcloudPlayer
   ): Promise<void> => {
     const { refreshSoundcloudToken, onTrackNotFound, handleError } = this.props;
     const { soundcloudAuth: soundcloudUser = undefined } = this.context;
-    if (this.authenticationRetries > 5) {
+    if (this.authenticationRetries > 3) {
       handleError(
         isString(error) ? error : error?.message,
         "Soundcloud token error"
@@ -294,6 +293,7 @@ export default class SoundcloudPlayer
       callbackFunction();
     } catch (refreshError) {
       handleError(refreshError, "Error connecting to SoundCloud");
+      onTrackNotFound();
     }
   };
 

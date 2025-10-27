@@ -149,7 +149,7 @@ export default class NavidromePlayer
   };
 
   onError = (event: Event): void => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     const audioElement = event.target as HTMLAudioElement;
 
     let errorMessage = "Audio playback error";
@@ -166,6 +166,7 @@ export default class NavidromePlayer
     }
 
     handleError(errorMessage, "Navidrome playback error");
+    onTrackNotFound();
   };
 
   onCanPlay = (event: Event): void => {
@@ -379,8 +380,9 @@ export default class NavidromePlayer
         audioElement.pause();
       }
     } catch (error) {
-      const { handleError } = this.props;
+      const { handleError, onTrackNotFound } = this.props;
       handleError(error.message, "Navidrome playback error");
+      onTrackNotFound();
     }
   };
 

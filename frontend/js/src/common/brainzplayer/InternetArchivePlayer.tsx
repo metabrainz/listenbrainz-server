@@ -147,6 +147,7 @@ export default class InternetArchivePlayer
       onPlayerPausedChange,
       onTrackInfoChange,
       onDurationChange,
+      onTrackNotFound,
       handleError,
       volume,
     } = this.props;
@@ -160,6 +161,7 @@ export default class InternetArchivePlayer
         await this.audioRef.current.play();
       } catch (error) {
         handleError(error, "Internet Archive playback error");
+        onTrackNotFound();
         return;
       }
       onPlayerPausedChange(false);
@@ -177,7 +179,12 @@ export default class InternetArchivePlayer
   };
 
   togglePlay = async () => {
-    const { playerPaused, onPlayerPausedChange, handleError } = this.props;
+    const {
+      playerPaused,
+      onPlayerPausedChange,
+      handleError,
+      onTrackNotFound,
+    } = this.props;
     if (!this.audioRef.current) return;
     try {
       if (playerPaused) {
@@ -189,6 +196,7 @@ export default class InternetArchivePlayer
       }
     } catch (error) {
       handleError(error, "Internet Archive playback error");
+      onTrackNotFound();
     }
   };
 

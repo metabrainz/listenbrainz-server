@@ -424,7 +424,7 @@ export default class SpotifyPlayer
     message: string;
     reason: string;
   }): void => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     handleError(
       {
         status: error.status,
@@ -432,6 +432,7 @@ export default class SpotifyPlayer
       },
       "Spotify player error"
     );
+    onTrackNotFound();
   };
 
   connectSpotifyPlayer = (

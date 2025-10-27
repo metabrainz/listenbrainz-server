@@ -132,7 +132,14 @@ export default class FunkwhalePlayer
 
   setupAudioListeners = (): void => {
     const audioElement = this.audioRef.current;
-    if (!audioElement) return;
+    if (!audioElement) {
+      const { onInvalidateDataSource } = this.props;
+      onInvalidateDataSource(
+        this,
+        "Funkwhale Player audio element not available"
+      );
+      return;
+    }
 
     audioElement.addEventListener("loadedmetadata", this.onLoadedMetadata);
     audioElement.addEventListener("timeupdate", this.onTimeUpdate);
@@ -190,7 +197,7 @@ export default class FunkwhalePlayer
   };
 
   onError = (event: Event): void => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     const audioElement = event.target as HTMLAudioElement;
 
     let errorMessage = "Audio playback error";
@@ -207,6 +214,7 @@ export default class FunkwhalePlayer
     }
 
     handleError(errorMessage, "Funkwhale playback error");
+    onTrackNotFound();
   };
 
   onCanPlay = (): void => {
@@ -340,11 +348,12 @@ export default class FunkwhalePlayer
         }
       }
     } catch (error) {
-      const { handleError } = this.props;
+      const { handleError, onTrackNotFound } = this.props;
       handleError(
         error.message || "Failed to play Funkwhale track",
         "Funkwhale Error"
       );
+      onTrackNotFound();
     }
   };
 
@@ -438,6 +447,7 @@ export default class FunkwhalePlayer
         errorObject.message ?? errorObject,
         "Error searching on Funkwhale"
       );
+      onTrackNotFound();
     }
   };
 
@@ -488,8 +498,9 @@ export default class FunkwhalePlayer
         audioElement.pause();
       }
     } catch (error) {
-      const { handleError } = this.props;
+      const { handleError, onTrackNotFound } = this.props;
       handleError(error.message, "Funkwhale playback error");
+      onTrackNotFound();
     }
   };
 
