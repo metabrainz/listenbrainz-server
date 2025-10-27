@@ -80,7 +80,6 @@ export default class FunkwhalePlayer
   public iconColor = dataSourcesInfo.funkwhale.color;
 
   audioRef: React.RefObject<HTMLAudioElement>;
-  updateProgressInterval?: NodeJS.Timeout;
   accessToken = "";
   currentBlobUrl?: string;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -118,9 +117,6 @@ export default class FunkwhalePlayer
 
   componentWillUnmount(): void {
     this.cleanupAudioListeners();
-    if (this.updateProgressInterval) {
-      clearInterval(this.updateProgressInterval);
-    }
     if (this.currentBlobUrl) {
       URL.revokeObjectURL(this.currentBlobUrl);
     }
