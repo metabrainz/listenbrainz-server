@@ -64,6 +64,7 @@ export default class InternetArchivePlayer
     this.state = {
       currentTrack: null,
     };
+    this.setupAudioListeners();
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -72,6 +73,28 @@ export default class InternetArchivePlayer
       this.audioRef.current.volume = (volume ?? 100) / 100;
     }
   }
+
+  setupAudioListeners = (): void => {
+    const { onTrackNotFound, handleError, onInvalidateDataSource } = this.props;
+    const audioElement = this.audioRef.current;
+    if (!audioElement) {
+      onInvalidateDataSource(
+        this,
+        "InternetArchive Player audio element not available"
+      );
+      return;
+    }
+    audioElement.addEventListener("loadedmetadata", this.handleLoadedMetadata);
+    audioElement.addEventListener("durationchange", this.handleLoadedMetadata);
+    audioElement.addEventListener("timeupdate", this.handleTimeUpdate);
+    audioElement.addEventListener("play", this.onPlay);
+    audioElement.addEventListener("pause", this.onPause);
+    audioElement.addEventListener("ended", this.handleAudioEnded);
+    audioElement.addEventListener("error", (ev) => {
+      handleError(ev.error, "Internet Archive audio playback error");
+      onTrackNotFound();
+    });
+  };
 
   stop = () => {
     this.audioRef?.current?.pause();
@@ -94,6 +117,16 @@ export default class InternetArchivePlayer
     if (this.audioRef.current) {
       onDurationChange(this.audioRef.current.duration * 1000);
     }
+  };
+
+  onPlay = (): void => {
+    const { onPlayerPausedChange } = this.props;
+    onPlayerPausedChange(false);
+  };
+
+  onPause = (): void => {
+    const { onPlayerPausedChange } = this.props;
+    onPlayerPausedChange(true);
   };
 
   searchAndPlayTrack = async (listen: any) => {
@@ -227,14 +260,7 @@ export default class InternetArchivePlayer
           <img src={currentTrack.artwork_url} alt={currentTrack.name} />
         )}
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <audio
-          ref={this.audioRef}
-          onEnded={this.handleAudioEnded}
-          onTimeUpdate={this.handleTimeUpdate}
-          onDurationChange={this.handleLoadedMetadata}
-          autoPlay
-          controls={false}
-        />
+        <audio ref={this.audioRef} autoPlay controls={false} />
       </div>
     );
   }
