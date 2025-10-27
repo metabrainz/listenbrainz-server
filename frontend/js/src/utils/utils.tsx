@@ -151,9 +151,9 @@ const searchForSoundcloudTrack = async (
   }
   // Considering we cannot tell the Soundcloud API that this should match only an album title,
   // results are paradoxically sometimes worse if we add it to the query
-  if (releaseName) {
-    query += ` ${releaseName}`;
-  }
+  // if (releaseName) {
+  //   query += ` ${releaseName}`;
+  // }
   if (!query) {
     return null;
   }
