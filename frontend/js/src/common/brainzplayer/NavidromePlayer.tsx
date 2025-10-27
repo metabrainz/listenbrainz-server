@@ -337,10 +337,6 @@ export default class NavidromePlayer
         }
       }
 
-      handleWarning(
-        `"${trackName}" by ${artistName} is not available on your Navidrome server`,
-        "Track not available on Navidrome"
-      );
       onTrackNotFound();
     } catch (errorObject) {
       if (errorObject.status === 401) {
