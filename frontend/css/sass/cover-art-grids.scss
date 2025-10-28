@@ -40,3 +40,9 @@
   border-radius: 4px;
   transition: all 0.2s;
 }
+
+.caption text > tspan {
+  fill: white;
+  font-size: 1.5em;
+  dominant-baseline: middle;
+}

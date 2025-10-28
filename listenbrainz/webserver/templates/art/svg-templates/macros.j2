@@ -27,6 +27,16 @@
         </title>
         {% endif %}
     </image>
+    {% if image.title and image.artist %}
+      <g class="caption" transform="translate({{ image.x }}, {{ image.y + image.height - 40 }})">
+        <rect fill="#0000007a" width="{{image.width}}" height="40" ></rect>
+        <text>
+          <tspan dx="10" dy="20">
+            {{- image.title|escape ~ " - " ~ image.artist|escape -}}
+          </tspan>
+        </text>  
+      </g>
+    {% endif %}
   {% if image.entity_mbid %}
   </a>
   {% endif %}

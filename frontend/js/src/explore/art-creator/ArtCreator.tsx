@@ -163,6 +163,7 @@ export default function ArtCreator() {
 
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
+  const [showCaption, setShowCaption] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>(
@@ -470,6 +471,7 @@ export default function ArtCreator() {
           <Preview
             key={previewUrl}
             url={previewUrl}
+            showCaption={showCaption}
             styles={{
               textColor,
               bgColor1: firstBgColor,
@@ -544,6 +546,14 @@ export default function ArtCreator() {
               <h4>Advanced</h4>
               {style.type === "grid" && (
                 <>
+                  <label className="form-check-label">
+                    <input
+                      type="checkbox"
+                      checked={showCaption}
+                      onChange={(evt) => setShowCaption(evt.target.checked)}
+                    />{" "}
+                    Show caption
+                  </label>
                   <small>Choose a grid layout:</small>
                   {/* <div className="input-group">
                     <div className="input-group-prepend">
