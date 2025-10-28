@@ -27,12 +27,15 @@
         </title>
         {% endif %}
     </image>
-    {% if image.title and image.artist %}
-      <g class="caption" transform="translate({{ image.x }}, {{ image.y + image.height - 40 }})">
-        <rect fill="#0000007a" width="{{image.width}}" height="40" ></rect>
-        <text>
-          <tspan dx="10" dy="20">
-            {{- image.title|escape ~ " - " ~ image.artist|escape -}}
+    {% if image.title or image.artist %}
+      <g class="caption" transform="translate({{ image.x }}, {{ image.y + image.height - 30 }})">
+        <rect fill="#0000007a" width="{{image.width}}" height="30" ></rect>
+        <text fill="white" font-weight="normal" font-size="12" font-family="Sintony, sans-serif">
+          <tspan x="5" y="13">
+            {{- image.title|escape -}}
+          </tspan>
+          <tspan x="5" dy="13">
+            {{- image.artist|escape -}}
           </tspan>
         </text>  
       </g>
