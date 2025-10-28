@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce } from "lodash";
+import { debounce, isEqual } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
@@ -104,6 +104,20 @@ enum TimeRangeOptions {
   "year" = "Last year",
   "all_time" = "All time",
 }
+
+const coverArtGridOptions: CoverArtGridOptions[] = [
+  { dimension: 1, layout: 0 },
+  { dimension: 2, layout: 0 },
+  { dimension: 3, layout: 0 },
+  { dimension: 3, layout: 1 },
+  { dimension: 3, layout: 2 },
+  { dimension: 4, layout: 0 },
+  { dimension: 4, layout: 1 },
+  { dimension: 4, layout: 2 },
+  { dimension: 4, layout: 3 },
+  { dimension: 5, layout: 0 },
+  { dimension: 5, layout: 1 },
+];
 
 // enum FontNameEnum {
 //   "Roboto",
@@ -530,11 +544,8 @@ export default function ArtCreator() {
               <h4>Advanced</h4>
               {style.type === "grid" && (
                 <>
-                  <small>
-                    You can customize the grid size and select one of our
-                    advanced layouts
-                  </small>
-                  <div className="input-group">
+                  <small>Choose a grid layout:</small>
+                  {/* <div className="input-group">
                     <div className="input-group-prepend">
                       <label
                         className="input-group-text"
@@ -583,6 +594,36 @@ export default function ArtCreator() {
                         }
                       )}
                     </select>
+                  </div> */}
+                  <div className="cover-art-grid">
+                    {coverArtGridOptions.map((option) => {
+                      return (
+                        <label className="cover-art-option">
+                          <input
+                            type="radio"
+                            name="artwork"
+                            value={`artwork-${option.dimension}-${option.layout}`}
+                            key={`artwork-${option.dimension}-${option.layout}`}
+                            className="cover-art-radio"
+                            checked={
+                              isEqual(option.dimension, gridSize) &&
+                              isEqual(option.layout, gridLayout)
+                            }
+                            onChange={() => {
+                              setGridSize(option.dimension);
+                              setGridLayout(option.layout);
+                            }}
+                          />
+                          <img
+                            height={80}
+                            width={80}
+                            src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
+                            alt={`Cover art option ${option.dimension}-${option.layout}`}
+                            className="cover-art-image"
+                          />
+                        </label>
+                      );
+                    })}
                   </div>
                 </>
               )}

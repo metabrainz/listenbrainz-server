@@ -1,0 +1,42 @@
+.cover-art-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cover-art-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.cover-art-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  &:checked + .cover-art-image {
+    border-color: #353070;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(53, 48, 112, 0.3);
+      border-radius: 2px;
+    }
+  }
+  &:focus + .cover-art-image {
+    box-shadow: 0 0 0 2px rgba(53, 48, 112, 0.5);
+  }
+}
+
+.cover-art-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
