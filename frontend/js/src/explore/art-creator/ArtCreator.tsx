@@ -411,13 +411,15 @@ export default function ArtCreator() {
         userNameArg: string,
         timeRangeArg: keyof typeof TimeRangeOptions,
         gridSizeArg: number,
-        gridLayoutArg: number
+        gridLayoutArg: number,
+        showCaptionArg: boolean
       ) => {
         if (styleArg.type === "grid") {
+          const captionParam = showCaptionArg ? "" : "?caption=false";
           setPreviewUrl(
             `${APIService.APIBaseURI}/art/grid-stats/${encodeURIComponent(
               userNameArg
-            )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
+            )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}${captionParam}`
           );
         } else {
           setPreviewUrl(
@@ -436,13 +438,21 @@ export default function ArtCreator() {
     if (!userName) {
       return;
     }
-    debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridLayout);
+    debouncedSetPreviewUrl(
+      style,
+      userName,
+      timeRange,
+      gridSize,
+      gridLayout,
+      showCaption
+    );
   }, [
     userName,
     style,
     timeRange,
     gridSize,
     gridLayout,
+    showCaption,
     debouncedSetPreviewUrl,
   ]);
 
