@@ -10,7 +10,7 @@
   {%- endif -%}
 {% endmacro %}
 
-{% macro render_image_link(entity, image) %}
+{% macro render_image_link(entity, image, show_caption) %}
   {% if image.entity_mbid %}
   <a href="https://listenbrainz.org/{{ entity }}/{{ image.entity_mbid }}" target="_blank">
   {% endif %}
@@ -27,7 +27,7 @@
         </title>
         {% endif %}
     </image>
-    {% if image.title or image.artist %}
+    {% if show_caption and (image.title or image.artist) %}
       <g class="caption" transform="translate({{ image.x }}, {{ image.y + image.height - 30 }})">
         <rect fill="#0000007a" width="{{image.width}}" height="30" ></rect>
         <text fill="white" font-weight="normal" font-size="12" font-family="Sintony, sans-serif">

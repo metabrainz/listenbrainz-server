@@ -55,6 +55,8 @@ def cover_art_grid_post():
                      a blank square is shown or if the Cover Art Archive missing image is show.
                          one, if true is passed. If false, the show-caa option will decide what happens.
     :type show-caa: ``bool``
+    :param caption: Whether to show the release name and artist overlayed on each cover art image.
+    :type caption: ``boolean``
     :param tiles: The tiles paramater is a list of strings that determines the location where cover art
                   images should be placed. Each string is a comma separated list of image cells. A grid of
                   dimension 3 has 9 cells, from 0 in the upper left hand corner, 2 in the upper right
@@ -96,13 +98,16 @@ def cover_art_grid_post():
     else:
         layout = None
 
+    show_caption = r.get("caption", True)
+
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"],
         r.get("dimension"),
         r.get("image_size"),
         r.get("background"),
         r.get("skip-missing"),
-        r.get("show-caa")
+        r.get("show-caa"),
+        show_caption=show_caption,
     )
 
     err = cac.validate_parameters()
@@ -168,7 +173,8 @@ def cover_art_grid_post():
                            images=images,
                            entity=entity,
                            width=r["image_size"],
-                           height=r["image_size"]), 200, {
+                           height=r["image_size"],
+                           show_caption=show_caption), 200, {
                                'Content-Type': 'image/svg+xml'
                            }
 
@@ -193,14 +199,19 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     :type layout: ``int``
     :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
+    :param caption: Whether to show the release name and artist overlayed on each cover art image.
+    :type caption: ``boolean``
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
     :resheader Content-Type: *image/svg+xml*
 
     See the bottom of this document for constants relating to this method.
     """
-
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], dimension, image_size)
+    r = request.json
+    show_caption = r.get("caption", True)
+    
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption)
     err = cac.validate_parameters()
     if err is not None:
         raise APIBadRequest(err)
@@ -229,7 +240,8 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            desc=desc,
                            entity="release",
                            width=image_size,
-                           height=image_size), 200, {
+                           height=image_size,
+                           show_caption=show_caption), 200, {
                                'Content-Type': 'image/svg+xml'
                            }
 

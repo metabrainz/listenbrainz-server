@@ -81,13 +81,15 @@ class CoverArtGenerator:
                  image_size,
                  background="#FFFFFF",
                  skip_missing=True,
-                 show_caa_image_for_missing_covers=True):
+                 show_caa_image_for_missing_covers=True,
+                 show_caption=True):
         self.mb_db_connection_str = mb_db_connection_str
         self.dimension = dimension
         self.image_size = image_size
         self.background = background
         self.skip_missing = skip_missing
         self.show_caa_image_for_missing_covers = show_caa_image_for_missing_covers
+        self.show_caption = show_caption
         self.tile_size = image_size // dimension  # This will likely need more cafeful thought due to round off errors
 
     def parse_color_code(self, color_code):
@@ -131,6 +133,9 @@ class CoverArtGenerator:
 
         if not isinstance(self.show_caa_image_for_missing_covers, bool):
             return f"option show-caa must be of type boolean."
+
+        if not isinstance(self.show_caption, bool):
+            return f"option caption must be of type boolean."
 
         return None
 

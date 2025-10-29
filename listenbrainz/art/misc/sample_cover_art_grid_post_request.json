@@ -4,6 +4,7 @@
 	"dimension": 4,
 	"skip-missing": false,
 	"show-caa": false,
+	"caption": false,
 	"tiles": [
 		"0,1,4,5",
 		"10,11,14,15",
