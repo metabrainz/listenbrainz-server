@@ -84,7 +84,8 @@ def get_cover_art_for_playlist(playlist: model_playlist.Playlist, images: list[d
         desc=desc,
         entity="album",
         width=500,
-        height=500
+        height=500,
+        show_caption=False
     )
 
 

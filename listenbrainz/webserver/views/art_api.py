@@ -838,7 +838,8 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     # Fetch the metadata for the playlist recordings
     fetch_playlist_recording_metadata(playlist)
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], dimension, 500)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], dimension, 500, show_caption=False)
     if (validation_error := cac.validate_parameters()) is not None:
         raise APIBadRequest(validation_error)
 
@@ -862,6 +863,7 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
                            desc=desc,
                            entity="release",
                            width=image_size,
-                           height=image_size), 200, {
+                           height=image_size,
+                           show_caption=False), 200, {
                                'Content-Type': 'image/svg+xml'
                            }

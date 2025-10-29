@@ -82,7 +82,8 @@ def get_cover_art_for_artist(release_groups):
         images=images,
         entity="album",
         width=400,
-        height=400
+        height=400,
+        show_caption=False
     )
 
 
