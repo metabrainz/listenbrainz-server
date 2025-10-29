@@ -41,9 +41,6 @@ export interface GridTemplateOption extends TemplateOption {
   defaultGridSize: number;
   defaultGridLayout: number;
 }
-/* How many layouts are available fro each grid dimension (number of rows/columns)
-See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
-const layoutsPerGridDimensionArr = [undefined, undefined, 1, 3, 4, 2];
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
 export type TemplateEnumType = {
@@ -105,6 +102,8 @@ enum TimeRangeOptions {
   "all_time" = "All time",
 }
 
+/* Layout options available for each grid dimension (number of rows/columns)
+See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
 const coverArtGridOptions: CoverArtGridOptions[] = [
   { dimension: 1, layout: 0 },
   { dimension: 2, layout: 0 },
@@ -124,10 +123,9 @@ const coverArtGridOptions: CoverArtGridOptions[] = [
 //   "Integer",
 //   "Sans Serif",
 // }
+// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 const DEFAULT_IMAGE_SIZE = 750;
-
-// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 const defaultStyleOnLoad = TemplateEnum[
   TemplateNameEnum.designerTop5
@@ -565,56 +563,6 @@ export default function ArtCreator() {
                     Show caption
                   </label>
                   <small>Choose a grid layout:</small>
-                  {/* <div className="input-group">
-                    <div className="input-group-prepend">
-                      <label
-                        className="input-group-text"
-                        htmlFor="albums-per-row"
-                      >
-                        Albums per row
-                      </label>
-                    </div>
-                    <input
-                      id="albums-per-row"
-                      className="form-control"
-                      type="number"
-                      min={2}
-                      max={5}
-                      value={gridSize}
-                      onChange={(event) => {
-                        setGridSize(event.target.valueAsNumber);
-                        setGridLayout(0);
-                      }}
-                    />
-                  </div>
-                  <div className="input-group">
-                    <div className="input-group-prepend">
-                      <label className="input-group-text" htmlFor="grid-layout">
-                        Grid layout
-                      </label>
-                    </div>
-                    <select
-                      id="grid-layout"
-                      className="form-select"
-                      value={gridLayout + 1}
-                      onChange={(event) => {
-                        setGridLayout(Number(event.target.value) - 1);
-                      }}
-                    >
-                      {[...Array(layoutsPerGridDimensionArr[gridSize])].map(
-                        (val, index) => {
-                          return (
-                            <option
-                              key={`option-${index + 1}`}
-                              value={index + 1}
-                            >
-                              Option {index + 1}
-                            </option>
-                          );
-                        }
-                      )}
-                    </select>
-                  </div> */}
                   <div className="cover-art-grid">
                     {coverArtGridOptions.map((option) => {
                       return (
