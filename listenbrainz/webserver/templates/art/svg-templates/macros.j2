@@ -20,13 +20,23 @@
         width="{{ image.width }}"
         height="{{ image.height }}"
         preserveAspectRatio="xMidYMid slice"
-        href="{{ image.url }}">
+        href="{{ image.url }}"
+        clip-path="url(#clip-{{ image.x }}-{{ image.y }})"
+    >
         {% if image.title and image.artist %}
         <title>
           {{- image.title|escape ~ " - " ~ image.artist|escape -}}
         </title>
         {% endif %}
     </image>
+    <clipPath id="clip-{{ image.x }}-{{ image.y }}">
+      <rect
+        x="{{ image.x }}"
+        y="{{ image.y }}"
+        width="{{ image.width }}"
+        height="{{ image.height }}">
+      </rect>
+    </clipPath>
     {% if show_caption and (image.title or image.artist) %}
       <g class="caption" transform="translate({{ image.x }}, {{ image.y + image.height - 30 }})">
         <rect fill="#0000007a" width="{{image.width}}" height="30" ></rect>
