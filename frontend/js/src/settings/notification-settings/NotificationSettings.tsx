@@ -6,6 +6,7 @@ import { useLoaderData } from "react-router";
 import Switch from "../../components/Switch";
 
 type NotificationPreferenceLoaderData = {
+  notifications_enabled: boolean;
   digest: boolean;
   digest_age: number;
 };
@@ -15,9 +16,8 @@ export default function NotificationSettings() {
 
   const [digestEnabled, setDigestEnabled] = React.useState(loaderData.digest);
   const [digestAge, setDigestAge] = React.useState(loaderData.digest_age);
-  // change this when notifications API is added.
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(
-    loaderData.digest
+    loaderData.notifications_enabled
   );
   const [saving, setSaving] = React.useState(false);
 
@@ -31,7 +31,8 @@ export default function NotificationSettings() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          digest: digestEnabled && notificationsEnabled,
+          notifications_enabled: notificationsEnabled,
+          digest: digestEnabled,
           digest_age: digestAge,
         }),
       });
@@ -48,8 +49,7 @@ export default function NotificationSettings() {
   };
 
   const hasNoChanges =
-    // change this when notifications API is added.
-    notificationsEnabled === loaderData.digest &&
+    notificationsEnabled === loaderData.notifications_enabled &&
     digestEnabled === loaderData.digest &&
     digestAge === loaderData.digest_age;
 
