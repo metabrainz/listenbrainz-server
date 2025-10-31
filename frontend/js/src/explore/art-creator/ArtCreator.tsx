@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { debounce } from "lodash";
+import { debounce, isEqual } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
@@ -42,9 +42,6 @@ export interface GridTemplateOption extends TemplateOption {
   defaultGridSize: number;
   defaultGridLayout: number;
 }
-/* How many layouts are available fro each grid dimension (number of rows/columns)
-See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
-const layoutsPerGridDimensionArr = [undefined, undefined, 1, 3, 4, 2];
 
 /* Fancy TypeScript to get a typed enum of object literals representing the options */
 export type TemplateEnumType = {
@@ -113,15 +110,30 @@ enum TimeRangeOptions {
   "all_time" = "All time",
 }
 
+/* Layout options available for each grid dimension (number of rows/columns)
+See GRID_TILE_DESIGNS in listenbrainz/art/cover_art_generator.py */
+const coverArtGridOptions: CoverArtGridOptions[] = [
+  { dimension: 1, layout: 0 },
+  { dimension: 2, layout: 0 },
+  { dimension: 3, layout: 0 },
+  { dimension: 3, layout: 1 },
+  { dimension: 3, layout: 2 },
+  { dimension: 4, layout: 0 },
+  { dimension: 4, layout: 1 },
+  { dimension: 4, layout: 2 },
+  { dimension: 4, layout: 3 },
+  { dimension: 5, layout: 0 },
+  { dimension: 5, layout: 1 },
+];
+
 // enum FontNameEnum {
 //   "Roboto",
 //   "Integer",
 //   "Sans Serif",
 // }
+// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 const DEFAULT_IMAGE_SIZE = 750;
-
-// const fontOptions = Object.values(FontNameEnum).filter((v) => isNaN(Number(v)));
 
 const defaultStyleOnLoad = TemplateEnum[
   TemplateNameEnum.designerTop5
@@ -157,6 +169,7 @@ export default function ArtCreator() {
 
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
+  const [showCaption, setShowCaption] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>(
@@ -404,13 +417,15 @@ export default function ArtCreator() {
         userNameArg: string,
         timeRangeArg: keyof typeof TimeRangeOptions,
         gridSizeArg: number,
-        gridLayoutArg: number
+        gridLayoutArg: number,
+        showCaptionArg: boolean
       ) => {
         if (styleArg.type === "grid") {
+          const captionParam = showCaptionArg ? "" : "?caption=false";
           setPreviewUrl(
             `${APIService.APIBaseURI}/art/grid-stats/${encodeURIComponent(
               userNameArg
-            )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`
+            )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}${captionParam}`
           );
         } else {
           setPreviewUrl(
@@ -429,13 +444,21 @@ export default function ArtCreator() {
     if (!userName) {
       return;
     }
-    debouncedSetPreviewUrl(style, userName, timeRange, gridSize, gridLayout);
+    debouncedSetPreviewUrl(
+      style,
+      userName,
+      timeRange,
+      gridSize,
+      gridLayout,
+      showCaption
+    );
   }, [
     userName,
     style,
     timeRange,
     gridSize,
     gridLayout,
+    showCaption,
     debouncedSetPreviewUrl,
   ]);
 
@@ -464,6 +487,7 @@ export default function ArtCreator() {
           <Preview
             key={previewUrl}
             url={previewUrl}
+            showCaption={showCaption}
             styles={{
               textColor,
               bgColor1: firstBgColor,
@@ -538,59 +562,44 @@ export default function ArtCreator() {
               <h4>Advanced</h4>
               {style.type === "grid" && (
                 <>
-                  <small>
-                    You can customize the grid size and select one of our
-                    advanced layouts
-                  </small>
-                  <div className="input-group">
-                    <div className="input-group-prepend">
-                      <label
-                        className="input-group-text"
-                        htmlFor="albums-per-row"
-                      >
-                        Albums per row
-                      </label>
-                    </div>
+                  <label className="form-check-label">
                     <input
-                      id="albums-per-row"
-                      className="form-control"
-                      type="number"
-                      min={2}
-                      max={5}
-                      value={gridSize}
-                      onChange={(event) => {
-                        setGridSize(event.target.valueAsNumber);
-                        setGridLayout(0);
-                      }}
-                    />
-                  </div>
-                  <div className="input-group">
-                    <div className="input-group-prepend">
-                      <label className="input-group-text" htmlFor="grid-layout">
-                        Grid layout
-                      </label>
-                    </div>
-                    <select
-                      id="grid-layout"
-                      className="form-select"
-                      value={gridLayout + 1}
-                      onChange={(event) => {
-                        setGridLayout(Number(event.target.value) - 1);
-                      }}
-                    >
-                      {[...Array(layoutsPerGridDimensionArr[gridSize])].map(
-                        (val, index) => {
-                          return (
-                            <option
-                              key={`option-${index + 1}`}
-                              value={index + 1}
-                            >
-                              Option {index + 1}
-                            </option>
-                          );
-                        }
-                      )}
-                    </select>
+                      type="checkbox"
+                      checked={showCaption}
+                      onChange={(evt) => setShowCaption(evt.target.checked)}
+                    />{" "}
+                    Show caption
+                  </label>
+                  <small>Choose a grid layout:</small>
+                  <div className="cover-art-grid">
+                    {coverArtGridOptions.map((option) => {
+                      return (
+                        <label className="cover-art-option">
+                          <input
+                            type="radio"
+                            name="artwork"
+                            value={`artwork-${option.dimension}-${option.layout}`}
+                            key={`artwork-${option.dimension}-${option.layout}`}
+                            className="cover-art-radio"
+                            checked={
+                              isEqual(option.dimension, gridSize) &&
+                              isEqual(option.layout, gridLayout)
+                            }
+                            onChange={() => {
+                              setGridSize(option.dimension);
+                              setGridLayout(option.layout);
+                            }}
+                          />
+                          <img
+                            height={80}
+                            width={80}
+                            src={`/static/img/playlist-cover-art/cover-art_${option.dimension}-${option.layout}.svg`}
+                            alt={`Cover art option ${option.dimension}-${option.layout}`}
+                            className="cover-art-image"
+                          />
+                        </label>
+                      );
+                    })}
                   </div>
                 </>
               )}
