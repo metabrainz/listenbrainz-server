@@ -6,7 +6,6 @@ import { useContext } from "react";
 import { Link } from "react-router";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../utils/GlobalAppContext";
-import { COLOR_LB_ORANGE } from "../utils/constants";
 
 type ExploreCardProps = {
   name: string;
@@ -49,6 +48,12 @@ export default function ExplorePage() {
         <title>Explore</title>
       </Helmet>
       <div className="row">
+        <ExploreCard
+          name="Art Creator"
+          desc="Share your album grids and other stats art"
+          img_name="art-creator.jpg"
+          url="/explore/art-creator/"
+        />
         <ExploreCard
           name="Fresh Releases"
           desc="Discover"
@@ -140,12 +145,6 @@ export default function ExplorePage() {
           desc="Instant custom playlists"
           img_name="lb-radio-beta.jpg"
           url="/explore/lb-radio/"
-        />
-        <ExploreCard
-          name="Stats art generator"
-          desc="Visualize and share your stats"
-          img_name="stats-art-beta.jpg"
-          url="/explore/art-creator/"
         />
       </div>
     </div>
