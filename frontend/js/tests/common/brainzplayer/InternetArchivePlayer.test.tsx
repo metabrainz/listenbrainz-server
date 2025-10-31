@@ -400,11 +400,13 @@ describe("InternetArchivePlayer", () => {
 
   describe("Audio event handlers", () => {
     it("should handle audio ended event", async () => {
-      await setupComponent();
+      const playerRef = await setupComponent();
 
       const audioElement = screen
         .getByTestId("internet-archive-player")
         .querySelector("audio");
+
+      playerRef.setupAudioListeners();
 
       fireEvent.ended(audioElement!);
 
@@ -412,11 +414,13 @@ describe("InternetArchivePlayer", () => {
     });
 
     it("should handle time update event", async () => {
-      await setupComponent();
+      const playerRef = await setupComponent();
 
       const audioElement = screen
         .getByTestId("internet-archive-player")
         .querySelector("audio");
+
+      playerRef.setupAudioListeners();
 
       // Mock currentTime for the test
       Object.defineProperty(audioElement!, "currentTime", {
@@ -435,12 +439,14 @@ describe("InternetArchivePlayer", () => {
         .getByTestId("internet-archive-player")
         .querySelector("audio");
 
+      playerRef.setupAudioListeners();
+
       Object.defineProperty(audioElement!, "duration", {
         writable: true,
         value: 120.5,
       });
 
-      playerRef.handleLoadedMetadata();
+      fireEvent.loadedMetadata(audioElement!);
 
       expect(defaultProps.onDurationChange).toHaveBeenCalledWith(120500);
     });
