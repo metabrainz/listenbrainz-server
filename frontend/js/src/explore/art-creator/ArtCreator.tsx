@@ -24,7 +24,6 @@ export enum TemplateNameEnum {
   designerTop10Alt = "designer-top-10-alt",
   lPsOnTheFloor = "lps-on-the-floor",
   gridStats = "grid-stats",
-  gridStatsSpecial = "grid-stats-special",
 }
 
 export interface TemplateOption {
@@ -85,14 +84,6 @@ export const TemplateEnum: TemplateEnumType = {
     type: "grid",
     defaultGridSize: 4,
     defaultGridLayout: 0,
-  },
-  [TemplateNameEnum.gridStatsSpecial]: {
-    name: TemplateNameEnum.gridStatsSpecial,
-    displayName: "Album grid alt",
-    image: "/static/img/explore/stats-art/template-grid-stats-2.png",
-    type: "grid",
-    defaultGridSize: 5,
-    defaultGridLayout: 1,
   },
 } as const;
 
