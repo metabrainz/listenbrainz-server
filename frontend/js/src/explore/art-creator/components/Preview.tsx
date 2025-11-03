@@ -65,7 +65,7 @@ const Preview = React.forwardRef(function PreviewComponent(
       <style>
         {!showCaption
           ? ` .caption { display: none; } `
-          : `.caption text > tspan { fill: white; `}
+          : `.caption text > tspan { fill: white; }`}
         {textColor
           ? `
           text > tspan,
