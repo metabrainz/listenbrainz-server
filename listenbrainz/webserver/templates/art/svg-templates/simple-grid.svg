@@ -17,6 +17,6 @@
 
      <rect id="background" fill="{{ background }}" x="0" ry="0" width="{{ width }}" height="{{ height }}"/>
      {% for image in images %}
-          {{ render_image_link(entity, image) }}
+          {{ render_image_link(entity, image, show_caption) }}
      {% endfor %}
 </svg>

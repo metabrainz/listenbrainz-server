@@ -4,6 +4,7 @@ import "external-svg-loader";
 type PreviewProps = {
   size?: number;
   url: string;
+  showCaption?: boolean;
   styles: {
     textColor?: string;
     bgColor1?: string;
@@ -16,10 +17,7 @@ const Preview = React.forwardRef(function PreviewComponent(
   ref: React.ForwardedRef<SVGSVGElement>
 ) {
   const [error, setError] = React.useState<string>();
-  const { url, styles, size = 750 } = props;
-  const hasCustomStyles = Boolean(
-    Object.values(styles)?.filter(Boolean).length
-  );
+  const { url, styles, size = 750, showCaption } = props;
   const { textColor, bgColor1, bgColor2 } = styles;
 
   React.useEffect(() => {
@@ -64,32 +62,33 @@ const Preview = React.forwardRef(function PreviewComponent(
       height={size}
       width={size}
     >
-      {hasCustomStyles && (
-        <style>
-          {textColor
-            ? `
-            text > tspan,
-            .accent-color {
-            fill: ${textColor};
-          }
-          .accent-color-stroke {
-            stroke: ${textColor};
-          }
-            `
-            : ""}
-          {bgColor1
-            ? `
-            stop:first-child { stop-color: ${bgColor1}; }
-            .bg-color-1 { fill: ${bgColor1}; }
+      <style>
+        {!showCaption
+          ? ` .caption { display: none; } `
+          : `.caption text > tspan { fill: white; `}
+        {textColor
+          ? `
+          text > tspan,
+          .accent-color {
+          fill: ${textColor};
+        }
+        .accent-color-stroke {
+          stroke: ${textColor};
+        }
           `
-            : ""}
-          {bgColor2
-            ? `
-            stop:nth-child(2) { stop-color: ${bgColor2}; }
-            .bg-color-2 { fill: ${bgColor2}; }`
-            : ""}
-        </style>
-      )}
+          : ""}
+        {bgColor1
+          ? `
+          stop:first-child { stop-color: ${bgColor1}; }
+          .bg-color-1 { fill: ${bgColor1}; }
+        `
+          : ""}
+        {bgColor2
+          ? `
+          stop:nth-child(2) { stop-color: ${bgColor2}; }
+          .bg-color-2 { fill: ${bgColor2}; }`
+          : ""}
+      </style>
       <svg data-src={url} data-js="enabled" data-cache="21600" />
     </svg>
   );
