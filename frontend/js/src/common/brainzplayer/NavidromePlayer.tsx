@@ -46,6 +46,7 @@ export default class NavidromePlayer
   public domainName = false;
   public icon = faNavidrome;
   public iconColor = dataSourcesInfo.navidrome.color;
+  public ready = false;
 
   audioRef: React.RefObject<HTMLAudioElement>;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -91,6 +92,8 @@ export default class NavidromePlayer
   setupAudioListeners = (): void => {
     const audioElement = this.audioRef.current;
     if (!audioElement) return;
+
+    this.ready = true;
 
     audioElement.addEventListener("loadedmetadata", this.onLoadedMetadata);
     audioElement.addEventListener("timeupdate", this.onTimeUpdate);

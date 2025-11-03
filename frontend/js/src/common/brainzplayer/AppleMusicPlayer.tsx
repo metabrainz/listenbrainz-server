@@ -115,6 +115,7 @@ export default class AppleMusicPlayer
   public domainName = "music.apple.com";
   public icon = faApple;
   public iconColor = dataSourcesInfo.appleMusic.color;
+  public ready = false;
 
   appleMusicPlayer?: AppleMusicPlayerType;
   declare context: React.ContextType<typeof GlobalAppContext>;
@@ -373,6 +374,7 @@ export default class AppleMusicPlayer
     if (!this.appleMusicPlayer) {
       return;
     }
+    this.ready = true;
 
     this.appleMusicPlayer.addEventListener(
       "playbackStateDidChange",

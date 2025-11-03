@@ -94,6 +94,7 @@ export default class SpotifyPlayer
   public domainName = "spotify.com";
   public icon = faSpotify;
   public iconColor = dataSourcesInfo.spotify.color;
+  public ready = false;
   // Saving the access token outside of React state , we do not need it for any rendering purposes
   // and it simplifies some of the closure issues we've had with old tokens.
   private accessToken = "";
@@ -494,6 +495,7 @@ export default class SpotifyPlayer
       "ready",
       ({ device_id }: { device_id: string }) => {
         this.deviceId = device_id;
+        this.ready = true;
         if (callbackFunction) {
           callbackFunction();
         }

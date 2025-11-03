@@ -78,6 +78,7 @@ export default class FunkwhalePlayer
   public domainName = false;
   public icon = faFunkwhale; // Custom Funkwhale FontAwesome icon
   public iconColor = dataSourcesInfo.funkwhale.color;
+  public ready = false;
 
   audioRef: React.RefObject<HTMLAudioElement>;
   accessToken = "";
@@ -136,6 +137,7 @@ export default class FunkwhalePlayer
       );
       return;
     }
+    this.ready = true;
 
     audioElement.addEventListener("loadedmetadata", this.onLoadedMetadata);
     audioElement.addEventListener("timeupdate", this.onTimeUpdate);

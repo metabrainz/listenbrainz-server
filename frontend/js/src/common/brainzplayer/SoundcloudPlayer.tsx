@@ -94,6 +94,7 @@ export default class SoundcloudPlayer
   public domainName = "soundcloud.com";
   public icon = faSoundcloud;
   public iconColor = dataSourcesInfo.soundcloud.color;
+  public ready = false;
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   // HTML widget options: https://developers.soundcloud.com/docs/api/html5-widget#parameters
@@ -185,6 +186,7 @@ export default class SoundcloudPlayer
     if (!this.soundcloudPlayer) {
       return;
     }
+    this.ready = true;
     const { onTrackEnd } = this.props;
     this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.FINISH, onTrackEnd);
     this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PAUSE, this.onPause);

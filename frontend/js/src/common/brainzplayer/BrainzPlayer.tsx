@@ -75,6 +75,7 @@ export type DataSourceType = {
   name: string;
   icon: IconProp;
   iconColor: string;
+  ready: boolean;
   playListen: (listen: Listen | JSPFTrack) => void;
   togglePlay: () => void;
   stop: () => void;
@@ -187,7 +188,7 @@ export default function BrainzPlayer() {
     isActivatedRef.current = true;
     store.set(isActivatedAtom, true);
     await new Promise((resolve) => {
-      setTimeout(resolve, 100);
+      setTimeout(resolve, 500);
     });
   };
 
@@ -549,6 +550,15 @@ export default function BrainzPlayer() {
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
     setCurrentDataSourceName(dataSource.name);
+    // Wait for the dataSource to be ready to play
+    await new Promise<void>((resolve) => {
+      const checkReadyInterval = setInterval(() => {
+        if (dataSource.ready) {
+          clearInterval(checkReadyInterval);
+          resolve();
+        }
+      }, 500);
+    });
     dataSource.playListen(getCurrentListen() ?? listen);
   };
 

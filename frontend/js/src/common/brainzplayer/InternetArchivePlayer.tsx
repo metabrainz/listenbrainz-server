@@ -55,6 +55,7 @@ export default class InternetArchivePlayer
   public domainName = "archive.org";
   public icon = faInternetArchive;
   public iconColor = "#6c757d";
+  public ready = false;
   audioRef: React.RefObject<HTMLAudioElement>;
   declare context: React.ContextType<typeof GlobalAppContext>;
 
@@ -84,6 +85,7 @@ export default class InternetArchivePlayer
       );
       return;
     }
+    this.ready = true;
     audioElement.addEventListener("loadedmetadata", this.handleLoadedMetadata);
     audioElement.addEventListener("durationchange", this.handleLoadedMetadata);
     audioElement.addEventListener("timeupdate", this.handleTimeUpdate);
