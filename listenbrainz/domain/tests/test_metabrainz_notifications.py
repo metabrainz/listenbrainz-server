@@ -12,6 +12,7 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
             musicbrainz_row_id=123,
             user_email="usermail@mail.com",
             from_addr="noreply@listenbrainz.org",
+            reply_to="noreply@listenbrainz.org"
         )
         expected_notification = [
                 {
