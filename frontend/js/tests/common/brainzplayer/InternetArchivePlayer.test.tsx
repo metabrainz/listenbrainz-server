@@ -182,9 +182,8 @@ describe("InternetArchivePlayer", () => {
       store.set(currentDataSourceNameAtom, "spotify");
       await setupComponent();
 
-      expect(
-        screen.queryByTestId("internet-archive-player")
-      ).not.toBeInTheDocument();
+      const iaPlayer = screen.getByTestId("internet-archive-player");
+      expect(iaPlayer).toHaveClass("hidden");
     });
 
     it("should render audio element", async () => {
