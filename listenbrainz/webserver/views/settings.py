@@ -23,7 +23,10 @@ from listenbrainz.domain.librefm import LibrefmService
 from listenbrainz.domain.musicbrainz import MusicBrainzService
 from listenbrainz.domain.soundcloud import SoundCloudService
 from listenbrainz.domain.spotify import SpotifyService, SPOTIFY_LISTEN_PERMISSIONS, SPOTIFY_IMPORT_PERMISSIONS
-from listenbrainz.domain.metabrainz_notifications import get_digest_preference, set_digest_preference
+from listenbrainz.domain.metabrainz_notifications import (
+    get_notification_preference,
+    set_notification_preference,
+)
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed
 from listenbrainz.webserver.errors import APIServiceUnavailable, APINotFound, APIForbidden, APIInternalServerError, \
@@ -377,25 +380,29 @@ def link_listens():
 
 @settings_bp.post("/notifications/")
 @api_login_required
-def get_digest_setting():
-    """Returns the current digest setting of the user."""
+def get_notification_settings():
+    """Returns the current notification settings of the user."""
     user = db_user.get(db_conn, current_user.id)
-    data = get_digest_preference(user["musicbrainz_row_id"])
-
+    data = get_notification_preference(user["musicbrainz_row_id"])
     return jsonify(data)
 
 
 @settings_bp.post("/set-notification-settings/")
 @api_login_required
-def set_digest_setting():
-    """Sets the digest preference for the user."""
+def set_notification_settings():
+    """Sets the notification settings for the user."""
     user = db_user.get(db_conn, current_user.id)
     data = request.json
-    resp_data = set_digest_preference(user["musicbrainz_row_id"], data["digest"], data["digest_age"])
-    if resp_data == data or (data["digest_age"] is None and data["digest"] == resp_data["digest"]):
+    try:
+        set_notification_preference(
+            user["musicbrainz_row_id"],
+            data["notifications_enabled"],
+            data["digest"],
+            data["digest_age"],
+        )
         return jsonify({"success": True})
-    else:
-        raise APIBadRequest("API request data doesn't match the response data.") 
+    except Exception as e:
+        raise APIBadRequest(f"Notification preferences couldnt be changed right now. {e}")
 
 
 @settings_bp.get('/', defaults={'path': ''})
