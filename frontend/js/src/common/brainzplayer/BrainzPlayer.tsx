@@ -685,6 +685,7 @@ export default function BrainzPlayer() {
       // Player has not been activated by the user, do nothing.
       return;
     }
+    stopPlayerStateTimer();
     const currDataSourceIndex = getCurrentDataSourceIndex();
     const currentListenFresh = getCurrentListen();
     if (currentListenFresh && currDataSourceIndex < dataSourceRefs.length - 1) {
@@ -705,7 +706,6 @@ export default function BrainzPlayer() {
         </>,
         "Could not find a match"
       );
-      stopPlayerStateTimer();
       playNextTrack();
     }
   };
@@ -714,6 +714,7 @@ export default function BrainzPlayer() {
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ): void => {
+    stopPlayerStateTimer();
     let dataSourceIndex = getCurrentDataSourceIndex();
     if (dataSource) {
       dataSourceIndex = dataSourceRefs.findIndex(
