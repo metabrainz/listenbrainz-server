@@ -577,6 +577,7 @@ export default class FunkwhalePlayer
     const artworkUrl = this.getTrackArtworkUrl(currentTrack);
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
+
     return (
       <div
         className={`funkwhale-player ${isCurrentDataSource ? "" : "hidden"}`}

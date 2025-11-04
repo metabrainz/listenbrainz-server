@@ -319,11 +319,6 @@ export default class SpotifyPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack, retryCount = 0): void => {
-    const isCurrentDataSource =
-      store.get(currentDataSourceNameAtom) === this.name;
-    if (!isCurrentDataSource) {
-      return;
-    }
     if (!this.checkRetries(retryCount)) {
       return;
     }
@@ -518,9 +513,7 @@ export default class SpotifyPlayer
   };
 
   handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {
-    const isCurrentDataSource =
-      store.get(currentDataSourceNameAtom) === this.name;
-    if (!playerState || !isCurrentDataSource) {
+    if (!playerState) {
       return;
     }
     const {
@@ -624,9 +617,13 @@ export default class SpotifyPlayer
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
 
-    if (!isCurrentDataSource) {
-      return null;
-    }
-    return <div data-testid="spotify-player">{this.getAlbumArt()}</div>;
+    return (
+      <div
+        className={!isCurrentDataSource ? "hidden" : ""}
+        data-testid="spotify-player"
+      >
+        {this.getAlbumArt()}
+      </div>
+    );
   }
 }

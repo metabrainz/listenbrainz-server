@@ -425,12 +425,11 @@ export default class NavidromePlayer
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
 
-    if (!isCurrentDataSource) {
-      return null;
-    }
-
     return (
-      <div className="navidrome-player" data-testid="navidrome-player">
+      <div
+        className={`navidrome-player ${!isCurrentDataSource ? "hidden" : ""}`}
+        data-testid="navidrome-player"
+      >
         <audio ref={this.audioRef} crossOrigin="anonymous" preload="metadata">
           <track kind="captions" />
         </audio>

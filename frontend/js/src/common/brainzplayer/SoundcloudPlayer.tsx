@@ -325,11 +325,6 @@ export default class SoundcloudPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
-    const isCurrentDataSource =
-      store.get(currentDataSourceNameAtom) === this.name;
-    if (!isCurrentDataSource) {
-      return;
-    }
     if (SoundcloudPlayer.isListenFromThisService(listen)) {
       const originURL = _get(
         listen,

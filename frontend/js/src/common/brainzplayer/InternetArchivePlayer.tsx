@@ -249,11 +249,12 @@ export default class InternetArchivePlayer
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
     const { currentTrack } = this.state;
-    if (!isCurrentDataSource) return null;
 
     return (
       <div
-        className="internet-archive-player"
+        className={`internet-archive-player ${
+          !isCurrentDataSource ? "hidden" : ""
+        }`}
         data-testid="internet-archive-player"
       >
         {currentTrack?.artwork_url && (

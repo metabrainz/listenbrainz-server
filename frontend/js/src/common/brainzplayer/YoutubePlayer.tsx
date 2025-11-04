@@ -179,11 +179,6 @@ export default class YoutubePlayer
       onProgressChange,
       onTrackInfoChange,
     } = this.props;
-    const isCurrentDataSource =
-      store.get(currentDataSourceNameAtom) === this.name;
-    if (!isCurrentDataSource) {
-      return;
-    }
     if (state === YouTube.PlayerState.ENDED) {
       const { onTrackEnd } = this.props;
       onTrackEnd();
@@ -313,10 +308,6 @@ export default class YoutubePlayer
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
-    const curName = store.get(currentDataSourceNameAtom);
-    if (curName !== this.name) {
-      return;
-    }
     const youtubeId = YoutubePlayer.getVideoIDFromListen(listen);
 
     if (youtubeId) {

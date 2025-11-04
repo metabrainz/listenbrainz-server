@@ -187,7 +187,7 @@ export default function BrainzPlayer() {
     isActivatedRef.current = true;
     store.set(isActivatedAtom, true);
     await new Promise((resolve) => {
-      setTimeout(resolve, 100);
+      setTimeout(resolve, 1000);
     });
   };
 
@@ -282,16 +282,6 @@ export default function BrainzPlayer() {
   // Check if it's time to submit the listen every X milliseconds
   const SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
 
-  const brainzPlayerDisabled =
-    userPreferences?.brainzplayer?.brainzplayerEnabled === false ||
-    (userPreferences?.brainzplayer?.spotifyEnabled === false &&
-      userPreferences?.brainzplayer?.youtubeEnabled === false &&
-      userPreferences?.brainzplayer?.soundcloudEnabled === false &&
-      userPreferences?.brainzplayer?.internetArchiveEnabled === false &&
-      userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
-      userPreferences?.brainzplayer?.navidromeEnabled === false &&
-      userPreferences?.brainzplayer?.appleMusicEnabled === false);
-
   const {
     spotifyEnabled = true,
     appleMusicEnabled = true,
@@ -303,6 +293,16 @@ export default function BrainzPlayer() {
     brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
+
+  const brainzPlayerDisabled =
+    brainzplayerEnabled === false ||
+    (spotifyEnabled === false &&
+      youtubeEnabled === false &&
+      soundcloudEnabled === false &&
+      internetArchiveEnabled === false &&
+      funkwhaleEnabled === false &&
+      navidromeEnabled === false &&
+      appleMusicEnabled === false);
 
   const enabledDataSources = [
     spotifyEnabled && SpotifyPlayer.hasPermissions(spotifyAuth) && "spotify",
@@ -549,6 +549,33 @@ export default function BrainzPlayer() {
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
     setCurrentDataSourceName(dataSource.name);
+    // Make sure the datasource is ready to play
+    try {
+      await new Promise<void>((resolve, reject) => {
+        // Early exit if already set
+        if (store.get(currentDataSourceIndexAtom) === selectedDatasourceIndex) {
+          resolve();
+          return;
+        }
+        let iterations = 0;
+        const checkDataSourceReadyInterval = setInterval(() => {
+          if (
+            store.get(currentDataSourceIndexAtom) === selectedDatasourceIndex
+          ) {
+            clearInterval(checkDataSourceReadyInterval);
+            resolve();
+          } else if (iterations >= 6) {
+            clearInterval(checkDataSourceReadyInterval);
+            reject();
+          } else {
+            iterations += 1;
+          }
+        }, 500);
+      });
+    } catch (e) {
+      playListen(listen, nextListenIndex, datasourceIndex + 1);
+      return;
+    }
     dataSource.playListen(getCurrentListen() ?? listen);
   };
 
