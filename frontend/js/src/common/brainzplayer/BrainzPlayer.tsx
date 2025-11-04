@@ -552,17 +552,11 @@ export default function BrainzPlayer() {
     setCurrentDataSourceName(dataSource.name);
     // Wait for the dataSource to be ready to play
     await new Promise<void>((resolve) => {
-      let iterations = 0;
       const checkReadyInterval = setInterval(() => {
         if (dataSource.ready) {
           clearInterval(checkReadyInterval);
           resolve();
-        } else if (iterations >= 10) {
-          // Wait up to 5 seconds, then give up and try another source
-          clearInterval(checkReadyInterval);
-          playListen(listen, nextListenIndex, datasourceIndex + 1);
         }
-        iterations += 1;
       }, 500);
     });
     dataSource.playListen(getCurrentListen() ?? listen);
