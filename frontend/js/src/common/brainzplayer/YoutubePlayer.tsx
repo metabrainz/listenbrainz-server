@@ -121,7 +121,6 @@ export default class YoutubePlayer
   public domainName = "youtube.com";
   public icon = faYoutube;
   public iconColor = dataSourcesInfo.youtube.color;
-  public ready = false;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
 
@@ -149,7 +148,6 @@ export default class YoutubePlayer
 
   onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
-    this.ready = true;
   };
 
   updateVideoInfo = (): void => {
