@@ -67,12 +67,9 @@ function HomePage() {
   }, []);
 
   const createAccountButton = (
-    <a
-      className="create-account-button"
-      href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
-    >
-      Create Account
-    </a>
+    <Link className="create-account-button" to="/login/">
+      Login
+    </Link>
   );
   const loginButton = (
     <Link className="login-button" to="/login/">
