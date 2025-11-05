@@ -6,7 +6,7 @@ from requests.auth import HTTPBasicAuth
 from requests_oauthlib import OAuth2Session
 
 TOKEN_CACHE_KEY = "notification_access_token"
-METABRAINZ_NOTIFICATIONS_ENDPOINT = "https://metabrainz.org/notification"
+METABRAINZ_NOTIFICATIONS_ENDPOINT = "http://metabrainz-web-1:8000/notification"
 
 
 def send_notification(
