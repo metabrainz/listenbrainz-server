@@ -1,7 +1,7 @@
 import * as React from "react";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useRevalidator } from "react-router";
 
 import Switch from "../../components/Switch";
 
@@ -13,6 +13,7 @@ type NotificationPreferenceLoaderData = {
 
 export default function NotificationSettings() {
   const loaderData = useLoaderData() as NotificationPreferenceLoaderData;
+  const revalidator = useRevalidator();
 
   const [digestEnabled, setDigestEnabled] = React.useState(loaderData.digest);
   const [digestAge, setDigestAge] = React.useState(loaderData.digest_age);
@@ -41,6 +42,7 @@ export default function NotificationSettings() {
         throw new Error(responseData.error);
       }
       toast.success("Notification settings saved successfully");
+      revalidator.revalidate();
     } catch (error) {
       toast.error(`Failed to save notification settings.${error}`);
     } finally {
