@@ -246,5 +246,9 @@ class UserRelationshipTestCase(DatabaseTestCase):
             followed=self.main_user['id'],
             followers=['followed_user_1', 'followed_user_2']
         )
+        expected_result = {
+            "followed_user_1": {"is_follower": True, "email": None, "mb_row_id": 2},
+            "followed_user_2": {"is_follower": False, "email": None, "mb_row_id": 3},
+        }
 
-        self.assertDictEqual({'followed_user_1': True, 'followed_user_2': False}, follower_results)
+        self.assertDictEqual(expected_result, follower_results)

@@ -59,9 +59,12 @@ def is_following_user(db_conn, follower: int, followed: int) -> bool:
 
 def multiple_users_by_username_following_user(db_conn, followed: int, followers: List[str]):
     ''' returns a dictionary, keys being usernames values being boolean '''
-    result = db_conn.execute(sqlalchemy.text("""
-        SELECT "user".musicbrainz_id,
-               bool(
+    result = db_conn.execute(
+        sqlalchemy.text("""
+        SELECT   "user".musicbrainz_id
+                ,"user".musicbrainz_row_id
+                ,"user".email
+                ,bool(
                    coalesce((
                     SELECT 't'
                       FROM user_relationship
@@ -74,11 +77,20 @@ def multiple_users_by_username_following_user(db_conn, followed: int, followers:
           FROM unnest(:followers) as arr
          INNER JOIN "user"
             ON "user".musicbrainz_id = arr
-    """), {
-        "followers": followers,
-        "followed": followed,
-    })
-    return {row.musicbrainz_id: row.result for row in result.fetchall()}
+    """),
+        {
+            "followers": followers,
+            "followed": followed,
+        },
+    )
+    return {
+        row.musicbrainz_id: {
+            "is_follower": row.result,
+            "mb_row_id": row.musicbrainz_row_id,
+            "email": row.email,
+        }
+        for row in result.mappings()
+    }
 
 
 def delete(db_conn, user_0: int, user_1: int, relationship_type: str) -> None:
