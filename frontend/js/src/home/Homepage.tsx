@@ -29,6 +29,7 @@ import { isNumber, throttle } from "lodash";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
 import GlobalAppContext from "../utils/GlobalAppContext";
@@ -66,15 +67,24 @@ function HomePage() {
     };
   }, []);
 
+  const buildAuthUrl = useCallback((loginHint: string) => {
+    const next = window.document.location.href;
+    const params = new URLSearchParams({ login_hint: loginHint });
+    if (next) {
+      params.set("next", next);
+    }
+    return `/login/musicbrainz/?${params.toString()}`;
+  }, []);
+
   const createAccountButton = (
-    <Link className="create-account-button" to="/login/">
-      Login
-    </Link>
+    <a className="create-account-button" href={buildAuthUrl("register")}>
+      Create Account
+    </a>
   );
   const loginButton = (
-    <Link className="login-button" to="/login/">
+    <a className="login-button" href={buildAuthUrl("login")}>
       Login
-    </Link>
+    </a>
   );
   // Calculate available screen real estate
   // This allows us to ensure that each page takes full height taking mobile browser toolbars into account
