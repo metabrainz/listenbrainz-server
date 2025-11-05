@@ -12,9 +12,9 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
             musicbrainz_row_id=123,
             user_email="usermail@mail.com",
             from_addr="noreply@listenbrainz.org",
+            reply_to="noreply@listenbrainz.org"
         )
         expected_notification = [
-            [
                 {
                     "subject": "test123",
                     "body": "testbody456",
@@ -22,11 +22,13 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
                     "to": "usermail@mail.com",
                     "project": "listenbrainz",
                     "sent_from": "noreply@listenbrainz.org",
+                    "reply_to": "noreply@listenbrainz.org",
                     "send_email": True,
                     "important": True,
                     "expire_age": 7,
+                    "template_id": None,
+                    "template_params": None
                 }
-            ]
         ]
 
         mock_send_multiple.assert_called_once_with(expected_notification)
@@ -57,16 +59,16 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
         mock_fetch_token.return_value = "access_token"
         mock_response = MagicMock()
         mock_response.raise_for_status.return_value = None
-        mock_response.json.return_value = {"digest": True, "digest_age": 7}
+        mock_response.json.return_value = {"notifications_enabled": True, "digest": True, "digest_age": 7}
         mock_get.return_value = mock_response
 
-        result = metabrainz_notifications.get_digest_preference(musicbrainz_row_id=456)
+        result = metabrainz_notifications.get_notification_preference(musicbrainz_row_id=456)
 
-        expected_url = "https://metabrainz.org/notification/456/digest-preference"
+        expected_url = "https://metabrainz.org/notification/456/notification-preference"
         mock_get.assert_called_once_with(
             url=expected_url, headers={"Authorization": "Bearer access_token"}
         )
-        self.assertEqual(result, {"digest": True, "digest_age": 7})
+        self.assertEqual(result, {"notifications_enabled": True, "digest": True, "digest_age": 7})
 
     @patch("listenbrainz.domain.metabrainz_notifications._fetch_token")
     @patch("requests.post")
@@ -74,16 +76,16 @@ class MetabrainNotificationsTestCase(NonAPIIntegrationTestCase):
         mock_fetch_token.return_value = "access_token"
         mock_response = MagicMock()
         mock_response.raise_for_status.return_value = None
-        mock_response.json.return_value = {"digest": True, "digest_age": 14}
+        mock_response.json.return_value = {"notifications_enabled": True, "digest": True, "digest_age": 14}
         mock_post.return_value = mock_response
 
-        result = metabrainz_notifications.set_digest_preference(
-            musicbrainz_row_id=789, digest=True, digest_age=14
+        result = metabrainz_notifications.set_notification_preference(
+            musicbrainz_row_id=789, notifications_enabled=True, digest=True, digest_age=14
         )
 
-        expected_url = "https://metabrainz.org/notification/789/digest-preference"
-        expected_data = {"digest": True, "digest_age": 14}
+        expected_url = "https://metabrainz.org/notification/789/notification-preference"
+        expected_data = {"notifications_enabled": True, "digest": True, "digest_age": 14}
         mock_post.assert_called_once_with(
             url=expected_url, json=expected_data, headers={"Authorization": "Bearer access_token"}
         )
-        self.assertEqual(result, {"digest": True, "digest_age": 14})
+        self.assertEqual(result, {"notifications_enabled": True, "digest": True, "digest_age": 14})
