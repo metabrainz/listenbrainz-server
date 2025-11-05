@@ -26,8 +26,9 @@ def index():
 @web_listenstore_needed
 @login_forbidden
 def musicbrainz():
-    session['next'] = request.args.get('next')
-    return redirect(provider.get_authentication_uri())
+    session["next"] = request.args.get("next")
+    login_hint = request.args.get("login_hint")
+    return redirect(provider.get_authentication_uri(login_hint=login_hint))
 
 
 @login_bp.get('/musicbrainz/post/')
