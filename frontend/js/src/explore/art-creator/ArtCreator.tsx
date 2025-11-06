@@ -161,6 +161,7 @@ export default function ArtCreator() {
   const [gridSize, setGridSize] = useState(4);
   const [gridLayout, setGridLayout] = useState(0);
   const [showCaption, setShowCaption] = useState(true);
+  const [skipMissing, setSkipMissing] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
   const [textColor, setTextColor] = useState<string>(
@@ -409,15 +410,26 @@ export default function ArtCreator() {
         timeRangeArg: keyof typeof TimeRangeOptions,
         gridSizeArg: number,
         gridLayoutArg: number,
-        showCaptionArg: boolean
+        showCaptionArg: boolean,
+        skipMissingArg: boolean
       ) => {
         if (styleArg.type === "grid") {
-          const captionParam = showCaptionArg ? "" : "?caption=false";
-          setPreviewUrl(
-            `${APIService.APIBaseURI}/art/grid-stats/${encodeURIComponent(
-              userNameArg
-            )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}${captionParam}`
-          );
+          let newPreviewUrl = `${
+            APIService.APIBaseURI
+          }/art/grid-stats/${encodeURIComponent(
+            userNameArg
+          )}/${timeRangeArg}/${gridSizeArg}/${gridLayoutArg}/${DEFAULT_IMAGE_SIZE}`;
+          const queryParams = new URLSearchParams();
+          if (!showCaptionArg) {
+            queryParams.set("caption", "false");
+          }
+          if (!skipMissingArg) {
+            queryParams.set("skip-missing", "false");
+          }
+          if (queryParams.size) {
+            newPreviewUrl += `?${queryParams.toString()}`;
+          }
+          setPreviewUrl(newPreviewUrl);
         } else {
           setPreviewUrl(
             `${APIService.APIBaseURI}/art/${styleArg.name}/${encodeURIComponent(
@@ -441,7 +453,8 @@ export default function ArtCreator() {
       timeRange,
       gridSize,
       gridLayout,
-      showCaption
+      showCaption,
+      skipMissing
     );
   }, [
     userName,
@@ -450,6 +463,7 @@ export default function ArtCreator() {
     gridSize,
     gridLayout,
     showCaption,
+    skipMissing,
     debouncedSetPreviewUrl,
   ]);
 
@@ -555,11 +569,21 @@ export default function ArtCreator() {
                 <>
                   <label className="form-check-label">
                     <input
+                      className="form-check-input me-2"
                       type="checkbox"
                       checked={showCaption}
                       onChange={(evt) => setShowCaption(evt.target.checked)}
                     />{" "}
                     Show caption
+                  </label>
+                  <label className="form-check-label">
+                    <input
+                      className="form-check-input me-2"
+                      type="checkbox"
+                      checked={skipMissing}
+                      onChange={(evt) => setSkipMissing(evt.target.checked)}
+                    />{" "}
+                    Skip missing covers
                   </label>
                   <small>Choose a grid layout:</small>
                   <div className="cover-art-grid">

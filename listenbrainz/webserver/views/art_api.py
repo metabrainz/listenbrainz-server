@@ -201,6 +201,8 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     :type image_size: ``int``
     :param caption: Whether to show the release name and artist overlayed on each cover art image. Default True
     :type caption: ``boolean``
+    :param skip-missing: Whether to skip albums that don't have cover art, or show a placeholder. Default True
+    :type skip-missing: ``boolean``
     :statuscode 200: cover art created successfully.
     :statuscode 400: Invalid JSON or invalid options in JSON passed. See error message for details.
     :resheader Content-Type: *image/svg+xml*
@@ -208,9 +210,10 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     See the bottom of this document for constants relating to this method.
     """
     show_caption = _parse_bool_arg("caption", True)
+    skip_missing = _parse_bool_arg("skip-missing", True)
     
     cac = CoverArtGenerator(
-        current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption)
+        current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption, skip_missing=skip_missing)
     err = cac.validate_parameters()
     if err is not None:
         raise APIBadRequest(err)
