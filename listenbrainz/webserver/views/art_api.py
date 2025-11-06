@@ -108,6 +108,7 @@ def cover_art_grid_post():
         r.get("skip-missing"),
         r.get("show-caa"),
         show_caption=show_caption,
+        server_root_url=current_app.config["SERVER_ROOT_URL"],
     )
 
     err = cac.validate_parameters()
@@ -213,7 +214,8 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
     skip_missing = _parse_bool_arg("skip-missing", True)
     
     cac = CoverArtGenerator(
-        current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption, skip_missing=skip_missing)
+        current_app.config["MB_DATABASE_URI"], dimension, image_size, show_caption=show_caption, skip_missing=skip_missing,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     err = cac.validate_parameters()
     if err is not None:
         raise APIBadRequest(err)
@@ -272,7 +274,9 @@ def cover_art_custom_stats(custom_name, user_name, time_range, image_size):
 
     """
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, image_size)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, image_size,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     err = cac.validate_parameters()
     if err is not None:
         raise APIBadRequest(err)
@@ -375,7 +379,9 @@ def _cover_art_yim_stats(user_name, stats, year, yim24):
 
 def _cover_art_yim_albums_2022(user_name, stats):
     """ Create the SVG using YIM top albums for 2022. """
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     image_urls = []
     selected_urls = set()
 
@@ -405,7 +411,9 @@ def _cover_art_yim_albums_2022(user_name, stats):
 
 def _cover_art_yim_albums_2023(user_name, stats):
     """ Create the SVG using YIM top albums for 2023. """
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     images = []
     selected_urls = set()
 
@@ -438,7 +446,9 @@ def _cover_art_yim_albums_2023(user_name, stats):
 
 def _cover_art_yim_albums_2024(user_name, stats, yim24):
     """ Create the SVG using YIM top albums for 2024. """
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     images = []
     selected_urls = set()
 
@@ -586,7 +596,9 @@ def _cover_art_yim_playlist_2023(user_name, stats, key, branding):
     images = []
     selected_urls = set()
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
 
     for track in stats[key]["track"]:
         additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
@@ -633,7 +645,9 @@ def _cover_art_yim_playlist_2024(user_name, stats, key, branding, yim24):
     images = []
     selected_urls = set()
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
 
     for track in stats[key]["track"]:
         additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
@@ -701,7 +715,9 @@ def _cover_art_yim_overview(user_name, stats, year, yim24):
         genre_count_percent = round(genre["genre_count"] / total_filtered_genre_count * 100)
         filtered_top_genres.append({"genre": genre["genre"], "genre_count_percent": genre_count_percent})
 
-    cac = CoverArtGenerator(current_app.config["MB_DATABASE_URI"], 3, 250)
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"], 3, 250,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
 
     albums = []
     for release_group in stats.get("top_release_groups", [])[:2]:
@@ -841,7 +857,8 @@ def playlist_cover_art_generate(playlist_mbid, dimension, layout):
     fetch_playlist_recording_metadata(playlist)
 
     cac = CoverArtGenerator(
-        current_app.config["MB_DATABASE_URI"], dimension, 500, show_caption=False)
+        current_app.config["MB_DATABASE_URI"], dimension, 500, show_caption=False,
+        server_root_url=current_app.config["SERVER_ROOT_URL"])
     if (validation_error := cac.validate_parameters()) is not None:
         raise APIBadRequest(validation_error)
 
