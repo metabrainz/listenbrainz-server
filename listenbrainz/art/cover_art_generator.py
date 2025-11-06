@@ -31,7 +31,7 @@ class CoverArtGenerator:
     """ Main engine for generating dynamic cover art. Given a design and data (e.g. stats) generate
         cover art from cover art images or text using the SVG format. """
 
-    CAA_MISSING_IMAGE = "https://listenbrainz.org/static/img/cover-art-placeholder.jpg"
+    CAA_MISSING_IMAGE = "https://listenbrainz.org/static/img/cover-art-placeholder-grid.png"
 
     # This grid tile designs (layouts?) are expressed as a dict with they key as dimension.
     # The value of the dict defines one design, with each cell being able to specify one or
