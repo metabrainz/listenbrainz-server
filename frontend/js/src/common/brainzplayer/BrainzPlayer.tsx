@@ -981,13 +981,25 @@ export default function BrainzPlayer() {
     ) {
       invalidateDataSource(navidromePlayerRef.current);
     }
+    if (
+      !AppleMusicPlayer.hasPermissions(appleAuth) &&
+      appleMusicPlayerRef?.current
+    ) {
+      invalidateDataSource(appleMusicPlayerRef.current);
+    }
+    if (
+      !FunkwhalePlayer.hasPermissions(funkwhaleAuth) &&
+      funkwhalePlayerRef?.current
+    ) {
+      invalidateDataSource(funkwhalePlayerRef.current);
+    }
     return () => {
       window.removeEventListener("message", receiveBrainzPlayerMessage);
       window.removeEventListener("beforeunload", alertBeforeClosingPage);
       stopPlayerStateTimer();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spotifyAuth, soundcloudAuth, navidromeAuth]);
+  }, [spotifyAuth, soundcloudAuth, navidromeAuth, appleAuth, funkwhaleAuth]);
 
   const { pathname } = useLocation();
 
