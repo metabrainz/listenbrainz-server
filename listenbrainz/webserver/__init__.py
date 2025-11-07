@@ -333,6 +333,7 @@ def create_app_rtfd():
     ))
 
     app.url_map.converters["not_api_path"] = NotApiPathConverter
+    app.url_map.converters["mb_username"] = UsernameConverter
 
     _register_blueprints(app)
     return app

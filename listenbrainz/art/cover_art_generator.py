@@ -31,8 +31,6 @@ class CoverArtGenerator:
     """ Main engine for generating dynamic cover art. Given a design and data (e.g. stats) generate
         cover art from cover art images or text using the SVG format. """
 
-    CAA_MISSING_IMAGE = "https://listenbrainz.org/static/img/cover-art-placeholder.jpg"
-
     # This grid tile designs (layouts?) are expressed as a dict with they key as dimension.
     # The value of the dict defines one design, with each cell being able to specify one or
     # more number of cells. Each string is a list of cells that will be used to define
@@ -82,7 +80,8 @@ class CoverArtGenerator:
                  background="#FFFFFF",
                  skip_missing=True,
                  show_caa_image_for_missing_covers=True,
-                 show_caption=True):
+                 show_caption=True,
+                 server_root_url="https://listenbrainz.org"):
         self.mb_db_connection_str = mb_db_connection_str
         self.dimension = dimension
         self.image_size = image_size
@@ -91,6 +90,7 @@ class CoverArtGenerator:
         self.show_caa_image_for_missing_covers = show_caa_image_for_missing_covers
         self.show_caption = show_caption
         self.tile_size = image_size // dimension  # This will likely need more cafeful thought due to round off errors
+        self.placeholder_image_url = f'{server_root_url}/static/img/cover-art-placeholder-grid.png'
 
     def parse_color_code(self, color_code):
         """ Parse an HTML color code that starts with # and return a tuple(red, green, blue) """
@@ -275,7 +275,7 @@ class CoverArtGenerator:
                             url = None
                             continue
                         elif self.show_caa_image_for_missing_covers:
-                            url = self.CAA_MISSING_IMAGE
+                            url = self.placeholder_image_url
                         else:
                             url = None
                     else:
@@ -284,7 +284,7 @@ class CoverArtGenerator:
                     break
                 except IndexError:
                     if self.show_caa_image_for_missing_covers:
-                        url = self.CAA_MISSING_IMAGE
+                        url = self.placeholder_image_url
                     else:
                         url = None
                     break

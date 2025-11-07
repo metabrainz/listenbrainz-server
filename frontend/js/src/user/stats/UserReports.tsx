@@ -191,7 +191,7 @@ export default function UserReports() {
                 <div className="mb-4">
                   {getLinkToArtCreator(
                     range,
-                    TemplateNameEnum.gridStatsSpecial,
+                    TemplateNameEnum.gridStats,
                     encodedUserOrCurrentUserName
                   )}
                 </div>

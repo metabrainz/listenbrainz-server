@@ -62,7 +62,8 @@ def get_cover_art_for_artist(release_groups):
         400,
         "transparent",
         True,
-        False
+        False,
+        server_root_url=current_app.config["SERVER_ROOT_URL"]
     )
     images = cac.generate_from_caa_ids(covers, [
         "0,1,4,5",
