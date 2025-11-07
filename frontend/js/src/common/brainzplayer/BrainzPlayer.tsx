@@ -812,13 +812,6 @@ export default function BrainzPlayer() {
     setDurationMs(newDurationMs);
   };
 
-  // Effect to start the timer when durationMs changes
-  React.useEffect(() => {
-    if (durationMs > 0) {
-      startPlayerStateTimer();
-    }
-  }, [durationMs, startPlayerStateTimer]);
-
   const trackInfoChange = (
     title: string,
     trackURL: string,
