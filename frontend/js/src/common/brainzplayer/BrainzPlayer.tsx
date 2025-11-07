@@ -451,7 +451,7 @@ export default function BrainzPlayer() {
   const pauseCurrentPlayback = async (): Promise<void> => {
     try {
       const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-      dataSource?.togglePlay();
+      dataSource?.stop();
     } catch (error) {
       handleError(error, "Could not pause playback");
     }
@@ -833,14 +833,12 @@ export default function BrainzPlayer() {
     setCurrentTrackCoverURL(artwork?.[0]?.src);
 
     updateWindowTitleWithTrackName();
-    if (!playerPaused) {
-      submitNowPlaying();
-    }
-    if (playerPaused) {
+    if (store.get(playerPausedAtom)) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
     }
+    submitNowPlaying();
 
     if (hasMediaSessionSupport()) {
       overwriteMediaSession(mediaSessionHandlers);
@@ -859,6 +857,8 @@ export default function BrainzPlayer() {
                 className="alert-thumbnail"
                 src={artwork[0].src}
                 alt={album || title}
+                // eslint-disable-next-line no-console
+                onError={console.error}
               />
             ) : (
               <FontAwesomeIcon icon={faPlayCircle as IconProp} />
