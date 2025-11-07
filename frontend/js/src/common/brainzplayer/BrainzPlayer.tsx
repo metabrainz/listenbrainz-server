@@ -211,9 +211,9 @@ export default function BrainzPlayer() {
   const setAmbientQueue = useSetAtom(ambientQueueAtom);
   const setCurrentListenIndex = useSetAtom(currentListenIndexAtom);
   const setCurrentListen = useSetAtom(currentListenAtom);
+  const setDurationMs = useSetAtom(durationMsAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
-  const [durationMs, setDurationMs] = useAtom(durationMsAtom);
   const [currentDataSourceIndex, setCurrentDataSourceIndex] = useAtom(
     currentDataSourceIndexAtom
   );
