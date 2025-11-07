@@ -79,6 +79,9 @@ const useListenSubmission = ({
     ) {
       newListen.track_metadata.artist_name = brainzplayer_metadata.artist_name;
     }
+    if (newListen.track_metadata.release_name === "") {
+      delete newListen.track_metadata.release_name;
+    }
 
     const musicServiceName = dataSource?.current?.name;
     let musicServiceDomain = dataSource?.current?.domainName;
