@@ -64,6 +64,22 @@ const useListenSubmission = ({
         cloneDeep((currentListen as BaseListenFormat)?.track_metadata) ?? {},
     };
 
+    // In some edge cases (eg. playing from stats page), listen metadata does not contain a track/artist name.
+    // The absence of track_name results in a rejected listen submission, so ensure there is one.
+    if (
+      !newListen.track_metadata.track_name &&
+      brainzplayer_metadata.track_name
+    ) {
+      newListen.track_metadata.track_name =
+        newListen.track_metadata.track_name || brainzplayer_metadata.track_name;
+    }
+    if (
+      !newListen.track_metadata.artist_name &&
+      brainzplayer_metadata.artist_name
+    ) {
+      newListen.track_metadata.artist_name = brainzplayer_metadata.artist_name;
+    }
+
     const musicServiceName = dataSource?.current?.name;
     let musicServiceDomain = dataSource?.current?.domainName;
 

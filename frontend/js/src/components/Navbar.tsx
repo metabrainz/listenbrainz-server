@@ -136,9 +136,16 @@ function Navbar() {
                 </NavLink>
               </>
             ) : (
-              <Link to="/login/" onClick={toggleSidebar}>
-                Sign in
-              </Link>
+              <>
+                <Link to="/login/" onClick={toggleSidebar}>
+                  Sign in
+                </Link>
+                <a
+                  href={`https://musicbrainz.org/register?returnto=${window.document.location.href}`}
+                >
+                  Create Account
+                </a>
+              </>
             )}
             <NavLink to="/about/" onClick={toggleSidebar}>
               About
