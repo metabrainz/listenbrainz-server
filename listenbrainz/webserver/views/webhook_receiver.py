@@ -38,7 +38,7 @@ def verify_webhook_signature(secret: str, payload_bytes: bytes, signature_header
         return False
 
 
-@webhook_bp.route("/metabrainz", methods=["POST"])
+@webhook_bp.route("/metabrainz/", methods=["POST"])
 def receive_metabrainz_webhook():
     """
     Receive and process MetaBrainz webhook events.
