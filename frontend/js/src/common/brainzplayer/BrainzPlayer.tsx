@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { Link, useLocation } from "react-router";
 import { Helmet } from "react-helmet";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
+import { useResetAtom } from "jotai/utils";
 import {
   ToastMsg,
   createNotification,
@@ -198,8 +199,8 @@ export default function BrainzPlayer() {
   // Context Atoms - Setters
   const setUpdateTime = useSetAtom(updateTimeAtom);
   const setProgressMs = useSetAtom(progressMsAtom);
-  const setListenSubmitted = useSetAtom(listenSubmittedAtom);
-  const setContinuousPlaybackTime = useSetAtom(continuousPlaybackTimeAtom);
+  const resetListenSubmitted = useResetAtom(listenSubmittedAtom);
+  const resetContinuousPlaybackTime = useResetAtom(continuousPlaybackTimeAtom);
   const setCurrentTrackCoverURL = useSetAtom(currentTrackCoverURLAtom);
   const setCurrentTrackName = useSetAtom(currentTrackNameAtom);
   const setCurrentTrackArtist = useSetAtom(currentTrackArtistAtom);
@@ -501,8 +502,8 @@ export default function BrainzPlayer() {
     }
     setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
-    setContinuousPlaybackTime(0);
-    setListenSubmitted(false);
+    resetContinuousPlaybackTime();
+    resetListenSubmitted();
 
     window.postMessage(
       {
