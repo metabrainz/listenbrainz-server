@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta, timezone
+from flask import current_app
 
 from sqlalchemy import text
 from troi.patches.periodic_jams import WEEKLY_JAMS_DESCRIPTION, WEEKLY_EXPLORATION_DESCRIPTION
 
 from listenbrainz import db
+from listenbrainz.db import user as User
 from listenbrainz.troi.spark import batch_process_playlists, remove_old_playlists, get_user_details
+from listenbrainz.domain.metabrainz_notifications import send_notification
+
 
 PERIODIC_PLAYLIST_LIFESPAN = 2
 
@@ -75,10 +79,30 @@ def process_weekly_playlists(slug, playlists):
         return
 
     all_playlists, playlists_to_export = exclude_playlists_from_deleted_users(slug, jam_name, description, playlists)
-    batch_process_playlists(all_playlists, playlists_to_export)
+    user_playlist_pairs = batch_process_playlists(all_playlists, playlists_to_export)
+    send_notification_to_users(jam_name, user_playlist_pairs)
 
 
 def process_weekly_playlists_end(slug):
     """ Once bulk generated playlists have been inserted in Spark, remove all but the
         two latest playlists of that slug for all users. """
     remove_old_playlists(slug, PERIODIC_PLAYLIST_LIFESPAN)
+
+
+def send_notification_to_users(jam_name: str, user_playlist_pairs: list[tuple[int, dict]]):
+    for user_id, playlist_data in user_playlist_pairs:
+        user = User.get(id=user_id, fetch_email=True)
+        playlist_url = f"{current_app.config['SERVER_ROOT_URL']}/playlist/{playlist_data['mbid']}"
+
+        send_notification(
+            musicbrainz_row_id=user["musicbrainz_row_id"],
+            user_email=user["email"],
+            template_id="playlist-notification",
+            template_params={
+                "to_name": user["musicbrainz_id"],
+                "playlist_name": jam_name,
+                "playlist_url": playlist_url,
+                "notification_settings_url": f"{current_app.config['SERVER_ROOT_URL']}/settings/notifications/",
+            },
+            important=False,
+        )

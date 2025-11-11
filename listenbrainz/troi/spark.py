@@ -146,6 +146,7 @@ def batch_process_playlists(all_playlists, playlists_to_export):
     """ Insert the playlists generated in batch by spark """
     export_to_spotify(playlists_to_export)
 
+    user_playlist_pairs = []
     conn = timescale.engine.raw_connection()
     try:
         with conn.cursor(cursor_factory=DictCursor) as curs:
@@ -155,11 +156,14 @@ def batch_process_playlists(all_playlists, playlists_to_export):
                 generated_data = playlist_ids[created_for]
                 playlist.update(generated_data)
                 insert_recordings(curs, playlist["id"], playlist["recordings"])
+                user_playlist_pairs.append((created_for, generated_data))
         conn.commit()
     except Exception:
         current_app.logger.error("Error while batch inserting playlists:", exc_info=True)
     finally:
         conn.close()
+
+    return user_playlist_pairs
 
 
 def remove_old_playlists(slug, keep):
