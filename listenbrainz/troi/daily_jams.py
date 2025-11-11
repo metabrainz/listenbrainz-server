@@ -13,7 +13,7 @@ from listenbrainz.db.user_relationship import get_followers_of_user
 from listenbrainz.db.user_timeline_event import create_user_timeline_event, UserTimelineEventType, NotificationMetadata
 from listenbrainz.domain.spotify import SpotifyService
 from listenbrainz.troi.utils import get_existing_playlist_urls, SPOTIFY_EXPORT_PREFERENCE
-from listenbrainz.domain.metabrainz_notifications import send_notification
+
 
 def run_post_recommendation_troi_bot():
     """ Top level function called after spark CF recommendations have been completed. """
@@ -52,8 +52,6 @@ def get_users_for_daily_jams(db_conn, create_all):
     query = """
         SELECT "user".musicbrainz_id AS musicbrainz_id
              , "user".id as id
-             , "user".musicbrainz_row_id as mb_row_id
-             , "user".email as email
              , to_char(NOW() AT TIME ZONE COALESCE(us.timezone_name, 'GMT'), 'YYYY-MM-DD Dy') AS jam_date
              , COALESCE(us.troi->>:export_preference, 'f')::bool AS export_to_spotify
           FROM user_relationship
@@ -146,19 +144,6 @@ def run_daily_jams(db_conn, user, existing_url, service):
             message += f"""You can also listen it on <a href="{spotify_link}">Spotify!</a>."""
 
         enter_timeline_notification(db_conn, username, message)
-
-        send_notification(
-            musicbrainz_row_id=user["mb_row_id"],
-            user_email=user["email"],
-            template_id="playlist-notification",
-            template_params={
-                "to_name": username,
-                "playlist_name": "daily-jams",
-                "playlist_url": url,
-                "notification_settings_url": f"{current_app.config["SERVER_ROOT_URL"]}/settings/notifications/"
-            },
-            important=False,
-        )
 
 
 def enter_timeline_notification(db_conn, username, message):
