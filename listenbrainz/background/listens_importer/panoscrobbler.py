@@ -1,4 +1,5 @@
 import orjson
+from flask import current_app
 from datetime import datetime, timezone
 from typing import Iterator, Any
 
@@ -20,13 +21,13 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                 try:
                     item = orjson.loads(line)
                     timestamp = datetime.fromtimestamp(item["timeMs"] / 1000.0, tz=timezone.utc)
-                    if from_date <= timestamp <= to_date:
+                    if item is not None and from_date <= timestamp <= to_date:
                         batch.append(item)
                     if len(batch) >= self.batch_size:
                         yield batch
                         batch = []
                 except orjson.JSONDecodeError:
-                    print(f"Skipping malformed JSON line: {line.strip().decode('utf-8', 'ignore')}")
+                    current_app.logger.error(f"Skipping malformed JSON line: {line.strip().decode('utf-8', 'ignore')}")
             if batch:
                 yield batch
 
@@ -41,7 +42,7 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                 
                 track_metadata = {
                     "track_name": item.get("track"),
-                    "track_name": item.get("artist_name"),
+                    "artist_name": item.get("artist"),
                 }
                 if item["album"]:
                     track_metadata["release_name"] = item["album"]
@@ -52,9 +53,9 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                 if item["durationMs"]:
                     additional_info["duration_ms"] = item["durationMs"]
 
-                if item["media_player"]:
+                if item["mediaPlayerName"]:
                     additional_info["media_player"] = item.get("mediaPlayerName")
-                if item["media_player_version"]:
+                if item["mediaPlayerVersion"]:
                     additional_info["media_player_version"] = item.get("mediaPlayerVersion")
                 
                 additional_info["submission_client"] = self.importer_name
@@ -66,6 +67,7 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                     "listened_at": timestamp,
                     "track_metadata": track_metadata,
                 })
-            except (ValueError, KeyError, TypeError):
+            except (ValueError, KeyError, TypeError) as e:
+                current_app.logger.error(f"Error parsing item: {item}. Error: {e}", exc_info=True)  
                 continue
         return listens
