@@ -56,7 +56,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm"]
+    allowed_services = ["spotify", "listenbrainz", "librefm", "panoscrobbler"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -67,7 +67,7 @@ def create_import_task():
     if not filename:
         raise APIBadRequest("Invalid file name!")
 
-    allowed_extensions = [".zip", ".csv"]
+    allowed_extensions = [".zip", ".csv", ".jsonl"]
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
         raise APIBadRequest("File type not allowed!")
@@ -76,6 +76,8 @@ def create_import_task():
         raise APIBadRequest("Only zip files are allowed for this service!")
     if service == "librefm" and extension != ".csv":
         raise APIBadRequest("Only csv files are allowed for this service!")
+    if service == "panoscrobbler" and extension != ".jsonl":
+        raise APIBadRequest("Only JSONL files are allowed for this service!")
 
     # add a unique ID to the filename to avoid collisions
     saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)

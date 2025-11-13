@@ -4,6 +4,7 @@ from sqlalchemy import text
 from listenbrainz.background.listens_importer.librefm import LibrefmListensImporter
 from listenbrainz.background.listens_importer.listenbrainz import ListenBrainzListensImporter
 from listenbrainz.background.listens_importer.spotify import SpotifyListensImporter
+from listenbrainz.background.listens_importer.panoscrobbler import PanoScrobblerListensImporter
 
 
 def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
@@ -29,6 +30,8 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
         importer = ListenBrainzListensImporter(db_conn, ts_conn)
     elif service == "librefm":
         importer = LibrefmListensImporter(db_conn, ts_conn)
+    elif service == "panoscrobbler":
+        importer = PanoScrobblerListensImporter(db_conn, ts_conn)
     else:
         raise ValueError(f"Unsupported service: {service}")
     importer.import_listens(user_id, import_task)
