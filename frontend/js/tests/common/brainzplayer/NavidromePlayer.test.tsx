@@ -166,7 +166,8 @@ describe("NavidromePlayer", () => {
           <NavidromePlayer {...defaultProps} />
         </GlobalAppContext.Provider>
       );
-      expect(screen.queryByTestId("navidrome-player")).toBeNull();
+      const navidromePlayer = screen.getByTestId("navidrome-player");
+      expect(navidromePlayer).toHaveClass("hidden");
     });
   });
 

@@ -75,7 +75,7 @@ function PlaybackControlButton(props: PlaybackControlButtonProps) {
     <button
       className={`btn-link ${className} ${disabled ? "disabled" : ""}`}
       title={title}
-      onClick={disabled ? noop : action}
+      onClick={disabled ? noop : () => action()}
       type="button"
       tabIndex={0}
       data-testid={`bp-${className}-button`}
