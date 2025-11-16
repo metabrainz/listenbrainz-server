@@ -1,0 +1,43 @@
+{
+  "maloja": {
+    "export_time": 1761035593
+  },
+  "scrobbles": [
+    {
+      "time": 1760532613,
+      "track": {
+        "artists": [
+          "Alabaster Deplume"
+        ],
+        "title": "Not Now, Jesus",
+        "album": {
+          "artists": [
+            "Alabaster Deplume"
+          ],
+          "albumtitle": "To Cy & Lee: Instrumentals Vol. 1"
+        },
+        "length": null
+      },
+      "duration": null,
+      "origin": "client:turntable"
+    },
+    {
+      "time": 1760532855,
+      "track": {
+        "artists": [
+          "Vega Trails"
+        ],
+        "title": "Old Friend; The Sea",
+        "album": {
+          "artists": [
+            "Vega Trails"
+          ],
+          "albumtitle": "Sierra Tracks"
+        },
+        "length": null
+      },
+      "duration": 245,
+      "origin": "client:turntable"
+    }
+  ]
+}

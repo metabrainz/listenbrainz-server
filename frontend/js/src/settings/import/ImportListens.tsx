@@ -33,12 +33,14 @@ enum Services {
   listenbrainz = "Listenbrainz",
   // applemusic = "Apple Music",
   librefm = "Libre.fm",
+  maloja = "Maloja",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
   [Services.listenbrainz]: ".zip",
   // [Services.applemusic]: ".zip",
   [Services.librefm]: ".csv",
+  [Services.maloja]: ".json",
 };
 type Import = {
   import_id: number;
