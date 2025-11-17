@@ -5,6 +5,7 @@ from functools import wraps
 import os
 import sys
 from time import time
+import traceback
 
 import click
 import requests
@@ -53,7 +54,7 @@ CACHE_REBUILD_SLEEP_TIME = 60
 
 def cache_lock_rebuild():
     """ Set the cache lock in redis for the rebuild process"""
-    bu.init()
+    cache.init(host=config.REDIS_HOST, port=int(config.REDIS_PORT), namespace=config.REDIS_NAMESPACE)
 
     while True: 
         value = "%d-%d" % (os.getpid(), int(time()))
@@ -67,7 +68,7 @@ def cache_lock_rebuild():
         else:
             # Nope, check to see if proc still exists
             pid, _ = value.split("-")
-            if psutil.pid_exists(pid):
+            if psutil.pid_exists(int(pid)):
                 log("Cache lock pid exists")
                 sleep(CACHE_REBUILD_SLEEP_TIME)
                 continue
@@ -81,7 +82,7 @@ def cache_lock_rebuild():
 
 def cache_lock_incremental():
     """ Set the cache lock in redis for the incremental process"""
-    cache.init()
+    cache.init(host=config.REDIS_HOST, port=int(config.REDIS_PORT), namespace=config.REDIS_NAMESPACE)
 
     value = "%d-%d" % (os.getpid(), int(time()))
     lock_value = cache._r.setnx(CACHE_LOCK_KEY, value)
@@ -94,7 +95,7 @@ def cache_lock_incremental():
     else:
         # Nope, check to see if proc still exists
         pid, _ = value.split("-")
-        if psutil.pid_exists(pid):
+        if psutil.pid_exists(int(pid)):
             log("Cache lock pid exists")
             return
 
@@ -187,6 +188,7 @@ def cron_update_all_mb_caches():
     try:
         cache_lock_incremental()
     except Exception as err:
+        traceback.print_exc()
         print(err)
         raise
 

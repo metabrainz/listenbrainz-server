@@ -17,7 +17,7 @@
 0 6 * * 0 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-build-tag-similarity >> /code/mapper/cron-tag-similarity.log 2>&1
 
 # Build the mb entity caches from scratch on every thursday, MB dumps run on Wed and Sat so avoid those days
-0 15 * * 4 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron-build-all-mb-caches >> /code/mapper/cron-mb-entity-cache.log 2>&1
+0 15 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron-build-all-mb-caches >> /code/mapper/cron-mb-entity-cache.log 2>&1
 
 # Update the mb entity caches incrementally every 4 hours
 0 */4 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-update-all-mb-caches >> /code/mapper/cron-mb-entity-cache.log 2>&1
