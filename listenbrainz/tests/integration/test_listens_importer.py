@@ -519,7 +519,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
         self.assertEqual(additional_info["music_service"], "maloja")
         self.assertEqual(additional_info["origin"], "client:turntable")
-        self.assertEqual(additional_info["duration_ms"], 245000)
+        self.assertEqual(additional_info["duration"], 245)
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1760532613)
@@ -528,6 +528,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Not Now, Jesus")
         self.assertEqual(track_metadata["release_name"], "To Cy & Lee: Instrumentals Vol. 1")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "turntable")
         self.assertEqual(additional_info["music_service"], "maloja")
         self.assertEqual(additional_info["origin"], "client:turntable")
