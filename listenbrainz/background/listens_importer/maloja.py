@@ -72,7 +72,7 @@ class MalojaListensImporter(BaseListensImporter):
                 if album_artists and album_artists != artists:
                     additional_info["release_artist_name"] = ", ".join(album_artists)
 
-                duration_seconds = item.get("duration")
+                duration_seconds = track.get("length")
                 if duration_seconds:
                     try:
                         additional_info["duration"] = int(duration_seconds)

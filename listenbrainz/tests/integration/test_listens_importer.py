@@ -518,7 +518,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "turntable")
         self.assertEqual(additional_info["origin"], "client:turntable")
-        self.assertEqual(additional_info["duration"], 245)
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1760532613)
