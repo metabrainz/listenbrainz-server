@@ -475,7 +475,8 @@ export default function ImportListens() {
 
               <div style={{ minWidth: "15em" }}>
                 <label className="form-label" htmlFor="file-upload">
-                  Choose a File:
+                  Select your {acceptedFileTypes[Services[selectedService]]}{" "}
+                  file:
                 </label>
                 <input
                   type="file"
