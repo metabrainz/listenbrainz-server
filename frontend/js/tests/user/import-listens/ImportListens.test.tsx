@@ -111,7 +111,7 @@ describe("ImportListensPage", () => {
       expect(screen.getByText(/start import from/i)).toBeInTheDocument();
       expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
       expect(screen.getByText(/select Service/i)).toBeInTheDocument();
-      expect(screen.getByText(/choose a File/i)).toBeInTheDocument();
+      expect(screen.getByText(/Select your .zip file/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /import listens/i })).toBeInTheDocument();
     });
   });
@@ -122,7 +122,7 @@ describe("ImportListensPage", () => {
     expect(importButton).toBeDisabled();
 
     const file = new File(['{ "foo": "bar" }'], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText(/choose a file/i);
+    const input = screen.getByLabelText(/select your .zip file/i);
 
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -181,7 +181,7 @@ it("calls import endpoint when import listens clicked", async () => {
     false
   );
 
-  const input = screen.getByLabelText(/choose a file/i);
+  const input = screen.getByLabelText(/select your .zip file/i);
 
   const file = new File(["spotify_test"], "spotify_test.zip", { type: "application/zip" });
   await user.upload(input, file);
