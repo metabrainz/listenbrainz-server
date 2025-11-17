@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { format, isValid } from "date-fns";
 import { useMemo } from "react";
+import { initial, last, partition } from "lodash";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
 import Loader from "../../components/Loader";
@@ -42,6 +43,14 @@ const acceptedFileTypes = {
   [Services.librefm]: ".csv",
   [Services.panoscrobbler]: ".jsonl",
 };
+const serviceNames = Object.values(Services);
+const humanReadableServices = `${initial(serviceNames).join(", ")} and ${last(
+  serviceNames
+)}`;
+const [zipServices, nonZipServices] = partition(serviceNames, (serv) => {
+  return acceptedFileTypes[serv] === ".zip";
+});
+
 type Import = {
   import_id: number;
   created: string;
@@ -419,13 +428,22 @@ export default function ImportListens() {
       <p>
         Migrate your listens from different streaming services to Listenbrainz!
       </p>
+      <p>
+        We currently support export files from: <b>{humanReadableServices}</b>.
+      </p>
       <div className="alert alert-warning fade show" role="alert">
-        The importer currently supports Spotify, ListenBrainz and Libre.fm
-        export files. For Spotify and ListenBrainz, please upload the complete{" "}
-        <mark>.zip</mark> archive as received, without extracting the files
-        within.
-        <br />
-        For Libre.fm, please upload the <mark>.csv</mark> file directly.
+        <p>
+          For <b>{zipServices.join(", ")}</b>: please upload the complete{" "}
+          <mark>.zip</mark> archive as received, without extracting the files
+          within.
+          <br />
+          For <b>{nonZipServices.join(", ")}</b>: please upload single files
+          directly (
+          {nonZipServices.map((s) => (
+            <mark>{acceptedFileTypes[s]}, </mark>
+          ))}{" "}
+          respectively).
+        </p>
       </div>
       <div className="card">
         <div className="card-body">
