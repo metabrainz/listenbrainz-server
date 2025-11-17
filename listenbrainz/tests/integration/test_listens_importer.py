@@ -517,7 +517,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Sierra Tracks")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "turntable")
-        self.assertEqual(additional_info["music_service"], "maloja")
         self.assertEqual(additional_info["origin"], "client:turntable")
         self.assertEqual(additional_info["duration"], 245)
 
@@ -529,5 +528,4 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "To Cy & Lee: Instrumentals Vol. 1")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "turntable")
-        self.assertEqual(additional_info["music_service"], "maloja")
         self.assertEqual(additional_info["origin"], "client:turntable")

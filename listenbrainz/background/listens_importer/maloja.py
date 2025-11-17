@@ -66,9 +66,7 @@ class MalojaListensImporter(BaseListensImporter):
                 if album_title:
                     track_metadata["release_name"] = album_title
 
-                additional_info: dict[str, Any] = {
-                    "submission_client": self.importer_name,
-                }
+                additional_info: dict[str, Any] = {}
 
                 album_artists = album.get("artists", []) or []
                 if album_artists and album_artists != artists:
