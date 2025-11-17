@@ -74,7 +74,7 @@ class MalojaListensImporter(BaseListensImporter):
                 duration_seconds = item.get("duration")
                 if duration_seconds:
                     try:
-                        additional_info["duration_ms"] = int(float(duration_seconds) * 1000)
+                        additional_info["duration"] = int(duration_seconds)
                     except (TypeError, ValueError):
                         current_app.logger.debug("Skipping invalid duration in Maloja item: %s", item, exc_info=True)
 
