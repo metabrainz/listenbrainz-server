@@ -11,6 +11,10 @@ from listenbrainz.background.listens_importer.base import BaseListensImporter
 class MalojaListensImporter(BaseListensImporter):
     """Importer for Maloja listening history exports."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.importer_name = "Maloja Archive Importer"
+
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Read the Maloja JSON export and yield filtered scrobbles in batches."""
         from_date = import_task["from_date"]
@@ -64,7 +68,6 @@ class MalojaListensImporter(BaseListensImporter):
 
                 additional_info: dict[str, Any] = {
                     "submission_client": self.importer_name,
-                    "music_service": "maloja",
                 }
 
                 album_artists = album.get("artists", []) or []
