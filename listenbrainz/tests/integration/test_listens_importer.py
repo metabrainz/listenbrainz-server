@@ -516,7 +516,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["track_name"], "Old Friend; The Sea")
         self.assertEqual(track_metadata["release_name"], "Sierra Tracks")
         additional_info = track_metadata["additional_info"]
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "turntable")
         self.assertEqual(additional_info["music_service"], "maloja")
         self.assertEqual(additional_info["origin"], "client:turntable")
         self.assertEqual(additional_info["duration"], 245)
