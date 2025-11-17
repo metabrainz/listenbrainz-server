@@ -9,6 +9,10 @@ from listenbrainz.background.listens_importer.base import BaseListensImporter
 class PanoScrobblerListensImporter(BaseListensImporter):
     """PanoScrobbler-specific listens importer."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.importer_name = "PanoScrobbler Archive Importer"
+
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the PanoScrobbler JSONL archive file and returns a generator of batches of items."""
         from_date = import_task["from_date"]
@@ -59,7 +63,6 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                     additional_info["media_player_version"] = item.get("mediaPlayerVersion")
                 
                 additional_info["submission_client"] = self.importer_name
-                additional_info["music_player"] = "PanoScrobbler"
 
                 timestamp = item["timeMs"] / 1000.0
                 track_metadata["additional_info"] = additional_info
