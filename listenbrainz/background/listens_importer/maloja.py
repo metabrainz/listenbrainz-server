@@ -81,6 +81,9 @@ class MalojaListensImporter(BaseListensImporter):
                 origin = item.get("origin")
                 if origin:
                     additional_info["origin"] = origin
+                    parsed_submission_client = self._parse_submission_client(origin)
+                    if parsed_submission_client:
+                        additional_info["submission_client"] = parsed_submission_client
 
                 track_metadata["additional_info"] = additional_info
 
@@ -94,3 +97,16 @@ class MalojaListensImporter(BaseListensImporter):
                 continue
 
         return listens
+
+    @staticmethod
+    def _parse_submission_client(origin: str) -> str | None:
+        """Return the last colon-delimited token, keeping legacy/unknown intact."""
+        cleaned = (origin or "").strip()
+        if not cleaned:
+            return None
+
+        if cleaned in {"legacy", "unknown"}:
+            return cleaned
+
+        client = cleaned.split(":")[-1].strip()
+        return client or None
