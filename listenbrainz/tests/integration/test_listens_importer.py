@@ -516,10 +516,9 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Problem/Solving")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["album_artist_name"], "KiloWatts")
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "PanoScrobbler Archive Importer")
         self.assertIn("media_player", additional_info)
         self.assertIn("media_player_version", additional_info)
-        self.assertEqual(additional_info["music_player"], "PanoScrobbler")
         self.assertEqual(additional_info["duration_ms"], 346958)
 
         self.assertEqual(listens[1]["listened_at"], 1762874400)
@@ -529,8 +528,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Whenever You Need Somebody")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["album_artist_name"], "Rick Astley")
-        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+        self.assertEqual(additional_info["submission_client"], "PanoScrobbler Archive Importer")
         self.assertIn("media_player", additional_info)
         self.assertIn("media_player_version", additional_info)
-        self.assertEqual(additional_info["music_player"], "PanoScrobbler")
         self.assertEqual(additional_info["duration_ms"], 216000)
