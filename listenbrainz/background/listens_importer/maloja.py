@@ -81,10 +81,9 @@ class MalojaListensImporter(BaseListensImporter):
 
                 origin = item.get("origin")
                 if origin:
-                    additional_info["origin"] = origin
                     parsed_submission_client = self._parse_submission_client(origin)
                     if parsed_submission_client:
-                        additional_info["submission_client"] = parsed_submission_client
+                        additional_info["original_submission_client"] = parsed_submission_client
 
                 track_metadata["additional_info"] = additional_info
 
