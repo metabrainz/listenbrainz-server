@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 from typing import Any, Iterator
+import pdb
 
 from flask import current_app
 from more_itertools import chunked
@@ -45,6 +46,7 @@ class MalojaListensImporter(BaseListensImporter):
         listens: list[dict[str, Any]] = []
 
         for item in batch:
+            pdb.set_trace()
             try:
                 track = item.get("track", {}) or {}
                 artists = track.get("artists", []) or []
@@ -73,6 +75,13 @@ class MalojaListensImporter(BaseListensImporter):
                 album_artists = album.get("artists", []) or []
                 if album_artists and album_artists != artists:
                     additional_info["release_artist_name"] = ", ".join(album_artists)
+
+                # duration_played = item.get("duration")
+                # if duration_played:
+                #     try:
+                #         additional_info["duration_played"] = int(duration_played)
+                #     except (TypeError, ValueError):
+                #         current_app.logger.debug("Skipping invalid duration_played in Maloja item: %s", item, exc_info=True)
 
                 duration_seconds = track.get("length")
                 if duration_seconds:
