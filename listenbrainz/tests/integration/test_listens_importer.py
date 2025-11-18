@@ -519,6 +519,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "Maloja Archive Importer")
         self.assertEqual(additional_info["original_submission_client"], "turntable")
         self.assertNotIn("duration", additional_info)
+        self.assertEqual(additional_info["duration_played"], 245)
 
         second_listen = listens[1]
         self.assertEqual(second_listen["listened_at"], 1760532613)
@@ -530,3 +531,4 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["submission_client"], "Maloja Archive Importer")
         self.assertEqual(additional_info["original_submission_client"], "turntable")
         self.assertEqual(additional_info["duration"], 220)
+        self.assertNotIn("duration_played", additional_info)
