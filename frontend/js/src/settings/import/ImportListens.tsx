@@ -35,6 +35,7 @@ enum Services {
   // applemusic = "Apple Music",
   librefm = "Libre.fm",
   panoscrobbler = "PanoScrobbler",
+  maloja = "Maloja",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
@@ -42,6 +43,7 @@ const acceptedFileTypes = {
   // [Services.applemusic]: ".zip",
   [Services.librefm]: ".csv",
   [Services.panoscrobbler]: ".jsonl",
+  [Services.maloja]: ".json",
 };
 const serviceNames = Object.values(Services);
 const humanReadableServices = `${initial(serviceNames).join(", ")} and ${last(
