@@ -491,3 +491,44 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+    def test_import_maloja(self):
+        data = {
+            "service": "maloja",
+            "file": open(self.path_to_data_file("maloja.json"), "rb")
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1760532855)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Vega Trails")
+        self.assertEqual(track_metadata["track_name"], "Old Friend; The Sea")
+        self.assertEqual(track_metadata["release_name"], "Sierra Tracks")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Maloja Archive Importer")
+        self.assertEqual(additional_info["original_submission_client"], "turntable")
+        self.assertNotIn("duration", additional_info)
+        self.assertEqual(additional_info["duration_played"], 245)
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1760532613)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Alabaster Deplume")
+        self.assertEqual(track_metadata["track_name"], "Not Now, Jesus")
+        self.assertEqual(track_metadata["release_name"], "To Cy & Lee: Instrumentals Vol. 1")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Maloja Archive Importer")
+        self.assertEqual(additional_info["original_submission_client"], "turntable")
+        self.assertEqual(additional_info["duration"], 220)
+        self.assertNotIn("duration_played", additional_info)

@@ -33,12 +33,14 @@ enum Services {
   listenbrainz = "Listenbrainz",
   // applemusic = "Apple Music",
   librefm = "Libre.fm",
+  maloja = "Maloja",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
   [Services.listenbrainz]: ".zip",
   // [Services.applemusic]: ".zip",
   [Services.librefm]: ".csv",
+  [Services.maloja]: ".json",
 };
 type Import = {
   import_id: number;
@@ -418,12 +420,13 @@ export default function ImportListens() {
         Migrate your listens from different streaming services to Listenbrainz!
       </p>
       <div className="alert alert-warning fade show" role="alert">
-        The importer currently supports Spotify, ListenBrainz and Libre.fm
-        export files. For Spotify and ListenBrainz, please upload the complete{" "}
-        <mark>.zip</mark> archive as received, without extracting the files
-        within.
+        The importer currently supports Spotify, ListenBrainz, Maloja and
+        Libre.fm export files. For Spotify and ListenBrainz, please upload the
+        complete <mark>.zip</mark> archive as received, without extracting the
+        files within.
         <br />
-        For Libre.fm, please upload the <mark>.csv</mark> file directly.
+        For Maloja, upload the <mark>.json</mark> export file directly, and for
+        Libre.fm upload the <mark>.csv</mark> file directly.
       </div>
       <div className="card">
         <div className="card-body">
