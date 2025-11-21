@@ -110,7 +110,7 @@ def get_notification_preference(musicbrainz_row_id: int) -> dict:
 
 
 def set_notification_preference(
-    musicbrainz_row_id: int, notifications_enabled: bool, digest: bool, digest_age: int = None
+    musicbrainz_row_id: int, notifications_enabled: bool, digest: bool, digest_age: int
 ) -> dict:
     """Sets the digest preference for a user.
 
