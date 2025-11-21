@@ -29,11 +29,22 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.user_relationship as db_user_relationship
 import listenbrainz.db.user_timeline_event as db_user_timeline_event
 from data.model.listen import APIListen
-from listenbrainz.db.model.user_timeline_event import RecordingRecommendationMetadata, APITimelineEvent, \
-    SimilarUserTimelineEvent, UserTimelineEventType, \
-    APIFollowEvent, NotificationMetadata, APINotificationEvent, APIPinEvent, APICBReviewEvent, \
-    CBReviewTimelineMetadata, PersonalRecordingRecommendationMetadata, APIPersonalRecommendationEvent, \
-    WritePersonalRecordingRecommendationMetadata, ThanksMetadata, APIThanksEvent
+from listenbrainz.db.model.user_timeline_event import (
+    RecordingRecommendationMetadata,
+    APITimelineEvent,
+    SimilarUserTimelineEvent,
+    UserTimelineEventType,
+    APIFollowEvent,
+    NotificationMetadata,
+    APINotificationEvent,
+    APIPinEvent,
+    APICBReviewEvent,
+    CBReviewTimelineMetadata,
+    APIPersonalRecommendationEvent,
+    WritePersonalRecordingRecommendationMetadata,
+    ThanksMetadata,
+    APIThanksEvent,
+)
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.db.model.review import CBReviewMetadata
 from listenbrainz.db.pinned_recording import get_pins_for_feed, get_pin_by_id
@@ -43,8 +54,14 @@ from listenbrainz.webserver import timescale_connection, db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, \
     APIForbidden
-from listenbrainz.webserver.views.api_tools import validate_auth_header, \
-    _validate_get_endpoint_params
+from listenbrainz.webserver.views.api_tools import (
+    validate_auth_header,
+    _validate_get_endpoint_params,
+    is_valid_uuid,
+)
+from listenbrainz.webserver.views.metadata_api import fetch_metadata
+from listenbrainz.domain.metabrainz_notifications import send_notification
+
 
 # the maximum number of listens we want to return in the feed per user
 MAX_LISTEN_EVENTS_PER_USER = 2
@@ -499,7 +516,7 @@ def delete_feed_events(user_name):
             try:
                 event_deleted = db_user_timeline_event.delete_user_timeline_event(
                     db_conn, event["id"], user["id"])
-            except Exception as e:
+            except Exception:
                 raise APIInternalServerError(
                     "Something went wrong. Please try again")
             if not event_deleted:
@@ -685,14 +702,26 @@ def create_personal_recommendation_event(user_name):
             metadata.users
         )
         non_followers = []
+        recommendees = []
         for follower in metadata.users:
-            if not follower_results or not follower_results[follower]:
+            if not follower_results or not follower_results[follower]["is_follower"]:
                 non_followers.append(follower)
+            else:
+                recommendees.append(
+                    {
+                        "mb_id": follower,
+                        "email": follower_results[follower]["email"],
+                        "mb_row_id": follower_results[follower]["mb_row_id"],
+                    }
+                )
         if non_followers:
             raise APIBadRequest(
                 f"You cannot recommend tracks to non-followers! These people don't follow you {str(non_followers)}")
+
         event = db_user_timeline_event.create_personal_recommendation_event(
             db_conn, user['id'], metadata)
+        send_notification_to_recommendees(user_name, metadata, recommendees)
+
     except pydantic.ValidationError as e:
         raise APIBadRequest(f"Invalid metadata: {str(e)}")
     except DatabaseException:
@@ -1269,3 +1298,44 @@ def get_thanks_events(
                 'Validation error: ' + str(e), exc_info=True)
             continue
     return events
+
+
+def send_notification_to_recommendees(
+    recommender_user_name: str,
+    metadata: WritePersonalRecordingRecommendationMetadata,
+    recommendees: List[dict],
+):
+    recording_mbid = metadata.recording_mbid
+    if is_valid_uuid(recording_mbid):
+        message = metadata.blurb_content
+        metadata = fetch_metadata([recording_mbid], ["artist", "release"])
+
+        if len(metadata) == 0:
+            return
+        else:
+            recording_metadata = metadata[recording_mbid]
+            recording_name = recording_metadata.get("recording").get("name")
+            artist_name = recording_metadata.get("artist").get("name")
+            release_group_mbid = recording_metadata.get("release").get("release_group_mbid")
+            album_art_url = (
+                f"https://coverartarchive.org/release-group/{release_group_mbid}/front-500"
+            )
+            recording_url = f"{current_app.config['SERVER_ROOT_URL']}/track/{recording_mbid}"
+
+            for recommendee in recommendees:
+                send_notification(
+                    musicbrainz_row_id=recommendee["mb_row_id"],
+                    user_email=recommendee["email"],
+                    template_id="personal-recommendation",
+                    template_params={
+                        "to_name": recommendee["mb_id"],
+                        "from_name": recommender_user_name,
+                        "message": message,
+                        "track_name": recording_name,
+                        "track_artist": artist_name,
+                        "track_url": recording_url,
+                        "album_art_url": album_art_url,
+                        "notification_settings_url": f"{current_app.config['SERVER_ROOT_URL']}/settings/notifications/",
+                    },
+                    important=False
+                )
