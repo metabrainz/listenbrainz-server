@@ -17,7 +17,7 @@ def add_task(user_id, task):
 
 def get_task():
     """ Fetch one task from the database """
-    query = "SELECT * FROM background_tasks LIMIT 1"
+    query = "SELECT * FROM background_tasks ORDER BY created LIMIT 1"
     result = db_conn.execute(text(query))
     return result.first()
 
