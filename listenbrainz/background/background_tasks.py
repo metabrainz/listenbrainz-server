@@ -17,7 +17,7 @@ def add_task(user_id, task):
 
 def get_task():
     """ Fetch one task from the database """
-    query = "SELECT * FROM background_tasks ORDER BY created LIMIT 1"
+    query = "SELECT * FROM background_tasks ORDER BY created LIMIT 1 FOR UPDATE SKIP LOCKED"
     result = db_conn.execute(text(query))
     return result.first()
 
@@ -33,6 +33,7 @@ class BackgroundTasks:
     def process_task(self, task):
         """ Perform the task """
         try:
+            current_app.logger.info(f"Processing task: {task.id}")
             if task.task == "delete_listens":
                 delete_listens_history(db_conn, task.user_id, task.created)
             elif task.task == "delete_user":
