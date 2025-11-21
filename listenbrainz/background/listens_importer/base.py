@@ -66,7 +66,7 @@ class BaseListensImporter(ABC):
                     except ListenValidationError as e:
                         current_app.logger.error("Invalid listen: %s", e)
 
-                self.submit_listens(parsed_listens, user_id, user["musicbrainz_id"], import_id)
+                self.submit_listens(validated_listens, user_id, user["musicbrainz_id"], import_id)
 
             self.update_import_progress_and_status(import_id, "completed", "Import completed!")
         except Exception as e:
