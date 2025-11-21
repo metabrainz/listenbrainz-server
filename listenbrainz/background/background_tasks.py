@@ -30,19 +30,21 @@ def remove_task(task):
 
 class BackgroundTasks:
 
-    def process_task(self, task) -> bool:
-        """ Perform the task and return whether the task succeeded """
-        if task.task == "delete_listens":
-            delete_listens_history(db_conn, task.user_id, task.created)
-        elif task.task == "delete_user":
-            delete_user(db_conn, task.user_id, task.created)
-        elif task.task == "export_all_user_data":
-            export_user(db_conn, ts_conn, task.user_id, task.metadata)
-        elif task.task == "import_listens":
-            import_listens(db_conn, ts_conn, task.user_id, task.metadata)
-        else:
-            current_app.logger.error(f"Unknown task type: {task}")
-        return True
+    def process_task(self, task):
+        """ Perform the task """
+        try:
+            if task.task == "delete_listens":
+                delete_listens_history(db_conn, task.user_id, task.created)
+            elif task.task == "delete_user":
+                delete_user(db_conn, task.user_id, task.created)
+            elif task.task == "export_all_user_data":
+                export_user(db_conn, ts_conn, task.user_id, task.metadata)
+            elif task.task == "import_listens":
+                import_listens(db_conn, ts_conn, task.user_id, task.metadata)
+            else:
+                current_app.logger.error(f"Unknown task type: {task}")
+        except Exception:
+            current_app.logger.error("Error processing task:", exc_info=True)
 
     def start(self):
         current_app.logger.info("Background tasks processor started.")
@@ -52,9 +54,8 @@ class BackgroundTasks:
                 if task is None:
                     time.sleep(5)
                     continue
-                status = self.process_task(task)
-                if status:
-                    remove_task(task)
+                self.process_task(task)
+                remove_task(task)
             except KeyboardInterrupt:
                 current_app.logger.error("Keyboard interrupt!")
                 break
