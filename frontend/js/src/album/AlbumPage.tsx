@@ -7,7 +7,7 @@ import {
   faUserAstronaut,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Palette } from "@vibrant/color";
 import { chain, flatten, isEmpty, isUndefined, merge } from "lodash";
 import { Vibrant } from "node-vibrant/browser";
@@ -91,7 +91,7 @@ export default function AlbumPage(): JSX.Element {
   } = listening_stats || {};
 
   const [metadata, setMetadata] = React.useState(initialReleaseGroupMetadata);
-  const [reviews, setReviews] = React.useState<CritiqueBrainzReviewAPI[]>([]);
+  const queryClient = useQueryClient();
 
   const { tag, release_group: album, artist, release } = (metadata ||
     {}) as ReleaseGroupMetadataLookup;
@@ -118,6 +118,36 @@ export default function AlbumPage(): JSX.Element {
       .catch(console.error);
   }, []);
 
+  // Fetch reviews using React Query
+  const { data: reviewsData, isError: reviewsError } = useQuery<{
+    reviews: CritiqueBrainzReviewAPI[];
+  }>({
+    queryKey: ["critiquebrainz-reviews", release_group_mbid, "release_group"],
+    queryFn: async () => {
+      if (!release_group_mbid) {
+        return { reviews: [] };
+      }
+      const response = await fetch(
+        `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${release_group_mbid}&entity_type=release_group`
+      );
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(body?.message ?? response.statusText);
+      }
+      return body;
+    },
+    enabled: Boolean(release_group_mbid),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const reviews = reviewsData?.reviews ?? [];
+
+  React.useEffect(() => {
+    if (reviewsError) {
+      toast.error("Failed to load reviews from CritiqueBrainz");
+    }
+  }, [reviewsError]);
+
   React.useEffect(() => {
     async function fetchCoverArt() {
       if (!release_group_mbid) {
@@ -135,24 +165,9 @@ export default function AlbumPage(): JSX.Element {
         console.error(error);
       }
     }
-    async function fetchReviews() {
-      try {
-        const response = await fetch(
-          `https://critiquebrainz.org/ws/1/review/?limit=5&entity_id=${release_group_mbid}&entity_type=release_group`
-        );
-        const body = await response.json();
-        if (!response.ok) {
-          throw body?.message ?? response.statusText;
-        }
-        setReviews(body.reviews);
-      } catch (error) {
-        toast.error(error);
-      }
-    }
     if (!caa_id || !caa_release_mbid) {
       fetchCoverArt();
     }
-    fetchReviews();
   }, [APIService, release_group_mbid, caa_id, caa_release_mbid]);
 
   const artistName = artist?.name ?? "";
@@ -503,6 +518,16 @@ export default function AlbumPage(): JSX.Element {
                   type: "release_group",
                   mbid: albumMBID,
                   name: album.name,
+                }}
+                onReviewSubmitted={() => {
+                  // Refetch reviews when a review is submitted
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "critiquebrainz-reviews",
+                      release_group_mbid,
+                      "release_group",
+                    ],
+                  });
                 }}
               />
             </div>

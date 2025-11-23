@@ -12,9 +12,15 @@ export default function CBReview(props: {
   recordingEntity?: ReviewableEntity;
   artistEntity?: ReviewableEntity;
   releaseGroupEntity?: ReviewableEntity;
+  onReviewSubmitted?: () => void;
 }) {
   const { critiquebrainzAuth } = React.useContext(GlobalAppContext);
-  const { recordingEntity, artistEntity, releaseGroupEntity } = props;
+  const {
+    recordingEntity,
+    artistEntity,
+    releaseGroupEntity,
+    onReviewSubmitted,
+  } = props;
 
   const [entityToReview, setEntityToReview] = React.useState<
     ReviewableEntity
@@ -90,6 +96,7 @@ export default function CBReview(props: {
             initialBlurbContent: blurbContent,
             initialLanguage: language,
             hideForm: true,
+            onReviewSubmitted,
           });
         }}
       >
