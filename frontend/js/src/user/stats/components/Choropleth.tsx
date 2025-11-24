@@ -250,14 +250,11 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             alignItems: "center",
             justifyContent: "space-between",
             background: `linear-gradient(180deg,rgba(252, 252, 252, 1) 0%, rgba(209, 209, 209, 1) 100%)`,
+            gap: "8px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div>
-              <div style={{ fontWeight: "bold", fontSize: "16px" }}>
-                {countryName}
-              </div>
-            </div>
+          <div style={{ fontWeight: "bold", fontSize: "16px" }}>
+            {countryName}
           </div>
           <button
             type="button"
@@ -283,54 +280,52 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             <FontAwesomeIcon icon={faPlayCircle as IconProp} />
           </button>
         </div>
-        <div style={{ padding: "8px 12px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
-            <span>
-              Listens:
-              <strong>
-                {selectedCountry.formattedValue} {suffix}
-              </strong>
-            </span>
-          </div>
+        {artists?.length > 0 && (
+          <div style={{ padding: "8px 12px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Chip color={selectedCountry.color!} style={{ marginRight: 7 }} />
+              <span>
+                Listens:&nbsp;
+                <strong>
+                  {selectedCountry.formattedValue} {suffix}
+                </strong>
+              </span>
+            </div>
 
-          {artists?.length > 0 && (
-            <>
-              <hr style={{ margin: "0.5em 0" }} />
-              <div
-                style={{
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                  overflowX: "hidden",
-                }}
-              >
-                {artists?.map((artist: UserArtistMapArtist) => (
-                  <div key={artist.artist_mbid}>
-                    <span
-                      className="badge bg-light text-info"
+            <hr style={{ margin: "0.5em 0" }} />
+            <div
+              style={{
+                maxHeight: "200px",
+                overflowY: "auto",
+                overflowX: "hidden",
+              }}
+            >
+              {artists?.map((artist: UserArtistMapArtist) => (
+                <div key={artist.artist_mbid}>
+                  <span
+                    className="badge bg-light text-info"
+                    style={{ marginRight: "4px" }}
+                  >
+                    <FontAwesomeIcon
                       style={{ marginRight: "4px" }}
-                    >
-                      <FontAwesomeIcon
-                        style={{ marginRight: "4px" }}
-                        icon={faHeadphones as IconProp}
-                      />
-                      {new Intl.NumberFormat().format(artist.listen_count)}
-                    </span>
-                    <Link to={`/artist/${artist.artist_mbid}/`}>
-                      {artist.artist_name}
-                    </Link>
-                    <br />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+                      icon={faHeadphones as IconProp}
+                    />
+                    {new Intl.NumberFormat().format(artist.listen_count)}
+                  </span>
+                  <Link to={`/artist/${artist.artist_mbid}/`}>
+                    {artist.artist_name}
+                  </Link>
+                  <br />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </button>
     );
   }, [selectedCountry, selectedMetric, handlePlayCountryTracks]);
