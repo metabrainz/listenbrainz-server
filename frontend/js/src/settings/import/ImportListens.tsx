@@ -99,7 +99,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
       variant: "danger",
       attempted,
       success,
-      description: "None of the listens in this batch were accepted.",
+      description: "None of the listens were imported.",
     };
   }
 
@@ -108,7 +108,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
       variant: "warning",
       attempted,
       success,
-      description: "Some listens were rejected during validation.",
+      description: "Some listens were rejected.",
     };
   }
 
@@ -116,7 +116,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
     variant: "success",
     attempted,
     success,
-    description: "All listens in this batch were accepted.",
+    description: "All listens imported successfully.",
   };
 }
 
@@ -170,9 +170,6 @@ function renderImport(
             {isValid(new Date(im.to_date)) ? format(im.to_date, "PPP") : "-"}
           </dd>
         </dl>
-        <small className="text-muted">
-          Validation counts are available for archive/file uploads only.
-        </small>
       </details>
     </div>
   );
@@ -193,12 +190,6 @@ function renderImport(
           <p className="mb-2" data-testid="validation-summary">
             Imported {validationSummary.success} / {validationSummary.attempted}
             &nbsp;listens. {validationSummary.description}
-          </p>
-        )}
-        {!hasValidationData && (
-          <p className="mb-2">
-            We will surface validation counts once your listens begin
-            processing.
           </p>
         )}
         <p>
