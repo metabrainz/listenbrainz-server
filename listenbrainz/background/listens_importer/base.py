@@ -132,11 +132,20 @@ class BaseListensImporter(ABC):
         validation_stats: dict[str, int],
     ) -> tuple[list[dict[str, Any]], dict[str, int]]:
         """Parse raw entries and validate them while updating counters."""
+        raw_attempts = len(batch)
         parsed_listens = self.parse_listen_batch(batch)
+        parsed_count = len(parsed_listens)
+        dropped_during_parsing = raw_attempts - parsed_count
+
+        if dropped_during_parsing > 0:
+            current_app.logger.warning(
+                "Dropped %d listens during parsing in %s importer", dropped_during_parsing, self.importer_name
+            )
+
+        validation_stats["attempted_count"] += raw_attempts
 
         validated_listens: list[dict[str, Any]] = []
         for listen in parsed_listens:
-            validation_stats["attempted_count"] += 1
             try:
                 validate_listen(listen, LISTEN_TYPE_IMPORT)
                 validation_stats["success_count"] += 1
