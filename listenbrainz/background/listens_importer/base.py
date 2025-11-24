@@ -55,18 +55,16 @@ class BaseListensImporter(ABC):
         self.update_import_progress_and_status(import_id, "in_progress", "Importing user listens")
 
         try:
+            validation_stats = self._initialize_validation_stats()
+            self.persist_validation_stats(import_id, validation_stats)
             for batch in self.process_import_file(import_task):
-                parsed_listens = self.parse_listen_batch(batch)
+                validated_listens, validation_stats = self.parse_and_validate_listen_items(
+                    batch,
+                    validation_stats,
+                )
 
-                validated_listens = []
-                for listen in parsed_listens:
-                    try:
-                        validate_listen(listen, LISTEN_TYPE_IMPORT)
-                        validated_listens.append(listen)
-                    except ListenValidationError as e:
-                        current_app.logger.error("Invalid listen: %s", e)
-
-                self.submit_listens(parsed_listens, user_id, user["musicbrainz_id"], import_id)
+                self.submit_listens(validated_listens, user_id, user["musicbrainz_id"], import_id)
+                self.persist_validation_stats(import_id, validation_stats)
 
             self.update_import_progress_and_status(import_id, "completed", "Import completed!")
         except Exception as e:
@@ -123,16 +121,55 @@ class BaseListensImporter(ABC):
                     self.update_import_progress_and_status(import_id, "failed", "Import failed due to an error")
                     raise ExternalServiceError("ISE while trying to import listens")
 
+    @staticmethod
+    def _initialize_validation_stats() -> dict[str, int]:
+        """Return a fresh attempted/success counter dict."""
+        return {"attempted_count": 0, "success_count": 0}
+
+    def parse_and_validate_listen_items(
+        self,
+        batch: list[dict[str, Any]],
+        validation_stats: dict[str, int],
+    ) -> tuple[list[dict[str, Any]], dict[str, int]]:
+        """Parse raw entries and validate them while updating counters."""
+        parsed_listens = self.parse_listen_batch(batch)
+
+        validated_listens: list[dict[str, Any]] = []
+        for listen in parsed_listens:
+            validation_stats["attempted_count"] += 1
+            try:
+                validate_listen(listen, LISTEN_TYPE_IMPORT)
+                validation_stats["success_count"] += 1
+                validated_listens.append(listen)
+            except ListenValidationError as e:
+                current_app.logger.error("Invalid listen: %s", e)
+
+        return validated_listens, validation_stats
+
+    def persist_validation_stats(self, import_id: int, validation_stats: dict[str, int]) -> None:
+        """Persist the current validation counters on the import task metadata."""
+        self._merge_import_metadata(import_id, {
+            "attempted_count": validation_stats.get("attempted_count", 0),
+            "success_count": validation_stats.get("success_count", 0),
+        })
+
     def update_import_progress_and_status(self, import_id: int, status: str, progress: str) -> None:
         """Update progress for user data import."""
+        updated_metadata = {"status": status, "progress": progress}
+        self._merge_import_metadata(import_id, updated_metadata)
+
+    def _merge_import_metadata(self, import_id: int, metadata_updates: dict[str, Any]) -> None:
+        """Merge arbitrary metadata fields into user_data_import.metadata."""
+        if not metadata_updates:
+            return
+
         query = text("""
              UPDATE user_data_import
                 SET metadata = metadata || (:metadata)::jsonb
               WHERE id = :import_id
         """)
-        updated_metadata = {"status": status, "progress": progress}
         self.db_conn.execute(query, {
-            "metadata": json.dumps(updated_metadata),
+            "metadata": json.dumps(metadata_updates),
             "import_id": import_id
         })
         self.db_conn.commit()
