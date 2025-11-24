@@ -394,6 +394,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        import_id = response.json["import_id"]
+
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         # Some tracks will be skipped,only expecting 6 tracks 
         response = self.wait_for_query_to_have_items(url, num_items=6, attempts=20)
@@ -410,6 +412,18 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["origin_url"], "https://open.spotify.com/track/50DMJJpAeQv4fIpxZvQz2e")
         self.assertEqual(additional_info["music_service"], "spotify.com")
         self.assertEqual(additional_info["spotify_album_id"], "https://open.spotify.com/album/1EGlv1JGCUPolWU4qv7bsK")
+
+        # Verify validation stats are stored in metadata
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["success_count"], 6)
+        self.assertGreaterEqual(metadata["attempted_count"], 6)
     
     def test_skip_import_spotify(self):
         # Listens should get skipped for a variety of reasons (manually skipped, errors, etc.)
@@ -426,11 +440,25 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        import_id = response.json["import_id"]
+
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         # all tracks except two will be skipped
         response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
         listens = response.json["payload"]["listens"]
         self.assertEqual(len(listens), 2)
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["success_count"], 2)
+        # More tracks were attempted but filtered during processing
+        self.assertGreaterEqual(metadata["attempted_count"], 2)
 
 
     def test_import_listenbrainz(self):
@@ -445,6 +473,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        import_id = response.json["import_id"]
+
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
         listens = response.json["payload"]["listens"]
@@ -459,6 +489,17 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
+
     def test_import_librefm(self):
         data = {
             "service": "librefm",
@@ -471,6 +512,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        import_id = response.json["import_id"]
+
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
         listens = response.json["payload"]["listens"]
@@ -492,6 +535,17 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
+
     def test_import_maloja(self):
         data = {
             "service": "maloja",
@@ -504,6 +558,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        import_id = response.json["import_id"]
+
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
         listens = response.json["payload"]["listens"]
@@ -532,3 +588,14 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(additional_info["original_submission_client"], "turntable")
         self.assertEqual(additional_info["duration"], 220)
         self.assertNotIn("duration_played", additional_info)
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 2)
