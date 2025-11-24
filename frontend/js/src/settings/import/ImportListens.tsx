@@ -42,21 +42,93 @@ const acceptedFileTypes = {
   [Services.librefm]: ".csv",
   [Services.maloja]: ".json",
 };
+type ImportMetadata = {
+  filename: string;
+  progress: string;
+  status: ImportStatus;
+  attempted_count?: number;
+  success_count?: number;
+};
 type Import = {
   import_id: number;
   created: string;
   file_path: string;
-  metadata: { filename: string; progress: string; status: ImportStatus };
+  metadata: ImportMetadata;
   service: Services;
   from_date: string;
   to_date: string;
 };
+
+type ValidationSummary = {
+  variant: "success" | "warning" | "danger" | "info";
+  attempted: number;
+  success: number;
+  description: string;
+};
+
+function ensureValidationCounts(metadata: ImportMetadata): ImportMetadata {
+  return {
+    attempted_count: 0,
+    success_count: 0,
+    ...metadata,
+  };
+}
+
+function normalizeImport(importTask: Import): Import {
+  return {
+    ...importTask,
+    metadata: ensureValidationCounts(importTask.metadata),
+  };
+}
+
+function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
+  const attempted = metadata.attempted_count ?? 0;
+  const success = metadata.success_count ?? 0;
+
+  if (attempted === 0) {
+    return {
+      variant: "info",
+      attempted,
+      success,
+      description: "Validation counts will appear once listens are processed.",
+    };
+  }
+
+  if (success === 0) {
+    return {
+      variant: "danger",
+      attempted,
+      success,
+      description: "None of the listens in this batch were accepted.",
+    };
+  }
+
+  if (success < attempted) {
+    return {
+      variant: "warning",
+      attempted,
+      success,
+      description: "Some listens were rejected during validation.",
+    };
+  }
+
+  return {
+    variant: "success",
+    attempted,
+    success,
+    description: "All listens in this batch were accepted.",
+  };
+}
 
 function renderImport(
   im: Import,
   cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
   fetchImport: (importId: number) => Promise<any>
 ) {
+  const validationSummary = getValidationSummary(im.metadata);
+  const hasValidationData =
+    (im.metadata.attempted_count ?? 0) > 0 ||
+    (im.metadata.success_count ?? 0) > 0;
   const extraInfo = (
     <div>
       <details>
@@ -77,6 +149,11 @@ function renderImport(
           <dd className="col-8">{im.import_id}</dd>
           <dt className="col-4">File name</dt>
           <dd className="col-8">{im.metadata.filename}</dd>
+          <dt className="col-4">Listens accepted</dt>
+          <dd className="col-8" data-testid="validation-counts-detail">
+            {im.metadata.success_count ?? 0} /{" "}
+            {im.metadata.attempted_count ?? 0}
+          </dd>
           <dt className="col-4">Service</dt>
           <dd className="col-8">
             {Services[(im.service as unknown) as keyof typeof Services]}
@@ -93,14 +170,37 @@ function renderImport(
             {isValid(new Date(im.to_date)) ? format(im.to_date, "PPP") : "-"}
           </dd>
         </dl>
+        <small className="text-muted">
+          Validation counts are available for archive/file uploads only.
+        </small>
       </details>
     </div>
   );
   if (im.metadata.status === ImportStatus.complete) {
+    const alertVariant =
+      validationSummary.variant === "info"
+        ? "success"
+        : validationSummary.variant;
     return (
-      <div key={im.import_id} className="mt-4 alert alert-success" role="alert">
+      <div
+        key={im.import_id}
+        className={`mt-4 alert alert-${alertVariant}`}
+        role="alert"
+      >
         <h4 className="alert-heading">Import completed!</h4>
 
+        {hasValidationData && (
+          <p className="mb-2" data-testid="validation-summary">
+            Imported {validationSummary.success} / {validationSummary.attempted}
+            &nbsp;listens. {validationSummary.description}
+          </p>
+        )}
+        {!hasValidationData && (
+          <p className="mb-2">
+            We will surface validation counts once your listens begin
+            processing.
+          </p>
+        )}
         <p>
           <b>
             Note: the uploaded file(s) will be deleted automatically after the
@@ -146,6 +246,12 @@ function renderImport(
         </button>
       </p>
       <p>Feel free to close this page while we import your listens.</p>
+      {hasValidationData && (
+        <p className="mb-2">
+          Imported {validationSummary.success} / {validationSummary.attempted}
+          &nbsp;listens so far.
+        </p>
+      )}
       <form
         onSubmit={(e) => cancelImport(e, im.import_id)}
         className="mt-3 mb-3"
@@ -198,8 +304,8 @@ export default function ImportListens() {
           throw new Error(errorText);
         }
         // Expecting an array of imports
-        const results = await response.json();
-        setImports(results);
+        const results: Array<Import> = await response.json();
+        setImports(results.map((importTask) => normalizeImport(importTask)));
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -220,19 +326,10 @@ export default function ImportListens() {
     async function fetchImport(id: number) {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${APIService.APIBaseURI}/import-listens/${id}/`,
-          {
-            method: "GET",
-            headers,
-          }
+        const nexImport = await APIService.getUserDataImportStatus(
+          id,
+          currentUser?.auth_token
         );
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText);
-        }
-        // Expecting an array of imports
-        const nexImport = await response.json();
         setImports((prevImports) => {
           // Replace item in imports array, or if not found there
           // place the newly created one at the beginning
@@ -241,10 +338,10 @@ export default function ImportListens() {
           );
           if (existingImportIndex !== -1) {
             const newArray = [...prevImports];
-            newArray.splice(existingImportIndex, 1, nexImport);
+            newArray.splice(existingImportIndex, 1, normalizeImport(nexImport));
             return newArray;
           }
-          return [nexImport, ...prevImports];
+          return [normalizeImport(nexImport), ...prevImports];
         });
       } catch (error) {
         toast.error(
@@ -258,7 +355,7 @@ export default function ImportListens() {
         setLoading(false);
       }
     },
-    [APIService.APIBaseURI, headers]
+    [APIService, currentUser?.auth_token]
   );
 
   const hasAnImportInProgress =
@@ -301,7 +398,10 @@ export default function ImportListens() {
         }
 
         const newImport: Import = await response.json();
-        setImports((prevImports) => [newImport, ...prevImports]);
+        setImports((prevImports) => [
+          normalizeImport(newImport),
+          ...prevImports,
+        ]);
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -418,6 +518,10 @@ export default function ImportListens() {
       <br />
       <p>
         Migrate your listens from different streaming services to Listenbrainz!
+      </p>
+      <p className="text-muted">
+        Validation counts (attempted vs. accepted listens) appear once an
+        archive/file upload starts processing. Live connectors remain unchanged.
       </p>
       <div className="alert alert-warning fade show" role="alert">
         The importer currently supports Spotify, ListenBrainz, Maloja and

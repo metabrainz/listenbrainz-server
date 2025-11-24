@@ -552,6 +552,32 @@ export default class APIService {
     return response.status; // Return true if timestamp is updated
   };
 
+  getUserDataImportStatus = async (
+    importId: number,
+    authToken?: string
+  ): Promise<any> => {
+    const url = `${this.APIBaseURI}/import-listens/${importId}/`;
+    const headers = authToken
+      ? {
+          Authorization: `Token ${authToken}`,
+        }
+      : undefined;
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+    await this.checkStatus(response);
+    const result = await response.json();
+    return {
+      ...result,
+      metadata: {
+        attempted_count: 0,
+        success_count: 0,
+        ...(result.metadata || {}),
+      },
+    };
+  };
+
   getUserEntity = async (
     userName: string | undefined,
     entity: Entity,
