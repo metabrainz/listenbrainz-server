@@ -24,12 +24,16 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                     continue
                 try:
                     item = orjson.loads(line)
-                    timestamp = datetime.fromtimestamp(item["timeMs"] / 1000.0, tz=timezone.utc)
-                    if item is not None and from_date <= timestamp <= to_date:
-                        batch.append(item)
+                    if item is not None and item.get("timeMs") is not None:
+                        timestamp = datetime.fromtimestamp(item.get("timeMs") / 1000.0, tz=timezone.utc)
+                        if from_date <= timestamp <= to_date:
+                            batch.append(item)
                     if len(batch) >= self.batch_size:
                         yield batch
                         batch = []
+                except (ValueError, KeyError, TypeError, OSError) as e:
+                    current_app.logger.error(
+                        f"Error parsing item: {item}. Error: {e}", exc_info=True)
                 except orjson.JSONDecodeError:
                     current_app.logger.error(f"Skipping malformed JSON line: {line.strip().decode('utf-8', 'ignore')}")
             if batch:
@@ -48,18 +52,18 @@ class PanoScrobblerListensImporter(BaseListensImporter):
                     "track_name": item.get("track"),
                     "artist_name": item.get("artist"),
                 }
-                if item["album"]:
+                if item.get("album"):
                     track_metadata["release_name"] = item["album"]
 
                 additional_info = {}
-                if item["albumArtist"]:
+                if item.get("albumArtist"):
                     additional_info["album_artist_name"] = item["albumArtist"]
-                if item["durationMs"]:
+                if item.get("durationMs") is not None:
                     additional_info["duration_ms"] = item["durationMs"]
 
-                if item["mediaPlayerName"]:
+                if item.get("mediaPlayerName"):
                     additional_info["media_player"] = item.get("mediaPlayerName")
-                if item["mediaPlayerVersion"]:
+                if item.get("mediaPlayerVersion"):
                     additional_info["media_player_version"] = item.get("mediaPlayerVersion")
                 
                 additional_info["submission_client"] = self.importer_name
