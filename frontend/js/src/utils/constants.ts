@@ -45,4 +45,5 @@ export const MB_RECORDING_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}
 export const MB_RELEASE_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/release\/${uuid}\/?`, "i");
 export const MB_RELEASE_GROUP_MBID_REGEXP = new RegExp(`${musicbrainz_website_regex}\/release-group\/${uuid}\/?`, "i");
 export const LB_ALBUM_MBID_REGEXP = new RegExp(`${listenbrainz_website_regex}\/album\/${uuid}\/?`, "i");
+export const LB_RELEASE_MBID_REGEXP = new RegExp(`${listenbrainz_website_regex}\/release\/${uuid}\/?`, "i");
 export const LB_RECORDING_MBID_REGEXP = new RegExp(`${listenbrainz_website_regex}\/track\/${uuid}\/?`, "i");
