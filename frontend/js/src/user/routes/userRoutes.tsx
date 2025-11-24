@@ -1,10 +1,8 @@
 import * as React from "react";
 
 import { Navigate, Outlet } from "react-router";
-import type { RouteObject, LoaderFunctionArgs } from "react-router";
-import { isEmpty } from "lodash";
-import RouteLoader, { RouteQueryLoader, RouteQuery } from "../../utils/Loader";
-import queryClient from "../../utils/QueryClient";
+import type { RouteObject } from "react-router";
+import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
 const getUserRoutes = (): RouteObject[] => {
   const routes = [
@@ -135,7 +133,7 @@ const getUserRoutes = (): RouteObject[] => {
       ],
     },
     {
-      path: "/user/:username/year-in-music/legacy/",
+      path: "/user/:username/year-in-music/legacy/:year/",
       lazy: {
         Component: async () => {
           return (await import("../../explore/layout")).default;
@@ -191,6 +189,31 @@ const getUserRoutes = (): RouteObject[] => {
             Component: async () => {
               return (await import("../year-in-music/2021/YearInMusic2021"))
                 .YearInMusicWrapper;
+            },
+          },
+        },
+      ],
+    },
+    {
+      path: "/user/:username/year-in-music/",
+      lazy: {
+        Component: async () => {
+          return (await import("../../explore/layout")).default;
+        },
+      },
+      children: [
+        {
+          index: true,
+          element: <Navigate to="./2025" replace />,
+        },
+        {
+          path: ":year/",
+          lazy: {
+            loader: async () => {
+              return RouteQueryLoader(`year-in-music`);
+            },
+            Component: async () => {
+              return (await import("../year-in-music/YearInMusic")).default;
             },
           },
         },

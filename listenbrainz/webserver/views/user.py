@@ -365,7 +365,7 @@ def legacy_year_in_music(user_name, year: int):
 
 @user_bp.post("/<mb_username:user_name>/year-in-music/")
 @user_bp.post("/<mb_username:user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2024):
+def year_in_music(user_name, year: int = 2025):
     """ Year in Music """
     if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
