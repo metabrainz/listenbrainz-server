@@ -96,7 +96,6 @@ export default class SoundcloudPlayer
   public iconColor = dataSourcesInfo.soundcloud.color;
   iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
-  retries = 0;
   // HTML widget options: https://developers.soundcloud.com/docs/api/html5-widget#parameters
   options = {
     auto_play: true,
@@ -132,24 +131,7 @@ export default class SoundcloudPlayer
       this.handleAccountError();
     }
 
-    const { onInvalidateDataSource } = this.props;
-    if (!(window as any).SC) {
-      onInvalidateDataSource(this, "Soundcloud JS API did not load properly.");
-      // Fallback to uncontrolled iframe player?
-      return;
-    }
-    if (!this.iFrameRef || !this.iFrameRef.current) {
-      onInvalidateDataSource(this, "SoundCloud IFrame not found in page.");
-      return;
-    }
-
-    this.soundcloudPlayer = (window as any).SC.Widget(
-      this.iFrameRef.current
-    ) as SoundCloudHTML5Widget;
-    this.soundcloudPlayer.bind(
-      SoundCloudHTML5WidgetEvents.READY,
-      this.onReady.bind(this)
-    );
+    this.initialize();
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -173,6 +155,27 @@ export default class SoundcloudPlayer
       // eslint-disable-next-line no-empty
     } catch (error) {}
   }
+
+  initialize = (): void => {
+    const { onInvalidateDataSource } = this.props;
+    if (!(window as any).SC) {
+      onInvalidateDataSource(this, "Soundcloud JS API did not load properly.");
+      // Fallback to uncontrolled iframe player?
+      return;
+    }
+    if (!this.iFrameRef?.current) {
+      onInvalidateDataSource(this, "SoundCloud IFrame not found in page.");
+      return;
+    }
+
+    this.soundcloudPlayer = (window as any).SC.Widget(
+      this.iFrameRef.current
+    ) as SoundCloudHTML5Widget;
+    this.soundcloudPlayer.bind(
+      SoundCloudHTML5WidgetEvents.READY,
+      this.onReady.bind(this)
+    );
+  };
 
   stop = () => {
     this.soundcloudPlayer?.pause();
@@ -224,13 +227,20 @@ export default class SoundcloudPlayer
     return false;
   };
 
-  searchAndPlayTrack = async (listen: Listen | JSPFTrack): Promise<void> => {
+  searchAndPlayTrack = async (
+    listen: Listen | JSPFTrack,
+    retryCount = 0
+  ): Promise<void> => {
+    const { handleError, handleWarning, onTrackNotFound } = this.props;
+    if (retryCount > 3) {
+      onTrackNotFound();
+      return;
+    }
     const trackName = getTrackName(listen);
     const artistName = getArtistName(listen);
     const releaseName = trackName
       ? ""
       : _get(listen, "track_metadata.release_name");
-    const { handleError, handleWarning, onTrackNotFound } = this.props;
     if (!trackName && !artistName && !releaseName) {
       handleWarning(
         "We are missing a track title, artist or album name to search on Soundcloud",
@@ -257,12 +267,11 @@ export default class SoundcloudPlayer
         // Handle token error and try again if fixed
         await this.handleTokenError(
           errorObject.message,
-          this.searchAndPlayTrack.bind(this, listen)
+          this.searchAndPlayTrack.bind(this, listen, retryCount + 1)
         );
+        return;
       }
-      if (errorObject.code === 400) {
-        onTrackNotFound();
-      }
+      onTrackNotFound();
       handleError(
         errorObject.message ?? errorObject,
         "Error searching on Soundcloud"
@@ -276,7 +285,7 @@ export default class SoundcloudPlayer
   ): Promise<void> => {
     const { refreshSoundcloudToken, onTrackNotFound, handleError } = this.props;
     const { soundcloudAuth: soundcloudUser = undefined } = this.context;
-    if (this.authenticationRetries > 5) {
+    if (this.authenticationRetries > 3) {
       handleError(
         isString(error) ? error : error?.message,
         "Soundcloud token error"
@@ -294,6 +303,7 @@ export default class SoundcloudPlayer
       callbackFunction();
     } catch (refreshError) {
       handleError(refreshError, "Error connecting to SoundCloud");
+      onTrackNotFound();
     }
   };
 
@@ -315,11 +325,6 @@ export default class SoundcloudPlayer
   };
 
   playListen = (listen: Listen | JSPFTrack) => {
-    const isCurrentDataSource =
-      store.get(currentDataSourceNameAtom) === this.name;
-    if (!isCurrentDataSource) {
-      return;
-    }
     if (SoundcloudPlayer.isListenFromThisService(listen)) {
       const originURL = _get(
         listen,
@@ -331,15 +336,15 @@ export default class SoundcloudPlayer
     }
   };
 
-  playStreamUrl = (streamUrl: string) => {
+  playStreamUrl = (streamUrl: string, retryCount = 0) => {
+    const { onInvalidateDataSource } = this.props;
     if (this.soundcloudPlayer) {
       this.soundcloudPlayer.load(streamUrl, this.options);
-    } else if (this.retries <= 3) {
-      this.retries += 1;
-      setTimeout(this.playStreamUrl.bind(this, streamUrl), 500);
+    } else if (retryCount <= 3) {
+      this.initialize();
+      setTimeout(this.playStreamUrl.bind(this, streamUrl, retryCount + 1), 500);
     } else {
       // Abort!
-      const { onInvalidateDataSource } = this.props;
       onInvalidateDataSource(this, "Soundcloud player did not load properly.");
     }
   };

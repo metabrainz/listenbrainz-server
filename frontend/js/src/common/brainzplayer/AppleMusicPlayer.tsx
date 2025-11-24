@@ -260,11 +260,6 @@ export default class AppleMusicPlayer
   };
 
   playListen = async (listen: Listen | JSPFTrack): Promise<void> => {
-    const isCurrentDataSource =
-      store.get(currentDataSourceNameAtom) === this.name;
-    if (!isCurrentDataSource) {
-      return;
-    }
     const apple_music_id = AppleMusicPlayer.getURLFromListen(listen as Listen);
     if (apple_music_id) {
       await this.playAppleMusicId(apple_music_id);
@@ -474,9 +469,11 @@ export default class AppleMusicPlayer
   render() {
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
-    if (!isCurrentDataSource) {
-      return null;
-    }
-    return <div>{this.getAlbumArt()}</div>;
+
+    return (
+      <div className={!isCurrentDataSource ? "hiddden" : ""}>
+        {this.getAlbumArt()}
+      </div>
+    );
   }
 }

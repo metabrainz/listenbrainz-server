@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { Link, useLocation } from "react-router";
 import { Helmet } from "react-helmet";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
+import { useResetAtom } from "jotai/utils";
 import {
   ToastMsg,
   createNotification,
@@ -187,7 +188,7 @@ export default function BrainzPlayer() {
     isActivatedRef.current = true;
     store.set(isActivatedAtom, true);
     await new Promise((resolve) => {
-      setTimeout(resolve, 100);
+      setTimeout(resolve, 1000);
     });
   };
 
@@ -198,8 +199,8 @@ export default function BrainzPlayer() {
   // Context Atoms - Setters
   const setUpdateTime = useSetAtom(updateTimeAtom);
   const setProgressMs = useSetAtom(progressMsAtom);
-  const setListenSubmitted = useSetAtom(listenSubmittedAtom);
-  const setContinuousPlaybackTime = useSetAtom(continuousPlaybackTimeAtom);
+  const resetListenSubmitted = useResetAtom(listenSubmittedAtom);
+  const resetContinuousPlaybackTime = useResetAtom(continuousPlaybackTimeAtom);
   const setCurrentTrackCoverURL = useSetAtom(currentTrackCoverURLAtom);
   const setCurrentTrackName = useSetAtom(currentTrackNameAtom);
   const setCurrentTrackArtist = useSetAtom(currentTrackArtistAtom);
@@ -210,9 +211,9 @@ export default function BrainzPlayer() {
   const setAmbientQueue = useSetAtom(ambientQueueAtom);
   const setCurrentListenIndex = useSetAtom(currentListenIndexAtom);
   const setCurrentListen = useSetAtom(currentListenAtom);
+  const setDurationMs = useSetAtom(durationMsAtom);
 
   const [playerPaused, setPlayerPaused] = useAtom(playerPausedAtom);
-  const [durationMs, setDurationMs] = useAtom(durationMsAtom);
   const [currentDataSourceIndex, setCurrentDataSourceIndex] = useAtom(
     currentDataSourceIndexAtom
   );
@@ -282,16 +283,6 @@ export default function BrainzPlayer() {
   // Check if it's time to submit the listen every X milliseconds
   const SUBMIT_LISTEN_UPDATE_INTERVAL = 5000;
 
-  const brainzPlayerDisabled =
-    userPreferences?.brainzplayer?.brainzplayerEnabled === false ||
-    (userPreferences?.brainzplayer?.spotifyEnabled === false &&
-      userPreferences?.brainzplayer?.youtubeEnabled === false &&
-      userPreferences?.brainzplayer?.soundcloudEnabled === false &&
-      userPreferences?.brainzplayer?.internetArchiveEnabled === false &&
-      userPreferences?.brainzplayer?.funkwhaleEnabled === false &&
-      userPreferences?.brainzplayer?.navidromeEnabled === false &&
-      userPreferences?.brainzplayer?.appleMusicEnabled === false);
-
   const {
     spotifyEnabled = true,
     appleMusicEnabled = true,
@@ -303,6 +294,16 @@ export default function BrainzPlayer() {
     brainzplayerEnabled = true,
     dataSourcesPriority = defaultDataSourcesPriority,
   } = userPreferences?.brainzplayer ?? {};
+
+  const brainzPlayerDisabled =
+    brainzplayerEnabled === false ||
+    (spotifyEnabled === false &&
+      youtubeEnabled === false &&
+      soundcloudEnabled === false &&
+      internetArchiveEnabled === false &&
+      funkwhaleEnabled === false &&
+      navidromeEnabled === false &&
+      appleMusicEnabled === false);
 
   const enabledDataSources = [
     spotifyEnabled && SpotifyPlayer.hasPermissions(spotifyAuth) && "spotify",
@@ -450,7 +451,7 @@ export default function BrainzPlayer() {
   const pauseCurrentPlayback = async (): Promise<void> => {
     try {
       const dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-      dataSource?.togglePlay();
+      dataSource?.stop();
     } catch (error) {
       handleError(error, "Could not pause playback");
     }
@@ -496,13 +497,13 @@ export default function BrainzPlayer() {
   ): Promise<void> => {
     // Stop playback on the previous datasource, if playing
     let dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-    if (dataSource && !getPlayerPaused()) {
+    if (dataSource) {
       dataSource.stop();
     }
     setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
-    setContinuousPlaybackTime(0);
-    setListenSubmitted(false);
+    resetContinuousPlaybackTime();
+    resetListenSubmitted();
 
     window.postMessage(
       {
@@ -549,6 +550,33 @@ export default function BrainzPlayer() {
     stopOtherBrainzPlayers();
     setCurrentDataSourceIndex(selectedDatasourceIndex);
     setCurrentDataSourceName(dataSource.name);
+    // Make sure the datasource is ready to play
+    try {
+      await new Promise<void>((resolve, reject) => {
+        // Early exit if already set
+        if (store.get(currentDataSourceIndexAtom) === selectedDatasourceIndex) {
+          resolve();
+          return;
+        }
+        let iterations = 0;
+        const checkDataSourceReadyInterval = setInterval(() => {
+          if (
+            store.get(currentDataSourceIndexAtom) === selectedDatasourceIndex
+          ) {
+            clearInterval(checkDataSourceReadyInterval);
+            resolve();
+          } else if (iterations >= 6) {
+            clearInterval(checkDataSourceReadyInterval);
+            reject();
+          } else {
+            iterations += 1;
+          }
+        }, 500);
+      });
+    } catch (e) {
+      playListen(listen, nextListenIndex, datasourceIndex + 1);
+      return;
+    }
     dataSource.playListen(getCurrentListen() ?? listen);
   };
 
@@ -658,6 +686,7 @@ export default function BrainzPlayer() {
       // Player has not been activated by the user, do nothing.
       return;
     }
+    stopPlayerStateTimer();
     const currDataSourceIndex = getCurrentDataSourceIndex();
     const currentListenFresh = getCurrentListen();
     if (currentListenFresh && currDataSourceIndex < dataSourceRefs.length - 1) {
@@ -678,7 +707,6 @@ export default function BrainzPlayer() {
         </>,
         "Could not find a match"
       );
-      stopPlayerStateTimer();
       playNextTrack();
     }
   };
@@ -687,8 +715,10 @@ export default function BrainzPlayer() {
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ): void => {
+    stopPlayerStateTimer();
     let dataSourceIndex = getCurrentDataSourceIndex();
     if (dataSource) {
+      dataSource.stop();
       dataSourceIndex = dataSourceRefs.findIndex(
         (source) => source.current === dataSource
       );
@@ -783,13 +813,6 @@ export default function BrainzPlayer() {
     setDurationMs(newDurationMs);
   };
 
-  // Effect to start the timer when durationMs changes
-  React.useEffect(() => {
-    if (durationMs > 0) {
-      startPlayerStateTimer();
-    }
-  }, [durationMs, startPlayerStateTimer]);
-
   const trackInfoChange = (
     title: string,
     trackURL: string,
@@ -804,14 +827,12 @@ export default function BrainzPlayer() {
     setCurrentTrackCoverURL(artwork?.[0]?.src);
 
     updateWindowTitleWithTrackName();
-    if (!playerPaused) {
-      submitNowPlaying();
-    }
-    if (playerPaused) {
+    if (store.get(playerPausedAtom)) {
       // Don't send notifications or any of that if the player is not playing
       // (Avoids getting notifications upon pausing a track)
       return;
     }
+    submitNowPlaying();
 
     if (hasMediaSessionSupport()) {
       overwriteMediaSession(mediaSessionHandlers);
@@ -830,6 +851,8 @@ export default function BrainzPlayer() {
                 className="alert-thumbnail"
                 src={artwork[0].src}
                 alt={album || title}
+                // eslint-disable-next-line no-console
+                onError={console.error}
               />
             ) : (
               <FontAwesomeIcon icon={faPlayCircle as IconProp} />
@@ -922,6 +945,7 @@ export default function BrainzPlayer() {
       return;
     }
     await activatePlayer();
+    pauseCurrentPlayback();
     switch (brainzplayer_event) {
       case "play-listen":
         playListenEventHandler(payload);
@@ -959,13 +983,25 @@ export default function BrainzPlayer() {
     ) {
       invalidateDataSource(navidromePlayerRef.current);
     }
+    if (
+      !AppleMusicPlayer.hasPermissions(appleAuth) &&
+      appleMusicPlayerRef?.current
+    ) {
+      invalidateDataSource(appleMusicPlayerRef.current);
+    }
+    if (
+      !FunkwhalePlayer.hasPermissions(funkwhaleAuth) &&
+      funkwhalePlayerRef?.current
+    ) {
+      invalidateDataSource(funkwhalePlayerRef.current);
+    }
     return () => {
       window.removeEventListener("message", receiveBrainzPlayerMessage);
       window.removeEventListener("beforeunload", alertBeforeClosingPage);
       stopPlayerStateTimer();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spotifyAuth, soundcloudAuth, navidromeAuth]);
+  }, [spotifyAuth, soundcloudAuth, navidromeAuth, appleAuth, funkwhaleAuth]);
 
   const { pathname } = useLocation();
 
