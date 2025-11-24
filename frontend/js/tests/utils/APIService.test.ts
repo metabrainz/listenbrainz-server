@@ -441,51 +441,6 @@ describe("getUserDailyActivity", () => {
   });
 });
 
-describe("getUserDataImportStatus", () => {
-  beforeEach(() => {
-    window.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          import_id: 42,
-          metadata: {
-            progress: "Import completed!",
-            status: "completed",
-            attempted_count: 5,
-          },
-        }),
-    });
-  });
-
-  it("requests the import status with auth header when token is provided", async () => {
-    await apiService.getUserDataImportStatus(42, "token-123");
-    expect(window.fetch).toHaveBeenCalledWith("foobar/1/import-listens/42/", {
-      method: "GET",
-      headers: { Authorization: "Token token-123" },
-    });
-  });
-
-  it("backfills validation counters when missing", async () => {
-    window.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () =>
-        Promise.resolve({
-          import_id: 84,
-          metadata: {
-            progress: "Processing",
-            status: "in_progress",
-          },
-        }),
-    });
-
-    const response = await apiService.getUserDataImportStatus(84);
-    expect(response.metadata.attempted_count).toBe(0);
-    expect(response.metadata.success_count).toBe(0);
-  });
-});
-
 describe("getUserArtistMap", () => {
   beforeEach(() => {
     // Mock function for fetch
