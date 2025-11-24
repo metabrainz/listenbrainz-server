@@ -613,8 +613,48 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["attempted_count"], 2)
         self.assertEqual(metadata["success_count"], 2)
+
+    def test_import_maloja_empty(self):
+        data = {
+            "service": "maloja",
+            "file": open(self.path_to_data_file("maloja_malformed.json"), "rb")
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        # Poll import task status until completion since no listens will be inserted
+        import time
+        for _ in range(20):
+            r = self.client.get(
+                self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+                headers={"Authorization": f"Token {self.user['auth_token']}"},
+            )
+            self.assert200(r)
+            metadata = r.json["metadata"]
+            if metadata["status"] in ["completed", "failed"]:
+                break
+            time.sleep(0.25)
+
+        # Verify no listens imported
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        r = self.client.get(url)
+        self.assert200(r)
+        listens = r.json["payload"]["listens"]
+        self.assertEqual(len(listens), 0)
+
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 0)
+        self.assertEqual(metadata["status"], "completed")
 
     def test_import_with_partial_validation_failures(self):
         data = {

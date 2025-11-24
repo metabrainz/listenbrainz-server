@@ -1,0 +1,19 @@
+{
+  "maloja": {
+		"export_time": 1761035593
+	},
+  "scrobbles": [
+    {
+			"time": 1760532613,
+			"track": {}
+		},
+    {
+			"time": 1760532855,
+			"track": {"title": "Missing Artists"}
+		},
+    {
+			"time": 1760532999,
+			"track": {"artists": [], "title": "Empty Artists Array"}
+		}
+  ]
+}
