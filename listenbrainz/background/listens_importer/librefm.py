@@ -7,15 +7,21 @@ from listenbrainz.background.listens_importer.base import BaseListensImporter
 
 
 class LibrefmListensImporter(BaseListensImporter):
-
-
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the libre.fm csv archive file and returns a generator of batches of items."""
+
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8") as file:
-            # the first three lines are comments, fourth line is header
-            for _ in range(3):
-                next(file)
-            header_line = next(file).strip().split(",")
+            first_line = file.readline()
+            file.seek(0)
+
+            if self._looks_like_header(first_line):
+                header_line = next(file).strip().split(",")
+            else:
+                # Original libre.fm exports include three comment lines before the header.
+                for _ in range(3):
+                    next(file)
+                header_line = next(file).strip().split(",")
+
             reader = csv.DictReader(file, fieldnames=header_line)
             yield from chunked(reader, self.batch_size)
 
@@ -38,3 +44,11 @@ class LibrefmListensImporter(BaseListensImporter):
             }
             listens.append(listen)
         return listens
+
+    @staticmethod
+    def _looks_like_header(line: str) -> bool:
+        if not line:
+            return False
+        normalized = {column.strip().strip('"') for column in line.strip().split(",")}
+        expected = {"Time", "Artist", "Track", "Album"}
+        return expected.issubset(normalized)
