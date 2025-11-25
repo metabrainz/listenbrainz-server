@@ -568,14 +568,7 @@ export default class APIService {
     });
     await this.checkStatus(response);
     const result = await response.json();
-    return {
-      ...result,
-      metadata: {
-        attempted_count: 0,
-        success_count: 0,
-        ...(result.metadata || {}),
-      },
-    };
+    return result;
   };
 
   getUserEntity = async (
