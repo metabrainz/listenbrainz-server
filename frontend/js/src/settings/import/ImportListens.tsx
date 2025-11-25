@@ -75,7 +75,7 @@ function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
       variant: "info",
       attempted,
       success,
-      description: "Validation counts will appear once listens are processed.",
+      description: "No listens were processed.",
     };
   }
 
@@ -159,10 +159,7 @@ function renderImport(
     </div>
   );
   if (im.metadata.status === ImportStatus.complete) {
-    const alertVariant =
-      validationSummary.variant === "info"
-        ? "success"
-        : validationSummary.variant;
+    const alertVariant = validationSummary.variant;
     return (
       <div
         key={im.import_id}
