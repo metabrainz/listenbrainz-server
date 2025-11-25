@@ -66,21 +66,6 @@ type ValidationSummary = {
   description: string;
 };
 
-function ensureValidationCounts(metadata: ImportMetadata): ImportMetadata {
-  return {
-    attempted_count: 0,
-    success_count: 0,
-    ...metadata,
-  };
-}
-
-function normalizeImport(importTask: Import): Import {
-  return {
-    ...importTask,
-    metadata: ensureValidationCounts(importTask.metadata),
-  };
-}
-
 function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
   const attempted = metadata.attempted_count ?? 0;
   const success = metadata.success_count ?? 0;
@@ -296,7 +281,7 @@ export default function ImportListens() {
         }
         // Expecting an array of imports
         const results: Array<Import> = await response.json();
-        setImports(results.map((importTask) => normalizeImport(importTask)));
+        setImports(results);
       } catch (error) {
         toast.error(
           <ToastMsg
@@ -329,10 +314,10 @@ export default function ImportListens() {
           );
           if (existingImportIndex !== -1) {
             const newArray = [...prevImports];
-            newArray.splice(existingImportIndex, 1, normalizeImport(nexImport));
+            newArray.splice(existingImportIndex, 1, nexImport);
             return newArray;
           }
-          return [normalizeImport(nexImport), ...prevImports];
+          return [nexImport, ...prevImports];
         });
       } catch (error) {
         toast.error(
@@ -389,10 +374,7 @@ export default function ImportListens() {
         }
 
         const newImport: Import = await response.json();
-        setImports((prevImports) => [
-          normalizeImport(newImport),
-          ...prevImports,
-        ]);
+        setImports((prevImports) => [newImport, ...prevImports]);
       } catch (error) {
         toast.error(
           <ToastMsg
