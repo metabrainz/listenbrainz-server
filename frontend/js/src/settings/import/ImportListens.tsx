@@ -490,8 +490,8 @@ export default function ImportListens() {
         Migrate your listens from different streaming services to Listenbrainz!
       </p>
       <p className="text-muted">
-        Validation counts (attempted vs. accepted listens) appear once an
-        archive/file upload starts processing. Live connectors remain unchanged.
+        Once your file begins importing, the number of attempted
+        and successfully imported items will appear below.
       </p>
       <div className="alert alert-warning fade show" role="alert">
         The importer currently supports Spotify, ListenBrainz, Maloja and
