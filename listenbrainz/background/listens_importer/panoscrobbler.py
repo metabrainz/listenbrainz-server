@@ -45,7 +45,7 @@ class PanoScrobblerListensImporter(BaseListensImporter):
         listens = []
         for item in batch:
             try:
-                if not item["track"]:
+                if not item.get("track"):
                     continue
                 
                 track_metadata = {
