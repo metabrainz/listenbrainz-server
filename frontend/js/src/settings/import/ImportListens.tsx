@@ -149,7 +149,7 @@ function renderImport(
           <dd className="col-8">{im.import_id}</dd>
           <dt className="col-4">File name</dt>
           <dd className="col-8">{im.metadata.filename}</dd>
-          <dt className="col-4">Listens accepted</dt>
+          <dt className="col-4">Listens imported</dt>
           <dd className="col-8" data-testid="validation-counts-detail">
             {im.metadata.success_count ?? 0} /{" "}
             {im.metadata.attempted_count ?? 0}
