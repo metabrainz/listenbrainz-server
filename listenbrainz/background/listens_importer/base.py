@@ -152,7 +152,7 @@ class BaseListensImporter(ABC):
             except ListenValidationError as e:
                 current_app.logger.error("Invalid listen: %s", e)
         
-        validation_stats["success_count"] = len(validated_listens)
+        validation_stats["success_count"] += len(validated_listens)
 
         return validated_listens, validation_stats
 
