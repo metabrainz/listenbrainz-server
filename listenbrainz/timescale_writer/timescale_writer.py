@@ -77,28 +77,33 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
     def messybrainz_lookup(self, listens):
         msb_listens = []
         for listen in listens:
-            if 'additional_info' not in listen['track_metadata']:
-                listen['track_metadata']['additional_info'] = {}
+            try:
+                if 'additional_info' not in listen['track_metadata']:
+                    listen['track_metadata']['additional_info'] = {}
 
-            data = {
-                'artist': listen['track_metadata']['artist_name'],
-                'title': listen['track_metadata']['track_name'],
-                'release': listen['track_metadata'].get('release_name'),
-            }
-            track_number = listen['track_metadata']['additional_info'].get('track_number')
-            if track_number:
-                data['track_number'] = str(track_number)
+                data = {
+                    'artist': listen['track_metadata'].get('artist_name'),
+                    'title': listen['track_metadata'].get('track_name'),
+                    'release': listen['track_metadata'].get('release_name'),
+                }
+                track_number = listen['track_metadata']['additional_info'].get(
+                    'track_number')
+                if track_number:
+                    data['track_number'] = str(track_number)
 
-            duration = listen['track_metadata']['additional_info'].get('duration')
-            if duration:
-                data['duration'] = duration * 1000  # convert into ms
-            else:  # try duration_ms field next
-                duration_ms = listen['track_metadata']['additional_info'].get('duration_ms')
+                duration = listen['track_metadata']['additional_info'].get(
+                    'duration')
                 if duration:
-                    data['duration'] = duration_ms
+                    data['duration'] = duration * 1000  # convert into ms
+                else:  # try duration_ms field next
+                    duration_ms = listen['track_metadata']['additional_info'].get(
+                        'duration_ms')
+                    if duration:
+                        data['duration'] = duration_ms
 
-            msb_listens.append(data)
-
+                msb_listens.append(data)
+            except Exception:
+                current_app.logger.error("MessyBrainz lookup listen parsing failed: ", exc_info=True)
         try:
             msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
         except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
