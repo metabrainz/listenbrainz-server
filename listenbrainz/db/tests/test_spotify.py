@@ -76,4 +76,4 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(user['user_id'], self.user['id'])
         self.assertIn('last_updated', user)
         self.assertIn('latest_listened_at', user)
-        self.assertIn('error_message', user)
+        self.assertIn('error', user)

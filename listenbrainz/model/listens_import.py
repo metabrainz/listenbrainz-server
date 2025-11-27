@@ -19,7 +19,7 @@ class ListensImporter(db.Model):
     last_updated = db.Column(db.DateTime(timezone=True))
     latest_listened_at = db.Column(db.DateTime(timezone=True))
     status = db.Column(JSONB)
-    error_message = db.Column(db.String)
+    error = db.Column(JSONB)
     user = db.relationship('User')
 
 
@@ -32,7 +32,7 @@ class ListensImporterAdminView(AdminModelView):
         'last_updated',
         'latest_listened_at',
         'status',
-        'error_message'
+        'error'
     ]
 
     column_list = [
@@ -44,20 +44,20 @@ class ListensImporterAdminView(AdminModelView):
         'last_updated',
         'latest_listened_at',
         'status',
-        'error_message'
+        'error'
     ]
 
     column_searchable_list = [
         'user_id',
         'service',
-        'error_message'
+        'error'
     ]
 
     column_filters = [
         'user_id',
         'service',
         'last_updated',
-        'error_message',
+        'error',
         'latest_listened_at'
     ]
 
