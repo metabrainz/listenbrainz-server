@@ -44,6 +44,8 @@ const mockImports = [
       filename: "spotify.zip",
       progress: "Your data import will start soon.",
       status: "waiting",
+      attempted_count: 123,
+      success_count: 100,
     },
     from_date: "1970-01-01T00:00:00Z",
     to_date: "2025-08-11T00:00:00Z",
@@ -56,6 +58,8 @@ const mockImports = [
       filename: "listenbrainz.zip",
       progress: "Import completed!",
       status: "completed",
+      attempted_count: 123,
+      success_count: 123,
     },
     from_date: "2025-08-10T00:00:00Z",
     to_date: "2025-08-12T00:00:00Z",
@@ -138,6 +142,7 @@ describe("ImportListensPage", () => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
       expect(screen.getByText("August 11th, 2025")).toBeInTheDocument();
       expect(screen.getByText("-")).toBeInTheDocument();
+      expect(screen.getByText("Imported 100 / 123 listens so far.")).toBeInTheDocument();
     });
   });
 

@@ -45,6 +45,13 @@ const acceptedFileTypes = {
   [Services.panoscrobbler]: ".jsonl",
   [Services.maloja]: ".json",
 };
+type ImportMetadata = {
+  filename: string;
+  progress: string;
+  status: ImportStatus;
+  attempted_count?: number;
+  success_count?: number;
+};
 const serviceNames = Object.values(Services);
 const humanReadableServices = `${initial(serviceNames).join(", ")} and ${last(
   serviceNames
@@ -57,17 +64,67 @@ type Import = {
   import_id: number;
   created: string;
   file_path: string;
-  metadata: { filename: string; progress: string; status: ImportStatus };
+  metadata: ImportMetadata;
   service: Services;
   from_date: string;
   to_date: string;
 };
+
+type ValidationSummary = {
+  variant: "success" | "warning" | "danger" | "info";
+  attempted: number;
+  success: number;
+  description: string;
+};
+
+function getValidationSummary(metadata: ImportMetadata): ValidationSummary {
+  const attempted = metadata.attempted_count ?? 0;
+  const success = metadata.success_count ?? 0;
+
+  if (attempted === 0) {
+    return {
+      variant: "info",
+      attempted,
+      success,
+      description: "No listens were processed.",
+    };
+  }
+
+  if (success === 0) {
+    return {
+      variant: "danger",
+      attempted,
+      success,
+      description: "None of the listens were imported.",
+    };
+  }
+
+  if (success < attempted) {
+    return {
+      variant: "warning",
+      attempted,
+      success,
+      description: "Some listens were rejected.",
+    };
+  }
+
+  return {
+    variant: "success",
+    attempted,
+    success,
+    description: "All listens imported successfully.",
+  };
+}
 
 function renderImport(
   im: Import,
   cancelImport: (event: React.SyntheticEvent, importToCancelId: number) => void,
   fetchImport: (importId: number) => Promise<any>
 ) {
+  const validationSummary = getValidationSummary(im.metadata);
+  const hasValidationData =
+    (im.metadata.attempted_count ?? 0) > 0 ||
+    (im.metadata.success_count ?? 0) > 0;
   const extraInfo = (
     <div>
       <details>
@@ -88,6 +145,11 @@ function renderImport(
           <dd className="col-8">{im.import_id}</dd>
           <dt className="col-4">File name</dt>
           <dd className="col-8">{im.metadata.filename}</dd>
+          <dt className="col-4">Listens imported</dt>
+          <dd className="col-8" data-testid="validation-counts-detail">
+            {im.metadata.success_count ?? 0} /{" "}
+            {im.metadata.attempted_count ?? 0}
+          </dd>
           <dt className="col-4">Service</dt>
           <dd className="col-8">
             {Services[(im.service as unknown) as keyof typeof Services]}
@@ -108,10 +170,21 @@ function renderImport(
     </div>
   );
   if (im.metadata.status === ImportStatus.complete) {
+    const alertVariant = validationSummary.variant;
     return (
-      <div key={im.import_id} className="mt-4 alert alert-success" role="alert">
+      <div
+        key={im.import_id}
+        className={`mt-4 alert alert-${alertVariant}`}
+        role="alert"
+      >
         <h4 className="alert-heading">Import completed!</h4>
 
+        {hasValidationData && (
+          <p className="mb-2" data-testid="validation-summary">
+            Imported {validationSummary.success} / {validationSummary.attempted}
+            &nbsp;listens. {validationSummary.description}
+          </p>
+        )}
         <p>
           <b>
             Note: the uploaded file(s) will be deleted automatically after the
@@ -157,6 +230,12 @@ function renderImport(
         </button>
       </p>
       <p>Feel free to close this page while we import your listens.</p>
+      {hasValidationData && (
+        <p className="mb-2">
+          Imported {validationSummary.success} / {validationSummary.attempted}
+          &nbsp;listens so far.
+        </p>
+      )}
       <form
         onSubmit={(e) => cancelImport(e, im.import_id)}
         className="mt-3 mb-3"
@@ -209,7 +288,7 @@ export default function ImportListens() {
           throw new Error(errorText);
         }
         // Expecting an array of imports
-        const results = await response.json();
+        const results: Array<Import> = await response.json();
         setImports(results);
       } catch (error) {
         toast.error(
@@ -231,19 +310,10 @@ export default function ImportListens() {
     async function fetchImport(id: number) {
       setLoading(true);
       try {
-        const response = await fetch(
-          `${APIService.APIBaseURI}/import-listens/${id}/`,
-          {
-            method: "GET",
-            headers,
-          }
+        const nexImport = await APIService.getUserDataImportStatus(
+          id,
+          currentUser?.auth_token
         );
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText);
-        }
-        // Expecting an array of imports
-        const nexImport = await response.json();
         setImports((prevImports) => {
           // Replace item in imports array, or if not found there
           // place the newly created one at the beginning
@@ -269,7 +339,7 @@ export default function ImportListens() {
         setLoading(false);
       }
     },
-    [APIService.APIBaseURI, headers]
+    [APIService, currentUser?.auth_token]
   );
 
   const hasAnImportInProgress =

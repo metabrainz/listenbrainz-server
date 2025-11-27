@@ -33,6 +33,14 @@ def _validate_datetime_param(param, default=None):
         raise APIBadRequest(f"Invalid {param} format!")
 
 
+def _with_validation_counts(metadata):
+    """Ensure metadata dict includes attempted/success counters with sensible defaults."""
+    metadata = dict(metadata or {})
+    metadata.setdefault("attempted_count", 0)
+    metadata.setdefault("success_count", 0)
+    return metadata
+
+
 @import_api_bp.post("/")
 @web_listenstore_needed
 @crossdomain
@@ -110,7 +118,13 @@ def create_import_task():
             "from_date": from_date,
             "to_date": to_date,
             "file_path": save_path,
-            "metadata": json.dumps({"status": "waiting", "progress": "Your data import will start soon.", "filename": filename})
+            "metadata": json.dumps({
+                "status": "waiting",
+                "progress": "Your data import will start soon.",
+                "filename": filename,
+                "attempted_count": 0,
+                "success_count": 0,
+            })
         })
         import_task = result.first()
 
@@ -132,7 +146,7 @@ def create_import_task():
                     "import_id": import_task.id,
                     "service": import_task.service,
                     "created": import_task.created.isoformat(),
-                    "metadata": import_task.metadata,
+                    "metadata": _with_validation_counts(import_task.metadata),
                     "file_path": import_task.file_path,
                 })
 
@@ -163,7 +177,7 @@ def get_import_task(import_id):
         "import_id": row.id,
         "service": row.service,
         "created": row.created.isoformat(),
-        "metadata": row.metadata,
+        "metadata": _with_validation_counts(row.metadata),
         "to_date": row.to_date.isoformat(),
         "from_date": row.from_date.isoformat(),
     })
@@ -185,7 +199,7 @@ def list_import_tasks():
         "import_id": row.id,
         "service": row.service,
         "created": row.created.isoformat(),
-        "metadata": row.metadata,
+        "metadata": _with_validation_counts(row.metadata),
         "to_date": row.to_date.isoformat(),
         "from_date": row.from_date.isoformat(),
     } for row in rows])
