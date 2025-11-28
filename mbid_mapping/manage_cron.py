@@ -159,7 +159,7 @@ def cron_build_mb_metadata_cache():
 
 
 @cli.command()
-@cron("build-mb-metadata-caches")
+@cron("cron-build-all-mb-caches")
 def cron_build_all_mb_caches():
     """Full rebuild all mb entity metadata cache and tables it depends on in production in appropriate
      databases. After building the cache, cleanup mbid_mapping table.
