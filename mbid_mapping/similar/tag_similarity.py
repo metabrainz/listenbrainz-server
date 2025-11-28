@@ -30,37 +30,37 @@ class TagSimilarity(BulkInsertTable):
 
     def get_insert_queries(self):
         return ["""SELECT array_agg(t.name) AS tag_name
-                     FROM artist a
-                     JOIN artist_tag at
+                     FROM musicbrainz.artist a
+                     JOIN musicbrainz.artist_tag at
                        ON at.artist = a.id
-                     JOIN tag t
+                     JOIN musicbrainz.tag t
                        ON at.tag = t.id
                  GROUP BY a.gid
                    HAVING t.count > 0
                UNION
                    SELECT array_agg(t.name) AS tag_name
-                     FROM release r
-                     JOIN release_tag rt
+                     FROM musicbrainz.release r
+                     JOIN musicbrainz.release_tag rt
                        ON rt.release = r.id
-                     JOIN tag t
+                     JOIN musicbrainz.tag t
                        ON rt.tag = t.id
                  GROUP BY r.gid
                    HAVING t.count > 0
                UNION
                    SELECT array_agg(t.name) AS tag_name
-                     FROM release_group rg
-                     JOIN release_group_tag rgt
+                     FROM musicbrainz.release_group rg
+                     JOIN musicbrainz.release_group_tag rgt
                        ON rgt.release_group = rg.id
-                     JOIN tag t
+                     JOIN musicbrainz.tag t
                        ON rgt.tag = t.id
                  GROUP BY rg.gid
                    HAVING t.count > 0
                UNION
                    SELECT array_agg(t.name) AS tag_name
-                     FROM recording rec
-                     JOIN recording_tag rect     
+                     FROM musicbrainz.recording rec
+                     JOIN musicbrainz.recording_tag rect     
                        ON rect.recording = rec.id
-                     JOIN tag t
+                     JOIN musicbrainz.tag t
                        ON rect.tag = t.id 
                  GROUP BY rec.gid
                    HAVING t.count > 0"""]
@@ -98,7 +98,7 @@ def create_tag_similarity():
     """
     psycopg2.extras.register_uuid()
 
-    mb_uri = config.MBID_MAPPING_DATABASE_URI
+    mb_uri = config.MB_DATABASE_MASTER_URI or config.MBID_MAPPING_DATABASE_URI
     with psycopg2.connect(mb_uri) as mb_conn:
         with psycopg2.connect(config.SQLALCHEMY_TIMESCALE_URI) as lb_conn:
             sim = TagSimilarity(mb_conn, lb_conn)

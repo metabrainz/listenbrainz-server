@@ -110,12 +110,14 @@ def cache_lock_cleanup():
 def cron(slug):
     """ Cron decorator making it easy to monitor a cron job. The slug argument defines the sentry cron job identifier. """
     def wrapper(func):
+        log("process %d starting" % os.getpid())
         @wraps(func)
         def wrapped_f(*args, **kwargs):
             try:
                 func(*args, **kwargs)
                 check_in(slug)
             except Exception:
+                traceback.print_exc()
                 sys.exit(-1)
 
         return wrapped_f

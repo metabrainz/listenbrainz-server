@@ -1,5 +1,5 @@
 # Create the mapping indexes (typesense, canonical data tables) each day at 4am
-0 5 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-create-all >> /code/mapper/lb-cron.log 2>&1
+0 5 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-create-all >> /code/mapper/lb-canonical.log 2>&1
 
 # Rebuild the spotify metadata index every friday at 1 A.M.
 0 1 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-build-spotify-metadata-index >> /code/mapper/cron-spotify-metadata-index.log 2>&1
@@ -14,10 +14,10 @@
 0 4 * * 5 listenbrainz /usr/local/bin/python /code/listenbrainz/manage.py run_metadata_cache_seeder >> /code/mapper/cron-internetarchive-metadata-index.log 2>&1
 
 # Rebuild similar tag data at 6am sundays
-0 6 * * 0 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-build-tag-similarity >> /code/mapper/cron-tag-similarity.log 2>&1
+0 12 * * 2 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-build-tag-similarity >> /code/mapper/cron-tag-similarity.log 2>&1
 
 # Build the mb entity caches from scratch on every thursday, MB dumps run on Wed and Sat so avoid those days
-0 15 * * 5 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron-build-all-mb-caches >> /code/mapper/cron-mb-entity-cache.log 2>&1
+0 15 * * 1 listenbrainz /usr/local/bin/python /code/mapper/manage.py cron-build-all-mb-caches >> /code/mapper/cron-mb-entity-cache-full.log 2>&1
 
 # Update the mb entity caches incrementally every 4 hours
-0 */4 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-update-all-mb-caches >> /code/mapper/cron-mb-entity-cache.log 2>&1
+0 */4 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py cron cron-update-all-mb-caches >> /code/mapper/cron-mb-entity-cache-incremental.log 2>&1
