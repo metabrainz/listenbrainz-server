@@ -4,7 +4,7 @@ import datetime
 from functools import wraps
 import os
 import sys
-from time import time
+from time import time, sleep
 import traceback
 
 import click
@@ -58,26 +58,22 @@ def cache_lock_rebuild():
 
     while True: 
         value = "%d-%d" % (os.getpid(), int(time()))
-        lock_value = cache._r.setnx(CACHE_LOCK_KEY, value)
-        
-        # Did we succeed in setting the lock?
-        if lock_value == value:
+        if cache._r.set(CACHE_LOCK_KEY, value, nx=True):
             log("Cache lock set for rebuild")
             # Yep, we're good to go.
             return
         else:
             # Nope, check to see if proc still exists
-            pid, _ = value.split("-")
+            lock_value = str(cache._r.get(CACHE_LOCK_KEY), "utf-8")
+            pid, _ = lock_value.split("-")
             if psutil.pid_exists(int(pid)):
-                log("Cache lock pid exists")
+                log("Cache lock pid (%d) exists" % pid)
                 sleep(CACHE_REBUILD_SLEEP_TIME)
                 continue
             else:
                 log("Cache lock pid no longer exists")
 
         log("Set cache lock for rebuild")
-        # That proc no longer exists, set key and proceed
-        cache._r.set(CACHE_LOCK_KEY, value)
         break
 
 def cache_lock_incremental():
@@ -85,23 +81,20 @@ def cache_lock_incremental():
     cache.init(host=config.REDIS_HOST, port=int(config.REDIS_PORT), namespace=config.REDIS_NAMESPACE)
 
     value = "%d-%d" % (os.getpid(), int(time()))
-    lock_value = cache._r.setnx(CACHE_LOCK_KEY, value)
-    
-    # Did we succeed in setting the lock?
-    if lock_value == value:
+    if cache._r.set(CACHE_LOCK_KEY, value, nx=True):
         log("Cache lock set for incremental")
         # Yep, we're good to go.
         return
     else:
         # Nope, check to see if proc still exists
-        pid, _ = value.split("-")
+        lock_value = str(cache._r.get(CACHE_LOCK_KEY), "utf-8")
+        pid, _ = lock_value.split("-")
         if psutil.pid_exists(int(pid)):
             log("Cache lock pid exists")
             return
 
     log("Set cache lock for incremental")
-    # That proc no longer exists, set key and proceed
-    cache._r.set(CACHE_LOCK_KEY, value)
+
     
 def cache_lock_cleanup():
     """Release the cache lock"""
