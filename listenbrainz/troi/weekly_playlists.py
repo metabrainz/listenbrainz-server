@@ -90,6 +90,7 @@ def process_weekly_playlists_end(slug):
 
 
 def send_notification_to_users(jam_name: str, user_playlist_pairs: list[tuple[int, dict]]):
+    """Helper function to send generated playlist notifications to users."""
     for user_id, playlist_data in user_playlist_pairs:
         user = User.get(id=user_id, fetch_email=True)
         playlist_url = f"{current_app.config['SERVER_ROOT_URL']}/playlist/{playlist_data['mbid']}"

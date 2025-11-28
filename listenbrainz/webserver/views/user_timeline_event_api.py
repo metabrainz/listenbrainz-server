@@ -516,7 +516,9 @@ def delete_feed_events(user_name):
             try:
                 event_deleted = db_user_timeline_event.delete_user_timeline_event(
                     db_conn, event["id"], user["id"])
-            except Exception:
+            except Exception as e:
+                current_app.logger.error(
+                    f'Database Error: {e}', exc_info=True)
                 raise APIInternalServerError(
                     "Something went wrong. Please try again")
             if not event_deleted:
