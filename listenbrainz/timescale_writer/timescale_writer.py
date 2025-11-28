@@ -70,12 +70,12 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
             submit = [Listen.from_json(listen) for listen in msb_listens]
             self.insert_to_listenstore(submit)
-        except psycopg2.OperationalError as e:
-            current_app.logger.error("Error processing listens due to database issues: %s" % str(e), exc_info=True)
+        except psycopg2.OperationalError:
+            current_app.logger.error("Error processing listens due to database issues:", exc_info=True)
             time.sleep(self.ERROR_RETRY_DELAY)
             raise
-        except Exception as e:
-            current_app.logger.error("Error processing listens, publishing to rejection queue: %s" % str(e), exc_info=True)
+        except Exception:
+            current_app.logger.error("Error processing listens, publishing to rejection queue:", exc_info=True)
             try:
                 self.producer.publish(
                     exchange=self.rejection_exchange,
@@ -84,8 +84,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
                     delivery_mode=PERSISTENT_DELIVERY_MODE,
                     declare=[self.rejection_exchange, self.rejection_queue]
                 )
-            except Exception as pub_error:
-                current_app.logger.error("Failed to publish to rejection queue: %s" % str(pub_error), exc_info=True)
+            except Exception:
+                current_app.logger.error("Failed to publish to rejection queue:", exc_info=True)
                 time.sleep(self.ERROR_RETRY_DELAY)
                 raise
 

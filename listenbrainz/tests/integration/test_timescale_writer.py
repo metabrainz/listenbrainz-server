@@ -191,7 +191,8 @@ class TimescaleWriterTestCase(NonAPIIntegrationTestCase):
 
             self.assertEqual(body[0]['user_id'], user["id"])
             self.assertEqual(body[0]['listened_at'], ts)
-
+            listens, _, _ = self.ls.fetch_listens(user, to_ts=datetime.now(timezone.utc))
+            self.assertEqual(len(listens), 0)
             # test timescale writer is still working and processing listens
             r = self.send_listen(user, "valid_single.json")
             self.assert200(r)
