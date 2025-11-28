@@ -495,11 +495,6 @@ export default function BrainzPlayer() {
     nextListenIndex: number,
     datasourceIndex: number = 0
   ): Promise<void> => {
-    // Stop playback on the previous datasource, if playing
-    let dataSource = dataSourceRefs[getCurrentDataSourceIndex()]?.current;
-    if (dataSource) {
-      dataSource.stop();
-    }
     setCurrentListenIndex(nextListenIndex);
     setCurrentListen(listen);
     resetContinuousPlaybackTime();
@@ -529,7 +524,7 @@ export default function BrainzPlayer() {
       selectedDatasourceIndex = datasourceIndex;
     }
 
-    dataSource = dataSourceRefs[selectedDatasourceIndex]?.current;
+    const dataSource = dataSourceRefs[selectedDatasourceIndex]?.current;
     if (!dataSource) {
       await new Promise((resolve) => {
         setTimeout(resolve, 200);
@@ -689,6 +684,11 @@ export default function BrainzPlayer() {
     stopPlayerStateTimer();
     const currDataSourceIndex = getCurrentDataSourceIndex();
     const currentListenFresh = getCurrentListen();
+    // Stop playback on the previous datasource, if playing
+    const currentDataSource = dataSourceRefs[currDataSourceIndex]?.current;
+    if (currentDataSource && !getPlayerPaused()) {
+      currentDataSource.stop();
+    }
     if (currentListenFresh && currDataSourceIndex < dataSourceRefs.length - 1) {
       // Try playing the listen with the next dataSource
       playListen(
