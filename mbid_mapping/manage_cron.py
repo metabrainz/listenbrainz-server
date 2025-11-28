@@ -149,16 +149,6 @@ def cron_update_coverart():
 
 
 @cli.command()
-@cron("build-mb-metadata-cache")
-def cron_build_mb_metadata_cache():
-    """ Build the mb metadata cache and tables it depends on in production in appropriate databases.
-     After building the cache, cleanup mbid_mapping table.
-    """
-    create_mb_metadata_cache(True)
-    cleanup_mbid_mapping_table()
-
-
-@cli.command()
 @cron("cron-build-all-mb-caches")
 def cron_build_all_mb_caches():
     """Full rebuild all mb entity metadata cache and tables it depends on in production in appropriate
