@@ -44,6 +44,8 @@ const mockImports = [
       filename: "spotify.zip",
       progress: "Your data import will start soon.",
       status: "waiting",
+      attempted_count: 123,
+      success_count: 100,
     },
     from_date: "1970-01-01T00:00:00Z",
     to_date: "2025-08-11T00:00:00Z",
@@ -56,6 +58,8 @@ const mockImports = [
       filename: "listenbrainz.zip",
       progress: "Import completed!",
       status: "completed",
+      attempted_count: 123,
+      success_count: 123,
     },
     from_date: "2025-08-10T00:00:00Z",
     to_date: "2025-08-12T00:00:00Z",
@@ -111,7 +115,7 @@ describe("ImportListensPage", () => {
       expect(screen.getByText(/start import from/i)).toBeInTheDocument();
       expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
       expect(screen.getByText(/select Service/i)).toBeInTheDocument();
-      expect(screen.getByText(/choose a File/i)).toBeInTheDocument();
+      expect(screen.getByText(/Select your .zip file/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /import listens/i })).toBeInTheDocument();
     });
   });
@@ -122,7 +126,7 @@ describe("ImportListensPage", () => {
     expect(importButton).toBeDisabled();
 
     const file = new File(['{ "foo": "bar" }'], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText(/choose a file/i);
+    const input = screen.getByLabelText(/select your .zip file/i);
 
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -138,6 +142,7 @@ describe("ImportListensPage", () => {
       expect(screen.getByText("spotify.zip")).toBeInTheDocument();
       expect(screen.getByText("August 11th, 2025")).toBeInTheDocument();
       expect(screen.getByText("-")).toBeInTheDocument();
+      expect(screen.getByText("Imported 100 / 123 listens so far.")).toBeInTheDocument();
     });
   });
 
@@ -181,7 +186,7 @@ it("calls import endpoint when import listens clicked", async () => {
     false
   );
 
-  const input = screen.getByLabelText(/choose a file/i);
+  const input = screen.getByLabelText(/select your .zip file/i);
 
   const file = new File(["spotify_test"], "spotify_test.zip", { type: "application/zip" });
   await user.upload(input, file);

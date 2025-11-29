@@ -173,6 +173,9 @@ SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
 SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
 SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
 
+REJECTION_EXCHANGE = '''{{template "KEY" "rejection_exchange"}}'''
+REJECTION_QUEUE = '''{{template "KEY" "rejection_queue"}}'''
+
 EXTERNAL_SERVICES_EXCHANGE = '''{{template "KEY" "external_services_exchange"}}'''
 EXTERNAL_SERVICES_SPOTIFY_CACHE_QUEUE = '''{{template "KEY" "external_services_spotify_cache"}}'''
 EXTERNAL_SERVICES_APPLE_CACHE_QUEUE = '''{{template "KEY" "external_services_apple_cache"}}'''
@@ -300,3 +303,5 @@ USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
 # Navidrome configuration
 # Set to a base64 encoded key for encryption/decryption of passwords.
 NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
+
+BACKGROUND_TASKS_SLEEP_TIME = 5

@@ -33,6 +33,14 @@ def _validate_datetime_param(param, default=None):
         raise APIBadRequest(f"Invalid {param} format!")
 
 
+def _with_validation_counts(metadata):
+    """Ensure metadata dict includes attempted/success counters with sensible defaults."""
+    metadata = dict(metadata or {})
+    metadata.setdefault("attempted_count", 0)
+    metadata.setdefault("success_count", 0)
+    return metadata
+
+
 @import_api_bp.post("/")
 @web_listenstore_needed
 @crossdomain
@@ -56,7 +64,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja"]
+    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -67,7 +75,7 @@ def create_import_task():
     if not filename:
         raise APIBadRequest("Invalid file name!")
 
-    allowed_extensions = [".zip", ".csv", ".json"]
+    allowed_extensions = [".zip", ".csv", ".json", ".jsonl"]
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
         raise APIBadRequest("File type not allowed!")
@@ -76,6 +84,8 @@ def create_import_task():
         raise APIBadRequest("Only zip files are allowed for this service!")
     if service == "librefm" and extension != ".csv":
         raise APIBadRequest("Only csv files are allowed for this service!")
+    if service == "panoscrobbler" and extension != ".jsonl":
+        raise APIBadRequest("Only JSONL files are allowed for this service!")
     if service == "maloja" and extension != ".json":
         raise APIBadRequest("Only JSON files are allowed for this service!")
 
@@ -108,7 +118,13 @@ def create_import_task():
             "from_date": from_date,
             "to_date": to_date,
             "file_path": save_path,
-            "metadata": json.dumps({"status": "waiting", "progress": "Your data import will start soon.", "filename": filename})
+            "metadata": json.dumps({
+                "status": "waiting",
+                "progress": "Your data import will start soon.",
+                "filename": filename,
+                "attempted_count": 0,
+                "success_count": 0,
+            })
         })
         import_task = result.first()
 
@@ -130,7 +146,7 @@ def create_import_task():
                     "import_id": import_task.id,
                     "service": import_task.service,
                     "created": import_task.created.isoformat(),
-                    "metadata": import_task.metadata,
+                    "metadata": _with_validation_counts(import_task.metadata),
                     "file_path": import_task.file_path,
                 })
 
@@ -161,7 +177,7 @@ def get_import_task(import_id):
         "import_id": row.id,
         "service": row.service,
         "created": row.created.isoformat(),
-        "metadata": row.metadata,
+        "metadata": _with_validation_counts(row.metadata),
         "to_date": row.to_date.isoformat(),
         "from_date": row.from_date.isoformat(),
     })
@@ -183,7 +199,7 @@ def list_import_tasks():
         "import_id": row.id,
         "service": row.service,
         "created": row.created.isoformat(),
-        "metadata": row.metadata,
+        "metadata": _with_validation_counts(row.metadata),
         "to_date": row.to_date.isoformat(),
         "from_date": row.from_date.isoformat(),
     } for row in rows])
