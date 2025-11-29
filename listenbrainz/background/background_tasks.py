@@ -17,7 +17,10 @@ def add_task(user_id, task):
 
 def get_task():
     """ Fetch one task from the database """
-    query = "SELECT * FROM background_tasks ORDER BY created LIMIT 1 FOR UPDATE SKIP LOCKED"
+    # todo: use for update skip locked to scale to multiple workers
+    #  but that needs ensuring tasks processing doesn't interfere with
+    #  the task retrieval and deletion.
+    query = "SELECT * FROM background_tasks ORDER BY created LIMIT 1"
     result = db_conn.execute(text(query))
     return result.first()
 
@@ -53,7 +56,7 @@ class BackgroundTasks:
             try:
                 task = get_task()
                 if task is None:
-                    time.sleep(5)
+                    time.sleep(current_app.config.get("BACKGROUND_TASKS_SLEEP_TIME", 5))
                     continue
                 self.process_task(task)
                 remove_task(task)

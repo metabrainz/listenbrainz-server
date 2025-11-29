@@ -236,3 +236,5 @@ FUNKWHALE_CALLBACK_URL = 'http://localhost:8100/settings/music-services/funkwhal
 # be generated as follows:
 # from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
 NAVIDROME_ENCRYPTION_KEY = ""
+
+BACKGROUND_TASKS_SLEEP_TIME = 1

@@ -303,3 +303,5 @@ USER_DATA_EXPORT_BASE_DIR = '''{{template "KEY" "user_data_export_base_dir"}}'''
 # Navidrome configuration
 # Set to a base64 encoded key for encryption/decryption of passwords.
 NAVIDROME_ENCRYPTION_KEY = '''{{template "KEY" "navidrome/encryption_key"}}'''
+
+BACKGROUND_TASKS_SLEEP_TIME = 5
