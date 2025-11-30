@@ -162,6 +162,54 @@ you obtained.
 .. _CritiqueBrainz applications page: https://critiquebrainz.org/profile/applications/
 
 
+To use Funkwhale for music playback and scrobbling, you need to set up the
+callback URL in the configuration file. Funkwhale uses OAuth for authentication
+with each Funkwhale instance independently.
+
+
+.. code-block:: yaml
+
+    # FUNKWHALE
+    FUNKWHALE_CALLBACK_URL = 'http://localhost:8100/settings/music-services/funkwhale/callback/'
+
+.. note::
+
+    If you use something other than ``localhost`` as the host to access your development server,
+    you should update the ``FUNKWHALE_CALLBACK_URL`` field accordingly.
+
+    Funkwhale integration works with self-hosted Funkwhale instances. When connecting your
+    Funkwhale instance, you'll need to provide your instance URL (e.g., ``https://your-funkwhale-instance.com``)
+    and authenticate through OAuth directly on your instance.
+
+
+To use Navidrome for music playback, you need to set up an encryption key for
+securely storing Navidrome passwords. Generate a base64 encoded encryption key
+and add it to the configuration.
+
+To generate an encryption key, run the following Python command:
+
+.. code-block:: bash
+
+    python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+
+.. code-block:: yaml
+
+    # NAVIDROME
+    NAVIDROME_ENCRYPTION_KEY = ""
+
+Update the ``NAVIDROME_ENCRYPTION_KEY`` field with the generated key.
+
+.. note::
+
+    The encryption key is used to securely encrypt and decrypt Navidrome passwords stored
+    in the database. Make sure to keep this key safe and consistent across your development
+    environment.
+
+    Navidrome integration works with self-hosted Navidrome instances. When connecting your
+    Navidrome instance, you'll need to provide your instance URL, username, and password.
+
+
 Initialize ListenBrainz containers
 ----------------------------------
 
