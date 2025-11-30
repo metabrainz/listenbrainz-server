@@ -82,7 +82,12 @@ export default function UserTopEntity(props: UserTopEntityProps) {
   }
   statsUrl += `/top-${terminology}s/?range=${range}`;
 
-  const entityTextOnCard = `${terminology}s`;
+  let entityTextOnCard = `${terminology}s`;
+  if (terminology === "release") {
+    entityTextOnCard = "albums";
+  } else if (terminology === "recording") {
+    entityTextOnCard = "tracks";
+  }
   if (hasError) {
     return (
       <Card data-testid="error-message">
