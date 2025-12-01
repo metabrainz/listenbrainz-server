@@ -160,7 +160,15 @@ export default class AppleMusicPlayer
   }
 
   stop = () => {
-    this.appleMusicPlayer?.pause();
+    if (
+      this.appleMusicPlayer?.playbackState &&
+      !(
+        this.appleMusicPlayer.playbackState in
+        [MusicKit.PlaybackStates.paused, MusicKit.PlaybackStates.stopped]
+      )
+    ) {
+      this.appleMusicPlayer?.pause();
+    }
   };
 
   playAppleMusicId = async (

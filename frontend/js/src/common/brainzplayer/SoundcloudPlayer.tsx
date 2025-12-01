@@ -178,7 +178,9 @@ export default class SoundcloudPlayer
   };
 
   stop = () => {
-    this.soundcloudPlayer?.pause();
+    if (!this.soundcloudPlayer?.isPaused) {
+      this.soundcloudPlayer?.pause();
+    }
   };
 
   onReady = (): void => {

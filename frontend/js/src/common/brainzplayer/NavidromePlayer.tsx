@@ -85,7 +85,9 @@ export default class NavidromePlayer
   }
 
   stop = () => {
-    this.audioRef.current?.pause();
+    if (!this.audioRef?.current?.paused) {
+      this.audioRef?.current?.pause();
+    }
   };
 
   setupAudioListeners = (): void => {

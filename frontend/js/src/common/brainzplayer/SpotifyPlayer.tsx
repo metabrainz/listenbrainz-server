@@ -360,9 +360,13 @@ export default class SpotifyPlayer
 
   stop = (): void => {
     this.setState({ currentSpotifyTrack: undefined });
-    if (this.spotifyPlayer) {
-      this.spotifyPlayer.pause();
-    }
+    this.spotifyPlayer
+      ?.getCurrentState()
+      .then((state: Spotify.PlaybackState) => {
+        if (state && !state.paused) {
+          this.spotifyPlayer?.pause();
+        }
+      });
   };
 
   handleTokenError = async (

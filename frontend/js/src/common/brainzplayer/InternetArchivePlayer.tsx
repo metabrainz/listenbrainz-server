@@ -97,7 +97,9 @@ export default class InternetArchivePlayer
   };
 
   stop = () => {
-    this.audioRef?.current?.pause();
+    if (!this.audioRef?.current?.paused) {
+      this.audioRef?.current?.pause();
+    }
   };
 
   handleAudioEnded = () => {
