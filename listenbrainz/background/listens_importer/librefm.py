@@ -1,21 +1,19 @@
 import csv
-from typing import Any, Iterator
+from typing import Any, Iterator, TextIO
 
 from more_itertools import chunked
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
+from listenbrainz.webserver.errors import ImportFailedError
 
 
 class LibrefmListensImporter(BaseListensImporter):
-
-
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the libre.fm csv archive file and returns a generator of batches of items."""
+
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8") as file:
-            # the first three lines are comments, fourth line is header
-            for _ in range(3):
-                next(file)
-            header_line = next(file).strip().split(",")
+            header_line = self._read_header_line(file, import_task["file_path"])
+
             reader = csv.DictReader(file, fieldnames=header_line)
             yield from chunked(reader, self.batch_size)
 
@@ -38,3 +36,23 @@ class LibrefmListensImporter(BaseListensImporter):
             }
             listens.append(listen)
         return listens
+
+    @staticmethod
+    def _looks_like_header(line: str) -> bool:
+        if not line:
+            return False
+        normalized = {column.strip().strip('"') for column in line.strip().split(",")}
+        expected = {"Time", "Artist", "Track", "Album"}
+        return expected.issubset(normalized)
+
+    def _read_header_line(self, file: TextIO, file_path: str) -> list[str]:
+        """Advance the file pointer until a header row is located."""
+        file.seek(0)
+        for line in file:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if self._looks_like_header(line):
+                return stripped.split(",")
+
+        raise ImportFailedError("Unable to locate Libre.fm header row in import file.")
