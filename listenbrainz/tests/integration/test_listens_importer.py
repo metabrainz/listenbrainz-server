@@ -574,6 +574,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             content_type="multipart/form-data"
         )
         self.assert200(response)
+        import_id = response.json["import_id"]
+
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=3, attempts=20)
         listens = response.json["payload"]["listens"]
@@ -605,6 +607,15 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+    
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 3)
 
     def test_import_librefm_no_header(self):
         data = {
