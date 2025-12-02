@@ -55,6 +55,4 @@ class LibrefmListensImporter(BaseListensImporter):
             if self._looks_like_header(line):
                 return stripped.split(",")
 
-        raise ImportFailedError(
-            f"Unable to locate Libre.fm header row in import file {file_path}."
-        )
+        raise ImportFailedError("Unable to locate Libre.fm header row in import file.")
