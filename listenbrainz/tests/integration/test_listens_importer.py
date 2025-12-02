@@ -2,12 +2,16 @@ import io
 import json
 import os.path
 import shutil
+import time
 import zipfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from unittest import mock
 
+from sqlalchemy import text
+
 import listenbrainz.db.user as db_user
+from listenbrainz.db import background
 from listenbrainz.metadata_cache.spotify.handler import SpotifyCrawlerHandler
 
 from listenbrainz.tests.integration import ListenAPIIntegrationTestCase
@@ -888,7 +892,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         import_id = response.json["import_id"]
 
-        import time
         for _ in range(20):
             response = self.client.get(
                 self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
@@ -936,3 +939,39 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertIn("status", metadata)
         self.assertIn("progress", metadata)
         self.assertEqual(metadata["status"], "waiting")
+
+    def test_unsupported_listens_importer_service(self):
+        self.db_conn.execute(text("ALTER TYPE user_data_import_service_type ADD VALUE IF NOT EXISTS 'foobar'"))
+        self.db_conn.commit()
+
+        # create task without API so that we can use an unsupported service
+        # can happen when background_tasks container is not updated in production
+        # but web container is.
+        result = background.create_import_task(
+            self.db_conn,
+            user_id=self.user["id"],
+            service="foobar",
+            from_date=datetime(2021, 1, 1, tzinfo=timezone.utc),
+            to_date=datetime(2022, 1, 1, tzinfo=timezone.utc),
+            save_path="xyz.zip",
+            filename="xyz.zip",
+        )
+        self.db_conn.commit()
+
+        metadata = None
+        for _ in range(20):
+            response = self.client.get(
+                self.custom_url_for(
+                    "import_listens_api_v1.get_import_task",
+                    import_id=result["import_id"]
+                ),
+                headers={"Authorization": f"Token {self.user['auth_token']}"},
+            )
+            self.assert200(response)
+            metadata = response.json["metadata"]
+            if metadata["status"] in ["completed", "failed"]:
+                break
+            time.sleep(0.5)
+
+        self.assertEqual(metadata["status"], "failed")
+        self.assertEqual(metadata["progress"], "Unsupported service: foobar")

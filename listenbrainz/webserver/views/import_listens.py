@@ -1,4 +1,3 @@
-import json
 import os
 import uuid
 
@@ -9,10 +8,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from werkzeug.utils import secure_filename
+
+from listenbrainz.db.background import _with_validation_counts
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
+from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import validate_auth_header
@@ -31,14 +33,6 @@ def _validate_datetime_param(param, default=None):
         return value
     except (TypeError, ValueError):
         raise APIBadRequest(f"Invalid {param} format!")
-
-
-def _with_validation_counts(metadata):
-    """Ensure metadata dict includes attempted/success counters with sensible defaults."""
-    metadata = dict(metadata or {})
-    metadata.setdefault("attempted_count", 0)
-    metadata.setdefault("success_count", 0)
-    return metadata
 
 
 @import_api_bp.post("/")
@@ -107,48 +101,22 @@ def create_import_task():
         if check_existing is not None:
             raise APIBadRequest("An import task is already in progress!")
 
-        query = """
-            INSERT INTO user_data_import (user_id, service, from_date, to_date, file_path, metadata)
-                 VALUES (:user_id, :service, :from_date, :to_date, :file_path, :metadata)
-              RETURNING id, service, created, file_path, metadata
-        """
-        result = db_conn.execute(text(query), {
-            "user_id": user["id"],
-            "service": service,
-            "from_date": from_date,
-            "to_date": to_date,
-            "file_path": save_path,
-            "metadata": json.dumps({
-                "status": "waiting",
-                "progress": "Your data import will start soon.",
-                "filename": filename,
-                "attempted_count": 0,
-                "success_count": 0,
-            })
-        })
-        import_task = result.first()
+        result = background.create_import_task(
+            db_conn,
+            user_id=user["id"],
+            service=service,
+            from_date=from_date,
+            to_date=to_date,
+            save_path=save_path,
+            filename=filename
+        )
+        if result is not None:
+            os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
+            uploaded_file.save(save_path)
 
-        if import_task is not None:
-            query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
-            result = db_conn.execute(text(query), {
-                "user_id": user["id"],
-                "task": "import_listens",
-                "metadata": json.dumps({"import_id": import_task.id})
-            })
-            task = result.first()
-            if task is not None:
-                os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
-                uploaded_file.save(save_path)
+            db_conn.commit()
 
-                db_conn.commit()
-
-                return jsonify({
-                    "import_id": import_task.id,
-                    "service": import_task.service,
-                    "created": import_task.created.isoformat(),
-                    "metadata": _with_validation_counts(import_task.metadata),
-                    "file_path": import_task.file_path,
-                })
+            return jsonify(result)
 
         # task already exists in queue, rollback new entry
         db_conn.rollback()
