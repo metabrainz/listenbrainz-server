@@ -82,7 +82,7 @@ text editor.
      If you are accessing your development server using a port other than ``8100``,
      ensure that you update the ``SERVER_ROOT_URL`` to reflect the appropriate port number.
      If you are accessing your development server using a host other than ``localhost`` (e.g., GitHub Codespaces),
-     ensure that you uncomment and update ``SERVER_NAME``, and ensure ``SERVER_ROOT_URL``is updated
+     ensure that you uncomment and update ``SERVER_NAME``, and ensure ``SERVER_ROOT_URL`` is updated
      accordingly to maintain consistency and support the appropriate host details.
 
 Next look for this section in the file.
@@ -152,7 +152,7 @@ you obtained.
     # CRITIQUEBRAINZ
     CRITIQUEBRAINZ_CLIENT_ID = ''
     CRITIQUEBRAINZ_CLIENT_SECRET = ''
-    CRITIQUEBRAINZ_REDIRECT_URI = 'http://localhost:8100/settings/music-services/critiquebrainz/callback/'
+    CRITIQUEBRAINZ_REDIRECT_URI = f'{SERVER_ROOT_URL}/settings/music-services/critiquebrainz/callback/'
 
 .. note::
 
@@ -170,16 +170,8 @@ with each Funkwhale instance independently.
 .. code-block:: yaml
 
     # FUNKWHALE
-    FUNKWHALE_CALLBACK_URL = 'http://localhost:8100/settings/music-services/funkwhale/callback/'
+    FUNKWHALE_CALLBACK_URL = f'{SERVER_ROOT_URL}/settings/music-services/funkwhale/callback/'
 
-.. note::
-
-    If you use something other than ``localhost`` as the host to access your development server,
-    you should update the ``FUNKWHALE_CALLBACK_URL`` field accordingly.
-
-    Funkwhale integration works with self-hosted Funkwhale instances. When connecting your
-    Funkwhale instance, you'll need to provide your instance URL (e.g., ``https://your-funkwhale-instance.com``)
-    and authenticate through OAuth directly on your instance.
 
 
 To use Navidrome for music playback, you need to set up an encryption key for
@@ -205,9 +197,6 @@ Update the ``NAVIDROME_ENCRYPTION_KEY`` field with the generated key.
     The encryption key is used to securely encrypt and decrypt Navidrome passwords stored
     in the database. Make sure you do not change this key, or you will have to disconnect 
     and reconnect to your Navidrome account.
-
-    Navidrome integration works with self-hosted Navidrome instances. When connecting your
-    Navidrome instance, you'll need to provide your instance URL, username, and password.
 
 
 Initialize ListenBrainz containers
