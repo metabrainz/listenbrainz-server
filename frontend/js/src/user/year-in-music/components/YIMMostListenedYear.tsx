@@ -57,7 +57,7 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
           lookout for new music this year? Not that we&apos;re judging
         </Tooltip>
       </h3>
-      <div className="graph-container">
+      <div className="graph-container card-bg">
         <div className="graph">
           <ResponsiveBar
             margin={{ left: 50, bottom: 45, right: 30, top: 30 }}

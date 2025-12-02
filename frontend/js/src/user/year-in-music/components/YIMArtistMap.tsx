@@ -53,7 +53,7 @@ export default function YIMArtistMap(props: YIMArtistMapProps) {
           Click on a country to see more details
         </Tooltip>
       </h3>
-      <div className="graph-container">
+      <div className="graph-container card-bg">
         <div className="graph">
           <div style={{ paddingLeft: "3em" }}>
             <span>Rank by number of</span>

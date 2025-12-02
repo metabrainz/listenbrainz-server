@@ -56,7 +56,7 @@ export default function YIMListeningActivity({
         </Tooltip>
       </h3>
 
-      <div className="graph-container">
+      <div className="graph-container card-bg">
         <div className="graph">
           <ResponsiveCalendar
             from={`${year}-01-01`}

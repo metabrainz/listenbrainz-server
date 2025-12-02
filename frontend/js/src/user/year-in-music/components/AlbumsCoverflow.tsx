@@ -17,7 +17,7 @@ function AlbumsCoverflow(props: {
 }) {
   const { topReleaseGroups } = props;
   return (
-    <div id="top-albums">
+    <div id="top-albums" className="card-bg">
       <Swiper
         modules={[Navigation, Keyboard, EffectCoverflow]}
         spaceBetween={15}
@@ -106,7 +106,7 @@ export default function YIMTopAlbums({
   }
   return (
     <div className="section">
-      <div className="card content-card" id="top-releases">
+      <div className="content-card" id="top-releases">
         <h3 className="flex-center">Top albums of {year}</h3>
         <AlbumsCoverflow topReleaseGroups={topReleaseGroups} />
         <div className="yim-share-button-container">

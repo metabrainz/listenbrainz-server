@@ -1,4 +1,5 @@
 @use "sass:map";
+@use 'sass:color';
 
 /* latin */
 @font-face {
@@ -10,13 +11,12 @@
 }
 
 $coverflow-image-height: 400px;
-$red2022: #ff0e25;
-$yellow2022: #ffcc49;
 
-#legacy-year-in-music {
+#year-in-music {
   // For coverflow arrow colors
   --swiper-theme-color: #{$blue};
-
+  margin-left: -1em;
+  margin-right: -1em;
   .accent {
     color: $orange;
   }
@@ -28,14 +28,7 @@ $yellow2022: #ffcc49;
     min-width: 355px;
     height: auto;
   }
-  .content-card {
-    margin-right: 15px;
-    margin-left: 15px;
-    background-color: var(--bs-card-bg);
-    > * {
-      padding: 0.6em;
-    }
-  }
+
   .listen-card {
     color: initial;
     .badge {
@@ -44,10 +37,6 @@ $yellow2022: #ffcc49;
       background-color: $blue;
       align-self: center;
     }
-  }
-  .scrollable-area {
-    max-height: 500px;
-    overflow-y: auto;
   }
 
   #header {
@@ -82,13 +71,6 @@ $yellow2022: #ffcc49;
   }
   #most-listened-year .graph {
     height: 300px;
-  }
-
-  #similar-users {
-    .similar-users-list {
-      margin: 0;
-      padding: 0;
-    }
   }
 
   #top-entities .listen-card.row {
@@ -190,7 +172,6 @@ $yellow2022: #ffcc49;
     }
   }
 
-  --swiper-theme-color: #{$red2022};
   /* Main header section at the top with logo */
   #main-header {
     padding: 3em 2em;
@@ -213,6 +194,7 @@ $yellow2022: #ffcc49;
     margin-bottom: 1em;
     text-align: center;
     font-family: "Roboto", sans-serif;
+    color: var(--headerColor);
     font-weight: 700;
     font-size: 48px;
     line-height: 56px;
@@ -244,8 +226,8 @@ $yellow2022: #ffcc49;
   }
   .yim-share-button-container {
     text-align: center;
-    margin-top: 2em;
-    margin-bottom: 2em;
+    padding-top: 2em;
+    padding-bottom: 2em;
   }
   .yim-share-button {
     border: none;
@@ -259,10 +241,6 @@ $yellow2022: #ffcc49;
   .cover-art-mosaic {
     width: 100vw;
     max-height: 42em;
-  }
-  .content-card .img-header {
-    max-height: 17em;
-    padding: 2.5rem;
   }
 
   .small-cards-container {
@@ -291,7 +269,7 @@ $yellow2022: #ffcc49;
   .closing-remarks {
     padding: 3em 2em;
     font-size: 1.3em;
-    color: $white;
+    color: var(--headerColor);
     font-family: "Roboto", sans-serif;
     font-weight: 200;
     text-align: center;
@@ -315,13 +293,6 @@ $yellow2022: #ffcc49;
     padding: 2em;
   }
 
-  --selectedColor: #4c6c52;
-  --swiper-navigation-color: var(--selectedColor);
-  $cream: #f0eee2;
-  $text-color: $cream;
-  $content-background-color: #e0e5de;
-  background-color: $cream;
-  color: var(--selectedColor);
   .btn {
     border-radius: 5px;
   }
@@ -329,8 +300,9 @@ $yellow2022: #ffcc49;
     background: unset;
     text-align: center;
     .header-image {
-      width: 500px;
-      margin: 3em 0;
+      margin: 0;
+      width: initial;
+      max-width: 90vw;
     }
   }
   #discovery-playlist,
@@ -388,10 +360,9 @@ $yellow2022: #ffcc49;
   }
   .yim-share-button,
   .btn-info {
-    color: $text-color;
-    background-color: $gray-600;
+    color: var(--headerColor);
     &:hover {
-      background-color: $gray-400;
+      background-color: color.adjust($blue, $lightness: 6%, $space: hsl);
     }
   }
   .lb-follow-button {
@@ -399,6 +370,7 @@ $yellow2022: #ffcc49;
   }
   .user-name {
     line-break: anywhere;
+    color: var(--headerColor);
   }
   .user-name,
   .hashtag {
@@ -430,44 +402,7 @@ $yellow2022: #ffcc49;
       border-radius: 50%;
     }
   }
-  .content-card {
-    color: $cream;
-    background-color: var(--selectedColor);
-    padding: 1em;
-    .heading {
-      min-height: 300px;
-      font-family: "Roboto", sans-serif;
-      font-weight: 700;
-      font-size: 48px;
-      line-height: 56px;
-      color: $cream;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      aspect-ratio: 1;
-      .img-header {
-        padding: 0.5rem;
-        margin-bottom: auto;
-        margin-top: auto;
-        width: 100%;
-        max-width: 400px;
-        max-width: min(60%, 400px);
-        min-width: 200px;
-      }
-      @media (max-width: map.get($grid-breakpoints,"sm")) {
-        font-size: 38px;
-      }
-    }
-    h3,
-    h4 {
-      a {
-        color: inherit;
-        font-weight: initial;
-      }
-      color: inherit;
-    }
-  }
+
   .graph-container {
     border-radius: 8px;
     overflow: hidden;
@@ -483,7 +418,7 @@ $yellow2022: #ffcc49;
   .swiper,
   .similar-users-list,
   .graph-container {
-    background-color: $content-background-color;
+    background-color: var(--cardBackgroundColor);
   }
   .masked-image {
     display: inline-block;
@@ -503,9 +438,6 @@ $yellow2022: #ffcc49;
     margin-top: 4em;
     margin-bottom: 2em;
   }
-  .closing-remarks {
-    color: var(--selectedColor);
-  }
   .small-stats {
     display: flex;
     flex-wrap: wrap;
@@ -516,7 +448,6 @@ $yellow2022: #ffcc49;
     }
   }
   .small-stat {
-    color: $text-color;
     font-size: 1.8rem;
     text-align: center;
     font-weight: lighter;
@@ -534,12 +465,15 @@ $yellow2022: #ffcc49;
         left: calc(50% - 1.5em);
         width: 3em;
         height: 1px;
-        border-bottom: 1px solid $cream;
+        border-bottom: 1px solid var(--accentColor);
       }
     }
   }
   .scrollable-area {
+    max-height: 500px;
+    overflow-y: auto;
     position: relative;
+    scrollbar-width: thin;
     &::after {
       content: " ";
       width: 100%;
@@ -547,81 +481,113 @@ $yellow2022: #ffcc49;
       display: block;
       bottom: -10px;
       height: 50px;
-      background: linear-gradient(0deg, var(--selectedColor), transparent);
+      background: linear-gradient(
+        0deg,
+        var(--cardBackgroundColor),
+        transparent
+      );
     }
   }
 
   --backgroundColor: #4c6c52;
   --cardBackgroundColor: #fefff5;
-  --accentColor: #2b9f7a;
+  --accentColor: $blue;
+  --headerColor: var(--cardBackgroundColor);
   --selectedColor: var(--accentColor);
   --swiper-navigation-color: var(--accentColor);
-  $text-color: var(--accentColor);
-  $content-background-color: var(--cardBackgroundColor);
+  --buttonCollor: var(--accentColor);
+
   background-color: var(--backgroundColor);
-  color: $text-color;
+  color: var(--accentColor);
+  .card-bg {
+    background: var(--cardBackgroundColor);
+    border-radius: 8px;
+  }
   .content-card {
-    background: $content-background-color;
-    color: $text-color;
-    .heading,
-    .small-stat {
-      color: inherit;
+    // margin-right: 15px;
+    // margin-left: 15px;
+    margin-inline: 4em;
+    border: 1px solid var(--headerColor);
+    border-radius: 8px;
+    > * {
+      padding: 0.6em;
+      margin-inline: -4em;
     }
+    position: relative;
+    background: transparent;
+    box-shadow: none;
+    color: var(--accentColor);
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+    // &:before,
+    // &:after {
+    //   content: "";
+    //   height: 2em;
+    //   width: calc(100% - 4em);
+    //   // border: 1px solid var(--accentColor);
+    //   // border-radius: 8px;
+    //   align-self: center;
+    //   z-index: -1;
+    // }
+    // &:before {
+    //   border-bottom: none;
+    //   margin-bottom: -2em;
+    //   border-top-left-radius: 8px;
+    //   border-top-right-radius: 8px;
+    // }
+    // &:after {
+    //   border-bottom-left-radius: 8px;
+    //   border-bottom-right-radius: 8px;
+    //   border-top: none;
+    //   margin-top: -2em;
+    // }
     .heading {
-      aspect-ratio: unset;
-      h3,
-      h4 {
-        margin: 0;
+      // min-height: 300px;
+      font-family: "Roboto", sans-serif;
+      font-weight: 700;
+      line-height: 56px;
+      color: var(--headerColor);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      // aspect-ratio: 1;
+      .img-header {
+        padding: 0.5rem;
+        margin-bottom: auto;
+        margin-top: auto;
+        width: 100%;
+        max-width: 400px;
+        max-width: min(60%, 400px);
+        min-width: 200px;
+      }
+      @media (max-width: map.get($grid-breakpoints,"sm")) {
+        font-size: 38px;
       }
     }
-    .img-header {
-      mix-blend-mode: multiply;
+    h3,
+    h4 {
+      color: var(--headerColor);
+      font-weight: 700;
+      margin-inline: initial;
+      text-align: center;
+      a {
+        color: inherit;
+        font-weight: initial;
+      }
     }
   }
   .small-stat {
     font-weight: 300;
   }
-  .scrollable-area::after {
-    background: linear-gradient(0deg, var(--cardBackgroundColor), transparent);
-  }
   .btn-info,
   .yim-share-button {
-    background-color: var(--accentColor);
-  }
-  .color-picker {
-    flex-wrap: wrap;
-    gap: 2em;
-    > div {
-      &:first-of-type {
-        width: 100%;
-        font-weight: bold;
-        font-size: larger;
-      }
-      text-align: center;
-      text-align: -webkit-center;
-      .color-selector {
-        background: none;
-      }
-    }
+    background-color: var(--buttonCollor);
   }
   .swiper,
   .graph-container {
     background-color: var(--backgroundColor);
-  }
-  .swiper-cube .swiper-slide {
-    text-align: center;
-    img {
-      max-width: min(90vw, 90vh);
-    }
-  }
-  #buddies .buddy .img-container img {
-    width: 100%;
-    mix-blend-mode: multiply;
-  }
-  #main-header .header-image {
-    margin: 0;
-    width: initial;
-    mix-blend-mode: multiply;
-    margin-inline: auto;
   }
 }

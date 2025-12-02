@@ -31,7 +31,7 @@ export default function YIMSimilarUsers({
   const sortedSimilarUsers = toPairs(similarUsers).sort((a, b) => b[1] - a[1]);
   return (
     <div
-      className="card content-card"
+      className="content-card"
       id="similar-users"
       style={{ marginBottom: "2.5em" }}
     >
@@ -52,7 +52,7 @@ export default function YIMSimilarUsers({
           </Tooltip>
         </h3>
       </div>
-      <div className="scrollable-area similar-users-list">
+      <div className="scrollable-area similar-users-list card-bg">
         {sortedSimilarUsers.map((userFromList) => {
           const [name, similarityScore] = userFromList;
           const similarUser: SimilarUser = {

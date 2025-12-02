@@ -39,7 +39,7 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
           The top genres {youOrUsername} listened to this year
         </Tooltip>
       </h3>
-      <div className="graph-container">
+      <div className="graph-container card-bg">
         <div className="graph" style={{ height: "400px" }}>
           <ResponsiveTreeMap
             margin={{ left: 30, bottom: 30, right: 30, top: 30 }}

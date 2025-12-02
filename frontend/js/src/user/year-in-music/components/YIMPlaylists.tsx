@@ -19,32 +19,34 @@ function TopLevelPlaylist(props: {
   const { APIService } = React.useContext(GlobalAppContext);
   const encodedUsername = encodeURIComponent(userName);
   return (
-    <div className="card content-card mb-3" id={`${coverArtKey}`}>
+    <div className="content-card mb-3" id={`${coverArtKey}`}>
       <div className="center-p heading">
         <object
           className="img-header"
           data={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}&branding=False`}
-        >{`SVG of cover art for ${topLevelPlaylist.title}`}</object>
-        <h3>
-          <a
-            href={topLevelPlaylist.identifier}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {topLevelPlaylist.title}{" "}
-          </a>
-          <FontAwesomeIcon
-            icon={faQuestionCircle}
-            data-tip
-            data-for={`playlist-${coverArtKey}-tooltip`}
-            size="xs"
-          />
-          <Tooltip id={`playlist-${coverArtKey}-tooltip`}>
-            {topLevelPlaylist.annotation}
-          </Tooltip>
-        </h3>
+        >
+          Playlist image
+        </object>
       </div>
-      <div>
+      <h3>
+        <a
+          href={topLevelPlaylist.identifier}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {topLevelPlaylist.title}{" "}
+        </a>
+        <FontAwesomeIcon
+          icon={faQuestionCircle}
+          data-tip
+          data-for={`playlist-${coverArtKey}-tooltip`}
+          size="xs"
+        />
+        <Tooltip id={`playlist-${coverArtKey}-tooltip`}>
+          {topLevelPlaylist.annotation}
+        </Tooltip>
+      </h3>
+      <div className="card-bg">
         {topLevelPlaylist.track.slice(0, 5).map((playlistTrack) => {
           const listen = JSPFTrackToListen(playlistTrack);
           //   listens.push(listen);
@@ -149,7 +151,7 @@ export default function YIMPlaylists({
           {youOrUsername} {isCurrentUser ? "have" : "has"} earned these
         </div>
       </div>
-      <div className="row flex flex-wrap" id="playlists">
+      <div className="flex flex-wrap" id="playlists">
         {topDiscoveriesPlaylist && (
           <TopLevelPlaylist
             topLevelPlaylist={topDiscoveriesPlaylist}

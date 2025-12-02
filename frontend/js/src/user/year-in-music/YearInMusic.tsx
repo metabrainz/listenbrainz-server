@@ -32,6 +32,7 @@ import YIMCharts from "./components/YIMCharts";
 import YIMFriends from "./components/YIMFriends";
 import YIMTopAlbums from "./components/AlbumsCoverflow";
 import YIMSimilarUsers from "./components/YIMSimilarUsers";
+import { COLOR_LB_BLUE } from "../../utils/constants";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -72,16 +73,65 @@ type YearInMusicLoaderData = {
   data: YearInMusicProps["yearInMusicData"];
   genreGraphData: YearInMusicProps["genreGraphData"];
 };
-
+const availableYears = {
+  2021: {
+    color: "red",
+    textColor: "#F1F2E1",
+    accentColor: COLOR_LB_BLUE,
+    backGroundColors: {
+      "0%": "#158D70",
+      "58%": "#4E3360",
+      "100%": "#8C4D89",
+    },
+  },
+  2022: {
+    color: "yellow",
+    textColor: "#F1F2E1",
+    accentColor: COLOR_LB_BLUE,
+    backGroundColors: {
+      "0%": "#158D70",
+      "58%": "#4E3360",
+      "100%": "#8C4D89",
+    },
+  },
+  2023: {
+    color: "green",
+    textColor: "#F1F2E1",
+    accentColor: COLOR_LB_BLUE,
+    backGroundColors: {
+      "0%": "#158D70",
+      "58%": "#4E3360",
+      "100%": "#8C4D89",
+    },
+  },
+  2024: {
+    color: "#158D70",
+    textColor: "#F1F2E1",
+    accentColor: COLOR_LB_BLUE,
+    backGroundColors: {
+      "0%": "#158D70",
+      "58%": "#4E3360",
+      "100%": "#2f6368",
+    },
+  },
+  2025: {
+    color: "#4E3360",
+    textColor: "#F1F2E1",
+    accentColor: COLOR_LB_BLUE,
+    backGroundColors: {
+      "0%": "#2f6368",
+      "100%": "#463f62",
+    },
+  },
+};
 export default function YearInMusic() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams();
   const { yearString = getYear(Date.now()) } = params;
-  const year = Number(yearString);
-  //   const [year, setYear] = React.useState<number>(
-  //     Number(params.year || getYear(Date.now()))
-  //   );
+  const [year, setYear] = React.useState<keyof typeof availableYears>(
+    Number(yearString) as keyof typeof availableYears
+  );
 
   const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
@@ -248,8 +298,15 @@ export default function YearInMusic() {
   };
 
   const backgroundColor = "#EDF3E4";
-  const cardBackgroundColor = "#FEFFF5";
-  const accentColor = "#2B9F7A";
+  const backgroundGradient = `linear-gradient(to right, ${Object.entries(
+    availableYears[year].backGroundColors
+  )
+    .map(([percent, color]) => `${color} ${percent}`)
+    .join(", ")} )`;
+  const svgNoise =
+    "data:image/svg+xml,%3Csvg viewBox='0 0 398 398' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.77' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
+  const { accentColor, textColor } = availableYears[year];
+  const cardBackgroundColor = textColor;
 
   let missingSomeData = missingPlaylistData;
   const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
@@ -277,7 +334,6 @@ export default function YearInMusic() {
 
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUser = user.name === currentUser?.name;
-  const youOrUsername = isCurrentUser ? "you" : `${user.name}`;
   const yourOrUsersName = isCurrentUser ? "your" : `${user.name}'s`;
   const encodedUsername = encodeURIComponent(user.name);
 
@@ -287,7 +343,7 @@ export default function YearInMusic() {
   const linkToThisPage = `${linkToUserProfile}/year-in-music/${year}`;
 
   const userShareBar = (
-    <div className="card content-card">
+    <div className="content-card">
       <div className="link-section">
         {isUserLoggedIn && user.name !== currentUser?.name && (
           <FollowButton
@@ -352,234 +408,262 @@ export default function YearInMusic() {
     <div
       id="year-in-music"
       className={`yim-${year}`}
-      role="main"
       style={{
         ["--backgroundColor" as any]: backgroundColor,
         ["--cardBackgroundColor" as any]: cardBackgroundColor,
         ["--accentColor" as any]: accentColor,
+        ["--headerColor" as any]: textColor,
+        background: `${backgroundGradient}, url(${svgNoise})`,
+        backgroundBlendMode: "multiply",
       }}
     >
-      <SEO year={year} userName={user?.name} />
-      <YIMYearMetaTags year={year} backgroundColor={backgroundColor} />
-      <div id="main-header">
-        <div className="color-picker">
-          <div>Choose a year</div>
-        </div>
-        {!hasSomeData && (
-          <div className="no-yim-message">
-            <p className="center-p">Oh no!</p>
-            <p className="center-p">
-              We don&apos;t have enough {year} statistics for {user.name}.
-            </p>
-            <p className="center-p">
-              <Link to="/settings/music-services/details/">Submit</Link> enough
-              listens before the end of December to generate your #yearinmusic
-              next year.
-            </p>
+      <div role="main">
+        <SEO year={year} userName={user?.name} />
+        <YIMYearMetaTags year={year} backgroundColor={backgroundGradient} />
+        <div id="main-header">
+          <div className="user-name">{user.name}&apos;s</div>
+          <div className="header-image">
+            <img
+              src="/static/img/year-in-music/header.png"
+              alt="Year in Music"
+              className="w-100"
+            />
           </div>
-        )}
-        <div className="user-name">{user.name}</div>
-        <div className="arrow-down" />
-      </div>
-
-      {userShareBar}
-      {hasSomeData && (
-        <>
-          {missingSomeData && (
-            <div className="alert alert-warning">
-              Heads up: We were unable to compute all of the parts of Your Year
-              in Music due to not enough listens or an issue in our database,
-              but we&apos;re showing you everything that we were able to make.
-              Your page might look a bit different than others.
+          <div className="year-selection">
+            {Object.keys(availableYears).map((availableYear) => (
+              <Link
+                key={availableYear}
+                to={`../${availableYear}/`}
+                className={`ms-5 year-link ${
+                  Number(availableYear) === year ? "selected" : ""
+                }`}
+                onClick={() =>
+                  setYear(Number(availableYear) as keyof typeof availableYears)
+                }
+              >
+                {availableYear}
+              </Link>
+            ))}
+          </div>
+          {!hasSomeData && (
+            <div className="no-yim-message">
+              <p className="center-p">Oh no!</p>
+              <p className="center-p">
+                We don&apos;t have enough {year} statistics for {user.name}.
+              </p>
+              <p className="center-p">
+                <Link to="/settings/music-services/details/">Submit</Link>{" "}
+                enough listens before the end of December to generate your
+                #yearinmusic next year.
+              </p>
             </div>
           )}
-          <div className="section">
-            <div className="card content-card" id="overview">
-              <h3 className="flex-center">Overview</h3>
-              <div className="d-flex justify-content-center">
-                <object
-                  className="card"
-                  data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
-                >
-                  Overview
-                </object>
+          <div className="arrow-down" />
+        </div>
+
+        {userShareBar}
+        {hasSomeData && (
+          <>
+            {missingSomeData && (
+              <div className="alert alert-warning">
+                Heads up: We were unable to compute all of the parts of Your
+                Year in Music due to not enough listens or an issue in our
+                database, but we&apos;re showing you everything that we were
+                able to make. Your page might look a bit different than others.
               </div>
-              <div className="yim-share-button-container">
-                <ImageShareButtons
-                  svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
-                  shareUrl={linkToThisPage}
-                  shareText={`Check out my ListenBrainz stats for ${year}`}
-                  shareTitle="My year in music"
-                  fileName={`${user.name}-overview-${year}`}
-                />
+            )}
+            <div className="section">
+              <div className="content-card" id="overview">
+                <h3 className="flex-center">Overview</h3>
+                <div className="d-flex justify-content-center">
+                  <object
+                    className="card"
+                    data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                  >
+                    Overview
+                  </object>
+                </div>
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                    shareUrl={linkToThisPage}
+                    shareText={`Check out my ListenBrainz stats for ${year}`}
+                    shareTitle="My year in music"
+                    fileName={`${user.name}-overview-${year}`}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <YIMTopAlbums
-            topReleaseGroups={yearInMusicData.top_release_groups}
-            userName={user.name}
-            year={year}
-          />
+            <YIMTopAlbums
+              topReleaseGroups={yearInMusicData.top_release_groups}
+              userName={user.name}
+              year={year}
+            />
 
-          <YIMCharts
-            yearInMusicData={yearInMusicData}
-            userName={user.name}
-            year={year}
-          />
+            <YIMCharts
+              yearInMusicData={yearInMusicData}
+              userName={user.name}
+              year={year}
+            />
 
-          <div className="section" id="stats">
-            <div className="header">
-              Statistics
-              <div className="subheader">you are a wonderful human being</div>
-            </div>
-            <div className="card content-card">
-              <YIMStats
-                yearInMusicData={yearInMusicData}
-                userName={user.name}
-              />
-              <YIMListeningActivity
-                listensPerDay={yearInMusicData.listens_per_day}
-                userName={user.name}
-                year={year}
-              />
-              <YIMMostListenedYear
-                mostListenedYearData={yearInMusicData.most_listened_year}
-                userName={user.name}
-              />
-              <YIMArtistMap
-                artistMapData={yearInMusicData.artist_map}
-                yourOrUsersName={yourOrUsersName}
-              />
-              {genreGraphData && (
-                <YIMGenreGraph
-                  genreGraphData={genreGraphData}
+            <div className="section" id="stats">
+              <div className="content-card">
+                <h3 className="flex-center">{year} statistics</h3>
+                <YIMStats
+                  yearInMusicData={yearInMusicData}
                   userName={user.name}
                 />
-              )}
-              <div className="yim-share-button-container">
-                <ImageShareButtons
-                  svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats`}
-                  shareUrl={`${linkToThisPage}#stats`}
-                  shareTitle={`My music listening in ${year}`}
-                  fileName={`${user.name}-stats-${year}`}
+                <YIMListeningActivity
+                  listensPerDay={yearInMusicData.listens_per_day}
+                  userName={user.name}
+                  year={year}
+                />
+                <YIMMostListenedYear
+                  mostListenedYearData={yearInMusicData.most_listened_year}
+                  userName={user.name}
+                />
+                <YIMArtistMap
+                  artistMapData={yearInMusicData.artist_map}
+                  yourOrUsersName={yourOrUsersName}
+                />
+                {genreGraphData && (
+                  <YIMGenreGraph
+                    genreGraphData={genreGraphData}
+                    userName={user.name}
+                  />
+                )}
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats`}
+                    shareUrl={`${linkToThisPage}#stats`}
+                    shareTitle={`My music listening in ${year}`}
+                    fileName={`${user.name}-stats-${year}`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <YIMPlaylists
+              yearInMusicData={yearInMusicData}
+              year={year}
+              userName={user.name}
+            />
+            <div className="section">
+              <div className="header">
+                Discover
+                <div className="subheader">
+                  there&apos;s a whole world out there
+                </div>
+              </div>
+              <div className="flex flex-wrap">
+                <YIMNewReleases
+                  newReleases={yearInMusicData.new_releases_of_top_artists}
+                  userName={user.name}
+                  year={year}
+                />
+                <YIMSimilarUsers
+                  similarUsers={yearInMusicData.similar_users}
+                  updateFollowingList={updateFollowingList}
+                  loggedInUserFollowsUser={loggedInUserFollowsUser}
+                  userName={user.name}
+                  year={year}
                 />
               </div>
             </div>
+          </>
+        )}
+
+        <YIMFriends
+          followingList={followingList}
+          userName={user.name}
+          year={year}
+        />
+
+        {/* ADD Community Year in Music tools ♡HERE */}
+
+        <div className="section">
+          {userShareBar}
+          <div className="closing-remarks align-items-center flex flex-column gap-5">
+            <img src="/static/img/year-in-music/heart.png" alt="With love," />
+            <img
+              src="/static/img/year-in-music/listenbrainz-footer.png"
+              alt="The ListenBrainz team"
+            />
+            <p className="bold">
+              Wishing you a very cozy {year + 1}, from the ListenBrainz team.
+            </p>
+            <p>
+              If you have questions or feedback don&apos;t hesitate to contact
+              us
+              <br />
+              on&nbsp;
+              <a
+                target="_blank"
+                href="https://community.metabrainz.org/c/listenbrainz/18"
+                rel="noopener noreferrer"
+              >
+                our forums
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="mailto:listenbrainz@metabrainz.org"
+                rel="noopener noreferrer"
+              >
+                by email
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
+                rel="noopener noreferrer"
+              >
+                Matrix
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://discord.gg/R4hBw972QA"
+                rel="noopener noreferrer"
+              >
+                Discord
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://bsky.app/profile/listenbrainz.org"
+                rel="noopener noreferrer"
+              >
+                Bluesky
+              </a>
+              &nbsp;or&nbsp;
+              <a
+                target="_blank"
+                href="https://mastodon.social/@ListenBrainz"
+                rel="noopener noreferrer"
+              >
+                Mastodon
+              </a>
+              .
+            </p>
+            <img
+              src="/static/img/year-in-music/OSS-footer.png"
+              alt="Open source and ethical forever"
+            />
           </div>
-
-          <YIMPlaylists
-            yearInMusicData={yearInMusicData}
-            year={year}
-            userName={user.name}
-          />
-          <div className="section">
-            <div className="header">
-              Discover
-              <div className="subheader">
-                there&apos;s a whole world out there
-              </div>
-            </div>
-            <div className="flex flex-wrap">
-              <YIMNewReleases
-                newReleases={yearInMusicData.new_releases_of_top_artists}
-                userName={user.name}
-                year={year}
-              />
-              <YIMSimilarUsers
-                similarUsers={yearInMusicData.similar_users}
-                updateFollowingList={updateFollowingList}
-                loggedInUserFollowsUser={loggedInUserFollowsUser}
-                userName={user.name}
-                year={year}
-              />
-            </div>
-          </div>
-        </>
-      )}
-
-      <YIMFriends
-        followingList={followingList}
-        userName={user.name}
-        year={year}
-      />
-
-      <div className="section">
-        {userShareBar}
-        <div className="closing-remarks">
-          <span className="bold">
-            Wishing you a very cozy {year + 1}, from the ListenBrainz team.
-          </span>
-          <br />
-          If you have questions or feedback don&apos;t hesitate to contact us
-          <br />
-          on&nbsp;
-          <a
-            target="_blank"
-            href="https://community.metabrainz.org/c/listenbrainz/18"
-            rel="noopener noreferrer"
-          >
-            our forums
-          </a>
-          ,&nbsp;
-          <a
-            target="_blank"
-            href="mailto:listenbrainz@metabrainz.org"
-            rel="noopener noreferrer"
-          >
-            by email
-          </a>
-          ,&nbsp;
-          <a
-            target="_blank"
-            href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
-            rel="noopener noreferrer"
-          >
-            Matrix
-          </a>
-          ,&nbsp;
-          <a
-            target="_blank"
-            href="https://discord.gg/R4hBw972QA"
-            rel="noopener noreferrer"
-          >
-            Discord
-          </a>
-          ,&nbsp;
-          <a
-            target="_blank"
-            href="https://bsky.app/profile/listenbrainz.org"
-            rel="noopener noreferrer"
-          >
-            Bluesky
-          </a>
-          &nbsp;or&nbsp;
-          <a
-            target="_blank"
-            href="https://mastodon.social/@ListenBrainz"
-            rel="noopener noreferrer"
-          >
-            Mastodon
-          </a>
-          .
-          <br />
-          <br />
-          Feeling nostalgic? See your previous Year in Music:{" "}
-          <Link to={`/user/${encodedUsername}/year-in-music/${year - 1}/`}>
-            {year - 1}
-          </Link>
         </div>
+        {/* Trick to load the font files for use with the SVG render CHECK IF THIS IS STILL REQUIRED */}
+        <span
+          style={{
+            fontFamily: "Inter, sans-serif",
+            opacity: 0,
+            position: "fixed",
+          }}
+        >
+          x
+        </span>
       </div>
-      {/* Trick to load the font files for use with the SVG render CHECK IF THIS IS STILL REQUIRED */}
-      <span
-        style={{
-          fontFamily: "Inter, sans-serif",
-          opacity: 0,
-          position: "fixed",
-        }}
-      >
-        x
-      </span>
     </div>
   );
 }

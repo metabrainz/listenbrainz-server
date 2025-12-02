@@ -35,7 +35,7 @@ export default function YIMNewReleases({
   const yourOrUsersName = isCurrentUser ? "your" : `${userName}'s`;
   return (
     <div
-      className="card content-card"
+      className="content-card"
       id="new-releases"
       style={{ marginBottom: "2.5em" }}
     >
@@ -56,7 +56,7 @@ export default function YIMNewReleases({
           </Tooltip>
         </h3>
       </div>
-      <div className="scrollable-area">
+      <div className="scrollable-area card-bg">
         {newReleases.map((release) => {
           const listenHere: Listen = {
             listened_at: 0,

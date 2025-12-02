@@ -29,19 +29,19 @@ export default function YIMCharts({
   //   const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
   return (
     <div className="section">
-      <div className="header">
+      {/* <div className="header">
         Charts
         <div className="subheader">
           {youOrUsername} {isCurrentUser ? "have" : "has"} great taste
         </div>
-      </div>
+      </div> */}
       <div className="flex flex-wrap" style={{ gap: "2em" }}>
         {yearInMusicData.top_recordings && (
-          <div className="card content-card" id="top-tracks">
+          <div className="content-card" id="top-tracks">
             <div className="heading">
               <h3>Top songs of {year}</h3>
             </div>
-            <div className="scrollable-area">
+            <div className="scrollable-area card-bg">
               {yearInMusicData.top_recordings.slice(0, 50).map((recording) => {
                 const listenHere: Listen = {
                   listened_at: 0,
@@ -88,11 +88,11 @@ export default function YIMCharts({
           </div>
         )}
         {yearInMusicData.top_artists && (
-          <div className="card content-card" id="top-artists">
+          <div className="content-card" id="top-artists">
             <div className="heading">
               <h3>Top artists of {year}</h3>
             </div>
-            <div className="scrollable-area">
+            <div className="scrollable-area card-bg">
               {yearInMusicData.top_artists.slice(0, 50).map((artist) => {
                 const details = getEntityLink(
                   "artist",
