@@ -56,6 +56,5 @@ class LibrefmListensImporter(BaseListensImporter):
                 return stripped.split(",")
 
         raise ImportFailedError(
-            "Unable to locate Libre.fm header row in import file "
-            f"{file_path}. Ensure the CSV column names include Time, Artist, Track, and Album."
+            f"Unable to locate Libre.fm header row in import file {file_path}."
         )

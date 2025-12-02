@@ -606,6 +606,35 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
+    def test_import_librefm_invalid_header(self):
+        data = {
+            "service": "librefm",
+            "file": open(self.path_to_data_file("librefm_invalid_header.csv"), "rb")
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        import time
+        for _ in range(20):
+            r = self.client.get(
+                self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+                headers={"Authorization": f"Token {self.user['auth_token']}"},
+            )
+            self.assert200(r)
+            metadata = r.json["metadata"]
+            if metadata["status"] in ["completed", "failed"]:
+                break
+            time.sleep(0.25)
+
+        self.assertEqual(metadata["status"], "failed")
+        self.assertIn("Unable to locate Libre.fm header row", metadata["progress"])
+
     def test_import_panoscrobbler(self):
         data = {
             "service": "panoscrobbler",
