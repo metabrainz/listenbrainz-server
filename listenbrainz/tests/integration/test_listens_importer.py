@@ -644,7 +644,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
             time.sleep(0.25)
 
         self.assertEqual(metadata["status"], "failed")
-        self.assertIn("Unable to locate Libre.fm header row", metadata["progress"])
+        self.assertEqual("Unable to locate Libre.fm header row in import file.", metadata["progress"])
 
     def test_import_librefm_with_comments(self):
         data = {
