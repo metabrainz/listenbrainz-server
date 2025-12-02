@@ -203,8 +203,8 @@ Update the ``NAVIDROME_ENCRYPTION_KEY`` field with the generated key.
 .. note::
 
     The encryption key is used to securely encrypt and decrypt Navidrome passwords stored
-    in the database. Make sure to keep this key safe and consistent across your development
-    environment.
+    in the database. Make sure you do not change this key, or you will have to disconnect 
+    and reconnect to your Navidrome account.
 
     Navidrome integration works with self-hosted Navidrome instances. When connecting your
     Navidrome instance, you'll need to provide your instance URL, username, and password.
