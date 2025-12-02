@@ -750,7 +750,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         import_id = response.json["import_id"]
 
-        # Poll import task status until completion since no listens will be inserted
         import time
         for _ in range(20):
             r = self.client.get(
@@ -763,7 +762,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
                 break
             time.sleep(0.25)
 
-        # Verify no listens imported
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         r = self.client.get(url)
         self.assert200(r)
