@@ -385,7 +385,8 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: ", exc_info=True)
             raise APIInternalServerError('Could not update latest_import, try again')
 
-        return jsonify({'status': 'ok'})
+        return jsonify({'status': 'ok' , 
+                        'version' : 'devlopment'})
     return None
 
 

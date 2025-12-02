@@ -437,3 +437,12 @@ def user_info(data):
 
     return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
                            data.get('format', "xml"))
+
+
+@api_bp.get('/api/status')
+def api_status():
+    '''Simple health check endpoint'''
+    return jsonify({
+        'status' : 'ok',
+        'version' : 'development'
+    })
