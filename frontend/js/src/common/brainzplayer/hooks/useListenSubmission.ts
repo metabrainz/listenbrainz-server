@@ -1,4 +1,5 @@
 import * as React from "react";
+import localforage from "localforage";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { assign, cloneDeep, omit } from "lodash";
 import {
@@ -176,6 +177,11 @@ const useListenSubmission = ({
             });
             await submitListenToListenBrainz(listenType, listen, retries - 1);
           } else if (!isPlayingNowType) {
+            const failedListensStore = localforage.createInstance({
+              name: "listenbrainz",
+              storeName: "failedListens",
+            });
+            failedListensStore.setItem(listen.listened_at.toString(), listen);
             onWarning(
               error instanceof Error ? error.message : error.toString(),
               "Could not save this listen"
