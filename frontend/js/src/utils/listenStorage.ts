@@ -17,9 +17,15 @@ export const saveFailedListen = async (listen: any) => {
 // Get Function
 export const getFailedListens = async () => {
   const failedListens: { id: string; listen: any }[] = [];
-  await listenStore.iterate((value: any, key: string) => {
+
+  if (typeof (listenStore as any).iterate !== "function") {
+    return failedListens;
+  }
+
+  await (listenStore as any).iterate((value: any, key: string) => {
     failedListens.push({ id: key, listen: value.listen });
   });
+
   return failedListens;
 };
 
