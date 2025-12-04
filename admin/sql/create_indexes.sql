@@ -6,7 +6,6 @@ CREATE UNIQUE INDEX login_id_ndx_user ON "user" (login_id);
 
 CREATE INDEX user_name_search_trgm_idx ON "user" USING GIST (musicbrainz_id gist_trgm_ops);
 
-
 CREATE INDEX reporter_user_id_ndx_reported_users ON reported_users (reporter_user_id);
 CREATE INDEX reported_user_id_ndx_reported_users ON reported_users (reported_user_id);
 CREATE UNIQUE INDEX user_id_reports_ndx_reported_users ON reported_users (reporter_user_id, reported_user_id);
@@ -16,8 +15,6 @@ CREATE UNIQUE INDEX token_api_key_ndx_token ON api_compat.token (token, api_key)
 
 CREATE UNIQUE INDEX sid_ndx_session ON api_compat.session (sid);
 CREATE UNIQUE INDEX sid_api_key_ndx_session ON api_compat.session (sid, api_key);
-
-CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 
 CREATE INDEX user_id_ndx_external_service_oauth ON external_service_oauth (user_id);
 CREATE INDEX service_ndx_external_service_oauth ON external_service_oauth (service);

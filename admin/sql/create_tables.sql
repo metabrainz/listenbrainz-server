@@ -111,18 +111,6 @@ CREATE TABLE hide_user_timeline_event (
     created      TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
-CREATE TABLE spotify_auth (
-  user_id                   INTEGER NOT NULL, -- PK and FK to user.id
-  user_token                VARCHAR NOT NULL,
-  token_expires             TIMESTAMP WITH TIME ZONE,
-  refresh_token             VARCHAR NOT NULL,
-  last_updated              TIMESTAMP WITH TIME ZONE,
-  latest_listened_at        TIMESTAMP WITH TIME ZONE,
-  record_listens            BOOLEAN DEFAULT TRUE,
-  error_message             VARCHAR,
-  permission                VARCHAR NOT NULL
-);
-
 CREATE TABLE external_service_oauth (
     id                      SERIAL,  -- PK
     user_id                 INTEGER NOT NULL,  -- FK to "user".id
@@ -143,7 +131,7 @@ CREATE TABLE listens_importer (
     last_updated                TIMESTAMP WITH TIME ZONE,
     latest_listened_at          TIMESTAMP WITH TIME ZONE,
     status                      JSONB,
-    error_message               TEXT
+    error                       JSONB    -- {message: text, retry: boolean}
 );
 
 CREATE TABLE recommendation_feedback (
