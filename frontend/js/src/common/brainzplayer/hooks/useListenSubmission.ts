@@ -1,7 +1,7 @@
 import * as React from "react";
-import localforage from "localforage";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { assign, cloneDeep, omit } from "lodash";
+import { useEffect } from "react";
 import {
   currentListenAtom,
   currentDataSourceIndexAtom,
@@ -13,6 +13,11 @@ import {
   listenSubmittedAtom,
 } from "../BrainzPlayerAtoms";
 import { DataSourceTypes } from "../BrainzPlayer";
+import {
+  saveFailedListen,
+  getFailedListens,
+  removeFailedListen,
+} from "../../../utils/listenStorage";
 
 interface ListenSubmissionProps {
   currentUser: ListenBrainzUser;
@@ -34,6 +39,62 @@ const useListenSubmission = ({
   dataSourceRefs,
 }: ListenSubmissionProps) => {
   const store = useStore();
+
+  const retryOfflineListens = React.useCallback(async () => {
+    if (!navigator.onLine) return;
+
+    const failedListens = await getFailedListens();
+    if (failedListens.length === 0) return;
+
+    console.log(
+      `[Online] Found ${failedListens.length} unsent listens. Retrying...`
+    );
+    onWarning(
+      `Retrying ${failedListens.length} unsent listens...`,
+      "Back Online"
+    );
+
+    // Promise
+    await Promise.all(
+      failedListens.map(async (item) => {
+        try {
+          if (!currentUser || !currentUser.auth_token) return;
+
+          const url = `${listenBrainzAPIBaseURI}/submit-listens`;
+          const struct = {
+            listen_type: "single",
+            payload: [item.listen],
+          };
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${currentUser.auth_token}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify(struct),
+          });
+
+          if (!response.ok) throw new Error(response.statusText);
+
+          // Success! Remove form storage
+          await removeFailedListen(item.id);
+          console.log(`[Retry] Sent & Removed: ${item.id}`);
+        } catch (error) {
+          console.error(`[Retry] Failed again: ${item.id}`);
+        }
+      })
+    );
+  }, [currentUser, listenBrainzAPIBaseURI, onWarning]);
+
+  // Listen for internet connection
+  useEffect(() => {
+    window.addEventListener("online", retryOfflineListens);
+    retryOfflineListens();
+    return () => {
+      window.removeEventListener("online", retryOfflineListens);
+    };
+  }, [retryOfflineListens]);
 
   // Atom values
   const currentListen = useAtomValue(currentListenAtom);
@@ -177,14 +238,11 @@ const useListenSubmission = ({
             });
             await submitListenToListenBrainz(listenType, listen, retries - 1);
           } else if (!isPlayingNowType) {
-            const failedListensStore = localforage.createInstance({
-              name: "listenbrainz",
-              storeName: "failedListens",
-            });
-            failedListensStore.setItem(listen.listened_at.toString(), listen);
+            console.warn("Saving to local storage due to network error.");
+            await saveFailedListen(listen);
             onWarning(
-              error instanceof Error ? error.message : error.toString(),
-              "Could not save this listen"
+              "Connection lost. Listen saved locally.",
+              "Submission Failed"
             );
           }
         }
