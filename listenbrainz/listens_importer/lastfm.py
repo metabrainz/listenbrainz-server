@@ -104,7 +104,7 @@ class BaseLastfmImporter(ListensImporter):
                 data = response.json()
                 if "error" in data and data.get("error") == 17:
                     raise LastfmUserNotRetryableException(
-                        "The user needs to disable privacy mode in Last.fm settings to allow importing listens."
+                        "Please disable privacy mode in the settings on your Last.fm account to allows importing listens."
                     )
                 raise ExternalServiceAPIError("Error from the API while getting listens: %s" % response.text)
             case _:
