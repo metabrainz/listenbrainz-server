@@ -22,6 +22,20 @@ FILE_SIZE_LIMIT = 524288000  # 500 MB
 IMPORTER_NAME = "ListenBrainz Archive Importer"
 
 
+def update_import_task(db_conn, import_id: int, **kwargs):
+    """Update import task status and progress."""
+    query = text("""
+                 UPDATE user_data_import
+                 SET metadata = metadata || (:metadata)::jsonb
+                 WHERE id = :import_id
+                 """)
+    db_conn.execute(query, {
+        "metadata": json.dumps(kwargs),
+        "import_id": import_id
+    })
+    db_conn.commit()
+
+
 class BaseListensImporter(ABC):
     """Abstract base class for listens importers."""
 
@@ -158,28 +172,13 @@ class BaseListensImporter(ABC):
 
     def persist_validation_stats(self, import_id: int, validation_stats: dict[str, int]) -> None:
         """Persist the current validation counters on the import task metadata."""
-        self._merge_import_metadata(import_id, {
-            "attempted_count": validation_stats.get("attempted_count", 0),
-            "success_count": validation_stats.get("success_count", 0),
-        })
+        update_import_task(
+            self.db_conn,
+            import_id,
+            attempted_count=validation_stats.get("attempted_count", 0),
+            success_count=validation_stats.get("success_count", 0),
+        )
 
     def update_import_progress_and_status(self, import_id: int, status: str, progress: str) -> None:
         """Update progress for user data import."""
-        updated_metadata = {"status": status, "progress": progress}
-        self._merge_import_metadata(import_id, updated_metadata)
-
-    def _merge_import_metadata(self, import_id: int, metadata_updates: dict[str, Any]) -> None:
-        """Merge arbitrary metadata fields into user_data_import.metadata."""
-        if not metadata_updates:
-            return
-
-        query = text("""
-             UPDATE user_data_import
-                SET metadata = metadata || (:metadata)::jsonb
-              WHERE id = :import_id
-        """)
-        self.db_conn.execute(query, {
-            "metadata": json.dumps(metadata_updates),
-            "import_id": import_id
-        })
-        self.db_conn.commit()
+        update_import_task(self.db_conn, import_id, status=status, progress=progress)
