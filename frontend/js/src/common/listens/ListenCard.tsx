@@ -30,6 +30,7 @@ import { get, isEmpty, isEqual, isNil, isNumber, merge } from "lodash";
 import { Link } from "react-router";
 import { toast } from "react-toastify";
 import { useSetAtom } from "jotai";
+import { parseISO } from "date-fns";
 import {
   fullLocalizedDateFromTimestampOrISODate,
   getAlbumArtFromListenMetadata,
@@ -118,12 +119,8 @@ export default function ListenCard(props: ListenCardProps) {
   const [displayListen, setDisplayListen] = React.useState<Listen>(listenProp);
   const [isCurrentlyPlaying, setIsCurrentlyPlaying] = React.useState(false);
 
-  const {
-    APIService,
-    currentUser,
-    userPreferences,
-    spotifyAuth,
-  } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser, userPreferences, spotifyAuth } =
+    React.useContext(GlobalAppContext);
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const albumArtQueryKey = React.useMemo(
@@ -298,22 +295,18 @@ export default function ListenCard(props: ListenCardProps) {
       </span>
     );
   } else {
+    let date: string | number | Date = "";
+    if (displayListen.listened_at_iso) {
+      date = parseISO(displayListen.listened_at_iso);
+    } else if (displayListen.listened_at) {
+      date = displayListen.listened_at * 1000;
+    }
     timeStampForDisplay = (
       <span
         className="listen-time"
-        title={
-          displayListen.listened_at
-            ? fullLocalizedDateFromTimestampOrISODate(
-                displayListen.listened_at * 1000
-              )
-            : fullLocalizedDateFromTimestampOrISODate(
-                displayListen.listened_at_iso
-              )
-        }
+        title={fullLocalizedDateFromTimestampOrISODate(date)}
       >
-        {preciseTimestamp(
-          displayListen.listened_at_iso || displayListen.listened_at * 1000
-        )}
+        {preciseTimestamp(date)}
       </span>
     );
   }
