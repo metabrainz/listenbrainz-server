@@ -113,6 +113,7 @@ export default function YearInMusic() {
   const [year, setYear] = React.useState<keyof typeof availableYears>(
     Number(yearString) as keyof typeof availableYears
   );
+  const selectedRef = React.useRef<HTMLAnchorElement>(null);
 
   const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
@@ -384,6 +385,33 @@ export default function YearInMusic() {
     </div>
   );
 
+  const handleYearClick = React.useCallback(
+    (
+      e: React.MouseEvent<HTMLAnchorElement>,
+      selectedYear: keyof typeof availableYears
+    ) => {
+      setYear(selectedYear);
+
+      // This is the magic line that centers the clicked element
+      e.currentTarget.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    },
+    [setYear]
+  );
+
+  React.useEffect(() => {
+    if (selectedRef.current) {
+      selectedRef.current.scrollIntoView({
+        behavior: "auto", // Instant scroll on load
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, []);
+
   return (
     <div
       id="year-in-music"
@@ -415,22 +443,7 @@ export default function YearInMusic() {
               style={{ mixBlendMode: "overlay" }}
             />
           </div>
-          <div className="year-selection">
-            {Object.keys(availableYears).map((availableYear) => (
-              <Link
-                key={availableYear}
-                to={`../${availableYear}/`}
-                className={`ms-5 year-link ${
-                  Number(availableYear) === year ? "selected" : ""
-                }`}
-                onClick={() =>
-                  setYear(Number(availableYear) as keyof typeof availableYears)
-                }
-              >
-                {availableYear}
-              </Link>
-            ))}
-          </div>
+
           {!hasSomeData && (
             <div className="no-yim-message">
               <p className="center-p">Oh no!</p>
@@ -446,7 +459,37 @@ export default function YearInMusic() {
           )}
           <div className="arrow-down" />
         </div>
-
+        <div className="year-selection">
+          {Object.keys(availableYears).map((availableYear) => {
+            const yearAsNum = Number(
+              availableYear
+            ) as keyof typeof availableYears;
+            const isSelectedYear = yearAsNum === year;
+            return (
+              <Link
+                key={availableYear}
+                to={`../${availableYear}/`}
+                ref={isSelectedYear ? selectedRef : null}
+                className={`year-item ${isSelectedYear ? "selected" : ""}`}
+                onClick={(e) => handleYearClick(e, yearAsNum)}
+              >
+                <div className="year-image">
+                  <img
+                    className="img-fluid"
+                    src="/static/img/cover-art-placeholder.jpg"
+                    alt={`Cover for year ${availableYear}`}
+                  />
+                </div>
+                <div className="year-separator">
+                  <div className="year-connector" />
+                  <div className="year-marker" />
+                  <div className="year-connector" />
+                </div>
+                <div className="year-number">{availableYear}</div>
+              </Link>
+            );
+          })}
+        </div>
         {userShareBar}
         {hasSomeData && (
           <>

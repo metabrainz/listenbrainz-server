@@ -590,6 +590,95 @@ $coverflow-image-height: 400px;
   }
   .swiper,
   .graph-container {
-    background-color: var(--backgroundColor);
+    background-color: var(--cardBackgroundColor);
+  }
+  .year-selection {
+    padding-left: calc(50% - 40px);
+    padding-right: calc(50% - 40px);
+    scroll-snap-type: x mandatory;
+    overflow-x: auto;
+    width: 100%;
+    font-size: 1.5em;
+    scrollbar-width: none;
+    margin-top: -5em;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: flex-end;
+    &,
+    & a,
+    & a:visited {
+      color: var(--headerColor);
+    }
+    .year-item {
+      display: flex;
+      position: relative;
+      flex-direction: column;
+      flex: 1;
+      min-width: 200px;
+      align-items: center;
+      &.selected {
+        min-width: 280px;
+        .year-image {
+          width: 200px;
+          img {
+            opacity: 0;
+          }
+        }
+        .year-number {
+          margin-top: -115px;
+          margin-bottom: 118px;
+          font-size: 1.6em;
+          letter-spacing: 10px;
+          // remove letter-spacing from last letter to center text
+          direction: rtl;
+          text-indent: -10px;
+          font-weight: bold;
+        }
+      }
+      &:last-child .year-separator .year-connector:last-child,
+      &:first-child .year-separator .year-connector:first-child {
+        opacity: 0;
+      }
+    }
+    .year-number {
+      font-family: "Inter";
+      margin-top: 1em;
+      margin-bottom: 0;
+      letter-spacing: 0px;
+      font-weight: normal;
+      transition: all 1s;
+    }
+    .year-image {
+      width: 125px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid var(--headerColor);
+      overflow: hidden;
+      margin-bottom: -50px;
+      img {
+        opacity: 0.5;
+        transition: opacity 2s;
+      }
+    }
+    .year-separator {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      .year-marker {
+        border: 1px solid var(--headerColor);
+        border-radius: 50%;
+        width: 40px;
+        aspect-ratio: 1;
+        flex-shrink: 0;
+      }
+
+      .year-connector {
+        height: 1px;
+        background-color: var(--headerColor);
+        width: 100%;
+      }
+    }
   }
 }
