@@ -208,8 +208,7 @@ $coverflow-image-height: 400px;
     font-family: "Roboto", sans-serif;
     color: var(--headerColor);
     font-weight: 700;
-    font-size: 48px;
-    line-height: 56px;
+    font-size: 2em;
     @media (max-width: map.get($grid-breakpoints,"sm")) {
       font-size: 38px;
       .subheader {

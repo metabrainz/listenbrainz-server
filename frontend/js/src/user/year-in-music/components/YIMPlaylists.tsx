@@ -127,9 +127,6 @@ export default function YIMPlaylists({
   userName: string;
   year: number;
 }) {
-  const { currentUser } = React.useContext(GlobalAppContext);
-  const isCurrentUser = userName === currentUser?.name;
-  const youOrUsername = isCurrentUser ? "you" : `${userName}`;
   const topDiscoveriesPlaylist = getPlaylistByName(
     yearInMusicData,
     "playlist-top-discoveries-for-year",
@@ -145,12 +142,6 @@ export default function YIMPlaylists({
   }
   return (
     <div className="section">
-      <div className="header">
-        {year} Playlists
-        <div className="subheader">
-          {youOrUsername} {isCurrentUser ? "have" : "has"} earned these
-        </div>
-      </div>
       <div className="flex flex-wrap" id="playlists">
         {topDiscoveriesPlaylist && (
           <TopLevelPlaylist

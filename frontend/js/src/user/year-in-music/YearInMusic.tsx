@@ -579,12 +579,6 @@ export default function YearInMusic() {
               userName={user.name}
             />
             <div className="section">
-              <div className="header">
-                Discover
-                <div className="subheader">
-                  there&apos;s a whole world out there
-                </div>
-              </div>
               <div className="flex flex-wrap">
                 <YIMNewReleases
                   newReleases={yearInMusicData.new_releases_of_top_artists}
