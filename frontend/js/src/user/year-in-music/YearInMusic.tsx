@@ -78,50 +78,31 @@ const availableYears = {
     color: "red",
     textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: {
-      "0%": "#158D70",
-      "58%": "#4E3360",
-      "100%": "#8C4D89",
-    },
+    backGroundColors: ["#166e30ff", "#3d0a79ff"],
   },
   2022: {
     color: "yellow",
     textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: {
-      "0%": "#158D70",
-      "58%": "#4E3360",
-      "100%": "#8C4D89",
-    },
+    backGroundColors: ["#3d0a79ff", "#158D70"],
   },
   2023: {
     color: "green",
     textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: {
-      "0%": "#158D70",
-      "58%": "#4E3360",
-      "100%": "#8C4D89",
-    },
+    backGroundColors: ["#158D70", "#8C4D89"],
   },
   2024: {
     color: "#158D70",
     textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: {
-      "0%": "#158D70",
-      "58%": "#4E3360",
-      "100%": "#2f6368",
-    },
+    backGroundColors: ["#8C4D89", "#2f6368"],
   },
   2025: {
     color: "#4E3360",
     textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: {
-      "0%": "#2f6368",
-      "100%": "#463f62",
-    },
+    backGroundColors: ["#2f6368", "#463f62"],
   },
 };
 export default function YearInMusic() {
@@ -297,16 +278,15 @@ export default function YearInMusic() {
     }
   };
 
-  const backgroundColor = "#EDF3E4";
-  const backgroundGradient = `linear-gradient(to right, ${Object.entries(
-    availableYears[year].backGroundColors
-  )
-    .map(([percent, color]) => `${color} ${percent}`)
-    .join(", ")} )`;
-  const svgNoise =
-    "data:image/svg+xml,%3Csvg viewBox='0 0 398 398' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.77' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E";
-  const { accentColor, textColor } = availableYears[year];
+  const {
+    accentColor,
+    textColor,
+    backGroundColors: gradientColors,
+  } = availableYears[year];
   const cardBackgroundColor = textColor;
+  const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(
+    ", "
+  )}`;
 
   let missingSomeData = missingPlaylistData;
   const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
@@ -409,12 +389,11 @@ export default function YearInMusic() {
       id="year-in-music"
       className={`yim-${year}`}
       style={{
-        ["--backgroundColor" as any]: backgroundColor,
         ["--cardBackgroundColor" as any]: cardBackgroundColor,
         ["--accentColor" as any]: accentColor,
         ["--headerColor" as any]: textColor,
-        background: `${backgroundGradient}, url(${svgNoise})`,
-        backgroundBlendMode: "multiply",
+        ["--gradientColor1" as any]: gradientColors[0],
+        ["--gradientColor2" as any]: gradientColors[1],
       }}
     >
       <div role="main">
@@ -427,6 +406,13 @@ export default function YearInMusic() {
               src="/static/img/year-in-music/header.png"
               alt="Year in Music"
               className="w-100"
+              style={{ opacity: 0.2 }}
+            />
+            <img
+              src="/static/img/year-in-music/header.png"
+              alt="Year in Music"
+              className="w-100"
+              style={{ mixBlendMode: "overlay" }}
             />
           </div>
           <div className="year-selection">

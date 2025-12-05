@@ -30,7 +30,7 @@ export default function YIMStats({ yearInMusicData, userName }: YIMStatsProps) {
   }
 
   return (
-    <div className="small-stats card-bg">
+    <div className="small-stats card-bg py-5">
       {yearInMusicData.total_listen_count && (
         <div className="small-stat text-center">
           <div className="value">{yearInMusicData.total_listen_count}</div>
