@@ -116,10 +116,8 @@ $coverflow-image-height: 400px;
   #top-albums .swiper {
     width: 100%;
     perspective: 900px;
-    background-color: whitesmoke;
 
     .swiper-wrapper {
-      padding: 1em 0;
       align-items: center;
     }
     .swiper-slide {
@@ -518,13 +516,17 @@ $coverflow-image-height: 400px;
   --accentColor: $blue;
   --headerColor: var(--cardBackgroundColor);
   --selectedColor: var(--accentColor);
-  --swiper-navigation-color: var(--accentColor);
+  --swiper-navigation-color: var(--cardBackgroundColor);
   --buttonCollor: var(--accentColor);
 
   color: var(--accentColor);
   .card-bg {
     background: var(--cardBackgroundColor);
     border-radius: 8px;
+  }
+  .swiper-button-prev,
+  .swiper-button-next {
+    filter: drop-shadow(0px 0px 5px var(--accentColor));
   }
   .content-card {
     // margin-right: 15px;

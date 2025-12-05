@@ -3,6 +3,7 @@ import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css/bundle";
 import React from "react";
+import { isNil } from "lodash";
 import {
   generateAlbumArtThumbnailLink,
   getStatsArtistLink,
@@ -31,6 +32,9 @@ function AlbumsCoverflow(props: {
           depth: 100,
           slideShadows: false,
         }}
+        onClick={(swiper) => {
+          if (!isNil(swiper.clickedIndex)) swiper.slideTo(swiper.clickedIndex);
+        }}
         breakpoints={{
           700: {
             initialSlide: 2,
@@ -55,16 +59,15 @@ function AlbumsCoverflow(props: {
           );
           return (
             <SwiperSlide
-              lazy
               key={`coverflow-${release_group.release_group_name}`}
+              // lazy
             >
+              {/* <div className="swiper-lazy-preloader" /> */}
               <img
-                data-src={coverArt ?? "/static/img/cover-art-placeholder.jpg"}
+                src={coverArt ?? "/static/img/cover-art-placeholder.jpg"}
                 alt={release_group.release_group_name}
-                className="swiper-lazy"
                 loading="lazy"
               />
-              <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
               <div title={release_group.release_group_name}>
                 {getEntityLink(
                   "release-group",
