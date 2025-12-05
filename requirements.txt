@@ -14,7 +14,7 @@ redis==6.0.0
 yattag==1.16.1
 xmltodict==0.14.2
 brainzutils@git+https://github.com/metabrainz/brainzutils-python.git@v3.0.0
-spotipy==2.25.1
+spotipy==2.25.2
 datasethoster@git+https://github.com/metabrainz/data-set-hoster.git@830ecb2b2120acbd5deed2dab4587784c7be04b6
 troi==2025.8.6.3
 eventlet==0.40.3
