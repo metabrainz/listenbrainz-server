@@ -63,6 +63,8 @@ def lb_radio():
            prompt: string, the prompt for playlist generation.
     """
 
+    return jsonify({})
+
     mode = request.args.get("mode", "")
     if mode != "" and mode not in ("easy", "medium", "hard"):
         return jsonify({"error": "mode parameter is required and must be one of 'easy', 'medium' or 'hard'."}), 400
