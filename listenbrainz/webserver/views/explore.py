@@ -61,13 +61,12 @@ def lb_radio():
         Possible page arguments:
            mode: string, must be easy, medium or hard.
            prompt: string, the prompt for playlist generation.
+           
+        Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
     """
 
-    # Return no data to get things stable again.
-    return jsonify({})
-
     # Ensure that the user is passing an auth header
-#    _ = validate_auth_header()
+    _ = validate_auth_header()
 
     mode = request.args.get("mode", "")
     if mode != "" and mode not in ("easy", "medium", "hard"):
