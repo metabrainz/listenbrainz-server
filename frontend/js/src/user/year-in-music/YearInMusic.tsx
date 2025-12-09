@@ -285,8 +285,6 @@ export default function YearInMusic() {
     backGroundColors: gradientColors,
   } = availableYears[year];
   const cardBackgroundColor = textColor;
-  const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(
-    ", "
   )}`;
 
   let missingSomeData = missingPlaylistData;

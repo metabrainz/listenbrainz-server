@@ -1,15 +1,6 @@
 @use "sass:map";
 @use 'sass:color';
 
-/* latin */
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url("../../fonts/Inter.woff2") format("woff2");
-}
-
 @property --gradientColor1 {
   syntax: "<color>";
   initial-value: magenta;

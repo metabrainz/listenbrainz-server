@@ -89,19 +89,14 @@ export function YIMYearMetaTags({
       />
       <meta property="og:image:type" content="image/png" />
       <style type="text/css">
-        {`body>*:not(nav) {
-            margin:0;
-            padding:0;
-            background-color: ${backgroundColor};
-          }
-          section.footer{
-            display: none;
-          }`}
-      </style>
-      <style type="text/css">
         {`
-        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;900");
-      `}
+        @font-face {
+          font-family: "Inter";
+          src: url("/static/fonts/Inter-variable.ttf");
+        }
+        section.footer{
+          display: none;
+        }`}
       </style>
     </Helmet>
   );
