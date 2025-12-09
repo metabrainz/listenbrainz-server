@@ -4,6 +4,7 @@ from sqlalchemy import text
 
 from listenbrainz.db.similar_users import get_top_similar_users
 from listenbrainz.webserver import db_conn, ts_conn
+from listenbrainz.webserver.views.api_tools import validate_auth_header
 
 explore_bp = Blueprint('explore', __name__)
 
