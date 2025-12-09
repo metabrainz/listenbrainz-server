@@ -1,0 +1,90 @@
+
+{%- from 'art/svg-templates/macros.j2' import render_entity_link -%}
+
+<svg
+    width="924"
+    height="924"
+    viewBox="0 0 924 924"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    role="img"
+    preserveAspectRatio="xMinYMin meet">
+    <title>Top 10 artists of {{ year }} for {{ user_name }}&#xA;</title>
+    <desc>
+        {% for artist in artists[:10]] %}
+        {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{
+        artist.artist_name }}&#xA;
+        {%- endfor -%}
+    </desc>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
+        text {
+        fill: #F0EEE2;
+        font-family: Inter, sans-serif;
+        font-weight: 900;
+        }
+        .branding {
+        font-size: 20px;
+        letter-spacing: 0em;
+        ont-weight: 900;
+        }
+        .track-name, .track-name * {
+        font-size: 20px;
+        }
+        .artist-name, .artist-name * {
+        font-size: 20px;
+        font-weight: 300;
+        }
+    </style>
+    <defs id="defs42">
+        <linearGradient id="gradient" x1="-20%" y1="-20%" x2="100%" y2="100%"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#083b2b" />
+            <stop offset="1" stop-color="#111820" />
+        </linearGradient>
+        <clipPath id="clip">
+            <use xlink:href="#background" />
+        </clipPath>
+    </defs>
+    <g clip-path="url(#clip)" letter-spacing="0em" font-weight="900" font-family="Inter, sans-serif"
+        fill="#006D39">
+
+        <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
+            x="0" />
+        <g id="g1264">
+            <rect width="770" height="770" x="77" y="77" class="accent-color-stroke" fill="none" />
+            <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
+            <text class="branding" x="26" y="43" id="text1248">{{user_name|upper|e}}</text>
+            <text class="branding" x="26" y="897" id="text1250">10 TOP ARTISTS OF {{year}}</text>
+            <text class="branding" x="844" y="43" id="text1252">#YEARINMUSIC</text>
+        </g> {%
+        set y_start = 100 %} {% set y_lines_start = 87 %} {% set gap = 80 %} <g font-size="35px"> {%
+        for artist in artists[:10] %} <text
+                id="artist-{{ loop.index }}">
+                <tspan x="-7" y="{{ y_start + loop.index0 * gap }}"
+                    id="artist-{{ loop.index }}-number">
+                    {% if loop.index == 10 %}
+                    X
+                    {% else %}
+                    {{ loop.index }}
+                    {% endif %}
+                </tspan>
+                <tspan x="40" y="{{ y_start + loop.index0 * gap }}"
+                    id="artist-{{ loop.index }}-album">
+                    {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name) }}
+                </tspan>
+            </text>
+        {% endfor %} </g>
+        <g id="lines" class="accent-color-stroke"> {% for _ in artists[:10] %} <line
+                x1="0"
+                y1="{{ y_lines_start + loop.index0 * gap }}"
+                x2="925"
+                y2="{{ y_lines_start + loop.index0 * gap }}"
+                id="line-{{ loop.index }}" /> {% endfor %} </g>
+    </g>
+</svg>
