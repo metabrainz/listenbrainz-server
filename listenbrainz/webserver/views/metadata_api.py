@@ -266,6 +266,10 @@ def get_mbid_mapping():
     :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
     :statuscode 400: invalid arguments
     """
+
+    # Block external metadata lookups
+    raise APIInternalServerError("temporarily unavailable")
+
     artist_name = request.args.get("artist_name")
     recording_name = request.args.get("recording_name")
     release_name = request.args.get("release_name")

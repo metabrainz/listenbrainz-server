@@ -63,7 +63,11 @@ def lb_radio():
            prompt: string, the prompt for playlist generation.
     """
 
+    # Return no data to get things stable again.
     return jsonify({})
+
+    # Ensure that the user is passing an auth header
+#    _ = validate_auth_header()
 
     mode = request.args.get("mode", "")
     if mode != "" and mode not in ("easy", "medium", "hard"):
