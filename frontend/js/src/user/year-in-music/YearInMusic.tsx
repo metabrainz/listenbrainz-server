@@ -109,16 +109,16 @@ export default function YearInMusic() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams();
-  const { yearString = getYear(Date.now()) } = params;
+  const { year: yearParam = getYear(Date.now()), userName } = params;
   const [year, setYear] = React.useState<keyof typeof availableYears>(
-    Number(yearString) as keyof typeof availableYears
+    Number(yearParam) as keyof typeof availableYears
   );
   const selectedRef = React.useRef<HTMLAnchorElement>(null);
 
   const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
   );
-  const fallbackUser = { name: "" };
+  const fallbackUser = { name: userName ?? "" };
   const {
     user = fallbackUser,
     data: yearInMusicData,
