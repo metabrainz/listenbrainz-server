@@ -9,10 +9,10 @@ type SEOProps = {
 
 export function YIMYearMetaTags({
   year,
-  backgroundColor,
-}: {
+}: // background,
+{
   year: number;
-  backgroundColor?: string;
+  // background?: string;
 }) {
   if (year === 2021) {
     return (

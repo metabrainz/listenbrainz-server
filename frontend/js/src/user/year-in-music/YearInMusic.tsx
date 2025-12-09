@@ -285,7 +285,9 @@ export default function YearInMusic() {
     backGroundColors: gradientColors,
   } = availableYears[year];
   const cardBackgroundColor = textColor;
-  )}`;
+  // const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(
+  //   ", "
+  // )})`;
 
   let missingSomeData = missingPlaylistData;
   const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
@@ -422,9 +424,9 @@ export default function YearInMusic() {
         ["--gradientColor2" as any]: gradientColors[1],
       }}
     >
-      <div role="main">
+      <div>
         <SEO year={year} userName={user?.name} />
-        <YIMYearMetaTags year={year} backgroundColor={backgroundGradient} />
+        <YIMYearMetaTags year={year} />
         <div id="main-header">
           <div className="user-name">{user.name}&apos;s</div>
           <div className="header-image">
@@ -455,9 +457,8 @@ export default function YearInMusic() {
               </p>
             </div>
           )}
-          <div className="arrow-down" />
         </div>
-        <div className="year-selection">
+        <div className="year-selection mb-5">
           {Object.keys(availableYears).map((availableYear) => {
             const yearAsNum = Number(
               availableYear
@@ -488,190 +489,224 @@ export default function YearInMusic() {
             );
           })}
         </div>
-        {userShareBar}
-        {hasSomeData && (
-          <>
-            {missingSomeData && (
-              <div className="alert alert-warning">
-                Heads up: We were unable to compute all of the parts of Your
-                Year in Music due to not enough listens or an issue in our
-                database, but we&apos;re showing you everything that we were
-                able to make. Your page might look a bit different than others.
-              </div>
-            )}
-            <div className="section">
-              <div className="content-card" id="overview">
-                <h3 className="flex-center">Overview</h3>
-                <div className="d-flex justify-content-center">
-                  <object
-                    className="card"
-                    data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
-                  >
-                    Overview
-                  </object>
+        <div role="main">
+          {userShareBar}
+          {hasSomeData && (
+            <>
+              {missingSomeData && (
+                <div className="alert alert-warning">
+                  Heads up: We were unable to compute all of the parts of Your
+                  Year in Music due to not enough listens or an issue in our
+                  database, but we&apos;re showing you everything that we were
+                  able to make. Your page might look a bit different than
+                  others.
                 </div>
-                <div className="yim-share-button-container">
-                  <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
-                    shareUrl={linkToThisPage}
-                    shareText={`Check out my ListenBrainz stats for ${year}`}
-                    shareTitle="My year in music"
-                    fileName={`${user.name}-overview-${year}`}
-                  />
+              )}
+              <div className="section">
+                <div className="content-card" id="overview">
+                  <h3 className="flex-center">Overview</h3>
+                  <div className="d-flex justify-content-center">
+                    <object
+                      className="card"
+                      data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                    >
+                      Overview
+                    </object>
+                  </div>
+                  <div className="yim-share-button-container">
+                    <ImageShareButtons
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                      shareUrl={linkToThisPage}
+                      shareText={`Check out my ListenBrainz stats for ${year}`}
+                      shareTitle="My year in music"
+                      fileName={`${user.name}-overview-${year}`}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <YIMTopAlbums
-              topReleaseGroups={yearInMusicData.top_release_groups}
-              userName={user.name}
-              year={year}
-            />
+              <YIMTopAlbums
+                topReleaseGroups={yearInMusicData.top_release_groups}
+                userName={user.name}
+                year={year}
+              />
 
-            <YIMCharts
-              yearInMusicData={yearInMusicData}
-              userName={user.name}
-              year={year}
-            />
+              <YIMCharts
+                yearInMusicData={yearInMusicData}
+                userName={user.name}
+                year={year}
+              />
 
-            <div className="section" id="stats">
-              <div className="content-card">
-                <h3 className="flex-center">{year} statistics</h3>
-                <YIMStats
-                  yearInMusicData={yearInMusicData}
-                  userName={user.name}
-                />
-                <YIMListeningActivity
-                  listensPerDay={yearInMusicData.listens_per_day}
-                  userName={user.name}
-                  year={year}
-                />
-                <YIMMostListenedYear
-                  mostListenedYearData={yearInMusicData.most_listened_year}
-                  userName={user.name}
-                />
-                <YIMArtistMap
-                  artistMapData={yearInMusicData.artist_map}
-                  yourOrUsersName={yourOrUsersName}
-                />
-                {genreGraphData && (
-                  <YIMGenreGraph
-                    genreGraphData={genreGraphData}
+              <div className="section" id="stats">
+                <div className="content-card">
+                  <h3 className="flex-center">Your statistics for {year}</h3>
+                  <YIMStats
+                    yearInMusicData={yearInMusicData}
                     userName={user.name}
                   />
-                )}
-                <div className="yim-share-button-container">
-                  <ImageShareButtons
-                    svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats`}
-                    shareUrl={`${linkToThisPage}#stats`}
-                    shareTitle={`My music listening in ${year}`}
-                    fileName={`${user.name}-stats-${year}`}
+                  <YIMListeningActivity
+                    listensPerDay={yearInMusicData.listens_per_day}
+                    userName={user.name}
+                    year={year}
+                  />
+                  <YIMMostListenedYear
+                    mostListenedYearData={yearInMusicData.most_listened_year}
+                    userName={user.name}
+                  />
+                  <YIMArtistMap
+                    artistMapData={yearInMusicData.artist_map}
+                    yourOrUsersName={yourOrUsersName}
+                  />
+                  {genreGraphData && (
+                    <YIMGenreGraph
+                      genreGraphData={genreGraphData}
+                      userName={user.name}
+                    />
+                  )}
+                  <div className="yim-share-button-container">
+                    <ImageShareButtons
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats`}
+                      shareUrl={`${linkToThisPage}#stats`}
+                      shareTitle={`My music listening in ${year}`}
+                      fileName={`${user.name}-stats-${year}`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <YIMPlaylists
+                yearInMusicData={yearInMusicData}
+                year={year}
+                userName={user.name}
+              />
+              <div className="section">
+                <div className="flex flex-wrap">
+                  <YIMNewReleases
+                    newReleases={yearInMusicData.new_releases_of_top_artists}
+                    userName={user.name}
+                    year={year}
+                  />
+                  <YIMSimilarUsers
+                    similarUsers={yearInMusicData.similar_users}
+                    updateFollowingList={updateFollowingList}
+                    loggedInUserFollowsUser={loggedInUserFollowsUser}
+                    userName={user.name}
+                    year={year}
                   />
                 </div>
               </div>
-            </div>
+            </>
+          )}
 
-            <YIMPlaylists
-              yearInMusicData={yearInMusicData}
-              year={year}
-              userName={user.name}
-            />
-            <div className="section">
-              <div className="flex flex-wrap">
-                <YIMNewReleases
-                  newReleases={yearInMusicData.new_releases_of_top_artists}
-                  userName={user.name}
-                  year={year}
+          <YIMFriends
+            followingList={followingList}
+            userName={user.name}
+            year={year}
+          />
+
+          {/* ADD Community Year in Music tools ♡HERE */}
+
+          <div className="section">
+            {userShareBar}
+            <div className="closing-remarks">
+              <div
+                className="overlay-image-container mb-5"
+                style={{ width: "50px", height: "50px" }}
+              >
+                <img
+                  src="/static/img/year-in-music/heart.png"
+                  alt="With love,"
                 />
-                <YIMSimilarUsers
-                  similarUsers={yearInMusicData.similar_users}
-                  updateFollowingList={updateFollowingList}
-                  loggedInUserFollowsUser={loggedInUserFollowsUser}
-                  userName={user.name}
-                  year={year}
+                <img
+                  src="/static/img/year-in-music/heart.png"
+                  alt="With love,"
+                />
+              </div>
+              <div
+                className="overlay-image-container mb-5"
+                style={{ width: "450px", height: "80px" }}
+              >
+                <img
+                  src="/static/img/year-in-music/listenbrainz-footer.png"
+                  alt="The ListenBrainz team"
+                />
+                <img
+                  src="/static/img/year-in-music/listenbrainz-footer.png"
+                  alt="The ListenBrainz team"
+                />
+              </div>
+              <p className="mb-5">
+                <div className="mb-4 bold">
+                  Wishing you a very cozy {year + 1}, from the ListenBrainz
+                  team.
+                </div>
+                If you have questions or feedback don&apos;t hesitate to contact
+                us
+                <br />
+                on&nbsp;
+                <a
+                  target="_blank"
+                  href="https://community.metabrainz.org/c/listenbrainz/18"
+                  rel="noopener noreferrer"
+                >
+                  our forums
+                </a>
+                ,&nbsp;
+                <a
+                  target="_blank"
+                  href="mailto:listenbrainz@metabrainz.org"
+                  rel="noopener noreferrer"
+                >
+                  by email
+                </a>
+                ,&nbsp;
+                <a
+                  target="_blank"
+                  href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
+                  rel="noopener noreferrer"
+                >
+                  Matrix
+                </a>
+                ,&nbsp;
+                <a
+                  target="_blank"
+                  href="https://discord.gg/R4hBw972QA"
+                  rel="noopener noreferrer"
+                >
+                  Discord
+                </a>
+                ,&nbsp;
+                <a
+                  target="_blank"
+                  href="https://bsky.app/profile/listenbrainz.org"
+                  rel="noopener noreferrer"
+                >
+                  Bluesky
+                </a>
+                &nbsp;or&nbsp;
+                <a
+                  target="_blank"
+                  href="https://mastodon.social/@ListenBrainz"
+                  rel="noopener noreferrer"
+                >
+                  Mastodon
+                </a>
+                .
+              </p>
+              <div
+                className="overlay-image-container mt-5 mb-5"
+                style={{ width: "250px", height: "85px" }}
+              >
+                <img
+                  src="/static/img/year-in-music/OSS-footer.png"
+                  alt="Open source and ethical forever"
+                />
+                <img
+                  src="/static/img/year-in-music/OSS-footer.png"
+                  alt="Open source and ethical forever"
                 />
               </div>
             </div>
-          </>
-        )}
-
-        <YIMFriends
-          followingList={followingList}
-          userName={user.name}
-          year={year}
-        />
-
-        {/* ADD Community Year in Music tools ♡HERE */}
-
-        <div className="section">
-          {userShareBar}
-          <div className="closing-remarks align-items-center flex flex-column gap-5">
-            <img src="/static/img/year-in-music/heart.png" alt="With love," />
-            <img
-              src="/static/img/year-in-music/listenbrainz-footer.png"
-              alt="The ListenBrainz team"
-            />
-            <p className="bold">
-              Wishing you a very cozy {year + 1}, from the ListenBrainz team.
-            </p>
-            <p>
-              If you have questions or feedback don&apos;t hesitate to contact
-              us
-              <br />
-              on&nbsp;
-              <a
-                target="_blank"
-                href="https://community.metabrainz.org/c/listenbrainz/18"
-                rel="noopener noreferrer"
-              >
-                our forums
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="mailto:listenbrainz@metabrainz.org"
-                rel="noopener noreferrer"
-              >
-                by email
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
-                rel="noopener noreferrer"
-              >
-                Matrix
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="https://discord.gg/R4hBw972QA"
-                rel="noopener noreferrer"
-              >
-                Discord
-              </a>
-              ,&nbsp;
-              <a
-                target="_blank"
-                href="https://bsky.app/profile/listenbrainz.org"
-                rel="noopener noreferrer"
-              >
-                Bluesky
-              </a>
-              &nbsp;or&nbsp;
-              <a
-                target="_blank"
-                href="https://mastodon.social/@ListenBrainz"
-                rel="noopener noreferrer"
-              >
-                Mastodon
-              </a>
-              .
-            </p>
-            <img
-              src="/static/img/year-in-music/OSS-footer.png"
-              alt="Open source and ethical forever"
-            />
           </div>
         </div>
         {/* Trick to load the font files for use with the SVG render CHECK IF THIS IS STILL REQUIRED */}

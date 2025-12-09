@@ -18,8 +18,10 @@ $coverflow-image-height: 400px;
 #year-in-music {
   // For coverflow arrow colors
   --swiper-theme-color: #{$blue};
-  margin-left: -1em;
-  margin-right: -1em;
+  margin-left: -15px;
+  margin-right: -15px;
+  margin-top: -25px;
+  margin-bottom: -25px;
   background: linear-gradient(
       to right,
       var(--gradientColor1),
@@ -35,10 +37,6 @@ $coverflow-image-height: 400px;
   > .row > * {
     margin-top: 2.5em;
     margin-bottom: 2.5em;
-  }
-  .flex > .content-card {
-    min-width: 355px;
-    height: auto;
   }
 
   .listen-card {
@@ -228,8 +226,7 @@ $coverflow-image-height: 400px;
   }
   .yim-share-button-container {
     text-align: center;
-    padding-top: 2em;
-    padding-bottom: 2em;
+    margin-top: 1em;
   }
   .yim-share-button {
     border: none;
@@ -237,7 +234,7 @@ $coverflow-image-height: 400px;
     height: 2.2em;
   }
   .flex > .content-card {
-    min-width: 300px;
+    min-width: 330px;
     height: auto;
   }
   .cover-art-mosaic {
@@ -269,12 +266,13 @@ $coverflow-image-height: 400px;
     }
   }
   .closing-remarks {
-    padding: 3em 2em;
+    padding: 3em 2em 10em;
     font-size: 1.3em;
     color: var(--headerColor);
     font-family: "Roboto", sans-serif;
     font-weight: 200;
     text-align: center;
+    margin-bottom: 0;
     .bold {
       font-weight: 400;
     }
@@ -315,6 +313,23 @@ $coverflow-image-height: 400px;
         position: absolute;
         top: 0;
         left: 0;
+      }
+    }
+  }
+  .overlay-image-container {
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    > img {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      left: 0;
+      &:first-child {
+        opacity: 0.2;
+      }
+      &:last-child {
+        mix-blend-mode: overlay;
       }
     }
   }
@@ -428,10 +443,9 @@ $coverflow-image-height: 400px;
       }
     }
   }
-  .swiper,
-  .similar-users-list,
-  .graph-container {
-    background-color: var(--cardBackgroundColor);
+  .similar-users-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
   .masked-image {
     display: inline-block;
@@ -519,18 +533,18 @@ $coverflow-image-height: 400px;
     filter: drop-shadow(0px 0px 5px var(--accentColor));
   }
   .content-card {
-    // margin-right: 15px;
-    // margin-left: 15px;
-    margin-inline: 4em;
-    border: 1px solid var(--headerColor); // fallback
-    border: 1px solid color-mix(in srgb, var(--headerColor) 50%, transparent);
+    margin-right: 4em;
+    margin-left: 4em;
+    // border: 1px solid var(--headerColor); // fallback
+    // border: 1px solid color-mix(in srgb, var(--headerColor) 50%, transparent);
+    // background: transparent;
+    background: color.change(black, $alpha: 15%);
     border-radius: 8px;
     > * {
       padding: 0.6em;
       margin-inline: -4em;
     }
     position: relative;
-    background: transparent;
     box-shadow: none;
     color: var(--accentColor);
     z-index: 0;
@@ -625,7 +639,7 @@ $coverflow-image-height: 400px;
           // remove letter-spacing from last letter to center text
           direction: rtl;
           text-indent: -10px;
-          font-weight: bold;
+          font-weight: 900;
         }
       }
       &:last-child .year-separator .year-connector:last-child,
@@ -638,7 +652,7 @@ $coverflow-image-height: 400px;
       margin-top: 1em;
       margin-bottom: 0;
       letter-spacing: 0px;
-      font-weight: normal;
+      font-weight: 500;
       transition: all 1s;
     }
     .year-image {

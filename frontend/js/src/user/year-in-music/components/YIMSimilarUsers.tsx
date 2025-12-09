@@ -33,7 +33,7 @@ export default function YIMSimilarUsers({
     <div
       className="content-card"
       id="similar-users"
-      style={{ marginBottom: "2.5em" }}
+      style={{ paddingBottom: "4.5em" }}
     >
       <div className="heading">
         <h3>

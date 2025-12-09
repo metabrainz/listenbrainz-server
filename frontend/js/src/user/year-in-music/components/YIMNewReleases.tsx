@@ -37,7 +37,7 @@ export default function YIMNewReleases({
     <div
       className="content-card"
       id="new-releases"
-      style={{ marginBottom: "2.5em" }}
+      style={{ paddingBottom: "4.5em" }}
     >
       <div className="heading">
         <h3>
