@@ -252,6 +252,7 @@ def get_mbid_mapping():
     .. literalinclude:: ../../../listenbrainz/testdata/mb_lookup_metadata_example.json
        :language: json
 
+    :reqheader Authorization: Token <user token>
     :param artist_name: artist name of the listen
     :type artist_name: ``str``
     :param recording_name: track name of the listen
@@ -265,10 +266,12 @@ def get_mbid_mapping():
     :type inc: ``str``
     :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
     :statuscode 400: invalid arguments
+    
+    Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
     """
 
-    # Block external metadata lookups
-    raise APIInternalServerError("temporarily unavailable")
+    # Require a valid auth header for this endpoint
+    _ = validate_auth_header()
 
     artist_name = request.args.get("artist_name")
     recording_name = request.args.get("recording_name")
@@ -405,9 +408,16 @@ def get_mbid_mapping_post():
     To see what data this endpoint returns, please look at the data above for the GET version. Note that this endpoint
     does not support metadata and incs parameters.
 
+    :reqheader Authorization: Token <user token>
     :statuscode 200: lookup succeeded, does not indicate whether a match was found or not
     :statuscode 400: invalid arguments
+
+    Note: Because of possible abuse by AI scrapers, this endpoint now requires an auth token.
     """
+
+    # Require a valid auth header for this endpoint
+    _ = validate_auth_header()
+
     data = request.json
     recordings = data.get("recordings", [])
     if not recordings:
