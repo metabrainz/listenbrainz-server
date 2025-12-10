@@ -188,7 +188,8 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             title="Please log in"
             message={
               <>
-                You must be <Link to="/login">logged in</Link> to use LB Radio.
+                You must be <Link to="/login">logged in</Link> to use LB Radio.<br/>
+                AI scrapers are causing undue traffic on our sites and not playing by the rules, booo!
               </>
             }
           />,
