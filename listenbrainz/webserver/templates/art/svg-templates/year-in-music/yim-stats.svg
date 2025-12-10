@@ -8,46 +8,70 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
         text {
-            fill: {{ accent_color }};
-            font-family: 'Inter', sans-serif;
-            font-weight: 900;
+        fill: {{ accent_color }};
+        font-family: 'Inter', sans-serif;
+        font-weight: 900;
         }
         .branding {
-            font-size: 20px;
-            letter-spacing: 0em;
-            text-transform: uppercase;
+        font-size: 20px;
+        letter-spacing: 0em;
+        text-transform: uppercase;
         }
         .subtitle {
-            text-anchor: middle;
-            font-size: 32px;
+        text-anchor: middle;
+        font-size: 32px;
         }
         .common-description {
-          font-weight: 300;
-          font-size: 28px;
-          letter-spacing: 0em;
-          text-anchor: middle;
+        font-weight: 300;
+        font-size: 28px;
+        letter-spacing: 0em;
+        text-anchor: middle;
         }
         .user-stat {
-          font-weight: 900;
+        font-weight: 900;
         }
         .background {
-            fill: {{ background_color }};
+        fill: {{ background_color }};
+        }
+        .accent-color-stroke {
+        stroke: {{ accent_color }};
+        }
+        stop:first-child {
+        stop-color: {{background_color_1}};
+        }
+        .bg-color-1 {
+        fill: {{background_color_1}};
+        }
+        stop:nth-child(2) {
+        stop-color: {{background_color_2}};
+        }
+        .bg-color-2 {
+        fill: {{background_color_2}};
         }
     </style>
+    <defs id="defs42">
+        <linearGradient id="gradient" x1="-20%" y1="-20%" x2="100%" y2="100%"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#083b2b" />
+            <stop offset="1" stop-color="#111820" />
+        </linearGradient>
+        <clipPath id="clip">
+            <use xlink:href="#background" />
+        </clipPath>
+    </defs>
     <g>
-        <rect class="background" width="924" height="924" fill="{{ background_color }}"/>
-        <image
-            href="{{ image_folder }}/playlists/yim24-playlist-04.png" width="250" height="250" x="620" y="0" style="pointer-events: none;" id="top">
-        </image>
-        <image
-            href="{{ image_folder }}/playlists/yim24-playlist-03.png" width="350" height="350" x="160" y="600" style="pointer-events: none;" id="stumpy">
-        </image>
+        <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
+            x="0" />
         <g>
-            <text class="branding" x="750" y="897">LISTENBRAINZ</text>
-            <text class="branding" x="26" y="43">{{user_name}}</text>
-            <text class="branding" font-style="italic" x="26" y="897">#YEARINMUSIC</text>
-            <text class="branding" x="844" y="43">2024</text>
-            <text x="50%" y="90" id="my-year" class="subtitle">
+            <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
+            <text class="branding" x="30" y="897" id="text1250">MY STATS FOR {{year}}</text>
+            <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
+            <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
+        </g>
+        <rect id="content-bg" width="750" height="750" x="85" y="80" fill="#00000040"
+            class="accent-color-stroke" rx="8" ry="8" />
+        <g>
+            <text x="50%" y="200" id="my-year" class="subtitle">
                 <tspan>M</tspan>
                 <tspan dx="12">Y</tspan>
                 <tspan dx="30">Y</tspan>
@@ -55,7 +79,7 @@
                 <tspan dx="12">A</tspan>
                 <tspan dx="12">R</tspan>
             </text>
-            <text x="50%" y="130" id="in-music" class="subtitle">
+            <text x="50%" y="240" id="in-music" class="subtitle">
                 <tspan>I</tspan>
                 <tspan dx="12">N</tspan>
                 <tspan dx="30">M</tspan>
@@ -65,27 +89,23 @@
                 <tspan dx="12">C</tspan>
             </text>
         </g>
-        <g style="transform: translateY(-40px);">
-            <rect x="110.5" y="276.5" width="684" height="462" fill="#FAFFFA"/>
+        <g transform="translateY(20px)">
             <text class="common-description" x="451.5" y="353" fill="{{ accent_color }}">
                 {{most_played_day_message}}
             </text>
-            <text class="common-description" x="451.5" y="440" fill="{{ accent_color }}">
-                LISTENED TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS
+            <text class="common-description" x="451.5" y="440" fill="{{ accent_color }}"> LISTENED
+                TO <tspan class="user-stat">{{total_listen_count}}</tspan> SONGS </text>
+            <text class="common-description" x="451.5" y="527" fill="{{ accent_color }}"> MAINLY
+                PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
             </text>
-            <text class="common-description" x="451.5" y="527" fill="{{ accent_color }}">
-                MAINLY PLAYED MUSIC FROM <tspan class="user-stat">{{most_listened_year}}</tspan>
-            </text>
-            <text class="common-description" x="451.5" y="611" fill="{{ accent_color }}">
-                LISTENED TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS
-            </text>
-            <text class="common-description" x="451.5" y="695" fill="{{ accent_color }}">
-                DISCOVERED <tspan class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS
-            </text>
-            <line x1="399" y1="384.5" x2="504" y2="384.5" stroke="{{ accent_color }}"/>
-            <line x1="399" y1="470.5" x2="504" y2="470.5" stroke="{{ accent_color }}"/>
-            <line x1="399" y1="556.5" x2="504" y2="556.5" stroke="{{ accent_color }}"/>
-            <line x1="399" y1="642.5" x2="504" y2="642.5" stroke="{{ accent_color }}"/>
+            <text class="common-description" x="451.5" y="611" fill="{{ accent_color }}"> LISTENED
+                TO <tspan class="user-stat">{{total_artists_count}}</tspan> ARTISTS </text>
+            <text class="common-description" x="451.5" y="695" fill="{{ accent_color }}"> DISCOVERED <tspan
+                    class="user-stat">{{total_new_artists_discovered}}</tspan> NEW ARTISTS </text>
+            <line x1="399" y1="384.5" x2="504" y2="384.5" stroke="{{ accent_color }}" />
+            <line x1="399" y1="470.5" x2="504" y2="470.5" stroke="{{ accent_color }}" />
+            <line x1="399" y1="556.5" x2="504" y2="556.5" stroke="{{ accent_color }}" />
+            <line x1="399" y1="642.5" x2="504" y2="642.5" stroke="{{ accent_color }}" />
         </g>
     </g>
 </svg>

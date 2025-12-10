@@ -13,7 +13,7 @@
     version="1.1"
     role="img"
     preserveAspectRatio="xMinYMin meet">
-    <title>Top 10 songs of {{ year }} for {{ user_name }}&#xA;</title>
+    <title>Top 9 albums of {{ year }} for {{ user_name }}&#xA;</title>
     <desc>
         {% for album in images[:9] %}
         {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{
@@ -30,7 +30,7 @@
         .branding {
         font-size: 20px;
         letter-spacing: 0em;
-        ont-weight: 900;
+        font-weight: 900;
         }
         .track-name, .track-name * {
         font-size: 20px;
@@ -38,6 +38,21 @@
         .artist-name, .artist-name * {
         font-size: 20px;
         font-weight: 300;
+        }
+        .accent-color-stroke {
+        stroke: {{ accent_color }};
+        }
+        stop:first-child {
+        stop-color: {{background_color_1}};
+        }
+        .bg-color-1 {
+        fill: {{background_color_1}};
+        }
+        stop:nth-child(2) {
+        stop-color: {{background_color_2}};
+        }
+        .bg-color-2 {
+        fill: {{background_color_2}};
         }
     </style>
     <defs id="defs42">
@@ -49,18 +64,31 @@
         <clipPath id="clip">
             <use xlink:href="#background" />
         </clipPath>
+        <clipPath id="clip-content">
+            <use xlink:href="#content-clip" />
+        </clipPath>
     </defs>
     <g clip-path="url(#clip)" letter-spacing="0em" font-weight="900" font-family="Inter, sans-serif"
         fill="#006D39">
 
         <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
             x="0" />
+        <rect id="content-bg" width="750" height="750" x="85" y="80" fill="#00000040"
+            rx="8" ry="8" />
         <g id="g1264">
-            <rect width="770" height="770" x="77" y="77" class="accent-color-stroke" fill="none" />
-            <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
-            <text class="branding" x="26" y="43" id="text1248">{{user_name|upper|e}}</text>
-            <text class="branding" x="26" y="897" id="text1250">10 TOP ALBUMS OF {{year}}</text>
-            <text class="branding" x="844" y="43" id="text1252">#YEARINMUSIC</text>
-        </g> {%
-        for image in images %} {{ render_image_link(entity, image, True) }} {% endfor %} </g>
+            <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
+            <text class="branding" x="30" y="897" id="text1250">9 TOP ALBUMS OF {{year}}</text>
+            <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
+            <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
+        </g>
+        <g id="images-clip" clip-path="url(#clip-content)">
+            <g id="images" transform="translate(85,80)">
+                {% for image in images %}
+                {{ render_image_link(entity, image, show_caption) }}
+                {% endfor %}
+            </g>
+        </g>
+        <rect id="content-clip" width="750" height="750" x="85" y="80" fill="none"
+            class="accent-color-stroke" rx="8" ry="8" />
+    </g>
 </svg>

@@ -358,30 +358,25 @@ def _cover_art_yim_stats(user_name, stats, year, styles):
 def _cover_art_yim_albums(user_name, stats, year, styles):
     """ Create the SVG using YIM top albums for the given year. """
     cac = CoverArtGenerator(
-        current_app.config["MB_DATABASE_URI"], 3, 250,
+        current_app.config["MB_DATABASE_URI"], 3, 750,
         server_root_url=current_app.config["SERVER_ROOT_URL"])
     images = []
-    selected_urls = set()
 
     if stats.get("top_release_groups") is None:
         return None
 
     for release_group in stats["top_release_groups"]:
         if "caa_id" in release_group and "caa_release_mbid" in release_group:
-            url = cac.resolve_cover_art(release_group["caa_id"], release_group["caa_release_mbid"], 250)
-            if url not in selected_urls:
-                selected_urls.add(url)
-                images.append({
-                    "url": url,
-                    "title": release_group["release_group_name"],
-                    "artist": release_group["artist_name"],
-                    "entity_mbid": release_group["release_group_mbid"]
-                })
+            images.append(release_group)
 
     if len(images) == 0:
         return None
 
     images = _repeat_images(images, size=9)
+
+    # Generate the cover art images
+    images = cac.generate_from_caa_ids(
+        images, layout=0, cover_art_size=250)
 
     return render_template(
         "art/svg-templates/year-in-music/yim-albums.svg",
@@ -416,6 +411,7 @@ def _cover_art_yim_artists(user_name, stats, year, styles):
         user_name=user_name,
         artists=stats["top_artists"],
         total_artists_count=stats["total_artists_count"],
+        year=year,
         **styles,
     )
 
@@ -475,7 +471,7 @@ def _cover_art_yim_overview(user_name, stats, year, styles):
     """ Create the SVG using top stats for the overview YIM image. """
     filtered_genres = []
     total_filtered_genre_count = 0
-    number_of_genres = 4 if year < 2024 else 6
+    number_of_genres =  6
     for genre in stats.get("top_genres", []):
         # In 2023 we filtered out the most popular genres
         if year > 2023 or genre["genre"] not in ("pop", "rock", "electronic", "hip hop"):
@@ -518,7 +514,8 @@ def _cover_art_yim_overview(user_name, stats, year, styles):
         "genres": filtered_top_genres,
         "user_name": user_name,
         "album_1": album_1,
-        "album_2": album_2
+        "album_2": album_2,
+        "year":year,
     }
 
     return render_template("art/svg-templates/year-in-music/yim-overview.svg", **props, **styles)
@@ -527,7 +524,7 @@ def _cover_art_yim_overview(user_name, stats, year, styles):
 @art_api_bp.get("/year-in-music/<int:year>/<mb_username:user_name>")
 @crossdomain
 @ratelimit()
-def cover_art_yim(user_name, year: int = 2024):
+def cover_art_yim(user_name, year: int = 2025):
     """ Create the shareable svg image using YIM stats """
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:

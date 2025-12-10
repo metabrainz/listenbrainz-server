@@ -15,6 +15,7 @@
     preserveAspectRatio="xMinYMin meet">
     <title>Top 10 songs of {{ year }} for {{ user_name }}&#xA;</title>
     <desc>
+        Top 10 songs of {{ year }} for {{ user_name }}:&#xA;
         {% for track in tracks[:10] %}
         {%- if loop.index == 10 -%}X{%- else -%}{{- loop.index -}}{%- endif -%}. {{
         track.track_name }} - {{ track.artist_name }}&#xA;
@@ -30,14 +31,29 @@
         .branding {
         font-size: 20px;
         letter-spacing: 0em;
-        ont-weight: 900;
+        font-weight: 900;
         }
         .track-name, .track-name * {
-        font-size: 20px;
+        font-size: 25px;
         }
         .artist-name, .artist-name * {
         font-size: 20px;
         font-weight: 300;
+        }
+        .accent-color-stroke {
+        stroke: {{ accent_color }};
+        }
+        stop:first-child {
+        stop-color: {{background_color_1}};
+        }
+        .bg-color-1 {
+        fill: {{background_color_1}};
+        }
+        stop:nth-child(2) {
+        stop-color: {{background_color_2}};
+        }
+        .bg-color-2 {
+        fill: {{background_color_2}};
         }
     </style>
     <defs id="defs42">
@@ -56,27 +72,28 @@
         <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
             x="0" />
         <g id="g1264">
-            <rect width="770" height="770" x="77" y="77" class="accent-color-stroke" fill="none" />
-            <text class="branding" x="750" y="897" id="text1246">LISTENBRAINZ</text>
-            <text class="branding" x="26" y="43" id="text1248">{{user_name|upper|e}}</text>
-            <text class="branding" x="26" y="897" id="text1250">10 TOP SONGS OF {{year}}</text>
-            <text class="branding" x="844" y="43" id="text1252">#YEARINMUSIC</text>
+            <rect width="770" height="770" x="77" y="77" fill="#00000040"
+                class="accent-color-stroke" rx="8" ry="8" />
+            <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
+            <text class="branding" x="30" y="897" id="text1250">10 TOP SONGS OF {{year}}</text>
+            <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
+            <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
         </g>
-        <g font-size="23px"> {% set y_start = 230 %} {% set gap = 50 %} {% for track in tracks[:10]
-            %} <text id="track-{{ loop.index }}" class="accent-color">
-                <tspan x="130" y="{{ y_start + loop.index0 * gap }}"
-                    id="track-{{ loop.index }}-number">
+        <g> {% set y_start = 250 %} {% set gap = 50 %} {% for track in tracks[:10] %} <text
+                id="track-{{ loop.index }}" class="accent-color">
+                <tspan x="150" y="{{ y_start + loop.index0 * gap }}"
+                    id="track-{{ loop.index }}-number" class="track-name">
                     {% if loop.index == 10 %}
                     X
                     {% else %}
                     {{ loop.index }}
                     {% endif %}
                 </tspan>
-                <tspan x="175" y="{{ y_start + loop.index0 * gap }}" class="track-name"
+                <tspan x="185" y="{{ y_start + loop.index0 * gap }}" class="track-name"
                     id="track-{{ loop.index }}-name">
                     {{ render_entity_link("recording", track.recording_mbid, track.track_name) }}
                 </tspan>
-                <tspan x="175" dy="20" class="artist-name"
+                <tspan x="185" dy="20" class="artist-name"
                     id="track-{{ loop.index }}-artist">
                     {{ render_entity_link("artist", track.artist_mbids[0], track.artist_name) }}
                 </tspan>

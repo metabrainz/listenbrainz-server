@@ -195,7 +195,7 @@ def notify_yim_users(db_conn, ts_conn, year):
     with open("/static/img/legacy-year-in-music/year-in-music-24/yim24-header-all-email.png", "rb") as img:
         logo = img.read()
 
-    if year not in [2021, 2022, 2023, 2024]:
+    if year not in [2021, 2022, 2023, 2024, 2025]:
         return None
 
     table = "statistics.year_in_music_" + str(year)
