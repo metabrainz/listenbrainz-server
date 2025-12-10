@@ -35,7 +35,9 @@ export default function LBRadio() {
   const generatePlaylistCallback = React.useCallback(
     async (prompt: string, mode: Modes) => {
       if (!currentUser?.auth_token) {
-        setErrorMessage("You must be logged in to use LB Radio");
+        setErrorMessage(
+          "Please log in to use LB Radio. (AI scrapers ruin everything!)"
+        );
         return;
       }
       setErrorMessage("");
