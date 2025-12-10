@@ -11,11 +11,13 @@ type YIMChartsProps = {
   yearInMusicData: YearInMusicProps["yearInMusicData"];
   userName: string;
   year: number;
+  customStyles?: string;
 };
 export default function YIMCharts({
   yearInMusicData,
   userName,
   year,
+  customStyles,
 }: YIMChartsProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   if (!yearInMusicData) {
@@ -26,7 +28,6 @@ export default function YIMCharts({
   const encodedUsername = encodeURIComponent(userName);
   const linkToUserProfile = `https://listenbrainz.org/user/${encodedUsername}`;
   const linkToThisPage = `${linkToUserProfile}/year-in-music/${year}`;
-  //   const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
   return (
     <div className="section">
       {/* <div className="header">
@@ -82,7 +83,7 @@ export default function YIMCharts({
                 // shareText="Check out my"
                 shareTitle={`My top tracks of ${year}`}
                 fileName={`${userName}-top-tracks-${year}`}
-                // customStyles={imageShareCustomStyles}
+                customStyles={customStyles}
               />
             </div>
           </div>
@@ -138,7 +139,7 @@ export default function YIMCharts({
                 // shareText="Check out my"
                 shareTitle={`My top artists of ${year}`}
                 fileName={`${userName}-top-artists-${year}`}
-                // customStyles={imageShareCustomStyles}
+                customStyles={customStyles}
               />
             </div>
           </div>

@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { toast } from "react-toastify";
-import { isEmpty, isNil, isUndefined } from "lodash";
+import { isEmpty, isNil, isUndefined, last } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useParams } from "react-router";
@@ -17,7 +17,7 @@ import FollowButton from "../components/follow/FollowButton";
 import SEO, { YIMYearMetaTags } from "./SEO";
 import { RouteQuery } from "../../utils/Loader";
 import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
-import YIMPlaylists, { getPlaylistByName } from "./components/YIMPlaylists";
+import TopLevelPlaylist, { getPlaylistByName } from "./components/YIMPlaylists";
 import YIMMostListenedYear from "./components/YIMMostListenedYear";
 import YIMArtistMap, { YIMArtistMapData } from "./components/YIMArtistMap";
 import YIMGenreGraph, { GenreGraphDataT } from "./components/YIMGenreGraph";
@@ -30,7 +30,7 @@ import YIMListeningActivity, {
 import YIMStats from "./components/YIMStats";
 import YIMCharts from "./components/YIMCharts";
 import YIMFriends from "./components/YIMFriends";
-import YIMTopAlbums from "./components/AlbumsCoverflow";
+import AlbumsCoverflow from "./components/AlbumsCoverflow";
 import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
 
@@ -288,6 +288,27 @@ export default function YearInMusic() {
   // const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(
   //   ", "
   // )})`;
+  const svgStyles = `
+        text > tspan,
+        .accent-color {
+          fill: ${textColor};
+        }
+        .accent-color-stroke {
+          stroke: ${textColor};
+        }
+        stop:first-child {
+          stop-color: ${gradientColors[0]};
+          }
+        .bg-color-1 {
+          fill: ${gradientColors[0]};
+        }
+        stop:nth-child(2) {
+          stop-color: ${last(gradientColors)};
+        }
+        .bg-color-2 {
+          fill: ${last(gradientColors)};
+        }
+  `;
 
   let missingSomeData = missingPlaylistData;
   const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
@@ -520,21 +541,36 @@ export default function YearInMusic() {
                       shareText={`Check out my ListenBrainz stats for ${year}`}
                       shareTitle="My year in music"
                       fileName={`${user.name}-overview-${year}`}
+                      customStyles={svgStyles}
                     />
                   </div>
                 </div>
               </div>
 
-              <YIMTopAlbums
-                topReleaseGroups={yearInMusicData.top_release_groups}
-                userName={user.name}
-                year={year}
-              />
+              <div className="section">
+                <div className="content-card" id="top-releases">
+                  <h3 className="flex-center">Top albums of {year}</h3>
+                  <AlbumsCoverflow
+                    topReleaseGroups={yearInMusicData.top_release_groups}
+                  />
+                  <div className="yim-share-button-container">
+                    <ImageShareButtons
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums`}
+                      shareUrl={`${linkToThisPage}#top-albums`}
+                      shareText={`Check out my top albums for ${year}`}
+                      shareTitle={`My top albums of ${year}`}
+                      fileName={`${userName}-top-albums-${year}`}
+                      customStyles={svgStyles}
+                    />
+                  </div>
+                </div>
+              </div>
 
               <YIMCharts
                 yearInMusicData={yearInMusicData}
                 userName={user.name}
                 year={year}
+                customStyles={svgStyles}
               />
 
               <div className="section" id="stats">
@@ -569,16 +605,32 @@ export default function YearInMusic() {
                       shareUrl={`${linkToThisPage}#stats`}
                       shareTitle={`My music listening in ${year}`}
                       fileName={`${user.name}-stats-${year}`}
+                      customStyles={svgStyles}
                     />
                   </div>
                 </div>
               </div>
 
-              <YIMPlaylists
-                yearInMusicData={yearInMusicData}
-                year={year}
-                userName={user.name}
-              />
+              <div className="section">
+                <div className="flex flex-wrap" id="playlists">
+                  {topDiscoveriesPlaylist && (
+                    <TopLevelPlaylist
+                      topLevelPlaylist={topDiscoveriesPlaylist}
+                      coverArtKey="discovery-playlist"
+                      userName={user.name}
+                      customStyles={svgStyles}
+                    />
+                  )}
+                  {topMissedRecordingsPlaylist && (
+                    <TopLevelPlaylist
+                      topLevelPlaylist={topMissedRecordingsPlaylist}
+                      coverArtKey="missed-playlist"
+                      userName={user.name}
+                      customStyles={svgStyles}
+                    />
+                  )}
+                </div>
+              </div>
               <div className="section">
                 <div className="flex flex-wrap">
                   <YIMNewReleases

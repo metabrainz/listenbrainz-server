@@ -2,6 +2,7 @@
 import { Navigation, Keyboard, EffectCoverflow } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css/bundle";
+/* eslint-enable import/no-unresolved */
 import React from "react";
 import { isNil } from "lodash";
 import {
@@ -9,11 +10,8 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import GlobalAppContext from "../../../utils/GlobalAppContext";
-import ImageShareButtons from "./ImageShareButtons";
-/* eslint-enable import/no-unresolved */
 
-function AlbumsCoverflow(props: {
+export default function AlbumsCoverflow(props: {
   topReleaseGroups: UserReleaseGroupsResponse["payload"]["release_groups"];
 }) {
   const { topReleaseGroups } = props;
@@ -86,43 +84,6 @@ function AlbumsCoverflow(props: {
           );
         })}
       </Swiper>
-    </div>
-  );
-}
-
-type YIMTopAlbumsProps = {
-  topReleaseGroups: UserReleaseGroupsResponse["payload"]["release_groups"];
-  userName: string;
-  year: number;
-};
-export default function YIMTopAlbums({
-  topReleaseGroups,
-  userName,
-  year,
-}: YIMTopAlbumsProps) {
-  const { APIService } = React.useContext(GlobalAppContext);
-  const encodedUsername = encodeURIComponent(userName);
-  const linkToUserProfile = `https://listenbrainz.org/user/${encodedUsername}`;
-  const linkToThisPage = `${linkToUserProfile}/year-in-music/${year}`;
-  if (!topReleaseGroups || topReleaseGroups.length === 0) {
-    return null;
-  }
-  return (
-    <div className="section">
-      <div className="content-card" id="top-releases">
-        <h3 className="flex-center">Top albums of {year}</h3>
-        <AlbumsCoverflow topReleaseGroups={topReleaseGroups} />
-        <div className="yim-share-button-container">
-          <ImageShareButtons
-            svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums`}
-            shareUrl={`${linkToThisPage}#top-albums`}
-            // shareText="Check out my"
-            shareTitle={`My top albums of ${year}`}
-            fileName={`${userName}-top-albums-${year}`}
-            // customStyles={imageShareCustomStyles}
-          />
-        </div>
-      </div>
     </div>
   );
 }
