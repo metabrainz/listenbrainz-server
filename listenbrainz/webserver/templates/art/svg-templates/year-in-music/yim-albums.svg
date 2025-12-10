@@ -21,11 +21,11 @@
         {%- endfor -%}
     </desc>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;900');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;900');
+        @import url('https://fonts.googleapis.com/css2?family=Anonymous%20Pro:wght@400;700');
         text {
         fill: #F0EEE2;
         font-family: Inter, sans-serif;
-        font-weight: 900;
         }
         .branding {
         font-size: 20px;
@@ -53,6 +53,14 @@
         }
         .bg-color-2 {
         fill: {{background_color_2}};
+        }
+        .caption text tspan{
+        font-size: 18px;
+        font-weight: normal;
+        font-family: 'Anonymous Pro', sans-serif;
+        }
+        .caption text tspan:first-child{
+        font-weight:bold;
         }
     </style>
     <defs id="defs42">

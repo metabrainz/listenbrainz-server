@@ -560,9 +560,9 @@ export default function YearInMusic() {
                     <ImageShareButtons
                       svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums`}
                       shareUrl={`${linkToThisPage}#top-albums`}
-                      shareText={`Check out my top albums for ${year}`}
+                      shareText={`Check out my top albums for ${year} on ListenBrainz`}
                       shareTitle={`My top albums of ${year}`}
-                      fileName={`${userName}-top-albums-${year}`}
+                      fileName={`${user.name}-top-albums-${year}`}
                       customStyles={svgStyles}
                     />
                   </div>
@@ -606,7 +606,7 @@ export default function YearInMusic() {
                     <ImageShareButtons
                       svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats`}
                       shareUrl={`${linkToThisPage}#stats`}
-                      shareTitle={`My music listening in ${year}`}
+                      shareTitle={`My music listening in ${year} on ListenBrainz`}
                       fileName={`${user.name}-stats-${year}`}
                       customStyles={svgStyles}
                     />

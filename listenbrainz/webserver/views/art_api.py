@@ -359,7 +359,8 @@ def _cover_art_yim_albums(user_name, stats, year, styles):
     """ Create the SVG using YIM top albums for the given year. """
     cac = CoverArtGenerator(
         current_app.config["MB_DATABASE_URI"], 3, 750,
-        server_root_url=current_app.config["SERVER_ROOT_URL"])
+        server_root_url=current_app.config["SERVER_ROOT_URL"],
+        show_caption=True)
     images = []
 
     if stats.get("top_release_groups") is None:
@@ -367,7 +368,14 @@ def _cover_art_yim_albums(user_name, stats, year, styles):
 
     for release_group in stats["top_release_groups"]:
         if "caa_id" in release_group and "caa_release_mbid" in release_group:
-            images.append(release_group)
+            image = {
+                "title": release_group["release_group_name"],
+                "artist": release_group["artist_name"],
+                "entity_mbid": release_group["release_group_mbid"],
+                "caa_id": release_group["caa_id"], 
+                "caa_release_mbid": release_group["caa_release_mbid"]
+            }
+            images.append(image)
 
     if len(images) == 0:
         return None
@@ -383,6 +391,7 @@ def _cover_art_yim_albums(user_name, stats, year, styles):
         user_name=user_name,
         images=images,
         year=year,
+        show_caption=True,
         **styles,
     )
 
