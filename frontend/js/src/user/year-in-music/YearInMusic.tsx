@@ -33,6 +33,7 @@ import YIMFriends from "./components/YIMFriends";
 import AlbumsCoverflow from "./components/AlbumsCoverflow";
 import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
+import Preview from "../../explore/art-creator/components/Preview";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -527,12 +528,14 @@ export default function YearInMusic() {
                 <div className="content-card" id="overview">
                   <h3 className="flex-center">Overview</h3>
                   <div className="d-flex justify-content-center">
-                    <object
-                      className="card"
-                      data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
-                    >
-                      Overview
-                    </object>
+                    <Preview
+                      url={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                      styles={{
+                        textColor,
+                        bgColor1: gradientColors[0],
+                        bgColor2: last(gradientColors),
+                      }}
+                    />
                   </div>
                   <div className="yim-share-button-container">
                     <ImageShareButtons

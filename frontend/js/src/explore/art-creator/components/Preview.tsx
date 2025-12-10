@@ -70,26 +70,32 @@ const Preview = React.forwardRef(function PreviewComponent(
           ? `
           text > tspan,
           .accent-color {
-          fill: ${textColor};
+          fill: ${textColor} !important;
         }
         .accent-color-stroke {
-          stroke: ${textColor};
+          stroke: ${textColor} !important;
         }
           `
           : ""}
         {bgColor1
           ? `
-          stop:first-child { stop-color: ${bgColor1}; }
-          .bg-color-1 { fill: ${bgColor1}; }
+          stop:first-child { stop-color: ${bgColor1} !important; }
+          .bg-color-1 { fill: ${bgColor1} !important; }
         `
           : ""}
         {bgColor2
           ? `
-          stop:nth-child(2) { stop-color: ${bgColor2}; }
-          .bg-color-2 { fill: ${bgColor2}; }`
+          stop:nth-child(2) { stop-color: ${bgColor2} !important; }
+          .bg-color-2 { fill: ${bgColor2} !important; }`
           : ""}
       </style>
-      <svg data-src={url} data-js="enabled" data-cache="21600" />
+      <svg
+        data-src={url}
+        data-js="enabled"
+        data-cache="21600"
+        height={size}
+        width={size}
+      />
     </svg>
   );
 });
