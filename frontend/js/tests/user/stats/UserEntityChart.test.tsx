@@ -31,7 +31,7 @@ if (typeof AbortController === "undefined") {
       throwIfAborted: () => {},
     };
     abort() {
-      // @ts-ignore
+      // @ts-expect-error
       this.signal.aborted = true;
     }
   } as any;

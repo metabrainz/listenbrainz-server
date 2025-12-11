@@ -183,10 +183,10 @@ export default class YearInMusic extends React.Component<
             newTrack?.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
           // See https://github.com/metabrainz/listenbrainz-server/pull/1839 for context
           if (trackExtension && has(trackExtension, "artist_mbids")) {
-            //  Using some forbiddden (but oh so sweet) ts-ignore as we're fixing objects that don't fit the expected type
-            // @ts-ignore
+            //  Using some forbiddden (but oh so sweet) ts-expect-error as we're fixing objects that don't fit the expected type
+            // @ts-expect-error
             trackExtension.artist_identifiers = trackExtension.artist_mbids;
-            // @ts-ignore
+            // @ts-expect-error
             delete trackExtension.artist_mbids;
           }
           return newTrack;
@@ -1014,10 +1014,10 @@ export function YearInMusicWrapper() {
             newTrack?.extension?.[MUSICBRAINZ_JSPF_TRACK_EXTENSION];
           // See https://github.com/metabrainz/listenbrainz-server/pull/1839 for context
           if (trackExtension && has(trackExtension, "artist_mbids")) {
-            //  Using some forbiddden (but oh so sweet) ts-ignore as we're fixing objects that don't fit the expected type
-            // @ts-ignore
+            //  Using some forbiddden (but oh so sweet) ts-expect-error as we're fixing objects that don't fit the expected type
+            // @ts-expect-error
             trackExtension.artist_identifiers = trackExtension.artist_mbids;
-            // @ts-ignore
+            // @ts-expect-error
             delete trackExtension.artist_mbids;
           }
           return newTrack;

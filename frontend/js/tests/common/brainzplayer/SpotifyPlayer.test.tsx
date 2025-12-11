@@ -127,7 +127,7 @@ describe("SpotifyPlayer", () => {
     </p>
   );
   beforeAll(() => {
-    // @ts-ignore
+    // @ts-expect-error
     window.Spotify = {
       Player: jest.fn(() => mockSpotifyPlayer),
     };

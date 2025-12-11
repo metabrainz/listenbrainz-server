@@ -136,7 +136,7 @@ export default class AppleMusicPlayer
         this.connectAppleMusicPlayer();
 
         try {
-          // @ts-ignore
+          // @ts-expect-error
           // eslint-disable-next-line no-underscore-dangle
           await this.appleMusicPlayer?._services.apiManager.store.storekit.me();
         } catch (error) {

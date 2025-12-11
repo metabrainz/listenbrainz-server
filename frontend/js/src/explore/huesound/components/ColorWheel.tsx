@@ -375,14 +375,14 @@ export default class ColorWheel extends React.Component<
   drawInnerWheel(startAnimationPercentage = 0) {
     let animationPercentage = startAnimationPercentage;
     // raf setup.
-    // @ts-ignore
+    // @ts-expect-error
     const requestAnimationFrame =
       window.requestAnimationFrame ||
-      // @ts-ignore
+      // @ts-expect-error
       window.mozRequestAnimationFrame ||
-      // @ts-ignore
+      // @ts-expect-error
       window.webkitRequestAnimationFrame ||
-      // @ts-ignore
+      // @ts-expect-error
       window.msRequestAnimationFrame;
     window.requestAnimationFrame = requestAnimationFrame;
 

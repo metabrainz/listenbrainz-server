@@ -247,7 +247,7 @@ export default function PlaylistCard({
         <div>
           Created:{" "}
           {new Date(playlist.date).toLocaleString(undefined, {
-            // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+            // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/40806
             dateStyle: "short",
           })}
         </div>
@@ -256,7 +256,7 @@ export default function PlaylistCard({
             `Last Modified: ${new Date(
               customFields.last_modified_at
             ).toLocaleString(undefined, {
-              // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+              // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/40806
               dateStyle: "short",
             })}`}
         </div>

@@ -51,7 +51,7 @@ const mockPlayer: YT.Player = {
   setVolume: jest.fn(),
   getDuration: jest.fn().mockReturnValue(180), // 3 minutes
   getCurrentTime: jest.fn().mockReturnValue(30), // 30 seconds
-  // @ts-ignore
+  // @ts-expect-error
   getVideoData: jest.fn().mockReturnValue({
     video_id: "dQw4w9WgXcQ",
     title: "Never Gonna Give You Up",

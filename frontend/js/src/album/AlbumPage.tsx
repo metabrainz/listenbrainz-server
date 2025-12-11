@@ -69,7 +69,7 @@ export default function AlbumPage(): JSX.Element {
   const { albumMBID } = params;
   const { data, isError } = useQuery<AlbumPageProps>({
     ...RouteQuery(["album", params], location.pathname),
-    //  @ts-ignore  the expected "error" here is a Response
+    //  @ts-expect-error  the expected "error" here is a Response
     // as RouteLoaderURL throws a json response object
     throwOnError: (response) => response?.status !== 404,
   });

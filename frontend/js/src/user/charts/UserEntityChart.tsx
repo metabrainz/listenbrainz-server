@@ -60,7 +60,7 @@ export const TERMINOLOGY_ENTITY_MAP: Record<string, Entity> = {
 
 const ROWS_PER_PAGE = 25;
 
-// @ts-ignore - Not sure why it does not accept UserEntityDatum,
+// @ts-expect-error - Not sure why it does not accept UserEntityDatum,
 // but BarDatum does not represent the actual data format we have.
 function CustomBarComponent(barProps: BarItemProps<UserEntityDatum>) {
   const { bar } = barProps;

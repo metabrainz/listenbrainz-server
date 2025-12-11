@@ -215,7 +215,7 @@ export default function AIBrainzComponent(props: AIBrainzComponentProps) {
     const { name, checked } = checkboxEvent.target;
     setInputs((prevState) => {
       const stateCopy = { ...prevState };
-      // @ts-ignore
+      // @ts-expect-error
       stateCopy[name] = checked;
 
       return stateCopy;

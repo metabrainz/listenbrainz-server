@@ -291,7 +291,7 @@ function PlaylistMenu({
                 coverArtGridOptions,
                 currentCoverArt,
               })
-                // @ts-ignore
+                // @ts-expect-error
                 .then((editedPlaylist: JSPFPlaylist) => {
                   if (onPlaylistSaved) {
                     onPlaylistSaved(editedPlaylist);
@@ -306,7 +306,7 @@ function PlaylistMenu({
             className="dropdown-item"
             onClick={() => {
               NiceModal.show(DeletePlaylistConfirmationModal, { playlist })
-                // @ts-ignore
+                // @ts-expect-error
                 .then((deletedPlaylist: JSPFPlaylist) => {
                   if (onPlaylistDeleted) {
                     onPlaylistDeleted(deletedPlaylist);

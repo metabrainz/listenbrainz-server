@@ -734,7 +734,7 @@ const fullLocalizedDateFromTimestampOrISODate = (
     return String(unix_epoch_timestamp);
   }
   return date.toLocaleString(undefined, {
-    // @ts-ignore see https://github.com/microsoft/TypeScript/issues/40806
+    // @ts-expect-error see https://github.com/microsoft/TypeScript/issues/40806
     dateStyle: "full",
     timeStyle: "long",
   });
@@ -890,7 +890,7 @@ const getPageProps = async (): Promise<{
     };
 
     if ("connection" in navigator) {
-      // @ts-ignore
+      // @ts-expect-error
       if (navigator.connection?.saveData === true) {
         userPreferences.saveData = true;
       }

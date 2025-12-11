@@ -418,7 +418,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         borderColor="#152538"
         // The typescript definition file for Choropleth is incomplete, so disable typescript
         // until it is fixed.
-        // @ts-ignore
+        // @ts-expect-error
         layers={["features", customLegend]}
       />
       {selectedCountry && (

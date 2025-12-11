@@ -173,7 +173,7 @@ const AddAlbumListens = forwardRef(function AddAlbumListens(
       setSelectedTracks((prevSelectedTracks) => {
         let newSelection: MBTrackWithAC[] = [];
         const isChecked = event.target.checked;
-        // @ts-ignore nativeEvent.shiftKey exists for there input events,
+        // @ts-expect-error nativeEvent.shiftKey exists for there input events,
         // but the react types define a very basic Event type which does not have shiftKey
         const shiftKey = Boolean(event.nativeEvent.shiftKey!);
         if (shiftKey && lastChecked?.current !== track) {
