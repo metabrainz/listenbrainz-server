@@ -654,12 +654,13 @@ export default function YearInMusic() {
               </div>
             </>
           )}
-
-          <YIMFriends
-            followingList={followingList}
-            userName={user.name}
-            year={year}
-          />
+          {followingList.length > 0 && (
+            <YIMFriends
+              followingList={followingList}
+              userName={user.name}
+              year={year}
+            />
+          )}
 
           {/* ADD Community Year in Music tools ♡HERE */}
 
