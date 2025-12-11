@@ -88,8 +88,10 @@ class FollowButton extends React.Component<
     const { user, updateFollowingList } = this.props;
     const { APIService, currentUser } = this.context;
     const { followUser } = APIService;
-
-    followUser(user.name, currentUser?.auth_token!).then(({ status }) => {
+    if (!currentUser?.auth_token) {
+      return;
+    }
+    followUser(user.name, currentUser.auth_token).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
         if (updateFollowingList) {
@@ -105,8 +107,10 @@ class FollowButton extends React.Component<
     const { user, updateFollowingList } = this.props;
     const { APIService, currentUser } = this.context;
     const { unfollowUser } = APIService;
-
-    unfollowUser(user.name, currentUser?.auth_token!).then(({ status }) => {
+    if (!currentUser?.auth_token) {
+      return;
+    }
+    unfollowUser(user.name, currentUser.auth_token).then(({ status }) => {
       if (status === 200) {
         this.setState({
           loggedInUserFollowsUser: false,
