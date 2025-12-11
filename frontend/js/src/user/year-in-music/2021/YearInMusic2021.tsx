@@ -159,7 +159,6 @@ export default class YearInMusic extends React.Component<
           const newTrack = { ...track };
           let track_id;
           if (Array.isArray(track.identifier)) {
-            // eslint-disable-next-line prefer-destructuring
             track_id = track.identifier[0];
           } else {
             track_id = track.identifier;
@@ -194,7 +193,6 @@ export default class YearInMusic extends React.Component<
         },
       );
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
     }
     return playlist;
@@ -484,7 +482,6 @@ export default class YearInMusic extends React.Component<
                     )
                     .slice(0, 10)
                     .map((release) => {
-                      // eslint-disable-next-line no-param-reassign
                       release.cover_art_src =
                         yearInMusicData.top_releases_coverart?.[
                           release.release_mbid
@@ -1025,7 +1022,6 @@ export function YearInMusicWrapper() {
         },
       );
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(`"Error parsing ${playlistName}:`, error);
     }
     return playlist;

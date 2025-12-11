@@ -154,7 +154,6 @@ export default class SoundcloudPlayer
       this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.PLAY_PROGRESS);
       this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.ERROR);
       this.soundcloudPlayer.unbind(SoundCloudHTML5WidgetEvents.READY);
-      // eslint-disable-next-line no-empty
     } catch (error) {}
   }
 
