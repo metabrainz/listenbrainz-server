@@ -139,7 +139,8 @@ export default class YearInMusic extends React.Component<
     playlistName: string,
     description?: string,
   ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
-    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    const uuidMatch =
+      /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
     /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
     const badPlaylistTrackExtensionValue = "https://musicbrainz.org/recording/";
     const { yearInMusicData } = this.props;
@@ -784,9 +785,8 @@ export default class YearInMusic extends React.Component<
                       name,
                       similarityScore,
                     };
-                    const loggedInUserFollowsUser = this.loggedInUserFollowsUser(
-                      similarUser
-                    );
+                    const loggedInUserFollowsUser =
+                      this.loggedInUserFollowsUser(similarUser);
                     return (
                       <UserListModalEntry
                         mode="similar-users"
@@ -975,7 +975,8 @@ export function YearInMusicWrapper() {
     playlistName: string,
     description?: string,
   ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
-    const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
+    const uuidMatch =
+      /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
     /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
     const badPlaylistTrackExtensionValue = "https://musicbrainz.org/recording/";
     let playlist;

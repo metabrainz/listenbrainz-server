@@ -70,7 +70,8 @@ export type SoundCloudPlayerProps = DataSourceProps & {
 
 export default class SoundcloudPlayer
   extends React.Component<SoundCloudPlayerProps, SoundcloudPlayerState>
-  implements DataSourceType {
+  implements DataSourceType
+{
   static contextType = GlobalAppContext;
   static hasPermissions = (soundcloudUser?: SoundCloudUser) => {
     return Boolean(soundcloudUser?.access_token);
@@ -353,11 +354,8 @@ export default class SoundcloudPlayer
   };
 
   updateTrackInfo = (event?: ProgressEvent) => {
-    const {
-      onTrackInfoChange,
-      onDurationChange,
-      onProgressChange,
-    } = this.props;
+    const { onTrackInfoChange, onDurationChange, onProgressChange } =
+      this.props;
     if (!this.soundcloudPlayer) {
       return;
     }

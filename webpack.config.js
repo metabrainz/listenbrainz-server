@@ -18,6 +18,7 @@ const es5LibrariesToTranspile = [
 const babelExcludeLibrariesRegexp = new RegExp(
   `node_modules/(?!(${es5LibrariesToTranspile.join("|")})/).*`,
   ""
+  "",
 );
 module.exports = function (env, argv) {
   const isProd = argv.mode === "production";
