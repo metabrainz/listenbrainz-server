@@ -83,7 +83,7 @@ WORKDIR /code
 COPY package.json package-lock.json /code/
 RUN npm install
 
-COPY webpack.config.js babel.config.js jest.config.js tsconfig.json .eslintrc.js .stylelintrc.js /code/
+COPY webpack.config.js babel.config.js jest.config.js tsconfig.json eslint.config.js .stylelintrc.js /code/
 
 
 #########################################################################
