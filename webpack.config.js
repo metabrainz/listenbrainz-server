@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require("path");
 const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
@@ -17,7 +18,6 @@ const es5LibrariesToTranspile = [
 ];
 const babelExcludeLibrariesRegexp = new RegExp(
   `node_modules/(?!(${es5LibrariesToTranspile.join("|")})/).*`,
-  ""
   "",
 );
 module.exports = function (env, argv) {
