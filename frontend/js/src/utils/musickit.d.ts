@@ -56,7 +56,7 @@ declare namespace MusicKit {
   }
 
   interface APISearchResult {
-    meta: {};
+    meta: object;
     results: {
       songs: {
         data: Song[];

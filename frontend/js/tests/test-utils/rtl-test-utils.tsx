@@ -94,6 +94,7 @@ export function textContentMatcher(textMatch: string | RegExp) {
       return false;
     }
 
+    // eslint-disable-next-line testing-library/no-node-access
     const childrenDontHaveText = Array.from(node?.children || []).every(
       (child) => !hasText(child)
     );

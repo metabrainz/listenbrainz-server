@@ -160,10 +160,7 @@ function AIBrainzHeader() {
   );
 }
 
-type AIBrainzComponentProps = {};
-
-export default function AIBrainzComponent(props: AIBrainzComponentProps) {
-  const { APIService } = useContext(GlobalAppContext);
+export default function AIBrainzComponent() {
   const [submitted, setSubmitted] = useState(false);
   const [inputs, setInputs] = useState({
     checkbox1: true,
