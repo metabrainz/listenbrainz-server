@@ -488,7 +488,10 @@ export default function YearInMusic() {
             ) as keyof typeof availableYears;
             const isSelectedYear = yearAsNum === year;
             let coverURL = `${APIService.APIBaseURI}/art/grid-stats/${encodedUsername}/this_year/1/0/250?caption=false`;
-            if (yearInMusicData.top_release_groups[idx]?.caa_id) {
+            if (
+              yearInMusicData?.top_release_groups?.[idx]?.caa_id &&
+              yearInMusicData?.top_release_groups?.[idx]?.caa_release_mbid
+            ) {
               coverURL = generateAlbumArtThumbnailLink(
                 yearInMusicData.top_release_groups[idx].caa_id,
                 yearInMusicData.top_release_groups[idx].caa_release_mbid
