@@ -45,9 +45,8 @@ export default function LBRadio() {
       try {
         const { payload } = await APIService.getLBRadioPlaylist(
           currentUser.auth_token,
-          `${
-            APIService.APIBaseURI
-          }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`
+          prompt,
+          mode
         );
         const { playlist } = payload?.jspf as JSPFObject;
         if (playlist?.track?.length) {
