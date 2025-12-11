@@ -1371,7 +1371,7 @@ export function getReviewEventContent(
 
 export function getPersonalRecommendationEventContent(
   eventMetadata: UserTrackPersonalRecommendationMetadata,
-  isCreator: Boolean
+  isCreator: boolean
 ): JSX.Element {
   const additionalContent = getAdditionalContent(eventMetadata);
   return (

@@ -17,13 +17,13 @@ import PinRecordingModal from "../../pins/PinRecordingModal";
 
 export type PinnedRecordingCardProps = {
   pinnedRecording: PinnedRecording;
-  isCurrentUser: Boolean;
+  isCurrentUser: boolean;
   removePinFromPinsList: (pin: PinnedRecording) => void;
 };
 
 export type PinnedRecordingCardState = {
-  currentlyPinned?: Boolean;
-  isDeleted: Boolean;
+  currentlyPinned?: boolean;
+  isDeleted: boolean;
   updatedBlurb?: string;
 };
 
@@ -42,7 +42,7 @@ export default class PinnedRecordingCard extends React.Component<
     };
   }
 
-  determineIfCurrentlyPinned = (): Boolean => {
+  determineIfCurrentlyPinned = (): boolean => {
     const { pinnedRecording } = this.props;
     const pinnedUntilTime: Date = new Date(pinnedRecording.pinned_until * 1000);
 

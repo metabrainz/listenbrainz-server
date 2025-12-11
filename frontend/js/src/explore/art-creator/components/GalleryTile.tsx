@@ -4,7 +4,7 @@ import { TemplateNameEnum, TemplateOption } from "../ArtCreator";
 
 type GalleryTileProps = {
   templateOption: TemplateOption;
-  isSelected: Boolean;
+  isSelected: boolean;
   onStyleSelect: (styleName: TemplateNameEnum) => void;
 };
 

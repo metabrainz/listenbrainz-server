@@ -8,8 +8,8 @@ import React, { PropsWithChildren } from "react";
 import { useDraggable } from "react-use-draggable-scroll-safe";
 
 type HorizontalScrollContainerProps = {
-  showScrollbar?: Boolean;
-  enableDragScroll?: Boolean;
+  showScrollbar?: boolean;
+  enableDragScroll?: boolean;
   className?: string;
 };
 

@@ -10,7 +10,7 @@ import ListenControl from "../../common/listens/ListenControl";
 
 export type PlaylistItemCardProps = {
   track: JSPFTrack;
-  canEdit: Boolean;
+  canEdit: boolean;
   removeTrackFromPlaylist?: (track: JSPFTrack) => void;
   showTimestamp?: boolean;
   showUsername?: boolean;
