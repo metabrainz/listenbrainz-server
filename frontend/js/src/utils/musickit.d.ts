@@ -7,7 +7,7 @@ declare namespace MusicKit {
    * Configure a MusicKit instance.
    */
   async function configure(
-    configuration: Configuration
+    configuration: Configuration,
   ): Promise<MusicKitInstance>;
   /**
    * Returns the configured MusicKit instance.
@@ -44,7 +44,7 @@ declare namespace MusicKit {
       previews: [
         {
           url: string;
-        }
+        },
       ];
       releaseDate: string;
       trackNumber: number;
@@ -81,7 +81,7 @@ declare namespace MusicKit {
     music(
       path: string,
       parameters?: any,
-      options?: any
+      options?: any,
     ): Promise<{ data: APISearchResult }>;
   }
 

@@ -82,7 +82,7 @@ export default class SoundcloudPlayer
   }
 
   static getURLFromListen = (
-    listen: Listen | JSPFTrack
+    listen: Listen | JSPFTrack,
   ): string | undefined => {
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (originURL && /soundcloud\.com/.test(originURL)) {
@@ -170,11 +170,11 @@ export default class SoundcloudPlayer
     }
 
     this.soundcloudPlayer = (window as any).SC.Widget(
-      this.iFrameRef.current
+      this.iFrameRef.current,
     ) as SoundCloudHTML5Widget;
     this.soundcloudPlayer.bind(
       SoundCloudHTML5WidgetEvents.READY,
-      this.onReady.bind(this)
+      this.onReady.bind(this),
     );
   };
 
@@ -194,7 +194,7 @@ export default class SoundcloudPlayer
     this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PLAY, this.onPlay);
     this.soundcloudPlayer.bind(
       SoundCloudHTML5WidgetEvents.PLAY_PROGRESS,
-      _throttle(this.onProgressChange, 2000, { leading: true, trailing: true })
+      _throttle(this.onProgressChange, 2000, { leading: true, trailing: true }),
     );
     this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.ERROR, this.onError);
   };
@@ -232,7 +232,7 @@ export default class SoundcloudPlayer
 
   searchAndPlayTrack = async (
     listen: Listen | JSPFTrack,
-    retryCount = 0
+    retryCount = 0,
   ): Promise<void> => {
     const { handleError, handleWarning, onTrackNotFound } = this.props;
     if (retryCount > 3) {
@@ -247,7 +247,7 @@ export default class SoundcloudPlayer
     if (!trackName && !artistName && !releaseName) {
       handleWarning(
         "We are missing a track title, artist or album name to search on Soundcloud",
-        "Not enough info to search on Soundcloud"
+        "Not enough info to search on Soundcloud",
       );
       onTrackNotFound();
       return;
@@ -258,7 +258,7 @@ export default class SoundcloudPlayer
         this.accessToken,
         trackName,
         artistName,
-        releaseName
+        releaseName,
       );
       if (streamUrl) {
         this.playStreamUrl(streamUrl);
@@ -270,28 +270,28 @@ export default class SoundcloudPlayer
         // Handle token error and try again if fixed
         await this.handleTokenError(
           errorObject.message,
-          this.searchAndPlayTrack.bind(this, listen, retryCount + 1)
+          this.searchAndPlayTrack.bind(this, listen, retryCount + 1),
         );
         return;
       }
       onTrackNotFound();
       handleError(
         errorObject.message ?? errorObject,
-        "Error searching on Soundcloud"
+        "Error searching on Soundcloud",
       );
     }
   };
 
   handleTokenError = async (
     error: Error | string | Spotify.Error,
-    callbackFunction: () => void
+    callbackFunction: () => void,
   ): Promise<void> => {
     const { refreshSoundcloudToken, onTrackNotFound, handleError } = this.props;
     const { soundcloudAuth: soundcloudUser = undefined } = this.context;
     if (this.authenticationRetries > 3) {
       handleError(
         isString(error) ? error : error?.message,
-        "Soundcloud token error"
+        "Soundcloud token error",
       );
       onTrackNotFound();
       return;
@@ -331,7 +331,7 @@ export default class SoundcloudPlayer
     if (SoundcloudPlayer.isListenFromThisService(listen)) {
       const originURL = _get(
         listen,
-        "track_metadata.additional_info.origin_url"
+        "track_metadata.additional_info.origin_url",
       );
       this.playStreamUrl(originURL);
     } else {
@@ -374,7 +374,7 @@ export default class SoundcloudPlayer
         currentTrack.permalink_url,
         currentTrack.user?.username,
         undefined,
-        artwork
+        artwork,
       );
       onDurationChange(currentTrack.duration);
       if (event) {

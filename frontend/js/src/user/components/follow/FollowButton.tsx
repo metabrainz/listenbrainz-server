@@ -35,7 +35,7 @@ type FollowButtonProps = {
   loggedInUserFollowsUser: boolean;
   updateFollowingList?: (
     user: ListenBrainzUser,
-    action: "follow" | "unfollow"
+    action: "follow" | "unfollow",
   ) => void;
 };
 

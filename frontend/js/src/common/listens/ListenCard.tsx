@@ -128,7 +128,7 @@ export default function ListenCard(props: ListenCardProps) {
 
   const albumArtQueryKey = React.useMemo(
     () => getAlbumArtFromListenMetadataKey(displayListen, spotifyAuth),
-    [displayListen, spotifyAuth]
+    [displayListen, spotifyAuth],
   );
 
   const albumArtDisabled =
@@ -141,11 +141,10 @@ export default function ListenCard(props: ListenCardProps) {
       try {
         const albumArtURL = await getAlbumArtFromListenMetadata(
           displayListen,
-          spotifyAuth
+          spotifyAuth,
         );
         return albumArtURL ?? "";
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error("Error fetching album art", error);
         return "";
       }
@@ -165,14 +164,14 @@ export default function ListenCard(props: ListenCardProps) {
         case "current-listen-change":
           setIsCurrentlyPlaying(
             isEqual(incomingListen, displayListen) ||
-              isEqual(incomingListen, listenProp)
+              isEqual(incomingListen, listenProp),
           );
           break;
         default:
         // do nothing
       }
     },
-    [displayListen, listenProp]
+    [displayListen, listenProp],
   );
   React.useEffect(() => {
     // Set up and clean up BrainzPlayer event listener
@@ -186,7 +185,7 @@ export default function ListenCard(props: ListenCardProps) {
     if (isCurrentlyPlaying) return;
     window.postMessage(
       { brainzplayer_event: "play-listen", payload: displayListen },
-      window.location.origin
+      window.location.origin,
     );
   }, [isCurrentlyPlaying, displayListen]);
 
@@ -204,17 +203,17 @@ export default function ListenCard(props: ListenCardProps) {
       const status = await APIService.recommendTrackToFollowers(
         currentUser.name,
         currentUser.auth_token,
-        metadata
+        metadata,
       );
       if (status === 200) {
         toast.success(
           <ToastMsg
             title="You recommended a track to your followers"
             message={`${getTrackName(displayListen)} by ${getArtistName(
-              displayListen
+              displayListen,
             )}`}
           />,
-          { toastId: "recommended-success" }
+          { toastId: "recommended-success" },
         );
       }
     } catch (error) {
@@ -223,7 +222,7 @@ export default function ListenCard(props: ListenCardProps) {
           title="We encountered an error when trying to recommend the track to your followers"
           message={typeof error === "object" ? error.message : error}
         />,
-        { toastId: "recommended-error" }
+        { toastId: "recommended-error" },
       );
     }
   }, [currentUser, APIService, displayListen]);
@@ -234,7 +233,7 @@ export default function ListenCard(props: ListenCardProps) {
         MBIDMappingModal,
         {
           listenToMap: displayListen,
-        }
+        },
       );
       setDisplayListen((prevState) => {
         const newVal = merge({}, prevState, {
@@ -252,7 +251,7 @@ export default function ListenCard(props: ListenCardProps) {
   const recordingMBID = getRecordingMBID(displayListen);
   const trackMBID = get(
     displayListen,
-    "track_metadata.additional_info.track_mbid"
+    "track_metadata.additional_info.track_mbid",
   );
   const releaseGroupMBID = getReleaseGroupMBID(displayListen);
   const releaseName = getReleaseName(displayListen);
@@ -324,7 +323,7 @@ export default function ListenCard(props: ListenCardProps) {
       thumbnailSrc,
       displayListen,
       currentUser,
-      openMBIDMappingModal
+      openMBIDMappingModal,
     );
 
   const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
@@ -578,7 +577,7 @@ function getThumbnailElement(
   thumbnailSrc: string | undefined,
   displayListen: Listen,
   currentUser: ListenBrainzUser,
-  openMBIDMappingModal: () => Promise<void>
+  openMBIDMappingModal: () => Promise<void>,
 ): JSX.Element {
   const isLoggedIn = !isEmpty(currentUser);
   const recordingMSID = getRecordingMSID(displayListen);
@@ -602,7 +601,7 @@ function getThumbnailElement(
       thumbnailLink = `/album/${releaseGroupMBID}`;
       thumbnailTitle = get(
         displayListen,
-        "track_metadata.mbid_mapping.release_group_name"
+        "track_metadata.mbid_mapping.release_group_name",
       );
     } else {
       thumbnailLink = spotifyURL || youtubeURL || soundcloudURL;

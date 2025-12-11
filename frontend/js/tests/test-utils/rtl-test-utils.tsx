@@ -40,7 +40,7 @@ export const renderWithProviders = (
   ui: React.ReactElement,
   globalContext?: Partial<GlobalAppContextT>,
   renderOptions?: RenderOptions,
-  withRouter = true
+  withRouter = true,
 ) => {
   function WithProviders({ children }: { children: React.ReactElement }) {
     const globalProps = React.useMemo<GlobalAppContextT>(
@@ -48,7 +48,7 @@ export const renderWithProviders = (
         ...defaultGlobalContext,
         ...globalContext,
       }),
-      []
+      [],
     );
 
     const providers = (
@@ -96,7 +96,7 @@ export function textContentMatcher(textMatch: string | RegExp) {
 
     // eslint-disable-next-line testing-library/no-node-access
     const childrenDontHaveText = Array.from(node?.children || []).every(
-      (child) => !hasText(child)
+      (child) => !hasText(child),
     );
 
     return childrenDontHaveText;

@@ -28,7 +28,7 @@ export default class ErrorBoundary extends React.Component<
   componentWillUnmount() {
     window.removeEventListener(
       "unhandledrejection",
-      this.promiseRejectionHandler
+      this.promiseRejectionHandler,
     );
   }
 

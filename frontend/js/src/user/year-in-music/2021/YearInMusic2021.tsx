@@ -137,7 +137,7 @@ export default class YearInMusic extends React.Component<
 
   private getPlaylistByName(
     playlistName: string,
-    description?: string
+    description?: string,
   ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
     const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
     /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
@@ -190,7 +190,7 @@ export default class YearInMusic extends React.Component<
             delete trackExtension.artist_mbids;
           }
           return newTrack;
-        }
+        },
       );
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -216,19 +216,19 @@ export default class YearInMusic extends React.Component<
           title="Error while fetching the users you follow"
           message={err.toString()}
         />,
-        { toastId: "fetch-following-error" }
+        { toastId: "fetch-following-error" },
       );
     }
   };
 
   updateFollowingList = (
     user: ListenBrainzUser,
-    action: "follow" | "unfollow"
+    action: "follow" | "unfollow",
   ) => {
     const { followingList } = this.state;
     const newFollowingList = [...followingList];
     const index = newFollowingList.findIndex(
-      (following) => following === user.name
+      (following) => following === user.name,
     );
     if (action === "follow" && index === -1) {
       newFollowingList.push(user.name);
@@ -309,7 +309,7 @@ export default class YearInMusic extends React.Component<
       // Ensure there are no holes between years
       const filledYears = range(
         Number(mostListenedYears[0]),
-        Number(mostListenedYears[mostListenedYears.length - 1])
+        Number(mostListenedYears[mostListenedYears.length - 1]),
       );
       mostListenedYearDataForGraph = filledYears.map((year: number) => ({
         year,
@@ -324,7 +324,7 @@ export default class YearInMusic extends React.Component<
       missingSomeData = true;
     } else {
       sortedSimilarUsers = toPairs(yearInMusicData.similar_users).sort(
-        (a, b) => b[1] - a[1]
+        (a, b) => b[1] - a[1],
       );
     }
 
@@ -341,7 +341,7 @@ export default class YearInMusic extends React.Component<
                 value: datum.listen_count,
               }
             : // Return null if the value is 0
-              null
+              null,
         )
         // Filter out null entries in the array
         .filter(Boolean);
@@ -478,8 +478,8 @@ export default class YearInMusic extends React.Component<
                     .filter((release) =>
                       has(
                         yearInMusicData.top_releases_coverart,
-                        release.release_mbid
-                      )
+                        release.release_mbid,
+                      ),
                     )
                     .slice(0, 10)
                     .map((release) => {
@@ -629,7 +629,7 @@ export default class YearInMusic extends React.Component<
                   const details = getEntityLink(
                     "artist",
                     artist.artist_name,
-                    artist.artist_mbids[0]
+                    artist.artist_mbids[0],
                   );
                   const thumbnail = (
                     <span className="badge bg-info">
@@ -751,8 +751,8 @@ export default class YearInMusic extends React.Component<
                     // Round to nearest 5 year mark
                     tickValues: uniq(
                       mostListenedYearDataForGraph.map(
-                        (datum) => Math.round((datum.year + 1) / 5) * 5
-                      )
+                        (datum) => Math.round((datum.year + 1) / 5) * 5,
+                      ),
                     ),
                   }}
                   axisLeft={{
@@ -819,7 +819,7 @@ export default class YearInMusic extends React.Component<
                           {getEntityLink(
                             "release",
                             release.title,
-                            release.release_mbid
+                            release.release_mbid,
                           )}
                         </div>
                         <span
@@ -829,7 +829,7 @@ export default class YearInMusic extends React.Component<
                           {getEntityLink(
                             "artist",
                             artistName,
-                            release.artist_credit_mbids[0]
+                            release.artist_credit_mbids[0],
                           )}
                         </span>
                       </>
@@ -920,7 +920,7 @@ export default class YearInMusic extends React.Component<
                                   showUsername={false}
                                 />
                               );
-                            }
+                            },
                           )}
                           <hr />
                           <Link
@@ -947,7 +947,7 @@ export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
   const { data } = useQuery<YearInMusicLoaderData>(
-    RouteQuery(["year-in-music-2021", params], location.pathname)
+    RouteQuery(["year-in-music-2021", params], location.pathname),
   );
   const fallbackUser = { name: "" };
   const { user = fallbackUser, data: yearInMusicData } = data || {};
@@ -973,7 +973,7 @@ export function YearInMusicWrapper() {
 
   function getPlaylistByName(
     playlistName: string,
-    description?: string
+    description?: string,
   ): { jspf: JSPFObject; mbid: string; description?: string } | undefined {
     const uuidMatch = /[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}/g;
     /* We generated some playlists with this incorrect value as the track extension key, rewrite it if it exists */
@@ -1021,7 +1021,7 @@ export function YearInMusicWrapper() {
             delete trackExtension.artist_mbids;
           }
           return newTrack;
-        }
+        },
       );
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -1033,19 +1033,19 @@ export function YearInMusicWrapper() {
   /* Playlists */
   const topDiscoveriesPlaylist = getPlaylistByName(
     "playlist-top-discoveries-for-year",
-    `Highlights songs that ${user.name} first listened to (more than once) in 2021`
+    `Highlights songs that ${user.name} first listened to (more than once) in 2021`,
   );
   const topMissedRecordingsPlaylist = getPlaylistByName(
     "playlist-top-missed-recordings-for-year",
-    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`
+    `Favorite songs of ${user.name}'s most similar users that ${user.name} hasn't listened to this year`,
   );
   const topNewRecordingsPlaylist = getPlaylistByName(
     "playlist-top-new-recordings-for-year",
-    `Songs released in 2021 that ${user.name} listened to`
+    `Songs released in 2021 that ${user.name} listened to`,
   );
   const topRecordingsPlaylist = getPlaylistByName(
     "playlist-top-recordings-for-year",
-    `This playlist is made from ${user.name}'s top recordings for 2021 statistics`
+    `This playlist is made from ${user.name}'s top recordings for 2021 statistics`,
   );
   let missingSomeData = false;
   if (

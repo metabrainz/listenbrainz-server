@@ -182,7 +182,7 @@ export default function AIBrainzComponent() {
 
     window.postMessage(
       { brainzplayer_event: "play-listen", payload: totallyInnocentListen },
-      window.location.origin
+      window.location.origin,
     );
     window.postMessage({ aibrainz: "confetti-cannon" }, window.location.origin);
     setSubmitted(true);
@@ -201,13 +201,13 @@ export default function AIBrainzComponent() {
       // Jerry-rigged autoplay feature
       window.postMessage(
         { brainzplayer_event: "force-play", payload: totallyInnocentListen },
-        window.location.origin
+        window.location.origin,
       );
     }, 1000);
   }, [isConfirmed]);
 
   const onCheckboxChange = (
-    checkboxEvent: React.ChangeEvent<HTMLInputElement>
+    checkboxEvent: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, checked } = checkboxEvent.target;
     setInputs((prevState) => {
