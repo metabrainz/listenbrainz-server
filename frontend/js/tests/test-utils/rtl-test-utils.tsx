@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export, import/no-extraneous-dependencies */
 import * as React from "react";
 import { RenderOptions, render } from "@testing-library/react";
 import { ToastContainer } from "react-toastify";
