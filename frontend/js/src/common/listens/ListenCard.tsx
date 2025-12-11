@@ -119,8 +119,12 @@ export default function ListenCard(props: ListenCardProps) {
   const [displayListen, setDisplayListen] = React.useState<Listen>(listenProp);
   const [isCurrentlyPlaying, setIsCurrentlyPlaying] = React.useState(false);
 
-  const { APIService, currentUser, userPreferences, spotifyAuth } =
-    React.useContext(GlobalAppContext);
+  const {
+    APIService,
+    currentUser,
+    userPreferences,
+    spotifyAuth
+  } = React.useContext(GlobalAppContext);
   const isMobile = useMediaQuery("(max-width: 480px)");
 
   const albumArtQueryKey = React.useMemo(
