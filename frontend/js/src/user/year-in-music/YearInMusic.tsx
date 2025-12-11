@@ -34,6 +34,7 @@ import AlbumsCoverflow from "./components/AlbumsCoverflow";
 import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
 import Preview from "../../explore/art-creator/components/Preview";
+import { generateAlbumArtThumbnailLink } from "../../utils/utils";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -481,11 +482,18 @@ export default function YearInMusic() {
           )}
         </div>
         <div className="year-selection mb-5">
-          {Object.keys(availableYears).map((availableYear) => {
+          {Object.keys(availableYears).map((availableYear, idx) => {
             const yearAsNum = Number(
               availableYear
             ) as keyof typeof availableYears;
             const isSelectedYear = yearAsNum === year;
+            let coverURL = `${APIService.APIBaseURI}/art/grid-stats/${encodedUsername}/this_year/1/0/250?caption=false`;
+            if (yearInMusicData.top_release_groups[idx]?.caa_id) {
+              coverURL = generateAlbumArtThumbnailLink(
+                yearInMusicData.top_release_groups[idx].caa_id,
+                yearInMusicData.top_release_groups[idx].caa_release_mbid
+              );
+            }
             return (
               <Link
                 key={availableYear}
@@ -497,7 +505,7 @@ export default function YearInMusic() {
                 <div className="year-image">
                   <img
                     className="img-fluid"
-                    src="/static/img/cover-art-placeholder.jpg"
+                    src={coverURL}
                     alt={`Cover for year ${availableYear}`}
                   />
                 </div>

@@ -629,7 +629,7 @@ $coverflow-image-height: 400px;
         .year-image {
           width: 200px;
           img {
-            opacity: 0;
+            opacity: 0.15;
           }
         }
         .year-number {
@@ -663,6 +663,8 @@ $coverflow-image-height: 400px;
       border: 1px solid var(--headerColor);
       overflow: hidden;
       margin-bottom: -50px;
+      align-content: center;
+      text-align: center;
       img {
         opacity: 0.5;
         transition: opacity 2s;
