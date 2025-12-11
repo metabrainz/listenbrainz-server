@@ -462,8 +462,8 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
             title=stats[key].get("title"),
             desc=stats[key].get("annotation"),
             entity="album",
-            width=924,
-            height=924,
+            width=500,
+            height=500,
             show_caption=False
         )
 
