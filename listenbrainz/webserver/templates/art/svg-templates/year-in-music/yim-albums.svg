@@ -91,7 +91,7 @@
         </g>
         <g id="images-clip" clip-path="url(#clip-content)">
             <g id="images" transform="translate(85,80)">
-                {% for image in images %}
+                {% for image in images[:9] %}
                 {{ render_image_link(entity, image, show_caption) }}
                 {% endfor %}
             </g>

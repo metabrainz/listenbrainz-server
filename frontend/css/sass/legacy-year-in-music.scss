@@ -359,6 +359,7 @@ $coverflow-image-height: 400px;
       scroll-snap-align: start;
       text-align: center;
       max-width: fit-content;
+      color: var(--headerColor);
       .value {
         overflow-wrap: anywhere;
         font-size: 1.5em;

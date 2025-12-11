@@ -542,7 +542,7 @@ export default function YearInMusic() {
                       svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
                       shareUrl={linkToThisPage}
                       shareText={`Check out my ListenBrainz stats for ${year}`}
-                      shareTitle="My year in music"
+                      shareTitle={`My year ${year} in music`}
                       fileName={`${user.name}-overview-${year}`}
                       customStyles={svgStyles}
                     />
@@ -618,6 +618,7 @@ export default function YearInMusic() {
                 <div className="flex flex-wrap" id="playlists">
                   {topDiscoveriesPlaylist && (
                     <TopLevelPlaylist
+                      year={year}
                       topLevelPlaylist={topDiscoveriesPlaylist}
                       coverArtKey="discovery-playlist"
                       userName={user.name}
@@ -626,6 +627,7 @@ export default function YearInMusic() {
                   )}
                   {topMissedRecordingsPlaylist && (
                     <TopLevelPlaylist
+                      year={year}
                       topLevelPlaylist={topMissedRecordingsPlaylist}
                       coverArtKey="missed-playlist"
                       userName={user.name}

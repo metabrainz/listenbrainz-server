@@ -14,9 +14,10 @@ export default function TopLevelPlaylist(props: {
   topLevelPlaylist: JSPFPlaylist;
   coverArtKey: string;
   userName: string;
+  year: number;
   customStyles?: string;
 }): JSX.Element {
-  const { topLevelPlaylist, coverArtKey, userName, customStyles } = props;
+  const { topLevelPlaylist, coverArtKey, userName, year, customStyles } = props;
   const { APIService } = React.useContext(GlobalAppContext);
   const encodedUsername = encodeURIComponent(userName);
   return (
@@ -24,7 +25,7 @@ export default function TopLevelPlaylist(props: {
       <div className="center-p heading">
         <object
           className="img-header"
-          data={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}&branding=False`}
+          data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&branding=False`}
         >
           Playlist image
         </object>
@@ -86,11 +87,11 @@ export default function TopLevelPlaylist(props: {
       </div>
       <div className="yim-share-button-container">
         <ImageShareButtons
-          svgURL={`${APIService.APIBaseURI}/art/year-in-music/2024/${encodedUsername}?image=${coverArtKey}`}
-          shareUrl={`https://listenbrainz.org/user/${encodedUsername}/year-in-music/2024#top-albums`}
+          svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}`}
+          shareUrl={`https://listenbrainz.org/user/${encodedUsername}/year-in-music/${year}#${coverArtKey}`}
           // shareText="Check out my"
-          shareTitle="My 2024 ListenBrainz playlists"
-          fileName={`${userName}-${coverArtKey}-2024`}
+          shareTitle={`My ${year} playlist on ListenBrainz`}
+          fileName={`${userName}-${coverArtKey}-${year}`}
           customStyles={customStyles}
         />
       </div>

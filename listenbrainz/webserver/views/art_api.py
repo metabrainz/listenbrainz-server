@@ -434,29 +434,38 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
     selected_urls = set()
 
     cac = CoverArtGenerator(
-        current_app.config["MB_DATABASE_URI"], 3, 250,
+        current_app.config["MB_DATABASE_URI"], dimension=3, image_size=500,
         server_root_url=current_app.config["SERVER_ROOT_URL"])
 
     for track in stats[key]["track"]:
         additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
         if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
             caa_id = additional_metadata["caa_id"]
-            caa_release_mbid = additional_metadata["caa_release_mbid"]
-            cover_art = cac.resolve_cover_art(caa_id, caa_release_mbid, 250)
-
             # check existence in set to avoid duplicates
-            if cover_art not in selected_urls:
-                images.append({
-                    "url": cover_art,
-                    "entity_mbid": caa_release_mbid,
-                    "title": track.get("album"),
-                    "artist": track.get("creator"),
-                })
-
+            if caa_id not in selected_urls:
+                images.append(additional_metadata)
+    
     if len(images) == 0:
         return None
 
     images = _repeat_images(images)
+
+    cover_art_images = cac.generate_from_caa_ids(
+        images, layout=0, cover_art_size=250)
+
+    if not branding:
+        # Return a simple grid for use on the YIM page
+        return render_template(
+            "art/svg-templates/simple-grid.svg",
+            background="transparent",
+            images=cover_art_images,
+            title=stats[key].get("title"),
+            desc=stats[key].get("annotation"),
+            entity="album",
+            width=924,
+            height=924,
+            show_caption=False
+        )
 
     match key:
         case "playlist-top-discoveries-for-year":
@@ -469,9 +478,11 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
     return render_template(
         target_svg,
         user_name=user_name,
-        images=images,
+        images=cover_art_images,
         year=year,
         branding=branding,
+        width=924,
+        height=924,
         **styles,
     )
 
