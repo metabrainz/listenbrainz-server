@@ -444,6 +444,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
             # check existence in set to avoid duplicates
             if caa_id not in selected_urls:
                 images.append(additional_metadata)
+                selected_urls.add(caa_id)
     
     if len(images) == 0:
         return None
