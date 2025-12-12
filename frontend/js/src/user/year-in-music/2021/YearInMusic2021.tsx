@@ -361,7 +361,7 @@ export default class YearInMusic extends React.Component<
           <div className="content-card flex-center flex-wrap">
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-2021.svg"
+              src="/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.svg"
               alt="Your year in music 2021"
             />
             <div>
