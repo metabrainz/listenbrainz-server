@@ -369,10 +369,12 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   Share your year with your friends
                   <p id="share-link">
-                    <Link to={`/user/${encodedUsername}/year-in-music/2021/`}>
+                    <Link
+                      to={`/user/${encodedUsername}/year-in-music/legacy/2021/`}
+                    >
                       https://listenbrainz.org/user/
                       {encodedUsername}
-                      /year-in-music/2021/
+                      /year-in-music/legacy/2021/
                     </Link>
                   </p>
                 </div>
@@ -947,7 +949,7 @@ export function YearInMusicWrapper() {
   const location = useLocation();
   const params = useParams();
   const { data } = useQuery<YearInMusicLoaderData>(
-    RouteQuery(["year-in-music-2021", params], location.pathname)
+    RouteQuery(["legacy-year-in-music-2021", params], location.pathname)
   );
   const fallbackUser = { name: "" };
   const { user = fallbackUser, data: yearInMusicData } = data || {};

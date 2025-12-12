@@ -1,8 +1,10 @@
 import * as React from "react";
 
 import { Navigate, Outlet } from "react-router";
-import type { RouteObject } from "react-router";
-import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
+import type { RouteObject, LoaderFunctionArgs } from "react-router";
+import { isEmpty } from "lodash";
+import RouteLoader, { RouteQueryLoader, RouteQuery } from "../../utils/Loader";
+import queryClient from "../../utils/QueryClient";
 
 const getUserRoutes = (): RouteObject[] => {
   const routes = [
@@ -133,7 +135,7 @@ const getUserRoutes = (): RouteObject[] => {
       ],
     },
     {
-      path: "/user/:username/year-in-music/",
+      path: "/user/:username/year-in-music/legacy/",
       lazy: {
         Component: async () => {
           return (await import("../../explore/layout")).default;
@@ -148,7 +150,7 @@ const getUserRoutes = (): RouteObject[] => {
           path: "2024/",
           lazy: {
             loader: async () => {
-              return RouteQueryLoader("year-in-music-2024");
+              return RouteQueryLoader("legacy-year-in-music-2024");
             },
             Component: async () => {
               return (await import("../year-in-music/2024/YearInMusic2024"))
@@ -160,7 +162,7 @@ const getUserRoutes = (): RouteObject[] => {
           path: "2023/",
           lazy: {
             loader: async () => {
-              return RouteQueryLoader("year-in-music-2023");
+              return RouteQueryLoader("legacy-year-in-music-2023");
             },
             Component: async () => {
               return (await import("../year-in-music/2023/YearInMusic2023"))
@@ -172,7 +174,7 @@ const getUserRoutes = (): RouteObject[] => {
           path: "2022/",
           lazy: {
             loader: async () => {
-              return RouteQueryLoader("year-in-music-2022");
+              return RouteQueryLoader("legacy-year-in-music-2022");
             },
             Component: async () => {
               return (await import("../year-in-music/2022/YearInMusic2022"))
@@ -184,7 +186,7 @@ const getUserRoutes = (): RouteObject[] => {
           path: "2021/",
           lazy: {
             loader: async () => {
-              return RouteQueryLoader("year-in-music-2021");
+              return RouteQueryLoader("legacy-year-in-music-2021");
             },
             Component: async () => {
               return (await import("../year-in-music/2021/YearInMusic2021"))
