@@ -771,8 +771,9 @@ def cover_art_yim(user_name, year: int = 2024):
             "Type of Image needs to be specified should be one of (overview, stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     branding = _parse_bool_arg("branding", True)
+    legacy = _parse_bool_arg("legacy", False)
 
-    stats = db_yim.get(user["id"], year)
+    stats = db_yim.get(user["id"], year, legacy=legacy)
     if stats is None:
         raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
 
@@ -791,6 +792,7 @@ def cover_art_yim(user_name, year: int = 2024):
             background_color = "#DFE5EB"
             accent_color = "#5B52AC"
 
+    # todo: use legacy query param here when new YIM images are ready
     yim24 = None
     if year == 2024:
         yim24 = {
