@@ -38,23 +38,23 @@ def _get_query():
                 ON l.recording_mbid = r.recording_mbid
              WHERE l.recording_mbid IS NOT NULL
          UNION ALL
-            -- Artist genres (priority 2)
+            -- Artist genres (priority 3 - lowest)
             SELECT l.user_id
                  , l.recording_mbid
                  , a.genre
                  , a.genre_count
-                 , 2 AS priority
+                 , 3 AS priority
               FROM listens_of_year l
               JOIN parquet.`{RECORDING_ARTIST_GENRE_DATAFRAME}` a
                 ON l.recording_mbid = a.recording_mbid
              WHERE l.recording_mbid IS NOT NULL
          UNION ALL
-            -- Release group genres (priority 3 - lowest)
+            -- Release group genres (priority 2)
             SELECT l.user_id
                  , l.recording_mbid
                  , rr.genre
                  , rr.genre_count
-                 , 3 AS priority
+                 , 2 AS priority
               FROM listens_of_year l
               JOIN parquet.`{RECORDING_RELEASE_GROUP_GENRE_DATAFRAME}` rr
                 ON l.recording_mbid = rr.recording_mbid
