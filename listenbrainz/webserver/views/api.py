@@ -240,6 +240,86 @@ def get_playing_now(user_name):
     })
 
 
+@api_bp.post("/user/<mb_username:user_name>/playing-now/delete")
+@crossdomain
+@ratelimit()
+def delete_playing_now(user_name):
+    """
+    Clear the listening now status for user ``user_name`` if it was submitted by the specified client.
+
+    This endpoint allows a client to dismiss/clear its own "listening now" status when the user
+    stops listening (e.g., dismisses their music player). The client must provide its name/id
+    in the request body, and the endpoint will only clear the playing_now if it matches the
+    client that originally submitted it.
+
+    :reqheader Authorization: Token <user token>
+    :reqheader Content-Type: *application/json*
+    :statuscode 200: Successfully cleared listening now status (or no playing_now exists).
+    :statuscode 400: Invalid request (missing client name or invalid JSON).
+    :statuscode 401: Invalid authorization.
+    :statuscode 403: The current playing_now was not submitted by the specified client.
+    :statuscode 404: The requested user was not found.
+    :resheader Content-Type: *application/json*
+    """
+    # Authenticate the user
+    user = validate_auth_header(fetch_email=False, scopes=["listenbrainz:submit-listens"])
+    
+    # Verify the user exists and is trying to clear their own playing_now
+    target_user = db_user.get_by_mb_id(db_conn, user_name)
+    if target_user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+    
+    if user['musicbrainz_id'] != user_name:
+        raise APIUnauthorized("You can only clear your own listening now status.")
+
+    # Get the current playing_now
+    playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
+    
+    # If no playing_now exists, return success
+    if playing_now_listen is None:
+        return jsonify({'status': 'ok', 'message': 'Playing now was already cleared'})
+
+    # Parse request body to get client name
+    try:
+        data = orjson.loads(request.get_data().decode("utf-8"))
+    except (ValueError, UnicodeDecodeError) as e:
+        log_raise_400("Cannot parse JSON document: %s" % e)
+
+    if not isinstance(data, dict):
+        log_raise_400("Invalid JSON document submitted. Top level of JSON document should be a json object.")
+
+    client_name = data.get('client')
+    if not client_name:
+        log_raise_400("JSON document must contain a 'client' field with the client name/id.")
+
+    if not isinstance(client_name, str):
+        log_raise_400("The 'client' field must be a string.")
+
+    # Check if the current playing_now was submitted by this client
+    track_metadata = playing_now_listen.data
+    submission_client = None
+    if 'additional_info' in track_metadata:
+        submission_client = track_metadata['additional_info'].get('submission_client')
+
+    # If the playing_now doesn't have a submission_client, we can't verify ownership
+    # In this case, we'll allow deletion if the client name is provided
+    # But if there is a submission_client and it doesn't match, reject the request
+    if submission_client and submission_client != client_name:
+        raise APIForbidden(
+            "The current playing_now was submitted by a different client. "
+            "Only the client that submitted the playing_now can clear it."
+        )
+
+    # Delete the playing_now
+    deleted = redis_connection._redis.delete_playing_now(user['id'])
+    
+    if deleted:
+        return jsonify({'status': 'ok', 'message': 'Playing now cleared successfully'})
+    else:
+        # This means the playing_now was already cleared, so return success
+        return jsonify({'status': 'ok', 'message': 'Playing now was already cleared'})
+
+
 @api_bp.get("/user/<mb_username:user_name>/similar-users")
 @crossdomain
 @ratelimit()
