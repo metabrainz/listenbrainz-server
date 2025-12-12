@@ -593,7 +593,6 @@ export default class YearInMusic extends React.Component<
                         return (
                           <SwiperSlide
                             key={`coverflow-${release.release_name}`}
-                            lazy
                           >
                             <img
                               data-src={

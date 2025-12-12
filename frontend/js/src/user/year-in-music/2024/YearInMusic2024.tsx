@@ -733,7 +733,6 @@ export default class YearInMusic extends React.Component<
                           );
                           return (
                             <SwiperSlide
-                              lazy
                               key={`coverflow-${release_group.release_group_name}`}
                             >
                               <img
@@ -1479,7 +1478,6 @@ export default class YearInMusic extends React.Component<
                 return (
                   <SwiperSlide
                     key={`coverflow-${mosaicImage.release_mbid}`}
-                    lazy
                   >
                     <div
                       style={{
