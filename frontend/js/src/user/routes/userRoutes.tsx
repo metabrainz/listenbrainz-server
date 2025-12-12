@@ -133,7 +133,7 @@ const getUserRoutes = (): RouteObject[] => {
       ],
     },
     {
-      path: "/user/:username/year-in-music/legacy/:year/",
+      path: "/user/:username/year-in-music/legacy/",
       lazy: {
         Component: async () => {
           return (await import("../../explore/layout")).default;
