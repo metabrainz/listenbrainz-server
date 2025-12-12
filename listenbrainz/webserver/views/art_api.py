@@ -338,6 +338,7 @@ def cover_art_yim(user_name, year: int = 2024):
 
     branding = _parse_bool_arg("branding", True)
     legacy = _parse_bool_arg("legacy", False)
+
     if legacy:
         if year < 2021 or year > 2024:
             raise APIBadRequest("Legacy Year In Music images are only available for years 2021, 2022, 2023 and 2024")

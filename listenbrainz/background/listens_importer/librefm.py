@@ -12,8 +12,7 @@ class LibrefmListensImporter(BaseListensImporter):
         """Processes the libre.fm csv archive file and returns a generator of batches of items."""
 
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8") as file:
-            header_line = self._read_header_line(file, import_task["file_path"])
-
+            header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
             yield from chunked(reader, self.batch_size)
 
@@ -22,14 +21,14 @@ class LibrefmListensImporter(BaseListensImporter):
         listens = []
         for item in batch:
             listen = {
-                "listened_at": item["Time"],
+                "listened_at": item["time"],
                 "track_metadata": {
-                    "track_name": item["Track"],
-                    "artist_name": item["Artist"],
+                    "track_name": item["track"],
+                    "artist_name": item["artist"],
                 }
             }
-            if item["Album"]:
-                listen["track_metadata"]["release_name"] = item["Album"]
+            if item["album"]:
+                listen["track_metadata"]["release_name"] = item["album"]
             listen["track_metadata"]["additional_info"] = {
                 "submission_client": self.importer_name,
                 "music_service": "libre.fm"
@@ -38,21 +37,24 @@ class LibrefmListensImporter(BaseListensImporter):
         return listens
 
     @staticmethod
-    def _looks_like_header(line: str) -> bool:
-        if not line:
-            return False
-        normalized = {column.strip().strip('"') for column in line.strip().split(",")}
-        expected = {"Time", "Artist", "Track", "Album"}
-        return expected.issubset(normalized)
+    def _looks_like_header(line: str) -> list[str] | None:
+        """Skip comment lines and find the first header line. Column names need
+           to be handled case-insensitively. Extra columns (userid) are allowed
+           but need to be included in the header for DictReader to ignore them.
+        """
+        maybe_header = [
+            column.strip(' "').lower() for column in line.strip().split(",")
+        ]
+        expected = {"time", "artist", "track", "album"}
+        if expected.issubset(maybe_header):
+            return maybe_header
+        return None
 
-    def _read_header_line(self, file: TextIO, file_path: str) -> list[str]:
+    def _read_header_line(self, file: TextIO) -> list[str]:
         """Advance the file pointer until a header row is located."""
         file.seek(0)
         for line in file:
-            stripped = line.strip()
-            if not stripped:
-                continue
-            if self._looks_like_header(line):
-                return stripped.split(",")
+            if header := self._looks_like_header(line):
+                return header
 
         raise ImportFailedError("Unable to locate Libre.fm header row in import file.")

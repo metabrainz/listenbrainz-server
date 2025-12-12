@@ -17,6 +17,7 @@ from data.model.user_era_activity import EraActivityRecord
 from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -1657,12 +1658,34 @@ def get_sitewide_artist_map():
     })
 
 
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
+@crossdomain
+@ratelimit()
+def legacy_year_in_music(user_name: str, year: int):
+    """ Get data for legacy year in music stuff """
+    if year < 2021 or year > 2024:
+        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
+
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
+        }
+    })
+
+
+
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music")
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
+@ratelimit()
 def year_in_music(user_name: str, year: int = 2024):
     """ Get data for year in music stuff """
-    if year != 2021 and year != 2022 and year != 2023 and year != 2024:
+    if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = db_user.get_by_mb_id(db_conn, user_name)
@@ -1672,7 +1695,7 @@ def year_in_music(user_name: str, year: int = 2024):
     return jsonify({
         "payload": {
             "user_name": user_name,
-            "data": db_year_in_music.get(user["id"], year) or {}
+            "data": db_year_in_music.get(user["id"], year, legacy=False) or {}
         }
     })
 
