@@ -736,15 +736,13 @@ export default class YearInMusic extends React.Component<
                               key={`coverflow-${release_group.release_group_name}`}
                             >
                               <img
-                                data-src={
+                                src={
                                   coverArt ??
                                   "/static/img/cover-art-placeholder.jpg"
                                 }
                                 alt={release_group.release_group_name}
-                                className="swiper-lazy"
                                 loading="lazy"
                               />
-                              <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                               <div title={release_group.release_group_name}>
                                 {getEntityLink(
                                   "release-group",
@@ -1487,13 +1485,11 @@ export default class YearInMusic extends React.Component<
                     >
                       <a href={imageLink} target="_blank" rel="noreferrer">
                         <img
-                          data-src={imageLink}
+                          src={imageLink}
                           alt={mosaicImage.release_name}
-                          className="swiper-lazy"
                           loading="lazy"
                         />
                       </a>
-                      <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                       <h4 title={mosaicImage.release_name}>
                         {getEntityLink(
                           "release",

@@ -742,15 +742,13 @@ export default class YearInMusic extends React.Component<
                               key={`coverflow-${release_group.release_group_name}`}
                             >
                               <img
-                                data-src={
+                                src={
                                   coverArt ??
                                   "/static/img/cover-art-placeholder.jpg"
                                 }
                                 alt={release_group.release_group_name}
-                                className="swiper-lazy"
                                 loading="lazy"
                               />
-                              <div className="swiper-lazy-preloader swiper-lazy-preloader-white" />
                               <div title={release_group.release_group_name}>
                                 {getEntityLink(
                                   "release-group",
