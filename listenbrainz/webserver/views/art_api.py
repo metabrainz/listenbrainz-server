@@ -425,7 +425,7 @@ def _cover_art_yim_artists(user_name, stats, year, styles):
     )
 
 
-def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
+def _cover_art_yim_playlist(user_name, stats, key, year, branding, show_caption, styles):
     """ Create the SVG using playlist tracks' cover arts for the given YIM playlist. """
     if stats.get(key) is None:
         return None
@@ -440,9 +440,17 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
     for track in stats[key]["track"]:
         additional_metadata = track["extension"][PLAYLIST_TRACK_EXTENSION_URI].get("additional_metadata")
         if additional_metadata.get("caa_id") and additional_metadata.get("caa_release_mbid"):
-            caa_id = additional_metadata["caa_id"]
+            caa_id = additional_metadata.get("caa_id")
+            caa_release_mbid = additional_metadata.get("caa_release_mbid")
             # check existence in set to avoid duplicates
             if caa_id not in selected_urls:
+                images.append({
+                    "caa_id": caa_id,
+                    "caa_release_mbid": caa_release_mbid,
+                    "title": track.get("title"),
+                    "entity_mbid": str(track.get("mbid")),
+                    "artist": track.get("artist_credit")
+                })
                 images.append(additional_metadata)
                 selected_urls.add(caa_id)
     
@@ -465,7 +473,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
             entity="album",
             width=500,
             height=500,
-            show_caption=False
+            show_caption=show_caption
         )
 
     match key:
@@ -484,6 +492,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, styles):
         branding=branding,
         width=924,
         height=924,
+        show_caption=show_caption,
         **styles,
     )
 
@@ -558,6 +567,7 @@ def cover_art_yim(user_name, year: int = 2025):
 
     branding = _parse_bool_arg("branding", True)
     legacy = _parse_bool_arg("legacy", False)
+    show_caption = _parse_bool_arg("show_caption", True)
 
     if legacy:
         if year < 2021 or year > 2024:
@@ -580,8 +590,8 @@ def cover_art_yim(user_name, year: int = 2025):
         case "albums": svg = _cover_art_yim_albums(user_name, stats, year, styles)
         case "tracks": svg = _cover_art_yim_tracks(user_name, stats, year, styles)
         case "artists": svg = _cover_art_yim_artists(user_name, stats, year, styles)
-        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding, styles)
-        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding, styles)
+        case "discovery-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-discoveries-for-year", year, branding, show_caption, styles)
+        case "missed-playlist": svg = _cover_art_yim_playlist(user_name, stats, "playlist-top-missed-recordings-for-year", year, branding, show_caption, styles)
         case other: raise APIBadRequest(f"Invalid image type {other}. Image type should be one of (stats, artists, albums, tracks, discovery-playlist, missed-playlist)")
 
     if svg is None:
