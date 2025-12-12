@@ -540,6 +540,7 @@ export default function YearInMusic() {
                   <h3 className="flex-center">Overview</h3>
                   <div className="d-flex justify-content-center">
                     <Preview
+                      className="img-fluid"
                       url={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
                       styles={{
                         textColor,
@@ -693,7 +694,7 @@ export default function YearInMusic() {
               </div>
               <div
                 className="overlay-image-container mb-5"
-                style={{ width: "450px", height: "80px" }}
+                style={{ maxWidth: "450px", height: "80px" }}
               >
                 <img
                   src="/static/img/year-in-music/listenbrainz-footer.png"
@@ -764,7 +765,7 @@ export default function YearInMusic() {
               </p>
               <div
                 className="overlay-image-container mt-5 mb-5"
-                style={{ width: "250px", height: "85px" }}
+                style={{ maxWidth: "250px", height: "85px" }}
               >
                 <img
                   src="/static/img/year-in-music/OSS-footer.png"

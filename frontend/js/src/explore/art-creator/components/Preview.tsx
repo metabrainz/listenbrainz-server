@@ -1,7 +1,7 @@
 import * as React from "react";
 import "external-svg-loader";
 
-type PreviewProps = {
+type PreviewProps = React.SVGProps<SVGSVGElement> & {
   size?: number;
   url: string;
   showCaption?: boolean;
@@ -17,7 +17,7 @@ const Preview = React.forwardRef(function PreviewComponent(
   ref: React.ForwardedRef<SVGSVGElement>
 ) {
   const [error, setError] = React.useState<string>();
-  const { url, styles, size = 750, showCaption } = props;
+  const { url, styles, size = 750, showCaption, ...svgProps } = props;
   const { textColor, bgColor1, bgColor2 } = styles;
 
   React.useEffect(() => {
@@ -61,6 +61,7 @@ const Preview = React.forwardRef(function PreviewComponent(
       viewBox={`0 0 ${size} ${size}`}
       height={size}
       width={size}
+      {...svgProps}
     >
       <style>
         {!showCaption
