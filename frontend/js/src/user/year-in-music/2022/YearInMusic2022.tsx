@@ -364,7 +364,7 @@ export default class YearInMusic extends React.Component<
           <div id="main-header" className="flex-center">
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-22/yim22-logo.png"
+              src="/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
               alt="Your year in music 2022"
             />
           </div>
@@ -501,7 +501,7 @@ export default class YearInMusic extends React.Component<
         <div id="main-header" className="flex-center">
           <img
             className="img-fluid header-image"
-            src="/static/img/year-in-music-22/yim22-logo.png"
+            src="/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
             alt="Your year in music 2022"
           />
           <div className="arrow-down" />
@@ -650,7 +650,7 @@ export default class YearInMusic extends React.Component<
                   <div className="center-p">
                     <img
                       className="img-header"
-                      src="/static/img/year-in-music-22/stereo.png"
+                      src="/static/img/legacy-year-in-music/year-in-music-22/stereo.png"
                       alt="Top artists of 2022"
                     />
                     <h4>Top tracks of 2022</h4>
@@ -703,7 +703,7 @@ export default class YearInMusic extends React.Component<
                   <div className="center-p">
                     <img
                       className="img-header"
-                      src="/static/img/year-in-music-22/map.png"
+                      src="/static/img/legacy-year-in-music/year-in-music-22/map.png"
                       alt="Top artists of 2022"
                     />
                     <h4>Top artists of 2022</h4>
@@ -1018,7 +1018,7 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   <img
                     className="img-header"
-                    src="/static/img/year-in-music-22/magnify.png"
+                    src="/static/img/legacy-year-in-music/year-in-music-22/magnify.png"
                     alt={`New albums from ${yourOrUsersName} top artists`}
                   />
                   <h4>
@@ -1108,7 +1108,7 @@ export default class YearInMusic extends React.Component<
                 <div className="center-p">
                   <img
                     className="img-header"
-                    src="/static/img/year-in-music-22/buddy.png"
+                    src="/static/img/legacy-year-in-music/year-in-music-22/buddy.png"
                     alt="Music buddies"
                   />
                   <h4>

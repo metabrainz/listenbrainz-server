@@ -139,13 +139,13 @@ enum YIM2023Color {
 const YIM2023ColorStrings = Object.values(YIM2023Color);
 
 const buddiesImages = [
-  "/static/img/year-in-music-23/fish.png",
-  "/static/img/year-in-music-23/dog.png",
-  "/static/img/year-in-music-23/worm.png",
-  "/static/img/year-in-music-23/cat.png",
-  "/static/img/year-in-music-23/trunk.png",
-  "/static/img/year-in-music-23/dog-tall.png",
-  "/static/img/year-in-music-23/ghost-square.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/fish.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/dog.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/worm.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/cat.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/trunk.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/dog-tall.png",
+  "/static/img/legacy-year-in-music/year-in-music-23/ghost-square.png",
 ];
 
 export type YearInMusicState = {
@@ -592,7 +592,7 @@ export default class YearInMusic extends React.Component<
           <div className="color-picker">
             <img
               className="pick-color-caption"
-              src="/static/img/year-in-music-23/pick-color.png"
+              src="/static/img/legacy-year-in-music/year-in-music-23/pick-color.png"
               alt="Pick a color"
             />
             {YIM2023ColorStrings.map((color) => {
@@ -616,12 +616,12 @@ export default class YearInMusic extends React.Component<
               className="masked-image"
               style={{
                 WebkitMaskImage:
-                  "url('/static/img/year-in-music-23/yim23-logo.png')",
+                  "url('/static/img/legacy-year-in-music/year-in-music-23/yim23-logo.png')",
               }}
             >
               <img
                 className="img-fluid header-image"
-                src="/static/img/year-in-music-23/yim23-logo.png"
+                src="/static/img/legacy-year-in-music/year-in-music-23/yim23-logo.png"
                 alt="Your year in music 2023"
               />
             </span>
@@ -631,12 +631,12 @@ export default class YearInMusic extends React.Component<
                 className="masked-image"
                 style={{
                   WebkitMaskImage:
-                    "url('/static/img/year-in-music-23/flower.png')",
+                    "url('/static/img/legacy-year-in-music/year-in-music-23/flower.png')",
                   marginTop: "6vh",
                 }}
               >
                 <img
-                  src="/static/img/year-in-music-23/flower.png"
+                  src="/static/img/legacy-year-in-music/year-in-music-23/flower.png"
                   alt="Your year in music 2023"
                 />
               </span>
@@ -797,7 +797,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src="/static/img/year-in-music-23/peep-square.png"
+                        src="/static/img/legacy-year-in-music/year-in-music-23/peep-square.png"
                         alt="Top songs of 2023"
                       />
                       <h4>Top songs of 2023</h4>
@@ -856,7 +856,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src="/static/img/year-in-music-23/heart-square.png"
+                        src="/static/img/legacy-year-in-music/year-in-music-23/heart-square.png"
                         alt="Top artists of 2023"
                       />
                       <h4>Top artists of 2023</h4>
@@ -1214,7 +1214,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src="/static/img/year-in-music-23/ghost-square.png"
+                        src="/static/img/legacy-year-in-music/year-in-music-23/ghost-square.png"
                         alt={`New albums from ${yourOrUsersName} top artists`}
                       />
                       <h4>
@@ -1303,7 +1303,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src="/static/img/year-in-music-23/buddies-square.png"
+                        src="/static/img/legacy-year-in-music/year-in-music-23/buddies-square.png"
                         alt="Music buddies"
                       />
                       <h4>

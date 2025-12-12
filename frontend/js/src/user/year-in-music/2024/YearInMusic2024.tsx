@@ -507,16 +507,16 @@ export default class YearInMusic extends React.Component<
     const linkToThisPage = `${linkToUserProfile}/year-in-music/2024`;
     const imageShareCustomStyles = `.background {\nfill: ${backgroundColor};\n}\n`;
     const buddiesImages = [
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-01.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-02.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-03.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-04.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-05.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-06.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-07.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-08.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-09.png`,
-      `/static/img/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-10.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-01.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-02.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-03.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-04.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-05.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-06.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-07.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-08.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-09.png`,
+      `/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/buddies/yim24-buddy-10.png`,
     ];
 
     let newArtistsDiscovered: number | string =
@@ -605,7 +605,7 @@ export default class YearInMusic extends React.Component<
                     data-season={name}
                   >
                     <img
-                      src={`/static/img/year-in-music-24/icon-${name}.svg`}
+                      src={`/static/img/legacy-year-in-music/year-in-music-24/icon-${name}.svg`}
                       alt={name}
                       height={40}
                     />
@@ -617,7 +617,7 @@ export default class YearInMusic extends React.Component<
           {hasSomeData ? (
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-24/yim24-header.png"
+              src="/static/img/legacy-year-in-music/year-in-music-24/yim24-header.png"
               alt="Your year in music 2024"
             />
           ) : (
@@ -626,12 +626,12 @@ export default class YearInMusic extends React.Component<
                 className="masked-image"
                 style={{
                   WebkitMaskImage:
-                    "url('/static/img/year-in-music-24/flower.png')",
+                    "url('/static/img/legacy-year-in-music/year-in-music-24/flower.png')",
                   marginTop: "6vh",
                 }}
               >
                 <img
-                  src="/static/img/year-in-music-24/flower.png"
+                  src="/static/img/legacy-year-in-music/year-in-music-24/flower.png"
                   alt="Your year in music 2024"
                 />
               </span>
@@ -791,7 +791,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-01.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-01.png`}
                         alt="Top songs of 2024"
                       />
                       <h3>Top songs of 2024</h3>
@@ -850,7 +850,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-02.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-02.png`}
                         alt="Top artists of 2024"
                       />
                       <h3>Top artists of 2024</h3>
@@ -1251,7 +1251,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-03.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-03.png`}
                         alt={`New albums from ${yourOrUsersName} top artists`}
                       />
                       <h3>
@@ -1340,7 +1340,7 @@ export default class YearInMusic extends React.Component<
                     <div className="heading">
                       <img
                         className="img-header"
-                        src={`/static/img/year-in-music-24/${selectedSeasonName}/yim24-04.png`}
+                        src={`/static/img/legacy-year-in-music/year-in-music-24/${selectedSeasonName}/yim24-04.png`}
                         alt="Music buddies"
                       />
                       <h3>

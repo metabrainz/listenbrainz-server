@@ -49,8 +49,8 @@ def legacy_cover_art_yim_stats(user_name, stats, year, yim24):
             total_listen_count=stats["total_listen_count"],
             total_new_artists_discovered=stats["total_new_artists_discovered"],
             total_artists_count=stats["total_artists_count"],
-            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-            magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-magnify.png',
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-bg.png',
+            magnify_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-magnify.png',
         )
 
     if year == 2023:
@@ -104,8 +104,8 @@ def _cover_art_yim_albums_2022(user_name, stats):
         "art/svg-templates/year-in-music/legacy/2022/yim-2022-albums.svg",
         user_name=user_name,
         image_urls=image_urls,
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-bg.png',
+        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-flames.png',
     )
 
 
@@ -202,8 +202,8 @@ def legacy_cover_art_yim_tracks(user_name, stats, year, yim24):
             "art/svg-templates/year-in-music/legacy/2022/yim-2022-tracks.svg",
             user_name=user_name,
             tracks=stats["top_recordings"],
-            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-            stereo_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-stereo.png',
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-bg.png',
+            stereo_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-stereo.png',
         )
 
     if year == 2023:
@@ -233,7 +233,7 @@ def legacy_cover_art_yim_artists(user_name, stats, year, yim24):
             user_name=user_name,
             artists=stats["top_artists"],
             total_artists_count=stats["total_artists_count"],
-            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
+            bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-bg.png',
         )
 
     if year == 2023:
@@ -283,8 +283,8 @@ def _cover_art_yim_playlist_2022(user_name, stats, key):
         "art/svg-templates/year-in-music/legacy/2022/yim-2022-playlists.svg",
         user_name=user_name,
         image_urls=image_urls,
-        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-bg.png',
-        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/art/yim-2022-shareable-flames.png',
+        bg_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-bg.png',
+        flames_image_url=f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-22/yim-2022-shareable-flames.png',
     )
 
 
@@ -486,7 +486,7 @@ def cover_art_yim_legacy(user, image: str, year: int = 2024, branding: bool = Tr
             "season": season,
             "background_color": background_color,
             "accent_color": accent_color,
-            "image_folder": f'{current_app.config["SERVER_ROOT_URL"]}/static/img/year-in-music-24/{season}',
+            "image_folder": f'{current_app.config["SERVER_ROOT_URL"]}/static/img/legacy-year-in-music/year-in-music-24/{season}',
         }
 
     match image:
