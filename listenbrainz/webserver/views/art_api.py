@@ -750,7 +750,7 @@ def _cover_art_yim_overview(user_name, stats, year, yim24):
     }
 
     if year == 2023:
-        return render_template("art/svg-templates/year-in-music/20232023/yim-2023.svg", **props)
+        return render_template("art/svg-templates/year-in-music/2023/yim-2023.svg", **props)
 
     if year == 2024:
         return render_template("art/svg-templates/year-in-music/2024/yim-2024-overview.svg", **props, **yim24)
