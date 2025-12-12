@@ -22,10 +22,13 @@ export type StreamDataItem = {
 const getLegendText = (timeRange: UserStatsAPIRange) => {
   switch (timeRange) {
     case "week":
+    case "this_week":
       return "Days of the week";
     case "month":
+    case "this_month":
       return "Days of the month";
     case "year":
+    case "this_year":
       return "Months";
     default:
       return "Years";
@@ -105,10 +108,13 @@ const getAxisFormatter = (
 
     switch (timeRange) {
       case "week":
+      case "this_week":
         return timeUnit.substring(0, 3);
       case "month":
+      case "this_month":
         return timeUnit;
       case "year":
+      case "this_year":
         return timeUnit.substring(0, 3);
       case "all_time": {
         if (isMobile) {
