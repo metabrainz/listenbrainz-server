@@ -27,7 +27,7 @@ export default function YIMListeningActivity({
   const youOrUsername = isCurrentUser ? "you" : `${userName}`;
   const yourOrUsersName = isCurrentUser ? "your" : `${userName}'s`;
   /* Listening history calendar graph */
-  if (!isEmpty(listensPerDay)) {
+  if (isEmpty(listensPerDay)) {
     return null;
   }
   const listensPerDayForGraph = listensPerDay

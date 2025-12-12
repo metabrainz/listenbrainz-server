@@ -5,6 +5,7 @@ import {
   faCircleChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router";
+import { isEmpty } from "lodash";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type YIMFriendsProps = {
@@ -40,6 +41,9 @@ export default function YIMFriends({
   };
   const isCurrentUser = userName === currentUser?.name;
   const yourOrUsersName = isCurrentUser ? "your" : `${userName}'s`;
+  if (isEmpty(followingList)) {
+    return null;
+  }
   return (
     <div className="section">
       <div className="header">

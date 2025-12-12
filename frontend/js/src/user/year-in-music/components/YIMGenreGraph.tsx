@@ -25,6 +25,9 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
   const isCurrentUser = userName === currentUser?.name;
   const youOrUsername = isCurrentUser ? "you" : `${userName}`;
   const hasOrHave = isCurrentUser ? "have" : "has";
+  if (!genreGraphData) {
+    return null;
+  }
   return (
     <div className="" id="genre-graph">
       <h3 className="text-center">

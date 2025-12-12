@@ -15,6 +15,9 @@ export default function AlbumsCoverflow(props: {
   topReleaseGroups: UserReleaseGroupsResponse["payload"]["release_groups"];
 }) {
   const { topReleaseGroups } = props;
+  if (!topReleaseGroups || topReleaseGroups.length === 0) {
+    return null;
+  }
   return (
     <div id="top-albums" className="card-bg">
       <Swiper
