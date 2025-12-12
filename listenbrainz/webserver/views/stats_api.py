@@ -1664,7 +1664,7 @@ def get_sitewide_artist_map():
 def legacy_year_in_music(user_name: str, year: int):
     """ Get data for legacy year in music stuff """
     if year < 2021 or year > 2024:
-        raise APINotFound(f"Cannot find Year in Music report for year: {year}")
+        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
 
     user = db_user.get_by_mb_id(db_conn, user_name)
     if user is None:

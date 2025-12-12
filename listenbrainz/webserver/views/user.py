@@ -327,7 +327,7 @@ def taste(user_name: str):
 def legacy_year_in_music(user_name, year: int):
     """ Year in Music """
     if year not in (2021, 2022, 2023, 2024):
-        return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
+        return jsonify({"error": f"Cannot find legacy Year in Music report for year: {year}"}), 404
 
     user = _get_user(user_name)
     if not user:
@@ -388,6 +388,7 @@ def year_in_music(user_name, year: int = 2024):
         }
     }
 
+    # TODO: Move this 2024-specific code to the /legacy endpoint when YIM 25 comes out
     if year_in_music_data and year == 2024:
         try:
             data = get_tag_hierarchy_data()
