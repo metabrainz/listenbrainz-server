@@ -41,7 +41,7 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ImageShareButtons from "./components/ImageShareButtons";
+import ImageShareButtons from "../components/ImageShareButtons";
 
 import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";

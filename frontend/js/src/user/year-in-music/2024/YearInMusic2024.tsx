@@ -47,7 +47,7 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ImageShareButtons from "../2023/components/ImageShareButtons";
+import ImageShareButtons from "../components/ImageShareButtons";
 import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
@@ -588,7 +588,7 @@ export default class YearInMusic extends React.Component<
         }}
       >
         <SEO year={2024} userName={user?.name} />
-        <YIMYearMetaTags year={2024} backgroundColor={backgroundColor} />
+        <YIMYearMetaTags year={2024} />
         <div id="main-header">
           <div className="color-picker">
             <div>Choose a season</div>
@@ -1474,9 +1474,7 @@ export default class YearInMusic extends React.Component<
               {mosaics?.map((mosaicImage) => {
                 const imageLink = `https://static.metabrainz.org/LB/year-in-music/2024/${mosaicImage.release_mbid}.png`;
                 return (
-                  <SwiperSlide
-                    key={`coverflow-${mosaicImage.release_mbid}`}
-                  >
+                  <SwiperSlide key={`coverflow-${mosaicImage.release_mbid}`}>
                     <div
                       style={{
                         marginInline: "auto",
