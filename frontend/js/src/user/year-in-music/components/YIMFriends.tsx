@@ -61,7 +61,7 @@ export default function YIMFriends({
             return (
               <Link
                 key={`follow-user-${followedUser}`}
-                className="buddy content-card card"
+                className="buddy content-card"
                 to={`/user/${encodeURIComponent(
                   followedUser
                 )}/year-in-music/${year}/`}

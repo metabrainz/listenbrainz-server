@@ -356,7 +356,7 @@ $coverflow-image-height: 400px;
       scroll-snap-type: x mandatory;
     }
     .buddy {
-      scroll-snap-align: start;
+      scroll-snap-align: center;
       text-align: center;
       max-width: fit-content;
       background: var(--cardBackgroundColor);
