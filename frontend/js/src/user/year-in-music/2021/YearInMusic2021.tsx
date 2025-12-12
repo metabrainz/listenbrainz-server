@@ -354,7 +354,7 @@ export default class YearInMusic extends React.Component<
     );
     const encodedUsername = encodeURIComponent(user.name);
     return (
-      <div role="main" id="year-in-music">
+      <div role="main" id="legacy-year-in-music">
         <SEO year={2021} userName={user?.name} />
         <YIMYearMetaTags year={2021} />
         <div className="flex flex-wrap" id="header">

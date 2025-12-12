@@ -578,7 +578,7 @@ export default class YearInMusic extends React.Component<
     );
     return (
       <div
-        id="year-in-music"
+        id="legacy-year-in-music"
         className="yim-2024"
         role="main"
         style={{

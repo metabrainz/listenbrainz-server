@@ -581,7 +581,7 @@ export default class YearInMusic extends React.Component<
     );
     return (
       <div
-        id="year-in-music"
+        id="legacy-year-in-music"
         className="yim-2023"
         role="main"
         style={{ ["--selectedColor" as any]: selectedColor }}
