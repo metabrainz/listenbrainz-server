@@ -354,14 +354,14 @@ export default class YearInMusic extends React.Component<
     );
     const encodedUsername = encodeURIComponent(user.name);
     return (
-      <div role="main" id="year-in-music">
+      <div role="main" id="legacy-year-in-music">
         <SEO year={2021} userName={user?.name} />
         <YIMYearMetaTags year={2021} />
         <div className="flex flex-wrap" id="header">
           <div className="content-card flex-center flex-wrap">
             <img
               className="img-fluid header-image"
-              src="/static/img/year-in-music-2021.svg"
+              src="/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.svg"
               alt="Your year in music 2021"
             />
             <div>

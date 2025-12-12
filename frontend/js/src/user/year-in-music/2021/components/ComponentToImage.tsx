@@ -52,7 +52,7 @@ function ComponentToImage({ data, entityType, user }: ComponentToImageProps) {
       <div id={`savable-${entityType}-component`} className="savable-card card">
         <img
           className="card-img-top"
-          src="/static/img/year-in-music-2021.png"
+          src="/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.png"
           alt="Your year in music 2022"
         />
         <h3 className="card-title">
