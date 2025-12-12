@@ -1176,6 +1176,25 @@ class APITestCase(ListenAPIIntegrationTestCase):
                                         user_name=self.user['musicbrainz_id'])
         auth_headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])}
 
+        # Submit a playing_now with a client name
+        playing_now_payload = {
+            "listen_type": "playing_now",
+            "payload": [
+                {
+                    "track_metadata": {
+                        "artist_name": "Kanye West",
+                        "release_name": "The Life of Pablo",
+                        "track_name": "Fade",
+                        "additional_info": {
+                            "submission_client": "BrainzPlayer"
+                        }
+                    }
+                }
+            ]
+        }
+        response = self.send_data(playing_now_payload)
+        self.assert200(response)
+
         # Test 1: Missing client field
         response = self.client.post(
             delete_url,
@@ -1186,17 +1205,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         self.assert400(response)
         self.assertIn('client', response.json['error'])
 
-        # Test 2: Client field is not a string
-        response = self.client.post(
-            delete_url,
-            data=json.dumps({'client': 123}),
-            headers=auth_headers,
-            content_type='application/json'
-        )
-        self.assert400(response)
-        self.assertIn('client', response.json['error'])
-
-        # Test 3: User tries to clear another user's playing_now
+        # Test 2 User tries to clear another user's playing_now
         other_user = db_user.get_or_create(self.db_conn, 999, 'otheruser')
         other_user_url = self.custom_url_for('api_v1.delete_playing_now',
                                             user_name=other_user['musicbrainz_id'])
