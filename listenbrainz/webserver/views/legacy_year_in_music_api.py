@@ -4,13 +4,12 @@ from markupsafe import Markup
 
 import listenbrainz.db.year_in_music as db_yim
 
-from flask import request, render_template, Blueprint, current_app
+from flask import request, render_template, current_app
 
 from listenbrainz.art.cover_art_generator import CoverArtGenerator
 from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.views.playlist_api import PLAYLIST_TRACK_EXTENSION_URI
 
-art_api_bp = Blueprint('art_api_v1', __name__)
 
 def _repeat_images(images, size=9):
     """ Repeat the images so that we have required number of images. """
@@ -20,6 +19,7 @@ def _repeat_images(images, size=9):
     while len(images) < size:
         images.append(next(repeater))
     return images
+
 
 def legacy_cover_art_yim_stats(user_name, stats, year, yim24):
     """ Create the SVG using YIM statistics for the given year. """
@@ -456,7 +456,6 @@ def legacy_cover_art_yim_overview(user_name, stats, year, yim24):
         return render_template("art/svg-templates/year-in-music/legacy/2024/yim-2024-overview.svg", **props, **yim24)
 
 
-
 def cover_art_yim_legacy(user, image: str, year: int = 2024, branding: bool = True):
     """ Create the shareable svg image using YIM stats """
     user_name = user["musicbrainz_id"]
@@ -464,7 +463,8 @@ def cover_art_yim_legacy(user, image: str, year: int = 2024, branding: bool = Tr
     if stats is None:
         raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
 
-    season = request.args.get("season") or 'spring'
+    season = request.args.get("season") or "spring"
+    season = season.lower()
     match season:
         case "spring":
             background_color = "#EDF3E4"
@@ -478,8 +478,9 @@ def cover_art_yim_legacy(user, image: str, year: int = 2024, branding: bool = Tr
         case "winter":
             background_color = "#DFE5EB"
             accent_color = "#5B52AC"
+        case _:
+            raise APIBadRequest(f"Invalid season {season}. Season should be one of (spring, summer, autumn, winter)")
 
-    # todo: use legacy query param here when new YIM images are ready
     yim24 = None
     if year == 2024:
         yim24 = {
