@@ -599,19 +599,23 @@ export default function YearInMusic() {
                     listensPerDay={yearInMusicData.listens_per_day}
                     userName={user.name}
                     year={year}
+                    gradientColors={gradientColors}
                   />
                   <YIMMostListenedYear
                     mostListenedYearData={yearInMusicData.most_listened_year}
                     userName={user.name}
+                    gradientColors={gradientColors}
                   />
                   <YIMArtistMap
                     artistMapData={yearInMusicData.artist_map}
                     yourOrUsersName={yourOrUsersName}
+                    gradientColors={gradientColors}
                   />
                   {genreGraphData && (
                     <YIMGenreGraph
                       genreGraphData={genreGraphData}
                       userName={user.name}
+                      gradientColors={gradientColors}
                     />
                   )}
                   <div className="yim-share-button-container">

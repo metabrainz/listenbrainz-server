@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "react-tooltip";
 import { CalendarDatum, ResponsiveCalendar } from "@nivo/calendar";
+import tinycolor from "tinycolor2";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 export type YIMListeningActivityData = Array<{
@@ -16,11 +17,13 @@ type YIMListeningActivityProps = {
   listensPerDay: YIMListeningActivityData;
   userName: string;
   year: number;
+  gradientColors: string[];
 };
 export default function YIMListeningActivity({
   listensPerDay,
   userName,
   year,
+  gradientColors,
 }: YIMListeningActivityProps) {
   const { currentUser } = React.useContext(GlobalAppContext);
   const isCurrentUser = userName === currentUser?.name;
@@ -40,7 +43,16 @@ export default function YIMListeningActivity({
         : null
     )
     .filter(Boolean);
-
+  const colorPalette = [
+    ...[1, 2, 3, 4, 5]
+      .map((index) =>
+        tinycolor(gradientColors[1])
+          .lighten(10 * index)
+          .toHexString()
+      )
+      .reverse(),
+    gradientColors[1],
+  ];
   return (
     <div className="" id="calendar">
       <h3 className="text-center">
@@ -63,16 +75,7 @@ export default function YIMListeningActivity({
             to={`${year}-12-31`}
             data={listensPerDayForGraph as CalendarDatum[]}
             // emptyColor={selectedSeason.background}
-            // colors={[
-            //   ...[1, 2, 3]
-            //     .map((multiplier) =>
-            //       tinycolor(accentColor)
-            //         .lighten(15 * multiplier)
-            //         .toHexString()
-            //     )
-            //     .reverse(),
-            //   accentColor,
-            // ]}
+            colors={colorPalette}
             monthBorderColor="#eeeeee"
             dayBorderWidth={1}
             dayBorderColor="#ffffff"

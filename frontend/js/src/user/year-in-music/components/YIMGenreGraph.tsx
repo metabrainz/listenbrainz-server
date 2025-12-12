@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ResponsiveTreeMap } from "@nivo/treemap";
 import * as React from "react";
 import Tooltip from "react-tooltip";
+import tinycolor from "tinycolor2";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 
 type Node = {
@@ -18,9 +19,10 @@ export type GenreGraphDataT = {
 type YIMGenreGraphProps = {
   genreGraphData: GenreGraphDataT;
   userName: string;
+  gradientColors: string[];
 };
 export default function YIMGenreGraph(props: YIMGenreGraphProps) {
-  const { genreGraphData, userName } = props;
+  const { genreGraphData, userName, gradientColors } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
   const isCurrentUser = userName === currentUser?.name;
   const youOrUsername = isCurrentUser ? "you" : `${userName}`;
@@ -28,6 +30,14 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
   if (!genreGraphData) {
     return null;
   }
+  const colorPalette = gradientColors
+    .map((color) =>
+      tinycolor(color)
+        .analogous()
+        .map((tc) => tc.brighten(20).saturate(15).toHexString())
+        .flat()
+    )
+    .flat();
   return (
     <div className="" id="genre-graph">
       <h3 className="text-center">
@@ -56,7 +66,7 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
               from: "color",
               modifiers: [["darker", 1.2]],
             }}
-            // colors={reorderedColors}
+            colors={colorPalette}
             parentLabelPosition="left"
             parentLabelTextColor={{
               from: "color",

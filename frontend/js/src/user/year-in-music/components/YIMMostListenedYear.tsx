@@ -9,9 +9,10 @@ import GlobalAppContext from "../../../utils/GlobalAppContext";
 type YIMGenreGraphProps = {
   mostListenedYearData: { [key: string]: number };
   userName: string;
+  gradientColors: string[];
 };
 export default function YIMGenreGraph(props: YIMGenreGraphProps) {
-  const { mostListenedYearData, userName } = props;
+  const { mostListenedYearData, userName, gradientColors } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
   const isCurrentUser = userName === currentUser?.name;
   const yourOrUsersName = isCurrentUser ? "your" : `${userName}'s`;
@@ -66,7 +67,7 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
             layout="vertical"
             keys={["songs"]}
             indexBy="year"
-            // colors={accentColor}
+            colors={gradientColors}
             enableLabel={false}
             axisBottom={{
               tickValues: mostListenedYearTicks,

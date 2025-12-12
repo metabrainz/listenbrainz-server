@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isEmpty } from "lodash";
 import * as React from "react";
 import Tooltip from "react-tooltip";
+import tinycolor from "tinycolor2";
 import CustomChoropleth from "../../stats/components/Choropleth";
 
 export type YIMArtistMapData = Array<{
@@ -14,10 +15,11 @@ export type YIMArtistMapData = Array<{
 type YIMArtistMapProps = {
   yourOrUsersName: string;
   artistMapData: YIMArtistMapData;
+  gradientColors: string[];
 };
 
 export default function YIMArtistMap(props: YIMArtistMapProps) {
-  const { yourOrUsersName, artistMapData } = props;
+  const { yourOrUsersName, artistMapData, gradientColors } = props;
   const [selectedMetric, setSelectedMetric] = React.useState<
     "artist" | "listen"
   >("listen");
@@ -39,6 +41,16 @@ export default function YIMArtistMap(props: YIMArtistMapProps) {
   if (isEmpty(artistMapData)) {
     return null;
   }
+  const colorPalette = [
+    ...[1, 2, 3, 4, 5]
+      .map((index) =>
+        tinycolor(gradientColors[1])
+          .lighten(10 * index)
+          .toHexString()
+      )
+      .reverse(),
+    gradientColors[1],
+  ];
   return (
     <div className="" id="user-artist-map" style={{ marginTop: "1.5em" }}>
       <h3 className="text-center">
@@ -91,21 +103,7 @@ export default function YIMArtistMap(props: YIMArtistMapProps) {
           <CustomChoropleth
             data={artistMapDataForGraph}
             selectedMetric={selectedMetric}
-            // colorScaleRange={[
-            //   ...[1, 2, 3]
-            //     .map((index) =>
-            //       tinycolor(accentColor)
-            //         .lighten(15 * index)
-            //         .toHexString()
-            //     )
-            //     .reverse(),
-            //   accentColor,
-            //   ...[1, 2].map((index) =>
-            //     tinycolor(accentColor)
-            //       .darken(15 * index)
-            //       .toHexString()
-            //   ),
-            // ]}
+            colorScaleRange={colorPalette}
           />
         </div>
       </div>
