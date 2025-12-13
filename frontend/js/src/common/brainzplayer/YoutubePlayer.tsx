@@ -16,6 +16,8 @@ import {
   faWindowMaximize,
   faWindowMinimize,
   faTimes,
+  faExpand,
+  faCompress,
 } from "@fortawesome/free-solid-svg-icons";
 import { faYoutube } from "@fortawesome/free-brands-svg-icons";
 import { Link } from "react-router";
@@ -35,6 +37,7 @@ export type YoutubePlayerProps = DataSourceProps & {
 
 type YoutubePlayerState = {
   hidePlayer?: boolean;
+  isExpanded?: boolean;
 };
 
 // For some reason Youtube types do not document getVideoData,
@@ -126,7 +129,10 @@ export default class YoutubePlayer
 
   constructor(props: YoutubePlayerProps) {
     super(props);
-    this.state = { hidePlayer: false };
+    this.state = {
+      hidePlayer: false,
+      isExpanded: false,
+    };
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -378,8 +384,16 @@ export default class YoutubePlayer
     });
   };
 
+  // Handle expansion/contraction of video
+  handleExpandToggle = () => {
+    this.setState((prevState) => ({
+      isExpanded: !prevState.isExpanded,
+    }));
+  };
+
   render() {
     const { hidePlayer } = this.state;
+    const { isExpanded } = this.state;
     const options: Options = {
       playerVars: {
         controls: 0,
@@ -412,7 +426,9 @@ export default class YoutubePlayer
         }}
       >
         <div
-          className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}`}
+          className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}${
+            isExpanded ? " expanded " : ""
+          }`}
           data-testid="youtube-wrapper"
         >
           <button
@@ -420,6 +436,14 @@ export default class YoutubePlayer
             type="button"
           >
             <FontAwesomeIcon icon={faArrowsAlt} />
+          </button>
+          <button
+            className="btn btn-sm youtube-button"
+            type="button"
+            onClick={this.handleExpandToggle}
+            title={isExpanded ? "Restore size" : "Expand video"}
+          >
+            <FontAwesomeIcon icon={isExpanded ? faCompress : faExpand} />
           </button>
           <button
             className="btn btn-sm youtube-button"
