@@ -78,7 +78,7 @@ $youtube-resize-transition: width 0.15s ease-in-out, height 0.15s ease-in-out;
         height: $youtube-player-height + $youtube-button-size;
         width: $youtube-player-width;
         max-width: calc(100vw - 20px);
-        @media (min-width: 992px) {
+        @media (min-width: $offscreen-sidenav-breakpoint) {
           max-width: calc(100vw - #{$sidenav-width} - 20px);
         }
         z-index: 4;
