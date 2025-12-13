@@ -64,11 +64,17 @@ def get_user():
     return user
 
 
-def get_authentication_uri():
+def get_authentication_uri(login_hint=None):
     """Prepare and return URL to authentication service login form."""
     csrf = generate_string(20)
     _persist_data(csrf=csrf)
-    return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, state=csrf, access_type="offline")
+    kwargs = {
+        "state": csrf,
+        "access_type": "offline",
+    }
+    if login_hint:
+        kwargs["login_hint"] = login_hint
+    return MusicBrainzService().get_authorize_url(MUSICBRAINZ_SCOPES, **kwargs)
 
 
 def validate_post_login():
