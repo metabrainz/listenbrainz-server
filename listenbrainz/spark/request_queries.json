@@ -79,6 +79,11 @@
     "description": "Calculate the year for in which highest number of albums listened by the user were released",
     "params": ["year"]
   },
+  "year_in_music.artist_evolution_activity": {
+    "name": "year_in_music.artist_evolution_activity",
+    "description": "Calculate artist evolution activity by month for Year in Music",
+    "params": ["year"]
+  },
   "import.dump.full": {
     "name": "import.dump.full",
     "description": "Import full dump into the spark cluster",
