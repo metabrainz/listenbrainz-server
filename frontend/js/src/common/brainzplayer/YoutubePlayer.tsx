@@ -139,6 +139,7 @@ export default class YoutubePlayer
       this.youtubePlayer?.setVolume(volume ?? 100);
     }
     if (prevProps.playerPaused && !playerPaused) {
+      // Show player if playing music
       this.setState({ hidePlayer: false });
     }
   }
@@ -148,6 +149,10 @@ export default class YoutubePlayer
   }
 
   handleNumberKeySkip = (event: KeyboardEvent) => {
+    if (typeof window.YT === "undefined") {
+      return;
+    }
+
     const keyAsNumber = Number(event.key);
     if (!Number.isInteger(keyAsNumber) || keyAsNumber < 0 || keyAsNumber > 9) {
       return;
