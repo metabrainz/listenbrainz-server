@@ -294,16 +294,24 @@ declare type UserDailyActivityResponse = {
 };
 
 declare type UserArtistActivityResponse = {
-  result: Array<{
-    name: string;
-    listen_count: number;
-    artist_mbid: string | null;
-    albums: Array<{
+  payload: {
+    artist_activity: Array<{
       name: string;
+      artist_name?: string;
       listen_count: number;
-      release_group_mbid: string;
+      artist_mbid: string | null;
+      albums: Array<{
+        name: string;
+        listen_count: number;
+        release_group_mbid: string | null;
+      }>;
     }>;
-  }>;
+    user_id?: string;
+    range: UserStatsAPIRange;
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+  };
 };
 
 declare type UserEraActivityResponse = {
