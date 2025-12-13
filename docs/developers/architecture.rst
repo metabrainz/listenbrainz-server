@@ -109,6 +109,63 @@ In production, webservers run uwsgi server to serve the flask application. In de
    * - listenbrainz spark cluster
      - spark cluster to generate statistics and recommendations for LB.
 
+Docker Volumes and Persistent Data
+----------------------------------
+
+ListenBrainz uses several named Docker volumes to persist data across container
+restarts. These volumes ensure that database state, cached metadata, and
+service-level data are not lost when rebuilding or updating the development
+environment.
+
+The volumes are defined in ``docker/docker-compose.yml``:
+
+- ``lb_db_data`` – PostgreSQL database (users, listens, playlists, metadata)
+- ``lb_timescale_data`` – TimescaleDB chunks (time-series listen data)
+- ``lb_redis_data`` – Redis cache (sessions, rate limits, temporary data)
+- ``lb_mbid_mapping_data`` – MBID mapping cache used for auto-matching listens
+- ``lb_metadata_cache_data`` – Cached release / recording metadata
+
+When to remove volumes
+~~~~~~~~~~~~~~~~~~~~~~
+
+These volumes may need to be removed in local development when:
+
+- switching branches that modify database schema
+- cached mapping or metadata becomes invalid
+- Redis contains inconsistent or stale values
+- starting with a fresh environment for debugging
+
+How to inspect or remove volumes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+List all Docker volumes:
+
+.. code-block:: bash
+
+    docker volume ls
+
+Shut down ListenBrainz and remove all volumes (full reset):
+
+.. code-block:: bash
+
+    docker-compose down -v
+
+Remove a specific volume:
+
+.. code-block:: bash
+
+    docker volume rm listenbrainz_lb_mbid_mapping_data
+
+(Replace the exact volume name with the name from ``docker volume ls``. Docker
+prefixes volume names with the project directory name.)
+
+After removal, rebuild the stack:
+
+.. code-block:: bash
+
+    docker-compose up --build
+
+This recreates empty volumes automatically.
 .. _listen-flow:
 
 Listen Flow
