@@ -123,6 +123,30 @@ export default class YoutubePlayer
   public iconColor = dataSourcesInfo.youtube.color;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
+
+  constructor(props: YoutubePlayerProps) {
+    super(props);
+    this.state = { hidePlayer: false };
+  }
+
+  componentDidMount() {
+    document.addEventListener("keydown", this.handleNumberKeySkip);
+  }
+
+  componentDidUpdate(prevProps: DataSourceProps) {
+    const { volume, playerPaused } = this.props;
+    if (prevProps.volume !== volume && this.youtubePlayer?.setVolume) {
+      this.youtubePlayer?.setVolume(volume ?? 100);
+    }
+    if (prevProps.playerPaused && !playerPaused) {
+      this.setState({ hidePlayer: false });
+    }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.handleNumberKeySkip);
+  }
+
   handleNumberKeySkip = (event: KeyboardEvent) => {
     const keyAsNumber = Number(event.key);
     if (!Number.isInteger(keyAsNumber) || keyAsNumber < 0 || keyAsNumber > 9) {
@@ -161,29 +185,6 @@ export default class YoutubePlayer
     const seekToSeconds = (duration * keyAsNumber * 10) / 100;
     this.youtubePlayer.seekTo(seekToSeconds, true);
   };
-
-  constructor(props: YoutubePlayerProps) {
-    super(props);
-    this.state = { hidePlayer: false };
-  }
-
-  componentDidMount() {
-    document.addEventListener("keydown", this.handleNumberKeySkip);
-  }
-
-  componentDidUpdate(prevProps: DataSourceProps) {
-    const { volume, playerPaused } = this.props;
-    if (prevProps.volume !== volume && this.youtubePlayer?.setVolume) {
-      this.youtubePlayer?.setVolume(volume ?? 100);
-    }
-    if (prevProps.playerPaused && !playerPaused) {
-      this.setState({ hidePlayer: false });
-    }
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleNumberKeySkip);
-  }
 
   stop = () => {
     this.youtubePlayer?.stopVideo();
