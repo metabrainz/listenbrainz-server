@@ -427,7 +427,7 @@ export default class YoutubePlayer
       >
         <div
           className={`youtube-wrapper${!isPlayerVisible ? " hidden" : ""}${
-            isExpanded ? " expanded " : ""
+            isExpanded ? " expanded" : ""
           }`}
           data-testid="youtube-wrapper"
         >
