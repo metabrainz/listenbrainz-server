@@ -442,6 +442,7 @@ export default class YoutubePlayer
             type="button"
             onClick={this.handleExpandToggle}
             title={isExpanded ? "Restore size" : "Expand video"}
+            aria-label={isExpanded ? "Restore size" : "Expand video"}
           >
             <FontAwesomeIcon icon={isExpanded ? faCompress : faExpand} />
           </button>
