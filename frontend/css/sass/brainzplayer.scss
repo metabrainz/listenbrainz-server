@@ -93,10 +93,10 @@ $youtube-resize-transition: width 0.15s ease-in-out, height 0.15s ease-in-out;
         }
 
         &.expanded {
-          width: 1308px;
-          height: calc(700px + #{$youtube-button-size});
+          width: 100%;
+          height: calc(min(70vw, 700px) + #{$youtube-button-size});
           .youtube-player {
-            height: 700px;
+            height: min(70vw, 700px);
           }
         }
 
