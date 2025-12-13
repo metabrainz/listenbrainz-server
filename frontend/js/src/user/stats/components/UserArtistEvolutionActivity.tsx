@@ -15,6 +15,15 @@ export type UserArtistEvolutionActivityProps = {
   user?: ListenBrainzUser;
 };
 
+export type UserArtistEvolutionActivityGraphProps = {
+  rawData: RawUserArtistEvolutionRow[];
+  range: UserStatsAPIRange;
+  isLoading?: boolean;
+  hasError?: boolean;
+  errorMessage?: string;
+  className?: string;
+};
+
 export type StreamDataItem = {
   [key: string]: string | number;
 };
@@ -242,57 +251,18 @@ export const artistEvolutionQueryKey = (
   range: UserStatsAPIRange
 ) => ["userArtistEvolutionActivity", userName, range] as const;
 
-export default function ArtistEvolutionActivityStreamGraph(
-  props: UserArtistEvolutionActivityProps
+export function UserArtistEvolutionActivityGraph(
+  props: UserArtistEvolutionActivityGraphProps
 ) {
-  const { APIService } = React.useContext(GlobalAppContext);
-  const { user, range } = props;
-  const navigate = useNavigate();
-
-  const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: artistEvolutionQueryKey(user?.name, range),
-    queryFn: async () => {
-      try {
-        const queryData = (await APIService.getUserArtistEvolutionActivity(
-          user?.name,
-          range
-        )) as UserArtistEvolutionActivityResponse;
-        return { data: queryData, hasError: false, errorMessage: "" };
-      } catch (error) {
-        return {
-          data: {
-            payload: {
-              artist_evolution_activity: [],
-              offset_year: 2020,
-              range,
-              from_ts: 0,
-              to_ts: 0,
-              last_updated: 0,
-              user_id: user?.name ?? "",
-            },
-          } as UserArtistEvolutionActivityResponse,
-          hasError: true,
-          errorMessage: (error as Error).message,
-        };
-      }
-    },
-  });
-
   const {
-    data: rawData = {
-      payload: {
-        artist_evolution_activity: [],
-        range,
-        from_ts: 0,
-        to_ts: 0,
-        last_updated: 0,
-        user_id: user?.name ?? "",
-      },
-    } as UserArtistEvolutionActivityResponse,
+    rawData,
+    range,
+    isLoading = false,
     hasError = false,
     errorMessage = "",
-  } = loaderData || {};
-
+    className = "user-stats-card",
+  } = props;
+  const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 767px)");
 
   const [topN, setTopN] = React.useState<number>(10);
@@ -301,13 +271,8 @@ export default function ArtistEvolutionActivityStreamGraph(
   };
 
   const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
-    () =>
-      transformArtistEvolutionActivityData(
-        rawData.payload.artist_evolution_activity,
-        range,
-        topN
-      ),
-    [rawData.payload.artist_evolution_activity, range, topN]
+    () => transformArtistEvolutionActivityData(rawData, range, topN),
+    [rawData, range, topN]
   );
 
   const artistHref = React.useCallback(
@@ -326,7 +291,7 @@ export default function ArtistEvolutionActivityStreamGraph(
 
   if (hasError) {
     return (
-      <Card className="user-stats-card" data-testid="artist-evolution">
+      <Card className={className} data-testid="artist-evolution">
         <div className="row">
           <div className="col-xs-10">
             <h3 className="capitalize-bold">Artist Evolution</h3>
@@ -346,7 +311,7 @@ export default function ArtistEvolutionActivityStreamGraph(
   }
 
   return (
-    <Card className="user-stats-card" data-testid="artist-evolution">
+    <Card className={className} data-testid="artist-evolution">
       <div
         className={`d-flex align-items-center justify-content-between ${
           isMobile ? "mb-3" : ""
@@ -374,7 +339,7 @@ export default function ArtistEvolutionActivityStreamGraph(
           <span>artists</span>
         </div>
       </div>
-      <Loader isLoading={loading}>
+      <Loader isLoading={isLoading}>
         {chartData.length === 0 ? (
           <div
             className="d-flex align-items-center justify-content-center"
@@ -479,3 +444,66 @@ export default function ArtistEvolutionActivityStreamGraph(
     </Card>
   );
 }
+
+export function UserArtistEvolutionActivityStats(
+  props: UserArtistEvolutionActivityProps
+) {
+  const { APIService } = React.useContext(GlobalAppContext);
+  const { user, range } = props;
+
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: artistEvolutionQueryKey(user?.name, range),
+    queryFn: async () => {
+      try {
+        const queryData = (await APIService.getUserArtistEvolutionActivity(
+          user?.name,
+          range
+        )) as UserArtistEvolutionActivityResponse;
+        return { data: queryData, hasError: false, errorMessage: "" };
+      } catch (error) {
+        return {
+          data: {
+            payload: {
+              artist_evolution_activity: [],
+              offset_year: 2020,
+              range,
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+              user_id: user?.name ?? "",
+            },
+          } as UserArtistEvolutionActivityResponse,
+          hasError: true,
+          errorMessage: (error as Error).message,
+        };
+      }
+    },
+  });
+
+  const {
+    data: rawData = {
+      payload: {
+        artist_evolution_activity: [],
+        range,
+        from_ts: 0,
+        to_ts: 0,
+        last_updated: 0,
+        user_id: user?.name ?? "",
+      },
+    } as UserArtistEvolutionActivityResponse,
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  return (
+    <UserArtistEvolutionActivityGraph
+      rawData={rawData.payload.artist_evolution_activity}
+      range={range}
+      isLoading={loading}
+      hasError={hasError}
+      errorMessage={errorMessage}
+    />
+  );
+}
+
+export default UserArtistEvolutionActivityStats;

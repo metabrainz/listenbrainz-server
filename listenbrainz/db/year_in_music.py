@@ -22,6 +22,7 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 # day_of_week
 # listens_per_day
 # most_listened_year
+# artist_evolution_activity
 # most_prominent_color
 # new_releases_of_top_artists
 # playlist-top-discoveries-for-year-playlists
