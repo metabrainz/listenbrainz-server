@@ -709,11 +709,10 @@ export default function YearInMusic() {
                   alt="The ListenBrainz team"
                 />
               </div>
+              <p className="mb-4 bold">
+                Wishing you a very cozy {year + 1}, from the ListenBrainz team.
+              </p>
               <p className="mb-5">
-                <div className="mb-4 bold">
-                  Wishing you a very cozy {year + 1}, from the ListenBrainz
-                  team.
-                </div>
                 If you have questions or feedback don&apos;t hesitate to contact
                 us
                 <br />

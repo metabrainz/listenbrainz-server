@@ -22,7 +22,7 @@ export default function TopLevelPlaylist(props: {
   const encodedUsername = encodeURIComponent(userName);
   return (
     <div className="content-card mb-3" id={`${coverArtKey}`}>
-      <div className="center-p m-auto mw-100">
+      <div className="center-p">
         <object
           className="img-fluid"
           data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&branding=False`}
