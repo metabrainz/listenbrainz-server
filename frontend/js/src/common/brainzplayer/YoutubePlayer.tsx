@@ -392,8 +392,7 @@ export default class YoutubePlayer
   };
 
   render() {
-    const { hidePlayer } = this.state;
-    const { isExpanded } = this.state;
+    const { hidePlayer, isExpanded } = this.state;
     const options: Options = {
       playerVars: {
         controls: 0,
