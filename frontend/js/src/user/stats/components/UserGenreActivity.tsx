@@ -15,6 +15,14 @@ export type UserGenreActivityProps = {
   user?: ListenBrainzUser;
 };
 
+export type UserGenreActivityGraphProps = {
+  rawData: GenreHourData[];
+  isLoading?: boolean;
+  hasError?: boolean;
+  errorMessage?: string;
+  className?: string;
+};
+
 type ProcessedTimeframeData = {
   timeOfDay: string;
   timeRange: string;
@@ -129,67 +137,22 @@ function TimeMarker({
   );
 }
 
-export default function UserGenreActivity({
-  user,
-  range,
-}: UserGenreActivityProps) {
-  const { APIService } = React.useContext(GlobalAppContext);
+export function UserGenreActivityGraph({
+  rawData,
+  isLoading = false,
+  hasError = false,
+  errorMessage = "",
+  className = "user-stats-card",
+}: UserGenreActivityGraphProps) {
   const colorScale = scaleSequential(interpolateRainbow).domain([0, 24]);
   const timezoneOffset = React.useMemo(() => getRoundedTimezoneOffset(), []);
 
   // Detect mobile screen size
   const isMobile = useMediaQuery("(max-width: 767px)");
 
-  const { data: loaderData, isLoading: loading } = useQuery({
-    queryKey: ["userGenreActivity", user?.name, range],
-    queryFn: async () => {
-      try {
-        if (!user?.name) throw new Error("User name is required");
-        const queryData = await APIService.getUserGenreActivity(
-          user.name,
-          range
-        );
-        return { data: queryData, hasError: false, errorMessage: "" };
-      } catch (error) {
-        return {
-          data: {
-            payload: {
-              genre_activity: [],
-              from_ts: 0,
-              to_ts: 0,
-              last_updated: 0,
-              user_id: user?.name ?? "",
-              range,
-            },
-          },
-          hasError: true,
-          errorMessage: error?.message ?? "Failed to load genre activity",
-        };
-      }
-    },
-    enabled: !!user?.name,
-  });
-
-  const {
-    data: rawData = {
-      payload: {
-        genre_activity: [],
-        from_ts: 0,
-        to_ts: 0,
-        last_updated: 0,
-        user_id: user?.name ?? "",
-        range,
-      },
-    },
-    hasError = false,
-    errorMessage = "",
-  } = loaderData || {};
-
   const chartData = React.useMemo(() => {
-    const { payload } = rawData as UserGenreActivityResponse;
-    const genre_activity: GenreHourData[] = payload?.genre_activity ?? [];
-    if (!genre_activity.length) return [];
-    const groupedData = groupDataByTimePeriod(genre_activity, timezoneOffset);
+    if (!rawData.length) return [];
+    const groupedData = groupDataByTimePeriod(rawData, timezoneOffset);
 
     return groupedData.flatMap((timeframe) => {
       // Calculate the total number of listens for all genres in this time period.
@@ -294,13 +257,13 @@ export default function UserGenreActivity({
   const timeMarkersConfig = getTimeMarkersConfig();
 
   return (
-    <Card className="user-stats-card" data-testid="user-genre-activity">
+    <Card className={className} data-testid="user-genre-activity">
       <div className="row">
         <div className="col-xs-10">
           <h3 className="capitalize-bold">Genre Activity</h3>
         </div>
       </div>
-      <Loader isLoading={loading}>
+      <Loader isLoading={isLoading}>
         {hasError ? (
           <div
             style={{
@@ -363,3 +326,71 @@ export default function UserGenreActivity({
     </Card>
   );
 }
+
+export function UserGenreActivityStats({
+  user,
+  range,
+}: UserGenreActivityProps) {
+  const { APIService } = React.useContext(GlobalAppContext);
+
+  const { data: loaderData, isLoading: loading } = useQuery({
+    queryKey: ["userGenreActivity", user?.name, range],
+    queryFn: async () => {
+      try {
+        if (!user?.name) throw new Error("User name is required");
+        const queryData = await APIService.getUserGenreActivity(
+          user.name,
+          range
+        );
+        return { data: queryData, hasError: false, errorMessage: "" };
+      } catch (error) {
+        return {
+          data: {
+            payload: {
+              genre_activity: [],
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+              user_id: user?.name ?? "",
+              range,
+            },
+          },
+          hasError: true,
+          errorMessage: error?.message ?? "Failed to load genre activity",
+        };
+      }
+    },
+    enabled: !!user?.name,
+  });
+
+  const {
+    data: rawData = {
+      payload: {
+        genre_activity: [],
+        from_ts: 0,
+        to_ts: 0,
+        last_updated: 0,
+        user_id: user?.name ?? "",
+        range,
+      },
+    },
+    hasError = false,
+    errorMessage = "",
+  } = loaderData || {};
+
+  const genreActivityData = React.useMemo(() => {
+    const { payload } = rawData as UserGenreActivityResponse;
+    return payload?.genre_activity ?? [];
+  }, [rawData]);
+
+  return (
+    <UserGenreActivityGraph
+      rawData={genreActivityData}
+      isLoading={loading}
+      hasError={hasError}
+      errorMessage={errorMessage}
+    />
+  );
+}
+
+export default UserGenreActivityStats;

@@ -374,6 +374,10 @@ def handle_yim_top_genres(message):
     year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
+def handle_yim_genre_activity(message):
+    year_in_music.insert_heavy("genre_activity", message["year"], message["data"])
+
+
 def handle_yim_playlists(message):
     process_yim_playlists(message["slug"], message["year"], message["data"])
 
