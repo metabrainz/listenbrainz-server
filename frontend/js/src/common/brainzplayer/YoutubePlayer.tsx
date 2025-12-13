@@ -123,10 +123,52 @@ export default class YoutubePlayer
   public iconColor = dataSourcesInfo.youtube.color;
   youtubePlayer?: ExtendedYoutubePlayer;
   checkVideoLoadedTimerId?: NodeJS.Timeout;
+  handleNumberKeySkip = (event: KeyboardEvent) => {
+    const keyAsNumber = Number(event.key);
+    if (!Number.isInteger(keyAsNumber) || keyAsNumber < 0 || keyAsNumber > 9) {
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+    if (
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.isContentEditable
+    ) {
+      return;
+    }
+
+    const isCurrentDataSource =
+      store.get(currentDataSourceNameAtom) === this.name;
+    if (!isCurrentDataSource) {
+      return;
+    }
+
+    if (
+      !this.youtubePlayer ||
+      this.youtubePlayer.getPlayerState() !== window.YT.PlayerState.PLAYING
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const duration = this.youtubePlayer.getDuration();
+    if (!duration) {
+      return;
+    }
+
+    const seekToSeconds = (duration * keyAsNumber * 10) / 100;
+    this.youtubePlayer.seekTo(seekToSeconds, true);
+  };
 
   constructor(props: YoutubePlayerProps) {
     super(props);
     this.state = { hidePlayer: false };
+  }
+
+  componentDidMount() {
+    document.addEventListener("keydown", this.handleNumberKeySkip);
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -135,9 +177,12 @@ export default class YoutubePlayer
       this.youtubePlayer?.setVolume(volume ?? 100);
     }
     if (prevProps.playerPaused && !playerPaused) {
-      // Show player if playing music
       this.setState({ hidePlayer: false });
     }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.handleNumberKeySkip);
   }
 
   stop = () => {
