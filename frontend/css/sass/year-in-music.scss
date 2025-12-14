@@ -604,6 +604,7 @@ $coverflow-image-height: 400px;
     padding-left: calc(50% - 40px);
     padding-right: calc(50% - 40px);
     scroll-snap-type: x mandatory;
+    scroll-initial-target: nearest;
     overflow-x: auto;
     width: 100%;
     font-size: 1.5em;
@@ -625,6 +626,7 @@ $coverflow-image-height: 400px;
       flex: 1;
       min-width: 200px;
       align-items: center;
+      scroll-snap-align: center;
       &.selected {
         min-width: 280px;
         .year-image {

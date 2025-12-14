@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { toast } from "react-toastify";
-import { isEmpty, isNil, isUndefined, last } from "lodash";
+import { debounce, isEmpty, isNil, isUndefined, last, noop } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useParams } from "react-router";
@@ -116,6 +116,8 @@ export default function YearInMusic() {
     Number(yearParam) as keyof typeof availableYears
   );
   const selectedRef = React.useRef<HTMLAnchorElement>(null);
+  const yearSelectionRef = React.useRef<HTMLDivElement>(null);
+  const isInitialEvent = React.useRef<boolean>(true);
 
   const { data } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
@@ -434,6 +436,28 @@ export default function YearInMusic() {
       });
     }
   }, []);
+  React.useEffect(() => {
+    if (!yearSelectionRef.current) return noop;
+    const innerRef = yearSelectionRef.current;
+    const onScrollSnapChange = (e: Event) => {
+      // @ts-expect-error Cannot find a SnapEvent type in TS yet, so snapTargetInline is not recognized
+      const selectThisYear = e.snapTargetInline?.dataset?.year;
+      if (isInitialEvent.current === true) {
+        // Ignore the first event fired on initial scrollIntoView (page load)
+        isInitialEvent.current = false;
+      } else if (selectThisYear) {
+        setYear(Number(selectThisYear) as keyof typeof availableYears);
+      }
+    };
+    const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 300);
+    innerRef.addEventListener("scrollsnapchange", debouncedonScrollSnapChange);
+    return () => {
+      innerRef.removeEventListener(
+        "scrollsnapchange",
+        debouncedonScrollSnapChange
+      );
+    };
+  }, [yearSelectionRef]);
 
   return (
     <div
@@ -481,7 +505,7 @@ export default function YearInMusic() {
             </div>
           )}
         </div>
-        <div className="year-selection mb-5">
+        <div className="year-selection mb-5" ref={yearSelectionRef}>
           {Object.keys(availableYears).map((availableYear, idx) => {
             const yearAsNum = Number(
               availableYear
@@ -504,6 +528,7 @@ export default function YearInMusic() {
                 ref={isSelectedYear ? selectedRef : null}
                 className={`year-item ${isSelectedYear ? "selected" : ""}`}
                 onClick={(e) => handleYearClick(e, yearAsNum)}
+                data-year={availableYear}
               >
                 <div className="year-image">
                   <img
