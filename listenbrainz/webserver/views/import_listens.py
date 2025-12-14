@@ -1,6 +1,8 @@
 import json
 import os
 import uuid
+import csv
+import io
 
 from flask import Blueprint, current_app, jsonify, request
 from psycopg2 import DatabaseError
@@ -15,7 +17,8 @@ from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
-from listenbrainz.webserver.views.api_tools import validate_auth_header
+from listenbrainz.webserver.views.api_tools import validate_auth_header, insert_payload, LISTEN_TYPE_IMPORT
+from listenbrainz.webserver.models import SubmitListenUserMetadata
 
 import_api_bp = Blueprint("import_listens_api_v1", __name__)
 
@@ -31,6 +34,39 @@ def _validate_datetime_param(param, default=None):
         return value
     except (TypeError, ValueError):
         raise APIBadRequest(f"Invalid {param} format!")
+
+
+def parse_scrobbler_log(file_stream):
+    listens = []
+    stream_content = file_stream.read().decode('utf-8', errors='replace')
+    stream = io.StringIO(stream_content)
+    
+    reader = csv.reader(stream, delimiter='\t')
+
+    for row in reader:
+        if not row or row[0].startswith('#'): continue
+        try:
+            if len(row) < 7: continue
+            
+            artist = row[0].strip()
+            if artist == "<Untagged>": continue
+            
+            listen = {
+                "track_metadata": {
+                    "artist_name": artist,
+                    "release_name": row[1].strip(),
+                    "track_name": row[2].strip(),
+                    "additional_info": {"import_source": "scrobbler_log", "rating": row[5].strip()}
+                },
+                "listened_at": int(row[6].strip())
+            }
+            if len(row) > 7 and row[7].strip():
+                listen["track_metadata"]["additional_info"]["recording_mbid"] = row[7].strip()
+            
+            listens.append(listen)
+        except (ValueError, IndexError):
+            continue
+    return listens
 
 
 @import_api_bp.post("/")
@@ -139,6 +175,38 @@ def create_import_task():
     except DatabaseError:
         current_app.logger.error("Error while creating import user data task: %s", user["musicbrainz_id"], exc_info=True)
         raise APIInternalServerError(f"Error while creating import user data task {user['musicbrainz_id']}, please try again later.")
+
+
+@import_api_bp.route('/import/scrobbler', methods=['POST'])
+@web_listenstore_needed
+@crossdomain
+@ratelimit()
+def import_scrobbler_log():
+    user = validate_auth_header(fetch_email=True, scopes=["listenbrainz:submit-listens"])
+
+    if mb_engine and current_app.config["REJECT_LISTENS_WITHOUT_USER_EMAIL"] and not user["email"]:
+        raise APIUnauthorized(REJECT_LISTENS_WITHOUT_EMAIL_ERROR)
+
+    if user["is_paused"]:
+        raise APIUnauthorized(REJECT_LISTENS_FROM_PAUSED_USER_ERROR)
+
+    uploaded_file = request.files.get("file")
+    if not uploaded_file:
+        raise APIBadRequest("No file uploaded!")
+
+    try:
+        listens = parse_scrobbler_log(uploaded_file.stream)
+        if not listens:
+             raise APIBadRequest("No valid listens found in the file.")
+        
+        user_metadata = SubmitListenUserMetadata(user_id=user['id'], musicbrainz_id=user['musicbrainz_id'])
+        insert_payload(listens, user_metadata, LISTEN_TYPE_IMPORT)
+        
+        return jsonify({"status": "success", "count": len(listens)})
+
+    except Exception as e:
+        current_app.logger.error("Error importing scrobbler log for user %s: %s", user["musicbrainz_id"], str(e), exc_info=True)
+        raise APIInternalServerError("Error processing the file.")
     
 
 @import_api_bp.get("/<import_id>/")

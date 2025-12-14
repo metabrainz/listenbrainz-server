@@ -33,12 +33,14 @@ enum Services {
   listenbrainz = "Listenbrainz",
   // applemusic = "Apple Music",
   librefm = "Libre.fm",
+  scrobbler = "Scrobbler Log",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
   [Services.listenbrainz]: ".zip",
   // [Services.applemusic]: ".zip",
   [Services.librefm]: ".csv",
+  [Services.scrobbler]: ".scrobbler.log",
 };
 type Import = {
   import_id: number;
@@ -82,7 +84,7 @@ function renderImport(
           <dt className="col-4">Start date</dt>
           <dd className="col-8">
             {isValid(new Date(im.from_date)) &&
-            new Date(im.from_date).getTime() !== 0
+              new Date(im.from_date).getTime() !== 0
               ? format(new Date(im.from_date), "PPP")
               : "-"}
           </dd>
@@ -282,6 +284,35 @@ export default function ImportListens() {
           );
           return;
         }
+
+        const service = formData.get("service") as string;
+        if (service === "scrobbler") {
+          const response = await fetch(
+            `${APIService.APIBaseURI}/import-listens/import/scrobbler`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Token ${currentUser?.auth_token}`,
+              },
+              body: formData,
+            }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+          }
+
+          const result = await response.json();
+          toast.success(
+            <ToastMsg
+              title="Import Successful"
+              message={`Successfully imported ${result.count} listens.`}
+            />
+          );
+          return;
+        }
+
         const response = await fetch(
           `${APIService.APIBaseURI}/import-listens/`,
           {
