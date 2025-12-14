@@ -1,6 +1,8 @@
 import csv
+from datetime import datetime, timezone
 from typing import Any, Iterator, TextIO
 
+from flask import current_app
 from more_itertools import chunked
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
@@ -11,6 +13,9 @@ class LibrefmListensImporter(BaseListensImporter):
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Processes the libre.fm csv archive file and returns a generator of batches of items."""
 
+        self._from_date = import_task["from_date"]
+        self._to_date = import_task["to_date"]
+
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8") as file:
             header_line = self._read_header_line(file)
             reader = csv.DictReader(file, fieldnames=header_line)
@@ -20,6 +25,13 @@ class LibrefmListensImporter(BaseListensImporter):
         """Parse libre.fm items to a listens batch."""
         listens = []
         for item in batch:
+            try:
+                ts = int(item["time"])
+            except (TypeError, ValueError):
+                current_app.logger.error("Invalid Libre.fm timestamp in item: %s", item, exc_info=True)
+                continue
+            if not (self._from_date <= datetime.fromtimestamp(ts, tz=timezone.utc) <= self._to_date):
+                continue
             listen = {
                 "listened_at": item["time"],
                 "track_metadata": {
