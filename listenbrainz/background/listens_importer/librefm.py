@@ -57,7 +57,7 @@ class LibrefmListensImporter(BaseListensImporter):
         maybe_header = [
             column.strip(' "').lower() for column in line.strip().split(",")
         ]
-        expected = {"time", "artist", "track", "album"}
+        expected = {"time", "artist", "track"}
         if expected.issubset(maybe_header):
             return maybe_header
         return None
