@@ -1,9 +1,12 @@
 from flask import current_app
 from sqlalchemy import text
 
+from listenbrainz.background.listens_importer.base import update_import_task
 from listenbrainz.background.listens_importer.librefm import LibrefmListensImporter
 from listenbrainz.background.listens_importer.listenbrainz import ListenBrainzListensImporter
+from listenbrainz.background.listens_importer.maloja import MalojaListensImporter
 from listenbrainz.background.listens_importer.spotify import SpotifyListensImporter
+from listenbrainz.background.listens_importer.panoscrobbler import PanoScrobblerListensImporter
 
 
 def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
@@ -29,6 +32,12 @@ def import_listens(db_conn, ts_conn, user_id, bg_task_metadata):
         importer = ListenBrainzListensImporter(db_conn, ts_conn)
     elif service == "librefm":
         importer = LibrefmListensImporter(db_conn, ts_conn)
+    elif service == "panoscrobbler":
+        importer = PanoScrobblerListensImporter(db_conn, ts_conn)
+    elif service == "maloja":
+        importer = MalojaListensImporter(db_conn, ts_conn)
     else:
-        raise ValueError(f"Unsupported service: {service}")
+        msg = f"Unsupported service: {service}"
+        update_import_task(db_conn, import_id, status="failed", progress=msg)
+        raise ValueError(msg)
     importer.import_listens(user_id, import_task)

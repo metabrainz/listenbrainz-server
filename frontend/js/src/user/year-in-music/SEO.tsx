@@ -19,11 +19,11 @@ export function YIMYearMetaTags({
       <Helmet>
         <meta
           property="og:image"
-          content="https://listenbrainz.org/static/img/year-in-music-2021.png"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.png"
         />
         <meta
           property="twitter:image"
-          content="https://listenbrainz.org/static/img/year-in-music-2021.png"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-21/year-in-music-2021.png"
         />
       </Helmet>
     );
@@ -33,11 +33,11 @@ export function YIMYearMetaTags({
       <Helmet>
         <meta
           property="og:image"
-          content="https://listenbrainz.org/static/img/year-in-music-22/yim22-logo.png"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
         />
         <meta
           property="twitter:image"
-          content="https://listenbrainz.org/static/img/year-in-music-22/yim22-logo.png"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-22/yim22-logo.png"
         />
         <style type="text/css">
           {`body>.container, body>.container-fluid {
@@ -57,11 +57,11 @@ export function YIMYearMetaTags({
       <Helmet>
         <meta
           property="og:image"
-          content="https://listenbrainz.org/static/img/year-in-music-23/yim-23-header.png"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
         />
         <meta
           property="twitter:image"
-          content="https://listenbrainz.org/static/img/year-in-music-23/yim-23-header.png"
+          content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
         />
         <meta property="og:image:type" content="image/png" />
         <style type="text/css">
@@ -81,11 +81,11 @@ export function YIMYearMetaTags({
     <Helmet>
       <meta
         property="og:image"
-        content="https://listenbrainz.org/static/img/year-in-music-24/yim-24-header.png"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-24/yim-24-header.png"
       />
       <meta
         property="twitter:image"
-        content="https://listenbrainz.org/static/img/year-in-music-24/yim-24-header.png"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-24/yim-24-header.png"
       />
       <meta property="og:image:type" content="image/png" />
       <style type="text/css">
@@ -147,11 +147,11 @@ export default function SEO(props: SEOProps) {
       />
       <meta
         property="og:image"
-        content="https://listenbrainz.org/static/img/year-in-music-23/yim-23-header.png"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
       />
       <meta
         property="twitter:image"
-        content="https://listenbrainz.org/static/img/year-in-music-23/yim-23-header.png"
+        content="https://listenbrainz.org/static/img/legacy-year-in-music/year-in-music-23/yim-23-header.png"
       />
       <meta property="og:image:type" content="image/png" />
     </Helmet>

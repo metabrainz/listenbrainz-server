@@ -229,6 +229,9 @@ The following optional elements may also be included in the ``additional_info`` 
    * - ``submission_client_version``
      - string
      - The version of the submission client.
+   * - ``original_submission_client``
+     - string
+     - If a listen was originally submitted by a different client provide the name of the client that first submitted the listen. This is useful for importers. Don't include a version number here.
    * - ``music_service``
      - string
      - If the song being listened to comes from an online service, the canonical domain of this service (see below for more details).
@@ -241,6 +244,9 @@ The following optional elements may also be included in the ``additional_info`` 
    * - ``duration_ms`` and ``duration``
      - integer
      - The duration of the track in milliseconds and seconds respectively. You should only include one of ``duration_ms`` or ``duration``.
+   * - ``duration_played``
+     - integer
+     - The duration in seconds that the user actually listened to the track.
 .. note::
 
   **Music service names**

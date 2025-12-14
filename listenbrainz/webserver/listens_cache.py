@@ -88,7 +88,6 @@ def invalidate_user_listen_caches(user_id: int) -> None:
     """
     user_cache_set = f"user_listens_cache:{user_id}"
     cache_keys = cache.smembers(user_cache_set)
-    current_app.logger.error("smembers: %s", cache_keys)
     if cache_keys:
         cache.delete_many(cache_keys)
         cache.delete(user_cache_set)

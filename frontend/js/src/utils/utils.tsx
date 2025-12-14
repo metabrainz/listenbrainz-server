@@ -151,9 +151,9 @@ const searchForSoundcloudTrack = async (
   }
   // Considering we cannot tell the Soundcloud API that this should match only an album title,
   // results are paradoxically sometimes worse if we add it to the query
-  if (releaseName) {
-    query += ` ${releaseName}`;
-  }
+  // if (releaseName) {
+  //   query += ` ${releaseName}`;
+  // }
   if (!query) {
     return null;
   }
@@ -664,7 +664,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
 
 // recieves or unix epoch timestamp int or ISO datetime string
 const preciseTimestamp = (
-  listened_at: number | string,
+  listened_at: number | string | Date,
   displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
 ): string => {
   const listenDate: Date = new Date(listened_at);
@@ -722,7 +722,7 @@ const preciseTimestamp = (
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
-  unix_epoch_timestamp: number | string | undefined | null
+  unix_epoch_timestamp: number | string | Date | undefined | null
 ): string => {
   if (!unix_epoch_timestamp) {
     return "";
@@ -782,25 +782,34 @@ export async function fetchMusicBrainzGenres() {
 }
 
 async function getOrFetchMBGenres(forceExpiry = false) {
-  // Try to load genres from local storage, fetch them otherwise
-  const localStorageString = localStorage?.getItem("musicbrainz-genres");
-  if (!localStorageString) {
-    // nothing saved, fetch the genres and save them
-    const fetchedGenres = await fetchMusicBrainzGenres();
-    return fetchedGenres;
+  try {
+    // Try to load genres from local storage, fetch them otherwise
+    const localStorageString = localStorage?.getItem("musicbrainz-genres");
+    if (!localStorageString) {
+      // nothing saved, fetch the genres and save them
+      const fetchedGenres = await fetchMusicBrainzGenres();
+      return fetchedGenres;
+    }
+    const localStorageObject = JSON.parse(localStorageString);
+    // expire the list after 2 weeks
+    if (
+      forceExpiry ||
+      !localStorageObject ||
+      Date.now() > localStorageObject.creation_date + 1209000000
+    ) {
+      // If the item is expired, fetch them afresh and save them
+      const fetchedGenres = await fetchMusicBrainzGenres();
+      return fetchedGenres;
+    }
+    return localStorageObject.genre_list;
+  } catch (error) {
+    // Cookies disabled or localStorage error, for example in Firefox Enhanced Tracking Protection mode
+    console.error(
+      "Cookie or storage error, some feature may not work as expected",
+      error
+    );
+    return [];
   }
-  const localStorageObject = JSON.parse(localStorageString);
-  // expire the list after 2 weeks
-  if (
-    forceExpiry ||
-    !localStorageObject ||
-    Date.now() > localStorageObject.creation_date + 1209000000
-  ) {
-    // If the item is expired, fetch them afresh and save them
-    const fetchedGenres = await fetchMusicBrainzGenres();
-    return fetchedGenres;
-  }
-  return localStorageObject.genre_list;
 }
 
 type SentryProps = {

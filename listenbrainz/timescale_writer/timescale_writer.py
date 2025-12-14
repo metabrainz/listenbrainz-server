@@ -20,7 +20,6 @@ from listenbrainz.webserver.listens_cache import invalidate_user_listen_caches
 from listenbrainz.webserver.views.api_tools import MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 
 METRIC_UPDATE_INTERVAL = 60  # seconds
-LISTEN_INSERT_ERROR_SENTINEL = -1  #
 
 
 class TimescaleWriterSubscriber(ConsumerProducerMixin):
@@ -32,6 +31,8 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         self.incoming_queue = Queue(current_app.config["INCOMING_QUEUE"], exchange=self.incoming_exchange, durable=True)
         self.unique_exchange = Exchange(current_app.config["UNIQUE_EXCHANGE"], "fanout", durable=False)
         self.unique_queue = Queue(current_app.config["UNIQUE_QUEUE"], exchange=self.unique_exchange, durable=True)
+        self.rejection_exchange = Exchange(current_app.config["REJECTION_EXCHANGE"], "fanout", durable=True)
+        self.rejection_queue = Queue(current_app.config["REJECTION_QUEUE"], exchange=self.rejection_exchange, durable=True)
 
         self.ERROR_RETRY_DELAY = 3  # number of seconds to wait until retrying an operation
 
@@ -51,28 +52,44 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         ]
 
     def callback(self, message: Message):
-        listens = orjson.loads(message.body)
+        """ Process a message from the incoming queue.
 
-        msb_listens = []
-        for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
-            msb_listens.extend(self.messybrainz_lookup(chunk))
+            1. If a listen inserts successfully, send it to the unique queue. Ack the incoming message.
+            2. If a listen fails to insert, send it to the rejection queue. Ack the incoming message. If
+               adding the message to the rejection queue fails, bubble up the error to cause a service
+               restart.
+            3. If a listen fails to insert due to a database error, sleep for a few seconds and bubble up
+               the error to cause a service restart.
+        """
+        try:
+            listens = orjson.loads(message.body)
 
-        submit = []
-        for listen in msb_listens:
+            msb_listens = []
+            for chunk in chunked(listens, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP):
+                msb_listens.extend(self.messybrainz_lookup(chunk))
+
+            submit = [Listen.from_json(listen) for listen in msb_listens]
+            self.insert_to_listenstore(submit)
+        except psycopg2.OperationalError:
+            current_app.logger.error("Error processing listens due to database issues:", exc_info=True)
+            time.sleep(self.ERROR_RETRY_DELAY)
+            raise
+        except Exception:
+            current_app.logger.error("Error processing listens, publishing to rejection queue:", exc_info=True)
             try:
-                submit.append(Listen.from_json(listen))
-            except ValueError:
-                pass
-
-        ret = self.insert_to_listenstore(submit)
-
-        # If there is an error, we do not ack the message so that rabbitmq redelivers it later.
-        if ret == LISTEN_INSERT_ERROR_SENTINEL:
-            return ret
+                self.producer.publish(
+                    exchange=self.rejection_exchange,
+                    routing_key="",
+                    body=message.body,
+                    delivery_mode=PERSISTENT_DELIVERY_MODE,
+                    declare=[self.rejection_exchange, self.rejection_queue]
+                )
+            except Exception:
+                current_app.logger.error("Failed to publish to rejection queue:", exc_info=True)
+                time.sleep(self.ERROR_RETRY_DELAY)
+                raise
 
         message.ack()
-
-        return ret
 
     def messybrainz_lookup(self, listens):
         msb_listens = []
@@ -99,11 +116,7 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
 
             msb_listens.append(data)
 
-        try:
-            msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
-        except (messybrainz.exceptions.BadDataException, messybrainz.exceptions.ErrorAddingException):
-            current_app.logger.error("MessyBrainz lookup for listens failed: ", exc_info=True)
-            return []
+        msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
 
         augmented_listens = []
         for listen, msid in zip(listens, msb_responses):
@@ -120,21 +133,16 @@ class TimescaleWriterSubscriber(ConsumerProducerMixin):
         Args:
             data: the data to be inserted into the ListenStore
 
-        Returns: number of listens successfully sent or LISTEN_INSERT_ERROR_SENTINEL
-        if there was an error in inserting listens
-        """
+        Returns: number of listens successfully sent
 
+        Raises: psycopg2.OperationalError if there was an error in inserting listens
+        """
         if not data:
             return 0
 
         self.incoming_listens += len(data)
-        try:
-            rows_inserted = timescale_connection._ts.insert(data)
-        except psycopg2.OperationalError as err:
-            current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
-            time.sleep(self.ERROR_RETRY_DELAY)
-            return LISTEN_INSERT_ERROR_SENTINEL
 
+        rows_inserted = timescale_connection._ts.insert(data)
         if not rows_inserted:
             return len(data)
 

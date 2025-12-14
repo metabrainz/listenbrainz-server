@@ -85,7 +85,9 @@ export default class NavidromePlayer
   }
 
   stop = () => {
-    this.audioRef.current?.pause();
+    if (!this.audioRef?.current?.paused) {
+      this.audioRef?.current?.pause();
+    }
   };
 
   setupAudioListeners = (): void => {
@@ -149,7 +151,7 @@ export default class NavidromePlayer
   };
 
   onError = (event: Event): void => {
-    const { handleError } = this.props;
+    const { handleError, onTrackNotFound } = this.props;
     const audioElement = event.target as HTMLAudioElement;
 
     let errorMessage = "Audio playback error";
@@ -166,6 +168,7 @@ export default class NavidromePlayer
     }
 
     handleError(errorMessage, "Navidrome playback error");
+    onTrackNotFound();
   };
 
   onCanPlay = (event: Event): void => {
@@ -336,10 +339,6 @@ export default class NavidromePlayer
         }
       }
 
-      handleWarning(
-        `"${trackName}" by ${artistName} is not available on your Navidrome server`,
-        "Track not available on Navidrome"
-      );
       onTrackNotFound();
     } catch (errorObject) {
       if (errorObject.status === 401) {
@@ -379,8 +378,9 @@ export default class NavidromePlayer
         audioElement.pause();
       }
     } catch (error) {
-      const { handleError } = this.props;
+      const { handleError, onTrackNotFound } = this.props;
       handleError(error.message, "Navidrome playback error");
+      onTrackNotFound();
     }
   };
 
@@ -427,12 +427,11 @@ export default class NavidromePlayer
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
 
-    if (!isCurrentDataSource) {
-      return null;
-    }
-
     return (
-      <div className="navidrome-player" data-testid="navidrome-player">
+      <div
+        className={`navidrome-player ${!isCurrentDataSource ? "hidden" : ""}`}
+        data-testid="navidrome-player"
+      >
         <audio ref={this.audioRef} crossOrigin="anonymous" preload="metadata">
           <track kind="captions" />
         </audio>

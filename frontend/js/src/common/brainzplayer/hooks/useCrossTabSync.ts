@@ -34,7 +34,15 @@ export default function useCrossTabSync(
   // Tell other tabs to stop playing
   const stopOtherBrainzPlayers = React.useCallback((): void => {
     // Using timestamp to ensure a new value each time
-    window?.localStorage?.setItem("BrainzPlayer_stop", Date.now().toString());
+    try {
+      window?.localStorage?.setItem("BrainzPlayer_stop", Date.now().toString());
+    } catch (error) {
+      // localStorage error, for example in Firefox Enhanced Tracking Protection mode
+      console.error(
+        "Cookie or storage error, some feature may not work as expected",
+        error
+      );
+    }
   }, []);
 
   // Setup and cleanup event listeners

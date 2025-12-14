@@ -1,4 +1,10 @@
+import psycopg2
+from brainzutils import cache
+from flask import current_app
 from psycopg2.extras import DictCursor
+
+TAG_HEIRARCHY_CACHE_KEY = "tag_hierarchy"
+TAG_HEIRARCHY_CACHE_EXPIRY = 60 * 60 * 24 * 7  # 7 days
 
 
 def load_genre_with_subgenres(mb_curs: DictCursor):
@@ -24,3 +30,16 @@ def load_genre_with_subgenres(mb_curs: DictCursor):
 
     mb_curs.execute(query)
     return mb_curs.fetchall()
+
+
+def get_tag_hierarchy_data():
+    data = cache.get(TAG_HEIRARCHY_CACHE_KEY)
+    if not data:
+        with (
+            psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn,
+            mb_conn.cursor(cursor_factory=DictCursor) as mb_curs
+        ):
+            data = load_genre_with_subgenres(mb_curs)
+            data = [dict(row) for row in data] if data else []
+        cache.set(TAG_HEIRARCHY_CACHE_KEY, data, expirein=TAG_HEIRARCHY_CACHE_EXPIRY)
+    return data

@@ -64,6 +64,7 @@ export default class InternetArchivePlayer
     this.state = {
       currentTrack: null,
     };
+    this.setupAudioListeners();
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -73,8 +74,32 @@ export default class InternetArchivePlayer
     }
   }
 
+  setupAudioListeners = (): void => {
+    const { onTrackNotFound, handleError, onInvalidateDataSource } = this.props;
+    const audioElement = this.audioRef.current;
+    if (!audioElement) {
+      onInvalidateDataSource(
+        this,
+        "InternetArchive Player audio element not available"
+      );
+      return;
+    }
+    audioElement.addEventListener("loadedmetadata", this.handleLoadedMetadata);
+    audioElement.addEventListener("durationchange", this.handleLoadedMetadata);
+    audioElement.addEventListener("timeupdate", this.handleTimeUpdate);
+    audioElement.addEventListener("play", this.onPlay);
+    audioElement.addEventListener("pause", this.onPause);
+    audioElement.addEventListener("ended", this.handleAudioEnded);
+    audioElement.addEventListener("error", (ev) => {
+      handleError(ev.error, "Internet Archive audio playback error");
+      onTrackNotFound();
+    });
+  };
+
   stop = () => {
-    this.audioRef?.current?.pause();
+    if (!this.audioRef?.current?.paused) {
+      this.audioRef?.current?.pause();
+    }
   };
 
   handleAudioEnded = () => {
@@ -94,6 +119,16 @@ export default class InternetArchivePlayer
     if (this.audioRef.current) {
       onDurationChange(this.audioRef.current.duration * 1000);
     }
+  };
+
+  onPlay = (): void => {
+    const { onPlayerPausedChange } = this.props;
+    onPlayerPausedChange(false);
+  };
+
+  onPause = (): void => {
+    const { onPlayerPausedChange } = this.props;
+    onPlayerPausedChange(true);
   };
 
   searchAndPlayTrack = async (listen: any) => {
@@ -147,6 +182,7 @@ export default class InternetArchivePlayer
       onPlayerPausedChange,
       onTrackInfoChange,
       onDurationChange,
+      onTrackNotFound,
       handleError,
       volume,
     } = this.props;
@@ -160,6 +196,7 @@ export default class InternetArchivePlayer
         await this.audioRef.current.play();
       } catch (error) {
         handleError(error, "Internet Archive playback error");
+        onTrackNotFound();
         return;
       }
       onPlayerPausedChange(false);
@@ -177,7 +214,12 @@ export default class InternetArchivePlayer
   };
 
   togglePlay = async () => {
-    const { playerPaused, onPlayerPausedChange, handleError } = this.props;
+    const {
+      playerPaused,
+      onPlayerPausedChange,
+      handleError,
+      onTrackNotFound,
+    } = this.props;
     if (!this.audioRef.current) return;
     try {
       if (playerPaused) {
@@ -189,6 +231,7 @@ export default class InternetArchivePlayer
       }
     } catch (error) {
       handleError(error, "Internet Archive playback error");
+      onTrackNotFound();
     }
   };
 
@@ -208,25 +251,19 @@ export default class InternetArchivePlayer
     const isCurrentDataSource =
       store.get(currentDataSourceNameAtom) === this.name;
     const { currentTrack } = this.state;
-    if (!isCurrentDataSource) return null;
 
     return (
       <div
-        className="internet-archive-player"
+        className={`internet-archive-player ${
+          !isCurrentDataSource ? "hidden" : ""
+        }`}
         data-testid="internet-archive-player"
       >
         {currentTrack?.artwork_url && (
           <img src={currentTrack.artwork_url} alt={currentTrack.name} />
         )}
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <audio
-          ref={this.audioRef}
-          onEnded={this.handleAudioEnded}
-          onTimeUpdate={this.handleTimeUpdate}
-          onDurationChange={this.handleLoadedMetadata}
-          autoPlay
-          controls={false}
-        />
+        <audio ref={this.audioRef} autoPlay controls={false} />
       </div>
     );
   }

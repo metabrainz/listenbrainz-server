@@ -1,4 +1,3 @@
-import json
 import os
 import uuid
 import csv
@@ -11,10 +10,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from werkzeug.utils import secure_filename
+
+from listenbrainz.db.background import _with_validation_counts
 from listenbrainz.webserver import db_conn
 from listenbrainz.webserver.decorators import web_listenstore_needed, crossdomain
 from brainzutils.ratelimit import ratelimit
 from brainzutils.musicbrainz_db import engine as mb_engine
+from listenbrainz.db import background
 from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIBadRequest, APIUnauthorized
 from listenbrainz.webserver.utils import REJECT_LISTENS_WITHOUT_EMAIL_ERROR, REJECT_LISTENS_FROM_PAUSED_USER_ERROR
 from listenbrainz.webserver.views.api_tools import validate_auth_header, insert_payload, LISTEN_TYPE_IMPORT
@@ -92,7 +94,7 @@ def create_import_task():
         raise APIBadRequest("No service selected!")
     service = service.lower()
 
-    allowed_services = ["spotify", "listenbrainz", "librefm"]
+    allowed_services = ["spotify", "listenbrainz", "librefm", "maloja", "panoscrobbler"]
     if service not in allowed_services:
         raise APIBadRequest("This service is not supported!")
 
@@ -103,7 +105,7 @@ def create_import_task():
     if not filename:
         raise APIBadRequest("Invalid file name!")
 
-    allowed_extensions = [".zip", ".csv"]
+    allowed_extensions = [".zip", ".csv", ".json", ".jsonl"]
     extension = os.path.splitext(filename)[1].lower()
     if extension not in allowed_extensions:
         raise APIBadRequest("File type not allowed!")
@@ -112,6 +114,10 @@ def create_import_task():
         raise APIBadRequest("Only zip files are allowed for this service!")
     if service == "librefm" and extension != ".csv":
         raise APIBadRequest("Only csv files are allowed for this service!")
+    if service == "panoscrobbler" and extension != ".jsonl":
+        raise APIBadRequest("Only JSONL files are allowed for this service!")
+    if service == "maloja" and extension != ".json":
+        raise APIBadRequest("Only JSON files are allowed for this service!")
 
     # add a unique ID to the filename to avoid collisions
     saved_filename = str(uuid.uuid4()) + "-" + secure_filename(filename)
@@ -131,42 +137,22 @@ def create_import_task():
         if check_existing is not None:
             raise APIBadRequest("An import task is already in progress!")
 
-        query = """
-            INSERT INTO user_data_import (user_id, service, from_date, to_date, file_path, metadata)
-                 VALUES (:user_id, :service, :from_date, :to_date, :file_path, :metadata)
-              RETURNING id, service, created, file_path, metadata
-        """
-        result = db_conn.execute(text(query), {
-            "user_id": user["id"],
-            "service": service,
-            "from_date": from_date,
-            "to_date": to_date,
-            "file_path": save_path,
-            "metadata": json.dumps({"status": "waiting", "progress": "Your data import will start soon.", "filename": filename})
-        })
-        import_task = result.first()
+        result = background.create_import_task(
+            db_conn,
+            user_id=user["id"],
+            service=service,
+            from_date=from_date,
+            to_date=to_date,
+            save_path=save_path,
+            filename=filename
+        )
+        if result is not None:
+            os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
+            uploaded_file.save(save_path)
 
-        if import_task is not None:
-            query = "INSERT INTO background_tasks (user_id, task, metadata) VALUES (:user_id, :task, :metadata) ON CONFLICT DO NOTHING RETURNING id"
-            result = db_conn.execute(text(query), {
-                "user_id": user["id"],
-                "task": "import_listens",
-                "metadata": json.dumps({"import_id": import_task.id})
-            })
-            task = result.first()
-            if task is not None:
-                os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
-                uploaded_file.save(save_path)
+            db_conn.commit()
 
-                db_conn.commit()
-
-                return jsonify({
-                    "import_id": import_task.id,
-                    "service": import_task.service,
-                    "created": import_task.created.isoformat(),
-                    "metadata": import_task.metadata,
-                    "file_path": import_task.file_path,
-                })
+            return jsonify(result)
 
         # task already exists in queue, rollback new entry
         db_conn.rollback()
@@ -227,7 +213,7 @@ def get_import_task(import_id):
         "import_id": row.id,
         "service": row.service,
         "created": row.created.isoformat(),
-        "metadata": row.metadata,
+        "metadata": _with_validation_counts(row.metadata),
         "to_date": row.to_date.isoformat(),
         "from_date": row.from_date.isoformat(),
     })
@@ -249,7 +235,7 @@ def list_import_tasks():
         "import_id": row.id,
         "service": row.service,
         "created": row.created.isoformat(),
-        "metadata": row.metadata,
+        "metadata": _with_validation_counts(row.metadata),
         "to_date": row.to_date.isoformat(),
         "from_date": row.from_date.isoformat(),
     } for row in rows])

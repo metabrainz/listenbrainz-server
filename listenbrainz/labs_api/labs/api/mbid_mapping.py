@@ -26,6 +26,9 @@ class MBIDMappingQuery(BaseMBIDMappingQuery):
     def fetch(self, params, source, offset=-1, count=-1):
         """ Call the MBIDMapper and carry out this mapping search """
 
+        # Disable temporarily 
+        return []
+
         args = []
         for i, param in enumerate(params):
             args.append((i, param.artist_credit_name, param.recording_name))

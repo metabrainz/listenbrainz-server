@@ -170,7 +170,7 @@ class SpotifyListensImporter(ZipBaseListensImporter):
                      WHERE rta.track_id = t.track_id
                   ) tal
                ON TRUE
-            WHERE t.track_id = '50DMJJpAeQv4fIpxZvQz2e';
+            WHERE t.track_id = ANY(:track_ids)
         """
         result = self.ts_conn.execute(text(query), {"track_ids": spotify_track_ids})
         return {r.track_id: dict(r) for r in result.mappings()}

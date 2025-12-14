@@ -1,15 +1,19 @@
 from typing import Optional, Union
 from uuid import UUID
+from enum import Enum
+from brainzutils import cache
 
 import psycopg2
 from datasethoster import Query, RequestSource, QueryOutputLine
 from flask import current_app
 from markupsafe import Markup
-from psycopg2.extras import execute_values
 from pydantic import BaseModel
+from sqlalchemy import text
 
-from listenbrainz.db import similarity
+from listenbrainz.db import similarity, timescale
 from listenbrainz.db.artist import load_artists_from_mbids_with_redirects
+
+ALGORITHM_CHOICES_CACHE_TTL = 3600
 
 
 class SimilarArtistsViewerInput(BaseModel):
@@ -27,7 +31,8 @@ class SimilarArtistsViewerOutputItem(BaseModel):
     reference_mbid: Optional[str]
 
 
-SimilarArtistsViewerOutput = Union[QueryOutputLine, SimilarArtistsViewerOutputItem]
+SimilarArtistsViewerOutput = Union[QueryOutputLine,
+                                   SimilarArtistsViewerOutputItem]
 
 
 class SimilarArtistsViewerQuery(Query):
@@ -39,7 +44,34 @@ class SimilarArtistsViewerQuery(Query):
     def names(self):
         return "similar-artists", "Similar Artists Viewer"
 
+    def table(self):
+        return "artist_credit_mbids_dev"
+
+    def get_cache_key(self):
+        return "labs-api:similar-artists"
+
+    def get_algorithm_choices(self):
+        key = self.get_cache_key()
+        if algorithms := cache.get(key):
+            return algorithms
+        with timescale.engine.begin() as conn:
+            table_name = "similarity." + self.table()
+            query = """
+                select distinct jsonb_object_keys(metadata) as algorithm
+                  from """ + table_name
+            result = conn.execute(text(query))
+            algorithms = list(r.algorithm for r in result)
+        cache.set(key, algorithms, expirein=ALGORITHM_CHOICES_CACHE_TTL)
+        return algorithms
+
     def inputs(self):
+        algorithms = self.get_algorithm_choices()
+        AlgorithmEnum = Enum("AlgorithmEnum", {x: x for x in algorithms})
+
+        class SimilarArtistsViewerInput(BaseModel):
+            artist_mbids: list[UUID]
+            algorithm: AlgorithmEnum
+
         return SimilarArtistsViewerInput
 
     def introduction(self):
@@ -50,7 +82,7 @@ class SimilarArtistsViewerQuery(Query):
 
     def fetch(self, params, source, offset=-1, count=-1):
         artist_mbids = [str(m) for m in params[0].artist_mbids]
-        algorithm = params[0].algorithm.strip()
+        algorithm = params[0].algorithm.value
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \

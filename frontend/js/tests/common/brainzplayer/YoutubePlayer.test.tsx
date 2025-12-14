@@ -245,11 +245,10 @@ describe("YoutubePlayer", () => {
     expect(mockPlayer.playVideo).toHaveBeenCalledTimes(1);
     expect(props.onPlayerPausedChange).toHaveBeenCalledWith(false);
   });
-  it("does nothing if it's not the currently selected datasource", async () => {
-    jest.useFakeTimers();
-    await setupComponent();
+  it("renders hidden if it's not the currently selected datasource", async () => {
     // Set the datasource name in jotai state to simulate spotify selected in BrainzPlayer
     store.set(currentDataSourceNameAtom, "spotify");
+    await setupComponent();
 
     // Simulate the player becoming ready
     await act(() => {
@@ -262,13 +261,8 @@ describe("YoutubePlayer", () => {
         target: mockPlayer,
       });
     });
-    jest.advanceTimersByTime(2000);
-    expect(props.onPlayerPausedChange).not.toHaveBeenCalled();
-    expect(props.onTrackInfoChange).not.toHaveBeenCalled();
-    expect(props.onDurationChange).not.toHaveBeenCalled();
-    expect(props.onTrackEnd).not.toHaveBeenCalled();
-    expect(props.onProgressChange).not.toHaveBeenCalled();
-    jest.useRealTimers();
+    screen.getByTestId("youtube-wrapper");
+    expect(screen.getByTestId("youtube-wrapper")).toHaveClass("hidden");
   });
 
   it("plays a track from a listen with a youtube URL", async () => {
