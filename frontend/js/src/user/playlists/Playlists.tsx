@@ -10,7 +10,6 @@ import {
   faSoundcloud,
 } from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
-
 import { orderBy } from "lodash";
 import NiceModal from "@ebay/nice-modal-react";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -18,6 +17,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useLoaderData, useSearchParams } from "react-router";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
+import { useAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import Card from "../../components/Card";
 import Pill from "../../components/Pill";
 import { ToastMsg } from "../../notifications/Notifications";
@@ -66,8 +67,13 @@ type UserPlaylistsClassProps = UserPlaylistsProps & {
   handleClickPrevious: () => void;
   handleClickNext: () => void;
   handleSetPlaylistType: (newType: PlaylistType) => void;
+  initialView: PlaylistView; // Constructor
+  setPersistentView: (view: PlaylistView) => void; // Render
 };
-
+const playlistViewAtom = atomWithStorage<PlaylistView>(
+  "lb_playlists_overview_view",
+  PlaylistView.GRID
+);
 export default class UserPlaylists extends React.Component<
   UserPlaylistsClassProps,
   UserPlaylistsState
@@ -77,18 +83,24 @@ export default class UserPlaylists extends React.Component<
 
   constructor(props: UserPlaylistsClassProps) {
     super(props);
-    const { playlists, playlistCount } = props;
+    const { playlists, playlistCount, initialView } = props; // initialView prop destructure
     this.state = {
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
       sortBy: SortOption.DATE_CREATED,
-      view: PlaylistView.GRID,
+      view: initialView, // <<< Prop view state set
     };
   }
 
   componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
-    const { playlists } = this.props;
+    const { playlists, initialView } = this.props;
+    // playlists update
     if (prevProps.playlists !== playlists) {
-      this.setState({ playlists: playlists.map((pl) => pl.playlist) });
+      this.setState({
+        playlists: playlists.map((pl) => pl.playlist),
+      });
+    }
+    if (prevProps.initialView !== initialView) {
+      this.setState({ view: initialView });
     }
   }
 
@@ -223,6 +235,7 @@ export default class UserPlaylists extends React.Component<
       playlistType,
       handleClickPrevious,
       handleClickNext,
+      setPersistentView, // Prop destructure
     } = this.props;
     const { playlists, sortBy, view } = this.state;
     const { currentUser } = this.context;
@@ -258,7 +271,10 @@ export default class UserPlaylists extends React.Component<
               <Pill
                 active={view === PlaylistView.GRID}
                 type="secondary"
-                onClick={() => this.setState({ view: PlaylistView.GRID })}
+                onClick={() => {
+                  this.setState({ view: PlaylistView.GRID });
+                  setPersistentView(PlaylistView.GRID); // Atom/Storage update
+                }}
                 title="Grid view"
               >
                 <FontAwesomeIcon icon={faGrid} fixedWidth />
@@ -266,7 +282,10 @@ export default class UserPlaylists extends React.Component<
               <Pill
                 active={view === PlaylistView.LIST}
                 type="secondary"
-                onClick={() => this.setState({ view: PlaylistView.LIST })}
+                onClick={() => {
+                  this.setState({ view: PlaylistView.LIST });
+                  setPersistentView(PlaylistView.LIST); // Atom/Storage update
+                }}
                 title="List view"
               >
                 <FontAwesomeIcon icon={faStacked} fixedWidth />
@@ -429,6 +448,7 @@ export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
+  const [persistentView, setPersistentView] = useAtom(playlistViewAtom); // Atom for persistent view state
   const currPageNoStr = searchParams.get("page") || "1";
   const currPageNo = parseInt(currPageNoStr, 10);
   const type = searchParams.get("type") || "";
@@ -470,6 +490,8 @@ export function UserPlaylistsWrapper() {
       handleClickPrevious={handleClickPrevious}
       handleClickNext={handleClickNext}
       handleSetPlaylistType={handleSetPlaylistType}
+      initialView={persistentView}
+      setPersistentView={setPersistentView}
     />
   );
 }
