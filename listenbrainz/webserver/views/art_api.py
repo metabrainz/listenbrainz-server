@@ -448,10 +448,9 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, show_caption,
                     "caa_id": caa_id,
                     "caa_release_mbid": caa_release_mbid,
                     "title": track.get("title"),
-                    "entity_mbid": str(track.get("mbid")),
-                    "artist": track.get("artist_credit")
+                    "entity_mbid": track["identifier"][0].split("/")[-1],
+                    "artist": track.get("creator")
                 })
-                images.append(additional_metadata)
                 selected_urls.add(caa_id)
     
     if len(images) == 0:
@@ -470,7 +469,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, show_caption,
             images=cover_art_images,
             title=stats[key].get("title"),
             desc=stats[key].get("annotation"),
-            entity="album",
+            entity="track",
             width=500,
             height=500,
             show_caption=show_caption
@@ -493,6 +492,7 @@ def _cover_art_yim_playlist(user_name, stats, key, year, branding, show_caption,
         width=924,
         height=924,
         show_caption=show_caption,
+        entity="track",
         **styles,
     )
 
