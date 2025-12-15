@@ -566,6 +566,50 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["attempted_count"], 2)
         self.assertEqual(metadata["success_count"], 2)
 
+    def test_import_librefm_without_album_column(self):
+        data = {
+            "service": "librefm",
+            "file": open(self.path_to_data_file("librefm_no_album_column.csv"), "rb"),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1762874400)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Rick Astley")
+        self.assertEqual(track_metadata["track_name"], "Never Gonna Give You Up")
+        self.assertNotIn("release_name", track_metadata)
+        self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1609459200)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Nina Simone")
+        self.assertEqual(track_metadata["track_name"], "Feeling Good")
+        self.assertNotIn("release_name", track_metadata)
+        self.assertEqual(track_metadata["additional_info"]["submission_client"], "ListenBrainz Archive Importer")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
+
     def test_import_librefm_via_maloja(self):
         data = {
             "service": "librefm",
