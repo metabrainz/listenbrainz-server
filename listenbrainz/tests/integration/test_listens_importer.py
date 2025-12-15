@@ -610,6 +610,54 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(metadata["attempted_count"], 2)
         self.assertEqual(metadata["success_count"], 2)
 
+    def test_import_librefm_with_date_range(self):
+        data = {
+            "service": "librefm",
+            "file": open(self.path_to_data_file("librefm.csv"), "rb"),
+            "from_date": datetime(2023, 1, 1, tzinfo=timezone.utc).isoformat(),
+            "to_date": datetime(2023, 12, 1, tzinfo=timezone.utc).isoformat(),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1690348225)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Sweet Garden")
+        self.assertEqual(track_metadata["track_name"], "Altered State")
+        self.assertNotIn("release_name", track_metadata)
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1690347960)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "The Horrors")
+        self.assertEqual(track_metadata["track_name"], "New Ice Age")
+        self.assertEqual(track_metadata["release_name"], "Primary Colours")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 2)
+
     def test_import_librefm_via_maloja(self):
         data = {
             "service": "librefm",
