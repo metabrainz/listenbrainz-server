@@ -123,8 +123,14 @@ def insert_similar_users(year, data):
 
 
 def insert_top_stats(entity, year, data):
-    insert_heavy(f"top_{entity}", year, data)
-    insert(f"total_{entity}_count", year, [(user["user_id"], user["count"]) for user in data], False)
+    insert_heavy(f"top_{entity}", year, [
+        {"user_id": user["user_id"], "data": user[entity]}
+        for user in data
+    ])
+    insert(f"total_{entity}_count", year, [
+        (user["user_id"], user[f"{entity}_count"])
+        for user in data
+    ], False)
 
 
 def create_yim_table(year):

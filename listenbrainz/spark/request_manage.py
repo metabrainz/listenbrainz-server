@@ -464,11 +464,13 @@ def request_yim_top_discoveries(year: int):
 @cli.command(name="request_year_in_music")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
+@click.option("--import-pg-tables/--no-import-pg-tables", is_flag=True, default=True, help="whether to import the pg tables before generating the stats.")
 @click.pass_context
-def request_year_in_music(ctx, year: int):
+def request_year_in_music(ctx, year: int, import_pg_tables: bool):
     """ Send the cluster a request to generate all year in music statistics. """
     send_request_to_spark_cluster("echo.echo", message={"year": year, "action": "year_in_music_start"})
-    ctx.invoke(request_import_pg_tables)
+    if import_pg_tables:
+        ctx.invoke(request_import_pg_tables)
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
