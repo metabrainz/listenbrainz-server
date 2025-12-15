@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { debounce, isEmpty, isNil, isUndefined, last, noop } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { getYear } from "date-fns";
@@ -106,10 +106,10 @@ export default function YearInMusic() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams();
+  const navigate = useNavigate();
   const { year: yearParam = getYear(Date.now()), userName } = params;
-  const [year, setYear] = React.useState<keyof typeof availableYears>(
-    Number(yearParam) as keyof typeof availableYears
-  );
+  const year = Number(yearParam) as keyof typeof availableYears;
+
   const selectedRef = React.useRef<HTMLAnchorElement>(null);
   const yearSelectionRef = React.useRef<HTMLDivElement>(null);
   const isInitialEvent = React.useRef<boolean>(true);
@@ -409,16 +409,15 @@ export default function YearInMusic() {
       e: React.MouseEvent<HTMLAnchorElement>,
       selectedYear: keyof typeof availableYears
     ) => {
-      setYear(selectedYear);
+      navigate(`../${selectedYear}/`);
 
-      // This is the magic line that centers the clicked element
       e.currentTarget.scrollIntoView({
         behavior: "smooth",
         inline: "center",
         block: "nearest",
       });
     },
-    [setYear]
+    [navigate]
   );
 
   React.useEffect(() => {
@@ -440,7 +439,7 @@ export default function YearInMusic() {
         // Ignore the first event fired on initial scrollIntoView (page load)
         isInitialEvent.current = false;
       } else if (selectThisYear) {
-        setYear(Number(selectThisYear) as keyof typeof availableYears);
+        navigate(`../${selectThisYear}/`);
       }
     };
     const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 300);
