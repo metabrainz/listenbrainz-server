@@ -39,7 +39,7 @@ class LibrefmListensImporter(BaseListensImporter):
                     "artist_name": item["artist"],
                 }
             }
-            if item["album"]:
+            if item.get("album"):
                 listen["track_metadata"]["release_name"] = item["album"]
             listen["track_metadata"]["additional_info"] = {
                 "submission_client": self.importer_name,
