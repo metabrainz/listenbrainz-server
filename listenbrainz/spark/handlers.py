@@ -381,6 +381,7 @@ def handle_yim_playlists(message):
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
 
+
 def handle_troi_playlists(message):
     process_weekly_playlists(message["slug"], message["data"])
 
