@@ -1,5 +1,5 @@
 @use "sass:map";
-@use 'sass:color';
+@use "sass:color";
 
 @property --gradientColor1 {
   syntax: "<color>";
@@ -53,13 +53,6 @@ $coverflow-image-height: 400px;
     align-items: center;
     #share-link {
       font-size: 0.7em;
-    }
-  }
-  .graph-container {
-    overflow-x: auto;
-    .graph {
-      min-width: min(700px, 100%);
-      width: 100%;
     }
   }
 
@@ -141,49 +134,7 @@ $coverflow-image-height: 400px;
       }
     }
   }
-  .savable-card {
-    width: 450px;
-    display: none;
-    padding: 1rem;
-    box-shadow: unset !important;
-    .card-img-top {
-      max-width: 60%;
-    }
-    .card-img-bottom {
-      width: 45%;
-    }
-    .card-footer {
-      padding: 1rem;
-    }
-    .list-container {
-      text-align: initial;
-      padding: 2rem;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      .listen-card {
-        box-shadow: unset !important;
-        margin: 0;
-        a {
-          color: inherit !important;
-        }
-        .right-section {
-          display: none;
-        }
-        .main-content {
-          padding: 0;
-          .listen-thumbnail {
-            margin: 0px 10px 0px 0px;
-          }
-        }
-      }
-    }
-  }
 
-  /* Main header section at the top with logo */
-  #main-header {
-    padding: 7em 2em 0;
-  }
   .no-yim-message {
     margin: 4vh auto;
     font-family: "Roboto", sans-serif;
@@ -205,19 +156,13 @@ $coverflow-image-height: 400px;
       }
     }
     .subheader {
+      margin-top: 1rem;
       font-family: "Roboto", sans-serif;
       font-weight: 300;
       font-size: 24px;
       line-height: 28px;
       text-align: center;
     }
-  }
-  .link-section {
-    padding: 0 1em;
-    text-align: center;
-    font-family: "Roboto", sans-serif;
-    font-weight: 300;
-    font-size: 1.6rem;
   }
   .button {
     width: 2em;
@@ -237,34 +182,7 @@ $coverflow-image-height: 400px;
     min-width: 330px;
     height: auto;
   }
-  .cover-art-mosaic {
-    width: 100vw;
-    max-height: 42em;
-  }
 
-  .small-cards-container {
-    margin-top: 1.5em;
-    > * {
-      min-width: calc(100vw - 60px);
-      margin-bottom: 1em;
-      font-family: "Roboto", sans-serif;
-      font-weight: 300;
-      font-size: 24px;
-      line-height: 1.3;
-      height: auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
-  .cover-art-composite {
-    padding-left: 0;
-    padding-right: 0;
-    .composite-image img {
-      width: 100%;
-      content-visibility: auto;
-    }
-  }
   .closing-remarks {
     padding: 3em 2em 10em;
     font-size: 1.3em;
@@ -285,9 +203,6 @@ $coverflow-image-height: 400px;
     }
   }
 
-  .share-modal .modal-body {
-    overflow-x: auto;
-  }
   .alert {
     margin: 0;
     padding: 2em;
@@ -296,7 +211,9 @@ $coverflow-image-height: 400px;
   .btn {
     border-radius: 5px;
   }
+  /* Main header section at the top with logo */
   #main-header {
+    padding: 7em 2em 0;
     background: unset;
     text-align: center;
     .header-image {
@@ -376,6 +293,11 @@ $coverflow-image-height: 400px;
     }
   }
   .link-section {
+    padding: 0 1em;
+    text-align: center;
+    font-family: "Roboto", sans-serif;
+    font-weight: 300;
+    font-size: 1.6rem;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -385,11 +307,9 @@ $coverflow-image-height: 400px;
       height: 2.8rem;
     }
   }
-  .header .subheader {
-    margin-top: 1rem;
-  }
   .yim-share-button,
   .btn-info {
+    background-color: $blue;
     color: var(--headerColor);
     &:hover {
       background-color: color.adjust($blue, $lightness: 6%, $space: hsl);
@@ -414,29 +334,13 @@ $coverflow-image-height: 400px;
       letter-spacing: 1rem;
     }
   }
-  .color-picker {
-    position: relative;
-    gap: 1em;
-    padding: 2rem;
-    display: inline-flex;
-    justify-content: center;
-    margin: auto;
-    .pick-color-caption {
-      position: absolute;
-      left: max(-15vw, -180px);
-      top: -15px;
-    }
-    .color-selector {
-      width: 2em;
-      height: 2em;
-      border-radius: 50%;
-    }
-  }
 
   .graph-container {
+    overflow-x: auto;
     border-radius: 8px;
-    overflow: hidden;
     .graph {
+      min-width: min(700px, 100%);
+      width: 100%;
       color: var(--accentColor);
       overflow-x: auto;
       overflow-y: hidden;
@@ -448,20 +352,6 @@ $coverflow-image-height: 400px;
   .similar-users-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-  }
-  .masked-image {
-    display: inline-block;
-    background-color: var(--accentColor);
-    mask-size: 98%; /* edges might get cut off if you use 100% */
-    mask-repeat: no-repeat;
-    mask-position: center;
-    -webkit-mask-size: 98%; /* edges might get cut off if you use 100% */
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    > img {
-      opacity: 0;
-      display: block;
-    }
   }
   .section {
     margin-top: 4em;
@@ -479,7 +369,7 @@ $coverflow-image-height: 400px;
   .small-stat {
     font-size: 1.8rem;
     text-align: center;
-    font-weight: lighter;
+    font-weight: 300;
     font-family: "Roboto", sans-serif;
     .value {
       position: relative;
@@ -585,13 +475,6 @@ $coverflow-image-height: 400px;
       }
     }
   }
-  .small-stat {
-    font-weight: 300;
-  }
-  .btn-info,
-  .yim-share-button {
-    background-color: var(--buttonColor);
-  }
   .swiper,
   .graph-container {
     background-color: var(--cardBackgroundColor);
@@ -648,7 +531,7 @@ $coverflow-image-height: 400px;
       }
     }
     .year-number {
-      font-family: "Inter";
+      font-family: "Inter", sans-serif;
       margin-top: 1em;
       margin-bottom: 0;
       letter-spacing: 0px;
@@ -659,7 +542,7 @@ $coverflow-image-height: 400px;
       width: 125px;
       aspect-ratio: 1;
       border-radius: 50%;
-      border: 1px dotted color.change(var(--headerColor), $alpha: 50%);
+      border: 1px dotted color.change(#f1f2e1, $alpha: 50%);
       overflow: hidden;
       margin-bottom: -50px;
       align-content: center;
