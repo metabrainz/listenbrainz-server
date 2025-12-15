@@ -28,7 +28,7 @@ class LibrefmListensImporter(BaseListensImporter):
             try:
                 ts = int(item["time"])
             except (TypeError, ValueError):
-                current_app.logger.error("Invalid Libre.fm timestamp in item: %s", item, exc_info=True)
+                current_app.logger.info("Invalid Libre.fm timestamp in item: %s", item, exc_info=True)
                 continue
             if not (self._from_date <= datetime.fromtimestamp(ts, tz=timezone.utc) <= self._to_date):
                 continue
