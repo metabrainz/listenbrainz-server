@@ -535,20 +535,28 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         import_id = response.json["import_id"]
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
-        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        response = self.wait_for_query_to_have_items(url, num_items=3, attempts=20)
         listens = response.json["payload"]["listens"]
-        self.assertEqual(len(listens), 2)
+        self.assertEqual(len(listens), 3)
 
-        self.assertEqual(listens[0]["listened_at"], 1690348225)
+        self.assertEqual(listens[0]["listened_at"], 1704067200)
         track_metadata = listens[0]["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "Oasis")
+        self.assertEqual(track_metadata["track_name"], "Wonderwall")
+        self.assertEqual(track_metadata["release_name"], "(What's the Story) Morning Glory?")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
+
+        self.assertEqual(listens[1]["listened_at"], 1690348225)
+        track_metadata = listens[1]["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "Sweet Garden")
         self.assertEqual(track_metadata["track_name"], "Altered State")
         self.assertNotIn("release_name", track_metadata)
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "ListenBrainz Archive Importer")
 
-        self.assertEqual(listens[1]["listened_at"], 1690347960)
-        track_metadata = listens[1]["track_metadata"]
+        self.assertEqual(listens[2]["listened_at"], 1690347960)
+        track_metadata = listens[2]["track_metadata"]
         self.assertEqual(track_metadata["artist_name"], "The Horrors")
         self.assertEqual(track_metadata["track_name"], "New Ice Age")
         self.assertEqual(track_metadata["release_name"], "Primary Colours")
@@ -563,8 +571,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         metadata = response.json["metadata"]
         self.assertIn("attempted_count", metadata)
         self.assertIn("success_count", metadata)
-        self.assertEqual(metadata["attempted_count"], 2)
-        self.assertEqual(metadata["success_count"], 2)
+        self.assertEqual(metadata["attempted_count"], 3)
+        self.assertEqual(metadata["success_count"], 3)
 
     def test_import_librefm_without_album_column(self):
         data = {
