@@ -51,7 +51,7 @@ export default function YIMFriends({
       </div>
       <div id="buddies">
         <button
-          className="btn-icon btn-transparent backward"
+          className="btn-icon btn-transparent backward text-light"
           type="button"
           onClick={manualScroll}
         >
@@ -78,7 +78,7 @@ export default function YIMFriends({
           })}
         </div>
         <button
-          className="btn-icon btn-transparent forward"
+          className="btn-icon btn-transparent forward text-light"
           type="button"
           onClick={manualScroll}
         >

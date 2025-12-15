@@ -24,7 +24,7 @@ export default function TopLevelPlaylist(props: {
     <div className="content-card mb-3" id={`${coverArtKey}`}>
       <div className="center-p">
         <object
-          className="img-fluid"
+          className="img-fluid border-radius"
           data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&branding=False`}
         >
           Playlist image

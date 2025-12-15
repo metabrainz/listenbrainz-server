@@ -78,31 +78,26 @@ type YearInMusicLoaderData = {
 const availableYears = {
   2021: {
     color: "red",
-    textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
     backGroundColors: ["#166e30ff", "#3d0a79ff"],
   },
   2022: {
     color: "yellow",
-    textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
     backGroundColors: ["#3d0a79ff", "#158D70"],
   },
   2023: {
     color: "green",
-    textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
     backGroundColors: ["#158D70", "#8C4D89"],
   },
   2024: {
     color: "#158D70",
-    textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
     backGroundColors: ["#8C4D89", "#2f6368"],
   },
   2025: {
     color: "#4E3360",
-    textColor: "#F1F2E1",
     accentColor: COLOR_LB_BLUE,
     backGroundColors: ["#2f6368", "#463f62"],
   },
@@ -283,11 +278,10 @@ export default function YearInMusic() {
     }
   };
 
-  const {
-    accentColor,
-    textColor,
-    backGroundColors: gradientColors,
-  } = availableYears[year];
+  const { accentColor, backGroundColors: gradientColors } = availableYears[
+    year
+  ];
+  const textColor = "#F1F2E1";
   const cardBackgroundColor = textColor;
   // const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(
   //   ", "
@@ -466,7 +460,6 @@ export default function YearInMusic() {
       style={{
         ["--cardBackgroundColor" as any]: cardBackgroundColor,
         ["--accentColor" as any]: accentColor,
-        ["--headerColor" as any]: textColor,
         ["--gradientColor1" as any]: gradientColors[0],
         ["--gradientColor2" as any]: gradientColors[1],
       }}
@@ -490,20 +483,6 @@ export default function YearInMusic() {
               style={{ mixBlendMode: "overlay" }}
             />
           </div>
-
-          {!hasSomeData && (
-            <div className="no-yim-message">
-              <p className="center-p">Oh no!</p>
-              <p className="center-p">
-                We don&apos;t have enough {year} statistics for {user.name}.
-              </p>
-              <p className="center-p">
-                <Link to="/settings/music-services/details/">Submit</Link>{" "}
-                enough listens before the end of December to generate your
-                #yearinmusic next year.
-              </p>
-            </div>
-          )}
         </div>
         <div className="year-selection mb-5" ref={yearSelectionRef}>
           {Object.keys(availableYears).map((availableYear, idx) => {
@@ -547,6 +526,19 @@ export default function YearInMusic() {
             );
           })}
         </div>
+        {!hasSomeData && (
+          <div className="no-yim-message">
+            <p className="center-p">Oh no!</p>
+            <p className="center-p">
+              We don&apos;t have enough {year} statistics for {user.name}.
+            </p>
+            <p className="center-p">
+              <Link to="/settings/music-services/details/">Submit</Link> enough
+              listens before the end of December to generate your #yearinmusic
+              next year.
+            </p>
+          </div>
+        )}
         <div role="main">
           {userShareBar}
           {hasSomeData && (
@@ -562,10 +554,9 @@ export default function YearInMusic() {
               )}
               <div className="section">
                 <div className="content-card" id="overview">
-                  <h3 className="flex-center">Overview</h3>
-                  <div className="d-flex justify-content-center">
+                  <div className="m-auto">
                     <Preview
-                      className="img-fluid"
+                      className="img-fluid border-radius"
                       url={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
                       styles={{
                         textColor,
@@ -723,7 +714,7 @@ export default function YearInMusic() {
               </div>
               <div
                 className="overlay-image-container mb-5"
-                style={{ maxWidth: "450px", height: "80px" }}
+                style={{ maxWidth: "400px", height: "80px" }}
               >
                 <img
                   src="/static/img/year-in-music/listenbrainz-footer.png"
@@ -793,7 +784,7 @@ export default function YearInMusic() {
               </p>
               <div
                 className="overlay-image-container mt-5 mb-5"
-                style={{ maxWidth: "250px", height: "85px" }}
+                style={{ maxWidth: "200px", height: "85px" }}
               >
                 <img
                   src="/static/img/year-in-music/OSS-footer.png"
