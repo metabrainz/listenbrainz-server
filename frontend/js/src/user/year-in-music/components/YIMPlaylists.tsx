@@ -15,9 +15,19 @@ export default function TopLevelPlaylist(props: {
   coverArtKey: string;
   userName: string;
   year: number;
+  gradientColors: string[];
+  accentColor: string;
   customStyles?: string;
 }): JSX.Element {
-  const { topLevelPlaylist, coverArtKey, userName, year, customStyles } = props;
+  const {
+    topLevelPlaylist,
+    coverArtKey,
+    userName,
+    year,
+    customStyles,
+    gradientColors,
+    accentColor,
+  } = props;
   const { APIService } = React.useContext(GlobalAppContext);
   const encodedUsername = encodeURIComponent(userName);
   return (
@@ -25,7 +35,7 @@ export default function TopLevelPlaylist(props: {
       <div className="m-auto p-0">
         <object
           className="img-fluid border-radius"
-          data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&branding=False`}
+          data={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&branding=False&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
         >
           Playlist image
         </object>
@@ -87,7 +97,7 @@ export default function TopLevelPlaylist(props: {
       </div>
       <div className="yim-share-button-container">
         <ImageShareButtons
-          svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}`}
+          svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
           shareUrl={`https://listenbrainz.org/user/${encodedUsername}/year-in-music/${year}#${coverArtKey}`}
           // shareText="Check out my"
           shareTitle={`My ${year} playlist on ListenBrainz`}

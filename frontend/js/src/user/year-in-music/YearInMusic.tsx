@@ -567,7 +567,7 @@ export default function YearInMusic() {
                   </div>
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
                       shareUrl={linkToThisPage}
                       shareText={`Check out my ListenBrainz stats for ${year}`}
                       shareTitle={`My year ${year} in music`}
@@ -586,7 +586,7 @@ export default function YearInMusic() {
                   />
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
                       shareUrl={`${linkToThisPage}#top-albums`}
                       shareText={`Check out my top albums for ${year} on ListenBrainz`}
                       shareTitle={`My top albums of ${year}`}
@@ -602,6 +602,8 @@ export default function YearInMusic() {
                 userName={user.name}
                 year={year}
                 customStyles={svgStyles}
+                gradientColors={gradientColors}
+                accentColor={accentColor}
               />
 
               <div className="section" id="stats">
@@ -636,7 +638,7 @@ export default function YearInMusic() {
                   )}
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
                       shareUrl={`${linkToThisPage}#stats`}
                       shareTitle={`My music listening in ${year} on ListenBrainz`}
                       fileName={`${user.name}-stats-${year}`}
@@ -655,6 +657,8 @@ export default function YearInMusic() {
                       coverArtKey="discovery-playlist"
                       userName={user.name}
                       customStyles={svgStyles}
+                      gradientColors={gradientColors}
+                      accentColor={accentColor}
                     />
                   )}
                   {topMissedRecordingsPlaylist && (
@@ -664,6 +668,8 @@ export default function YearInMusic() {
                       coverArtKey="missed-playlist"
                       userName={user.name}
                       customStyles={svgStyles}
+                      gradientColors={gradientColors}
+                      accentColor={accentColor}
                     />
                   )}
                 </div>

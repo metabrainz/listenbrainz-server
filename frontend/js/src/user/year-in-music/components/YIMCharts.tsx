@@ -12,12 +12,16 @@ type YIMChartsProps = {
   userName: string;
   year: number;
   customStyles?: string;
+  gradientColors: string[];
+  accentColor: string;
 };
 export default function YIMCharts({
   yearInMusicData,
   userName,
   year,
   customStyles,
+  gradientColors,
+  accentColor,
 }: YIMChartsProps) {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   if (!yearInMusicData) {
@@ -78,7 +82,7 @@ export default function YIMCharts({
             </div>
             <div className="yim-share-button-container">
               <ImageShareButtons
-                svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=tracks`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=tracks&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
                 shareUrl={`${linkToThisPage}#top-tracks`}
                 // shareText="Check out my"
                 shareTitle={`My top tracks of ${year}`}
@@ -134,7 +138,7 @@ export default function YIMCharts({
             </div>
             <div className="yim-share-button-container">
               <ImageShareButtons
-                svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=artists`}
+                svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=artists&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
                 shareUrl={`${linkToThisPage}#top-artists`}
                 // shareText="Check out my"
                 shareTitle={`My top artists of ${year}`}

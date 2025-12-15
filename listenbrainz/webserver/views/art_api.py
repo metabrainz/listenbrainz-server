@@ -579,9 +579,9 @@ def cover_art_yim(user_name, year: int = 2025):
         raise APIBadRequest(f"Year In Music {year} report for user {user_name} not found")
 
     styles = {
-        "background_color_1": request.args.get("bg_color_1", "#2f6368"),
-        "background_color_2": request.args.get("bg_color_2", "#463f62"),
-        "accent_color": request.args.get("accent_color", "#F1F2E1"),
+        "background_color_1": request.args.get("bg-color-1", "#2f6368"),
+        "background_color_2": request.args.get("bg-color-2", "#463f62"),
+        "accent_color": request.args.get("accent-color", "#F1F2E1"),
     }
 
     match image:
