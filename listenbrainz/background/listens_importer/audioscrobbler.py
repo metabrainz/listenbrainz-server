@@ -98,8 +98,8 @@ class AudioscrobblerListensImporter(BaseListensImporter):
             if stripped.startswith("#"):
                 if stripped.startswith("#CLIENT/"):
                     self.original_client = stripped[len("#CLIENT/"):].strip()
-
-            break
+            else:
+                break
 
     def _filtered_rows(self, reader: csv.DictReader, from_date: datetime, to_date: datetime) -> Iterator[dict[str, Any]]:
         for row in reader:
