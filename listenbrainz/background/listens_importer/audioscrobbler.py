@@ -63,23 +63,26 @@ class AudioscrobblerListensImporter(BaseListensImporter):
                 },
             }
 
+            track_metadata = listen["track_metadata"]
+            additional_info = track_metadata["additional_info"]
+
             if self.original_client:
-                listen["track_metadata"]["additional_info"]["original_submission_client"] = self.original_client
+                additional_info["original_submission_client"] = self.original_client
 
             if item.get("release_name"):
-                listen["track_metadata"]["release_name"] = item["release_name"]
+                track_metadata["release_name"] = item["release_name"]
 
             if item.get("duration"):
                 try:
-                    listen["track_metadata"]["additional_info"]["duration"] = int(item["duration"])
+                    additional_info["duration"] = int(item["duration"])
                 except (TypeError, ValueError):
                     current_app.logger.debug("Skipping invalid duration in Audioscrobbler row: %s", item)
 
             if item.get("tracknumber"):
-                listen["track_metadata"]["additional_info"]["tracknumber"] = item["tracknumber"]
+                additional_info["tracknumber"] = item["tracknumber"]
 
             if item.get("track_mbid"):
-                listen["track_metadata"]["additional_info"]["track_mbid"] = item["track_mbid"]
+                additional_info["track_mbid"] = item["track_mbid"]
 
             listens.append(listen)
 
