@@ -41,7 +41,6 @@
     }
     .genre-count {
     font-size: 50px;
-    filter: drop-shadow(4px 2px 2px #0000008f);
     }
     .value {
     font-weight: 300;
@@ -74,6 +73,9 @@
     <mask id="cover-art-mask">
       <rect x="346" y="373" width="396" height="396" fill="white" />
     </mask>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-opacity="0.4" />
+    </filter>
   </defs>
   <g clip-path="url(#clip)">
     <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
@@ -158,14 +160,16 @@
       y="324">
       <tspan class="entity-count">{{ "{:,}".format(songs_count) }}</tspan>
       <tspan class="entity" dx="16">SONGS</tspan>
-    </text> {%- set y_start = 800 -%} {%- set
-    y_step = 50 -%} {%- for genre in genres -%} <text
-      class="genre-count"
-      y="{{ y_start - y_step * loop.index0 }}"
-      opacity="{{ '1' if loop.index0 == 0 else '0.7' }}"
-    >
-      <tspan class="value" x="170" text-anchor="end">{{ genre['genre_count_percent'] }}%</tspan>
-      <tspan x="170">{{ genre['genre']|upper }}</tspan>
-    </text> {%- endfor -%} </g>
+    </text>
+    <g id="top-genres" filter="url(#shadow)">
+      {%- set y_start = 800 -%} {%- set
+      y_step = 50 -%} {%- for genre in genres -%} <text
+        class="genre-count"
+        y="{{ y_start - y_step * loop.index0 }}"
+      >
+        <tspan class="value" x="170" text-anchor="end">{{ genre['genre_count_percent'] }}%</tspan>
+        <tspan x="170">{{ genre['genre']|upper }}</tspan>
+      </text> {%- endfor -%} </g>
+    </g> <!-- Closing id="top-genres" group -->
   </g> <!-- Closing id="stats" group -->
 </svg>
