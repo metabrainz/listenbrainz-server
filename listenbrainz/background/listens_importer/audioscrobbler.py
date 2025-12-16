@@ -1,6 +1,6 @@
 import csv
 from datetime import datetime, timezone
-from typing import Any, Iterator
+from typing import Any, Iterator, TextIO
 
 from flask import current_app
 from more_itertools import chunked
@@ -8,7 +8,7 @@ from more_itertools import chunked
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 
 
-class RockboxListensImporter(BaseListensImporter):
+class AudioscrobblerListensImporter(BaseListensImporter):
     DEFAULT_FIELDNAMES = [
         "artist_name",
         "release_name",
@@ -22,11 +22,11 @@ class RockboxListensImporter(BaseListensImporter):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.importer_name = ".scrobbler.log Archive Importer"
+        self.importer_name = "Audioscrobbler Archive Importer"
         self.original_client = None
 
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
-        """Process Rockbox .scrobbler.log files.
+        """Process Audioscrobbler .scrobbler.log files.
 
         Lines starting with '#' are treated as comments and ignored, except
         for '#CLIENT/' which is stored as original submission client. Timezone
@@ -73,7 +73,7 @@ class RockboxListensImporter(BaseListensImporter):
                 try:
                     listen["track_metadata"]["additional_info"]["duration"] = int(item["duration"])
                 except (TypeError, ValueError):
-                    current_app.logger.debug("Skipping invalid duration in Rockbox row: %s", item)
+                    current_app.logger.debug("Skipping invalid duration in Audioscrobbler row: %s", item)
 
             if item.get("tracknumber"):
                 listen["track_metadata"]["additional_info"]["tracknumber"] = item["tracknumber"]
@@ -85,7 +85,7 @@ class RockboxListensImporter(BaseListensImporter):
 
         return listens
 
-    def _parse_header(self, file) -> None:
+    def _parse_header(self, file: TextIO) -> None:
         """Extract metadata from header comment lines."""
         for line in file:
             stripped = line.strip()
@@ -101,16 +101,16 @@ class RockboxListensImporter(BaseListensImporter):
     def _filtered_rows(self, reader: csv.DictReader, from_date: datetime, to_date: datetime) -> Iterator[dict[str, Any]]:
         for row in reader:
             if None in row:
-                current_app.logger.debug("Skipping malformed Rockbox row with extra fields: %s", row)
+                current_app.logger.debug("Skipping malformed Audioscrobbler row with extra fields: %s", row)
                 continue
 
             if not row.get("artist_name") or not row.get("track_name") or not row.get("timestamp"):
-                current_app.logger.debug("Skipping Rockbox row with missing required fields: %s", row)
+                current_app.logger.debug("Skipping Audioscrobbler row with missing required fields: %s", row)
                 continue
 
             artist_name = row.get("artist_name", "")
             if artist_name == "<Untagged>":
-                current_app.logger.debug("Skipping Rockbox row with untagged artist: %s", row)
+                current_app.logger.debug("Skipping Audioscrobbler row with untagged artist: %s", row)
                 continue
 
             rating = row.get("rating")
@@ -120,12 +120,12 @@ class RockboxListensImporter(BaseListensImporter):
             try:
                 ts = int(row["timestamp"])
             except (TypeError, ValueError):
-                current_app.logger.debug("Skipping Rockbox row with invalid timestamp: %s", row)
+                current_app.logger.debug("Skipping Audioscrobbler row with invalid timestamp: %s", row)
                 continue
 
             listened_at = datetime.fromtimestamp(ts, tz=timezone.utc)
             if not (from_date <= listened_at <= to_date):
-                current_app.logger.debug("Skipping Rockbox listen outside date range: %s", row)
+                current_app.logger.debug("Skipping Audioscrobbler listen outside date range: %s", row)
                 continue
 
             row["timestamp"] = ts
