@@ -272,6 +272,21 @@ $coverflow-image-height: 400px;
       flex: 1;
       scroll-snap-type: x mandatory;
       scroll-initial-target: nearest;
+      padding: 0 40px;
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 100px,
+        #000 calc(100% - 100px),
+        transparent
+      );
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 100px,
+        #000 calc(100% - 100px),
+        transparent
+      );
     }
     .buddy {
       scroll-snap-align: center;
