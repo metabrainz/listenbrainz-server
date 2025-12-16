@@ -975,3 +975,59 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
         self.assertEqual(metadata["status"], "failed")
         self.assertEqual(metadata["progress"], "Unsupported service: foobar")
+
+    def test_import_audioscrobbler(self):
+        data = {
+            "service": "audioscrobbler",
+            "file": open(self.path_to_data_file(".scrobbler.log"), "rb"),
+        }
+        response = self.client.post(
+            self.custom_url_for("import_listens_api_v1.create_import_task"),
+            data=data,
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+            content_type="multipart/form-data"
+        )
+        self.assert200(response)
+        import_id = response.json["import_id"]
+
+        url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
+        response = self.wait_for_query_to_have_items(url, num_items=2, attempts=20)
+        listens = response.json["payload"]["listens"]
+        self.assertEqual(len(listens), 2)
+
+        first_listen = listens[0]
+        self.assertEqual(first_listen["listened_at"], 1577840400)
+        track_metadata = first_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "今堀恒雄")
+        self.assertEqual(track_metadata["track_name"], "YELLOW ALERT")
+        self.assertEqual(track_metadata["release_name"], "trigun the first donuts")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Audioscrobbler Archive Importer")
+        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200 $Revision$")
+        self.assertEqual(additional_info["duration"], 185)
+        self.assertEqual(additional_info["tracknumber"], "18")
+        self.assertEqual(additional_info["track_mbid"], "f427312a-d073-4ba3-99f0-cd499528b639")
+
+        second_listen = listens[1]
+        self.assertEqual(second_listen["listened_at"], 1577836800)
+        track_metadata = second_listen["track_metadata"]
+        self.assertEqual(track_metadata["artist_name"], "The Beatles")
+        self.assertEqual(track_metadata["track_name"], "Come Together")
+        self.assertEqual(track_metadata["release_name"], "Abbey Road")
+        additional_info = track_metadata["additional_info"]
+        self.assertEqual(additional_info["submission_client"], "Audioscrobbler Archive Importer")
+        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200 $Revision$")
+        self.assertEqual(additional_info["duration"], 259)
+        self.assertEqual(additional_info["tracknumber"], "1")
+        self.assertEqual(additional_info["track_mbid"], "d5e4fb56-e457-4684-aa31-63ce70ee5a8c")
+
+        response = self.client.get(
+            self.custom_url_for("import_listens_api_v1.get_import_task", import_id=import_id),
+            headers={"Authorization": f"Token {self.user['auth_token']}"},
+        )
+        self.assert200(response)
+        metadata = response.json["metadata"]
+        self.assertIn("attempted_count", metadata)
+        self.assertIn("success_count", metadata)
+        self.assertEqual(metadata["attempted_count"], 2)
+        self.assertEqual(metadata["success_count"], 2)
