@@ -513,9 +513,9 @@ export default function ImportListens() {
           <br />
           For <b>{nonZipServices.join(", ")}</b>: please upload single files
           directly (
-          {nonZipServices.map((s) => (
-            <mark>{acceptedFileTypes[s]}, </mark>
-          ))}{" "}
+          <mark>
+            {nonZipServices.map((s) => acceptedFileTypes[s]).join(", ")}
+          </mark>{" "}
           respectively).
         </p>
       </div>
