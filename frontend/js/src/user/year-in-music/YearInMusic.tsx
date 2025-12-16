@@ -484,6 +484,7 @@ export default function YearInMusic() {
           </div>
         </div>
         <div className="year-selection mb-5" ref={yearSelectionRef}>
+          <div className="leading-line" />
           {Object.keys(availableYears).map((availableYear, idx) => {
             const yearAsNum = Number(
               availableYear
@@ -524,6 +525,7 @@ export default function YearInMusic() {
               </Link>
             );
           })}
+          <div className="trailing-line" />
         </div>
         {!hasSomeData && (
           <div className="no-yim-message">

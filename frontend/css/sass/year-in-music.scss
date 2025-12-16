@@ -518,7 +518,7 @@ $coverflow-image-height: 400px;
           }
         }
         .year-number {
-          margin-top: -115px;
+          margin-top: -116px;
           margin-bottom: 118px;
           font-size: 1.6em;
           letter-spacing: 10px;
@@ -528,11 +528,8 @@ $coverflow-image-height: 400px;
           font-weight: 900;
         }
       }
-      &:last-child .year-separator .year-connector:last-child,
-      &:first-child .year-separator .year-connector:first-child {
-        opacity: 0;
-      }
     }
+
     .year-number {
       font-family: "Inter", sans-serif;
       margin-top: 1em;
@@ -569,10 +566,26 @@ $coverflow-image-height: 400px;
       }
 
       .year-connector {
-        height: 1px;
-        background-color: var(--headerColor);
+        border: 1px solid var(--headerColor);
         width: 100%;
       }
+    }
+    :nth-last-child(1 of .year-item) .year-separator .year-connector:last-child,
+    :nth-child(1 of .year-item) .year-separator .year-connector:first-child {
+      opacity: 0;
+    }
+    .trailing-line,
+    .leading-line {
+      min-width: 50vw;
+      margin-bottom: 70px;
+      border: 1px dashed var(--headerColor);
+      opacity: 0.3;
+    }
+    .trailing-line {
+      margin-left: -120px;
+    }
+    .leading-line {
+      margin-right: -120px;
     }
   }
 }
