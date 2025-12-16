@@ -1,7 +1,15 @@
 import * as React from "react";
 
 import { toast } from "react-toastify";
-import { debounce, isEmpty, isNil, isUndefined, last, noop } from "lodash";
+import {
+  debounce,
+  isEmpty,
+  isNil,
+  isUndefined,
+  last,
+  noop,
+  throttle,
+} from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
@@ -423,7 +431,7 @@ export default function YearInMusic() {
   React.useEffect(() => {
     if (selectedRef.current) {
       selectedRef.current.scrollIntoView({
-        behavior: "auto", // Instant scroll on load
+        behavior: "auto",
         inline: "center",
         block: "nearest",
       });
@@ -442,15 +450,40 @@ export default function YearInMusic() {
         navigate(`../${selectThisYear}/`);
       }
     };
-    const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 300);
+    const onScrollSnapChanging = (e: Event) => {
+      // @ts-expect-error Cannot find a SnapEvent type in TS yet, so snapTargetInline is not recognized
+      const target = e.snapTargetInline;
+      if (target) {
+        const elementsWithSelectedClass = target.parentElement.querySelectorAll(
+          ".selected"
+        );
+        elementsWithSelectedClass.forEach((selected: HTMLElement) => {
+          selected.classList.remove("selected");
+        });
+        target.classList.add("selected");
+      }
+    };
+    const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 1500, {
+      leading: false,
+      trailing: true,
+    });
+    const debouncedonScrollSnapChanging = throttle(onScrollSnapChanging, 250);
     innerRef.addEventListener("scrollsnapchange", debouncedonScrollSnapChange);
+    innerRef.addEventListener(
+      "scrollsnapchanging",
+      debouncedonScrollSnapChanging
+    );
     return () => {
       innerRef.removeEventListener(
         "scrollsnapchange",
         debouncedonScrollSnapChange
       );
+      innerRef.removeEventListener(
+        "scrollsnapchanging",
+        debouncedonScrollSnapChanging
+      );
     };
-  }, [yearSelectionRef]);
+  }, [yearSelectionRef, navigate]);
 
   return (
     <div
