@@ -43,6 +43,7 @@ import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
 import Preview from "../../explore/art-creator/components/Preview";
 import { generateAlbumArtThumbnailLink } from "../../utils/utils";
+import Loader from "../../components/Loader";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -122,7 +123,7 @@ export default function YearInMusic() {
   const yearSelectionRef = React.useRef<HTMLDivElement>(null);
   const isInitialEvent = React.useRef<boolean>(true);
 
-  const { data } = useQuery<YearInMusicLoaderData>(
+  const { data, isLoading } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
   );
   const fallbackUser = { name: userName ?? "" };
@@ -413,27 +414,21 @@ export default function YearInMusic() {
   );
 
   const handleYearClick = React.useCallback(
-    (
-      e: React.MouseEvent<HTMLAnchorElement>,
-      selectedYear: keyof typeof availableYears
-    ) => {
-      navigate(`../${selectedYear}/`);
-
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
       e.currentTarget.scrollIntoView({
         behavior: "smooth",
         inline: "center",
-        block: "nearest",
       });
     },
-    [navigate]
+    []
   );
 
   React.useEffect(() => {
     if (selectedRef.current) {
       selectedRef.current.scrollIntoView({
-        behavior: "auto",
+        behavior: "instant",
         inline: "center",
-        block: "nearest",
       });
     }
   }, []);
@@ -447,7 +442,10 @@ export default function YearInMusic() {
         // Ignore the first event fired on initial scrollIntoView (page load)
         isInitialEvent.current = false;
       } else if (selectThisYear) {
-        navigate(`../${selectThisYear}/`);
+        navigate(`../${selectThisYear}/`, {
+          preventScrollReset: true,
+          replace: true,
+        });
       }
     };
     const onScrollSnapChanging = (e: Event) => {
@@ -516,6 +514,7 @@ export default function YearInMusic() {
             />
           </div>
         </div>
+        <Loader className="loader-container" isLoading={isLoading} />
         <div className="year-selection mb-5" ref={yearSelectionRef}>
           <div className="leading-line" />
           {Object.keys(availableYears).map((availableYear, idx) => {
@@ -539,7 +538,7 @@ export default function YearInMusic() {
                 to={`../${availableYear}/`}
                 ref={isSelectedYear ? selectedRef : null}
                 className={`year-item ${isSelectedYear ? "selected" : ""}`}
-                onClick={(e) => handleYearClick(e, yearAsNum)}
+                onClick={handleYearClick}
                 data-year={availableYear}
               >
                 <div className="year-image">

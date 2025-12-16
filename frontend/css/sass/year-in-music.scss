@@ -534,7 +534,7 @@ $coverflow-image-height: 400px;
         }
         .year-number {
           margin-top: -116px;
-          margin-bottom: 118px;
+          margin-bottom: 118.5px;
           font-size: 1.6em;
           letter-spacing: 10px;
           // remove letter-spacing from last letter to center text
@@ -547,7 +547,7 @@ $coverflow-image-height: 400px;
 
     .year-number {
       font-family: "Inter", sans-serif;
-      margin-top: 1em;
+      margin-top: 21.5px;
       margin-bottom: 0;
       letter-spacing: 0px;
       font-weight: 500;
@@ -592,7 +592,7 @@ $coverflow-image-height: 400px;
     .trailing-line,
     .leading-line {
       min-width: 50vw;
-      margin-bottom: 70px;
+      margin-bottom: 73px;
       border: 1px dashed var(--headerColor);
       opacity: 0.3;
     }
@@ -602,5 +602,10 @@ $coverflow-image-height: 400px;
     .leading-line {
       margin-right: -120px;
     }
+  }
+  .loader-container {
+    position: absolute;
+    left: calc(50% - 15px);
+    top: 491px;
   }
 }
