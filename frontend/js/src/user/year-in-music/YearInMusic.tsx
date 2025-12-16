@@ -87,17 +87,17 @@ const availableYears = {
   2021: {
     color: "red",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#166e30ff", "#3d0a79ff"],
+    backGroundColors: ["#EDCE69", "#8C4D4D"],
   },
   2022: {
     color: "yellow",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#3d0a79ff", "#158D70"],
+    backGroundColors: ["#8C4D4D", "#307750"],
   },
   2023: {
     color: "green",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#158D70", "#8C4D89"],
+    backGroundColors: ["#307750", "#8C4D89"],
   },
   2024: {
     color: "#158D70",
@@ -463,7 +463,7 @@ export default function YearInMusic() {
         target.classList.add("selected");
       }
     };
-    const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 1500, {
+    const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 800, {
       leading: false,
       trailing: true,
     });
@@ -498,7 +498,7 @@ export default function YearInMusic() {
     >
       <div>
         <SEO year={year} userName={user?.name} />
-        <YIMYearMetaTags year={year} />
+        <YIMYearMetaTags />
         <div id="main-header">
           <div className="user-name">{user.name}&apos;s</div>
           <div className="header-image">

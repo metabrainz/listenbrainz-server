@@ -7,13 +7,7 @@ type SEOProps = {
   userName: string;
 };
 
-export function YIMYearMetaTags({
-  year,
-}: // background,
-{
-  year: number;
-  // background?: string;
-}) {
+export function YIMYearMetaTags({ year }: { year?: number }) {
   if (year === 2021) {
     return (
       <Helmet>
@@ -124,7 +118,7 @@ export default function SEO(props: SEOProps) {
       <meta property="og:type" content="website" />
       <meta
         property="og:title"
-        content={`ListenBrainz Year in Music for ${userName}`}
+        content={`ListenBrainz ${year} Year in Music for ${userName}`}
       />
       <meta
         property="og:description"
@@ -133,7 +127,7 @@ export default function SEO(props: SEOProps) {
       <meta property="twitter:url" content={urlString} />
       <meta
         property="twitter:title"
-        content={`ListenBrainz Year in Music for ${userName}`}
+        content={`ListenBrainz ${year} Year in Music for ${userName}`}
       />
       <meta property="twitter:domain" content="listenbrainz.org" />
       <meta
