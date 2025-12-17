@@ -766,7 +766,7 @@ export default function YearInMusic() {
               </div>
               <div
                 className="overlay-image-container mb-5"
-                style={{ maxWidth: "400px", height: "80px" }}
+                style={{ maxWidth: "250px", height: "80px" }}
               >
                 <img
                   src="/static/img/year-in-music/listenbrainz-footer.png"

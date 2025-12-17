@@ -179,7 +179,7 @@ $coverflow-image-height: 400px;
     height: 2.2em;
   }
   .flex > .content-card {
-    min-width: 330px;
+    min-width: min(calc(100% - 8em), 330px);
     height: auto;
   }
 
