@@ -15,8 +15,7 @@ import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
 import { toast } from "react-toastify";
 import { useSetAtom } from "jotai";
-
-import { millisecondsToStr } from "../playlists/utils";
+import humanizeDuration from "humanize-duration";
 import CBReview from "../cb-review/CBReview";
 import ListenCard from "../common/listens/ListenCard";
 import Username from "../common/Username";
@@ -226,8 +225,16 @@ export default function AlbumPage(): JSX.Element {
     .filter((length): length is number => Number.isFinite(length))
     .reduce((sum, length) => sum + length, 0);
 
-  const totalAlbumDurationStr =
-    totalAlbumDurationMs > 0 ? millisecondsToStr(totalAlbumDurationMs) : null;
+  const trackCount = allTracks.length;
+  const trackUnit = trackCount === 1 ? "track" : "tracks";
+
+  const durationStr = humanizeDuration(totalAlbumDurationMs, {
+    round: true,
+    units: ["h", "m", "s"],
+    delimiter: " ",
+    spacer: " ",
+    language: "en",
+  });
 
   if (isError) {
     return (
@@ -318,9 +325,9 @@ export default function AlbumPage(): JSX.Element {
               ))}
             </div>
 
-            {totalAlbumDurationStr && (
+            {totalAlbumDurationMs > 0 && (
               <small className="form-text text-muted">
-                Total length: {totalAlbumDurationStr}
+                {trackCount} {trackUnit} - {durationStr}
               </small>
             )}
 
