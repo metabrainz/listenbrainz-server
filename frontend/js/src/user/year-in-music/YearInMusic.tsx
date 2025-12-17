@@ -600,7 +600,7 @@ export default function YearInMusic() {
               )}
               <div className="section">
                 <div className="content-card" id="overview">
-                  <div className="m-auto">
+                  <div className="m-auto mt-5">
                     <Preview
                       className="img-fluid border-radius"
                       url={overviewImageUrl}
