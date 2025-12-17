@@ -77,39 +77,38 @@ type YearInMusicLoaderData = {
   data: YearInMusicProps["yearInMusicData"];
   genreGraphData: YearInMusicProps["genreGraphData"];
 };
-export const availableYears = {
-  2021: {
-    color: "red",
-    accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#678838", "#C0B55D"],
-  },
-  2022: {
-    color: "yellow",
-    accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#C0B55D", "#3C4679"],
-  },
-  2023: {
-    color: "green",
-    accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#3C4679", "#8C4D4D"],
-  },
-  2024: {
-    color: "#158D70",
-    accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#8C4D4D", "#8C4D89"],
-  },
-  2025: {
-    color: "#4E3360",
-    accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#8C4D89", "#EDCE69"],
-  },
+
+const colorSequence = [
+  "#307750",
+  "#A16551",
+  "#693544",
+  "#447D87",
+  "#B2744D",
+  "#4D326D",
+  "#678838",
+  "#C0B55D",
+  "#3C4679",
+  "#8C4D4D",
+  "#8C4D89",
+  "#EDCE69",
+];
+
+export const getYearColors = (year: number) => {
+  const index = (year - 2003) % colorSequence.length;
+
+  return [
+    colorSequence[index],
+    colorSequence[(index + 1) % colorSequence.length],
+  ];
 };
+export const availableYears = [2021, 2022, 2023, 2024, 2025] as const;
+
 export default function YearInMusic() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams();
   const { year: yearParam = getYear(Date.now()), userName } = params;
-  const year = Number(yearParam) as keyof typeof availableYears;
+  const year = Number(yearParam) as typeof availableYears[number];
 
   const { data, isLoading } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
@@ -275,9 +274,8 @@ export default function YearInMusic() {
     }
   };
 
-  const { accentColor, backGroundColors: gradientColors } = availableYears[
-    year
-  ];
+  const gradientColors = getYearColors(Number(year));
+  const accentColor = COLOR_LB_BLUE;
   const textColor = "#F1F2E1";
   const cardBackgroundColor = textColor;
   // const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(

@@ -106,8 +106,10 @@ export default function YIMYearSelection({
   return (
     <div className="year-selection mb-5" ref={yearSelectionRef}>
       <div className="leading-line" />
-      {Object.keys(availableYears).map((availableYear, idx) => {
-        const yearAsNum = Number(availableYear) as keyof typeof availableYears;
+      {availableYears.map((availableYear, idx) => {
+        const yearAsNum = Number(
+          availableYear
+        ) as typeof availableYears[number];
         const isSelectedYear = yearAsNum === year;
         let coverURL = `${APIService.APIBaseURI}/art/grid-stats/${encodedUsername}/this_year/1/0/250?caption=false`;
         if (
