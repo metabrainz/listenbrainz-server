@@ -58,6 +58,7 @@ def get_release_group_metadata_cache_query(with_filter: bool = False):
                         ORDER BY acn.position
                     ) AS artists
                  , rgm.first_release_date_year
+                 , rgpt.name AS primary_type
               FROM musicbrainz.release_group rg
               {mbid_filter_clause}
               JOIN musicbrainz.release_group_meta rgm
@@ -68,6 +69,8 @@ def get_release_group_metadata_cache_query(with_filter: bool = False):
                 ON ac.id = acn.artist_credit
               JOIN musicbrainz.artist a
                 ON acn.artist = a.id
+         LEFT JOIN musicbrainz.release_group_primary_type rgpt
+                ON rg.type = rgpt.id
          LEFT JOIN rg_cover_art rgca
                 ON rgca.release_group = rg.id
           GROUP BY rg.gid
@@ -77,4 +80,5 @@ def get_release_group_metadata_cache_query(with_filter: bool = False):
                  , ac.name
                  , rgca.caa_id
                  , rgca.caa_release_mbid
+                 , rgpt.name
     """
