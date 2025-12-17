@@ -1,15 +1,7 @@
 import * as React from "react";
 
 import { toast } from "react-toastify";
-import {
-  debounce,
-  isEmpty,
-  isNil,
-  isUndefined,
-  last,
-  noop,
-  throttle,
-} from "lodash";
+import { isEmpty, isNil, isUndefined, last } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
@@ -43,8 +35,8 @@ import AlbumsCoverflow from "./components/AlbumsCoverflow";
 import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
 import Preview from "../../explore/art-creator/components/Preview";
-import { generateAlbumArtThumbnailLink } from "../../utils/utils";
 import Loader from "../../components/Loader";
+import YIMYearSelection from "./components/YIMYearSelection";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -85,7 +77,7 @@ type YearInMusicLoaderData = {
   data: YearInMusicProps["yearInMusicData"];
   genreGraphData: YearInMusicProps["genreGraphData"];
 };
-const availableYears = {
+export const availableYears = {
   2021: {
     color: "red",
     accentColor: COLOR_LB_BLUE,
@@ -116,13 +108,8 @@ export default function YearInMusic() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams();
-  const navigate = useNavigate();
   const { year: yearParam = getYear(Date.now()), userName } = params;
   const year = Number(yearParam) as keyof typeof availableYears;
-
-  const selectedRef = React.useRef<HTMLAnchorElement>(null);
-  const yearSelectionRef = React.useRef<HTMLDivElement>(null);
-  const isInitialEvent = React.useRef<boolean>(true);
 
   const { data, isLoading } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)
@@ -414,76 +401,6 @@ export default function YearInMusic() {
     </div>
   );
 
-  const handleYearClick = React.useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault();
-      e.currentTarget.scrollIntoView({
-        behavior: "smooth",
-        inline: "center",
-      });
-    },
-    []
-  );
-
-  React.useEffect(() => {
-    if (selectedRef.current) {
-      selectedRef.current.scrollIntoView({
-        behavior: "instant",
-        inline: "center",
-      });
-    }
-  }, []);
-  React.useEffect(() => {
-    if (!yearSelectionRef.current) return noop;
-    const innerRef = yearSelectionRef.current;
-    const onScrollSnapChange = (e: Event) => {
-      // @ts-expect-error Cannot find a SnapEvent type in TS yet, so snapTargetInline is not recognized
-      const selectThisYear = e.snapTargetInline?.dataset?.year;
-      if (isInitialEvent.current === true) {
-        // Ignore the first event fired on initial scrollIntoView (page load)
-        isInitialEvent.current = false;
-      } else if (selectThisYear) {
-        navigate(`../${selectThisYear}/`, {
-          preventScrollReset: true,
-          replace: true,
-        });
-      }
-    };
-    const onScrollSnapChanging = (e: Event) => {
-      // @ts-expect-error Cannot find a SnapEvent type in TS yet, so snapTargetInline is not recognized
-      const target = e.snapTargetInline;
-      if (target) {
-        const elementsWithSelectedClass = target.parentElement.querySelectorAll(
-          ".selected"
-        );
-        elementsWithSelectedClass.forEach((selected: HTMLElement) => {
-          selected.classList.remove("selected");
-        });
-        target.classList.add("selected");
-      }
-    };
-    const debouncedonScrollSnapChange = debounce(onScrollSnapChange, 800, {
-      leading: false,
-      trailing: true,
-    });
-    const debouncedonScrollSnapChanging = throttle(onScrollSnapChanging, 250);
-    innerRef.addEventListener("scrollsnapchange", debouncedonScrollSnapChange);
-    innerRef.addEventListener(
-      "scrollsnapchanging",
-      debouncedonScrollSnapChanging
-    );
-    return () => {
-      innerRef.removeEventListener(
-        "scrollsnapchange",
-        debouncedonScrollSnapChange
-      );
-      innerRef.removeEventListener(
-        "scrollsnapchanging",
-        debouncedonScrollSnapChanging
-      );
-    };
-  }, [yearSelectionRef, navigate]);
-
   const encodedBgColor1 = encodeURIComponent(gradientColors[0]);
   const encodedBgColor2 = encodeURIComponent(gradientColors[1]);
   const encodedAccentColor = encodeURIComponent(textColor);
@@ -528,50 +445,11 @@ export default function YearInMusic() {
           </div>
         </div>
         <Loader className="loader-container" isLoading={isLoading} />
-        <div className="year-selection mb-5" ref={yearSelectionRef}>
-          <div className="leading-line" />
-          {Object.keys(availableYears).map((availableYear, idx) => {
-            const yearAsNum = Number(
-              availableYear
-            ) as keyof typeof availableYears;
-            const isSelectedYear = yearAsNum === year;
-            let coverURL = `${APIService.APIBaseURI}/art/grid-stats/${encodedUsername}/this_year/1/0/250?caption=false`;
-            if (
-              yearInMusicData?.top_release_groups?.[idx]?.caa_id &&
-              yearInMusicData?.top_release_groups?.[idx]?.caa_release_mbid
-            ) {
-              coverURL = generateAlbumArtThumbnailLink(
-                yearInMusicData.top_release_groups[idx].caa_id,
-                yearInMusicData.top_release_groups[idx].caa_release_mbid
-              );
-            }
-            return (
-              <Link
-                key={availableYear}
-                to={`../${availableYear}/`}
-                ref={isSelectedYear ? selectedRef : null}
-                className={`year-item ${isSelectedYear ? "selected" : ""}`}
-                onClick={handleYearClick}
-                data-year={availableYear}
-              >
-                <div className="year-image">
-                  <img
-                    className="img-fluid"
-                    src={coverURL}
-                    alt={`Cover for year ${availableYear}`}
-                  />
-                </div>
-                <div className="year-separator">
-                  <div className="year-connector" />
-                  <div className="year-marker" />
-                  <div className="year-connector" />
-                </div>
-                <div className="year-number">{availableYear}</div>
-              </Link>
-            );
-          })}
-          <div className="trailing-line" />
-        </div>
+        <YIMYearSelection
+          year={year}
+          encodedUsername={encodedUsername}
+          yearInMusicData={yearInMusicData}
+        />
         {!hasSomeData && (
           <div className="no-yim-message">
             <p className="center-p">Oh no!</p>
