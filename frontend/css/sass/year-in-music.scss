@@ -546,6 +546,7 @@ $coverflow-image-height: 400px;
     }
 
     .year-number {
+      z-index: 1;
       font-family: "Inter", sans-serif;
       margin-top: 21.5px;
       margin-bottom: 0;
@@ -554,6 +555,7 @@ $coverflow-image-height: 400px;
       transition: all 1s;
     }
     .year-image {
+      z-index: 0;
       width: 125px;
       aspect-ratio: 1;
       border-radius: 50%;
@@ -562,12 +564,14 @@ $coverflow-image-height: 400px;
       margin-bottom: -50px;
       align-content: center;
       text-align: center;
+      backdrop-filter: blur(6px) contrast(1.5);
       img {
-        opacity: 0.5;
-        transition: opacity 2s;
+        opacity: 0.8;
+        transition: opacity 1s;
       }
     }
     .year-separator {
+      z-index: 1;
       width: 100%;
       display: flex;
       align-items: center;
