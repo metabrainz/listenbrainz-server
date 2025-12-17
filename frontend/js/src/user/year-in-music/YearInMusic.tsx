@@ -16,6 +16,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { getYear } from "date-fns";
+import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 import ImageShareButtons from "./components/ImageShareButtons";
@@ -501,6 +502,14 @@ export default function YearInMusic() {
       <div>
         <SEO year={year} userName={user?.name} />
         <YIMYearMetaTags />
+        <Helmet>
+          <link
+            rel="preload"
+            href="/static/img/year-in-music/header.png"
+            as="image"
+          />
+          <link rel="preload" href={overviewImageUrl} as="image" />
+        </Helmet>
         <div id="main-header">
           <div className="user-name">{user.name}&apos;s</div>
           <div className="header-image">
