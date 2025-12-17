@@ -483,6 +483,10 @@ export default function YearInMusic() {
     };
   }, [yearSelectionRef, navigate]);
 
+  const encodedBgColor1 = encodeURIComponent(gradientColors[0]);
+  const encodedBgColor2 = encodeURIComponent(gradientColors[1]);
+  const encodedAccentColor = encodeURIComponent(textColor);
+  const overviewImageUrl = `${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`;
   return (
     <div
       id="year-in-music"
@@ -590,7 +594,7 @@ export default function YearInMusic() {
                   <div className="m-auto">
                     <Preview
                       className="img-fluid border-radius"
-                      url={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview`}
+                      url={overviewImageUrl}
                       styles={{
                         textColor,
                         bgColor1: gradientColors[0],
@@ -600,7 +604,7 @@ export default function YearInMusic() {
                   </div>
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
+                      svgURL={overviewImageUrl}
                       shareUrl={linkToThisPage}
                       shareText={`Check out my ListenBrainz stats for ${year}`}
                       shareTitle={`My year ${year} in music`}
@@ -619,7 +623,7 @@ export default function YearInMusic() {
                   />
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`}
                       shareUrl={`${linkToThisPage}#top-albums`}
                       shareText={`Check out my top albums for ${year} on ListenBrainz`}
                       shareTitle={`My top albums of ${year}`}
@@ -671,7 +675,7 @@ export default function YearInMusic() {
                   )}
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
+                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`}
                       shareUrl={`${linkToThisPage}#stats`}
                       shareTitle={`My music listening in ${year} on ListenBrainz`}
                       fileName={`${user.name}-stats-${year}`}
