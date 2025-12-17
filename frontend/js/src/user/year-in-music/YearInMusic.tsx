@@ -89,27 +89,27 @@ const availableYears = {
   2021: {
     color: "red",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#EDCE69", "#8C4D4D"],
+    backGroundColors: ["#678838", "#C0B55D"],
   },
   2022: {
     color: "yellow",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#8C4D4D", "#307750"],
+    backGroundColors: ["#C0B55D", "#3C4679"],
   },
   2023: {
     color: "green",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#307750", "#8C4D89"],
+    backGroundColors: ["#3C4679", "#8C4D4D"],
   },
   2024: {
     color: "#158D70",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#8C4D89", "#2f6368"],
+    backGroundColors: ["#8C4D4D", "#8C4D89"],
   },
   2025: {
     color: "#4E3360",
     accentColor: COLOR_LB_BLUE,
-    backGroundColors: ["#2f6368", "#463f62"],
+    backGroundColors: ["#8C4D89", "#EDCE69"],
   },
 };
 export default function YearInMusic() {
