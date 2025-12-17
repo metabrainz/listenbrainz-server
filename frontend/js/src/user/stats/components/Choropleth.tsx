@@ -98,7 +98,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
   const [tooltipPosition, setTooltipPosition] = useState([0, 0]);
   const [selectedCountry, setSelectedCountry] = useState<CountryFeature>();
   const refContainer = useRef<HTMLDivElement>(null);
-  const { APIService } = React.useContext(GlobalAppContext);
+  const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const tooltipRef = useRef<HTMLButtonElement>(null);
 
   // Use default container width of 1000px, but promptly calculate the real width in a useLayoutEffect
@@ -182,8 +182,26 @@ export default function CustomChoropleth(props: ChoroplethProps) {
 
   const handlePlayCountryTracks = useCallback(
     async (countryName: string) => {
+      if (!currentUser?.auth_token) {
+        toast.warning(
+          <ToastMsg
+            title="Please log in"
+            message={
+              <>
+                You must be <Link to="/login">logged in</Link> to use LB Radio.<br/>
+                AI scrapers are causing undue traffic on our sites and not playing by the rules, booo!
+              </>
+            }
+          />,
+          {
+            toastId: "error",
+          }
+        );
+        return;
+      }
       try {
         const { payload } = await APIService.getLBRadioPlaylist(
+          currentUser.auth_token,
           `country:(${countryName})`
         );
         const tracks = payload.jspf.playlist.track;
@@ -200,7 +218,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         });
       }
     },
-    [APIService]
+    [APIService, currentUser]
   );
 
   const customTooltip = useMemo(() => {

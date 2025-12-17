@@ -16,9 +16,9 @@ def get_new_releases_of_top_artists(year):
     get_listens_from_dump(from_date, to_date).createOrReplaceTempView("listens")
 
     create_release_group_metadata_cache()
-    get_release_group_metadata_cache().createOrReplaceTempView("release_groups_all")
+    cache_table = get_release_group_metadata_cache()
 
-    new_releases = run_query(_get_new_releases_of_top_artists(year))
+    new_releases = run_query(_get_new_releases_of_top_artists(year, cache_table))
 
     for rows in chunked(new_releases.toLocalIterator(), USERS_PER_MESSAGE):
         stats = []
@@ -35,7 +35,7 @@ def get_new_releases_of_top_artists(year):
         }
 
 
-def _get_new_releases_of_top_artists(year):
+def _get_new_releases_of_top_artists(year, cache_table):
     # instead of exploding the artist mbids, it is possible to use arrays_overlap on the two artist credit mbids
     # however in that case spark will do a BroadcastNestedLoopJoin which is very slow (takes 3 hours). the query
     # below using equality on artist mbid takes 2 minutes.
@@ -67,7 +67,7 @@ def _get_new_releases_of_top_artists(year):
                  , caa_release_mbid
                  , artists
                  , explode(artist_credit_mbids) AS artist_mbid
-              FROM release_groups_all
+              FROM {cache_table}
              WHERE first_release_date_year = {year}
         )
             SELECT user_id

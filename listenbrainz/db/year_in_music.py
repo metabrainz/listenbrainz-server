@@ -1,9 +1,9 @@
 import smtplib
+from collections import defaultdict
 from email.message import EmailMessage
 from email.utils import make_msgid
 
 import psycopg2
-import sqlalchemy
 import orjson
 from flask import current_app, render_template
 from psycopg2.extras import execute_values
@@ -11,7 +11,6 @@ from psycopg2.sql import SQL, Literal, Identifier
 from sqlalchemy import text
 
 from listenbrainz.db.model.user_timeline_event import NotificationMetadata
-from listenbrainz import db
 from listenbrainz.db import timescale
 from listenbrainz.db.user import get_all_usernames
 from listenbrainz.db.user_timeline_event import create_user_notification_event
@@ -36,16 +35,23 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 # top_releases_coverart
 # total_listen_count
 
+LAST_FM_FOUNDING_YEAR = 2002
+MAX_YEAR_IN_MUSIC_YEAR = 2025
 
-def get(user_id, year):
+
+def get(user_id, year: int, legacy: bool = False):
     """ Get year in music data for requested user """
-    if year not in [2021, 2022, 2023, 2024]:
+    if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         return None
 
-    table = "statistics.year_in_music_" + str(year)
+    table = "year_in_music_" + str(year)
+    if legacy:
+        table = "legacy_" + table
+    qualified_table = "statistics." + table
+
     with timescale.engine.connect() as connection:
         result = connection.execute(
-            text("SELECT data FROM " + table + " WHERE user_id = :user_id"),
+            text("SELECT data FROM " + qualified_table + " WHERE user_id = :user_id"),
             {"user_id": user_id}
         )
         row = result.fetchone()
@@ -117,8 +123,14 @@ def insert_similar_users(year, data):
 
 
 def insert_top_stats(entity, year, data):
-    insert_heavy(f"top_{entity}", year, data)
-    insert(f"total_{entity}_count", year, [(user["user_id"], user["count"]) for user in data], False)
+    insert_heavy(f"top_{entity}", year, [
+        {"user_id": user["user_id"], "data": user[entity]}
+        for user in data
+    ])
+    insert(f"total_{entity}_count", year, [
+        (user["user_id"], user[f"{entity}_count"])
+        for user in data
+    ], False)
 
 
 def create_yim_table(year):
@@ -186,7 +198,7 @@ def sanitize_username(username):
 
 def notify_yim_users(db_conn, ts_conn, year):
     logo_cid = make_msgid()
-    with open("/static/img/year-in-music-24/yim24-header-all-email.png", "rb") as img:
+    with open("/static/img/legacy-year-in-music/year-in-music-24/yim24-header-all-email.png", "rb") as img:
         logo = img.read()
 
     if year not in [2021, 2022, 2023, 2024]:
@@ -233,3 +245,73 @@ def notify_yim_users(db_conn, ts_conn, year):
                            f'your own <a href="{year_in_music}">Year in Music</a> now!'
         metadata = NotificationMetadata(creator="troi-bot", message=timeline_message)
         create_user_notification_event(db_conn, row.user_id, metadata)
+
+
+def process_genre_data(yim_top_genre: list, data: list, user_name: str):
+    if not yim_top_genre or not data:
+        return {}
+
+    yim_data_dict = {genre["genre"]: genre["genre_count"] for genre in yim_top_genre}
+
+    adj_matrix = defaultdict(list)
+    is_head = defaultdict(lambda: True)
+    id_name_map = {}
+    parent_map = defaultdict(lambda: None)
+
+    for row in data:
+        genre_id = row["genre_gid"]
+        is_head[genre_id]
+        id_name_map[genre_id] = row.get("genre")
+
+        subgenre_id = row["subgenre_gid"]
+        if subgenre_id:
+            is_head[subgenre_id] = False
+            id_name_map[subgenre_id] = row.get("subgenre")
+            parent_map[subgenre_id] = genre_id
+            adj_matrix[genre_id].append(subgenre_id)
+        else:
+            adj_matrix[genre_id] = []
+
+    visited = set()
+    root_nodes = [node for node in is_head if is_head[node]]
+
+    def create_node(id):
+        if id in visited:
+            return None
+        visited.add(id)
+
+        genre_count = yim_data_dict.get(id_name_map[id], 0)
+        children = []
+
+        for sub_genre in sorted(adj_matrix[id]):
+            child_node = create_node(sub_genre)
+            if isinstance(child_node, list):
+                children.extend(child_node)
+            elif child_node is not None:
+                children.append(child_node)
+
+        if genre_count == 0:
+            if len(children) == 0:
+                return None
+            return children
+
+        node = {"id": id, "name": id_name_map[id], "children": children, "loc": genre_count}
+
+        if len(children) == 0:
+            del node["children"]
+
+        return node
+
+    output = []
+    for root_node in root_nodes:
+        node = create_node(root_node)
+        if isinstance(node, list):
+            output.extend(node)
+        elif node is not None:
+            output.append(node)
+
+    return {
+        "name": user_name,
+        "color": "transparent",
+        "children": output
+    }

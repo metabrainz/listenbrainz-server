@@ -91,50 +91,6 @@ export default function ExplorePage() {
           url="/explore/similar-users/"
         />
       </div>
-      {currentUser?.name && (
-        <>
-          <div className="explore-page-divider">
-            <h3>Your year in music</h3>
-            <hr />
-          </div>
-          <div className="row">
-            <ExploreCard
-              name="Your Year in Music 2024"
-              desc="Review"
-              img_name="year-in-music-2024.png"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/2024/`}
-            />
-
-            <ExploreCard
-              name="Your Year in Music 2023"
-              desc="Review"
-              img_name="year-in-music-2023.jpg"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/2023/`}
-            />
-
-            <ExploreCard
-              name="Your Year in Music 2022"
-              desc="Review"
-              img_name="year-in-music-2022.jpg"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/2022/`}
-            />
-            <ExploreCard
-              name="Your Year in Music 2021"
-              desc="Review"
-              img_name="year-in-music-2021.jpg"
-              url={`/user/${encodeURIComponent(
-                currentUser.name
-              )}/year-in-music/2021/`}
-            />
-          </div>
-        </>
-      )}
       <div className="explore-page-divider">
         <h3>Beta</h3>
         <hr />
@@ -147,6 +103,50 @@ export default function ExplorePage() {
           url="/explore/lb-radio/"
         />
       </div>
+      {currentUser?.name && (
+        <>
+          <div className="explore-page-divider">
+            <h3>Archived</h3>
+            <hr />
+          </div>
+          <div className="row">
+            <ExploreCard
+              name="Your Year in Music 2024"
+              desc="Archival version of Year In Music 2024"
+              img_name="year-in-music-2024.png"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2024/`}
+            />
+
+            <ExploreCard
+              name="Your Year in Music 2023"
+              desc="Archival version of Year In Music 2023"
+              img_name="year-in-music-2023.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2023/`}
+            />
+
+            <ExploreCard
+              name="Your Year in Music 2022"
+              desc="Archival version of Year In Music 2022"
+              img_name="year-in-music-2022.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2022/`}
+            />
+            <ExploreCard
+              name="Your Year in Music 2021"
+              desc="Archival version of Year In Music 2021"
+              img_name="year-in-music-2021.jpg"
+              url={`/user/${encodeURIComponent(
+                currentUser.name
+              )}/year-in-music/legacy/2021/`}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
