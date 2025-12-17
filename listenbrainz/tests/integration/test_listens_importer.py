@@ -1003,7 +1003,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "trigun the first donuts")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "Audioscrobbler Archive Importer")
-        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200 $Revision$")
+        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200")
         self.assertEqual(additional_info["duration"], 185)
         self.assertEqual(additional_info["tracknumber"], "18")
         self.assertEqual(additional_info["track_mbid"], "f427312a-d073-4ba3-99f0-cd499528b639")
@@ -1016,7 +1016,7 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(track_metadata["release_name"], "Abbey Road")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "Audioscrobbler Archive Importer")
-        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200 $Revision$")
+        self.assertEqual(additional_info["original_submission_client"], "Rockbox sansae200")
         self.assertEqual(additional_info["duration"], 259)
         self.assertEqual(additional_info["tracknumber"], "1")
         self.assertEqual(additional_info["track_mbid"], "d5e4fb56-e457-4684-aa31-63ce70ee5a8c")

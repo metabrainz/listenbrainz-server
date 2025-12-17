@@ -97,7 +97,7 @@ class AudioscrobblerListensImporter(BaseListensImporter):
 
             if stripped.startswith("#"):
                 if stripped.startswith("#CLIENT/"):
-                    self.original_client = stripped[len("#CLIENT/"):].strip()
+                    self.original_client = stripped.removeprefix("#CLIENT/").strip().replace("$Revision$", "").strip()
             else:
                 break
 
