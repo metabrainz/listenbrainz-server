@@ -63,12 +63,6 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://www.jewelcase.app/">Jewelcase</a>
-          </em>
-          , an offline music player for iOS
-        </li>
-        <li>
-          <em>
             <a href="https://wiki.gnome.org/Apps/Lollypop">Lollypop</a>
           </em>
           , a modern music player for GNOME
@@ -365,6 +359,12 @@ export default function AddData() {
             </a>
           </em>
           , for Android devices
+        </li>
+        <li>
+          <em>
+            <a href="https://www.jewelcase.app/">Jewelcase</a>
+          </em>
+          , an offline music player for iOS
         </li>
         <li>
           <em>
