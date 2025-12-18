@@ -69,6 +69,13 @@ export default function YIMCharts({
                     },
                   },
                 };
+                const listenCountComponent = (
+                  <span className="badge bg-info">
+                    {recording.listen_count}
+                    &nbsp;
+                    <FontAwesomeIcon icon={faHeadphones} />
+                  </span>
+                );
                 return (
                   <ListenCard
                     compact
@@ -76,6 +83,7 @@ export default function YIMCharts({
                     listen={listenHere}
                     showTimestamp={false}
                     showUsername={false}
+                    additionalActions={listenCountComponent}
                   />
                 );
               })}
