@@ -71,14 +71,18 @@
 
         <rect id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
             x="0" />
+        <rect width="770" height="770" x="77" y="77" fill="#00000040"
+            class="accent-color-stroke" rx="8" ry="8" />
+        {% if branding != False %}
         <g id="g1264">
-            <rect width="770" height="770" x="77" y="77" fill="#00000040"
-                class="accent-color-stroke" rx="8" ry="8" />
+            {% if anonymous != True %}
             <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
+            {% endif %}
             <text class="branding" x="30" y="897" id="text1250">10 TOP SONGS OF {{year}}</text>
             <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
             <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
         </g>
+        {% endif %}
         <g> {% set y_start = 250 %} {% set gap = 50 %} {% for track in tracks[:10] %} <text
                 id="track-{{ loop.index }}" class="accent-color">
                 <tspan x="150" y="{{ y_start + loop.index0 * gap }}"

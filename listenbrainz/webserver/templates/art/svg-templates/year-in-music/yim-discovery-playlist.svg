@@ -66,12 +66,16 @@
     <rect id="content-bg" width="600" height="600" x="160" y="160" fill="#00000040"
         class="accent-color-stroke" rx="8" ry="8" />
     <g id="g297">
+        {% if branding != False %}
         <g id="g1264">
+            {% if anonymous != True %}
             <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
+            {% endif %}
             <text class="branding" x="30" y="897" id="text1250">{{year}}</text>
             <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
             <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
         </g>
+        {% endif %}
         <text x="50%" y="90" id="my-year" class="subtitle">
             <tspan>M</tspan>
             <tspan dx="12">Y</tspan>
