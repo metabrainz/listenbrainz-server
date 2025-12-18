@@ -38,7 +38,7 @@ export default function AlbumsCoverflow(props: {
         }}
         breakpoints={{
           700: {
-            initialSlide: 2,
+            initialSlide: 1,
             spaceBetween: 100,
             slidesPerView: 3,
             coverflowEffect: {

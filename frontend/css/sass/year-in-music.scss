@@ -1,5 +1,6 @@
 @use "sass:map";
 @use "sass:color";
+@use "sass:selector";
 
 @property --gradientColor1 {
   syntax: "<color>";
@@ -14,6 +15,7 @@
 }
 
 $coverflow-image-height: 400px;
+$transition-duration: 1s;
 
 #year-in-music {
   // For coverflow arrow colors
@@ -35,7 +37,8 @@ $coverflow-image-height: 400px;
       var(--gradientColor2)
     ),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 398 398' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='5.77' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  transition: --gradientColor1 1.5s, --gradientColor2 1.5s;
+  transition: --gradientColor1 $transition-duration,
+    --gradientColor2 $transition-duration;
   background-blend-mode: multiply;
   overflow: hidden;
 
@@ -437,8 +440,12 @@ $coverflow-image-height: 400px;
     filter: drop-shadow(0px 0px 5px var(--accentColor));
   }
   .content-card {
-    margin-right: 4em;
-    margin-left: 4em;
+    margin-right: 2em;
+    margin-left: 2em;
+    @media (min-width: map.get($grid-breakpoints,"md")) {
+      margin-right: 4em;
+      margin-left: 4em;
+    }
     // border: 1px solid var(--headerColor); // fallback
     // border: 1px solid color-mix(in srgb, var(--headerColor) 50%, transparent);
     // background: transparent;
@@ -449,7 +456,10 @@ $coverflow-image-height: 400px;
     }
     .card-bg,
     .graph-container {
-      margin-inline: -4em;
+      margin-inline: -2em;
+      @media (min-width: map.get($grid-breakpoints,"md")) {
+        margin-inline: -4em;
+      }
     }
     position: relative;
     box-shadow: none;
@@ -467,7 +477,7 @@ $coverflow-image-height: 400px;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      // aspect-ratio: 1;
+      padding-inline: 0;
       .img-header {
         padding: 0.5rem;
         margin-bottom: auto;
@@ -504,43 +514,74 @@ $coverflow-image-height: 400px;
     scroll-initial-target: nearest;
     overflow-x: auto;
     width: 100%;
+    height: 240px;
     font-size: 1.5em;
     scrollbar-width: none;
-    margin-top: -5em;
+    margin-top: -3.3em;
     display: flex;
     flex-grow: 1;
     flex-direction: row;
     align-items: flex-end;
+    @media (min-width: map.get($grid-breakpoints,"md")) {
+      margin-top: -5em;
+    }
     &,
     & a,
     & a:visited {
       color: var(--headerColor);
     }
+    --year-item-width: 150px;
     .year-item {
       display: flex;
       position: relative;
       flex-direction: column;
       flex: 1;
-      min-width: 200px;
+      min-width: 150px;
       align-items: center;
       scroll-snap-align: center;
+      transition: width $transition-duration;
       &.selected {
-        min-width: 280px;
+        min-width: 170px;
+        + .trailing-line {
+          --year-item-width: 170px;
+        }
+        @at-root #{selector.replace(&, ".year-item.selected", ".leading-line:has(+ .year-item.selected)")} {
+          --year-item-width: 170px;
+        }
         .year-image {
-          width: 200px;
+          width: 170px;
           img {
             opacity: 0;
           }
         }
         .year-number {
-          margin-top: -116px;
-          margin-bottom: 118.5px;
+          margin-top: -101px;
+          margin-bottom: 103.6px;
           font-size: 1.6em;
           letter-spacing: 10px;
           // remove letter-spacing from last letter to center text
           direction: rtl;
           text-indent: -10px;
           font-weight: 900;
+        }
+      }
+    }
+    @media (min-width: map.get($grid-breakpoints,"md")) {
+      --year-item-width: 200px;
+      .year-item {
+        min-width: 200px;
+        &.selected {
+          min-width: 280px;
+          + .trailing-line {
+            --year-item-width: 280px;
+          }
+          @at-root #{selector.replace(&, ".year-item.selected", ".leading-line:has(+ .year-item.selected)")} {
+            --year-item-width: 280px;
+          }
+          .year-number {
+            margin-top: -116px;
+            margin-bottom: 118.6px;
+          }
         }
       }
     }
@@ -552,7 +593,7 @@ $coverflow-image-height: 400px;
       margin-bottom: 0;
       letter-spacing: 0px;
       font-weight: 500;
-      transition: all 1s;
+      transition: all $transition-duration;
     }
     .year-image {
       z-index: 0;
@@ -565,9 +606,10 @@ $coverflow-image-height: 400px;
       align-content: center;
       text-align: center;
       backdrop-filter: blur(6px) contrast(1.5);
+      transition: width $transition-duration;
       img {
         opacity: 0.8;
-        transition: opacity 1s;
+        transition: opacity $transition-duration;
       }
     }
     .year-separator {
@@ -596,15 +638,20 @@ $coverflow-image-height: 400px;
     .trailing-line,
     .leading-line {
       min-width: 50vw;
-      margin-bottom: 73px;
+      margin-bottom: 3.5em;
       border: 1px dashed var(--headerColor);
       opacity: 0.3;
+      @media (min-width: map.get($grid-breakpoints,"md")) {
+        margin-bottom: 73px;
+      }
     }
     .trailing-line {
-      margin-left: -120px;
+      transition: margin-left $transition-duration;
+      margin-left: calc((var(--year-item-width) - 40px) / 2 * -1);
     }
     .leading-line {
-      margin-right: -120px;
+      transition: margin-right $transition-duration;
+      margin-right: calc((var(--year-item-width) - 40px) / 2 * -1);
     }
   }
   .loader-container {
