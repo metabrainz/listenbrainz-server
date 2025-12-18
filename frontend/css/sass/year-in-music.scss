@@ -578,6 +578,9 @@ $transition-duration: 1s;
           @at-root #{selector.replace(&, ".year-item.selected", ".leading-line:has(+ .year-item.selected)")} {
             --year-item-width: 280px;
           }
+          .year-image {
+            width: 200px;
+          }
           .year-number {
             margin-top: -116px;
             margin-bottom: 118.6px;
