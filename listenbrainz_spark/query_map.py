@@ -25,6 +25,7 @@ import listenbrainz_spark.year_in_music.listen_count
 import listenbrainz_spark.year_in_music.listening_time
 import listenbrainz_spark.year_in_music.new_artists_discovered
 import listenbrainz_spark.year_in_music.top_genres
+import listenbrainz_spark.year_in_music.genre_activity
 import listenbrainz_spark.year_in_music.top_discoveries
 import listenbrainz_spark.year_in_music.top_missed_recordings
 import listenbrainz_spark.fresh_releases.fresh_releases
@@ -82,6 +83,7 @@ functions = {
         listenbrainz_spark.year_in_music.new_artists_discovered.get_new_artists_discovered_count,
     'year_in_music.listening_time': listenbrainz_spark.year_in_music.listening_time.get_listening_time,
     'year_in_music.top_genres': listenbrainz_spark.year_in_music.top_genres.get_top_genres,
+    'year_in_music.genre_activity': listenbrainz_spark.year_in_music.genre_activity.get_genre_activity,
     'year_in_music.top_missed_recordings':
         listenbrainz_spark.year_in_music.top_missed_recordings.generate_top_missed_recordings,
     'year_in_music.top_discoveries': listenbrainz_spark.year_in_music.top_discoveries.generate_top_discoveries,
