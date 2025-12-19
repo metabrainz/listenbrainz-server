@@ -53,7 +53,7 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
         </Tooltip>
       </h3>
       <div className="graph-container card-bg">
-        <div className="graph" style={{ height: "400px" }}>
+        <div className="graph">
           <ResponsiveTreeMap
             margin={{ left: 30, bottom: 30, right: 30, top: 30 }}
             data={genreGraphData}

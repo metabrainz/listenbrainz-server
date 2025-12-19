@@ -3,8 +3,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import Tooltip from "react-tooltip";
 import { ResponsiveBar } from "@nivo/bar";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { type AxisLegendPosition } from "@nivo/axes";
 import { isEmpty, range, uniq } from "lodash";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
+import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 
 type YIMGenreGraphProps = {
   mostListenedYearData: { [key: string]: number };
@@ -14,6 +17,7 @@ type YIMGenreGraphProps = {
 export default function YIMGenreGraph(props: YIMGenreGraphProps) {
   const { mostListenedYearData, userName, gradientColors } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const isCurrentUser = userName === currentUser?.name;
   const yourOrUsersName = isCurrentUser ? "your" : `${userName}'s`;
   if (isEmpty(mostListenedYearData)) {
@@ -35,14 +39,26 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
   );
   const mostListenedMaxYear = Math.max(...mostListenedYearYears);
   const mostListenedMinYear = Math.min(...mostListenedYearYears);
+  const modulus = isMobile ? 2 : 5;
   const mostListenedYearTicks = uniq(
     mostListenedYearYears
-      .map((listenYear) => Math.round((listenYear + 1) / 5) * 5)
+      .map((listenYear) => Math.round((listenYear + 1) / modulus) * modulus)
       .filter(
         (listenYear) =>
           listenYear >= mostListenedMinYear && listenYear <= mostListenedMaxYear
       )
   );
+  const mobileMargins = { left: 40, bottom: 30, right: 15, top: 15 };
+  const desktopMargins = { left: 50, bottom: 45, right: 30, top: 30 };
+  const axis1 = {
+    legend: "Number of listens",
+    legendOffset: isMobile ? -5 : -40,
+    legendPosition: "middle" as AxisLegendPosition,
+  };
+  const axis2 = {
+    tickValues: mostListenedYearTicks,
+    tickRotation: -30,
+  };
   return (
     <div className="" id="most-listened-year">
       <h3 className="text-center">
@@ -61,23 +77,16 @@ export default function YIMGenreGraph(props: YIMGenreGraphProps) {
       <div className="graph-container card-bg">
         <div className="graph">
           <ResponsiveBar
-            margin={{ left: 50, bottom: 45, right: 30, top: 30 }}
+            margin={isMobile ? mobileMargins : desktopMargins}
             data={mostListenedYearDataForGraph}
             padding={0.1}
-            layout="vertical"
+            layout={isMobile ? "horizontal" : "vertical"}
             keys={["songs"]}
             indexBy="year"
             colors={gradientColors}
             enableLabel={false}
-            axisBottom={{
-              tickValues: mostListenedYearTicks,
-              tickRotation: -30,
-            }}
-            axisLeft={{
-              legend: "Number of listens",
-              legendOffset: -40,
-              legendPosition: "middle",
-            }}
+            axisBottom={isMobile ? axis1 : axis2}
+            axisLeft={isMobile ? axis2 : axis1}
           />
         </div>
       </div>
