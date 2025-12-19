@@ -131,11 +131,7 @@ export default function YIMYearSelection({
             data-year={availableYear}
           >
             <div className="year-image">
-              <img
-                className="img-fluid"
-                src={coverURL}
-                alt={`Cover for year ${availableYear}`}
-              />
+              <img src={coverURL} alt={`Cover for year ${availableYear}`} />
             </div>
             <div className="year-separator">
               <div className="year-connector" />

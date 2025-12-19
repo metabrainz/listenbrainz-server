@@ -522,7 +522,7 @@ $transition-duration: 1s;
       min-width: 150px;
       align-items: center;
       scroll-snap-align: center;
-      transition: width $transition-duration;
+      transition: width $transition-duration, height $transition-duration;
       &.selected {
         min-width: 170px;
         + .trailing-line {
@@ -533,6 +533,7 @@ $transition-duration: 1s;
         }
         .year-image {
           width: 170px;
+          height: 170px;
           img {
             opacity: 0;
           }
@@ -563,6 +564,7 @@ $transition-duration: 1s;
           }
           .year-image {
             width: 200px;
+            height: 200px;
           }
           .year-number {
             margin-top: -116px;
@@ -584,7 +586,7 @@ $transition-duration: 1s;
     .year-image {
       z-index: 0;
       width: 125px;
-      aspect-ratio: 1;
+      height: 125px;
       border-radius: 50%;
       border: 1px dotted color.change(#f1f2e1, $alpha: 50%);
       overflow: hidden;
@@ -592,10 +594,15 @@ $transition-duration: 1s;
       align-content: center;
       text-align: center;
       backdrop-filter: blur(6px) contrast(1.5);
-      transition: width $transition-duration;
+      transition: width $transition-duration, height $transition-duration;
       img {
         opacity: 0.8;
         transition: opacity $transition-duration;
+        max-width: inherit;
+        max-height: inherit;
+        height: inherit;
+        width: inherit;
+        object-fit: cover;
       }
     }
     .year-separator {
