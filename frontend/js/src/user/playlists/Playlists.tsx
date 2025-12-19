@@ -67,12 +67,22 @@ type UserPlaylistsClassProps = UserPlaylistsProps & {
   handleClickPrevious: () => void;
   handleClickNext: () => void;
   handleSetPlaylistType: (newType: PlaylistType) => void;
-  initialView: PlaylistView; // Constructor
-  setPersistentView: (view: PlaylistView) => void; // Render
+  initialView: PlaylistView;
+  setPersistentView: (view: PlaylistView) => void;
+  initialSort: SortOption;
+  setPersistentSort: (sort: SortOption) => void;
 };
 const playlistViewAtom = atomWithStorage<PlaylistView>(
   "lb_playlists_overview_view",
   PlaylistView.GRID
+);
+const playlistSortAtom = atomWithStorage<SortOption>(
+  "lb_playlists_overview_sort",
+  SortOption.DATE_CREATED
+);
+const playlistTypeAtom = atomWithStorage<string>(
+  "lb_playlists_overview_type",
+  ""
 );
 export default class UserPlaylists extends React.Component<
   UserPlaylistsClassProps,
@@ -83,24 +93,47 @@ export default class UserPlaylists extends React.Component<
 
   constructor(props: UserPlaylistsClassProps) {
     super(props);
-    const { playlists, playlistCount, initialView } = props; // initialView prop destructure
+    const { playlists, playlistCount, initialView, initialSort } = props;
     this.state = {
       playlists: playlists?.map((pl) => pl.playlist) ?? [],
-      sortBy: SortOption.DATE_CREATED,
-      view: initialView, // <<< Prop view state set
+      sortBy: initialSort,
+      view: initialView,
     };
   }
 
   componentDidUpdate(prevProps: Readonly<UserPlaylistsClassProps>): void {
-    const { playlists, initialView } = this.props;
-    // playlists update
+    const { playlists, initialView, initialSort, playlistType } = this.props;
+    const { sortBy } = this.state;
+    if (prevProps.playlistType !== playlistType) {
+      this.setState(
+        {
+          playlists: playlists.map((pl) => pl.playlist),
+          sortBy: initialSort,
+          view: initialView,
+        },
+        () => {
+          this.setSortOption(initialSort);
+        }
+      );
+      return;
+    }
     if (prevProps.playlists !== playlists) {
-      this.setState({
-        playlists: playlists.map((pl) => pl.playlist),
-      });
+      this.setState(
+        {
+          playlists: playlists.map((pl) => pl.playlist),
+        },
+        () => {
+          this.setSortOption(sortBy || initialSort);
+        }
+      );
     }
     if (prevProps.initialView !== initialView) {
       this.setState({ view: initialView });
+    }
+    if (prevProps.initialSort !== initialSort) {
+      this.setState({ sortBy: initialSort }, () => {
+        this.setSortOption(initialSort);
+      });
     }
   }
 
@@ -118,7 +151,6 @@ export default class UserPlaylists extends React.Component<
     const { handleSetPlaylistType, playlistType } = this.props;
     if (type !== playlistType) {
       handleSetPlaylistType(type);
-      this.setState({ sortBy: SortOption.DATE_CREATED });
     }
   };
 
@@ -177,6 +209,8 @@ export default class UserPlaylists extends React.Component<
 
   setSortOption = (option: SortOption) => {
     const { playlists } = this.state;
+    const { setPersistentSort } = this.props;
+    setPersistentSort(option);
     if (option === SortOption.RANDOM) {
       this.setState({
         sortBy: option,
@@ -235,7 +269,7 @@ export default class UserPlaylists extends React.Component<
       playlistType,
       handleClickPrevious,
       handleClickNext,
-      setPersistentView, // Prop destructure
+      setPersistentView,
     } = this.props;
     const { playlists, sortBy, view } = this.state;
     const { currentUser } = this.context;
@@ -273,7 +307,7 @@ export default class UserPlaylists extends React.Component<
                 type="secondary"
                 onClick={() => {
                   this.setState({ view: PlaylistView.GRID });
-                  setPersistentView(PlaylistView.GRID); // Atom/Storage update
+                  setPersistentView(PlaylistView.GRID); // Atom/Storage..
                 }}
                 title="Grid view"
               >
@@ -284,7 +318,7 @@ export default class UserPlaylists extends React.Component<
                 type="secondary"
                 onClick={() => {
                   this.setState({ view: PlaylistView.LIST });
-                  setPersistentView(PlaylistView.LIST); // Atom/Storage update
+                  setPersistentView(PlaylistView.LIST); // Atom/Storage..
                 }}
                 title="List view"
               >
@@ -443,15 +477,16 @@ export default class UserPlaylists extends React.Component<
     );
   }
 }
-
 export function UserPlaylistsWrapper() {
   const data = useLoaderData() as UserPlaylistsLoaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParamsObj = getObjectForURLSearchParams(searchParams);
-  const [persistentView, setPersistentView] = useAtom(playlistViewAtom); // Atom for persistent view state
+  const [persistentView, setPersistentView] = useAtom(playlistViewAtom);
+  const [persistentSort, setPersistentSort] = useAtom(playlistSortAtom);
+  const [persistentType, setPersistentType] = useAtom(playlistTypeAtom);
   const currPageNoStr = searchParams.get("page") || "1";
   const currPageNo = parseInt(currPageNoStr, 10);
-  const type = searchParams.get("type") || "";
+  const type = searchParams.get("type") || persistentType;
 
   const handleClickPrevious = () => {
     setSearchParams({
@@ -476,12 +511,18 @@ export function UserPlaylistsWrapper() {
     const newParams = { ...searchParamsObj };
     if (newType === PlaylistType.collaborations) {
       newParams.type = "collaborative";
+      setPersistentType("collaborative");
     } else {
       delete newParams?.type;
+      setPersistentType("");
     }
     setSearchParams(newParams);
   };
-
+  React.useEffect(() => {
+    if (!searchParams.get("type") && persistentType === "collaborative") {
+      setSearchParams({ ...searchParamsObj, type: "collaborative" });
+    }
+  }, [searchParams, persistentType]);
   return (
     <UserPlaylists
       {...data}
@@ -492,6 +533,8 @@ export function UserPlaylistsWrapper() {
       handleSetPlaylistType={handleSetPlaylistType}
       initialView={persistentView}
       setPersistentView={setPersistentView}
+      initialSort={persistentSort}
+      setPersistentSort={setPersistentSort}
     />
   );
 }
