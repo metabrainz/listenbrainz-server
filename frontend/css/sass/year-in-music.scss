@@ -258,10 +258,6 @@ $transition-duration: 1s;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    .heading .img-header {
-      max-width: 450px;
-      max-width: min(80%, 450px);
-    }
   }
   #overview object {
     max-width: min(500px, 90%);
@@ -457,6 +453,7 @@ $transition-duration: 1s;
     .card-bg,
     .graph-container {
       margin-inline: -2em;
+      filter: drop-shadow(0px 4px 6px color.change(black, $alpha: 40%));
       @media (min-width: map.get($grid-breakpoints,"md")) {
         margin-inline: -4em;
       }
@@ -478,16 +475,6 @@ $transition-duration: 1s;
       justify-content: center;
       align-items: center;
       padding-inline: 0;
-      .img-header {
-        padding: 0.5rem;
-        margin-bottom: auto;
-        margin-top: auto;
-        width: 100%;
-        height: auto;
-        max-width: 400px;
-        max-width: min(60%, 400px);
-        min-width: 200px;
-      }
       @media (max-width: map.get($grid-breakpoints,"sm")) {
         font-size: 38px;
       }
@@ -502,10 +489,6 @@ $transition-duration: 1s;
         color: inherit;
       }
     }
-  }
-  .swiper,
-  .graph-container {
-    background-color: var(--cardBackgroundColor);
   }
   .year-selection {
     padding-left: calc(50% - 40px);
