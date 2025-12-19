@@ -1,36 +1,33 @@
 import localforage from "localforage";
 
-// Setup Database
 const listenStore = localforage.createInstance({
   name: "listenbrainz",
   storeName: "unsent_listens_queue",
 });
 
-// Save Function
-export const saveFailedListen = async (listen: any) => {
-  const id = Date.now().toString();
-  // Store payload and timestamp
-  await listenStore.setItem(id, { listen, timestamp: Date.now() });
-  console.log(`[Offline] Listen saved locally: ${id}`);
+export const saveFailedListen = async (listen: Listen): Promise<void> => {
+  const id = `${listen.listened_at}-${Math.random().toString(36).slice(2)}`;
+  await listenStore.setItem(id, listen);
 };
 
-// Get Function
-export const getFailedListens = async () => {
-  const failedListens: { id: string; listen: any }[] = [];
+export const getFailedListens = async (): Promise<
+  { id: string; listen: Listen }[]
+> => {
+  const failedListens: { id: string; listen: Listen }[] = [];
 
-  if (typeof (listenStore as any).iterate !== "function") {
-    return failedListens;
-  }
-
-  await (listenStore as any).iterate((value: any, key: string) => {
-    failedListens.push({ id: key, listen: value.listen });
+  await listenStore.iterate<Listen, void>((value, key) => {
+    failedListens.push({ id: key, listen: value });
   });
 
-  return failedListens;
+  return failedListens.sort(
+    (a, b) => a.listen.listened_at - b.listen.listened_at
+  );
 };
 
-// Delete Function
-export const removeFailedListen = async (id: string) => {
+export const removeFailedListen = async (id: string): Promise<void> => {
   await listenStore.removeItem(id);
-  console.log(`[Offline] Listen removed: ${id}`);
+};
+
+export const clearFailedListens = async (): Promise<void> => {
+  await listenStore.clear();
 };
