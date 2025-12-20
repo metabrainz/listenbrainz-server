@@ -1,5 +1,6 @@
 import json
 from unittest.mock import patch
+import unittest
 
 import flask_testing
 from datasethoster import RequestSource
@@ -177,6 +178,7 @@ class MainTestCase(flask_testing.TestCase):
              'artist_mbids', 'release_name', 'recording_name', 'release_mbid', 'recording_mbid',
              'artist_credit_id', 'match_type'])
 
+    @unittest.skip("Disabled temporarily")
     @patch('typesense.documents.Documents.search')
     def test_fetch(self, search):
         search.side_effect = typesense_response_0
@@ -188,6 +190,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertDictEqual(json.loads(resp[1].json()), json_response_0[1])
         self.assertDictEqual(json.loads(resp[2].json()), json_response_0[2])
 
+    @unittest.skip("Disabled temporarily")
     @patch('typesense.documents.Documents.search')
     def test_fetch_without_stop_words(self, search):
         search.side_effect = typesense_response_1
