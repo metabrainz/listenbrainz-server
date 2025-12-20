@@ -4,6 +4,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import { faChevronDown, faSave } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAtomValue, useSetAtom } from "jotai";
+import humanizeDuration from "humanize-duration";
 import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
@@ -39,21 +40,6 @@ const getDurationMs = (item?: DurationSource): number => {
   if (info?.duration_ms) return info.duration_ms;
   if (info?.duration) return info.duration * 1000;
   return 0;
-};
-const formatDurationLocal = (totalMs: number): string => {
-  if (!totalMs || totalMs <= 0) return "0:00";
-
-  const totalSeconds = Math.floor(totalMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const pad = (n: number) => n.toString().padStart(2, "0");
-
-  if (hours > 0) {
-    return `${hours}:${pad(minutes)}:${pad(seconds)}`;
-  }
-  return `${minutes}:${pad(seconds)}`;
 };
 
 function Queue(props: BrainzPlayerQueueProps) {
@@ -110,8 +96,14 @@ function Queue(props: BrainzPlayerQueueProps) {
     queueNextUp.forEach((track) => {
       totalMs += getDurationMs(track as DurationSource);
     });
-
-    return formatDurationLocal(totalMs);
+    if (totalMs <= 0) return "0s";
+    return humanizeDuration(totalMs, {
+      round: true,
+      units: ["h", "m", "s"],
+      delimiter: " ",
+      spacer: "",
+      language: "en",
+    });
   }, [queueNextUp, currentListen, tick]);
 
   const addQueueToPlaylist = () => {
@@ -156,7 +148,7 @@ function Queue(props: BrainzPlayerQueueProps) {
             <h4>Now Playing:</h4>
           </div>
           <ListenCard
-            key={`queue-listening-now-${getListenCardKey(currentListen)}}`}
+            key={`queue-listening-now-${getListenCardKey(currentListen)}`}
             className="queue-item-card"
             listen={currentListen as Listen}
             showTimestamp={false}
@@ -167,7 +159,7 @@ function Queue(props: BrainzPlayerQueueProps) {
       <div className="queue-headers d-flex justify-content-between align-items-center">
         <h4>Next Up:</h4>
         {queueNextUp.length > 0 && (
-          <span className="text-secondary" style={{ fontSize: "1.3rem" }}>
+          <span className="text-secondary" style={{ fontSize: "1.2rem" }}>
             {queueNextUp.length} {queueNextUp.length === 1 ? "track" : "tracks"}{" "}
             - {totalRemainingTime} left
           </span>
