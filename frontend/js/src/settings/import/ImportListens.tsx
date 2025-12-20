@@ -20,6 +20,8 @@ import Loader from "../../components/Loader";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
+  pg_timezones: Array<{ name: string; offset: string }>;
+  user_timezone: string;
 };
 
 enum ImportStatus {
@@ -254,7 +256,7 @@ function renderImport(
 
 export default function ImportListens() {
   const data = useLoaderData() as ImportListensLoaderData;
-  const { user_has_email: userHasEmail } = data;
+  const { user_has_email: userHasEmail, pg_timezones, user_timezone } = data;
 
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
 
@@ -561,6 +563,30 @@ export default function ImportListens() {
                   required
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
+              </div>
+
+              <div style={{ minWidth: "15em" }}>
+                <label className="form-label" htmlFor="timezone">
+                  Timezone (optional):
+                </label>
+                <select
+                  className="form-select"
+                  id="timezone"
+                  name="timezone"
+                  defaultValue={user_timezone}
+                  title="Timezone fallback for ambiguous timestamps"
+                >
+                  <option value="">
+                    Use profile timezone ({user_timezone})
+                  </option>
+                  {pg_timezones.map((zone) => {
+                    return (
+                      <option key={zone.name} value={zone.name}>
+                        {zone.name} ({zone.offset})
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
 
               <div style={{ minWidth: "15em" }}>

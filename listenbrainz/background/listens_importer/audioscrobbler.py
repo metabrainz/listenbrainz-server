@@ -33,9 +33,8 @@ class AudioscrobblerListensImporter(BaseListensImporter):
 
         Lines starting with `#` are treated as comments and ignored, except
         for `#CLIENT/` which is stored as original submission client and `#TZ/` which
-        indicates the timezone. Timestamps with `#TZ/Unknown` are interpreted using
-        the user's timezone setting and converted to UTC. Field order is fixed as
-        defined in DEFAULT_FIELDNAMES; header aliases are ignored.
+        indicates the timezone. Field order is fixed as defined in DEFAULT_FIELDNAMES;
+        header aliases are ignored.
         """
 
         from_date = import_task["from_date"]
@@ -45,8 +44,13 @@ class AudioscrobblerListensImporter(BaseListensImporter):
             self._parse_header(file)
             
             if self.timezone is None:
-                user_settings = db_usersetting.get(self.db_conn, import_task["user_id"])
-                timezone_name = user_settings.get("timezone_name", "UTC")
+                user_timezone_override = import_task.get("metadata", {}).get("user_timezone")
+                if user_timezone_override:
+                    timezone_name = user_timezone_override
+                else:
+                    user_settings = db_usersetting.get(self.db_conn, import_task["user_id"])
+                    timezone_name = user_settings.get("timezone_name", "UTC")
+                
                 try:
                     self.timezone = ZoneInfo(timezone_name)
                 except ZoneInfoNotFoundError:
@@ -145,7 +149,7 @@ class AudioscrobblerListensImporter(BaseListensImporter):
 
             try:
                 listened_at = datetime.fromtimestamp(ts, tz=timezone.utc)
-                
+
                 if self.timezone and str(self.timezone) != "UTC":
                     # Adjust timestamps from user's local timezone to UTC
                     raw_ts = datetime.utcfromtimestamp(ts)

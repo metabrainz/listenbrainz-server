@@ -65,6 +65,10 @@ def create_import_task():
     from_date = _validate_datetime_param("from_date", datetime.fromtimestamp(0, timezone.utc))
     to_date = _validate_datetime_param("to_date", datetime.now(timezone.utc))
 
+    user_timezone = request.form.get("timezone", "").strip()
+    if not user_timezone:
+        user_timezone = None
+
     filename = uploaded_file.filename
     if not filename:
         raise APIBadRequest("Invalid file name!")
@@ -110,6 +114,7 @@ def create_import_task():
             from_date=from_date,
             to_date=to_date,
             save_path=save_path,
+            user_timezone=user_timezone,
             filename=filename
         )
         if result is not None:
