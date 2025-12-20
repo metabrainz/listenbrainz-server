@@ -1,11 +1,13 @@
 import csv
 from datetime import datetime, timezone
 from typing import Any, Iterator, TextIO
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask import current_app
 from more_itertools import chunked
 
 from listenbrainz.background.listens_importer.base import BaseListensImporter
+from listenbrainz.db import user_setting as db_usersetting
 
 
 class AudioscrobblerListensImporter(BaseListensImporter):
@@ -24,14 +26,16 @@ class AudioscrobblerListensImporter(BaseListensImporter):
         super().__init__(*args, **kwargs)
         self.importer_name = "Audioscrobbler Archive Importer"
         self.original_client = None
+        self.timezone = None
 
     def process_import_file(self, import_task: dict[str, Any]) -> Iterator[list[dict[str, Any]]]:
         """Process Audioscrobbler .scrobbler.log files.
 
-        Lines starting with '#' are treated as comments and ignored, except
-        for '#CLIENT/' which is stored as original submission client. Timezone
-        is treated as UTC, irrespective of if '#TZ/' is 'UTC' or 'Unknown'. Field
-        order is fixed as defined in DEFAULT_FIELDNAMES; header aliases are ignored.
+        Lines starting with `#` are treated as comments and ignored, except
+        for `#CLIENT/` which is stored as original submission client and `#TZ/` which
+        indicates the timezone. Timestamps with `#TZ/Unknown` are interpreted using
+        the user's timezone setting and converted to UTC. Field order is fixed as
+        defined in DEFAULT_FIELDNAMES; header aliases are ignored.
         """
 
         from_date = import_task["from_date"]
@@ -39,6 +43,16 @@ class AudioscrobblerListensImporter(BaseListensImporter):
 
         with open(import_task["file_path"], mode="r", newline="", encoding="utf-8", errors="replace") as file:
             self._parse_header(file)
+            
+            if self.timezone is None:
+                user_settings = db_usersetting.get(self.db_conn, import_task["user_id"])
+                timezone_name = user_settings.get("timezone_name", "UTC")
+                try:
+                    self.timezone = ZoneInfo(timezone_name)
+                except ZoneInfoNotFoundError:
+                    current_app.logger.warning(f"Unknown timezone '{timezone_name}' for user {import_task['user_id']}, defaulting to UTC.")
+                    self.timezone = ZoneInfo("UTC")
+
             file.seek(0) # Reset to beginning after extracting header metadata
 
             reader = csv.DictReader(
@@ -98,6 +112,9 @@ class AudioscrobblerListensImporter(BaseListensImporter):
             if stripped.startswith("#"):
                 if stripped.startswith("#CLIENT/"):
                     self.original_client = stripped.removeprefix("#CLIENT/").strip().replace("$Revision$", "").strip()
+                elif stripped.startswith("#TZ/"):
+                    tz_value = stripped.removeprefix("#TZ/").strip()
+                    self.timezone = ZoneInfo("UTC") if tz_value == "UTC" else None
             else:
                 break
 
@@ -126,7 +143,19 @@ class AudioscrobblerListensImporter(BaseListensImporter):
                 current_app.logger.debug("Skipping Audioscrobbler row with invalid timestamp: %s", row)
                 continue
 
-            listened_at = datetime.fromtimestamp(ts, tz=timezone.utc)
+            try:
+                listened_at = datetime.fromtimestamp(ts, tz=timezone.utc)
+                
+                if self.timezone and str(self.timezone) != "UTC":
+                    # Adjust timestamps from user's local timezone to UTC
+                    raw_ts = datetime.utcfromtimestamp(ts)
+                    adjusted_ts = raw_ts.replace(tzinfo=self.timezone)
+                    listened_at = adjusted_ts.astimezone(timezone.utc)
+                    ts = int(listened_at.timestamp())
+            except (ValueError, OSError) as e:
+                current_app.logger.error("Error converting timestamp in Audioscrobbler row: %s, error: %s", row, e)
+                continue
+
             if not (from_date <= listened_at <= to_date):
                 current_app.logger.debug("Skipping Audioscrobbler listen outside date range: %s", row)
                 continue
