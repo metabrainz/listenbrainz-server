@@ -229,6 +229,13 @@ def request_yim_top_genres(year: int):
     send_request_to_spark_cluster("year_in_music.top_genres", year=year)
 
 
+@cli.command(name="request_yim_genre_activity")
+@click.option("--year", type=int, help="Year for which to calculate genre activity", default=date.today().year)
+def request_yim_genre_activity(year: int):
+    """Calculate genre activity for Year in Music"""
+    send_request_to_spark_cluster("year_in_music.genre_activity", year=year)
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False, default=None,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
@@ -475,6 +482,7 @@ def request_year_in_music(ctx, year: int, import_pg_tables: bool):
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
     ctx.invoke(request_yim_top_genres, year=year)
+    ctx.invoke(request_yim_genre_activity, year=year)
     ctx.invoke(request_yim_top_stats, year=year)
     ctx.invoke(request_yim_listens_per_day, year=year)
     ctx.invoke(request_yim_listen_count, year=year)
