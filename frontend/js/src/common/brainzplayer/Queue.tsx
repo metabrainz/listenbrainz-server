@@ -21,6 +21,21 @@ import {
   currentListenIndexAtom,
 } from "./BrainzPlayerAtoms";
 
+const shortEnglishHumanizer = humanizeDuration.humanizer({
+  language: "shortEn",
+  languages: {
+    shortEn: {
+      y: () => "y",
+      mo: () => "mo",
+      w: () => "w",
+      d: () => "d",
+      h: () => "h",
+      m: () => "m",
+      s: () => "s",
+      ms: () => "ms",
+    },
+  },
+});
 type DurationSource = {
   track_metadata?: {
     additional_info?: {
@@ -97,12 +112,11 @@ function Queue(props: BrainzPlayerQueueProps) {
       totalMs += getDurationMs(track as DurationSource);
     });
     if (totalMs <= 0) return "0s";
-    return humanizeDuration(totalMs, {
+    return shortEnglishHumanizer(totalMs, {
       round: true,
       units: ["h", "m", "s"],
       delimiter: " ",
       spacer: "",
-      language: "en",
     });
   }, [queueNextUp, currentListen, tick]);
 
