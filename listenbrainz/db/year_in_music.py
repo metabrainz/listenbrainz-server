@@ -22,6 +22,7 @@ from listenbrainz.db.user_timeline_event import create_user_notification_event
 # day_of_week
 # listens_per_day
 # most_listened_year
+# genre_activity
 # most_prominent_color
 # new_releases_of_top_artists
 # playlist-top-discoveries-for-year-playlists
@@ -123,8 +124,14 @@ def insert_similar_users(year, data):
 
 
 def insert_top_stats(entity, year, data):
-    insert_heavy(f"top_{entity}", year, data)
-    insert(f"total_{entity}_count", year, [(user["user_id"], user["count"]) for user in data], False)
+    insert_heavy(f"top_{entity}", year, [
+        {"user_id": user["user_id"], "data": user[entity]}
+        for user in data
+    ])
+    insert(f"total_{entity}_count", year, [
+        (user["user_id"], user[f"{entity}_count"])
+        for user in data
+    ], False)
 
 
 def create_yim_table(year):

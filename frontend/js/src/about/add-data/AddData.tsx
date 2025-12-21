@@ -362,6 +362,12 @@ export default function AddData() {
         </li>
         <li>
           <em>
+            <a href="https://www.jewelcase.app/">Jewelcase</a>
+          </em>
+          , an offline music player for iOS
+        </li>
+        <li>
+          <em>
             <a href="https://play.google.com/store/apps/details?id=com.arn.scrobble">
               Pano Scrobbler
             </a>
