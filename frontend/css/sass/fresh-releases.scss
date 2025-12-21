@@ -229,6 +229,10 @@
   // height: 100%;
   max-height: calc(100vh - 8em);
 
+  .rc-slider-mark-text svg {
+    display: none;
+  }
+
   @media (max-width: map.get($grid-breakpoints, "lg")) {
     height: unset;
     width: 100%;
