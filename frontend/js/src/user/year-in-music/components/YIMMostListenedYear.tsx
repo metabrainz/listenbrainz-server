@@ -9,12 +9,12 @@ import { isEmpty, range, uniq } from "lodash";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { useMediaQuery } from "../../../explore/fresh-releases/utils";
 
-type YIMGenreGraphProps = {
+type YIMMostListenedYearProps = {
   mostListenedYearData: { [key: string]: number };
   userName: string;
   gradientColors: string[];
 };
-export default function YIMGenreGraph(props: YIMGenreGraphProps) {
+export default function YIMMostListenedYear(props: YIMMostListenedYearProps) {
   const { mostListenedYearData, userName, gradientColors } = props;
   const { currentUser } = React.useContext(GlobalAppContext);
   const isMobile = useMediaQuery("(max-width: 767px)");
