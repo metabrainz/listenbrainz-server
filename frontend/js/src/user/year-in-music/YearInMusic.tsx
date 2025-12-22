@@ -404,10 +404,16 @@ export default function YearInMusic() {
     </div>
   );
 
-  const encodedBgColor1 = encodeURIComponent(gradientColors[0]);
-  const encodedBgColor2 = encodeURIComponent(gradientColors[1]);
-  const encodedAccentColor = encodeURIComponent(textColor);
-  const overviewImageUrl = `${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=overview&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`;
+  const getImageUrl = React.useCallback(
+    (imageType: string) => {
+      const encodedBgColor1 = encodeURIComponent(gradientColors[0]);
+      const encodedBgColor2 = encodeURIComponent(gradientColors[1]);
+      const encodedAccentColor = encodeURIComponent(textColor);
+      return `${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${imageType}&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`;
+    },
+    [APIService.APIBaseURI, year, encodedUsername, gradientColors, textColor]
+  );
+  const overviewImageUrl = getImageUrl("overview");
   return (
     <div
       id="year-in-music"
@@ -519,7 +525,7 @@ export default function YearInMusic() {
                   />
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=albums&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`}
+                      svgURL={getImageUrl("albums")}
                       shareUrl={`${linkToThisPage}#top-albums`}
                       shareText={`Check out my top albums for ${year} on ListenBrainz`}
                       shareTitle={`My top albums of ${year}`}
@@ -579,7 +585,7 @@ export default function YearInMusic() {
                   )}
                   <div className="yim-share-button-container">
                     <ImageShareButtons
-                      svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=stats&bg-color-1=${encodedBgColor1}&bg-color-2=${encodedBgColor2}&accent-color=${encodedAccentColor}`}
+                      svgURL={getImageUrl("stats")}
                       shareUrl={`${linkToThisPage}#stats`}
                       shareTitle={`My music listening in ${year} on ListenBrainz`}
                       fileName={`${user.name}-stats-${year}`}
