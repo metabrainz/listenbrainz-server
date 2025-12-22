@@ -238,11 +238,6 @@ export default function YearInMusic() {
     // keep these stable via deps
   }, [getFollowingForLoggedInUser, getFollowing]);
 
-  // Update when viewed user changes
-  React.useEffect(() => {
-    getFollowing();
-  }, [getFollowing, user?.name]);
-
   const updateFollowingList = React.useCallback(
     (aUser: ListenBrainzUser, action: "follow" | "unfollow") => {
       const newFollowingList = [...followingListForLoggedInUser];
