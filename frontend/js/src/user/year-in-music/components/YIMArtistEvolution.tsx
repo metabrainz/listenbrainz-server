@@ -24,7 +24,7 @@ export default function YIMArtistEvolution(props: YIMArtistEvolutionProps) {
     ),
   ];
   return (
-    <div className="" id="user-artist-map" style={{ marginTop: "1.5em" }}>
+    <div className="" id="user-artist-evolution" style={{ marginTop: "1.5em" }}>
       <h3 className="text-center">
         Evolution of {yourOrUsersName} favorite artists of {year}
       </h3>

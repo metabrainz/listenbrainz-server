@@ -20,11 +20,8 @@ export type UserArtistEvolutionActivityProps = {
 export type UserArtistEvolutionActivityGraphProps = {
   rawData: RawUserArtistEvolutionRow[];
   range: UserStatsAPIRange;
-  isLoading?: boolean;
-  hasError?: boolean;
-  errorMessage?: string;
-  className?: string;
   colorPalette?: OrdinalColorScaleConfig;
+  topN?: number;
 };
 
 export type StreamDataItem = {
@@ -260,19 +257,11 @@ export function UserArtistEvolutionActivityGraph(
   const {
     rawData,
     range,
-    isLoading = false,
-    hasError = false,
-    errorMessage = "",
-    className = "user-stats-card",
+    topN = 10,
     colorPalette = { scheme: "nivo" },
   } = props;
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 767px)");
-
-  const [topN, setTopN] = React.useState<number>(10);
-  const onTopNChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
-    setTopN(parseInt(e.target.value, 10));
-  };
 
   const { chartData, keys, orderedTimeUnits, artistMap } = React.useMemo(
     () => transformArtistEvolutionActivityData(rawData, range, topN),
@@ -293,159 +282,94 @@ export function UserArtistEvolutionActivityGraph(
     [orderedTimeUnits, artistHref]
   );
 
-  if (hasError) {
-    return (
-      <Card className={className} data-testid="artist-evolution">
-        <div className="row">
-          <div className="col-xs-10">
-            <h3 className="capitalize-bold">Artist Evolution</h3>
-          </div>
-        </div>
-        <div
-          className="d-flex align-items-center justify-content-center"
-          style={{ minHeight: "inherit" }}
-        >
-          <span style={{ fontSize: 24 }}>
-            <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-            {errorMessage}
-          </span>
-        </div>
-      </Card>
-    );
-  }
 
   return (
-    <Card className={className} data-testid="artist-evolution">
-      <div
-        className={`d-flex align-items-center justify-content-between ${
-          isMobile ? "mb-3" : ""
-        } flex-wrap mt-3`}
-      >
-        <h3 className="capitalize-bold m-0">Artist Evolution</h3>
-        <div className="d-flex align-items-center flex-shrink-0 gap-2">
-          <label htmlFor="top-n-select" className="m-0">
-            Top
-          </label>
-          <select
-            id="top-n-select"
-            className="form-select"
-            value={topN}
-            onChange={onTopNChange}
-            aria-label="Select number of top artists to show"
-            style={{ width: 80 }}
-          >
-            {[5, 10, 15].map((num) => (
-              <option key={num} value={num}>
-                {num}
-              </option>
-            ))}
-          </select>
-          <span>artists</span>
-        </div>
-      </div>
-      <Loader isLoading={isLoading}>
-        {chartData.length === 0 ? (
-          <div
-            className="d-flex align-items-center justify-content-center"
-            style={{ minHeight: "300px" }}
-          >
-            <span style={{ fontSize: 18 }}>
-              No artist evolution data available for this time period
-            </span>
-          </div>
-        ) : (
-          <div className="row">
-            <div className="col-xs-12">
-              <div
-                style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
-                data-testid="artist-evolution-stream"
-                aria-label="artist-evolution-stream"
-              >
-                <ResponsiveStream
-                  data={chartData}
-                  keys={keys}
-                  margin={
-                    isMobile
-                      ? { top: 60, right: 20, bottom: 120, left: 40 }
-                      : { top: 60, right: 20, bottom: 60, left: 60 }
-                  }
-                  axisBottom={{
-                    format: getAxisFormatter(range, orderedTimeUnits, isMobile),
-                    tickSize: 5,
-                    tickPadding: 5,
-                    legend: getLegendText(range),
-                    legendOffset: 40,
-                    legendPosition: "middle",
-                    tickRotation: isMobile ? -45 : 0,
-                  }}
-                  axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
-                  enableGridX
-                  enableGridY
-                  offsetType="none"
-                  order="ascending"
-                  curve="basis"
-                  colors={colorPalette}
-                  fillOpacity={0.85}
-                  borderColor={{ theme: "background" }}
-                  dotSize={8}
-                  dotColor={{ from: "color" }}
-                  dotBorderWidth={2}
-                  dotBorderColor={{
-                    from: "color",
-                    modifiers: [["darker", 0.7]],
-                  }}
-                  theme={{
-                    axis: {
-                      ticks: {
-                        text: {
-                          fontSize: isMobile ? 10 : 12,
-                          fill: "#333333",
-                        },
-                      },
-                    },
-                    grid: {
-                      line: {
-                        stroke: "#dddddd",
-                        strokeWidth: 1,
-                      },
-                    },
-                    legends: { text: { fontSize: isMobile ? 10 : 12 } },
-                  }}
-                  legends={[
-                    {
-                      anchor: "top-left",
-                      direction: isMobile ? "row" : "column",
-                      translateX: 10,
-                      translateY: 10,
-                      itemWidth: isMobile ? 70 : 90,
-                      itemHeight: 18,
-                      itemTextColor: "#333333",
-                      symbolSize: 12,
-                      symbolShape: "circle",
-                      itemsSpacing: isMobile ? 6 : 2,
-                      itemBackground: "rgba(255,255,255,0.75)",
-                      itemOpacity: 1,
-                      effects: [
-                        {
-                          on: "hover",
-                          style: { itemTextColor: "#000000" },
-                        },
-                      ],
-                      onClick: (datum: any) => {
-                        const name = datum.label;
-                        const mbid = artistMap[name];
-                        if (mbid) navigate(`/artist/${mbid}`);
-                      },
-                    } as any,
-                  ]}
-                  tooltip={tooltipRenderer}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </Loader>
-    </Card>
+    
+    <div
+      style={{ width: "100%", height: isMobile ? "500px" : "600px" }}
+      data-testid="artist-evolution-stream"
+      aria-label="artist-evolution-stream"
+    >
+      <ResponsiveStream
+        data={chartData}
+        keys={keys}
+        margin={
+          isMobile
+            ? { top: 60, right: 20, bottom: 120, left: 40 }
+            : { top: 60, right: 20, bottom: 60, left: 60 }
+        }
+        axisBottom={{
+          format: getAxisFormatter(range, orderedTimeUnits, isMobile),
+          tickSize: 5,
+          tickPadding: 5,
+          legend: getLegendText(range),
+          legendOffset: 40,
+          legendPosition: "middle",
+          tickRotation: isMobile ? -45 : 0,
+        }}
+        axisLeft={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
+        enableGridX
+        enableGridY
+        offsetType="none"
+        order="ascending"
+        curve="basis"
+        colors={colorPalette}
+        fillOpacity={0.85}
+        borderColor={{ theme: "background" }}
+        dotSize={8}
+        dotColor={{ from: "color" }}
+        dotBorderWidth={2}
+        dotBorderColor={{
+          from: "color",
+          modifiers: [["darker", 0.7]],
+        }}
+        theme={{
+          axis: {
+            ticks: {
+              text: {
+                fontSize: isMobile ? 10 : 12,
+                fill: "#333333",
+              },
+            },
+          },
+          grid: {
+            line: {
+              stroke: "#dddddd",
+              strokeWidth: 1,
+            },
+          },
+          legends: { text: { fontSize: isMobile ? 10 : 12 } },
+        }}
+        legends={[
+          {
+            anchor: "top-left",
+            direction: isMobile ? "row" : "column",
+            translateX: 10,
+            translateY: 10,
+            itemWidth: isMobile ? 70 : 90,
+            itemHeight: 18,
+            itemTextColor: "#333333",
+            symbolSize: 12,
+            symbolShape: "circle",
+            itemsSpacing: isMobile ? 6 : 2,
+            itemBackground: "rgba(255,255,255,0.75)",
+            itemOpacity: 1,
+            effects: [
+              {
+                on: "hover",
+                style: { itemTextColor: "#000000" },
+              },
+            ],
+            onClick: (datum: any) => {
+              const name = datum.label;
+              const mbid = artistMap[name];
+              if (mbid) navigate(`/artist/${mbid}`);
+            },
+          } as any,
+        ]}
+        tooltip={tooltipRenderer}
+      />
+    </div>
   );
 }
 
@@ -454,6 +378,11 @@ export function UserArtistEvolutionActivityStats(
 ) {
   const { APIService } = React.useContext(GlobalAppContext);
   const { user, range } = props;
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [topN, setTopN] = React.useState<number>(10);
+  const onTopNChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setTopN(parseInt(e.target.value, 10));
+  };
 
   const { data: loaderData, isLoading: loading } = useQuery({
     queryKey: artistEvolutionQueryKey(user?.name, range),
@@ -499,14 +428,79 @@ export function UserArtistEvolutionActivityStats(
     errorMessage = "",
   } = loaderData || {};
 
+  if (hasError) {
+    return (
+      <Card className="user-stats-card" data-testid="artist-evolution">
+        <div className="row">
+          <div className="col-xs-10">
+            <h3 className="capitalize-bold">Artist Evolution</h3>
+          </div>
+        </div>
+        <div
+          className="d-flex align-items-center justify-content-center"
+          style={{ minHeight: "inherit" }}
+        >
+          <span style={{ fontSize: 24 }}>
+            <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+            {errorMessage}
+          </span>
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <UserArtistEvolutionActivityGraph
-      rawData={rawData.payload.artist_evolution_activity}
-      range={range}
-      isLoading={loading}
-      hasError={hasError}
-      errorMessage={errorMessage}
-    />
+    <Card className="user-stats-card" data-testid="artist-evolution">
+      <div
+        className={`d-flex align-items-center justify-content-between ${
+          isMobile ? "mb-3" : ""
+        } flex-wrap mt-3`}
+      >
+        <h3 className="capitalize-bold m-0">Artist Evolution</h3>
+        <div className="d-flex align-items-center flex-shrink-0 gap-2">
+          <label htmlFor="top-n-select" className="m-0">
+            Top
+          </label>
+          <select
+            id="top-n-select"
+            className="form-select"
+            value={topN}
+            onChange={onTopNChange}
+            aria-label="Select number of top artists to show"
+            style={{ width: 80 }}
+          >
+            {[5, 10, 15].map((num) => (
+              <option key={num} value={num}>
+                {num}
+              </option>
+            ))}
+          </select>
+          <span>artists</span>
+        </div>
+      </div>
+      <Loader isLoading={loading}>
+        {rawData.payload.artist_evolution_activity.length === 0 ? (
+          <div
+            className="d-flex align-items-center justify-content-center"
+            style={{ minHeight: "300px" }}
+          >
+            <span style={{ fontSize: 18 }}>
+              No artist evolution data available for this time period
+            </span>
+          </div>
+        ) : (
+          <div className="row">
+            <div className="col-xs-12">
+              <UserArtistEvolutionActivityGraph
+                rawData={rawData.payload.artist_evolution_activity}
+                range={range}
+                topN={topN}
+              />
+            </div>
+          </div>
+        )}
+      </Loader>
+    </Card>
   );
 }
 
