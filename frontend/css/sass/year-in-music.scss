@@ -88,7 +88,7 @@ $transition-duration: 1s;
     }
   }
   #genre-graph .graph {
-    height: 70vh;
+    height: 80vh;
     @media (min-width: map.get($grid-breakpoints,"md")) {
       height: 400px;
     }
