@@ -98,7 +98,7 @@ export default function TopLevelPlaylist(props: {
       <div className="yim-share-button-container">
         <ImageShareButtons
           svgURL={`${APIService.APIBaseURI}/art/year-in-music/${year}/${encodedUsername}?image=${coverArtKey}&bg-color-1=${gradientColors[0]}&bg-color-2=${gradientColors[1]}&accent-color=${accentColor}`}
-          shareUrl={`https://listenbrainz.org/user/${encodedUsername}/year-in-music/${year}#${coverArtKey}`}
+          shareUrl={`${window.location.href}#${coverArtKey}`}
           // shareText="Check out my"
           shareTitle={`My ${year} playlist on ListenBrainz`}
           fileName={`${userName}-${coverArtKey}-${year}`}

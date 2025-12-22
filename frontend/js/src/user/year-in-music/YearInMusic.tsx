@@ -339,10 +339,7 @@ export default function YearInMusic() {
   const yourOrUsersName = isCurrentUser ? "your" : `${user.name}'s`;
   const encodedUsername = encodeURIComponent(user.name);
 
-  /* Most listened years */
-
-  const linkToUserProfile = `https://listenbrainz.org/user/${encodedUsername}`;
-  const linkToThisPage = `${linkToUserProfile}/year-in-music/${year}`;
+  const linkToThisPage = window.location.href;
 
   const userShareBar = (
     <div className="content-card">

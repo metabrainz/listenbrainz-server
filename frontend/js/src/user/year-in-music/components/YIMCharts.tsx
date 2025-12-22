@@ -23,23 +23,16 @@ export default function YIMCharts({
   gradientColors,
   accentColor,
 }: YIMChartsProps) {
-  const { APIService, currentUser } = React.useContext(GlobalAppContext);
+  const { APIService } = React.useContext(GlobalAppContext);
+
   if (!yearInMusicData) {
     return null;
   }
-  const isCurrentUser = userName === currentUser?.name;
-  const youOrUsername = isCurrentUser ? "you" : `${userName}`;
   const encodedUsername = encodeURIComponent(userName);
-  const linkToUserProfile = `https://listenbrainz.org/user/${encodedUsername}`;
-  const linkToThisPage = `${linkToUserProfile}/year-in-music/${year}`;
+  const linkToThisPage = window.location.href;
+
   return (
     <div className="section">
-      {/* <div className="header">
-        Charts
-        <div className="subheader">
-          {youOrUsername} {isCurrentUser ? "have" : "has"} great taste
-        </div>
-      </div> */}
       <div className="flex flex-wrap" style={{ gap: "2em" }}>
         {yearInMusicData.top_recordings && (
           <div className="content-card" id="top-tracks">
