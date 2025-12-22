@@ -39,6 +39,7 @@ import Preview from "../../explore/art-creator/components/Preview";
 import Loader from "../../components/Loader";
 import YIMYearSelection from "./components/YIMYearSelection";
 import YIMArtistEvolution from "./components/YIMArtistEvolution";
+import YIMGenreActivity from "./components/YIMGenreActivity";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -315,6 +316,8 @@ export default function YearInMusic() {
       !yearInMusicData.top_recordings ||
       !yearInMusicData.top_artists ||
       !yearInMusicData.top_genres ||
+      !yearInMusicData.genre_activity ||
+      !yearInMusicData.artist_evolution_activity ||
       !yearInMusicData.listens_per_day ||
       !yearInMusicData.total_listen_count ||
       !yearInMusicData.total_listening_time ||
@@ -583,6 +586,12 @@ export default function YearInMusic() {
                       gradientColors={gradientColors}
                     />
                   )}
+                  <YIMGenreActivity
+                    genreActivityData={yearInMusicData.genre_activity}
+                    yourOrUsersName={yourOrUsersName}
+                    gradientColors={gradientColors}
+                    year={year}
+                  />
                   <div className="yim-share-button-container">
                     <ImageShareButtons
                       svgURL={getImageUrl("stats")}
