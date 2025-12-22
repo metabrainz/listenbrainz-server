@@ -32,7 +32,7 @@ def _get_genre_activity_query():
         WITH genre_listens AS (
             SELECT l.user_id,
                    g.genre,
-                   MONTH(l.listened_at) AS month,
+                   HOUR(l.listened_at) AS hour,
                    COUNT(*) AS listen_count
               FROM listens_of_year l
               LEFT JOIN genres g ON l.recording_mbid = g.recording_mbid
@@ -42,23 +42,23 @@ def _get_genre_activity_query():
         top_genres AS (
             SELECT user_id,
                    genre,
-                   month,
+                   hour,
                    listen_count,
                    ROW_NUMBER() OVER (
-                       PARTITION BY user_id, month
+                       PARTITION BY user_id, hour
                        ORDER BY listen_count DESC
                    ) AS rank
               FROM genre_listens
         ),
         filtered_genres AS (
-            SELECT user_id, genre, month, listen_count
+            SELECT user_id, genre, hour, listen_count
               FROM top_genres
              WHERE rank <= {TOP_GENRES_PER_MONTH}
         )
         SELECT user_id,
                SORT_ARRAY(
                    COLLECT_LIST(
-                       STRUCT(genre, month, listen_count)
+                       STRUCT(genre, hour, listen_count)
                    )
                ) AS data
           FROM filtered_genres
