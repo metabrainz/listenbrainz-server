@@ -1,4 +1,6 @@
 import { ResponsiveStream, TooltipProps } from "@nivo/stream";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import {  type OrdinalColorScaleConfig } from "@nivo/colors";
 import * as React from "react";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -22,6 +24,7 @@ export type UserArtistEvolutionActivityGraphProps = {
   hasError?: boolean;
   errorMessage?: string;
   className?: string;
+  colorPalette?: OrdinalColorScaleConfig;
 };
 
 export type StreamDataItem = {
@@ -261,6 +264,7 @@ export function UserArtistEvolutionActivityGraph(
     hasError = false,
     errorMessage = "",
     className = "user-stats-card",
+    colorPalette = { scheme: "nivo" },
   } = props;
   const navigate = useNavigate();
   const isMobile = useMediaQuery("(max-width: 767px)");
@@ -380,7 +384,7 @@ export function UserArtistEvolutionActivityGraph(
                   offsetType="none"
                   order="ascending"
                   curve="basis"
-                  colors={{ scheme: "nivo" }}
+                  colors={colorPalette}
                   fillOpacity={0.85}
                   borderColor={{ theme: "background" }}
                   dotSize={8}

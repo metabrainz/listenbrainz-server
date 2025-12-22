@@ -38,6 +38,7 @@ import { COLOR_LB_BLUE } from "../../utils/constants";
 import Preview from "../../explore/art-creator/components/Preview";
 import Loader from "../../components/Loader";
 import YIMYearSelection from "./components/YIMYearSelection";
+import YIMArtistEvolution from "./components/YIMArtistEvolution";
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -560,6 +561,14 @@ export default function YearInMusic() {
                     artistMapData={yearInMusicData.artist_map}
                     yourOrUsersName={yourOrUsersName}
                     gradientColors={gradientColors}
+                  />
+                  <YIMArtistEvolution
+                    artistEvolutionData={
+                      yearInMusicData.artist_evolution_activity
+                    }
+                    yourOrUsersName={yourOrUsersName}
+                    gradientColors={gradientColors}
+                    year={year}
                   />
                   {genreGraphData && (
                     <YIMGenreGraph
