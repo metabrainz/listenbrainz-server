@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { getYear } from "date-fns";
 import { Helmet } from "react-helmet";
+import tinycolor from "tinycolor2";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 import ImageShareButtons from "./components/ImageShareButtons";
@@ -409,7 +410,13 @@ export default function YearInMusic() {
       className={`yim-${year}`}
       style={{
         ["--cardBackgroundColor" as any]: cardBackgroundColor,
-        ["--accentColor" as any]: accentColor,
+        ["--accentColor" as any]: tinycolor
+          .mostReadable(cardBackgroundColor, gradientColors, {
+            includeFallbackColors: false,
+          })
+          .darken(5)
+          .saturate(5)
+          .toHexString(),
         ["--gradientColor1" as any]: gradientColors[0],
         ["--gradientColor2" as any]: gradientColors[1],
       }}
