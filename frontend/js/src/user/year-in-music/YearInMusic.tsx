@@ -68,6 +68,8 @@ export type YearInMusicProps = {
     total_release_groups_count: number;
     new_releases_of_top_artists: YIMNewReleasesData;
     artist_map: YIMArtistMapData;
+    artist_evolution_activity: RawUserArtistEvolutionRow[];
+    genre_activity: GenreHourData[];
   };
   topDiscoveriesPlaylist: JSPFPlaylist | undefined;
   topMissedRecordingsPlaylist: JSPFPlaylist | undefined;

@@ -1,5 +1,6 @@
 import { isEmpty } from "lodash";
 import * as React from "react";
+import tinycolor from "tinycolor2";
 import { UserGenreActivityGraph } from "../../stats/components/UserGenreActivity";
 
 type YIMGenreActivityProps = {
@@ -14,6 +15,14 @@ export default function YIMGenreActivity(props: YIMGenreActivityProps) {
   if (isEmpty(genreActivityData)) {
     return null;
   }
+  //   const colorPalette = [
+  //     ...Array.from(Array(10).keys()).map((index) =>
+  //       tinycolor
+  //         .mix(gradientColors[0], gradientColors[1], (index - 1) * 10)
+  //         .saturate(10)
+  //         .toHexString()
+  //     ),
+  //   ];
 
   return (
     <div className="" id="user-genre-activity" style={{ marginTop: "1.5em" }}>
@@ -24,6 +33,7 @@ export default function YIMGenreActivity(props: YIMGenreActivityProps) {
         <div className="graph">
           <UserGenreActivityGraph
             rawData={genreActivityData}
+            // colorPalette={colorPalette}
           />
         </div>
       </div>
