@@ -8,6 +8,7 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.listens.data import get_listens_from_dump
 
 USERS_PER_MESSAGE = 500
+MAX_RELEASES_PER_ARTIST = 5
 
 
 def get_new_releases_of_top_artists(year):
@@ -66,24 +67,74 @@ def _get_new_releases_of_top_artists(year, cache_table):
                  , caa_id
                  , caa_release_mbid
                  , artists
+                 , primary_type
                  , explode(artist_credit_mbids) AS artist_mbid
               FROM {cache_table}
              WHERE first_release_date_year = {year}
+        ), matched_releases AS (
+            SELECT t50a.user_id
+                 , rg.title
+                 , rg.artist_credit_name
+                 , rg.release_group_mbid
+                 , rg.artist_credit_mbids
+                 , rg.artists
+                 , rg.caa_id
+                 , rg.caa_release_mbid
+                 , rg.primary_type
+                 , t50a.artist_mbid
+              FROM release_groups_of_year rg
+              JOIN top_50_artists t50a
+                ON rg.artist_mbid = t50a.artist_mbid
+        ), ranked_releases AS (
+            -- Rank releases per user per artist
+            -- Priority: Album (1) > EP (2) > Single (3) > Other (4) > Broadcast (5)
+            -- Then by release_group_mbid for consistency
+            SELECT user_id
+                 , title
+                 , artist_credit_name
+                 , release_group_mbid
+                 , artist_credit_mbids
+                 , artists
+                 , caa_id
+                 , caa_release_mbid
+                 , row_number() OVER(
+                     PARTITION BY user_id, artist_mbid 
+                     ORDER BY 
+                         CASE 
+                             WHEN primary_type = 'Album' THEN 1
+                             WHEN primary_type = 'EP' THEN 2
+                             WHEN primary_type = 'Single' THEN 3
+                             WHEN primary_type = 'Other' THEN 4
+                             WHEN primary_type = 'Broadcast' THEN 5
+                         END ASC,
+                         release_group_mbid ASC
+                   ) AS release_rank
+              FROM matched_releases
+        ), limited_releases AS (
+            -- Keep only top N per artist
+            SELECT user_id
+                 , title
+                 , artist_credit_name
+                 , release_group_mbid
+                 , artist_credit_mbids
+                 , artists
+                 , caa_id
+                 , caa_release_mbid
+              FROM ranked_releases
+             WHERE release_rank <= {MAX_RELEASES_PER_ARTIST}
         )
             SELECT user_id
                  , collect_set(
                         struct(
-                           rg.title
-                         , rg.artist_credit_name
-                         , rg.release_group_mbid
-                         , rg.artist_credit_mbids
-                         , rg.artists
-                         , rg.caa_id
-                         , rg.caa_release_mbid
+                           title
+                         , artist_credit_name
+                         , release_group_mbid
+                         , artist_credit_mbids
+                         , artists
+                         , caa_id
+                         , caa_release_mbid
                         )
                     ) AS new_releases
-              FROM release_groups_of_year rg
-              JOIN top_50_artists t50a
-             WHERE rg.artist_mbid = t50a.artist_mbid
+              FROM limited_releases
           GROUP BY user_id
     """
