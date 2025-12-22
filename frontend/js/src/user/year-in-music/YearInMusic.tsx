@@ -123,26 +123,6 @@ export default function YearInMusic() {
       name: "",
     },
   } = data || {};
-  const listens: BaseListenFormat[] = [];
-
-  if (yearInMusicData?.top_recordings) {
-    yearInMusicData.top_recordings.forEach((recording) => {
-      const listen = {
-        listened_at: 0,
-        track_metadata: {
-          artist_name: recording.artist_name,
-          track_name: recording.track_name,
-          release_name: recording.release_name,
-          additional_info: {
-            recording_mbid: recording.recording_mbid,
-            release_mbid: recording.release_mbid,
-            artist_mbids: recording.artist_mbids,
-          },
-        },
-      };
-      listens.push(listen);
-    });
-  }
 
   /* Playlists */
   let missingPlaylistData = false;
@@ -160,18 +140,45 @@ export default function YearInMusic() {
     missingPlaylistData = true;
   }
 
-  if (topDiscoveriesPlaylist) {
-    topDiscoveriesPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
-      const listen = JSPFTrackToListen(playlistTrack);
-      listens.push(listen);
-    });
-  }
-  if (topMissedRecordingsPlaylist) {
-    topMissedRecordingsPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
-      const listen = JSPFTrackToListen(playlistTrack);
-      listens.push(listen);
-    });
-  }
+  const listens = React.useMemo(() => {
+    const result: BaseListenFormat[] = [];
+
+    if (yearInMusicData?.top_recordings) {
+      yearInMusicData.top_recordings.forEach((recording) => {
+        result.push({
+          listened_at: 0,
+          track_metadata: {
+            artist_name: recording.artist_name,
+            track_name: recording.track_name,
+            release_name: recording.release_name,
+            additional_info: {
+              recording_mbid: recording.recording_mbid,
+              release_mbid: recording.release_mbid,
+              artist_mbids: recording.artist_mbids,
+            },
+          },
+        });
+      });
+    }
+
+    if (topDiscoveriesPlaylist) {
+      topDiscoveriesPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+        result.push(JSPFTrackToListen(playlistTrack));
+      });
+    }
+
+    if (topMissedRecordingsPlaylist) {
+      topMissedRecordingsPlaylist.track.slice(0, 5).forEach((playlistTrack) => {
+        result.push(JSPFTrackToListen(playlistTrack));
+      });
+    }
+
+    return result;
+  }, [
+    yearInMusicData?.top_recordings,
+    topDiscoveriesPlaylist,
+    topMissedRecordingsPlaylist,
+  ]);
 
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
   // CHECK THAT WE ADD LISTENS FROM VARIOUS PARTS OF THE YIM DATA
@@ -304,29 +311,33 @@ export default function YearInMusic() {
         }
   `;
 
-  let missingSomeData = missingPlaylistData;
+  const missingSomeData = React.useMemo(() => {
+    let missing = missingPlaylistData;
+    if (
+      !yearInMusicData ||
+      !yearInMusicData.top_release_groups ||
+      !yearInMusicData.top_recordings ||
+      !yearInMusicData.top_artists ||
+      !yearInMusicData.top_genres ||
+      !yearInMusicData.listens_per_day ||
+      !yearInMusicData.total_listen_count ||
+      !yearInMusicData.total_listening_time ||
+      !yearInMusicData.total_new_artists_discovered ||
+      !yearInMusicData.total_recordings_count ||
+      !yearInMusicData.total_release_groups_count ||
+      !yearInMusicData.day_of_week ||
+      !yearInMusicData.new_releases_of_top_artists ||
+      !yearInMusicData.artist_map ||
+      !yearInMusicData.total_artists_count ||
+      !yearInMusicData.similar_users ||
+      isEmpty(yearInMusicData.most_listened_year)
+    ) {
+      missing = true;
+    }
+    return missing;
+  }, [yearInMusicData, missingPlaylistData]);
+
   const hasSomeData = !!yearInMusicData && !isEmpty(yearInMusicData);
-  if (
-    !yearInMusicData ||
-    !yearInMusicData.top_release_groups ||
-    !yearInMusicData.top_recordings ||
-    !yearInMusicData.top_artists ||
-    !yearInMusicData.top_genres ||
-    !yearInMusicData.listens_per_day ||
-    !yearInMusicData.total_listen_count ||
-    !yearInMusicData.total_listening_time ||
-    !yearInMusicData.total_new_artists_discovered ||
-    !yearInMusicData.total_recordings_count ||
-    !yearInMusicData.total_release_groups_count ||
-    !yearInMusicData.day_of_week ||
-    !yearInMusicData.new_releases_of_top_artists ||
-    !yearInMusicData.artist_map ||
-    !yearInMusicData.total_artists_count ||
-    !yearInMusicData.similar_users ||
-    isEmpty(yearInMusicData.most_listened_year)
-  ) {
-    missingSomeData = true;
-  }
 
   const isUserLoggedIn = !isNil(currentUser) && !isEmpty(currentUser);
   const isCurrentUser = user.name === currentUser?.name;

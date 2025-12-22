@@ -25,10 +25,13 @@ export default function YIMSimilarUsers({
   const { currentUser } = React.useContext(GlobalAppContext);
   const isCurrentUser = userName === currentUser?.name;
   const youOrUsername = isCurrentUser ? "you" : `${userName}`;
-  if (!similarUsers || similarUsers.length === 0) {
+  const sortedSimilarUsers = React.useMemo(
+    () => toPairs(similarUsers).sort((a, b) => b[1] - a[1]),
+    [similarUsers]
+  );
+  if (!sortedSimilarUsers || sortedSimilarUsers.length === 0) {
     return null;
   }
-  const sortedSimilarUsers = toPairs(similarUsers).sort((a, b) => b[1] - a[1]);
   return (
     <div
       className="content-card"
