@@ -112,9 +112,11 @@ function Queue(props: BrainzPlayerQueueProps) {
       totalMs += getDurationMs(track as DurationSource);
     });
     if (totalMs <= 0) return "0s";
+    const isOverOneHour = totalMs >= 3600000;
+
     return shortEnglishHumanizer(totalMs, {
       round: true,
-      units: ["h", "m", "s"],
+      units: isOverOneHour ? ["h", "m"] : ["h", "m", "s"],
       delimiter: " ",
       spacer: "",
     });
