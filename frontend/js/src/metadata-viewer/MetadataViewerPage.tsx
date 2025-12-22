@@ -24,6 +24,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
       setCurrentListen(playingNowListen);
       try {
         const metadata = await APIService.lookupRecordingMetadata(
+          currentUser?.auth_token || "",
           playingNowListen.track_metadata.track_name,
           playingNowListen.track_metadata.artist_name
         );
@@ -40,7 +41,7 @@ export default function PlayingNowPage(props: PlayingNowPageProps) {
         );
       }
     },
-    [setCurrentListen, setRecordingData]
+    [setCurrentListen, setRecordingData, currentUser?.auth_token]
   );
 
   /** Websockets connection */

@@ -123,7 +123,10 @@ def load_playlist(playlist_mbid: str):
 
     serialized_playlist = playlist.serialize_jspf()
 
-    selected_cover_art = playlist.additional_metadata.get("cover_art")
+    selected_cover_art = None
+    if playlist.additional_metadata is not None:
+        selected_cover_art = playlist.additional_metadata.get("cover_art")
+
     if not selected_cover_art and len(options) > 0:
         sorted_options = sorted(
             options,

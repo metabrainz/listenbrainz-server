@@ -67,7 +67,15 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
         return { data: queryData, hasError: false, errorMessage: "" };
       } catch (error) {
         return {
-          data: { result: [] } as UserArtistActivityResponse,
+          data: {
+            payload: {
+              artist_activity: [],
+              range: "all_time",
+              from_ts: 0,
+              to_ts: 0,
+              last_updated: 0,
+            },
+          } as UserArtistActivityResponse,
           hasError: true,
           errorMessage: error.message,
         };
@@ -76,7 +84,15 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   });
 
   const {
-    data: rawData = { result: [] } as UserArtistActivityResponse,
+    data: rawData = {
+      payload: {
+        artist_activity: [],
+        range: "all_time",
+        from_ts: 0,
+        to_ts: 0,
+        last_updated: 0,
+      },
+    } as UserArtistActivityResponse,
     hasError = false,
     errorMessage = "",
   } = loaderData || {};
@@ -98,10 +114,15 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   };
 
   const processData = (data?: UserArtistActivityResponse) => {
-    if (!data || !data.result || data.result.length === 0) {
+    if (
+      !data ||
+      !data.payload ||
+      !data.payload.artist_activity ||
+      data.payload.artist_activity.length === 0
+    ) {
       return [];
     }
-    return data.result.map((artist) => {
+    return data.payload.artist_activity.map((artist) => {
       const wrappedLabel = wrapWordsByLength(artist.name, 14);
       return {
         label: wrappedLabel,
@@ -116,8 +137,8 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
 
   const albumRedirectMapping = React.useMemo(() => {
     const mapping: Record<string, string> = {};
-    if (rawData && rawData.result) {
-      rawData.result.forEach((artist) => {
+    if (rawData && rawData.payload && rawData.payload.artist_activity) {
+      rawData.payload.artist_activity.forEach((artist) => {
         artist.albums.forEach((album) => {
           if (album.release_group_mbid) {
             mapping[`${artist.name}-${album.name}`] = album.release_group_mbid;
@@ -129,7 +150,12 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
   }, [rawData]);
 
   React.useEffect(() => {
-    if (rawData && rawData.result.length > 0) {
+    if (
+      rawData &&
+      rawData.payload &&
+      rawData.payload.artist_activity &&
+      rawData.payload.artist_activity.length > 0
+    ) {
       const processedData = processData(rawData);
       setChartData(processedData);
     }
@@ -209,9 +235,11 @@ export default function UserArtistActivity(props: UserArtistActivityProps) {
                     tickRotation: -45,
                     renderTick: (tick) => {
                       const artistMbid =
-                        rawData?.result?.[tick.tickIndex]?.artist_mbid || "";
+                        rawData?.payload?.artist_activity?.[tick.tickIndex]
+                          ?.artist_mbid || "";
                       const artistName =
-                        rawData?.result?.[tick.tickIndex]?.name || "";
+                        rawData?.payload?.artist_activity?.[tick.tickIndex]
+                          ?.name || "";
                       const linkTo = artistMbid
                         ? `/artist/${artistMbid}`
                         : `/search?search_term=${encodeURIComponent(

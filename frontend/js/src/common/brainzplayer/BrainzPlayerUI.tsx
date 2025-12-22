@@ -420,6 +420,8 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
                   style={{ color: showVolume ? "green" : "" }}
                   onClick={() => setShowVolume(!showVolume)}
                   className="d-none d-md-block"
+                  title="Volume control"
+                  aria-label="Volume control"
                 />
               )}
             </>
@@ -427,7 +429,12 @@ function BrainzPlayerUI(props: React.PropsWithChildren<BrainzPlayerUIProps>) {
           {isMobile ? (
             <FontAwesomeIcon icon={faMaximize} onClick={toggleMusicPlayer} />
           ) : (
-            <FontAwesomeIcon icon={faBarsStaggered} onClick={toggleQueue} />
+            <FontAwesomeIcon
+              icon={faBarsStaggered}
+              onClick={toggleQueue}
+              title="Show Queue"
+              aria-label="Show Queue"
+            />
           )}
 
           {!isMobile && (
