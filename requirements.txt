@@ -38,7 +38,7 @@ pyarrow==20.0.0
 more-itertools==10.7.0
 kombu==5.5.3
 itsdangerous==2.2.0
-urllib3==2.5.0
+urllib3==2.6.0
 orjson==3.10.18
 pyjwt[crypto]==2.10.1
 packaging~=25.0

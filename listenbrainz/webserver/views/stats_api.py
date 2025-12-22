@@ -17,6 +17,7 @@ from data.model.user_era_activity import EraActivityRecord
 from data.model.user_artist_evolution_activity import ArtistEvolutionActivityRecord
 from listenbrainz.db import year_in_music as db_year_in_music
 from listenbrainz.db.metadata import get_metadata_for_artist
+from listenbrainz.db.year_in_music import LAST_FM_FOUNDING_YEAR, MAX_YEAR_IN_MUSIC_YEAR
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
@@ -45,17 +46,17 @@ def get_artist(user_name):
             "payload": {
                 "artists": [
                     {
-                       "artist_mbids": ["93e6118e-7fa8-49f6-9e02-699a1ebce105"],
+                       "artist_mbid": "93e6118e-7fa8-49f6-9e02-699a1ebce105",
                        "artist_name": "The Local train",
                        "listen_count": 385
                     },
                     {
-                       "artist_mbids": ["ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714"],
+                       "artist_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
                        "artist_name": "Lenka",
                        "listen_count": 333
                     },
                     {
-                       "artist_mbids": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"],
+                       "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
                        "artist_name": "Coldplay",
                        "listen_count": 321
                     }
@@ -71,7 +72,7 @@ def get_artist(user_name):
         }
 
     .. note::
-        ``artist_mbids`` is an optional field and may not be present in all the responses
+        ``artist_mbid`` is an optional field and may not be present in all the responses
 
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -485,31 +486,71 @@ def get_artist_activity(user_name: str):
     .. code-block:: json
 
         {
-            "result": [
-                {
-                    "name": "Radiohead",
-                    "listen_count": 120,
-                    "albums": [
-                        {"name": "OK Computer", "listen_count": 45},
-                        {"name": "In Rainbows", "listen_count": 75}
-                    ]
-                },
-                {
-                    "name": "The Beatles",
-                    "listen_count": 95,
-                    "albums": [
-                        {"name": "Abbey Road", "listen_count": 60},
-                        {"name": "Revolver", "listen_count": 35}
-                    ]
-                }
-            ]
+            "payload": {
+                "artist_activity": [
+                    {
+                        "name": "Radiohead",
+                        "artist_name": "Radiohead",
+                        "artist_mbid": "a74b1b7f-71a5-4011-9441-dc7410c7388a",
+                        "listen_count": 120,
+                        "albums": [
+                            {
+                                "name": "OK Computer",
+                                "listen_count": 45,
+                                "release_group_mbid": "1c2b57e1-9b3d-4f5a-8c7d-9e0f1a2b3c4d"
+                            },
+                            {
+                                "name": "In Rainbows",
+                                "listen_count": 75,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    },
+                    {
+                        "name": "The Beatles",
+                        "artist_name": "The Beatles",
+                        "artist_mbid": null,
+                        "listen_count": 95,
+                        "albums": [
+                            {
+                                "name": "Abbey Road",
+                                "listen_count": 60,
+                                "release_group_mbid": "2d3c68f2-0a4e-5g6b-9d8e-0f1a2b3c4d5e"
+                            },
+                            {
+                                "name": "Revolver",
+                                "listen_count": 35,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    }
+                ],
+                "user_id": "foobar",
+                "range": "all_time",
+                "from_ts": 1609459200,
+                "to_ts": 1640995200,
+                "last_updated": 1640995200
+            }
         }
 
     .. note::
 
         - The example above shows artist activity data with two artists and their respective albums.
         - The statistics are aggregated based on the number of listens recorded for each artist and their albums.
+        - Each artist entry includes:
+            * ``name``: The artist name (may be the credited name on the release group)
+            * ``artist_name``: The canonical artist name (only present for user-specific requests when available)
+            * ``artist_mbid``: The MusicBrainz artist ID (may be null if unavailable)
+            * ``listen_count``: Total number of listens for this artist
+            * ``albums``: List of albums/release groups for this artist
+        - Each album entry includes:
+            * ``name``: The release group name
+            * ``listen_count``: Number of listens for this release group
+            * ``release_group_mbid``: The MusicBrainz release group ID (may be null if unavailable)
 
+    :param range: Optional stats range (see :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`),
+                  defaults to ``all_time``.
+    :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -525,7 +566,14 @@ def get_artist_activity(user_name: str):
 
     release_groups_list, _ = _process_user_entity(stats, offset, count, entire_range=True)
     result = _get_artist_activity(release_groups_list)
-    return jsonify({"result": result})
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "artist_activity": result,
+        "range": stats_range,
+        "from_ts": stats.from_ts,
+        "to_ts": stats.to_ts,
+        "last_updated": stats.last_updated
+    }})
 
 
 @stats_api_bp.get("/user/<mb_username:user_name>/era-activity")
@@ -1051,12 +1099,12 @@ def get_sitewide_artist():
             "payload": {
                 "artists": [
                     {
-                        "artist_mbids": [],
+                        "artist_mbid": null,
                         "artist_name": "Kanye West",
                         "listen_count": 1305
                     },
                     {
-                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_mbid": "0b30341b-b59d-4979-8130-b66c0e475321",
                         "artist_name": "Lil Nas X",
                         "listen_count": 1267
                     }
@@ -1072,7 +1120,7 @@ def get_sitewide_artist():
         }
 
     .. note::
-        - ``artist_mbids`` is optional field and may not be present in all the entries
+        - ``artist_mbid`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -1409,8 +1457,8 @@ def get_sitewide_listening_activity():
 @ratelimit()
 def get_sitewide_artist_activity():
     """
-    Get the sitewide artist activity. The daily activity shows the number of listens
-    submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
+    Get the sitewide artist activity. The artist activity shows the total number of listens
+    across all users for each artist along with their albums and corresponding listen counts.
 
     A sample response from the endpoint may look like:
 
@@ -1418,40 +1466,69 @@ def get_sitewide_artist_activity():
 
         {
             "payload": {
+                "artist_activity": [
+                    {
+                        "name": "Radiohead",
+                        "artist_mbid": null,
+                        "listen_count": 12000,
+                        "albums": [
+                            {
+                                "name": "OK Computer",
+                                "listen_count": 4500,
+                                "release_group_mbid": "1c2b57e1-9b3d-4f5a-8c7d-9e0f1a2b3c4d"
+                            },
+                            {
+                                "name": "In Rainbows",
+                                "listen_count": 7500,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    },
+                    {
+                        "name": "The Beatles",
+                        "artist_mbid": null,
+                        "listen_count": 9500,
+                        "albums": [
+                            {
+                                "name": "Abbey Road",
+                                "listen_count": 6000,
+                                "release_group_mbid": "2d3c68f2-0a4e-5g6b-9d8e-0f1a2b3c4d5e"
+                            },
+                            {
+                                "name": "Revolver",
+                                "listen_count": 3500,
+                                "release_group_mbid": null
+                            }
+                        ]
+                    }
+                ],
+                "range": "all_time",
                 "from_ts": 1587945600,
-                "last_updated": 1592807084,
-                "daily_activity": {
-                    "Monday": [
-                        {
-                            "hour": 0
-                            "listen_count": 26,
-                        },
-                        {
-                            "hour": 1
-                            "listen_count": 30,
-                        },
-                        {
-                            "hour": 2
-                            "listen_count": 4,
-                        },
-                        "..."
-                    ],
-                    "Tuesday": ["..."],
-                    "..."
-                },
-                "stats_range": "all_time",
-                "to_ts": 1589155200,
-                "user_id": "ishaanshah"
+                "to_ts": 1640995200,
+                "last_updated": 1640995200
             }
         }
+
+    .. note::
+
+        - The example above shows sitewide artist activity data with two artists and their respective albums.
+        - The statistics are aggregated based on the number of listens recorded across all users for each artist and their albums.
+        - Each artist entry includes:
+            * ``name``: The artist name
+            * ``artist_mbid``: The MusicBrainz artist ID (always null for sitewide stats)
+            * ``listen_count``: Total number of listens for this artist across all users
+            * ``albums``: List of albums/release groups for this artist
+        - Each album entry includes:
+            * ``name``: The release group name
+            * ``listen_count``: Number of listens for this release group across all users
+            * ``release_group_mbid``: The MusicBrainz release group ID (may be null if unavailable)
 
     :param range: Optional, time interval for which statistics should be returned, possible values are
         :data:`~data.model.common_stat.ALLOWED_STATISTICS_RANGE`, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
-    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
-    :statuscode 404: User not found
     :resheader Content-Type: *application/json*
 
     """
@@ -1465,7 +1542,13 @@ def get_sitewide_artist_activity():
     
     release_groups_list = stats["data"]
     result = _get_artist_activity(release_groups_list)
-    return jsonify({"result": result})
+    return jsonify({"payload": {
+        "artist_activity": result,
+        "range": stats_range,
+        "from_ts": stats["from_ts"],
+        "to_ts": stats["to_ts"],
+        "last_updated": stats["last_updated"]
+    }})
 
 
 @stats_api_bp.get("/sitewide/era-activity")
@@ -1657,12 +1740,34 @@ def get_sitewide_artist_map():
     })
 
 
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
+@crossdomain
+@ratelimit()
+def legacy_year_in_music(user_name: str, year: int):
+    """ Get data for legacy year in music stuff """
+    if year < 2021 or year > 2024:
+        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
+
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
+        }
+    })
+
+
+
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music")
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
+@ratelimit()
 def year_in_music(user_name: str, year: int = 2024):
     """ Get data for year in music stuff """
-    if year != 2021 and year != 2022 and year != 2023 and year != 2024:
+    if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
     user = db_user.get_by_mb_id(db_conn, user_name)
@@ -1672,7 +1777,7 @@ def year_in_music(user_name: str, year: int = 2024):
     return jsonify({
         "payload": {
             "user_name": user_name,
-            "data": db_year_in_music.get(user["id"], year) or {}
+            "data": db_year_in_music.get(user["id"], year, legacy=False) or {}
         }
     })
 

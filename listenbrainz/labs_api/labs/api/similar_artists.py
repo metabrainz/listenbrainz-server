@@ -82,7 +82,7 @@ class SimilarArtistsViewerQuery(Query):
 
     def fetch(self, params, source, offset=-1, count=-1):
         artist_mbids = [str(m) for m in params[0].artist_mbids]
-        algorithm = params[0].algorithm.strip()
+        algorithm = params[0].algorithm.value
         count = count if count > 0 else 100
 
         with psycopg2.connect(current_app.config["MB_DATABASE_URI"]) as mb_conn, \

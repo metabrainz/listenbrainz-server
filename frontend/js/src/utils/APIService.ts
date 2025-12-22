@@ -1706,11 +1706,12 @@ export default class APIService {
   };
 
   lookupRecordingMetadata = async (
+    userToken: string,
     trackName: string,
     artistName: string,
     metadata: boolean = true
   ): Promise<MetadataLookup | null> => {
-    if (!trackName) {
+    if (!trackName || !userToken) {
       return null;
     }
     const queryParams: any = {
@@ -1731,7 +1732,11 @@ export default class APIService {
       url.searchParams.append("inc", "artist tag release");
     }
 
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Token ${userToken}`,
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   };
@@ -2250,13 +2255,20 @@ export default class APIService {
   };
 
   async getLBRadioPlaylist(
+    userToken: string,
     prompt: string,
     mode: Modes = Modes.easy
   ): Promise<LBRadioResponse> {
     const url = `${
       this.APIBaseURI
     }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/xspf+xml;charset=UTF-8",
+      },
+    });
     await this.checkStatus(response);
     return response.json();
   }
