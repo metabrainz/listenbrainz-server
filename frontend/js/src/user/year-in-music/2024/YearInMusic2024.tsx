@@ -621,32 +621,17 @@ export default class YearInMusic extends React.Component<
               alt="Your year in music 2024"
             />
           ) : (
-            <>
-              <span
-                className="masked-image"
-                style={{
-                  WebkitMaskImage:
-                    "url('/static/img/legacy-year-in-music/year-in-music-24/flower.png')",
-                  marginTop: "6vh",
-                }}
-              >
-                <img
-                  src="/static/img/legacy-year-in-music/year-in-music-24/flower.png"
-                  alt="Your year in music 2024"
-                />
-              </span>
-              <div className="no-yim-message">
-                <p className="center-p">Oh no!</p>
-                <p className="center-p">
-                  We don&apos;t have enough 2024 statistics for {user.name}.
-                </p>
-                <p className="center-p">
-                  <Link to="/settings/music-services/details/">Submit</Link>{" "}
-                  enough listens before the end of December to generate your
-                  #yearinmusic next year.
-                </p>
-              </div>
-            </>
+            <div className="no-yim-message">
+              <p className="center-p">Oh no!</p>
+              <p className="center-p">
+                We don&apos;t have enough 2024 statistics for {user.name}.
+              </p>
+              <p className="center-p">
+                <Link to="/settings/music-services/details/">Submit</Link>{" "}
+                enough listens before the end of December to generate your
+                #yearinmusic next year.
+              </p>
+            </div>
           )}
           <div className="user-name">{user.name}</div>
           <div className="arrow-down" />
