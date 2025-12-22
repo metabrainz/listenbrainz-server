@@ -43,16 +43,22 @@ export default function YIMListeningActivity({
         : null
     )
     .filter(Boolean);
+  const sortedByBrightness = gradientColors.sort((a, b) => {
+    return tinycolor(b).getBrightness() - tinycolor(a).getBrightness();
+  });
   const colorPalette = [
-    ...[1, 2, 3, 4, 5]
-      .map((index) =>
-        tinycolor(gradientColors[1])
-          .lighten(10 * index)
-          .toHexString()
-      )
-      .reverse(),
-    gradientColors[1],
+    ...[1, 2, 3, 4, 5, 6].map((index) =>
+      tinycolor
+        .mix(sortedByBrightness[0], sortedByBrightness[1], (index - 1) * 20)
+        .brighten(20 - 5 * index)
+        .desaturate(10 - 5 * index)
+        .toHexString()
+    ),
   ];
+  const monthBorderColor = tinycolor(sortedByBrightness[1])
+    .lighten(40)
+    .desaturate(10)
+    .toHexString();
   return (
     <div className="" id="calendar">
       <h3 className="text-center">
@@ -76,7 +82,7 @@ export default function YIMListeningActivity({
             data={listensPerDayForGraph as CalendarDatum[]}
             // emptyColor={selectedSeason.background}
             colors={colorPalette}
-            monthBorderColor="#eeeeee"
+            monthBorderColor={monthBorderColor}
             dayBorderWidth={1}
             dayBorderColor="#ffffff"
             legends={[
