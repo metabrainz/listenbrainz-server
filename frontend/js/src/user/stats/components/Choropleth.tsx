@@ -32,6 +32,18 @@ const {
   useLayoutEffect,
 } = React;
 
+type UserArtistMapData = { id: string; value: number; data?: any }[];
+type UserArtistMapArtist = {
+  artist_mbid: string;
+  artist_name: string;
+  listen_count: number;
+};
+type CountryFeature = ChoroplethBoundFeature & {
+  formattedValue?: number;
+  color?: string;
+  data?: { value: number; artists: UserArtistMapArtist[] };
+};
+
 export type ChoroplethProps = {
   data: UserArtistMapData;
   selectedMetric: "artist" | "listen";
@@ -113,7 +125,9 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     // Then observe the target element and update the width when resized (with debounce)
     const resizeHandler = (entries: ResizeObserverEntry[]) => {
       // We only observe one element
-      const newWidth = entries[0]?.contentBoxSize?.[0].inlineSize;
+      const newWidth =
+        entries[0]?.contentBoxSize?.[0].inlineSize ??
+        entries[0]?.contentBoxSize.width;
       setContainerWidth(newWidth);
     };
     const debouncedResizeHandler = debounce(resizeHandler, 1000, {
@@ -155,29 +169,28 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     .range(colorScaleRange ?? schemeOranges[6]);
 
   // Create a custom legend component because the default doesn't work with scaleThreshold
-  const customLegend = () => (
-    <BoxLegendSvg
-      containerHeight={containerWidth / 2}
-      containerWidth={containerWidth}
-      data={colorScale.range().map((color: string, index: number) => {
-        // eslint-disable-next-line prefer-const
-        let [start, end] = colorScale.invertExtent(color);
+  const customLegend = useCallback(
+    () => (
+      <BoxLegendSvg
+        containerHeight={containerWidth / 2}
+        containerWidth={containerWidth}
+        data={colorScale.range().map((color: string, index: number) => {
+          let [start, end] = colorScale.invertExtent(color);
+          start = start ?? 1;
+          end = end ?? start;
 
-        // Domain starts with 1
-        if (start === undefined) {
-          start = 1;
-        }
-
-        return {
-          index,
-          color,
-          id: color,
-          extent: [start, end],
-          label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
-        };
-      })}
-      {...(isMobile ? legends.mobile : legends.desktop)}
-    />
+          return {
+            index,
+            color,
+            id: color,
+            extent: [start, end],
+            label: `${format(".2s")(start)} - ${format(".2s")(end!)}`,
+          };
+        })}
+        {...(isMobile ? legends.mobile : legends.desktop)}
+      />
+    ),
+    [containerWidth, colorScale, isMobile]
   );
 
   const handlePlayCountryTracks = useCallback(
@@ -188,8 +201,10 @@ export default function CustomChoropleth(props: ChoroplethProps) {
             title="Please log in"
             message={
               <>
-                You must be <Link to="/login">logged in</Link> to use LB Radio.<br/>
-                AI scrapers are causing undue traffic on our sites and not playing by the rules, booo!
+                You must be <Link to="/login">logged in</Link> to use LB Radio.
+                <br />
+                AI scrapers are causing undue traffic on our sites and not
+                playing by the rules, booo!
               </>
             }
           />,
@@ -367,7 +382,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     return () => {
       document.removeEventListener("click", handleClickOutside, true);
     };
-  });
+  }, [handleClickOutside]);
 
   const showTooltipFromEvent: ChoroplethEventHandler = useCallback(
     (feature: CountryFeature, event: React.MouseEvent<HTMLElement>) => {
@@ -419,7 +434,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
         // The typescript definition file for Choropleth is incomplete, so disable typescript
         // until it is fixed.
         // @ts-ignore
-        layers={["features", customLegend]}
+        layers={["features", () => customLegend()]}
       />
       {selectedCountry && (
         <div
