@@ -197,8 +197,17 @@ def get_yim_covers_for_user(user_id):
     """)
 
     with timescale.engine.connect() as connection:
-        result = connection.execute(query, {"user_id": user_id}).mappings()
-        return [dict(row) for row in result.fetchall()]
+        result = connection.execute(query, {"user_id": user_id})
+        return [
+            {
+                "year": row.year,
+                "cover_art": {
+                    "caa_id": row.caa_id,
+                    "caa_release_mbid": row.caa_release_mbid,
+                },
+            }
+            for row in result.fetchall()
+        ]
 
 
 def swap_yim_tables(year):
