@@ -7,7 +7,6 @@ import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
-import { getYear } from "date-fns";
 import { Helmet } from "react-helmet";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
@@ -37,6 +36,8 @@ import Preview from "../../explore/art-creator/components/Preview";
 import Loader from "../../components/Loader";
 import YIMArtistEvolution from "./components/YIMArtistEvolution";
 import YIMGenreActivity from "./components/YIMGenreActivity";
+
+export const LATEST_YEAR_IN_MUSIC_YEAR = 2025;
 
 export type YearInMusicProps = {
   user: ListenBrainzUser;
@@ -103,14 +104,13 @@ export const getYearColors = (year: number) => {
     colorSequence[(index + 1) % colorSequence.length],
   ];
 };
-export const availableYears = [2021, 2022, 2023, 2024, 2025] as const;
 
 export default function YearInMusic() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
   const location = useLocation();
   const params = useParams();
-  const { year: yearParam = getYear(Date.now()), userName } = params;
-  const year = Number(yearParam) as typeof availableYears[number];
+  const { year: yearParam, userName } = params;
+  const year = Number(yearParam) || LATEST_YEAR_IN_MUSIC_YEAR;
 
   const { data, isLoading } = useQuery<YearInMusicLoaderData>(
     RouteQuery([`year-in-music`, params], location.pathname)

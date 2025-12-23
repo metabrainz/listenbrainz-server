@@ -2,11 +2,10 @@ import * as React from "react";
 import { Link, Outlet, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import tinycolor from "tinycolor2";
-import { getYear } from "date-fns";
 
 import queryClient from "../../utils/QueryClient";
 import { RouteQuery } from "../../utils/Loader";
-import { getYearColors } from "./YearInMusic";
+import { getYearColors, LATEST_YEAR_IN_MUSIC_YEAR } from "./YearInMusic";
 import SEO, { YIMYearMetaTags } from "./SEO";
 import YIMYearSelection from "./components/YIMYearSelection";
 import Loader from "../../components/Loader";
@@ -40,7 +39,7 @@ function YearInMusicLayout() {
     year: string;
     userName: string;
   }>();
-  const year = Number(yearParam) || getYear(Date.now());
+  const year = Number(yearParam) || LATEST_YEAR_IN_MUSIC_YEAR;
 
   const loaderUrl = getLoaderURL();
   const { data, isLoading } = useQuery<YearInMusicLayoutProps>(

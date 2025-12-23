@@ -5,6 +5,7 @@ import type { RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
 import { routeQueryLoader as yearInMusicLayoutLoader } from "../year-in-music/layout";
+import { LATEST_YEAR_IN_MUSIC_YEAR } from "../year-in-music/YearInMusic";
 
 const getUserRoutes = (): RouteObject[] => {
   const routes = [
@@ -209,7 +210,7 @@ const getUserRoutes = (): RouteObject[] => {
       children: [
         {
           index: true,
-          element: <Navigate to="./2025" replace />,
+          element: <Navigate to={`./${LATEST_YEAR_IN_MUSIC_YEAR}/`} replace />,
         },
         {
           path: ":year/",
