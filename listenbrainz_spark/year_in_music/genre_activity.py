@@ -6,12 +6,12 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.utils import read_files_from_HDFS
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
-TOP_GENRES_PER_MONTH = 10
+TOP_GENRES_PER_HOUR = 10
 USERS_PER_MESSAGE = 1000
 
 
 def get_genre_activity(year):
-    """ Get genre activity by month for Year in Music """
+    """ Get genre activity by hour for Year in Music """
     setup_listens_for_year(year)
     create_genre_cache()
     
@@ -37,7 +37,7 @@ def _get_genre_activity_query():
               FROM listens_of_year l
               LEFT JOIN genres g ON l.recording_mbid = g.recording_mbid
              WHERE g.genre IS NOT NULL
-          GROUP BY l.user_id, g.genre, MONTH(l.listened_at)
+          GROUP BY l.user_id, g.genre, HOUR(l.listened_at)
         ),
         top_genres AS (
             SELECT user_id,
@@ -53,7 +53,7 @@ def _get_genre_activity_query():
         filtered_genres AS (
             SELECT user_id, genre, hour, listen_count
               FROM top_genres
-             WHERE rank <= {TOP_GENRES_PER_MONTH}
+             WHERE rank <= {TOP_GENRES_PER_HOUR}
         )
         SELECT user_id,
                SORT_ARRAY(
