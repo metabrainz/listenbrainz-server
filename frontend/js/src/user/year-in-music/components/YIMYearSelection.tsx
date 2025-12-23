@@ -1,19 +1,20 @@
 import React from "react";
 import { debounce, noop, throttle } from "lodash";
 import { Link, useNavigate } from "react-router";
-import { availableYears, YearInMusicProps } from "../YearInMusic";
 import GlobalAppContext from "../../../utils/GlobalAppContext";
 import { generateAlbumArtThumbnailLink } from "../../../utils/utils";
+import type { YearInMusicLayoutData } from "../layout";
 
 type YIMYearSelectionProps = {
   year: number;
   encodedUsername: string;
-  yearInMusicData: YearInMusicProps["yearInMusicData"];
+  data: YearInMusicLayoutData[];
 };
+
 export default function YIMYearSelection({
   year,
   encodedUsername,
-  yearInMusicData,
+  data,
 }: YIMYearSelectionProps) {
   const navigate = useNavigate();
   const { APIService } = React.useContext(GlobalAppContext);
@@ -21,12 +22,21 @@ export default function YIMYearSelection({
   const yearSelectionRef = React.useRef<HTMLDivElement>(null);
   const isInitialEvent = React.useRef<boolean>(true);
 
+  const availableYears = data.map((item) => item.year).sort((a, b) => a - b);
+  const transformedData = data.reduce(
+    (acc: Record<number, YearInMusicLayoutData>, item) => {
+      acc[item.year] = item;
+      return acc;
+    },
+    {} as Record<number, YearInMusicLayoutData>
+  );
+
   const handleYearClick = React.useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
       const selectThisYear = e.currentTarget?.dataset?.year;
       if (selectThisYear) {
-        navigate(`../${selectThisYear}/`, {
+        navigate(`./${selectThisYear}/`, {
           preventScrollReset: true,
           replace: true,
         });
@@ -62,7 +72,7 @@ export default function YIMYearSelection({
         // Ignore the first event fired on initial scrollIntoView (page load)
         isInitialEvent.current = false;
       } else if (selectThisYear) {
-        navigate(`../${selectThisYear}/`, {
+        navigate(`./${selectThisYear}/`, {
           preventScrollReset: true,
           replace: true,
         });
@@ -107,24 +117,18 @@ export default function YIMYearSelection({
     <div className="year-selection mb-5" ref={yearSelectionRef}>
       <div className="leading-line" />
       {availableYears.map((availableYear, idx) => {
-        const yearAsNum = Number(
-          availableYear
-        ) as typeof availableYears[number];
-        const isSelectedYear = yearAsNum === year;
+        const yearData = transformedData[availableYear];
+        const { cover_art } = yearData || {};
+        const { caa_id, caa_release_mbid } = cover_art || {};
+        const isSelectedYear = availableYear === year;
         let coverURL = `${APIService.APIBaseURI}/art/grid-stats/${encodedUsername}/this_year/1/0/250?caption=false`;
-        if (
-          yearInMusicData?.top_release_groups?.[idx]?.caa_id &&
-          yearInMusicData?.top_release_groups?.[idx]?.caa_release_mbid
-        ) {
-          coverURL = generateAlbumArtThumbnailLink(
-            yearInMusicData.top_release_groups[idx].caa_id,
-            yearInMusicData.top_release_groups[idx].caa_release_mbid
-          );
+        if (caa_id && caa_release_mbid) {
+          coverURL = generateAlbumArtThumbnailLink(caa_id, caa_release_mbid);
         }
         return (
           <Link
             key={availableYear}
-            to={`../${availableYear}/`}
+            to={`./${availableYear}/`}
             ref={isSelectedYear ? selectedRef : null}
             className={`year-item ${isSelectedYear ? "selected" : ""}`}
             onClick={handleYearClick}

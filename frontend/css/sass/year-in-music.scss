@@ -41,6 +41,7 @@ $transition-duration: 1s;
     --gradientColor2 $transition-duration;
   background-blend-mode: multiply;
   overflow: hidden;
+  min-height: 100dvh;
 
   .listen-card {
     color: initial;

@@ -4,19 +4,17 @@ import { toast } from "react-toastify";
 import { isEmpty, isNil, isUndefined, last } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
-import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { getYear } from "date-fns";
 import { Helmet } from "react-helmet";
-import tinycolor from "tinycolor2";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 
 import ImageShareButtons from "./components/ImageShareButtons";
 import { JSPFTrackToListen } from "../../playlists/utils";
 import { ToastMsg } from "../../notifications/Notifications";
 import FollowButton from "../components/follow/FollowButton";
-import SEO, { YIMYearMetaTags } from "./SEO";
 import { RouteQuery } from "../../utils/Loader";
 import { setAmbientQueueAtom } from "../../common/brainzplayer/BrainzPlayerAtoms";
 import TopLevelPlaylist, { getPlaylistByName } from "./components/YIMPlaylists";
@@ -37,7 +35,6 @@ import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
 import Preview from "../../explore/art-creator/components/Preview";
 import Loader from "../../components/Loader";
-import YIMYearSelection from "./components/YIMYearSelection";
 import YIMArtistEvolution from "./components/YIMArtistEvolution";
 import YIMGenreActivity from "./components/YIMGenreActivity";
 
@@ -284,7 +281,6 @@ export default function YearInMusic() {
   const gradientColors = getYearColors(Number(year));
   const accentColor = COLOR_LB_BLUE;
   const textColor = "#F1F2E1";
-  const cardBackgroundColor = textColor;
   // const backgroundGradient = `linear-gradient(to right, ${gradientColors.join(
   //   ", "
   // )})`;
@@ -420,359 +416,301 @@ export default function YearInMusic() {
   );
   const overviewImageUrl = getImageUrl("overview");
   return (
-    <div
-      id="year-in-music"
-      className={`yim-${year}`}
-      style={{
-        ["--cardBackgroundColor" as any]: cardBackgroundColor,
-        ["--accentColor" as any]: tinycolor
-          .mostReadable(cardBackgroundColor, gradientColors, {
-            includeFallbackColors: false,
-          })
-          .darken(5)
-          .saturate(5)
-          .toHexString(),
-        ["--gradientColor1" as any]: gradientColors[0],
-        ["--gradientColor2" as any]: gradientColors[1],
-      }}
-    >
-      <div>
-        <SEO year={year} userName={user?.name} />
-        <YIMYearMetaTags />
-        <Helmet>
-          <link
-            rel="preload"
-            href="/static/img/year-in-music/header.png"
-            as="image"
-          />
-          <link rel="preload" href={overviewImageUrl} as="image" />
-        </Helmet>
-        <div id="main-header">
-          <div className="user-name">{user.name}&apos;s</div>
-          <div className="header-image">
-            <img
-              src="/static/img/year-in-music/header.png"
-              alt="Year in Music"
-              className="w-100"
-              style={{ opacity: 0.2 }}
-            />
-            <img
-              src="/static/img/year-in-music/header.png"
-              alt="Year in Music"
-              className="w-100"
-              style={{ mixBlendMode: "overlay" }}
-            />
-          </div>
-        </div>
-        <Loader className="loader-container" isLoading={isLoading} />
-        <YIMYearSelection
-          year={year}
-          encodedUsername={encodedUsername}
-          yearInMusicData={yearInMusicData}
+    <>
+      <Helmet>
+        <link
+          rel="preload"
+          href="/static/img/year-in-music/header.png"
+          as="image"
         />
-        {!hasSomeData && (
-          <div className="no-yim-message">
-            <p className="center-p">Oh no!</p>
-            <p className="center-p">
-              We don&apos;t have enough {year} statistics for {user.name}.
-            </p>
-            <p className="center-p">
-              <Link to="/settings/music-services/details/">Submit</Link> enough
-              listens before the end of December to generate your #yearinmusic
-              next year.
-            </p>
-          </div>
-        )}
-        <div role="main">
-          {userShareBar}
-          {hasSomeData && (
-            <>
-              {missingSomeData && (
-                <div className="alert alert-warning">
-                  Heads up: We were unable to compute all of the parts of Your
-                  Year in Music due to not enough listens or an issue in our
-                  database, but we&apos;re showing you everything that we were
-                  able to make. Your page might look a bit different than
-                  others.
+        <link rel="preload" href={overviewImageUrl} as="image" />
+      </Helmet>
+      <Loader className="loader-container" isLoading={isLoading} />
+      {!hasSomeData && (
+        <div className="no-yim-message">
+          <p className="center-p">Oh no!</p>
+          <p className="center-p">
+            We don&apos;t have enough {year} statistics for {user.name}.
+          </p>
+          <p className="center-p">
+            <Link to="/settings/music-services/details/">Submit</Link> enough
+            listens before the end of December to generate your #yearinmusic
+            next year.
+          </p>
+        </div>
+      )}
+      <div role="main">
+        {userShareBar}
+        {hasSomeData && (
+          <>
+            {missingSomeData && (
+              <div className="alert alert-warning">
+                Heads up: We were unable to compute all of the parts of Your
+                Year in Music due to not enough listens or an issue in our
+                database, but we&apos;re showing you everything that we were
+                able to make. Your page might look a bit different than others.
+              </div>
+            )}
+            <div className="section">
+              <div className="content-card" id="overview">
+                <div className="bg-transparent card-bg center-p mt-5 p-0">
+                  <Preview
+                    className="img-fluid border-radius"
+                    url={overviewImageUrl}
+                    styles={{
+                      textColor,
+                      bgColor1: gradientColors[0],
+                      bgColor2: last(gradientColors),
+                    }}
+                  />
                 </div>
-              )}
-              <div className="section">
-                <div className="content-card" id="overview">
-                  <div className="bg-transparent card-bg center-p mt-5 p-0">
-                    <Preview
-                      className="img-fluid border-radius"
-                      url={overviewImageUrl}
-                      styles={{
-                        textColor,
-                        bgColor1: gradientColors[0],
-                        bgColor2: last(gradientColors),
-                      }}
-                    />
-                  </div>
-                  <div className="yim-share-button-container">
-                    <ImageShareButtons
-                      svgURL={overviewImageUrl}
-                      shareUrl={linkToThisPage}
-                      shareText={`Check out my ListenBrainz stats for ${year}`}
-                      shareTitle={`My year ${year} in music`}
-                      fileName={`${user.name}-overview-${year}`}
-                      customStyles={svgStyles}
-                    />
-                  </div>
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={overviewImageUrl}
+                    shareUrl={linkToThisPage}
+                    shareText={`Check out my ListenBrainz stats for ${year}`}
+                    shareTitle={`My year ${year} in music`}
+                    fileName={`${user.name}-overview-${year}`}
+                    customStyles={svgStyles}
+                  />
                 </div>
               </div>
+            </div>
 
-              <div className="section">
-                <div className="content-card" id="top-releases">
-                  <h3 className="flex-center">Top albums of {year}</h3>
-                  <AlbumsCoverflow
-                    topReleaseGroups={yearInMusicData.top_release_groups}
+            <div className="section">
+              <div className="content-card" id="top-releases">
+                <h3 className="flex-center">Top albums of {year}</h3>
+                <AlbumsCoverflow
+                  topReleaseGroups={yearInMusicData.top_release_groups}
+                />
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={getImageUrl("albums")}
+                    shareUrl={`${linkToThisPage}#top-albums`}
+                    shareText={`Check out my top albums for ${year} on ListenBrainz`}
+                    shareTitle={`My top albums of ${year}`}
+                    fileName={`${user.name}-top-albums-${year}`}
+                    customStyles={svgStyles}
                   />
-                  <div className="yim-share-button-container">
-                    <ImageShareButtons
-                      svgURL={getImageUrl("albums")}
-                      shareUrl={`${linkToThisPage}#top-albums`}
-                      shareText={`Check out my top albums for ${year} on ListenBrainz`}
-                      shareTitle={`My top albums of ${year}`}
-                      fileName={`${user.name}-top-albums-${year}`}
-                      customStyles={svgStyles}
-                    />
-                  </div>
                 </div>
               </div>
+            </div>
 
-              <YIMCharts
-                yearInMusicData={yearInMusicData}
-                userName={user.name}
-                year={year}
-                customStyles={svgStyles}
-                gradientColors={gradientColors}
-                accentColor={accentColor}
-              />
-
-              <div className="section" id="stats">
-                <div className="content-card">
-                  <h3 className="flex-center">Your statistics for {year}</h3>
-                  <YIMStats
-                    yearInMusicData={yearInMusicData}
-                    userName={user.name}
-                  />
-                  <YIMListeningActivity
-                    listensPerDay={yearInMusicData.listens_per_day}
-                    userName={user.name}
-                    year={year}
-                    gradientColors={gradientColors}
-                  />
-                  <YIMMostListenedYear
-                    mostListenedYearData={yearInMusicData.most_listened_year}
-                    userName={user.name}
-                    gradientColors={gradientColors}
-                  />
-                  <YIMArtistMap
-                    artistMapData={yearInMusicData.artist_map}
-                    yourOrUsersName={yourOrUsersName}
-                    gradientColors={gradientColors}
-                  />
-                  <YIMArtistEvolution
-                    artistEvolutionData={
-                      yearInMusicData.artist_evolution_activity
-                    }
-                    yourOrUsersName={yourOrUsersName}
-                    gradientColors={gradientColors}
-                    year={year}
-                  />
-                  {genreGraphData && (
-                    <YIMGenreGraph
-                      genreGraphData={genreGraphData}
-                      userName={user.name}
-                      gradientColors={gradientColors}
-                    />
-                  )}
-                  <YIMGenreActivity
-                    genreActivityData={yearInMusicData.genre_activity}
-                    yourOrUsersName={yourOrUsersName}
-                    gradientColors={gradientColors}
-                    year={year}
-                  />
-                  <div className="yim-share-button-container">
-                    <ImageShareButtons
-                      svgURL={getImageUrl("stats")}
-                      shareUrl={`${linkToThisPage}#stats`}
-                      shareTitle={`My music listening in ${year} on ListenBrainz`}
-                      fileName={`${user.name}-stats-${year}`}
-                      customStyles={svgStyles}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="section">
-                <div className="flex flex-wrap" id="playlists">
-                  {topDiscoveriesPlaylist && (
-                    <TopLevelPlaylist
-                      year={year}
-                      topLevelPlaylist={topDiscoveriesPlaylist}
-                      coverArtKey="discovery-playlist"
-                      userName={user.name}
-                      customStyles={svgStyles}
-                      gradientColors={gradientColors}
-                      accentColor={accentColor}
-                    />
-                  )}
-                  {topMissedRecordingsPlaylist && (
-                    <TopLevelPlaylist
-                      year={year}
-                      topLevelPlaylist={topMissedRecordingsPlaylist}
-                      coverArtKey="missed-playlist"
-                      userName={user.name}
-                      customStyles={svgStyles}
-                      gradientColors={gradientColors}
-                      accentColor={accentColor}
-                    />
-                  )}
-                </div>
-              </div>
-              <div className="section">
-                <div className="flex flex-wrap">
-                  <YIMNewReleases
-                    newReleases={yearInMusicData.new_releases_of_top_artists}
-                    userName={user.name}
-                    year={year}
-                  />
-                  <YIMSimilarUsers
-                    similarUsers={yearInMusicData.similar_users}
-                    updateFollowingList={updateFollowingList}
-                    loggedInUserFollowsUser={loggedInUserFollowsUser}
-                    userName={user.name}
-                    year={year}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-          {followingList.length > 0 && (
-            <YIMFriends
-              followingList={followingList}
+            <YIMCharts
+              yearInMusicData={yearInMusicData}
               userName={user.name}
               year={year}
+              customStyles={svgStyles}
+              gradientColors={gradientColors}
+              accentColor={accentColor}
             />
-          )}
 
-          {/* ADD Community Year in Music tools ♡HERE */}
+            <div className="section" id="stats">
+              <div className="content-card">
+                <h3 className="flex-center">Your statistics for {year}</h3>
+                <YIMStats
+                  yearInMusicData={yearInMusicData}
+                  userName={user.name}
+                />
+                <YIMListeningActivity
+                  listensPerDay={yearInMusicData.listens_per_day}
+                  userName={user.name}
+                  year={year}
+                  gradientColors={gradientColors}
+                />
+                <YIMMostListenedYear
+                  mostListenedYearData={yearInMusicData.most_listened_year}
+                  userName={user.name}
+                  gradientColors={gradientColors}
+                />
+                <YIMArtistMap
+                  artistMapData={yearInMusicData.artist_map}
+                  yourOrUsersName={yourOrUsersName}
+                  gradientColors={gradientColors}
+                />
+                <YIMArtistEvolution
+                  artistEvolutionData={
+                    yearInMusicData.artist_evolution_activity
+                  }
+                  yourOrUsersName={yourOrUsersName}
+                  gradientColors={gradientColors}
+                  year={year}
+                />
+                {genreGraphData && (
+                  <YIMGenreGraph
+                    genreGraphData={genreGraphData}
+                    userName={user.name}
+                    gradientColors={gradientColors}
+                  />
+                )}
+                <YIMGenreActivity
+                  genreActivityData={yearInMusicData.genre_activity}
+                  yourOrUsersName={yourOrUsersName}
+                  gradientColors={gradientColors}
+                  year={year}
+                />
+                <div className="yim-share-button-container">
+                  <ImageShareButtons
+                    svgURL={getImageUrl("stats")}
+                    shareUrl={`${linkToThisPage}#stats`}
+                    shareTitle={`My music listening in ${year} on ListenBrainz`}
+                    fileName={`${user.name}-stats-${year}`}
+                    customStyles={svgStyles}
+                  />
+                </div>
+              </div>
+            </div>
 
-          <div className="section">
-            {userShareBar}
-            <div className="closing-remarks">
-              <div
-                className="overlay-image-container mb-5"
-                style={{ width: "50px", height: "50px" }}
-              >
-                <img
-                  src="/static/img/year-in-music/heart.png"
-                  alt="With love,"
-                />
-                <img
-                  src="/static/img/year-in-music/heart.png"
-                  alt="With love,"
-                />
+            <div className="section">
+              <div className="flex flex-wrap" id="playlists">
+                {topDiscoveriesPlaylist && (
+                  <TopLevelPlaylist
+                    year={year}
+                    topLevelPlaylist={topDiscoveriesPlaylist}
+                    coverArtKey="discovery-playlist"
+                    userName={user.name}
+                    customStyles={svgStyles}
+                    gradientColors={gradientColors}
+                    accentColor={accentColor}
+                  />
+                )}
+                {topMissedRecordingsPlaylist && (
+                  <TopLevelPlaylist
+                    year={year}
+                    topLevelPlaylist={topMissedRecordingsPlaylist}
+                    coverArtKey="missed-playlist"
+                    userName={user.name}
+                    customStyles={svgStyles}
+                    gradientColors={gradientColors}
+                    accentColor={accentColor}
+                  />
+                )}
               </div>
-              <div
-                className="overlay-image-container mb-5"
-                style={{ maxWidth: "250px", height: "80px" }}
-              >
-                <img
-                  src="/static/img/year-in-music/listenbrainz-footer.png"
-                  alt="The ListenBrainz team"
+            </div>
+            <div className="section">
+              <div className="flex flex-wrap">
+                <YIMNewReleases
+                  newReleases={yearInMusicData.new_releases_of_top_artists}
+                  userName={user.name}
+                  year={year}
                 />
-                <img
-                  src="/static/img/year-in-music/listenbrainz-footer.png"
-                  alt="The ListenBrainz team"
-                />
-              </div>
-              <p className="mb-4 bold">
-                Wishing you a very cozy {year + 1}, from the ListenBrainz team.
-              </p>
-              <p className="mb-5">
-                If you have questions or feedback don&apos;t hesitate to contact
-                us
-                <br />
-                on&nbsp;
-                <a
-                  target="_blank"
-                  href="https://community.metabrainz.org/c/listenbrainz/18"
-                  rel="noopener noreferrer"
-                >
-                  our forums
-                </a>
-                ,&nbsp;
-                <a
-                  target="_blank"
-                  href="mailto:listenbrainz@metabrainz.org"
-                  rel="noopener noreferrer"
-                >
-                  by email
-                </a>
-                ,&nbsp;
-                <a
-                  target="_blank"
-                  href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
-                  rel="noopener noreferrer"
-                >
-                  Matrix
-                </a>
-                ,&nbsp;
-                <a
-                  target="_blank"
-                  href="https://discord.gg/R4hBw972QA"
-                  rel="noopener noreferrer"
-                >
-                  Discord
-                </a>
-                ,&nbsp;
-                <a
-                  target="_blank"
-                  href="https://bsky.app/profile/listenbrainz.org"
-                  rel="noopener noreferrer"
-                >
-                  Bluesky
-                </a>
-                &nbsp;or&nbsp;
-                <a
-                  target="_blank"
-                  href="https://mastodon.social/@ListenBrainz"
-                  rel="noopener noreferrer"
-                >
-                  Mastodon
-                </a>
-                .
-              </p>
-              <div
-                className="overlay-image-container mt-5 mb-5"
-                style={{ maxWidth: "200px", height: "85px" }}
-              >
-                <img
-                  src="/static/img/year-in-music/OSS-footer.png"
-                  alt="Open source and ethical forever"
-                />
-                <img
-                  src="/static/img/year-in-music/OSS-footer.png"
-                  alt="Open source and ethical forever"
+                <YIMSimilarUsers
+                  similarUsers={yearInMusicData.similar_users}
+                  updateFollowingList={updateFollowingList}
+                  loggedInUserFollowsUser={loggedInUserFollowsUser}
+                  userName={user.name}
+                  year={year}
                 />
               </div>
             </div>
+          </>
+        )}
+        {followingList.length > 0 && (
+          <YIMFriends
+            followingList={followingList}
+            userName={user.name}
+            year={year}
+          />
+        )}
+
+        {/* ADD Community Year in Music tools ♡HERE */}
+
+        <div className="section">
+          {userShareBar}
+          <div className="closing-remarks">
+            <div
+              className="overlay-image-container mb-5"
+              style={{ width: "50px", height: "50px" }}
+            >
+              <img src="/static/img/year-in-music/heart.png" alt="With love," />
+              <img src="/static/img/year-in-music/heart.png" alt="With love," />
+            </div>
+            <div
+              className="overlay-image-container mb-5"
+              style={{ maxWidth: "250px", height: "80px" }}
+            >
+              <img
+                src="/static/img/year-in-music/listenbrainz-footer.png"
+                alt="The ListenBrainz team"
+              />
+              <img
+                src="/static/img/year-in-music/listenbrainz-footer.png"
+                alt="The ListenBrainz team"
+              />
+            </div>
+            <p className="mb-4 bold">
+              Wishing you a very cozy {year + 1}, from the ListenBrainz team.
+            </p>
+            <p className="mb-5">
+              If you have questions or feedback don&apos;t hesitate to contact
+              us
+              <br />
+              on&nbsp;
+              <a
+                target="_blank"
+                href="https://community.metabrainz.org/c/listenbrainz/18"
+                rel="noopener noreferrer"
+              >
+                our forums
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="mailto:listenbrainz@metabrainz.org"
+                rel="noopener noreferrer"
+              >
+                by email
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://matrix.to/#/#metabrainz-all:chatbrainz.org"
+                rel="noopener noreferrer"
+              >
+                Matrix
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://discord.gg/R4hBw972QA"
+                rel="noopener noreferrer"
+              >
+                Discord
+              </a>
+              ,&nbsp;
+              <a
+                target="_blank"
+                href="https://bsky.app/profile/listenbrainz.org"
+                rel="noopener noreferrer"
+              >
+                Bluesky
+              </a>
+              &nbsp;or&nbsp;
+              <a
+                target="_blank"
+                href="https://mastodon.social/@ListenBrainz"
+                rel="noopener noreferrer"
+              >
+                Mastodon
+              </a>
+              .
+            </p>
+            <div
+              className="overlay-image-container mt-5 mb-5"
+              style={{ maxWidth: "200px", height: "85px" }}
+            >
+              <img
+                src="/static/img/year-in-music/OSS-footer.png"
+                alt="Open source and ethical forever"
+              />
+              <img
+                src="/static/img/year-in-music/OSS-footer.png"
+                alt="Open source and ethical forever"
+              />
+            </div>
           </div>
         </div>
-        {/* Trick to load the font files for use with the SVG render CHECK IF THIS IS STILL REQUIRED */}
-        <span
-          style={{
-            fontFamily: "Inter, sans-serif",
-            opacity: 0,
-            position: "fixed",
-          }}
-        >
-          x
-        </span>
       </div>
-    </div>
+    </>
   );
 }

@@ -412,7 +412,14 @@ def year_in_music_covers(user_name):
         return jsonify({"error": "Cannot find user: %s" % user_name}), 404
 
     covers = db_year_in_music.get_yim_covers_for_user(user.id)
-    return jsonify(covers)
+
+    return jsonify({
+        "user": {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+        "data": covers,
+    })
 
 
 # Embedable widgets, return HTML page to embed in an iframe

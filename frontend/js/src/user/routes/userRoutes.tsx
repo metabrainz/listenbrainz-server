@@ -4,6 +4,8 @@ import { Navigate, Outlet } from "react-router";
 import type { RouteObject } from "react-router";
 import RouteLoader, { RouteQueryLoader } from "../../utils/Loader";
 
+import { routeQueryLoader as yearInMusicLayoutLoader } from "../year-in-music/layout";
+
 const getUserRoutes = (): RouteObject[] => {
   const routes = [
     {
@@ -196,11 +198,14 @@ const getUserRoutes = (): RouteObject[] => {
     },
     {
       path: "/user/:username/year-in-music/",
+      id: "year-in-music-layout",
       lazy: {
         Component: async () => {
-          return (await import("../../explore/layout")).default;
+          return (await import("../year-in-music/layout")).default;
         },
       },
+      // We're not using a lazy loader here because we want to load the year-in-music layout first
+      loader: yearInMusicLayoutLoader,
       children: [
         {
           index: true,
