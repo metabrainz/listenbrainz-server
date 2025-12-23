@@ -150,6 +150,66 @@ def create_yim_table(year):
         connection.execute(text(create_sql))
 
 
+def populate_yim_cover_table(connection, year, table):
+    """ Populate year_in_music_cover table with the topmost album cover for each user.
+
+    For each user with YIM data for the given year, find the first release group
+    that has caa_id and caa_release_mbid. If none found, use NULL for both.
+    """
+    delete_query = text("""
+        DELETE FROM statistics.year_in_music_cover WHERE year = :year
+    """)
+
+    # Query to extract the first release group with cover art for each user
+    # Uses LATERAL join to find the first matching entry in the top_release_groups array
+    insert_query = text("""
+        INSERT INTO statistics.year_in_music_cover (user_id, year, caa_id, caa_release_mbid)
+        SELECT
+            yim.user_id,
+            :year AS year,
+            (cover_info->>'caa_id')::BIGINT AS caa_id,
+            (cover_info->>'caa_release_mbid')::UUID AS caa_release_mbid
+        FROM """ + table + """ yim
+        LEFT JOIN LATERAL (
+            SELECT elem AS cover_info
+              FROM jsonb_array_elements(yim.data->'top_release_groups') WITH ORDINALITY AS t(elem, ord)
+             WHERE elem->>'caa_id' IS NOT NULL
+               AND elem->>'caa_release_mbid' IS NOT NULL
+          ORDER BY ord
+             LIMIT 1
+        ) cover ON true
+    """)
+
+    connection.execute(delete_query, {"year": year})
+    connection.execute(insert_query, {"year": year})
+
+
+def get_yim_covers_for_user(user_id):
+    """ Get all year in music cover data for a user.
+
+    Returns a list of dicts with year, caa_id, and caa_release_mbid for each year.
+    """
+    query = text("""
+        SELECT year, caa_id, caa_release_mbid
+          FROM statistics.year_in_music_cover
+         WHERE user_id = :user_id
+      ORDER BY year DESC
+    """)
+
+    with timescale.engine.connect() as connection:
+        result = connection.execute(query, {"user_id": user_id})
+        return [
+            {
+                "year": row.year,
+                "cover_art": {
+                    "caa_id": row.caa_id,
+                    "caa_release_mbid": row.caa_release_mbid,
+                },
+            }
+            for row in result.fetchall()
+        ]
+
+
 def swap_yim_tables(year):
     """ Swap the year in music tables """
     table_without_schema = "year_in_music_" + str(year)
@@ -163,6 +223,8 @@ def swap_yim_tables(year):
     with timescale.engine.connect() as connection:
         connection.connection.set_isolation_level(0)
         connection.execute(text(vacuum_sql))
+
+        populate_yim_cover_table(connection, year, tmp_table)
 
     with timescale.engine.begin() as connection:
         connection.execute(text(drop_sql))

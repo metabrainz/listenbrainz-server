@@ -363,9 +363,8 @@ def legacy_year_in_music(user_name, year: int):
     return jsonify(response)
 
 
-@user_bp.post("/<mb_username:user_name>/year-in-music/")
 @user_bp.post("/<mb_username:user_name>/year-in-music/<int:year>/")
-def year_in_music(user_name, year: int = 2024):
+def year_in_music(user_name, year: int):
     """ Year in Music """
     if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         return jsonify({"error": f"Cannot find Year in Music report for year: {year}"}), 404
@@ -403,6 +402,22 @@ def year_in_music(user_name, year: int = 2024):
         response["genreGraphData"] = {}
 
     return jsonify(response)
+
+
+@user_bp.post("/<mb_username:user_name>/year-in-music/")
+def year_in_music_covers(user_name):
+    """ Get Year in Music cover "cover art" data for all years for a user.
+
+    Returns a list of objects containing year, caa_id, and caa_release_mbid
+    for the user's topmost album that has cover art for that year.
+    """
+    user = _get_user(user_name)
+    if not user:
+        return jsonify({"error": "Cannot find user: %s" % user_name}), 404
+
+    covers = db_year_in_music.get_yim_covers_for_user(user.id)
+    return jsonify(covers)
+
 
 # Embedable widgets, return HTML page to embed in an iframe
 
