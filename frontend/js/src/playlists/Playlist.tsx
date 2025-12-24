@@ -75,9 +75,8 @@ const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
 
 export default function PlaylistPage() {
   // Context
-  const { currentUser, APIService, websocketsUrl } = React.useContext(
-    GlobalAppContext
-  );
+  const { currentUser, APIService, websocketsUrl } =
+    React.useContext(GlobalAppContext);
 
   // BrainzPlayer Atoms
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
@@ -451,7 +450,8 @@ export default function PlaylistPage() {
                 )}
             </div>
             <div>
-              {playlist.track?.length} tracks
+              {playlist.track?.length}{" "}
+              {playlist.track?.length === 1 ? "track" : "tracks"}
               {totalDurationForDisplay && (
                 <>&nbsp;-&nbsp;{totalDurationForDisplay}</>
               )}
