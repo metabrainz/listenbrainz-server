@@ -1474,9 +1474,7 @@ export default class YearInMusic extends React.Component<
               {mosaics?.map((mosaicImage) => {
                 const imageLink = `https://static.metabrainz.org/LB/year-in-music/2024/${mosaicImage.release_mbid}.png`;
                 return (
-                  <SwiperSlide
-                    key={`coverflow-${mosaicImage.release_mbid}`}
-                  >
+                  <SwiperSlide key={`coverflow-${mosaicImage.release_mbid}`}>
                     <div
                       style={{
                         marginInline: "auto",

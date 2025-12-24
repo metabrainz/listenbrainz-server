@@ -123,7 +123,7 @@ export default function ListenCard(props: ListenCardProps) {
     APIService,
     currentUser,
     userPreferences,
-    spotifyAuth
+    spotifyAuth,
   } = React.useContext(GlobalAppContext);
   const isMobile = useMediaQuery("(max-width: 480px)");
 
