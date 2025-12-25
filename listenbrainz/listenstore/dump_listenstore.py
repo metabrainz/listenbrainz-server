@@ -174,9 +174,11 @@ class DumpListenStore:
                             ).to_json()
                             out_file.write(orjson.dumps(listen).decode("utf-8") + "\n")
                             rows_added += 1
-                    tar_file.add(filename, arcname=os.path.join(
-                        archive_name, 'listens', str(year), f"{month}.listens"
-                    ))
+                    tar_file.add(
+                        filename,
+                        arcname=os.path.join(archive_name, 'listens', str(year), f"{month}.listens")
+                    )
+                    os.unlink(filename)
 
                     listen_count += rows_added
                     self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count,
