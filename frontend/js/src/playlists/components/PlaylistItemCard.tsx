@@ -14,6 +14,7 @@ export type PlaylistItemCardProps = {
   removeTrackFromPlaylist?: (track: JSPFTrack) => void;
   showTimestamp?: boolean;
   showUsername?: boolean;
+  onPlay?: () => void;
 };
 
 export default class PlaylistItemCard extends React.Component<
@@ -33,6 +34,7 @@ export default class PlaylistItemCard extends React.Component<
       showUsername,
       showTimestamp,
       removeTrackFromPlaylist,
+      onPlay,
     } = this.props;
     // const customFields = getTrackExtension(track);
     // const trackDuration = track.duration
@@ -68,6 +70,7 @@ export default class PlaylistItemCard extends React.Component<
         beforeThumbnailContent={dragHandle}
         data-recording-mbid={track.id}
         additionalMenuItems={additionalMenuItems}
+        onPlay={onPlay}
       />
     );
   }

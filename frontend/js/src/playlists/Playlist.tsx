@@ -601,6 +601,16 @@ export default function PlaylistPage() {
                     canEdit={userHasRightToEdit}
                     track={track}
                     removeTrackFromPlaylist={deletePlaylistItem}
+                    onPlay={() => {
+                      const tracksToPlay = tracks.slice(index);
+                      window.postMessage(
+                        {
+                          brainzplayer_event: "play-ambient-queue",
+                          payload: tracksToPlay,
+                        },
+                        window.location.origin
+                      );
+                    }}
                   />
                 );
               })}
