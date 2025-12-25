@@ -112,7 +112,6 @@ class TimescaleListenStore:
                        expirein=REDIS_USER_LISTEN_COUNT_EXPIRY)
         return listen_count
 
-
     def get_timestamps_for_user(self, user_id: int) -> Tuple[Optional[datetime], Optional[datetime]]:
         """ Return the min_ts and max_ts for the given list of users """
         query = """

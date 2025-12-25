@@ -189,7 +189,7 @@ class DumpListenStore:
             year = next_year
 
     def dump_listens(self, location, dump_id, start_time, end_time, dump_type,
-                     threads=DUMP_DEFAULT_THREAD_COUNT):
+                     threads=DUMP_DEFAULT_THREAD_COUNT, temp_location=None):
         """ Dumps all listens in the ListenStore into a .tar.zst archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
@@ -217,7 +217,7 @@ class DumpListenStore:
             archive_name = '{}-incremental'.format(archive_name)
 
         metadata = self.get_dump_metadata(start_time, end_time, full_dump)
-        with zstd_dump(location, archive_name, metadata, threads) as (zstd, tar, temp_dir, archive_path):
+        with zstd_dump(location, archive_name, metadata, threads, temp_location=temp_location) as (zstd, tar, temp_dir, archive_path):
             listens_path = os.path.join(temp_dir, 'listens')
             self.write_listens(
                 listens_path, tar, archive_name,
@@ -419,11 +419,11 @@ class DumpListenStore:
 
         return parquet_file_id
 
-    def dump_listens_for_spark(self, location,
-                               dump_id: int,
-                               dump_type: str,
-                               start_time: datetime,
-                               end_time: datetime):
+    def dump_listens_for_spark(
+        self, location, dump_id: int, dump_type: str,
+        start_time: datetime, end_time: datetime,
+        temp_location: str = None,
+    ):
         """ Dumps all listens in the ListenStore into spark parquet files in a .tar archive.
 
         Listens are dumped into files ideally no larger than 128MB, sorted from oldest to newest. Files
@@ -455,7 +455,7 @@ class DumpListenStore:
         metadata = self.get_dump_metadata(start_time, end_time, full_dump)
         max_created = end_time
         parquet_index = 0
-        with uncompressed_dump(location, archive_name, metadata) as (tar, temp_dir, archive_path):
+        with uncompressed_dump(location, archive_name, metadata, temp_location=temp_location) as (tar, temp_dir, archive_path):
 
             for year in range(start_time.year, end_time.year + 1):
                 if year == start_time.year:
