@@ -34,7 +34,7 @@ source "admin/functions.sh"
 
 # This variable contains the name of a directory that is deleted when the script
 # exits, so we sanitise it here in case it was included in the environment.
-DUMP_TEMP_DIR=""
+DUMP_INTERMEDIATE_DIR=""
 
 if [ "$CONTAINER_NAME" == "listenbrainz-cron-prod" ] && [ "$PROD" == "prod" ]
 then
@@ -61,12 +61,12 @@ function add_rsync_include_rule {
 function on_exit {
     echo "Disk space when create-dumps ends:"; df -m
 
-    if [ -n "$DUMP_TEMP_DIR" ]; then
-        rm -rf "$DUMP_TEMP_DIR"
+    if [ -n "$DUMP_INTERMEDIATE_DIR" ]; then
+        rm -rf "$DUMP_INTERMEDIATE_DIR"
     fi
 
-    if [ -n "$PRIVATE_DUMP_TEMP_DIR" ]; then
-        rm -rf "$PRIVATE_DUMP_TEMP_DIR"
+    if [ -n "$PRIVATE_DUMP_INTERMEDIATE_DIR" ]; then
+        rm -rf "$PRIVATE_DUMP_INTERMEDIATE_DIR"
     fi
 
     if [ -n "$START_TIME" ]; then
@@ -118,38 +118,42 @@ fi
 # Trap should not be called before we lock cron to avoid wiping out an existing lock file
 trap on_exit EXIT
 
-DUMP_TEMP_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
+DUMP_INTERMEDIATE_DIR="$DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "DUMP_BASE_DIR is $DUMP_BASE_DIR"
-echo "creating DUMP_TEMP_DIR $DUMP_TEMP_DIR"
-mkdir -p "$DUMP_TEMP_DIR"
+echo "creating DUMP_INTERMEDIATE_DIR $DUMP_INTERMEDIATE_DIR"
+mkdir -p "$DUMP_INTERMEDIATE_DIR"
 
-PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
+DUMP_TEMP_DIR="$DUMP_BASE_DIR"
+
+PRIVATE_DUMP_INTERMEDIATE_DIR="$PRIVATE_DUMP_BASE_DIR/$SUB_DIR.$$"
 echo "PRIVATE_DUMP_BASE_DIR is $PRIVATE_DUMP_BASE_DIR"
-echo "creating PRIVATE_DUMP_TEMP_DIR $PRIVATE_DUMP_TEMP_DIR"
-mkdir -p "$PRIVATE_DUMP_TEMP_DIR"
+echo "creating PRIVATE_DUMP_INTERMEDIATE_DIR $PRIVATE_DUMP_INTERMEDIATE_DIR"
+mkdir -p "$PRIVATE_DUMP_INTERMEDIATE_DIR"
+
+PRIVATE_DUMP_TEMP_DIR="$PRIVATE_DUMP_BASE_DIR"
 
 if [ "$DUMP_TYPE" == "full" ]; then
-    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_TEMP_DIR" -lp "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_full -l "$DUMP_INTERMEDIATE_DIR" -lp "$PRIVATE_DUMP_INTERMEDIATE_DIR" -lt "$DUMP_TEMP_DIR" -lpt "$PRIVATE_DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Full dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "incremental" ]; then
-    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_incremental -l "$DUMP_INTERMEDIATE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Incremental dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "feedback" ]; then
-    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_TEMP_DIR" -t "$DUMP_THREADS" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_feedback -l "$DUMP_INTERMEDIATE_DIR" -t "$DUMP_THREADS" "$@"; then
         echo "Feedback dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "mbcanonical" ]; then
-    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_TEMP_DIR" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_mbcanonical -l "$DUMP_INTERMEDIATE_DIR" "$@"; then
         echo "MB Canonical dump failed, exiting!"
         exit 1
     fi
 elif [ "$DUMP_TYPE" == "sample" ]; then
-    if ! /usr/local/bin/python manage.py dump create_sample -l "$DUMP_TEMP_DIR" "$@"; then
+    if ! /usr/local/bin/python manage.py dump create_sample -l "$DUMP_INTERMEDIATE_DIR" "$@"; then
         echo "Sample dump failed, exiting!"
         exit 1
     fi
@@ -158,13 +162,13 @@ else
     exit 1
 fi
 
-DUMP_ID_FILE=$(find "$DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
+DUMP_ID_FILE=$(find "$DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
 if [ -z "$DUMP_ID_FILE" ]; then
     echo "DUMP_ID.txt not found, exiting."
     exit 1
 fi
 
-HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_TEMP_DIR" -empty)
+HAS_EMPTY_DIRS_OR_FILES=$(find "$DUMP_INTERMEDIATE_DIR" -empty)
 if [ -n "$HAS_EMPTY_DIRS_OR_FILES" ]; then
     echo "Empty files or dirs found, exiting."
     echo "$HAS_EMPTY_DIRS_OR_FILES"
@@ -190,11 +194,11 @@ retry rsync -a "$DUMP_DIR/" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"
 chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR/$SUB_DIR/$DUMP_NAME/"*
 echo "Dumps copied to backup directory!"
 
-HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_TEMP_DIR" -empty)
+HAS_EMPTY_PRIVATE_DIRS_OR_FILES=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -empty)
 if [ -z "$HAS_EMPTY_PRIVATE_DIRS_OR_FILES" ]; then
     # private dumps directory is not empty
 
-    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_TEMP_DIR" -type f -name 'DUMP_ID.txt')
+    PRIVATE_DUMP_ID_FILE=$(find "$PRIVATE_DUMP_INTERMEDIATE_DIR" -type f -name 'DUMP_ID.txt')
     if [ -z "$PRIVATE_DUMP_ID_FILE" ]; then
         echo "DUMP_ID.txt not found, exiting."
         exit 1
