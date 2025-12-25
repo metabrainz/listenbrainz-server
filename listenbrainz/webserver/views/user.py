@@ -363,6 +363,29 @@ def legacy_year_in_music(user_name, year: int):
     return jsonify(response)
 
 
+@user_bp.get("/<mb_username:user_name>/year-in-music/<int:year>/")
+def year_in_music_get(user_name, year: int):
+    """ Get Year in Music data for a user """
+    user = _get_user(user_name)
+    if not user:
+        og_meta_tags = None
+    else:
+        current_app.config['SERVER_ROOT_URL'] = "https://test.listenbrainz.org"
+        url = f'{current_app.config["SERVER_ROOT_URL"]}/user/{user_name}/year-in-music/{year}/'
+        title = f"ListenBrainz {year} Year in Music for {user_name}"
+        description = f'Check out the music review for {year} that @ListenBrainz created from my listening history!'
+        image = f"{current_app.config['SERVER_ROOT_URL']}/static/img/explore/year-in-music.png"
+
+        og_meta_tags = {
+            "title": title,
+            "description": description,
+            "url": url,
+            "image": image,
+            "image:type": "image/png",
+        }
+
+    return render_template("index.html", og_meta_tags=og_meta_tags, user=user)
+
 @user_bp.post("/<mb_username:user_name>/year-in-music/<int:year>/")
 def year_in_music(user_name, year: int):
     """ Year in Music """

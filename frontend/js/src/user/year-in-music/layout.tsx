@@ -6,7 +6,7 @@ import tinycolor from "tinycolor2";
 import queryClient from "../../utils/QueryClient";
 import { RouteQuery } from "../../utils/Loader";
 import { getYearColors, LATEST_YEAR_IN_MUSIC_YEAR } from "./YearInMusic";
-import SEO, { YIMYearMetaTags } from "./SEO";
+import { YIMSEO } from "./SEO";
 import YIMYearSelection from "./components/YIMYearSelection";
 import Loader from "../../components/Loader";
 
@@ -28,7 +28,7 @@ const getLoaderURL = () => {
     /^\/user\/([^/]+)\/year-in-music(?:\/([^/]+))?\/?$/
   );
   if (!match) {
-    throw new Error("Invalid year-in-music URL");
+    return null;
   }
   const [, username] = match;
   return new URL(`/user/${username}/year-in-music/`, window.location.origin);
@@ -43,7 +43,7 @@ function YearInMusicLayout() {
 
   const loaderUrl = getLoaderURL();
   const { data, isLoading } = useQuery<YearInMusicLayoutProps>(
-    RouteQuery([`year-in-music-layout`], loaderUrl.toString())
+    RouteQuery([`year-in-music-layout`], loaderUrl?.toString() || "")
   );
 
   const fallbackUser = { name: userName ?? "" };
@@ -56,8 +56,7 @@ function YearInMusicLayout() {
 
   return (
     <>
-      <SEO year={year} userName={user.name} />
-      <YIMYearMetaTags />
+      <YIMSEO year={year} userName={user.name} />
       <div className="secondary-nav">
         <ol className="breadcrumb">
           <li>
@@ -124,6 +123,9 @@ function YearInMusicLayout() {
 
 export const routeQueryLoader = async () => {
   const url = getLoaderURL();
+  if (!url) {
+    return null;
+  }
 
   await queryClient.ensureQueryData({
     ...RouteQuery(["year-in-music-layout"], url.toString()),
