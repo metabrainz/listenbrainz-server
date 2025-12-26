@@ -91,6 +91,7 @@ const Preview = React.forwardRef(function PreviewComponent(
           : ""}
       </style>
       <svg
+        key={url}
         data-src={url}
         data-js="enabled"
         data-cache="21600"

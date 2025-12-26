@@ -455,7 +455,6 @@ export default function YearInMusic() {
               <div className="content-card" id="overview">
                 <div className="bg-transparent card-bg center-p mt-5 p-0">
                   <Preview
-                    key={`overview-image-${year}`}
                     className="img-fluid border-radius"
                     url={overviewImageUrl}
                     styles={{
