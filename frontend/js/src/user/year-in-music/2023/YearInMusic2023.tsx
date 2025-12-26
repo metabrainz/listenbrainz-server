@@ -41,7 +41,7 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ImageShareButtons from "./components/ImageShareButtons";
+import ImageShareButtons from "../components/ImageShareButtons";
 
 import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
@@ -49,7 +49,10 @@ import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
-import SEO, { YIMYearMetaTags } from "../SEO";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
 
 import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";

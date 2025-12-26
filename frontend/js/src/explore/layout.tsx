@@ -13,11 +13,11 @@ const links: NavbarLink[] = [
   { to: "similar-users/", label: "Similar Users" },
   { to: "lb-radio/", label: "LB Radio" },
   { to: "art-creator/", label: "Art Creator" },
-  { to: "year-in-music/2024/", label: "Year in Music 2024" },
-  { to: "year-in-music/2023/", label: "Year in Music 2023" },
-  { to: "year-in-music/2022/", label: "Year in Music 2022" },
-  { to: "year-in-music/2021/", label: "Year in Music 2021" },
-  { to: "year-in-music/", label: "Year in Music 2024" },
+  { to: "year-in-music/legacy/2024/", label: "Year in Music 2024" },
+  { to: "year-in-music/legacy/2023/", label: "Year in Music 2023" },
+  { to: "year-in-music/legacy/2022/", label: "Year in Music 2022" },
+  { to: "year-in-music/legacy/2021/", label: "Year in Music 2021" },
+  { to: "year-in-music/", label: "Year in Music" },
   { to: "ai-brainz/", label: "AI Brainz" },
 ];
 

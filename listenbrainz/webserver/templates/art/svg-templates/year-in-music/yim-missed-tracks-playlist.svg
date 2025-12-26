@@ -1,0 +1,127 @@
+{%- from 'art/svg-templates/macros.j2' import render_entity_link, render_image_link -%}
+
+<svg width="{{width}}" height="{{height}}" viewBox="0 0 924 924"
+    fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs id="defs42">
+        <linearGradient id="gradient" x1="-20%" y1="-20%" x2="100%" y2="100%"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#083b2b" />
+            <stop offset="1" stop-color="#111820" />
+        </linearGradient>
+        <clipPath id="clip">
+            <use xlink:href="#background" />
+        </clipPath>
+    </defs>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;900');
+        @import url('https://fonts.googleapis.com/css2?family=Anonymous%20Pro:wght@400;700');
+        text {
+        fill: #F0EEE2;
+        font-family: Inter, sans-serif;
+        }
+        .branding {
+        font-size: 20px;
+        letter-spacing: 0em;
+        font-weight: 900;
+        }
+        .subtitle {
+        text-anchor: middle;
+        font-size: 32px;
+        font-weight: 900;
+        }
+        .track-name, .track-name * {
+        font-size: 20px;
+        }
+        .artist-name, .artist-name * {
+        font-size: 20px;
+        font-weight: 300;
+        }
+        .accent-color-stroke {
+        stroke: {{ accent_color }};
+        }
+        stop:first-child {
+        stop-color: {{background_color_1}};
+        }
+        .bg-color-1 {
+        fill: {{background_color_1}};
+        }
+        stop:nth-child(2) {
+        stop-color: {{background_color_2}};
+        }
+        .bg-color-2 {
+        fill: {{background_color_2}};
+        }
+        .caption text tspan{
+        font-size: 18px;
+        font-weight: normal;
+        font-family: 'Anonymous Pro', sans-serif;
+        }
+        .caption text tspan:first-child{
+        font-weight:bold;
+        }
+    </style>
+    <rect
+        id="background" height="924" fill="url(#gradient)" rx="4" ry="4" width="924" y="0"
+        x="0" />
+    <rect id="content-bg" width="600" height="600" x="160" y="160" fill="#00000040"
+        class="accent-color-stroke" rx="8" ry="8" />
+    <g id="g297">
+        {% if branding != False %}
+        <g id="g1264">
+            {% if anonymous != True %}
+            <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
+            {% endif %}
+            <text class="branding" x="30" y="897" id="text1250">{{year}}</text>
+            <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
+            <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
+        </g>
+        {% endif %}
+        <text x="50%" y="90" id="my-year" class="subtitle">
+            <tspan>M</tspan>
+            <tspan dx="12">Y</tspan>
+            <tspan dx="30">Y</tspan>
+            <tspan dx="12">E</tspan>
+            <tspan dx="12">A</tspan>
+            <tspan dx="12">R</tspan>
+        </text>
+        <text x="50%" y="130" id="in-music" class="subtitle">
+            <tspan>I</tspan>
+            <tspan dx="12">N</tspan>
+            <tspan dx="30">M</tspan>
+            <tspan dx="12">U</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">I</tspan>
+            <tspan dx="12">C</tspan>
+        </text>
+        <text x="50%" y="820" id="playlist" class="subtitle">
+            <tspan>P</tspan>
+            <tspan dx="12">L</tspan>
+            <tspan dx="12">A</tspan>
+            <tspan dx="12">Y</tspan>
+            <tspan dx="12">L</tspan>
+            <tspan dx="12">I</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">T</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">:</tspan>
+        </text>
+        <text x="50%" y="860" id="missed-tracks" class="subtitle">
+            <tspan>M</tspan>
+            <tspan dx="12">I</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">S</tspan>
+            <tspan dx="12">E</tspan>
+            <tspan dx="12">D</tspan>
+            <tspan dx="30">T</tspan>
+            <tspan dx="12">R</tspan>
+            <tspan dx="12">A</tspan>
+            <tspan dx="12">C</tspan>
+            <tspan dx="12">K</tspan>
+            <tspan dx="12">S</tspan>
+        </text>
+    </g>
+    <g transform="translate({{width/2 - 250 }},{{height/2 - 250 }})">
+        {% for image in images[:9] %} {{
+        render_image_link(entity, image, show_caption) }} {% endfor %}
+    </g>
+</svg>
