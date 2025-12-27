@@ -58,7 +58,8 @@ If you are interested in helping out, consider
 
 If you are interested in contributing code or documentation,
 please have a look at the [issue tracker](https://tickets.metabrainz.org/browse/LB)
-or come visit us in the #metabrainz IRC channel on irc.libera.chat.
+or chat with us in [IRC/Matrix/Discord](https://beta.musicbrainz.org/doc/Communication/ChatBrainz)
+on the #metabrainz channel.
 
 ## Development environment
 
