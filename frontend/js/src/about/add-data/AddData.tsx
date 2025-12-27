@@ -92,7 +92,10 @@ export default function AddData() {
           </em>
           , cross-platform multimedia player:{" "}
           <a href="https://gist.github.com/madeindjs/f33225cf4d8fdc9f61e0fe3ebe2dcce7">
-            <code>MPV Listenbrainz plugin</code>
+            <code>plugin</code>
+            ,{" "}
+          <a href="https://github.com/kufern/mpv-listenbrainz-windows/">
+            <code>plugin (Windows)</code>
           </a>
         </li>
         <li>
@@ -158,7 +161,7 @@ export default function AddData() {
           <a href="https://github.com/Inrixia/TidaLuna">
             <code>TidaLuna client mod</code>
           </a>
-          +{" "}
+          {" "}+{" "}
           <a href="https://github.com/Inrixia/neptune-plugins?tab=readme-ov-file#listenbrainz">
             <code>ListenBrainz plugin</code>
           </a>
