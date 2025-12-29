@@ -64,8 +64,7 @@ export default function ExplorePage() {
           name="Year in Music"
           desc="COMING SOON! Explore your yearly stats"
           img_name="year-in-music.png"
-          // url="/my/year-in-music/"
-          url=""
+          url="/my/year-in-music/"
         />
         <ExploreCard
           name="Link listens"
