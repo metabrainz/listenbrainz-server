@@ -3,7 +3,11 @@ import * as React from "react";
 import { toast } from "react-toastify";
 import { isEmpty, isNil, isUndefined, last } from "lodash";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCopy, faShareAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCopy,
+  faExternalLink,
+  faShareAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
@@ -613,7 +617,54 @@ export default function YearInMusic() {
           />
         )}
 
-        {/* ADD Community Year in Music tools ♡HERE */}
+        <div className="section">
+          <div className="header">
+            Year in Music tools made by community members &#60;3
+          </div>
+          <div
+            className="m-auto flex justify-content-center"
+            style={{ gap: "4em" }}
+          >
+            <a
+              className="outline-card position-relative"
+              href="https://rustynova016.github.io/Alistral/installing.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FontAwesomeIcon
+                icon={faExternalLink}
+                className="position-absolute"
+                style={{ right: "20px", fontSize: "1.5em" }}
+              />
+              <div className="flex flex-column h-100 small-stat">
+                <span>by RustyNova</span>
+                <div className="value" style={{ fontSize: "1.6em" }}>
+                  Alistral
+                </div>
+                <span>In depth stats for the command-line savvy</span>
+              </div>
+            </a>
+            <a
+              className="outline-card position-relative"
+              href="https://wrapped.devmatei.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FontAwesomeIcon
+                icon={faExternalLink}
+                className="position-absolute"
+                style={{ right: "20px", fontSize: "1.5em" }}
+              />
+              <div className="flex flex-column h-100 small-stat">
+                <span>by DevMatei</span>
+                <div className="value" style={{ fontSize: "1.6em" }}>
+                  Make a Wrapped
+                </div>
+                <span>A shareable poster in a recognisable style</span>
+              </div>
+            </a>
+          </div>
+        </div>
 
         <div className="section">
           {userShareBar}
