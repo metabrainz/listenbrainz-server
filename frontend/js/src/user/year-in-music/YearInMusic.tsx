@@ -36,7 +36,6 @@ import YIMFriends from "./components/YIMFriends";
 import AlbumsCoverflow from "./components/AlbumsCoverflow";
 import YIMSimilarUsers from "./components/YIMSimilarUsers";
 import { COLOR_LB_BLUE } from "../../utils/constants";
-import Preview from "../../explore/art-creator/components/Preview";
 import Loader from "../../components/Loader";
 import YIMArtistEvolution from "./components/YIMArtistEvolution";
 import YIMGenreActivity from "./components/YIMGenreActivity";
@@ -458,15 +457,13 @@ export default function YearInMusic() {
             <div className="section">
               <div className="content-card" id="overview">
                 <div className="bg-transparent card-bg center-p mt-5 p-0">
-                  <Preview
-                    className="img-fluid border-radius"
-                    url={overviewImageUrl}
-                    styles={{
-                      textColor,
-                      bgColor1: gradientColors[0],
-                      bgColor2: last(gradientColors),
-                    }}
-                  />
+                  <object data={overviewImageUrl} type="image/svg+xml">
+                    <img
+                      src={overviewImageUrl}
+                      alt="Year in Music"
+                      className="img-fluid border-radius"
+                    />
+                  </object>
                 </div>
                 <div className="yim-share-button-container">
                   <ImageShareButtons

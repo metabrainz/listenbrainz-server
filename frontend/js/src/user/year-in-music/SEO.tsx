@@ -198,7 +198,7 @@ export function YIMSEO(props: SEOProps) {
         {`
         @font-face {
           font-family: "Inter";
-          src: url("/static/fonts/Inter-variable.ttf");
+          src: url("/static/fonts/Inter-variable.ttf") format("truetype");
         }
         section.footer{
           display: none;
