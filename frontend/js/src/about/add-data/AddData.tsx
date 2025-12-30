@@ -93,6 +93,7 @@ export default function AddData() {
           , cross-platform multimedia player:{" "}
           <a href="https://gist.github.com/madeindjs/f33225cf4d8fdc9f61e0fe3ebe2dcce7">
             <code>plugin</code>
+          </a>
             ,{" "}
           <a href="https://github.com/kufern/mpv-listenbrainz-windows/">
             <code>plugin (Windows)</code>
