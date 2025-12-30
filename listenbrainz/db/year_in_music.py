@@ -281,14 +281,12 @@ def notify_yim_users(db_conn, ts_conn, year):
     rows = result.fetchall()
 
     for row in rows:
-        user_name = sanitize_username(row.musicbrainz_id)
-
         # cannot use url_for because we do not set SERVER_NAME and
         # a request_context will not be available in this script.
         base_url = "https://listenbrainz.org"
-        link_to_year_in_music = f"{base_url}/user/{user_name}/year-in-music/{year}/"
+        link_to_year_in_music = f"{base_url}/user/{row.musicbrainz_id}/year-in-music/{year}/"
         params = {
-            "user_name": user_name,
+            "user_name": row.musicbrainz_id,
             "year": year,
             "link_to_year_in_music": link_to_year_in_music,
             "logo_cid": logo_cid[1:-1]
@@ -299,20 +297,22 @@ def notify_yim_users(db_conn, ts_conn, year):
                 subject=f"Year In Music {year}",
                 content=render_template("emails/year_in_music.txt", **params),
                 to_email=row.email,
-                to_name=user_name,
+                to_name=sanitize_username(row.musicbrainz_id),
                 html=render_template("emails/year_in_music.html", **params),
                 logo_cid=logo_cid,
                 logo=logo,
                 filename="yim-email-header.png"
             )
         except Exception:
-            current_app.logger.error("Could not send YIM email to %s", user_name, exc_info=True)
+            current_app.logger.error("Could not send YIM email to %s", row.musicbrainz_id, exc_info=True)
 
         # create timeline event too
         timeline_message = f'ListenBrainz\' very own retrospective on {year} has just dropped: Check out ' \
                            f'your own <a href="{link_to_year_in_music}">Year in Music</a> now!'
         metadata = NotificationMetadata(creator="troi-bot", message=timeline_message)
         create_user_notification_event(db_conn, row.user_id, metadata)
+
+    return None
 
 
 def process_genre_data(yim_top_genre: list, data: list, user_name: str):
