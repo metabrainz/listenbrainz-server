@@ -4,6 +4,7 @@ import json
 import uuid
 from unittest import mock
 
+from listenbrainz.background.background_tasks import get_task
 from listenbrainz.db import user as db_user
 
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -59,9 +60,6 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         payload = {
             "user_id": 123,
             "name": "newuser",
-            "email": "newuser@example.com",
-            "is_email_confirmed": False,
-            "created_at": "2025-11-01T10:30:00.000000+00:00"
         }
 
         response, delivery_id = self._send_webhook("user.created", payload)
@@ -76,9 +74,6 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         payload = {
             "user_id": 123,
             "name": "newuser",
-            "email": "newuser@example.com",
-            "is_email_confirmed": False,
-            "created_at": "2025-11-01T10:30:00.000000+00:00"
         }
 
         response, delivery_id = self._send_webhook("user.created", payload, secret="wrong_secret_here")
@@ -156,9 +151,6 @@ class WebhookReceiverTestCase(IntegrationTestCase):
         payload = {
             "user_id": 999,
             "name": "erroruser",
-            "email": "error@example.com",
-            "is_email_confirmed": False,
-            "created_at": "2025-11-01T10:30:00.000000+00:00"
         }
 
         response, delivery_id = self._send_webhook("user.created", payload)
@@ -204,3 +196,89 @@ class WebhookReceiverTestCase(IntegrationTestCase):
 
         self.assert401(response)
         self.assertIn("Invalid signature", response.json["error"])
+
+    def test_user_updated(self):
+        payload = {
+            "user_id": 456,
+            "name": "oldusername",
+        }
+        response, _ = self._send_webhook("user.created", payload)
+        self.assert200(response)
+
+        update_payload = {
+            "user_id": 456,
+            "old": {"username": "oldusername"},
+            "new": {"username": "newusername"}
+        }
+        response, _ = self._send_webhook("user.updated", update_payload)
+        self.assert200(response)
+
+        user = db_user.get_by_mb_row_id(self.db_conn, 456, fetch_email=True)
+        self.assertEqual(user["musicbrainz_id"], "newusername")
+
+        update_payload = {
+            "user_id": 456,
+            "old": {},
+            "new": {"email": "new@example.com"}
+        }
+        response, _ = self._send_webhook("user.updated", update_payload)
+        self.assert200(response)
+
+        user = db_user.get_by_mb_row_id(self.db_conn, 456, fetch_email=True)
+        self.assertEqual(user["musicbrainz_id"], "newusername")
+        self.assertEqual(user["email"], "new@example.com")
+
+        update_payload = {
+            "user_id": 456,
+            "old": {"username": "newusername", "email": "new@example.com"},
+            "new": {"username": "user-456", "email": "user-456@example.com"}
+        }
+        response, _ = self._send_webhook("user.updated", update_payload)
+        self.assert200(response)
+
+        user = db_user.get_by_mb_row_id(self.db_conn, 456, fetch_email=True)
+        self.assertEqual(user["musicbrainz_id"], "user-456")
+        self.assertEqual(user["email"], "user-456@example.com")
+
+        update_payload = {
+            "user_id": 99999,
+            "old": {"username": "nonexistent"},
+            "new": {"username": "newname"}
+        }
+        response, _ = self._send_webhook("user.updated", update_payload)
+        self.assert200(response)
+
+        user = db_user.get_by_mb_row_id(self.db_conn, 99999, fetch_email=True)
+        self.assertIsNone(user)
+
+    def test_user_deleted(self):
+        delete_payload = {"user_id": 99999}
+        response, _ = self._send_webhook("user.deleted", delete_payload)
+        self.assert200(response)
+
+        with self.app.app_context():
+            task = get_task()
+        self.assertIsNone(task)
+
+        payload = {
+            "user_id": 789,
+            "name": "deleteuser",
+            "email": "delete@example.com",
+            "is_email_confirmed": False,
+            "created_at": "2025-11-01T10:30:00.000000+00:00"
+        }
+        response, _ = self._send_webhook("user.created", payload)
+        self.assert200(response)
+
+        user = db_user.get_by_mb_row_id(self.db_conn, 789, fetch_email=True)
+        user_id = user["id"]
+
+        delete_payload = {"user_id": 789}
+        response, _ = self._send_webhook("user.deleted", delete_payload)
+        self.assert200(response)
+
+        with self.app.app_context():
+            task = get_task()
+        self.assertIsNotNone(task)
+        self.assertEqual(task.user_id, user_id)
+        self.assertEqual(task.task, "delete_user")
