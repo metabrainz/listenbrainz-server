@@ -67,8 +67,7 @@ export default function GDPR() {
           </p>
           <p>
             If you change your mind about processing your listening history, you
-            will need to{" "}
-            <a href="/login/musicbrainz">delete your ListenBrainz account</a>.
+            will need to delete your ListenBrainz account.
           </p>
           <input
             type="radio"

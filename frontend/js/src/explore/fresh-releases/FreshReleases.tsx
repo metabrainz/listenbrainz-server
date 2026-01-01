@@ -4,12 +4,12 @@ import Spinner from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRss } from "@fortawesome/free-solid-svg-icons";
 import NiceModal from "@ebay/nice-modal-react";
 import GlobalAppContext from "../../utils/GlobalAppContext";
 import { ToastMsg } from "../../notifications/Notifications";
+import buildAuthUrl from "../../utils/auth";
 import ReleaseFilters from "./components/ReleaseFilters";
 import ReleaseTimeline from "./components/ReleaseTimeline";
 import Pill from "../../components/Pill";
@@ -110,7 +110,6 @@ type FreshReleasesData = {
 
 export default function FreshReleases() {
   const { APIService, currentUser } = React.useContext(GlobalAppContext);
-  const navigate = useNavigate();
 
   const isLoggedIn: boolean = Object.keys(currentUser).length !== 0;
 
@@ -294,7 +293,7 @@ export default function FreshReleases() {
       { toastId: "login-error" }
     );
 
-    navigate("/login");
+    window.location.href = buildAuthUrl("login");
   };
 
   return (

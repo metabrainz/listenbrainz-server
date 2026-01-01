@@ -2,27 +2,37 @@ import * as React from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { FeedModes } from "./types";
+import buildAuthUrl from "../utils/auth";
 
 function NavItem({
   label,
   url,
   isActive,
-  isDisabled,
+  loginRequired,
+  loggedIn,
 }: {
   label: string;
   url: string;
   isActive: boolean;
-  isDisabled?: boolean;
+  loginRequired?: boolean;
+  loggedIn?: boolean;
 }) {
+  const disable = loginRequired && !loggedIn;
   return (
     <li
       className={`nav-item ${isActive ? "active" : ""} ${
-        isDisabled ? "disabled" : ""
+        disable ? "disabled" : ""
       }`}
     >
-      <NavLink end className="nav-link" to={url}>
-        {label}
-      </NavLink>
+      {disable ? (
+        <a className="nav-link" href={buildAuthUrl("login", url)}>
+          {label}
+        </a>
+      ) : (
+        <NavLink end className="nav-link" to={url}>
+          {label}
+        </NavLink>
+      )}
     </li>
   );
 }
@@ -32,7 +42,7 @@ function UserFeedLayout() {
   const locationArr = location?.pathname?.split("/").filter(Boolean);
   const { currentUser } = React.useContext(GlobalAppContext);
 
-  const loggedIn = currentUser?.name;
+  const loggedIn = Boolean(currentUser?.name);
 
   const [activeSection, setActiveSection] = React.useState<string>(
     locationArr.at(-1) ?? ""
@@ -48,22 +58,20 @@ function UserFeedLayout() {
         <ul className="nav nav-tabs" role="tablist">
           <NavItem
             label="My Feed"
-            url={loggedIn ? "/feed/" : `/login/?next=/feed/`}
+            url="/feed/"
             isActive={activeSection === "feed"}
-            isDisabled={!loggedIn}
+            loggedIn={loggedIn}
+            loginRequired
           />
           <NavItem
             label="My Network"
-            url={
-              loggedIn
-                ? `/feed/${FeedModes.Follows}/`
-                : `/login/?next=/feed/${FeedModes.Follows}/`
-            }
+            url={`/feed/${FeedModes.Follows}/`}
             isActive={
               activeSection === FeedModes.Follows ||
               activeSection === FeedModes.Similar
             }
-            isDisabled={!loggedIn}
+            loggedIn={loggedIn}
+            loginRequired
           />
           <NavItem
             label="Global"

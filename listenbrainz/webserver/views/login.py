@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, render_template, url_for, session, current_app
+from flask import Blueprint, request, redirect, url_for, session, current_app
 from flask_login import login_user, logout_user, login_required
 from markupsafe import Markup
 
@@ -13,21 +13,14 @@ from listenbrainz.webserver.login.provider import MusicBrainzAuthSessionError, M
 login_bp = Blueprint('login', __name__)
 
 
-@login_bp.get('/')
-@web_musicbrainz_needed
-@web_listenstore_needed
-@login_forbidden
-def index():
-    return render_template('index.html')
-
-
 @login_bp.get('/musicbrainz/')
 @web_musicbrainz_needed
 @web_listenstore_needed
 @login_forbidden
 def musicbrainz():
-    session['next'] = request.args.get('next')
-    return redirect(provider.get_authentication_uri())
+    session["next"] = request.args.get("next")
+    login_hint = request.args.get("login_hint")
+    return redirect(provider.get_authentication_uri(login_hint=login_hint))
 
 
 @login_bp.get('/musicbrainz/post/')

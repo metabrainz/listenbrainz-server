@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 import sqlalchemy
 import uuid
@@ -34,6 +34,7 @@ def create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str, email: str = N
     result = db_conn.execute(text("""
         INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, email)
              VALUES (:mb_id, :mb_row_id, :token, :email)
+        ON CONFLICT DO NOTHING
           RETURNING id
     """), {
         "mb_id": musicbrainz_id,
@@ -42,7 +43,14 @@ def create(db_conn, musicbrainz_row_id: int, musicbrainz_id: str, email: str = N
         "email": email,
     })
     db_conn.commit()
-    return result.fetchone().id
+    if (row := result.first()) is not None:
+        return row.id
+
+    result = db_conn.execute(
+        text("""SELECT id FROM "user" WHERE musicbrainz_row_id = :mb_row_id"""),
+        {"mb_row_id": musicbrainz_row_id}
+    )
+    return result.first().id
 
 
 def update_token(db_conn, id):
@@ -357,7 +365,7 @@ def agree_to_gdpr(db_conn, musicbrainz_id):
             "Couldn't update gdpr agreement for user: %s" % str(err))
 
 
-def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
+def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None, *, fetch_email: bool = False) -> dict[str, Any] | None:
     """ Get user with specified MusicBrainz row id.
 
     Note: this function also optionally takes a MusicBrainz username to fall back on
@@ -367,9 +375,12 @@ def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
         db_conn: database connection
         musicbrainz_row_id (int): the MusicBrainz row ID of the user
         musicbrainz_id (str): the MusicBrainz username of the user
+        fetch_email: whether to return email in response
 
     Returns: a dict representing the user if found, else None.
     """
+    columns = USER_GET_COLUMNS + ["email"] if fetch_email else USER_GET_COLUMNS
+
     filter_str = ''
     filter_data = {}
     if musicbrainz_id:
@@ -383,7 +394,7 @@ def get_by_mb_row_id(db_conn, musicbrainz_row_id, musicbrainz_id=None):
           FROM "user"
          WHERE musicbrainz_row_id = :musicbrainz_row_id
          {optional_filter}
-    """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
+    """.format(columns=','.join(columns), optional_filter=filter_str)), filter_data)
 
     return result.mappings().first()
 
