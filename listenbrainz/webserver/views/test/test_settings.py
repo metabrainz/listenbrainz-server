@@ -63,7 +63,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests user info view when not logged in"""
         profile_info_url = self.custom_url_for('settings.index', path='')
         response = self.client.get(profile_info_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=profile_info_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=profile_info_url))
 
     def test_delete_listens(self):
         """Tests delete listens end point"""
@@ -79,7 +79,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         """Tests delete listens view when not logged in"""
         delete_listens_url = self.custom_url_for('settings.index', path='delete-listens')
         response = self.client.get(delete_listens_url)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=delete_listens_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=delete_listens_url))
 
         response = self.client.post(delete_listens_url)
         self.assert401(response)
@@ -96,7 +96,7 @@ class SettingsViewsTestCase(IntegrationTestCase):
         select_timezone_url = self.custom_url_for('settings.index', path='select_timezone')
         response = self.client.get(select_timezone_url)
         self.assertStatus(response, 302)
-        self.assertRedirects(response, self.custom_url_for('login.index', next=select_timezone_url))
+        self.assertRedirects(response, self.custom_url_for('login.musicbrainz', next=select_timezone_url))
 
     def test_music_services_details(self):
         self.temporary_login(self.user['login_id'])

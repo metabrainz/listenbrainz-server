@@ -29,11 +29,11 @@ import { isNumber, throttle } from "lodash";
 import { Link, Navigate, useLocation, useSearchParams } from "react-router";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
 import NumberCounter from "./NumberCounter";
 import Blob from "./Blob";
 import GlobalAppContext from "../utils/GlobalAppContext";
 import { RouteQuery } from "../utils/Loader";
+import buildAuthUrl from "../utils/auth";
 
 type HomePageProps = {
   listenCount: number;
@@ -65,15 +65,6 @@ function HomePage() {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
-
-  const buildAuthUrl = useCallback((loginHint: string) => {
-    const next = window.document.location.href;
-    const params = new URLSearchParams({ login_hint: loginHint });
-    if (next) {
-      params.set("next", next);
-    }
-    return `/login/musicbrainz/?${params.toString()}`;
   }, []);
 
   const createAccountButton = (
