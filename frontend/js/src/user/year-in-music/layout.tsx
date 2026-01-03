@@ -23,30 +23,20 @@ type YearInMusicLayoutProps = {
   data: YearInMusicLayoutData[];
 };
 
-const getLoaderURL = () => {
-  const match = window.location.pathname.match(
-    /^\/user\/([^/]+)\/year-in-music(?:\/([^/]+))?\/?$/
-  );
-  if (!match) {
-    return null;
-  }
-  const [, username] = match;
-  return new URL(`/user/${username}/year-in-music/`, window.location.origin);
-};
-
 function YearInMusicLayout() {
-  const { year: yearParam, userName } = useParams<{
+  const params = useParams();
+  const { year: yearParam, username } = params as {
     year: string;
-    userName: string;
-  }>();
+    username: string;
+  };
   const year = Number(yearParam) || LATEST_YEAR_IN_MUSIC_YEAR;
 
-  const loaderUrl = getLoaderURL();
+  const loaderUrl = `/user/${username}/year-in-music/`;
   const { data, isLoading } = useQuery<YearInMusicLayoutProps>(
-    RouteQuery([`year-in-music-layout`], loaderUrl?.toString() || "")
+    RouteQuery([`year-in-music-layout`, username], loaderUrl)
   );
 
-  const fallbackUser = { name: userName ?? "" };
+  const fallbackUser = { name: username ?? "" };
   const { user = fallbackUser, data: yearInMusicData = [] } = data || {};
   const encodedUsername = encodeURIComponent(user.name);
 
@@ -121,14 +111,19 @@ function YearInMusicLayout() {
   );
 }
 
-export const routeQueryLoader = async () => {
-  const url = getLoaderURL();
-  if (!url) {
+export const routeQueryLoader = async ({
+  params,
+}: {
+  params: { username?: string };
+}) => {
+  const { username } = params;
+  if (!username) {
     return null;
   }
+  const url = `/user/${username}/year-in-music/`;
 
   await queryClient.ensureQueryData({
-    ...RouteQuery(["year-in-music-layout"], url.toString()),
+    ...RouteQuery(["year-in-music-layout", username], url),
   });
   return null;
 };

@@ -7,7 +7,7 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 from listenbrainz_spark.year_in_music.utils import setup_listens_for_year
 
 TOP_GENRES_PER_HOUR = 10
-USERS_PER_MESSAGE = 1000
+USERS_PER_MESSAGE = 750
 
 
 def get_genre_activity(year):

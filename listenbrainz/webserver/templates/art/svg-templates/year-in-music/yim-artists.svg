@@ -77,7 +77,7 @@
             {% if anonymous != True %}
             <text class="branding" x="30" y="43" id="text1248">{{user_name|upper|e}}</text>
             {% endif %}
-            <text class="branding" x="30" y="897" id="text1250">10 TOP ALBUMS OF {{year}}</text>
+            <text class="branding" x="30" y="897" id="text1250">10 TOP ARTISTS OF {{year}}</text>
             <text class="branding" x="894" y="897" id="text1246" text-anchor="end">LISTENBRAINZ</text>
             <text class="branding" x="894" y="43" id="text1252" text-anchor="end">#YEARINMUSIC</text>
         </g>
@@ -94,7 +94,7 @@
                     {% endif %}
                 </tspan>
                 <tspan x="90" y="{{ y_start + loop.index0 * gap }}"
-                    id="artist-{{ loop.index }}-album">
+                    id="artist-{{ loop.index }}">
                     {{ render_entity_link("artist", artist.artist_mbid, artist.artist_name) }}
                 </tspan>
             </text>

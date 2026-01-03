@@ -127,7 +127,7 @@ export default function YIMYearSelection({
         }
         return (
           <Link
-            key={availableYear}
+            key={`${encodedUsername}-${availableYear}`}
             to={`./${availableYear}/`}
             ref={isSelectedYear ? selectedRef : null}
             className={`year-item ${isSelectedYear ? "selected" : ""}`}
