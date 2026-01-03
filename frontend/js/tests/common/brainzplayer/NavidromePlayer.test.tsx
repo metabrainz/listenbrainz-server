@@ -361,7 +361,12 @@ describe("NavidromePlayer", () => {
         },
       };
 
-      await playerRef.current?.searchAndPlayTrack(listen);
+      const abortController = new AbortController();
+      await playerRef.current?.searchAndPlayTrack(
+        listen,
+        abortController.signal,
+        abortController
+      );
 
       expect(defaultProps.handleWarning).toHaveBeenCalledWith(
         "We are missing a track title and artist name to search on Navidrome",
@@ -391,7 +396,12 @@ describe("NavidromePlayer", () => {
         },
       };
 
-      await playerRef.current?.searchAndPlayTrack(listen);
+      const abortController = new AbortController();
+      await playerRef.current?.searchAndPlayTrack(
+        listen,
+        abortController.signal,
+        abortController
+      );
 
       expect(defaultProps.handleWarning).toHaveBeenCalledWith(
         "Navidrome authentication not available. Please check your connection.",
