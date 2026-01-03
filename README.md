@@ -53,6 +53,19 @@ the MetaBrainz site.
 
 ## Contributing
 
+## Quick Start for New Contributors
+
+1. Fork the repository on GitHub.
+2. Clone your fork locally:
+   git clone https://github.com/<your-username>/listenbrainz-server.git
+3. Follow the development environment documentation to set up dependencies.
+4. Run the server locally and ensure basic services start correctly.
+5. Make a small change (documentation or code) and submit a pull request.
+
+### Getting Help
+If you are new, you can ask questions in the #metabrainz IRC channel on irc.libera.chat.
+
+
 If you are interested in helping out, consider
 [donating](https://metabrainz.org/donate) to the MetaBrainz Foundation.
 
