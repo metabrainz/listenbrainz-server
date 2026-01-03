@@ -5,6 +5,8 @@ from markupsafe import Markup
 import listenbrainz.db.user as db_user
 import listenbrainz.db.year_in_music as db_yim
 import listenbrainz.db.playlist as db_playlist
+from listenbrainz.db import popularity
+from listenbrainz.db.metadata import get_metadata_for_artist
 
 from brainzutils.ratelimit import ratelimit
 from flask import request, render_template, Blueprint, current_app
@@ -249,6 +251,106 @@ def cover_art_grid_stats(user_name, time_range, dimension, layout, image_size):
                            show_caption=show_caption), 200, {
                                'Content-Type': 'image/svg+xml'
                            }
+
+
+@art_api_bp.get("/artist-grid/<uuid:artist_mbid>/<int:dimension>/<int:layout>/<int:image_size>")
+@crossdomain
+@ratelimit()
+def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
+    """
+    Create a cover art grid SVG file from the release groups of a given artist.
+
+    :param artist_mbid: MusicBrainz ID of the artist.
+    :type artist_mbid: ``uuid``
+    :param dimension: The dimension to use for this grid. A grid of dimension 3 has 3 images across
+                      and 3 images down, for a total of 9 images.
+    :type dimension: ``int``
+    :param layout: The layout to be used for this grid. Layout 0 is always a simple grid, but other layouts
+                   may have image images be of different sizes. See https://art.listenbrainz.org for examples
+                   of the available layouts.
+    :type layout: ``int``
+    :param image_size: The size of the cover art image. See constants at the bottom of this document.
+    :type image_size: ``int``
+
+    :statuscode 200: Cover art grid SVG generated successfully.
+    :statuscode 400: Invalid parameters or insufficient cover art.
+    :statuscode 404: Artist not found in metadata cache.
+    :resheader Content-Type: *image/svg+xml*
+    """
+     
+    try:
+        grid_design = CoverArtGenerator.GRID_TILE_DESIGNS[dimension][layout]
+    except IndexError:
+        raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}")
+
+    artist_data = get_metadata_for_artist(ts_conn, [str(artist_mbid)])
+    if not artist_data:
+        raise APINotFound(f"Artist {artist_mbid} not found")
+
+    release_groups = artist_data[0].release_group_data
+    release_group_mbids = [rg["mbid"] for rg in release_groups]
+
+    popularity_data, _ = popularity.get_counts(
+        ts_conn, "release_group", release_group_mbids
+    )
+
+    for rg, pop in zip(release_groups, popularity_data):
+        rg["total_listen_count"] = pop["total_listen_count"]
+
+    release_groups.sort(
+        key=lambda rg: rg.get("total_listen_count") or 0,
+        reverse=True
+    )
+
+    release_groups = release_groups[:100]
+
+    images = []
+    for rg in release_groups:
+        if rg.get("caa_id") and rg.get("caa_release_mbid"):
+            images.append({
+                "entity_mbid": rg["mbid"],
+                "title": rg["name"],
+                "artist": rg["artist_credit_name"],
+                "caa_id": rg["caa_id"],
+                "caa_release_mbid": rg["caa_release_mbid"],
+            })
+
+    if not images:
+        raise APIBadRequest("Not enough cover art to generate artist grid")
+
+    images = _repeat_images(images, len(grid_design))
+
+    cac = CoverArtGenerator(
+        current_app.config["MB_DATABASE_URI"],
+        dimension,
+        image_size,
+        background="transparent",
+        skip_missing=True,
+        show_caa=False,
+        show_caption=False,
+        server_root_url=current_app.config["SERVER_ROOT_URL"],
+    )
+
+    if (err := cac.validate_parameters()) is not None:
+        raise APIBadRequest(err)
+
+    cover_art_images = cac.generate_from_caa_ids(
+        images,
+        layout=layout,
+        cover_art_size=250 if image_size < 1000 else 500,
+    )
+
+    return render_template(
+        "art/svg-templates/simple-grid.svg",
+        background="transparent",
+        images=cover_art_images,
+        entity="release_group",
+        width=image_size,
+        height=image_size,
+        show_caption=False,
+    ), 200, {
+        "Content-Type": "image/svg+xml"
+    }
 
 
 @art_api_bp.get("/<custom_name>/<mb_username:user_name>/<time_range>/<int:image_size>")
