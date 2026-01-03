@@ -315,4 +315,18 @@ def import_feedback():
         counts = lastfm.import_feedback(user["id"], data["user_name"])
         return jsonify(counts)
 
+    if data["service"] == "navidrome":
+        if not all(k in data for k in ("navidrome_url", "auth_token", "salt", "user_name")):
+             raise APIBadRequest("Missing required Navidrome credentials (navidrome_url, auth_token, salt, user_name)")
+        
+        from listenbrainz.domain import navidrome
+        counts = navidrome.import_starred_tracks(
+            user["id"], 
+            data["navidrome_url"], 
+            data["auth_token"], 
+            data["salt"], 
+            data["user_name"]
+        )
+        return jsonify(counts)
+
     return APIBadRequest(f"Service {data['service']} is not supported for feedback import.")
