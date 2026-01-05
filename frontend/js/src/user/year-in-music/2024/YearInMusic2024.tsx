@@ -47,14 +47,17 @@ import {
   getStatsArtistLink,
 } from "../../../utils/utils";
 import { getEntityLink } from "../../stats/utils";
-import ImageShareButtons from "../2023/components/ImageShareButtons";
+import ImageShareButtons from "../components/ImageShareButtons";
 import ListenCard from "../../../common/listens/ListenCard";
 import UserListModalEntry from "../../components/follow/UserListModalEntry";
 import { JSPFTrackToListen } from "../../../playlists/utils";
 import CustomChoropleth from "../../stats/components/Choropleth";
 import { ToastMsg } from "../../../notifications/Notifications";
 import FollowButton from "../../components/follow/FollowButton";
-import SEO, { YIMYearMetaTags } from "../SEO";
+import {
+  LegacyYIMSEO as SEO,
+  LegacyYIMYearMetaTags as YIMYearMetaTags,
+} from "../SEO";
 import { RouteQuery } from "../../../utils/Loader";
 import { YearInMusicProps } from "../2023/YearInMusic2023";
 import { setAmbientQueueAtom } from "../../../common/brainzplayer/BrainzPlayerAtoms";
@@ -588,7 +591,7 @@ export default class YearInMusic extends React.Component<
         }}
       >
         <SEO year={2024} userName={user?.name} />
-        <YIMYearMetaTags year={2024} backgroundColor={backgroundColor} />
+        <YIMYearMetaTags year={2024} />
         <div id="main-header">
           <div className="color-picker">
             <div>Choose a season</div>
@@ -621,32 +624,17 @@ export default class YearInMusic extends React.Component<
               alt="Your year in music 2024"
             />
           ) : (
-            <>
-              <span
-                className="masked-image"
-                style={{
-                  WebkitMaskImage:
-                    "url('/static/img/legacy-year-in-music/year-in-music-24/flower.png')",
-                  marginTop: "6vh",
-                }}
-              >
-                <img
-                  src="/static/img/legacy-year-in-music/year-in-music-24/flower.png"
-                  alt="Your year in music 2024"
-                />
-              </span>
-              <div className="no-yim-message">
-                <p className="center-p">Oh no!</p>
-                <p className="center-p">
-                  We don&apos;t have enough 2024 statistics for {user.name}.
-                </p>
-                <p className="center-p">
-                  <Link to="/settings/music-services/details/">Submit</Link>{" "}
-                  enough listens before the end of December to generate your
-                  #yearinmusic next year.
-                </p>
-              </div>
-            </>
+            <div className="no-yim-message">
+              <p className="center-p">Oh no!</p>
+              <p className="center-p">
+                We don&apos;t have enough 2024 statistics for {user.name}.
+              </p>
+              <p className="center-p">
+                <Link to="/settings/music-services/details/">Submit</Link>{" "}
+                enough listens before the end of December to generate your
+                #yearinmusic next year.
+              </p>
+            </div>
           )}
           <div className="user-name">{user.name}</div>
           <div className="arrow-down" />

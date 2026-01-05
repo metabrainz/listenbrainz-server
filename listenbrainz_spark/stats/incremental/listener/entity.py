@@ -26,7 +26,7 @@ class EntityListenerStatsQueryProvider(QueryProvider, abc.ABC):
 class EntityListenerStatsMessageCreator(UserStatsMessageCreator):
 
     def items_per_message(self):
-        return 10000
+        return 500
 
     @property
     def default_database_prefix(self):

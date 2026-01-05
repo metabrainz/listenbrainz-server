@@ -330,8 +330,8 @@ body {
       position: absolute;
       pointer-events: none;
       right: 0;
-      height: $tabs-height;
-      margin-top: -$tabs-height;
+      height: calc($tabs-height - 5px);
+      margin-top: calc(-#{$tabs-height} - 10px);
     }
 
     .nav.nav-tabs > li {
