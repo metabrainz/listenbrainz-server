@@ -132,7 +132,7 @@ export default function NetworkFeedPage() {
     }
 
     prevListens.current = listens ?? [];
-  }, [addListenToBottomOfAmbientQueue, listens]);
+  }, [addListenToBottomOfAmbientQueue, setAmbientQueue,listens]);
 
   return (
     <>
