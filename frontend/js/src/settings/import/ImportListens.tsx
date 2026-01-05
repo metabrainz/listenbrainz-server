@@ -20,7 +20,7 @@ import Loader from "../../components/Loader";
 
 type ImportListensLoaderData = {
   user_has_email: boolean;
-  pg_timezones: Array<{ name: string; offset: string }>;
+  pg_timezones: Array<[string, string]>;
   user_timezone: string;
 };
 
@@ -564,68 +564,82 @@ export default function ImportListens() {
                   onChange={(e) => setFileSelected(!!e.target.files?.length)}
                 />
               </div>
+            </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="timezone">
-                  Timezone (optional):
-                </label>
-                <select
-                  className="form-select"
-                  id="timezone"
-                  name="timezone"
-                  defaultValue={user_timezone}
-                  title="Timezone fallback for ambiguous timestamps"
-                >
-                  <option value="">
-                    Use profile timezone ({user_timezone})
-                  </option>
-                  {pg_timezones.map((zone) => {
-                    return (
-                      <option key={zone.name} value={zone.name}>
-                        {zone.name} ({zone.offset})
+            <details className="mt-3">
+              <summary>
+                <FontAwesomeIcon
+                  icon={faChevronCircleRight}
+                  size="sm"
+                  className="summary-indicator"
+                />
+                Additional options
+              </summary>
+              <div className="flex flex-wrap mt-3" style={{ gap: "1em" }}>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="timezone">
+                    Timezone (optional):
+                  </label>
+                  <select
+                    className="form-select"
+                    id="timezone"
+                    name="timezone"
+                    defaultValue={user_timezone}
+                    title="Timezone fallback for ambiguous timestamps"
+                  >
+                    <option value="">
+                      Use profile timezone ({user_timezone})
+                    </option>
+                    {pg_timezones.map(([name, offset]) => (
+                      <option key={name} value={name}>
+                        {name}
+                        {offset ? ` (${offset})` : ""}
                       </option>
-                    );
-                  })}
-                </select>
-              </div>
+                    ))}
+                  </select>
+                </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="start-datetime">
-                  Start import from (optional):
-                </label>
-                <input
-                  type="date"
-                  id="start-datetime"
-                  className="form-control"
-                  max={new Date().toISOString()}
-                  name="from_date"
-                  title="Date and time to start import at"
-                />
-              </div>
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="start-datetime">
+                    Start import from (optional):
+                  </label>
+                  <input
+                    type="date"
+                    id="start-datetime"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    name="from_date"
+                    title="Date and time to start import at"
+                  />
+                </div>
 
-              <div style={{ minWidth: "15em" }}>
-                <label className="form-label" htmlFor="end-datetime">
-                  End date for import (optional):
-                </label>
-                <input
-                  type="date"
-                  id="end-datetime"
-                  className="form-control"
-                  max={new Date().toISOString()}
-                  name="to_date"
-                  title="Date and time to end import at"
-                />
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="end-datetime">
+                    End date for import (optional):
+                  </label>
+                  <input
+                    type="date"
+                    id="end-datetime"
+                    className="form-control"
+                    max={new Date().toISOString()}
+                    name="to_date"
+                    title="Date and time to end import at"
+                  />
+                </div>
               </div>
+            </details>
 
-              <div style={{ flex: 0, alignSelf: "end", minWidth: "15em" }}>
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                  disabled={hasAnImportInProgress || !fileSelected}
-                >
-                  Import Listens
-                </button>
-              </div>
+            <div className="mt-4" style={{ minWidth: "15em" }}>
+              <button
+                type="submit"
+                className="btn btn-success"
+                style={{
+                  padding: "1rem 2.5rem",
+                }}
+                disabled={hasAnImportInProgress || !fileSelected}
+              >
+                Import Listens
+              </button>
             </div>
           </form>
         </div>
