@@ -237,7 +237,7 @@ export const removeTrackFromAmbientQueueAtom = atom(
 
 export const addListenToTopOfQueueAtom = atom(
   null,
-  (get, set, trackData: any) => {
+  (get, set, trackData: Listen | JSPFTrack) => {
     const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
     const queue = get(queueAtom);
     const currentListenIndex = get(currentListenIndexAtom);
@@ -252,7 +252,7 @@ export const addListenToTopOfQueueAtom = atom(
 
 export const addListenToBottomOfQueueAtom = atom(
   null,
-  (get, set, trackData: any) => {
+  (get, set, trackData: Listen | JSPFTrack) => {
     const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
     const queue = get(queueAtom);
     set(queueAtom, [...queue, trackToAdd]);
@@ -261,7 +261,7 @@ export const addListenToBottomOfQueueAtom = atom(
 
 export const addListenToBottomOfAmbientQueueAtom = atom(
   null,
-  (get, set, trackData: any) => {
+  (get, set, trackData: Listen | JSPFTrack) => {
     const trackToAdd = listenOrJSPFTrackToQueueItem(trackData);
     const ambientQueue = get(ambientQueueAtom);
     set(ambientQueueAtom, [...ambientQueue, trackToAdd]);
@@ -317,7 +317,7 @@ export const moveAmbientQueueItemsToQueueAtom = atom(null, (get, set) => {
 
 export const addMultipleListenToBottomOfAmbientQueueAtom = atom(
   null,
-  (get, set, tracksData: BrainzPlayerQueue) => {
+  (get, set, tracksData: Array<Listen | JSPFTrack>) => {
     const tracksToAdd = tracksData.map(listenOrJSPFTrackToQueueItem);
     const ambientQueue = get(ambientQueueAtom);
     set(ambientQueueAtom, [...ambientQueue, ...tracksToAdd]);
