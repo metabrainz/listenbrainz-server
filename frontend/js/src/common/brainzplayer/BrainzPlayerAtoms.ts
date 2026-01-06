@@ -268,6 +268,32 @@ export const addListenToBottomOfAmbientQueueAtom = atom(
   }
 );
 
+export const clearQueuesBeforeListenAndSetQueuesAtom = atom(
+  null,
+  (get, set, listen: Listen | JSPFTrack) => {
+    const queue = get(queueAtom);
+    const ambientQueue = get(ambientQueueAtom);
+    const listenAsQueueItem = listenOrJSPFTrackToQueueItem(listen);
+    const listenIndexInQueue = queue.findIndex(
+      (item) => item.id === listenAsQueueItem.id
+    );
+    const listenIndexInAmbientQueue = ambientQueue.findIndex(
+      (item) => item.id === listenAsQueueItem.id
+    );
+    if (listenIndexInAmbientQueue !== -1) {
+      // When a user clicks to play a track on the page, we clear the ambient queue
+      // until that point so that playback continues from there.
+      set(ambientQueueAtom, ambientQueue.slice(listenIndexInAmbientQueue + 1));
+    }
+    if (listenIndexInQueue !== -1) {
+      // If the track is in the regular queue, skip directly to it, clearing queue before that point
+      set(queueAtom, queue.slice(listenIndexInQueue));
+    } else {
+      // If the track is not in the regular queue, add it to the top right after currently playing.
+      set(addListenToTopOfQueueAtom, listen);
+    }
+  }
+);
 export const clearQueueAfterCurrentAndSetAmbientQueueAtom = atom(
   null,
   (get, set, data: BrainzPlayerQueue) => {
@@ -345,6 +371,7 @@ export const useBrainzPlayerAtoms = () => ({
   addListenToBottomOfQueueAtom,
   addListenToBottomOfAmbientQueueAtom,
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
+  clearQueuesBeforeListenAndSetQueuesAtom,
   moveAmbientQueueItemsToQueueAtom,
   addMultipleListenToBottomOfAmbientQueueAtom,
 
