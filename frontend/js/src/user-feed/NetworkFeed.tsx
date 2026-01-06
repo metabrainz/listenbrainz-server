@@ -125,14 +125,13 @@ export default function NetworkFeedPage() {
       const newListens = listens?.filter(
         (listen) => !prevListens.current?.includes(listen)
       );
-      if (!newListens?.length) {
-        return;
+      if (newListens?.length) {
+        addListensToBottomOfAmbientQueue(newListens);
       }
-      addListensToBottomOfAmbientQueue(newListens);
     }
 
     prevListens.current = listens ?? [];
-  }, [addListensToBottomOfAmbientQueue, listens]);
+  }, [addListensToBottomOfAmbientQueue, listens, setAmbientQueue]);
 
   return (
     <>
