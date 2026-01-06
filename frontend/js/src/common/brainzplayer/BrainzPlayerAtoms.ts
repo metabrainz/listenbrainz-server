@@ -315,7 +315,7 @@ export const moveAmbientQueueItemsToQueueAtom = atom(null, (get, set) => {
   set(ambientQueueAtom, []);
 });
 
-export const addMultipleListenToBottomOfAmbientQueueAtom = atom(
+export const addMultipleListensToBottomOfAmbientQueueAtom = atom(
   null,
   (get, set, tracksData: Array<Listen | JSPFTrack>) => {
     const tracksToAdd = tracksData.map(listenOrJSPFTrackToQueueItem);
@@ -373,7 +373,7 @@ export const useBrainzPlayerAtoms = () => ({
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
   clearQueuesBeforeListenAndSetQueuesAtom,
   moveAmbientQueueItemsToQueueAtom,
-  addMultipleListenToBottomOfAmbientQueueAtom,
+  addMultipleListensToBottomOfAmbientQueueAtom,
 
   // Derived atoms
   currentTrackAtom,
