@@ -1765,8 +1765,219 @@ def legacy_year_in_music(user_name: str, year: int):
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
 @ratelimit()
-def year_in_music(user_name: str, year: int = 2024):
-    """ Get data for year in music stuff """
+def year_in_music(user_name: str, year: int = 2025):
+    """
+    Get the Year in Music data for specific user. It returns a JSON object containing all calculated Year in Music
+    statistics for the specified user and year.
+
+     A sample response from the endpoint may look like:
+ 
+    .. code-block:: json
+
+        {
+            "payload": {
+                "user_name": "example_user",
+                "year": 2025,
+                "data": {
+                    "artist_evolution_activity": [
+                        {
+                            "artist_mbid": "artist_mbid_example",
+                            "artist_name": "Example Artist",
+                            "listen_count": 7,
+                            "time_unit": "September"
+                        }
+                    ],
+                    "artist_map": [
+                        {
+                            "country": "USA",
+                            "artist_count": 3,
+                            "listen_count": 920,
+                            "artists": [
+                                {
+                                    "artist_mbid": "artist_mbid_1",
+                                    "artist_name": "Artist One",
+                                    "listen_count": 191
+                                },
+                                {
+                                    "artist_mbid": "artist_mbid_2",
+                                    "artist_name": "Artist Two",
+                                    "listen_count": 173
+                                }
+                            ]
+                        }
+                    ],
+                    "day_of_week": "Monday",
+                    "genre_activity": [
+                        {
+                            "genre": "alternative pop",
+                            "hour": 21,
+                            "listen_count": 13
+                        }
+                    ],
+                    "listens_per_day": [
+                        {
+                            "from_ts": 1735689600,
+                            "to_ts": 1735775999,
+                            "time_range": "01 January 2025",
+                            "listen_count": 0
+                        }
+                    ],
+                    "most_listened_year": {
+                        "1957": 2,
+                        "1928": 1
+                    },
+                    "new_releases_of_top_artists": [
+                        {
+                            "title": "Example Release Title",
+                            "release_group_mbid": "release_group_mbid_example",
+                            "caa_id": 123456789,
+                            "caa_release_mbid": "caa_release_mbid_example",
+                            "artist_credit_mbids": [
+                                "artist_mbid_example"
+                            ],
+                            "artist_credit_name": "Example Artist",
+                            "artists": [
+                                {
+                                    "artist_credit_name": "Example Artist",
+                                    "artist_mbid": "artist_mbid_example",
+                                    "join_phrase": ""
+                                }
+                            ]
+                        }
+                    ],
+                    "playlist-top-discoveries-for-year": {
+                        "title": "Top Discoveries of 2025 for example_user",
+                        "creator": "listenbrainz",
+                        "date": "2025-01-01T00:00:00+00:00",
+                        "identifier": "https://listenbrainz.org/playlist/example",
+                        "annotation": "<p>Example annotation</p>",
+                        "extension": {
+                            "https://musicbrainz.org/doc/jspf#playlist": {
+                                "created_for": "example_user",
+                                "creator": "listenbrainz",
+                                "public": true
+                            }
+                        },
+                        "track": [
+                            {
+                                "title": "Example Track",
+                                "creator": "Example Artist",
+                                "album": "Example Album",
+                                "duration": 180000,
+                                "identifier": [
+                                    "https://musicbrainz.org/recording/recording_mbid_example"
+                                ],
+                                "extension": {
+                                    "https://musicbrainz.org/doc/jspf#track": {
+                                        "added_at": "2025-01-01T00:00:00+00:00",
+                                        "added_by": "listenbrainz",
+                                        "artist_identifiers": [
+                                            "https://musicbrainz.org/artist/artist_mbid_example"
+                                        ],
+                                        "additional_metadata": {
+                                            "caa_id": 123456789,
+                                            "caa_release_mbid": "caa_release_mbid_example",
+                                            "artists": [
+                                                {
+                                                    "artist_credit_name": "Example Artist",
+                                                    "artist_mbid": "artist_mbid_example",
+                                                    "join_phrase": ""
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "playlist-top-missed-recordings-for-year": {
+                        "title": "Top Missed Recordings of 2025 for example_user",
+                        "creator": "listenbrainz",
+                        "date": "2025-01-01T00:00:00+00:00",
+                        "identifier": "https://listenbrainz.org/playlist/example-missed",
+                        "annotation": "<p>Example annotation</p>",
+                        "extension": {
+                            "https://musicbrainz.org/doc/jspf#playlist": {
+                                "created_for": "example_user",
+                                "creator": "listenbrainz",
+                                "public": true
+                            }
+                        },
+                        "track": []
+                    },
+                    "similar_users": {
+                        "user_a": 0.05,
+                        "user_b": 0.06
+                    },
+                    "top_artists": [
+                        {
+                            "artist_mbid": "artist_mbid_example",
+                            "artist_name": "Example Artist",
+                            "listen_count": 507
+                        }
+                    ],
+                    "top_genres": [
+                        {
+                            "genre": "rock",
+                            "genre_count": 13483,
+                            "genre_count_percent": 6.02
+                        }
+                    ],
+                    "top_recordings": [
+                        {
+                            "track_name": "Example Track",
+                            "artist_name": "Example Artist",
+                            "listen_count": 55,
+                            "recording_mbid": "recording_mbid_example",
+                            "release_name": "Example Release",
+                            "release_mbid": "release_mbid_example",
+                            "caa_id": null,
+                            "caa_release_mbid": null,
+                            "artist_mbids": []
+                        }
+                    ],
+                    "top_release_groups": [
+                        {
+                            "release_group_name": "Example Release Group",
+                            "release_group_mbid": "release_group_mbid_example",
+                            "artist_name": "Example Artist",
+                            "artist_mbids": [
+                                "artist_mbid_example"
+                            ],
+                            "listen_count": 210,
+                            "caa_id": 123456789,
+                            "caa_release_mbid": "caa_release_mbid_example",
+                            "artists": [
+                                {
+                                    "artist_credit_name": "Example Artist",
+                                    "artist_mbid": "artist_mbid_example",
+                                    "join_phrase": ""
+                                }
+                            ]
+                        }
+                    ],
+                    "total_artists_count": 2059,
+                    "total_listen_count": 20989,
+                    "total_listening_time": 4154743.722,
+                    "total_new_artists_discovered": 1227,
+                    "total_recordings_count": 12716,
+                    "total_release_groups_count": 1861
+                }
+            }
+        }
+
+    :param year: Optional, year for which the Year in Music report should be returned.
+        Defaults to ``2025``.
+    :type year: ``int``
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Year in Music data for the user hasn't been calculated,
+        empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found or Year in Music data not available for the given year
+
+    :resheader Content-Type: *application/json*
+    """
     if year < LAST_FM_FOUNDING_YEAR or year > MAX_YEAR_IN_MUSIC_YEAR:
         raise APINotFound(f"Cannot find Year in Music report for year: {year}")
 
@@ -1777,6 +1988,7 @@ def year_in_music(user_name: str, year: int = 2024):
     return jsonify({
         "payload": {
             "user_name": user_name,
+            "year": year,
             "data": db_year_in_music.get(user["id"], year, legacy=False) or {}
         }
     })
