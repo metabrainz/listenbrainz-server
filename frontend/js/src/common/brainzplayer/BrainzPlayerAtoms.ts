@@ -280,17 +280,19 @@ export const clearQueuesBeforeListenAndSetQueuesAtom = atom(
     const listenIndexInAmbientQueue = ambientQueue.findIndex(
       (item) => item.id === listenAsQueueItem.id
     );
-    if (listenIndexInAmbientQueue !== -1) {
-      // When a user clicks to play a track on the page, we clear the ambient queue
-      // until that point so that playback continues from there.
-      set(ambientQueueAtom, ambientQueue.slice(listenIndexInAmbientQueue + 1));
-    }
     if (listenIndexInQueue !== -1) {
       // If the track is in the regular queue, skip directly to it, clearing queue before that point
       set(queueAtom, queue.slice(listenIndexInQueue));
     } else {
-      // If the track is not in the regular queue, add it to the top right after currently playing.
+      // If the track is not in the regular queue, add it to the top after currently playing.
       set(addListenToTopOfQueueAtom, listen);
+      if (listenIndexInAmbientQueue !== -1) {
+        // Clear the ambient queue until that point so that playback continues from there.
+        set(
+          ambientQueueAtom,
+          ambientQueue.slice(listenIndexInAmbientQueue + 1)
+        );
+      }
     }
   }
 );
