@@ -1,6 +1,7 @@
 import * as React from "react";
 import { isFunction } from "lodash";
-import { faGripLines, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { faGripLines } from "@fortawesome/free-solid-svg-icons";
+import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
