@@ -1,6 +1,6 @@
 import * as React from "react";
 import { isFunction } from "lodash";
-import { faGripLines, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faGripLines, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -22,18 +22,19 @@ function QueueItemCard(props: QueueItemCardProps) {
     </div>
   );
 
-  let additionalMenuItems;
+  let additionalAction;
   if (isFunction(removeTrackFromQueue)) {
-    additionalMenuItems = [
+    additionalAction = (
       <ListenControl
         title="Remove from Queue"
-        text="Remove from Queue"
-        icon={faTrash}
+        buttonClassName="btn btn-transparent"
+        text=""
+        icon={faTrashCan}
         action={() => {
           removeTrackFromQueue(track);
         }}
-      />,
-    ];
+      />
+    );
   }
 
   return (
@@ -43,7 +44,7 @@ function QueueItemCard(props: QueueItemCardProps) {
       showTimestamp={false}
       showUsername={false}
       beforeThumbnailContent={!hideDragHandle ? dragHandle : undefined}
-      additionalMenuItems={additionalMenuItems}
+      additionalActions={additionalAction}
     />
   );
 }
