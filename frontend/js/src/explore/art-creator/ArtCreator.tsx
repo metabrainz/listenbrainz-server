@@ -213,13 +213,6 @@ export default function ArtCreator() {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
       }
-      // else if (selectedStyle.type === "text") {
-      //   setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
-      //   setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
-      //   setSecondBgColor(
-      //     (selectedStyle as TextTemplateOption).defaultColors[2]
-      //   );
-      // }
     },
     [updateSearchParam]
   );
