@@ -56,7 +56,7 @@ import type { FeedFetchParams } from "./types";
 import { EventType } from "./types";
 import Card from "../components/Card";
 import {
-  addListenToBottomOfAmbientQueueAtom,
+  addMultipleListensToBottomOfAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
 
@@ -155,8 +155,8 @@ type UserFeedLoaderData = UserFeedPageProps;
 export default function UserFeedPage() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
-  const addListenToBottomOfAmbientQueue = useSetAtom(
-    addListenToBottomOfAmbientQueueAtom
+  const addListensToBottomOfAmbientQueue = useSetAtom(
+    addMultipleListensToBottomOfAmbientQueueAtom
   );
 
   const prevListens = React.useRef<Listen[]>([]);
@@ -279,7 +279,7 @@ export default function UserFeedPage() {
       const newListens = listens.filter(
         (listen) => !prevListens.current?.includes(listen)
       );
-      addListenToBottomOfAmbientQueue(newListens);
+      addListensToBottomOfAmbientQueue(newListens);
     }
 
     prevListens.current = listens;
