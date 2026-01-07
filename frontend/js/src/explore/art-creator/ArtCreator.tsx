@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { debounce, isEqual } from "lodash";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
@@ -132,6 +132,33 @@ const defaultStyleOnLoad = TemplateEnum[
 
 const defaultTimeRangeOnLoad: keyof typeof TimeRangeOptions = "this_month";
 
+function usePersistState(
+  defaultValue: string,
+  key: string
+): [string, React.Dispatch<React.SetStateAction<string>>] {
+  const [value, setValue] = useState<string>(() => {
+    try {
+      const persistValue = window?.localStorage?.getItem(key);
+      return persistValue !== null ? persistValue : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window?.localStorage?.setItem(key, value);
+    } catch (error) {
+      console.error(
+        "localstorage error, some features might not work as expected",
+        error
+      );
+    }
+  }, [value, key]);
+
+  return [value, setValue];
+}
+
 export default function ArtCreator() {
   const { currentUser, APIService } = React.useContext(GlobalAppContext);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -164,14 +191,17 @@ export default function ArtCreator() {
   const [skipMissing, setSkipMissing] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   // const [font, setFont] = useState<keyof typeof FontNameEnum>("Roboto");
-  const [textColor, setTextColor] = useState<string>(
-    defaultStyleOnLoad.defaultColors[0]
+  const [textColor, setTextColor] = usePersistState(
+    defaultStyleOnLoad.defaultColors[0],
+    "lb-art-creator-text-color"
   );
-  const [firstBgColor, setFirstBgColor] = useState<string>(
-    defaultStyleOnLoad.defaultColors[1]
+  const [firstBgColor, setFirstBgColor] = usePersistState(
+    defaultStyleOnLoad.defaultColors[1],
+    "lb-art-creator-bg-color-1"
   );
-  const [secondBgColor, setSecondBgColor] = useState<string>(
-    defaultStyleOnLoad.defaultColors[2]
+  const [secondBgColor, setSecondBgColor] = usePersistState(
+    defaultStyleOnLoad.defaultColors[2],
+    "lb-art-creator-bg-color-2"
   );
   const previewSVGRef = React.useRef<SVGSVGElement>(null);
 
@@ -182,13 +212,14 @@ export default function ArtCreator() {
       if (selectedStyle.type === "grid") {
         setGridLayout((selectedStyle as GridTemplateOption).defaultGridLayout);
         setGridSize((selectedStyle as GridTemplateOption).defaultGridSize);
-      } else if (selectedStyle.type === "text") {
-        setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
-        setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
-        setSecondBgColor(
-          (selectedStyle as TextTemplateOption).defaultColors[2]
-        );
       }
+      // else if (selectedStyle.type === "text") {
+      //   setTextColor((selectedStyle as TextTemplateOption).defaultColors[0]);
+      //   setFirstBgColor((selectedStyle as TextTemplateOption).defaultColors[1]);
+      //   setSecondBgColor(
+      //     (selectedStyle as TextTemplateOption).defaultColors[2]
+      //   );
+      // }
     },
     [updateSearchParam]
   );
