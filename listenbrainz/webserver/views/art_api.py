@@ -271,16 +271,25 @@ def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
     :type layout: ``int``
     :param image_size: The size of the cover art image. See constants at the bottom of this document.
     :type image_size: ``int``
+    :param caption: Whether to show the release group name and artist overlayed on each cover art image.
+                    Default True.
+    :type caption: ``boolean``
+    :param skip-missing: Whether to skip release groups that don't have cover art, or show a placeholder.
+                         Default True.
+    :type skip-missing: ``boolean``
 
     :statuscode 200: Cover art grid SVG generated successfully.
     :statuscode 400: Invalid parameters or insufficient cover art.
     :statuscode 404: Artist not found in metadata cache.
     :resheader Content-Type: *image/svg+xml*
     """
-     
+    
+    show_caption = _parse_bool_arg("caption", True)
+    skip_missing = _parse_bool_arg("skip-missing", True)
+
     try:
         grid_design = CoverArtGenerator.GRID_TILE_DESIGNS[dimension][layout]
-    except IndexError:
+    except (IndexError, KeyError):
         raise APIBadRequest(f"layout {layout} is not available for dimension {dimension}")
 
     artist_data = get_metadata_for_artist(ts_conn, [str(artist_mbid)])
@@ -290,17 +299,12 @@ def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
     release_groups = artist_data[0].release_group_data
     release_group_mbids = [rg["mbid"] for rg in release_groups]
 
-    popularity_data, _ = popularity.get_counts(
-        ts_conn, "release_group", release_group_mbids
-    )
+    popularity_data, _ = popularity.get_counts(ts_conn, "release_group", release_group_mbids)
 
     for rg, pop in zip(release_groups, popularity_data):
         rg["total_listen_count"] = pop["total_listen_count"]
 
-    release_groups.sort(
-        key=lambda rg: rg.get("total_listen_count") or 0,
-        reverse=True
-    )
+    release_groups.sort(key=lambda rg: rg.get("total_listen_count") or 0, reverse=True)
 
     release_groups = release_groups[:100]
 
@@ -325,30 +329,33 @@ def cover_art_artist_grid(artist_mbid, dimension, layout, image_size):
         dimension,
         image_size,
         background="transparent",
-        skip_missing=True,
-        show_caa=False,
-        show_caption=False,
+        skip_missing=skip_missing,
+        show_caa_image_for_missing_covers=False,
+        show_caption=show_caption,
         server_root_url=current_app.config["SERVER_ROOT_URL"],
     )
 
     if (err := cac.validate_parameters()) is not None:
         raise APIBadRequest(err)
 
-    cover_art_images = cac.generate_from_caa_ids(
-        images,
-        layout=layout,
-        cover_art_size=250 if image_size < 1000 else 500,
-    )
+    cover_art_images = cac.generate_from_caa_ids(images, layout=layout, cover_art_size=250 if image_size < 1000 else 500)
+    
+    artist_name = artist_data[0].artist_data.get("name", artist_mbid)
+    title = f"Top {len(cover_art_images)} Release Groups for {artist_name}\n"
+    desc = ""
+    for i, image in enumerate(cover_art_images):
+        desc += f"{i + 1}. {image.get('title')} - {image.get('artist')}\n"
 
     return render_template(
         "art/svg-templates/simple-grid.svg",
         background="transparent",
         images=cover_art_images,
+        title=title,
+        desc=desc,
         entity="release_group",
         width=image_size,
         height=image_size,
-        show_caption=False,
-    ), 200, {
+        show_caption=show_caption), 200, {
         "Content-Type": "image/svg+xml"
     }
 
