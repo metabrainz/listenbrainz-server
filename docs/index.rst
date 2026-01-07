@@ -13,6 +13,21 @@ If you are interested in contributing to ListenBrainz as a developer, see the
 
 We also publish some maintainer documentation, which is used by the MetaBrainz team to run the ListenBrainz site.
 
+
+Documentation build behavior
+----------------------------
+
+When building the ListenBrainz documentation, the Sphinx configuration
+automatically ensures that a configuration file is present.
+
+If ``listenbrainz/config.py`` does not exist, it is created by copying
+``listenbrainz/config.py.sample``. This is done to prevent import errors
+during documentation generation.
+
+This configuration file is intended **only for documentation builds**
+and should not be used as a production configuration.
+
+
 Contents
 --------
 
