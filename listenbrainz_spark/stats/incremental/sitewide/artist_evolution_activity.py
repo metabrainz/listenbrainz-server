@@ -29,9 +29,9 @@ class ArtistEvolutionActivitySitewideStatsQuery(SitewideStatsQueryProvider):
         """Get the appropriate time field expression based on stats range."""
         if self.stats_range in ("week", "this_week"):
             return "date_format(listened_at, 'EEEE')"
-        if self.stats_range in ("month", "this_month"):
+        elif self.stats_range in ("month", "this_month"):
             return "day(listened_at)"
-        if self.stats_range in ("year", "this_year", "quarter", "half_yearly"):
+        elif self.stats_range in ("year", "this_year", "quarter", "half_yearly"):
             return "date_format(listened_at, 'MMMM')"
         else:
             return "year(listened_at)"
