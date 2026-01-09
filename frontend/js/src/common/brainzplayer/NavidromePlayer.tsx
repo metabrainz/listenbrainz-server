@@ -120,8 +120,14 @@ export default class NavidromePlayer
 
   onLoadedMetadata = (event: Event): void => {
     const { onDurationChange } = this.props;
+    const { currentTrack } = this.state;
     const audioElement = event.target as HTMLAudioElement;
-    onDurationChange(audioElement.duration * 1000);
+    if (currentTrack?.duration) {
+      onDurationChange(currentTrack.duration * 1000);
+    } else {
+      // fallback: Use browser duration but round it to avoid floating point errors
+      onDurationChange(Math.round(audioElement.duration * 1000));
+    }
   };
 
   onTimeUpdate = (event: Event): void => {
