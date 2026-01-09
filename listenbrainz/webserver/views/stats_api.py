@@ -737,9 +737,9 @@ def get_artist_evolution_activity(user_name: str):
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
 
@@ -1640,9 +1640,9 @@ def get_sitewide_artist_evolution_activity():
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
         - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
