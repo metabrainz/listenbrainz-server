@@ -8,8 +8,8 @@ to explore this data.
 If you want to use the ListenBrainz API to read or submit data, see the :doc:`API documentation <users/api/index>`. You also
 may want to review the JSON documentation.
 
-If you are interested in contributing to ListenBrainz as a developer, see the
-:doc:`Developer documentation. <developers/devel-env>`
+If you are interested in contributing to ListenBrainz as a developer, see the :doc:`Developer documentation <developers/devel-env>`.
+
 
 We also publish some maintainer documentation, which is used by the MetaBrainz team to run the ListenBrainz site.
 
