@@ -18,7 +18,12 @@ from listenbrainz.webserver import create_app
 QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
 DATAFRAME_JOB_TYPES = ("recommendation_recording", "similar_users")
 
-cli = click.Group()
+cli = click.Group(help="""
+Manage Spark-related requests.
+
+This group contains commands to submit and manage
+Spark jobs used by ListenBrainz.
+""")
 
 
 class InvalidSparkRequestError(Exception):
