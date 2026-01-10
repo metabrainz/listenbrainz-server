@@ -130,6 +130,7 @@ describe("ImportListensPage", () => {
     await user.click(accordionSummary);
 
     await waitFor(() => {
+      expect(screen.getByLabelText(/timezone/i)).toBeInTheDocument();
       expect(screen.getByText(/start import from/i)).toBeInTheDocument();
       expect(screen.getByText(/end date for import/i)).toBeInTheDocument();
     });
