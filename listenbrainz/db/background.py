@@ -11,7 +11,7 @@ def _with_validation_counts(metadata):
     return metadata
 
 
-def create_import_task(db_conn, user_id, service, from_date, to_date, save_path, filename):
+def create_import_task(db_conn, user_id, service, from_date, to_date, save_path, filename, user_timezone=None):
     """ Create a new import task for the specified user.
 
         Note, this method does not commit so that the API can commit only if the file upload
@@ -33,6 +33,7 @@ def create_import_task(db_conn, user_id, service, from_date, to_date, save_path,
             "filename": filename,
             "attempted_count": 0,
             "success_count": 0,
+            **({"user_timezone": user_timezone} if user_timezone else {})
         })
     })
     import_task = result.first()
