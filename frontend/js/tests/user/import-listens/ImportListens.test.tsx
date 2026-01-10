@@ -136,6 +136,25 @@ describe("ImportListensPage", () => {
     });
   });
 
+  it("disables timezone selection for non-audioscrobbler services", async () => {
+    renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
+    const accordionSummary = screen.getByText(/additional options/i);
+    await user.click(accordionSummary);
+
+    await waitFor(() => {
+      const timezoneSelect = screen.getByLabelText(/timezone/i);
+      expect(timezoneSelect).toBeDisabled();
+    });
+
+    const serviceSelect = screen.getByLabelText(/select service/i);
+    await user.selectOptions(serviceSelect, "audioscrobbler");
+
+    await waitFor(() => {
+      const timezoneSelect = screen.getByLabelText(/timezone/i);
+      expect(timezoneSelect).not.toBeDisabled();
+    });
+  });
+
   it("enables the import button after a file is uploaded", async () => {
     renderWithProviders(<RouterProvider router={router} />, {}, { wrapper: ReactQueryWrapper }, false);
     const importButton = screen.getByRole("button", { name: /import listens/i });
