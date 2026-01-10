@@ -586,6 +586,7 @@ export default function ImportListens() {
                     name="timezone"
                     defaultValue={user_timezone}
                     title="Timezone fallback for ambiguous timestamps"
+                    disabled={selectedService !== "audioscrobbler"}
                   >
                     <option value="">
                       Use profile timezone ({user_timezone})
