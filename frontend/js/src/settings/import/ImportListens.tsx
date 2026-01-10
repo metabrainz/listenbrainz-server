@@ -577,30 +577,6 @@ export default function ImportListens() {
               </summary>
               <div className="flex flex-wrap mt-3" style={{ gap: "1em" }}>
                 <div style={{ minWidth: "15em" }}>
-                  <label className="form-label" htmlFor="timezone">
-                    Timezone (optional):
-                  </label>
-                  <select
-                    className="form-select"
-                    id="timezone"
-                    name="timezone"
-                    defaultValue={user_timezone}
-                    title="Timezone fallback for ambiguous timestamps"
-                    disabled={selectedService !== "audioscrobbler"}
-                  >
-                    <option value="">
-                      Use profile timezone ({user_timezone})
-                    </option>
-                    {pg_timezones.map(([name, offset]) => (
-                      <option key={name} value={name}>
-                        {name}
-                        {offset ? ` (${offset})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ minWidth: "15em" }}>
                   <label className="form-label" htmlFor="start-datetime">
                     Start import from (optional):
                   </label>
@@ -626,6 +602,30 @@ export default function ImportListens() {
                     name="to_date"
                     title="Date and time to end import at"
                   />
+                </div>
+
+                <div style={{ minWidth: "15em" }}>
+                  <label className="form-label" htmlFor="timezone">
+                    Timezone (optional):
+                  </label>
+                  <select
+                    className="form-select"
+                    id="timezone"
+                    name="timezone"
+                    defaultValue={user_timezone}
+                    title="Timezone fallback for ambiguous timestamps"
+                    disabled={selectedService !== "audioscrobbler"}
+                  >
+                    <option value="">
+                      Use profile timezone ({user_timezone})
+                    </option>
+                    {pg_timezones.map(([name, offset]) => (
+                      <option key={name} value={name}>
+                        {name}
+                        {offset ? ` (${offset})` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </details>
