@@ -1740,27 +1740,6 @@ def get_sitewide_artist_map():
     })
 
 
-@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
-@crossdomain
-@ratelimit()
-def legacy_year_in_music(user_name: str, year: int):
-    """ Get data for legacy year in music stuff """
-    if year < 2021 or year > 2024:
-        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
-
-    user = db_user.get_by_mb_id(db_conn, user_name)
-    if user is None:
-        raise APINotFound(f"Cannot find user: {user_name}")
-
-    return jsonify({
-        "payload": {
-            "user_name": user_name,
-            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
-        }
-    })
-
-
-
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music")
 @stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/<int:year>")
 @crossdomain
@@ -1770,7 +1749,7 @@ def year_in_music(user_name: str, year: int = 2025):
     Get the Year in Music data for specific user. It returns a JSON object containing all calculated Year in Music
     statistics for the specified user and year.
 
-     A sample response from the endpoint may look like:
+    A sample response from the endpoint may look like:
  
     .. code-block:: json
 
@@ -1798,11 +1777,7 @@ def year_in_music(user_name: str, year: int = 2025):
                                     "artist_name": "Artist One",
                                     "listen_count": 191
                                 },
-                                {
-                                    "artist_mbid": "artist_mbid_2",
-                                    "artist_name": "Artist Two",
-                                    "listen_count": 173
-                                }
+                                ...,
                             ]
                         }
                     ],
@@ -1812,7 +1787,8 @@ def year_in_music(user_name: str, year: int = 2025):
                             "genre": "alternative pop",
                             "hour": 21,
                             "listen_count": 13
-                        }
+                        },
+                        ...,
                     ],
                     "listens_per_day": [
                         {
@@ -1820,11 +1796,13 @@ def year_in_music(user_name: str, year: int = 2025):
                             "to_ts": 1735775999,
                             "time_range": "01 January 2025",
                             "listen_count": 0
-                        }
+                        },
+                        ...,
                     ],
                     "most_listened_year": {
                         "1957": 2,
-                        "1928": 1
+                        "1928": 1,
+                        ...,
                     },
                     "new_releases_of_top_artists": [
                         {
@@ -1843,7 +1821,8 @@ def year_in_music(user_name: str, year: int = 2025):
                                     "join_phrase": ""
                                 }
                             ]
-                        }
+                        },
+                        ...,
                     ],
                     "playlist-top-discoveries-for-year": {
                         "title": "Top Discoveries of 2025 for example_user",
@@ -1887,7 +1866,8 @@ def year_in_music(user_name: str, year: int = 2025):
                                         }
                                     }
                                 }
-                            }
+                            },
+                            ...,
                         ]
                     },
                     "playlist-top-missed-recordings-for-year": {
@@ -1903,25 +1883,59 @@ def year_in_music(user_name: str, year: int = 2025):
                                 "public": true
                             }
                         },
-                        "track": []
+                        "track": [
+                            {
+                                "title": "Example Track",
+                                "creator": "Example Artist",
+                                "album": "Example Album",
+                                "duration": 180000,
+                                "identifier": [
+                                    "https://musicbrainz.org/recording/recording_mbid_example"
+                                ],
+                                "extension": {
+                                    "https://musicbrainz.org/doc/jspf#track": {
+                                        "added_at": "2025-01-01T00:00:00+00:00",
+                                        "added_by": "listenbrainz",
+                                        "artist_identifiers": [
+                                            "https://musicbrainz.org/artist/artist_mbid_example"
+                                        ],
+                                        "additional_metadata": {
+                                            "caa_id": 123456789,
+                                            "caa_release_mbid": "caa_release_mbid_example",
+                                            "artists": [
+                                                {
+                                                    "artist_credit_name": "Example Artist",
+                                                    "artist_mbid": "artist_mbid_example",
+                                                    "join_phrase": ""
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            ...,
+                        ]
                     },
                     "similar_users": {
                         "user_a": 0.05,
-                        "user_b": 0.06
+                        "user_b": 0.06,
+                        ...,
                     },
                     "top_artists": [
                         {
                             "artist_mbid": "artist_mbid_example",
                             "artist_name": "Example Artist",
                             "listen_count": 507
-                        }
+                        },
+                        ...,
                     ],
                     "top_genres": [
                         {
                             "genre": "rock",
                             "genre_count": 13483,
                             "genre_count_percent": 6.02
-                        }
+                        },
+                        ...,
                     ],
                     "top_recordings": [
                         {
@@ -1934,7 +1948,8 @@ def year_in_music(user_name: str, year: int = 2025):
                             "caa_id": null,
                             "caa_release_mbid": null,
                             "artist_mbids": []
-                        }
+                        },
+                        ...,
                     ],
                     "top_release_groups": [
                         {
@@ -1954,7 +1969,8 @@ def year_in_music(user_name: str, year: int = 2025):
                                     "join_phrase": ""
                                 }
                             ]
-                        }
+                        },
+                        ...,
                     ],
                     "total_artists_count": 2059,
                     "total_listen_count": 20989,
@@ -1966,9 +1982,9 @@ def year_in_music(user_name: str, year: int = 2025):
             }
         }
 
-    :param year: Optional, year for which the Year in Music report should be returned.
-        Defaults to ``2025``.
-    :type year: ``int``
+    .. warning::
+        The Year in Music payload can be significantly larger than other stats 
+        endpoints, as it may include full playlist data.
 
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Year in Music data for the user hasn't been calculated,
@@ -1990,6 +2006,88 @@ def year_in_music(user_name: str, year: int = 2025):
             "user_name": user_name,
             "year": year,
             "data": db_year_in_music.get(user["id"], year, legacy=False) or {}
+        }
+    })
+
+
+@stats_api_bp.get("/user/<mb_username:user_name>/year-in-music/legacy/<int:year>")
+@crossdomain
+@ratelimit()
+def legacy_year_in_music(user_name: str, year: int):
+    """
+    Get legacy Year in Music data for a specific user and year. This endpoint returns historical 
+    Year in Music payloads that were generated by earlier data pipelines. The response structure 
+    is not stable across years and should be treated as archival data.
+
+    Payload structure varies by year.
+
+    **2021**
+
+    - Payload structure differs significantly from later years.
+    - Playlist entries are wrapped in a JSPF structure under the ``jspf`` key.
+    - Each playlist includes an associated ``mbid``.
+    - Playlist cover art URLs are provided separately via ``*-coverart`` mappings.
+    - Several fields present in payloads of later years are not included.
+
+    A sample response from the endpoint may look like:
+
+    .. code-block:: json
+
+        {
+            "day_of_week": "Monday",
+            "listens_per_day": [ ... ],
+            "most_listened_year": { ... },
+            "playlist-top-discoveries-for-year": {
+                "jspf": {
+                    "playlist": { ... }
+                },
+                "mbid": "9510f3b1-d156-459b-9b1d-80ba2c8f43fd"
+            },
+            "playlist-top-discoveries-for-year-coverart": {
+                "recording_mbid": "https://archive.org/..."
+            },
+            "top_artists": [ ... ],
+            "top_recordings": [ ... ],
+            "total_listen_count": 12731
+        }
+
+    **2022**
+
+    - Core payload structure matches the non-legacy Year in Music endpoint.
+    - Playlist objects are no longer wrapped in JSPF.
+    - An additional ``yim_artist_map`` field is present alongside ``artist_map``. 
+      This duplication is a historical artifact of the 2022 pipeline. Clients should prefer ``artist_map``.
+    - Playlist cover art is provided via additional ``*-coverart`` mappings.
+
+    **2023 and later**
+
+    - Payload structure matches the non-legacy endpoint.
+    - ``yim_artist_map`` is no longer present.
+    - Playlist cover art mappings (``playlist-*-coverart``) are still included.
+
+    .. warning::
+        The legacy Year in Music payload can be significantly larger than other stats 
+        endpoints, as it may include full playlist data and cover art mappings.
+
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Year in Music data for the user hasn't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found or Year in Music data not available for the given year
+
+    :resheader Content-Type: *application/json*
+    """
+    if year < 2021 or year > 2024:
+        raise APINotFound(f"Cannot find legacy Year in Music report for year: {year}")
+
+    user = db_user.get_by_mb_id(db_conn, user_name)
+    if user is None:
+        raise APINotFound(f"Cannot find user: {user_name}")
+
+    return jsonify({
+        "payload": {
+            "user_name": user_name,
+            "year": year,
+            "data": db_year_in_music.get(user["id"], year, legacy=True) or {}
         }
     })
 
