@@ -36,6 +36,7 @@ enum Services {
   librefm = "Libre.fm",
   panoscrobbler = "PanoScrobbler",
   maloja = "Maloja",
+  youtube = "Youtube",
 }
 const acceptedFileTypes = {
   [Services.spotify]: ".zip",
@@ -44,6 +45,7 @@ const acceptedFileTypes = {
   [Services.librefm]: ".csv",
   [Services.panoscrobbler]: ".jsonl",
   [Services.maloja]: ".json",
+  [Services.youtube]: ".json",
 };
 type ImportMetadata = {
   filename: string;
