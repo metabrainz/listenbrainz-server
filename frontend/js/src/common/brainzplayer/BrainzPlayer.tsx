@@ -308,17 +308,17 @@ export default function BrainzPlayer() {
   const enabledDataSources = [
     spotifyEnabled && SpotifyPlayer.hasPermissions(spotifyAuth) && "spotify",
     appleMusicEnabled &&
-      AppleMusicPlayer.hasPermissions(appleAuth) &&
-      "appleMusic",
+    AppleMusicPlayer.hasPermissions(appleAuth) &&
+    "appleMusic",
     funkwhaleEnabled &&
-      FunkwhalePlayer.hasPermissions(funkwhaleAuth) &&
-      "funkwhale",
+    FunkwhalePlayer.hasPermissions(funkwhaleAuth) &&
+    "funkwhale",
     navidromeEnabled &&
-      NavidromePlayer.hasPermissions(navidromeAuth) &&
-      "navidrome",
+    NavidromePlayer.hasPermissions(navidromeAuth) &&
+    "navidrome",
     soundcloudEnabled &&
-      SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
-      "soundcloud",
+    SoundcloudPlayer.hasPermissions(soundcloudAuth) &&
+    "soundcloud",
     youtubeEnabled && "youtube",
     internetArchiveEnabled && "internetArchive",
   ].filter(Boolean) as DataSourceKey[];
@@ -395,9 +395,8 @@ export default function BrainzPlayer() {
     }
     const message = _isString(error)
       ? error
-      : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${
-          error.message || error.statusText
-        }`;
+      : `${!_isNil(error.status) ? `Error ${error.status}:` : ""} ${error.message || error.statusText
+      }`;
     toast.error(<ToastMsg title={title} message={message} />, {
       toastId: title,
     });

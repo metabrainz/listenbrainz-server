@@ -63,9 +63,8 @@ export interface PlaylistPageState {
 const makeJSPFTrack = (trackMetadata: TrackMetadata): JSPFTrack => {
   return {
     identifier: [
-      `${PLAYLIST_TRACK_URI_PREFIX}${
-        trackMetadata.recording_mbid ??
-        trackMetadata.additional_info?.recording_mbid
+      `${PLAYLIST_TRACK_URI_PREFIX}${trackMetadata.recording_mbid ??
+      trackMetadata.additional_info?.recording_mbid
       }`,
     ],
     title: trackMetadata.track_name,
@@ -380,9 +379,8 @@ export default function PlaylistPage() {
         <meta property="og:type" content="music.playlist" />
         <meta
           property="og:title"
-          content={`${playlist.title} by ${playlist.creator} (${
-            playlist.track?.length ?? 0
-          } tracks) — ListenBrainz`}
+          content={`${playlist.title} by ${playlist.creator} (${playlist.track?.length ?? 0
+            } tracks) — ListenBrainz`}
         />
         <meta property="og:description" content={playlist.annotation} />
         <meta
@@ -404,7 +402,7 @@ export default function PlaylistPage() {
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(
               coverArt ??
-                "<img src='/static/img/cover-art-placeholder.jpg'></img>"
+              "<img src='/static/img/cover-art-placeholder.jpg'></img>"
             ),
           }}
           title={`Cover art for ${playlist.title}`}
@@ -477,9 +475,8 @@ export default function PlaylistPage() {
           {playlist.annotation && (
             <div className="description">
               <div
-                className={`${isLongDescription ? "text-summary long" : ""} ${
-                  showMore ? "expanded" : ""
-                }`}
+                className={`${isLongDescription ? "text-summary long" : ""} ${showMore ? "expanded" : ""
+                  }`}
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(playlist.annotation),

@@ -97,7 +97,6 @@ export type ListenCardProps = {
   // This optional JSX element is for a custom icon
   additionalActions?: JSX.Element;
   showPinButton?: boolean;
-  isPinned?: boolean;
   onPlay?: () => void;
 };
 
@@ -116,8 +115,7 @@ export default function ListenCard(props: ListenCardProps) {
     feedbackComponent,
     additionalMenuItems,
     additionalActions,
-    showPinButton = false,
-    isPinned = false,
+    showPinButton = true,
     onPlay,
     ...otherProps
   } = props;
@@ -172,7 +170,7 @@ export default function ListenCard(props: ListenCardProps) {
         case "current-listen-change":
           setIsCurrentlyPlaying(
             isEqual(incomingListen, displayListen) ||
-              isEqual(incomingListen, listenProp)
+            isEqual(incomingListen, listenProp)
           );
           break;
         default:
@@ -341,11 +339,9 @@ export default function ListenCard(props: ListenCardProps) {
     <Card
       {...otherProps}
       onDoubleClick={renderBrainzplayer ? playListen : undefined}
-      className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${
-        compact ? " compact" : ""
-      }${additionalContent ? " has-additional-content" : " "} ${
-        className || ""
-      }`}
+      className={`listen-card ${isCurrentlyPlaying ? "current-listen" : ""}${compact ? " compact" : ""
+        }${additionalContent ? " has-additional-content" : " "} ${className || ""
+        }`}
       data-testid="listen"
     >
       <div className="main-content">
@@ -481,7 +477,7 @@ export default function ListenCard(props: ListenCardProps) {
                       }}
                     />
                   )}
-                  {isLoggedIn && hasInfoAndMBID && (
+                  {isLoggedIn && hasInfoAndMBID && showPinButton && (
                     <ListenControl
                       text="Pin this track"
                       icon={faThumbtack}
@@ -556,9 +552,8 @@ export default function ListenCard(props: ListenCardProps) {
             {renderBrainzplayer && (
               <button
                 title="Play"
-                className={`btn btn-transparent play-button${
-                  isCurrentlyPlaying ? " playing" : ""
-                }`}
+                className={`btn btn-transparent play-button${isCurrentlyPlaying ? " playing" : ""
+                  }`}
                 onClick={playListen}
                 type="button"
               >
