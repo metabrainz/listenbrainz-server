@@ -387,7 +387,7 @@ describe("<UserSocialNetwork />", () => {
 
 
 describe("User not found error deduplication", () => {
-  it("should show only one error toast when multiple API calls fail with 'user not found'", async () => {
+  it("should use the same toastId for all user-not-found errors to prevent duplicates", async () => {
     // Spy on toast.error to track calls
     const toastErrorSpy = jest.spyOn(toast, "error");
 
@@ -415,7 +415,8 @@ describe("User not found error deduplication", () => {
 
     // Render the component with a non-existent user
     renderWithProviders(
-      <UserSocialNetwork user={{ name: "nonexistent_user" }} />
+      <UserSocialNetwork user={{ name: "nonexistent_user" }} />,
+      globalContext
     );
 
     // Wait for API calls to complete and toasts to be triggered
@@ -426,18 +427,32 @@ describe("User not found error deduplication", () => {
       { timeout: 3000 }
     );
 
-    // Filter to find toast calls related to "user not found" errors
+    // Filter toast.error calls that are for "User not found" errors
     const userNotFoundCalls = toastErrorSpy.mock.calls.filter((call) => {
-      const message = call[0];
-      const options = call[1];
+      const message = call[0]; // First argument is the message/component
+      const options = call[1];  // Second argument contains the options
       
-      // Check if this is a user-not-found error by looking at the toastId
-      return options?.toastId === "user-not-found-error";
+      // Check if this is a user-not-found error by looking at the message title
+      return message?.props?.title === "User not found";
     });
 
-    // With toastId deduplication, there should be exactly ONE toast
-    // even though multiple API calls failed
-    expect(userNotFoundCalls.length).toBe(1);
+    // We expect multiple API calls to fail (followers, following, similar-users)
+    // so toast.error should be called multiple times
+    expect(userNotFoundCalls.length).toBeGreaterThan(1);
+
+    // The key assertion: ALL user-not-found errors should use the SAME toastId
+    // This is what prevents duplicate toasts from appearing to the user
+    const toastIds = userNotFoundCalls.map(call => call[1]?.toastId);
+    const uniqueToastIds = new Set(toastIds);
+    
+    // All should have the same toastId
+    expect(uniqueToastIds.size).toBe(1);
+    expect(uniqueToastIds.has("user-not-found-error")).toBe(true);
+    
+    // Verify that each call actually has the toastId set
+    toastIds.forEach(toastId => {
+      expect(toastId).toBe("user-not-found-error");
+    });
 
     // Clean up
     toastErrorSpy.mockRestore();
