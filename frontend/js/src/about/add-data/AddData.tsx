@@ -441,13 +441,20 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://github.com/regorxxx/ListenBrainz-SMP">
-              ListenBrainz-SMP
+            <a href="https://github.com/regorxxx/Infinity-Tools-SMP">
+              ListenBrainz tools (Infinity-Tools-SMP)
             </a>
           </em>
-          , a Foobar2000 plugin for submitting and retrieving playlists from
-          ListenBrainz (+ Spotify). Can retrieve recommendations and submit
-          track feedback.
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "} plugin for submitting and retrieving playlists from
+          ListenBrainz (+ Spotify). Can retrieve recommendations, submit
+          tracks feedback (love and hate) and batch upload{" "}
+          <em>
+            <a href="https://kawaiidango.github.io/pano-scrobbler/">Pano Scrobbler</a>
+          </em>{" "}
+          listens.
         </li>
         <li>
           <em>
@@ -460,8 +467,8 @@ export default function AddData() {
             <a href="https://www.foobar2000.org/">Foobar2000</a>
           </em>{" "}
           plugin for syncing local playlists with ListenBrainz (+ Spotify).
-          Tracks playlists changes and resolves tracks with local content and
-          YouTube links.
+          Provides tracking for playlists changes and resolves tracks with 
+          local content and YouTube links.
         </li>
         <li>
           <em>
@@ -505,10 +512,16 @@ export default function AddData() {
         </li>
         <li>
           <em>
-            <a href="https://github.com/regorxxx/Wrapped-SMP">Wrapped-SMP</a>
+            <a href="https://github.com/regorxxx/Infinity-Tools-SMP">
+              Wrapped (Infinity-Tools-SMP)
+            </a>
           </em>
-          , a Foobar2000 plugin that creates listening reports, similar to
-          Spotify&apos;s annual report. Can utilize ListenBrainz
+          , a{" "}
+          <em>
+            <a href="https://www.foobar2000.org/">Foobar2000</a>
+          </em>{" "}
+          plugin that creates listening reports, similar to Spotify&apos;s annual
+          report for any time period. Can use ListenBrainz listening history and
           recommendations.
         </li>
       </ul>
