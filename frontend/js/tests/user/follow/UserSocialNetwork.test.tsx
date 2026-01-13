@@ -385,7 +385,6 @@ describe("<UserSocialNetwork />", () => {
     });
   });
 
-
 describe("User not found error deduplication", () => {
   it("should use the same toastId for all user-not-found errors to prevent duplicates", async () => {
     // Spy on toast.error to track calls
@@ -433,7 +432,7 @@ describe("User not found error deduplication", () => {
       const options = call[1];  // Second argument contains the options
       
       // Check if this is a user-not-found error by looking at the message title
-      return message?.props?.title === "User not found";
+      return message && message.props && message.props.title === "User not found";
     });
 
     // We expect multiple API calls to fail (followers, following, similar-users)
