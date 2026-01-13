@@ -21,7 +21,6 @@
 import * as React from "react";
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import { rest } from "msw";
 import { SetupServerApi, setupServer } from "msw/node";
 import { toast } from "react-toastify";
 
@@ -416,15 +415,15 @@ it("deduplicates 'user not found' errors using a shared toastId", async () => {
   (toast.error as jest.Mock).mockClear();
 
   server.use(
-    rest.get("/1/user/:user/followers", (req: any, res: any, ctx: any) => {
-      return res(ctx.status(404), ctx.json({ error: "User not found" }));
-    }),
-    rest.get("/1/user/:user/following", (req: any, res: any, ctx: any) => {
-      return res(ctx.status(404), ctx.json({ error: "User not found" }));
-    }),
-    rest.get("/1/user/:user/similar-users", (req: any, res: any, ctx: any) => {
-      return res(ctx.status(404), ctx.json({ error: "User not found" }));
-    })
+    http.get("/1/user/:user/followers", () =>
+      HttpResponse.json({ error: "User not found" }, { status: 404 })
+    ),
+    http.get("/1/user/:user/following", () =>
+      HttpResponse.json({ error: "User not found" }, { status: 404 })
+    ),
+    http.get("/1/user/:user/similar-users", () =>
+      HttpResponse.json({ error: "User not found" }, { status: 404 })
+    )
   );
 
   const props = {
@@ -442,7 +441,6 @@ it("deduplicates 'user not found' errors using a shared toastId", async () => {
     expect(toast.error).toHaveBeenCalledTimes(1);
   });
 });
-
 
 
 });
