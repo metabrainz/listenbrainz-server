@@ -18,7 +18,7 @@ import GlobalAppContext from "../utils/GlobalAppContext";
 import { getListenCardKey } from "../utils/utils";
 import { FeedFetchParams, FeedModes } from "./types";
 import {
-  addListenToBottomOfAmbientQueueAtom,
+  addMultipleListensToBottomOfAmbientQueueAtom,
   setAmbientQueueAtom,
 } from "../common/brainzplayer/BrainzPlayerAtoms";
 
@@ -34,8 +34,8 @@ export default function NetworkFeedPage() {
     getListensFromSimilarUsers,
   } = APIService;
   const setAmbientQueue = useSetAtom(setAmbientQueueAtom);
-  const addListenToBottomOfAmbientQueue = useSetAtom(
-    addListenToBottomOfAmbientQueueAtom
+  const addListensToBottomOfAmbientQueue = useSetAtom(
+    addMultipleListensToBottomOfAmbientQueueAtom
   );
 
   const prevListens = React.useRef<Listen[]>([]);
@@ -117,7 +117,7 @@ export default function NetworkFeedPage() {
   React.useEffect(() => {
     // Since we're using infinite queries, we need to manually set the ambient queue and also ensure
     // that only the newly fetched listens are added to the botom of the queue.
-    // But on first load, we need to add replace the entire queue with the listens
+    // But on first load, we need to replace the entire queue with the listens
 
     if (!prevListens.current?.length) {
       setAmbientQueue(listens ?? []);
@@ -125,14 +125,13 @@ export default function NetworkFeedPage() {
       const newListens = listens?.filter(
         (listen) => !prevListens.current?.includes(listen)
       );
-      if (!listens?.length) {
-        return;
+      if (newListens?.length) {
+        addListensToBottomOfAmbientQueue(newListens);
       }
-      addListenToBottomOfAmbientQueue(newListens);
     }
 
     prevListens.current = listens ?? [];
-  }, [addListenToBottomOfAmbientQueue, setAmbientQueue,listens]);
+  }, [addListensToBottomOfAmbientQueue, listens, setAmbientQueue]);
 
   return (
     <>

@@ -170,6 +170,14 @@ def request_yim_most_listened_year(year: int):
     send_request_to_spark_cluster("year_in_music.most_listened_year", year=year)
 
 
+@cli.command(name="request_yim_artist_evolution")
+@click.option("--year", type=int, help="Year for which to calculate artist evolution",
+              default=date.today().year)
+def request_yim_artist_evolution(year: int):
+    """Calculate artist evolution activity for Year in Music"""
+    send_request_to_spark_cluster("year_in_music.artist_evolution_activity", year=year)
+
+
 @cli.command(name="request_yim_top_stats")
 @click.option("--year", type=int, help="Year for which to calculate the stat",
               default=date.today().year)
@@ -301,7 +309,7 @@ def parse_list(ctx, param, value):
 def request_model(rank, itr, lmbda, alpha, use_transformed_listencounts):
     """ Send the cluster a request to train the model.
 
-    For more details refer to https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html
+    For more details refer to https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html
     """
     params = {
         'ranks': rank,
@@ -481,6 +489,7 @@ def request_year_in_music(ctx, year: int, import_pg_tables: bool):
     ctx.invoke(request_yim_new_release_stats, year=year)
     ctx.invoke(request_yim_day_of_week, year=year)
     ctx.invoke(request_yim_most_listened_year, year=year)
+    ctx.invoke(request_yim_artist_evolution, year=year)
     ctx.invoke(request_yim_top_genres, year=year)
     ctx.invoke(request_yim_genre_activity, year=year)
     ctx.invoke(request_yim_top_stats, year=year)

@@ -46,17 +46,17 @@ def get_artist(user_name):
             "payload": {
                 "artists": [
                     {
-                       "artist_mbids": ["93e6118e-7fa8-49f6-9e02-699a1ebce105"],
+                       "artist_mbid": "93e6118e-7fa8-49f6-9e02-699a1ebce105",
                        "artist_name": "The Local train",
                        "listen_count": 385
                     },
                     {
-                       "artist_mbids": ["ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714"],
+                       "artist_mbid": "ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714",
                        "artist_name": "Lenka",
                        "listen_count": 333
                     },
                     {
-                       "artist_mbids": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"],
+                       "artist_mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
                        "artist_name": "Coldplay",
                        "listen_count": 321
                     }
@@ -72,7 +72,7 @@ def get_artist(user_name):
         }
 
     .. note::
-        ``artist_mbids`` is an optional field and may not be present in all the responses
+        ``artist_mbid`` is an optional field and may not be present in all the responses
 
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -737,9 +737,9 @@ def get_artist_evolution_activity(user_name: str):
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
 
@@ -1099,12 +1099,12 @@ def get_sitewide_artist():
             "payload": {
                 "artists": [
                     {
-                        "artist_mbids": [],
+                        "artist_mbid": null,
                         "artist_name": "Kanye West",
                         "listen_count": 1305
                     },
                     {
-                        "artist_mbids": ["0b30341b-b59d-4979-8130-b66c0e475321"],
+                        "artist_mbid": "0b30341b-b59d-4979-8130-b66c0e475321",
                         "artist_name": "Lil Nas X",
                         "listen_count": 1267
                     }
@@ -1120,7 +1120,7 @@ def get_sitewide_artist():
         }
 
     .. note::
-        - ``artist_mbids`` is optional field and may not be present in all the entries
+        - ``artist_mbid`` is optional field and may not be present in all the entries
         - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
@@ -1640,9 +1640,9 @@ def get_sitewide_artist_evolution_activity():
 
     .. note::
         - ``time_unit`` depends on the stats range:
-            * ``week``  → weekday names (Monday..Sunday)
-            * ``month`` → day numbers as strings ("1".."31")
-            * ``year``  → month names (January..December)
+            * ``week``, ``this_week``  → weekday names (Monday..Sunday)
+            * ``month``, ``this_month`` → day numbers as strings ("1".."31")
+            * ``year``, ``this_year``, ``half_yearly``, ``quarter``  → month names (January..December)
             * ``all_time`` → calendar years as strings ("2019", "2020", ...)
         - ``artist_mbid`` may be null/omitted if unavailable.
         - Shape matches ``/user/<user_name>/artist-evolution-activity`` for easy client reuse.
