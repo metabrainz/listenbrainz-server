@@ -432,7 +432,13 @@ describe("User not found error deduplication", () => {
       const options = call[1];  // Second argument contains the options
       
       // Check if this is a user-not-found error by looking at the message title
-      return message && message.props && message.props.title === "User not found";
+      return (
+        typeof message === "object" &&
+        message !== null &&
+        "props" in message &&
+        message.props &&
+        message.props.title === "User not found"
+      );
     });
 
     // We expect multiple API calls to fail (followers, following, similar-users)
@@ -441,7 +447,10 @@ describe("User not found error deduplication", () => {
 
     // The key assertion: ALL user-not-found errors should use the SAME toastId
     // This is what prevents duplicate toasts from appearing to the user
-    const toastIds = userNotFoundCalls.map(call => call[1]?.toastId);
+    const toastIds = userNotFoundCalls.map(call => {
+      const options = call[1];
+      return options && typeof options === "object" ? options.toastId : undefined;
+    });
     const uniqueToastIds = new Set(toastIds);
     
     // All should have the same toastId
