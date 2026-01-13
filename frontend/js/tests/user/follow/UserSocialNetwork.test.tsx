@@ -407,4 +407,38 @@ describe("<UserSocialNetwork />", () => {
       ).toBeInTheDocument();
     });
   });
+
+
+ it("deduplicates 'user not found' errors using a shared toastId", async () => {
+  (toast.error as jest.Mock).mockClear();
+
+  server.get("/1/user/:user/followers", () => {
+    return HttpResponse.json({ error: "User not found" }, { status: 404 });
+  });
+
+  server.get("/1/user/:user/following", () => {
+    return HttpResponse.json({ error: "User not found" }, { status: 404 });
+  });
+
+  server.get("/1/user/:user/similar-users", () => {
+    return HttpResponse.json({ error: "User not found" }, { status: 404 });
+  });
+
+  const props = {
+    user: { id: 1, name: "ghost" },
+  };
+
+  renderWithProviders(
+    <QueryClientProvider client={queryClient}>
+      <UserSocialNetwork {...props} />
+    </QueryClientProvider>,
+    globalContext
+  );
+
+  await waitFor(() => {
+    expect(toast.error).toHaveBeenCalledTimes(1);
+  });
+});
+
+
 });
