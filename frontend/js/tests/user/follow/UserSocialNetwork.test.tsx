@@ -283,11 +283,11 @@ describe("<UserSocialNetwork />", () => {
   it("handles similar users API error gracefully", async () => {
   (toast.error as jest.Mock).mockClear();
 
-  server.use(
-    http.get("/1/user/*/similar", () =>
-      HttpResponse.json({ error: "Server error" }, { status: 500 })
-    )
-  );
+ server.use(
+  http.get("/1/user/:user/similar-users", () =>
+    HttpResponse.json({ error: "Server error" }, { status: 500 })
+  )
+);
 
   renderWithProviders(
     <QueryClientProvider client={queryClient}>
@@ -430,12 +430,16 @@ it("deduplicates 'user not found' errors using a shared toastId", async () => {
     )
   );
 
-  renderWithProviders(
-    <QueryClientProvider client={queryClient}>
-      <UserSocialNetwork user={{ id: 1, name: "ghost" }} />
-    </QueryClientProvider>,
-    globalContext
-  );
+renderWithProviders(
+  <QueryClientProvider client={queryClient}>
+    <UserSocialNetwork user={{ id: 2, name: "ghost" }} />
+  </QueryClientProvider>,
+  {
+    ...globalContext,
+    currentUser: { name: "loggedinuser" },
+  }
+);
+
 
   await waitFor(() => {
     const calls = (toast.error as jest.Mock).mock.calls;
