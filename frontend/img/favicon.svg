@@ -1,6 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="0 0 27 30"
-     shape-rendering="geometricPrecision">
-  <polygon fill="#353070" points="13 1 1 8 1 22 13 29 13 1"/>
-  <polygon fill="#eb743b" points="14 1 26 8 26 22 14 29 14 1"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="27" height="30"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="27" height="30"><svg id="a" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 27 30"><defs><style>.b{fill:#353070;}.c{fill:#eb743b;}</style></defs><polygon class="b" points="13 1 1 8 1 22 13 29 13 1"></polygon><polygon class="c" points="14 1 26 8 26 22 14 29 14 1"></polygon></svg></svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>
