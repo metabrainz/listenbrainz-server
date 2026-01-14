@@ -16,7 +16,7 @@ class ImporterService(ExternalService, ABC):
         """ Return list of active users for importing listens. """
         return listens_importer.get_active_users_to_process(db_conn, self.service, exclude_error)
 
-    def update_user_import_status(self, user_id: int, error: str = None):
+    def update_user_import_status(self, user_id: int, error: str = None, retry: bool = True):
         """ Update the last_update field for user with specified user ID.
 
         If there was an error, add the error to the db.
@@ -24,8 +24,14 @@ class ImporterService(ExternalService, ABC):
         Args:
             user_id (int): the ListenBrainz row ID of the user
             error (str): the user-friendly error message to be displayed.
+            retry (bool): whether the import should be retried (default True).
         """
-        listens_importer.update_import_status(db_conn, user_id, self.service, error)
+        listens_importer.update_import_status(
+            db_conn,
+            user_id,
+            self.service,
+            {"message": error, "retry": retry} if error else None
+        )
 
     def update_latest_listen_ts(self, user_id: int, timestamp: Union[int, float]):
         """ Update the latest_listened_at field for user with specified ListenBrainz user ID.

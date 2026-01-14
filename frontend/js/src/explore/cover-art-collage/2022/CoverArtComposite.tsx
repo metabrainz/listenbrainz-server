@@ -60,7 +60,7 @@ export default function CoverArtComposite() {
 
   return (
     <div
-      id="year-in-music"
+      id="legacy-year-in-music"
       className="yim-2022"
       style={{
         textAlign: "center",

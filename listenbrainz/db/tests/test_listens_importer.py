@@ -29,15 +29,17 @@ class ListensImporterDatabaseTestCase(DatabaseTestCase):
 
     def test_update_import_status(self):
         db_import.update_import_status(
-            self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY, 'test error message'
+            self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY,
+            {'message': 'test error message', 'retry': True}
         )
         spotify_user = db_spotify.get_user_import_details(self.db_conn, self.user['id'])
-        self.assertEqual(spotify_user['error_message'], 'test error message')
+        self.assertEqual(spotify_user['error']['message'], 'test error message')
+        self.assertEqual(spotify_user['error']['retry'], True)
         self.assertIsNotNone(spotify_user['last_updated'])
 
         db_import.update_import_status(self.db_conn, self.user['id'], ExternalServiceType.SPOTIFY)
         spotify_user = db_spotify.get_user_import_details(self.db_conn, self.user['id'])
-        self.assertIsNone(spotify_user['error_message'])
+        self.assertIsNone(spotify_user['error'])
         self.assertIsNotNone(spotify_user['last_updated'])
 
     def test_update_latest_listened_at(self):

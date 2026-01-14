@@ -664,7 +664,7 @@ const formatWSMessageToListen = (wsMsg: any): Listen | null => {
 
 // recieves or unix epoch timestamp int or ISO datetime string
 const preciseTimestamp = (
-  listened_at: number | string,
+  listened_at: number | string | Date,
   displaySetting?: "timeAgo" | "includeYear" | "excludeYear"
 ): string => {
   const listenDate: Date = new Date(listened_at);
@@ -722,7 +722,7 @@ const preciseTimestamp = (
 };
 // recieves or unix epoch timestamp int or ISO datetime string
 const fullLocalizedDateFromTimestampOrISODate = (
-  unix_epoch_timestamp: number | string | undefined | null
+  unix_epoch_timestamp: number | string | Date | undefined | null
 ): string => {
   if (!unix_epoch_timestamp) {
     return "";

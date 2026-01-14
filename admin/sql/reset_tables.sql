@@ -19,7 +19,6 @@ DELETE FROM recommendation.similar_user    CASCADE;
 DELETE FROM user_timeline_event            CASCADE;
 DELETE FROM hide_user_timeline_event       CASCADE;
 
--- DELETE FROM spotify_auth                   CASCADE;
 DELETE FROM external_service_oauth         CASCADE;
 DELETE FROM listens_importer               CASCADE;
 

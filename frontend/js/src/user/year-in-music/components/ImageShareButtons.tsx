@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Canvg } from "canvg";
 import { saveAs } from "file-saver";
 import { toast } from "react-toastify";
-import { ToastMsg } from "../../../../notifications/Notifications";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 export type MagicShareButtonProps = {
   svgURL: string;

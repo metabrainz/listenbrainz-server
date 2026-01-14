@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, jsonify, request
 from listenbrainz.db.msid_mbid_mapping import fetch_track_metadata_for_items
 from listenbrainz.webserver import db_conn, ts_conn
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.errors import APIInternalServerError, APINotFound
+from listenbrainz.webserver.errors import APIInternalServerError, APINotFound, APIForbidden
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import (
     log_raise_400,
@@ -353,13 +353,21 @@ def update_blurb_content_pinned_recording(row_id):
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    validate_auth_header()
+    user = validate_auth_header()
 
     data = request.json
     try:
         row_id = int(row_id)
+        pin = db_pinned_rec.get_pin_by_id(db_conn, row_id)
     except ValueError:
         log_raise_400("Invalid row_id provided")
+
+    if pin is None:
+        raise APINotFound("Cannot find pin for row_id: %s" % (row_id,))
+
+    if pin.user_id != user["id"]:
+        raise APIForbidden("Cannot update pin for another user")
+
     if "blurb_content" not in data:
         log_raise_400("JSON document must contain blurb_content", data)
 

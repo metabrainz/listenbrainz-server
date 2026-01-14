@@ -110,26 +110,19 @@ def load_playlist(playlist_mbid: str):
     fetch_playlist_recording_metadata(playlist)
 
     images = get_cover_art_options(playlist)
-    options = []
-
-    for dimension, designs in CoverArtGenerator.GRID_TILE_DESIGNS.items():
-        for layout_idx, design in enumerate(designs):
-            image_count = len(design)
-            if len(images) >= image_count:
-                options.append({
-                    "dimension": dimension,
-                    "layout": layout_idx
-                })
+    
+    # Get all valid layout options for this playlist
+    options = CoverArtGenerator.get_layout_options(len(images))
 
     serialized_playlist = playlist.serialize_jspf()
 
-    selected_cover_art = playlist.additional_metadata.get("cover_art")
-    if not selected_cover_art and len(options) > 0:
-        sorted_options = sorted(
-            options,
-            key=lambda x: (-x["dimension"], x["layout"])
-        )
-        selected_cover_art = sorted_options[0]
+    selected_cover_art = None
+    if playlist.additional_metadata is not None:
+        selected_cover_art = playlist.additional_metadata.get("cover_art")
+
+    # If no cover art is already selected, use the utility function to select the best layout
+    if not selected_cover_art:
+        selected_cover_art = CoverArtGenerator.select_best_layout(len(images))
 
     serialized_playlist["cover_art"] = selected_cover_art
 

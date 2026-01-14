@@ -596,3 +596,67 @@ class PinnedRecAPITestCase(IntegrationTestCase):
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
+
+    def test_update_pin_blurb(self):
+        """ Tests that update pin works """
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(self.pinned_rec_samples[0]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.update_blurb_content_pinned_recording",
+                                row_id=pin_to_update.row_id),
+            data=json.dumps({"blurb_content": "new comment"}),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        self.assertEqual(pin_to_update.blurb_content, "new comment")
+
+    def test_update_pin_404(self):
+        """ Test that update pin returns 404 if pin not found """
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(self.pinned_rec_samples[0]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.update_blurb_content_pinned_recording",
+                                row_id=7777),
+            data=json.dumps({"blurb_content": "new comment"}),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert404(response)
+
+    def test_update_pin_403(self):
+        """ Test that update pin returns 403 if user tries to update another user's pin  """
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.pin_recording_for_user"),
+            data=json.dumps(self.pinned_rec_samples[0]),
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json",
+        )
+        self.assert200(response)
+
+        pin_to_update = db_pinned_rec.get_current_pin_for_user(self.db_conn, self.user["id"])
+        response = self.client.post(
+            self.custom_url_for("pinned_rec_api_bp_v1.update_blurb_content_pinned_recording",
+                                row_id=pin_to_update.row_id),
+            data=json.dumps({"blurb_content": "new comment"}),
+            headers={"Authorization": "Token " + self.followed_user_1["auth_token"]},
+            content_type="application/json",
+        )
+        self.assert403(response)

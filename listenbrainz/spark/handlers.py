@@ -346,6 +346,10 @@ def handle_yim_most_listened_year(message):
     year_in_music.insert_heavy("most_listened_year", message["year"], message["data"])
 
 
+def handle_yim_artist_evolution_activity(message):
+    year_in_music.insert_heavy("artist_evolution_activity", message["year"], message["data"])
+
+
 def handle_yim_top_stats(message):
     year_in_music.insert_top_stats(message["entity"], message["year"], message["data"])
 
@@ -374,12 +378,17 @@ def handle_yim_top_genres(message):
     year_in_music.insert_heavy("top_genres", message["year"], message["data"])
 
 
+def handle_yim_genre_activity(message):
+    year_in_music.insert_heavy("genre_activity", message["year"], message["data"])
+
+
 def handle_yim_playlists(message):
     process_yim_playlists(message["slug"], message["year"], message["data"])
 
 
 def handle_yim_playlists_end(message):
     process_yim_playlists_end(message["slug"], message["year"])
+
 
 def handle_troi_playlists(message):
     process_weekly_playlists(message["slug"], message["data"])

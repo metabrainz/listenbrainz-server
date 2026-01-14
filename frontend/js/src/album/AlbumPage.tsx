@@ -15,6 +15,7 @@ import { Helmet } from "react-helmet";
 import { Link, useLocation, useParams } from "react-router";
 import { toast } from "react-toastify";
 import { useSetAtom } from "jotai";
+import humanizeDuration from "humanize-duration";
 import CBReview from "../cb-review/CBReview";
 import ListenCard from "../common/listens/ListenCard";
 import Username from "../common/Username";
@@ -215,6 +216,25 @@ export default function AlbumPage(): JSX.Element {
     notation: "compact",
   });
   const showMediumTitle = (mediums?.length ?? 0) > 1;
+  const allTracks = flatten(
+    mediums?.map((medium) => medium.tracks ?? []) ?? []
+  );
+
+  const totalAlbumDurationMs = allTracks
+    .map((track) => track.length)
+    .filter((length): length is number => Number.isFinite(length))
+    .reduce((sum, length) => sum + length, 0);
+
+  const trackCount = allTracks.length;
+  const trackUnit = trackCount === 1 ? "track" : "tracks";
+
+  const durationStr = humanizeDuration(totalAlbumDurationMs, {
+    round: true,
+    units: ["h", "m", "s"],
+    delimiter: " ",
+    spacer: " ",
+    language: "en",
+  });
 
   if (isError) {
     return (
@@ -294,17 +314,23 @@ export default function AlbumPage(): JSX.Element {
         </div>
         <div className="artist-info">
           <h1>{album?.name}</h1>
+
           <div className="details h4">
             <div>
-              {artist.artists.map((ar) => {
-                return (
-                  <span key={ar.artist_mbid}>
-                    <Link to={`/artist/${ar.artist_mbid}/`}>{ar?.name}</Link>
-                    {ar.join_phrase}
-                  </span>
-                );
-              })}
+              {artist.artists.map((ar) => (
+                <span key={ar.artist_mbid}>
+                  <Link to={`/artist/${ar.artist_mbid}/`}>{ar?.name}</Link>
+                  {ar.join_phrase}
+                </span>
+              ))}
             </div>
+
+            {totalAlbumDurationMs > 0 && (
+              <small className="form-text text-muted">
+                {trackCount} {trackUnit} - {durationStr}
+              </small>
+            )}
+
             <small className="form-text">
               {type}
               {type && album?.date ? " - " : ""}
@@ -312,6 +338,7 @@ export default function AlbumPage(): JSX.Element {
             </small>
           </div>
         </div>
+
         <div className="right-side gap-1">
           <div className="entity-rels">
             {!isEmpty(artist?.artists?.[0]?.rels) &&

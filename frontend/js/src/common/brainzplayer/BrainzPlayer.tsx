@@ -62,10 +62,10 @@ import {
   queueAtom,
   ambientQueueAtom,
   currentListenIndexAtom,
-  addListenToTopOfQueueAtom,
   addListenToBottomOfQueueAtom,
   clearQueueAfterCurrentAndSetAmbientQueueAtom,
   isActivatedAtom,
+  clearQueuesBeforeListenAndSetQueuesAtom,
 } from "./BrainzPlayerAtoms";
 
 import useWindowTitle from "./hooks/useWindowTitle";
@@ -220,10 +220,12 @@ export default function BrainzPlayer() {
 
   // Action Atoms
   const updatePlayerProgressBar = useSetAtom(setPlaybackTimerAtom);
-  const addListenToTopOfQueue = useSetAtom(addListenToTopOfQueueAtom);
   const addListenToBottomOfQueue = useSetAtom(addListenToBottomOfQueueAtom);
   const clearQueueAfterCurrentAndSetAmbientQueue = useSetAtom(
     clearQueueAfterCurrentAndSetAmbientQueueAtom
+  );
+  const addOrSkipToListenInQueue = useSetAtom(
+    clearQueuesBeforeListenAndSetQueuesAtom
   );
 
   const getProgressMs = () => store.get(progressMsAtom);
@@ -889,7 +891,7 @@ export default function BrainzPlayer() {
   };
 
   const playListenEventHandler = (listen: Listen | JSPFTrack) => {
-    addListenToTopOfQueue(listen);
+    addOrSkipToListenInQueue(listen);
     playNextListenFromQueue();
   };
 

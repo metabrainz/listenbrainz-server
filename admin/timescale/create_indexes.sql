@@ -112,4 +112,6 @@ CREATE INDEX popularity_top_release_artist_mbid_user_count_idx ON popularity.top
 
 CREATE INDEX tags_lb_tag_radio_percent_idx ON tags.lb_tag_radio (tag, percent) INCLUDE (source, recording_mbid, tag_count);
 
+CREATE UNIQUE INDEX year_in_music_cover_user_id_idx ON statistics.year_in_music_cover (user_id, year);
+
 COMMIT;
