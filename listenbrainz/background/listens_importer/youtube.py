@@ -63,8 +63,11 @@ class YouTubeListensImporter(BaseListensImporter):
                 if subtitles and isinstance(subtitles, list):
                     channel_name = subtitles[0].get("name", "")
 
+                if not channel_name:
+                    continue
+
                 track_name = title
-                artist_name = channel_name if channel_name else "Unknown Artist"
+                artist_name = channel_name
 
                 track_metadata: dict[str, Any] = {
                     "artist_name": artist_name,
@@ -73,13 +76,17 @@ class YouTubeListensImporter(BaseListensImporter):
 
                 additional_info: dict[str, Any] = {
                     "submission_client": self.importer_name,
-                    "music_service": "youtube.com",
+                    "music_service": "music.youtube.com",
                 }
 
                 video_url = item.get("titleUrl", "")
                 if video_url:
                     additional_info["origin_url"] = video_url
-                    video_id = self._extract_video_id(video_url)
+                    match = re.search(r'watch\?v=([^&]+)', video_url)
+                    if match:
+                        video_id=match.group(1)
+                    else: 
+                        continue
                     if video_id:
                         additional_info["youtube_id"] = video_id
 
@@ -98,18 +105,4 @@ class YouTubeListensImporter(BaseListensImporter):
                 continue
 
         return listens
-
-    def _extract_video_id(self, url: str) -> str | None:
-        """Extract video ID from YouTube URL."""
-        patterns = [
-            r'watch\?v=([^&]+)',
-            r'youtu\.be/([^?]+)',
-            r'embed/([^?]+)',
-            r'v/([^?]+)'
-        ]
         
-        for pattern in patterns:
-            match = re.search(pattern, url)
-            if match:
-                return match.group(1)
-        return None
