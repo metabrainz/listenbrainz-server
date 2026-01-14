@@ -555,7 +555,6 @@ export default function PlaylistPage() {
                 className="btn btn-info btn-rounded play-tracks-button"
                 title="Play all tracks"
                 onClick={() => {
-                  setAmbientQueue(tracks);
                   window.postMessage(
                     {
                       brainzplayer_event: "play-ambient-queue",

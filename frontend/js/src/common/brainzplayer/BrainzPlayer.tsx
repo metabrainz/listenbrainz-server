@@ -894,10 +894,13 @@ export default function BrainzPlayer() {
   };
 
   const playAmbientQueue = (tracks: BrainzPlayerQueue): void => {
-    // 1. Clear the items in the queue after the current playing track
-    clearQueueAfterCurrentAndSetAmbientQueue(tracks);
-
-    // 2. Play the first item in the ambient queue
+    // Overwrite the main queue with the new tracks (Permanent Queue)
+    setQueue(tracks);
+    // Clear ambient queue to avoid conflicts
+    setAmbientQueue([]);
+    // Reset index so it starts from the first song
+    setCurrentListenIndex(-1);
+    // Start playing
     playNextTrack();
   };
 
