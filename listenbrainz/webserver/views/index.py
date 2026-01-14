@@ -90,10 +90,9 @@ def index():
     return jsonify(props)
 
 
-@index_bp.get("/favicon.ico")
+@index_bp.get("/favicon.ico/")
 def favicon():
     return send_from_directory(current_app.static_folder, "favicon.ico", mimetype="image/vnd.microsoft.icon")
-
 
 @index_bp.post("/current-status/")
 @web_listenstore_needed
