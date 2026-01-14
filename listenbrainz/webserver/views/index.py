@@ -6,7 +6,7 @@ from typing import List
 
 from brainzutils import cache
 from dateutil.relativedelta import relativedelta
-from flask import Blueprint, render_template, current_app, request, jsonify, Response
+from flask import Blueprint, render_template, current_app, request, jsonify, Response, send_from_directory
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
 from werkzeug.exceptions import Unauthorized, NotFound
@@ -88,6 +88,11 @@ def index():
     }
 
     return jsonify(props)
+
+
+@index_bp.get("/favicon.ico")
+def favicon():
+    return send_from_directory(current_app.static_folder, "favicon.ico", mimetype="image/vnd.microsoft.icon")
 
 
 @index_bp.post("/current-status/")
