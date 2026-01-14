@@ -9,7 +9,7 @@ import QueueItemCard from "./QueueItemCard";
 import ListenCard from "../listens/ListenCard";
 import CreateOrEditPlaylistModal from "../../playlists/components/CreateOrEditPlaylistModal";
 import { listenToJSPFTrack } from "../../playlists/utils";
-import { getListenCardKey } from "../../utils/utils";
+import { getListenCardKey, getTrackDurationInMs } from "../../utils/utils";
 import {
   queueAtom,
   ambientQueueAtom,
@@ -19,6 +19,8 @@ import {
   moveQueueItemAtom,
   removeTrackFromQueueAtom,
   currentListenIndexAtom,
+  progressMsAtom,
+  durationMsAtom,
 } from "./BrainzPlayerAtoms";
 
 const shortEnglishHumanizer = humanizeDuration.humanizer({
@@ -36,33 +38,22 @@ const shortEnglishHumanizer = humanizeDuration.humanizer({
     },
   },
 });
-type DurationSource = {
-  track_metadata?: {
-    additional_info?: {
-      duration_ms?: number;
-      duration?: number;
-    };
-  };
-};
+
 type BrainzPlayerQueueProps = {
   clearQueue: () => void;
   onHide: () => void;
 };
 
 const MAX_AMBIENT_QUEUE_ITEMS = 15;
-const getDurationMs = (item?: DurationSource): number => {
-  const info = item?.track_metadata?.additional_info;
-  if (info?.duration_ms) return info.duration_ms;
-  if (info?.duration) return info.duration * 1000;
-  return 0;
-};
 
 function Queue(props: BrainzPlayerQueueProps) {
   const currentListen = useAtomValue(currentListenAtom);
   const ambientQueue = useAtomValue(ambientQueueAtom);
   const queue = useAtomValue(queueAtom);
 
-  // Functional Atoms
+  const progressMs = useAtomValue(progressMsAtom);
+  const durationMs = useAtomValue(durationMsAtom);
+
   const moveAmbientQueueItemsToQueue = useSetAtom(
     moveAmbientQueueItemsToQueueAtom
   );
@@ -77,40 +68,38 @@ function Queue(props: BrainzPlayerQueueProps) {
   const { clearQueue, onHide } = props;
 
   const [queueNextUp, setQueueNextUp] = React.useState<BrainzPlayerQueue>([]);
-  const [tick, setTick] = React.useState(0);
-  React.useEffect(() => {
-    const timerId = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(timerId);
-  }, []);
+
   React.useEffect(() => {
     if (currentListen && currentListenIndex >= 0 && queue.length > 0) {
       if (currentListenIndex === queue.length - 1) {
         setQueueNextUp([]);
       } else {
-        setQueueNextUp(queue.slice(currentListenIndex + 1));
+        const nextUp = queue.slice(currentListenIndex + 1);
+        setQueueNextUp(nextUp);
       }
     } else {
-      // If there is no current listen track, show all tracks in the queue
       setQueueNextUp([...queue]);
     }
   }, [queue, currentListen, currentListenIndex]);
-  const totalRemainingTime = React.useMemo(() => {
-    let totalMs = 0;
-    if (currentListen) {
-      const duration = getDurationMs(currentListen as DurationSource);
-      const progress =
-        typeof (currentListen as { progress_ms?: number }).progress_ms ===
-        "number"
-          ? (currentListen as { progress_ms?: number }).progress_ms!
-          : 0;
-
-      if (duration > progress) {
-        totalMs += duration - progress;
-      }
-    }
+  const queueDurationMs = React.useMemo(() => {
+    let total = 0;
     queueNextUp.forEach((track) => {
-      totalMs += getDurationMs(track as DurationSource);
+      total += Number(getTrackDurationInMs(track)) || 0;
     });
+    return total;
+  }, [queueNextUp]);
+
+  const totalRemainingTime = React.useMemo(() => {
+    let totalMs = queueDurationMs;
+
+    if (currentListen) {
+      const currentTrackDuration =
+        Number(getTrackDurationInMs(currentListen)) || durationMs;
+
+      const remaining = Math.max(0, currentTrackDuration - progressMs);
+      totalMs += remaining;
+    }
+
     if (totalMs <= 0) return "0s";
     const isOverTenMinutes = totalMs >= 600000;
 
@@ -120,7 +109,7 @@ function Queue(props: BrainzPlayerQueueProps) {
       delimiter: " ",
       spacer: "",
     });
-  }, [queueNextUp, currentListen, tick]);
+  }, [queueDurationMs, currentListen, progressMs, durationMs]);
 
   const addQueueToPlaylist = () => {
     const jspfTrackQueue = queue.map((track) => {
@@ -172,15 +161,31 @@ function Queue(props: BrainzPlayerQueueProps) {
           />
         </>
       )}
-      <div className="queue-headers d-flex justify-content-between align-items-center">
-        <h4>Next Up:</h4>
-        {queueNextUp.length > 0 && (
-          <span className="text-secondary" style={{ fontSize: "1.2rem" }}>
-            {queueNextUp.length} {queueNextUp.length === 1 ? "track" : "tracks"}{" "}
-            - {totalRemainingTime} left
-          </span>
-        )}
-      </div>
+
+      {currentListen ? (
+        <div className="queue-headers d-flex justify-content-between align-items-center">
+          <h4>Next Up:</h4>
+          {queueNextUp.length > 0 && (
+            <span className="text-secondary" style={{ fontSize: "1.2rem" }}>
+              {queueNextUp.length}{" "}
+              {queueNextUp.length === 1 ? "track" : "tracks"} -{" "}
+              {totalRemainingTime} left
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="queue-headers d-flex align-items-center gap-3">
+          <h4 className="m-0">Next Up:</h4>
+          {queueNextUp.length > 0 && (
+            <span className="text-secondary" style={{ fontSize: "1.2rem" }}>
+              {queueNextUp.length}{" "}
+              {queueNextUp.length === 1 ? "track" : "tracks"} -{" "}
+              {totalRemainingTime} left
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="queue-list" data-testid="queue">
         {queueNextUp.length > 0 ? (
           <ReactSortable
@@ -199,7 +204,7 @@ function Queue(props: BrainzPlayerQueueProps) {
                 if (!queueItem) return null;
                 return (
                   <QueueItemCard
-                    key={queueItem?.id}
+                    key={`${queueItem?.id}-${index.toString()}`}
                     track={queueItem}
                     removeTrackFromQueue={(
                       trackToDelete: BrainzPlayerQueueItem
