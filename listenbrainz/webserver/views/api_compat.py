@@ -429,7 +429,7 @@ def user_info(data):
             with tag('realname'):
                 text(query_user.name)
             with tag('url'):
-                text('http://listenbrainz.org/user/' + query_user.name)
+                text('https://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
                 text(User.get_play_count(db_conn, query_user.id, timescale_connection._ts))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):

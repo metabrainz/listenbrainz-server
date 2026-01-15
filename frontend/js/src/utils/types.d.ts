@@ -693,7 +693,7 @@ type CoverArtArchiveEntry = {
 
 type CoverArtArchiveResponse = {
   images: CoverArtArchiveEntry[];
-  release: string; // Full MB URL i.e "http://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
+  release: string; // Full MB URL i.e "https://musicbrainz.org/release/76df3287-6cda-33eb-8e9a-044b5e15ffdd"
 };
 
 type ColorReleaseItem = {

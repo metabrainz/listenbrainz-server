@@ -20,8 +20,8 @@ export default function Data() {
           </a>
         </li>
         <li>
-          <a href="http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz">
-            HTTP main download site (USA)
+          <a href="https://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz">
+            HTTPS main download site (USA)
           </a>
         </li>
         <li>

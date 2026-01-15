@@ -10,7 +10,7 @@ export default function LastfmProxy() {
         ListenBrainz supports the Last.FM API and v1.2 of the AudioScrobbler API
         (used by clients like VLC and Spotify). Existing Last.FM clients can be
         pointed to the{" "}
-        <a href="http://proxy.listenbrainz.org">ListenBrainz proxy URL</a> and
+        <a href="https://proxy.listenbrainz.org">ListenBrainz proxy URL</a> and
         they should submit listens to ListenBrainz instead of Last.FM.
       </p>
 
@@ -36,8 +36,8 @@ export default function LastfmProxy() {
         </a>{" "}
         (such as VLC and Spotify) can be configured to work with ListenBrainz by
         making the client point to{" "}
-        <a href="http://proxy.listenbrainz.org">
-          http://proxy.listenbrainz.org
+        <a href="https://proxy.listenbrainz.org">
+          https://proxy.listenbrainz.org
         </a>{" "}
         and using MusicBrainz ID as username and the{" "}
         <Link to="/settings/">LB auth token</Link> as password.

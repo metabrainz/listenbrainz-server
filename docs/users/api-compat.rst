@@ -8,14 +8,14 @@ There are two versions of the Last.FM API used by clients to submit data to Last
 
 #. `The AudioScrobbler API v1.2 <http://www.audioscrobbler.net/development/protocol/>`_
 
-ListenBrainz can understand requests sent to both these APIs and use their data to import listens submitted by clients like VLC and Spotify. Existing Last.FM clients can be pointed to the `ListenBrainz proxy URL <http://proxy.listenbrainz.org>`_ and they should submit listens to ListenBrainz instead of Last.FM.
+ListenBrainz can understand requests sent to both these APIs and use their data to import listens submitted by clients like VLC and Spotify. Existing Last.FM clients can be pointed to the `ListenBrainz proxy URL <https://proxy.listenbrainz.org>`_ and they should submit listens to ListenBrainz instead of Last.FM.
 
 *Note*: This information is also present on the `ListenBrainz website <https://listenbrainz.org/lastfm-proxy>`_.
 
 AudioScrobbler API v1.2
 =======================
 
-Clients supporting the old version of the AudioScrobbler API (such as VLC and Spotify) can be configured to work with ListenBrainz by making the client point to ``http://proxy.listenbrainz.org`` and using your MusicBrainz ID as username and the `LB Authorization Token <https://listenbrainz.org/settings/>`_ as password.
+Clients supporting the old version of the AudioScrobbler API (such as VLC and Spotify) can be configured to work with ListenBrainz by making the client point to ``https://proxy.listenbrainz.org`` and using your MusicBrainz ID as username and the `LB Authorization Token <https://listenbrainz.org/settings/>`_ as password.
 
 If the software you are using doesn't support changing where the client submits info (like Spotify), you can edit your ``/etc/hosts`` file as follows::
 

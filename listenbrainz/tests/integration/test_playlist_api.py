@@ -59,7 +59,7 @@ class PlaylistAPITestCase(IntegrationTestCase):
         assert result == "<a>link to google</a>"
 
         # a href to approved domain
-        description = """<a href="http://acousticbrainz.org/foo">link to AB</a>"""
+        description = """<a href="https://acousticbrainz.org/foo">link to AB</a>"""
         result = playlist_api._filter_description_html(description)
         assert result == description
 
