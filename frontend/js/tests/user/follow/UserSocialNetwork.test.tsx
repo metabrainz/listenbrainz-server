@@ -253,35 +253,58 @@ describe("<UserSocialNetwork />", () => {
     getSimilarUsersForUserSpy.mockRestore();
   });
 
- it("handles similar users API error gracefully", async () => {
-  (toast.error as jest.Mock).mockClear();
-
-  const spy = jest
-    .spyOn(globalContext.APIService, "getSimilarUsersForUser")
-    .mockRejectedValue(new Error("Server error"));
-
-  renderWithProviders(
-    <UserSocialNetwork {...props} />,
-    globalContext
-  );
-
-  await waitFor(() => {
-    const calls = (toast.error as jest.Mock).mock.calls;
-
-    const hasSimilarUsersError = calls.some(
-      ([node, options]) =>
-        node?.props?.title === "Error while fetching similar users" &&
-        options?.toastId === "fetch-similar-error"
+  it("handles API errors gracefully with toast notifications", async () => {
+    // Mock server to return error
+    server.use(
+      http.get("/1/user/*/followers", () => {
+        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+      })
     );
 
-    expect(hasSimilarUsersError).toBe(true);
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      globalContext
+    );
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          props: expect.objectContaining({
+            title: "Error while fetching followers",
+          }),
+        }),
+        { toastId: "fetch-followers-error" }
+      );
+    });
   });
 
-  spy.mockRestore();
-});
+  it("handles similar users API error gracefully", async () => {
+    server.use(
+      http.get("/1/user/*/similar", () => {
+        return HttpResponse.json({ error: "Server error" }, { status: 500 });
+      })
+    );
 
+    renderWithProviders(
+      <QueryClientProvider client={queryClient}>
+        <UserSocialNetwork {...props} />
+      </QueryClientProvider>,
+      globalContext
+    );
 
-
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          props: expect.objectContaining({
+            title: " Error while fetching similar users",
+          }),
+        }),
+        { toastId: "fetch-similar-error" }
+      );
+    });
+  });
 
   it("does not fetch similarity data when not logged in", async () => {
     const contextWithoutUser = {
@@ -385,87 +408,62 @@ describe("<UserSocialNetwork />", () => {
     });
   });
 
-describe("User not found error deduplication", () => {
   it("should use the same toastId for all user-not-found errors to prevent duplicates", async () => {
-    // Spy on toast.error to track calls
-    const toastErrorSpy = jest.spyOn(toast, "error");
+  const errorSpy = jest.spyOn(toast, "error");
 
-    // Set up MSW handlers to return 404 for all user-related endpoints
-    server.use(
-      http.get("*/user/nonexistent_user/followers", () => {
-        return HttpResponse.json(
-          { code: 404, error: "User not found" },
-          { status: 404 }
-        );
-      }),
-      http.get("*/user/nonexistent_user/following", () => {
-        return HttpResponse.json(
-          { code: 404, error: "User not found" },
-          { status: 404 }
-        );
-      }),
-      http.get("*/user/nonexistent_user/similar-users", () => {
-        return HttpResponse.json(
-          { code: 404, error: "User not found" },
-          { status: 404 }
-        );
-      })
-    );
-
-    // Render the component with a non-existent user
-    renderWithProviders(
-      <UserSocialNetwork user={{ name: "nonexistent_user" }} />,
-      globalContext
-    );
-
-    // Wait for API calls to complete and toasts to be triggered
-    await waitFor(
-      () => {
-        expect(toastErrorSpy).toHaveBeenCalled();
-      },
-      { timeout: 3000 }
-    );
-
-    // Filter toast.error calls that are for "User not found" errors
-    const userNotFoundCalls = toastErrorSpy.mock.calls.filter((call) => {
-      const message = call[0]; // First argument is the message/component
-      const options = call[1];  // Second argument contains the options
-      
-      // Check if this is a user-not-found error by looking at the message title
-      return (
-        typeof message === "object" &&
-        message !== null &&
-        "props" in message &&
-        message.props &&
-        message.props.title === "User not found"
+  // mock all endpoints to fail with 404
+  server.use(
+    http.get("*/user/nonexistent_user/followers", () => {
+      return HttpResponse.json(
+        { code: 404, error: "User not found" },
+        { status: 404 }
       );
-    });
+    }),
+    http.get("*/user/nonexistent_user/following", () => {
+      return HttpResponse.json(
+        { code: 404, error: "User not found" },
+        { status: 404 }
+      );
+    }),
+    http.get("*/user/nonexistent_user/similar-users", () => {
+      return HttpResponse.json(
+        { code: 404, error: "User not found" },
+        { status: 404 }
+      );
+    })
+  );
 
-    // We expect multiple API calls to fail (followers, following, similar-users)
-    // so toast.error should be called multiple times
-    expect(userNotFoundCalls.length).toBeGreaterThan(1);
+  renderWithProviders(
+    <UserSocialNetwork user={{ name: "nonexistent_user" }} />,
+    globalContext
+  );
 
-    // The key assertion: ALL user-not-found errors should use the SAME toastId
-    // This is what prevents duplicate toasts from appearing to the user
-    const toastIds = userNotFoundCalls.map(call => {
-      const options = call[1];
-      return options && typeof options === "object" ? options.toastId : undefined;
-    });
-    const uniqueToastIds = new Set(toastIds);
-    
-    // All should have the same toastId
-    expect(uniqueToastIds.size).toBe(1);
-    expect(uniqueToastIds.has("user-not-found-error")).toBe(true);
-    
-    // Verify that each call actually has the toastId set
-    toastIds.forEach(toastId => {
-      expect(toastId).toBe("user-not-found-error");
-    });
+  // wait for the component to finish loading and error handling
+  await waitFor(
+    () => {
+      expect(errorSpy).toHaveBeenCalled();
+    },
+    { timeout: 3000 }
+  );
 
-    // Clean up
-    toastErrorSpy.mockRestore();
-  });
+  // filter out calls where the title is "User not found"
+ const notFoundCalls = errorSpy.mock.calls.filter((call) => {
+  const message = call[0] as { props?: { title?: string } } | undefined;
+  return message?.props?.title === "User not found";
 });
 
-});
 
+  // should be called multiple times since all 3 endpoints failed
+  expect(notFoundCalls.length).toBeGreaterThan(1);
+
+  // now check that they all used the same toastId
+  const ids = notFoundCalls.map(call => call[1]?.toastId);
+  const uniqueIds = new Set(ids);
+  
+  // all failures should use the same ID so only 1 toast shows up
+  expect(uniqueIds.size).toBe(1);
+  expect(uniqueIds.has("user-not-found-error")).toBe(true);
+
+  errorSpy.mockRestore();
+});
+});
