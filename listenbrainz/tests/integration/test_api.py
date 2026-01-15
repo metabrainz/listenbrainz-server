@@ -415,6 +415,7 @@ class APITestCase(ListenAPIIntegrationTestCase):
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
+        self.assertTrue(is_valid_uuid(response.json['recording_msid']))
 
         r = self.client.get(self.custom_url_for('api_v1.get_playing_now',
                                                 user_name=self.user['musicbrainz_id']))
