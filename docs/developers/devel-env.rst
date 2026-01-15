@@ -15,6 +15,12 @@ will have…
 * Initialized development databases
 * Running ListenBrainz Server
 
+.. note::
+    **Quick Start**: We provide a unified CLI tool for development tasks.
+    See :doc:`lb-cli` for a beginner-friendly interface that wraps all
+    common operations. Advanced users can continue using ``develop.sh``
+    and ``test.sh`` directly.
+
 Clone listenbrainz-server
 -------------------------
 

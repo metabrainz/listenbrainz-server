@@ -38,6 +38,7 @@ Contents
    :caption: Developer Documentation
 
    developers/devel-env
+   developers/lb-cli
    developers/spark-devel-env
    developers/architecture
    developers/spark-architecture

@@ -66,7 +66,19 @@ on the #metabrainz channel.
 These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
-**Read the [development environment
+### Quick Start with lb CLI
+
+We provide a unified CLI tool for common development tasks:
+
+```bash
+python lb.py init      # Setup environment and databases
+python lb.py start     # Start development server
+python lb.py test      # Run tests
+python lb.py db psql   # Database shell
+python lb.py --help    # See all commands
+```
+
+For detailed setup instructions, **read the [development environment
 documentation](https://listenbrainz.readthedocs.io/en/latest/developers/devel-env.html  "Setting up a development environment - ListenBrainz documentation")**
 
 In order to work with Spark, you'll have to setup the Spark development environment.
