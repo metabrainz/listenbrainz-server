@@ -11,3 +11,8 @@ class NoDataFoundException(DatabaseException):
 class BadDataException(DatabaseException):
     """Should be used when incorrect data is being submitted."""
     pass
+
+
+class UserNotFoundException(DatabaseException):
+    """Should be used when a user ID does not exist in the database."""
+    pass

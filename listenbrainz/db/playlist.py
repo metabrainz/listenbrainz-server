@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import user as db_user
+from listenbrainz.db.exceptions import UserNotFoundException
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
 
@@ -658,7 +659,7 @@ def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model
     # TODO: These two gets should be done in a single query
     creator = db_user.get(db_conn, playlist.creator_id)
     if creator is None:
-        raise Exception("TODO: Custom exception")
+        raise UserNotFoundException(f"User with ID {playlist.creator_id} not found")
 
     # TODO: In a way this is less than ideal -- the caller must take the string name and find the ID,
     # and then the name is fetched for verification again. Should we accept created_for here and do
@@ -666,7 +667,7 @@ def create(db_conn, ts_conn, playlist: model_playlist.WritablePlaylist) -> model
     if playlist.created_for_id:
         created_for = db_user.get(db_conn, playlist.created_for_id)
         if created_for is None:
-            raise Exception("TODO: Custom exception")
+            raise UserNotFoundException(f"User with ID {playlist.created_for_id} not found")
 
     query = text("""
         INSERT INTO playlist.playlist (creator_id

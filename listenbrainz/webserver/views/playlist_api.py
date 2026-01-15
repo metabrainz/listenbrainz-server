@@ -21,6 +21,7 @@ from listenbrainz.metadata_cache.soundcloud.client import SoundCloud
 from listenbrainz.webserver.utils import parse_boolean_arg
 from listenbrainz.webserver.decorators import crossdomain, api_listenstore_needed
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APINotFound, APIForbidden, APIError, PlaylistAPIXMLError, APIUnauthorized
+from listenbrainz.db.exceptions import UserNotFoundException
 from brainzutils.ratelimit import ratelimit
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid, validate_auth_header, \
     _filter_description_html, get_non_negative_param
@@ -399,6 +400,9 @@ def create_playlist():
 
     try:
         playlist = db_playlist.create(db_conn, ts_conn, playlist)
+    except UserNotFoundException as e:
+        current_app.logger.error("Invalid user ID while creating playlist: {}".format(e))
+        raise APIBadRequest("Invalid user ID provided. {}".format(str(e)))
     except Exception as e:
         current_app.logger.error("Error while creating new playlist: {}".format(e))
         raise APIInternalServerError("Failed to create the playlist. Please try again.")
