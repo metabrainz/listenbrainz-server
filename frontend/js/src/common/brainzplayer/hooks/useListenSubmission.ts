@@ -40,9 +40,10 @@ const useListenSubmission = ({
   dataSourceRefs,
 }: ListenSubmissionProps) => {
   const store = useStore();
-  const apiService = useMemo(() => new APIService(listenBrainzAPIBaseURI), [
-    listenBrainzAPIBaseURI,
-  ]);
+  const apiService = useMemo(
+    () => new APIService(listenBrainzAPIBaseURI),
+    [listenBrainzAPIBaseURI]
+  );
   const retryOfflineListens = React.useCallback(async () => {
     if (!navigator.onLine) return;
 
@@ -57,7 +58,7 @@ const useListenSubmission = ({
     try {
       if (!currentUser || !currentUser.auth_token) return;
       const payload = failedListens.map((item) => item.listen);
-      await apiService.submitListens(currentUser.auth_token, "single", payload);
+      await apiService.submitListens(currentUser.auth_token, "import", payload);
       await Promise.all(
         failedListens.map((item) => removeFailedListen(item.id))
       );
