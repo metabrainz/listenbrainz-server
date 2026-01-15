@@ -293,17 +293,24 @@ describe("<UserSocialNetwork />", () => {
       </QueryClientProvider>,
       globalContext
     );
+// This scenario can trigger multiple API failures at once (followers, following,
+// and similar users so among all calls we check the one with correct toasstid for "similar user"
+   await waitFor(() => {
+  const calls = (toast.error as jest.Mock).mock.calls;
 
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        expect.objectContaining({
-          props: expect.objectContaining({
-            title: " Error while fetching similar users",
-          }),
-        }),
-        { toastId: "fetch-similar-error" }
-      );
-    });
+  const similarCalls = calls.filter(call => {
+    const message = call[0] as { props?: { title?: string } } | undefined;
+    const options = call[1];
+
+    return (
+      message?.props?.title === "Error while fetching similar users" &&
+      options?.toastId === "fetch-similar-error"
+    );
+  });
+
+  expect(similarCalls.length).toBeGreaterThan(0);
+});
+
   });
 
   it("does not fetch similarity data when not logged in", async () => {
