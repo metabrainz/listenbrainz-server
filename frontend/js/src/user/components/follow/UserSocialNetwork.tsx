@@ -35,21 +35,20 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
   >([]);
   const [similarityScore, setSimilarityScore] = React.useState<number>(0);
 
-
-   const isUserNotFoundError = (err: Error): boolean => {
+  const isUserNotFoundError = (err: Error): boolean => {
     const msg = err.toString().toLowerCase();
     return msg.includes("user not found");
   };
 
   const showUserNotFoundToast = React.useCallback(() => {
-  toast.error(
-    <ToastMsg
-      title="User not found"
-      message="This user does not exist yet."
-    />,
-    { toastId: "user-not-found-error" }
-  );
-}, []);
+    toast.error(
+      <ToastMsg
+        title="User not found"
+        message="This user does not exist yet."
+      />,
+      { toastId: "user-not-found-error" }
+    );
+  }, []);
 
   React.useEffect(() => {
     const {
@@ -65,38 +64,38 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
       .then((response: { followers: string[] }) => {
         setFollowerList(response.followers || []);
       })
-     .catch((err: Error) => {
-      if (isUserNotFoundError(err)) {
-        showUserNotFoundToast();
-      } else {
-        toast.error(
-          <ToastMsg
-            title="Error while fetching followers"
-            message={err.toString()}
-          />,
-          { toastId: "fetch-followers-error" }
-        );
-      }
-    });
+      .catch((err: Error) => {
+        if (isUserNotFoundError(err)) {
+          showUserNotFoundToast();
+        } else {
+          toast.error(
+            <ToastMsg
+              title="Error while fetching followers"
+              message={err.toString()}
+            />,
+            { toastId: "fetch-followers-error" }
+          );
+        }
+      });
 
     // Get following
     getFollowingForUser(profileUser.name)
       .then((response: { following: string[] }) => {
         setFollowingList(response.following || []);
       })
-     .catch((err: Error) => {
-      if (isUserNotFoundError(err)) {
-        showUserNotFoundToast();
-      } else {
-        toast.error(
-          <ToastMsg
-            title={`Error while fetching ${profileUser?.name}'s following`}
-            message={err.toString()}
-          />,
-          { toastId: "fetch-following-error" }
-        );
-      }
-    });
+      .catch((err: Error) => {
+        if (isUserNotFoundError(err)) {
+          showUserNotFoundToast();
+        } else {
+          toast.error(
+            <ToastMsg
+              title={`Error while fetching ${profileUser?.name}'s following`}
+              message={err.toString()}
+            />,
+            { toastId: "fetch-following-error" }
+          );
+        }
+      });
 
     // Get similar users
     getSimilarUsersForUser(profileUser.name)
@@ -114,18 +113,18 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         }
       )
       .catch((err: Error) => {
-      if (isUserNotFoundError(err)) {
-        showUserNotFoundToast();
-      } else {
-        toast.error(
-          <ToastMsg
-            title="Error while fetching similar users"
-            message={err.toString()}
-          />,
-          { toastId: "fetch-similar-error" }
-        );
-      }
-    });
+        if (isUserNotFoundError(err)) {
+          showUserNotFoundToast();
+        } else {
+          toast.error(
+            <ToastMsg
+              title="Error while fetching similar users"
+              message={err.toString()}
+            />,
+            { toastId: "fetch-similar-error" }
+          );
+        }
+      });
 
     // Get current user following (only if logged in)
     if (currentUser?.name) {
@@ -133,19 +132,19 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         .then((response: { following: string[] }) => {
           setCurrentUserFollowingList(response.following || []);
         })
-       .catch((err: Error) => {
-        if (isUserNotFoundError(err)) {
-          showUserNotFoundToast();
-        } else {
-          toast.error(
-            <ToastMsg
-              title="Error while fetching the users you follow"
-              message={err.toString()}
-            />,
-            { toastId: "fetch-following-error" }
-          );
-        }
-      });
+        .catch((err: Error) => {
+          if (isUserNotFoundError(err)) {
+            showUserNotFoundToast();
+          } else {
+            toast.error(
+              <ToastMsg
+                title="Error while fetching the users you follow"
+                message={err.toString()}
+              />,
+              { toastId: "fetch-following-error" }
+            );
+          }
+        });
     }
 
     // Get similarity and similar artists (only if logged in and different user)
@@ -155,24 +154,24 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
         .then((response: { payload: { similarity: number } }) => {
           setSimilarityScore(response.payload.similarity);
         })
-         .catch((err: Error) => {
+        .catch((err: Error) => {
           // This is expected in some cases and should remain there
-        if (err.toString() === "Error: Similar-to user not found") {
-          return;
-        }
-        
-        if (isUserNotFoundError(err)) {
-          showUserNotFoundToast();
-        } else {
-          toast.error(
-            <ToastMsg
-              title="Error while fetching similarity"
-              message={err.toString()}
-            />,
-            { toastId: "fetch-similarity-error" }
-          );
-        }
-      });
+          if (err.toString() === "Error: Similar-to user not found") {
+            return;
+          }
+
+          if (isUserNotFoundError(err)) {
+            showUserNotFoundToast();
+          } else {
+            toast.error(
+              <ToastMsg
+                title="Error while fetching similarity"
+                message={err.toString()}
+              />,
+              { toastId: "fetch-similarity-error" }
+            );
+          }
+        });
 
       // Get similar artists
       Promise.all([
@@ -188,21 +187,21 @@ function UserSocialNetwork(props: UserSocialNetworkProps) {
             intersectionBy(userArtists, currentUserArtists, "artist_name")
           );
         })
-         .catch((err: Error) => {
-        if (isUserNotFoundError(err)) {
-          showUserNotFoundToast();
-        } else {
-          toast.error(
-            <ToastMsg
-              title="Error while fetching user artists"
-              message={err.toString()}
-            />,
-            { toastId: "fetch-artists-error" }
-          );
-        }
-      });
+        .catch((err: Error) => {
+          if (isUserNotFoundError(err)) {
+            showUserNotFoundToast();
+          } else {
+            toast.error(
+              <ToastMsg
+                title="Error while fetching user artists"
+                message={err.toString()}
+              />,
+              { toastId: "fetch-artists-error" }
+            );
+          }
+        });
     }
-  }, [profileUser, currentUser, APIService,showUserNotFoundToast]);
+  }, [profileUser, currentUser, APIService, showUserNotFoundToast]);
 
   const isAnotherUser =
     Boolean(currentUser?.name) && currentUser.name !== profileUser?.name;
