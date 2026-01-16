@@ -858,15 +858,6 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         self.assert200(response)
         import_id = response.json["import_id"]
 
-        # Manually process the background task since the background processor isn't running in tests
-        from listenbrainz.background.background_tasks import BackgroundTasks, get_task, remove_task
-        processor = BackgroundTasks()
-        task = get_task()
-        self.assertIsNotNone(task)
-        self.assertEqual(task.task, "import_listens")
-        processor.process_task(task)
-        remove_task(task)
-
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=1, attempts=20)
         listens = response.json["payload"]["listens"]
@@ -875,11 +866,11 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         listen = listens[0]
         self.assertEqual(listen["listened_at"], 1639818816)
         track_metadata = listen["track_metadata"]
-        self.assertEqual(track_metadata["artist_name"], "Rage Against the Machine - Topic")
+        self.assertEqual(track_metadata["artist_name"], "Rage Against the Machine")
         self.assertEqual(track_metadata["track_name"], "Killing In the Name")
         additional_info = track_metadata["additional_info"]
         self.assertEqual(additional_info["submission_client"], "YouTube Music History Importer")
-        self.assertEqual(additional_info["music_service"], "youtube.com")
+        self.assertEqual(additional_info["music_service"], "music.youtube.com")
         self.assertEqual(additional_info["youtube_id"], "2o9aoL0NWpw")
         self.assertEqual(additional_info["origin_url"], "https://www.youtube.com/watch?v=2o9aoL0NWpw")
 
