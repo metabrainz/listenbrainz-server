@@ -41,7 +41,7 @@
     align-items: start;
     justify-items: center;
 
-    @supports not selector(::-webkit-scrollbar) {
+    @supports not selector(: : -webkit-scrollbar) {
       scrollbar-width: thin;
       scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
@@ -58,7 +58,6 @@
       background: rgba(0, 0, 0, 0.2);
       border-radius: 2px;
     }
-
   }
 
   .settings-navbar {
@@ -66,7 +65,7 @@
     max-width: 320px;
     overflow-y: scroll;
 
-    @supports not selector(::-webkit-scrollbar) {
+    @supports not selector(: : -webkit-scrollbar) {
       scrollbar-width: thin;
       scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
@@ -179,7 +178,7 @@
     padding-left: 0;
 
     /* Input */
-    >input {
+    > input {
       appearance: none;
       -moz-appearance: none;
       -webkit-appearance: none;
@@ -216,20 +215,20 @@
         transition: transform 0s, opacity 0s;
       }
 
-      &:checked+span::before {
+      &:checked + span::before {
         background-color: $black;
       }
 
-      &:checked+span::after {
+      &:checked + span::after {
         background-color: $gray-600;
         transform: translateX(10px);
       }
 
-      &:active+span::before {
+      &:active + span::before {
         background-color: $gray-600;
       }
 
-      &:checked:active+span::before {
+      &:checked:active + span::before {
         background-color: $black;
       }
 
@@ -238,21 +237,21 @@
         opacity: 0;
       }
 
-      &:disabled+span::before {
+      &:disabled + span::before {
         background-color: $gray-300;
       }
 
-      &:checked:disabled+span::before {
+      &:checked:disabled + span::before {
         background-color: #bfdbda;
       }
 
-      &:checked:disabled+span::after {
+      &:checked:disabled + span::after {
         background-color: $black;
       }
     }
 
     /* Track */
-    >span::before {
+    > span::before {
       content: "";
       display: inline-block;
       margin: 5px 0 5px 10px;
@@ -265,7 +264,7 @@
     }
 
     /* Thumb */
-    >span::after {
+    > span::after {
       content: "";
       position: absolute;
       top: 4px;
@@ -280,7 +279,7 @@
     }
 
     /* Hover, Focus */
-    &:hover>input {
+    &:hover > input {
       opacity: 0.04;
 
       &:focus {
@@ -303,7 +302,7 @@
       flex-basis: 300px;
       justify-content: left;
 
-      >.btn-link>span {
+      > .btn-link > span {
         margin-right: 0.2em;
         font-size: 14px;
       }
@@ -319,21 +318,21 @@
       margin-left: 0.6em;
       margin-right: auto;
 
-      >input {
+      > input {
         text-overflow: ellipsis;
         border-radius: 5px 0 0 5px;
         height: inherit;
       }
 
-      >span {
+      > span {
         height: inherit;
 
-        >button {
+        > button {
           height: inherit;
           border-radius: 0 5px 5px 0;
           line-height: 1em;
 
-          >svg {
+          > svg {
             font-size: 1.5em;
           }
         }
