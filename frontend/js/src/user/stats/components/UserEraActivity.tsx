@@ -63,18 +63,22 @@ const processDataIntoDecades = (
   const decadeMap = new Map<number, number>();
 
   data.forEach((item) => {
+    // We ignore anything before 1900
+    if (item.year < 1900) return;
+
     const decade = getDecade(item.year);
     const currentCount = decadeMap.get(decade) || 0;
     const itemCount = getCount(item);
     decadeMap.set(decade, currentCount + itemCount);
   });
 
-  const years = data.map((item) => item.year);
-  const minYear = Math.min(...years);
-  const maxYear = Math.max(...years);
+  // We calculate min/max years ONLY from the filtered data
+  const decades = Array.from(decadeMap.keys());
 
-  const minDecade = getDecade(minYear);
-  const maxDecade = getDecade(maxYear);
+  if (decades.length === 0) return [];
+
+  const minDecade = Math.min(...decades);
+  const maxDecade = Math.max(...decades);
 
   const result = [];
   for (let decade = minDecade; decade <= maxDecade; decade += 10) {
