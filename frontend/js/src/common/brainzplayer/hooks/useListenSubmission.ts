@@ -2,6 +2,7 @@ import * as React from "react";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { assign, cloneDeep } from "lodash";
 import { useEffect, useMemo } from "react";
+import { toast } from "react-toastify";
 import {
   currentListenAtom,
   currentDataSourceIndexAtom,
@@ -19,12 +20,11 @@ import {
   removeFailedListen,
 } from "../../../utils/listenStorage";
 import APIService from "../../../utils/APIService";
+import { ToastMsg } from "../../../notifications/Notifications";
 
 interface ListenSubmissionProps {
   currentUser: ListenBrainzUser;
   listenBrainzAPIBaseURI: string;
-  onError: (error: any, title: string) => void;
-  onWarning: (message: string, title: string) => void;
   dataSourceRefs: React.RefObject<DataSourceTypes>[];
 }
 
@@ -35,24 +35,27 @@ interface ListenSubmissionProps {
 const useListenSubmission = ({
   currentUser,
   listenBrainzAPIBaseURI,
-  onError,
-  onWarning,
   dataSourceRefs,
 }: ListenSubmissionProps) => {
   const store = useStore();
-  const apiService = useMemo(
-    () => new APIService(listenBrainzAPIBaseURI),
-    [listenBrainzAPIBaseURI]
-  );
+  const apiService = useMemo(() => new APIService(listenBrainzAPIBaseURI), [
+    listenBrainzAPIBaseURI,
+  ]);
   const retryOfflineListens = React.useCallback(async () => {
     if (!navigator.onLine) return;
 
     const failedListens = await getFailedListens();
-    if (failedListens.length === 0) return;
+    const failedListensCount = failedListens.length;
+    if (failedListensCount === 0) return;
 
-    onWarning(
-      `Retrying ${failedListens.length} unsent listens...`,
-      "Back Online"
+    toast.info(
+      ToastMsg({
+        title: "Back online",
+        message: `Retrying ${failedListensCount} unsent listens...`,
+      }),
+      {
+        toastId: "retry-submissions",
+      }
     );
 
     try {
@@ -63,9 +66,27 @@ const useListenSubmission = ({
         failedListens.map((item) => removeFailedListen(item.id))
       );
     } catch (error) {
-      onError(error, "Retry Failed");
+      toast.error(
+        ToastMsg({
+          title: "Retry failed",
+          message: error.toString(),
+        }),
+        {
+          toastId: "retry-failed",
+        }
+      );
+      return;
     }
-  }, [currentUser, apiService, onWarning, onError]);
+    toast.success(
+      ToastMsg({
+        title: "Listens submitted",
+        message: `Successfully submitted ${failedListensCount} saved listens.`,
+      }),
+      {
+        toastId: "offline-listens-success",
+      }
+    );
+  }, [currentUser, apiService]);
   useEffect(() => {
     window.addEventListener("online", retryOfflineListens);
     retryOfflineListens();
@@ -183,21 +204,21 @@ const useListenSubmission = ({
         } catch (error) {
           if (!isPlayingNowType) {
             await saveFailedListen(listen as Listen);
-            onWarning(
-              "Connection lost. Listen saved locally.",
-              "Submission Failed"
+            toast.warning(
+              ToastMsg({
+                title: "Submission failed",
+                message:
+                  "Connection lost. Listens are saved locally to retry later.",
+              }),
+              {
+                toastId: "offline",
+              }
             );
           }
         }
       }
     },
-    [
-      dataSourceRefs,
-      getCurrentDataSourceIndex,
-      currentUser,
-      apiService,
-      onWarning,
-    ]
+    [dataSourceRefs, getCurrentDataSourceIndex, currentUser, apiService]
   );
 
   const submitCurrentListen = React.useCallback(async (): Promise<void> => {
