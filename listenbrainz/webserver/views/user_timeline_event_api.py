@@ -324,7 +324,8 @@ def user_feed_event(user_name: str, event_id: int):
         raise APINotFound(f"Event with id {event_id} not found")
 
     # Get metadata for event
-    _ = fetch_track_metadata_for_items(ts_conn, [user_event.metadata])
+    if user_event.event_type not in [UserTimelineEventType.NOTIFICATION]:
+        _ = fetch_track_metadata_for_items(ts_conn, [user_event.metadata])
 
     # Format the event
     user_event = APITimelineEvent(
@@ -752,7 +753,7 @@ def create_thanks_event(user_name):
             result = db_user_timeline_event.get_user_timeline_event_by_id(
                 db_conn, row_id)
         elif event_type == UserTimelineEventType.RECORDING_PIN:
-            result = get_pin_by_id(db_conn, row_id)
+            result = db_user_timeline_event.get_user_timeline_event_by_id(db_conn, row_id)
         else:
             raise APIBadRequest(
                 "This event type is not supported for thanking")
