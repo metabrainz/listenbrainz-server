@@ -17,27 +17,72 @@
     align-items: center;
     justify-items: center;
     justify-content: center;
+
     .gallery-tile {
       max-width: 100px;
       border: none;
       pointer-events: none;
+
       &.selected {
         border: 3px solid $orange;
       }
     }
   }
 
-  .color-picker-panel {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .custom-presets-panel {
     margin-bottom: 4px;
     margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    max-height: 140px;
+    overflow-y: scroll;
+    padding: 0px 15px 30px 4px;
+    align-items: start;
+    justify-items: center;
+
+    @supports not selector(::-webkit-scrollbar) {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 2px;
+    }
+
   }
 
   .settings-navbar {
     margin-left: auto;
     max-width: 320px;
+    overflow-y: scroll;
+
+    @supports not selector(::-webkit-scrollbar) {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 2px;
+    }
   }
 
   /*Color Picker*/
@@ -48,19 +93,66 @@
     position: relative;
     overflow: hidden;
     border: none;
+    cursor: pointer;
 
     .color-half {
       width: 50%;
       height: 100%;
       position: absolute;
       top: 0;
+
       &:first-child {
         left: 0;
       }
+
       &:last-child {
         left: 50%;
       }
     }
+  }
+
+  .custom-preset-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    height: 24px;
+    width: 24px;
+
+    &.preset-selected {
+      box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #194b9d;
+      z-index: 1;
+    }
+
+    .delete-preset-btn {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      border-radius: 50%;
+      border: none;
+      color: #1e3050;
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out, transform 0.1s;
+      padding: 0;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      z-index: 2;
+    }
+
+    &:hover .delete-preset-btn {
+      opacity: 1;
+    }
+  }
+
+  .save-preset-btn {
+    border-radius: 5px;
   }
 
   .preview {
@@ -85,8 +177,9 @@
     position: relative;
     display: inline-block;
     padding-left: 0;
+
     /* Input */
-    > input {
+    >input {
       appearance: none;
       -moz-appearance: none;
       -webkit-appearance: none;
@@ -105,14 +198,17 @@
       transform: scale(1);
       pointer-events: none;
       transition: opacity 0.3s 0.1s, transform 0.2s 0.1s;
+
       /* Checked */
       &:checked {
         right: -10px;
         background-color: $gray-600;
       }
+
       &:focus {
         opacity: 0.12;
       }
+
       /* Active */
       &:active {
         opacity: 1;
@@ -120,19 +216,20 @@
         transition: transform 0s, opacity 0s;
       }
 
-      &:checked + span::before {
+      &:checked+span::before {
         background-color: $black;
       }
 
-      &:checked + span::after {
+      &:checked+span::after {
         background-color: $gray-600;
         transform: translateX(10px);
       }
-      &:active + span::before {
+
+      &:active+span::before {
         background-color: $gray-600;
       }
 
-      &:checked:active + span::before {
+      &:checked:active+span::before {
         background-color: $black;
       }
 
@@ -141,20 +238,21 @@
         opacity: 0;
       }
 
-      &:disabled + span::before {
+      &:disabled+span::before {
         background-color: $gray-300;
       }
 
-      &:checked:disabled + span::before {
+      &:checked:disabled+span::before {
         background-color: #bfdbda;
       }
 
-      &:checked:disabled + span::after {
+      &:checked:disabled+span::after {
         background-color: $black;
       }
     }
+
     /* Track */
-    > span::before {
+    >span::before {
       content: "";
       display: inline-block;
       margin: 5px 0 5px 10px;
@@ -165,8 +263,9 @@
       vertical-align: top;
       transition: background-color 0.2s, opacity 0.2s;
     }
+
     /* Thumb */
-    > span::after {
+    >span::after {
       content: "";
       position: absolute;
       top: 4px;
@@ -181,8 +280,9 @@
     }
 
     /* Hover, Focus */
-    &:hover > input {
+    &:hover>input {
       opacity: 0.04;
+
       &:focus {
         opacity: 0.16;
       }
@@ -196,42 +296,51 @@
     gap: 1em;
     margin-top: 1em;
     margin-bottom: 1em;
+
     .profile,
     .share-buttons {
       flex: 1;
       flex-basis: 300px;
       justify-content: left;
-      > .btn-link > span {
+
+      >.btn-link>span {
         margin-right: 0.2em;
         font-size: 14px;
       }
     }
+
     .profile {
       text-align: left;
     }
+
     .link-container {
       min-width: 150px;
       height: 3em;
       margin-left: 0.6em;
       margin-right: auto;
-      > input {
+
+      >input {
         text-overflow: ellipsis;
         border-radius: 5px 0 0 5px;
         height: inherit;
       }
-      > span {
+
+      >span {
         height: inherit;
-        > button {
+
+        >button {
           height: inherit;
           border-radius: 0 5px 5px 0;
           line-height: 1em;
-          > svg {
+
+          >svg {
             font-size: 1.5em;
           }
         }
       }
     }
   }
+
   input[type="color"] {
     padding: 0;
     max-width: 5em;
@@ -239,6 +348,7 @@
 
   .input-group {
     flex-wrap: nowrap;
+
     .input-group-text {
       font-size: 1.4rem;
     }
