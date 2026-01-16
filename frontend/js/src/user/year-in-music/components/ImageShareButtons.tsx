@@ -4,6 +4,7 @@ import {
   faCopy,
   faDownload,
   faShareAlt,
+  faClone,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -90,6 +91,39 @@ export default function MagicShareButton({
     },
     [svgURL, customStyles]
   );
+
+  const copyAltText = useCallback(async () => {
+    try {
+      const response = await fetch(svgURL);
+      const svgText = await response.text();
+
+      if (!response.ok) {
+        throw new Error(svgText);
+      }
+
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
+
+      const title = svgDoc.querySelector("title")?.textContent ?? "";
+      const desc = svgDoc.querySelector("desc")?.textContent ?? "";
+
+      if (!title && !desc) {
+        throw new Error("No alt text found in SVG");
+      }
+
+      const altText = `${title}${desc ? ` — ${desc}` : ""}`;
+
+      await navigator.clipboard.writeText(altText);
+      toast.success("Copied alt text to clipboard");
+    } catch (error) {
+      toast.error(
+        <ToastMsg
+          title="Could not copy alt text"
+          message={typeof error === "object" ? error.message : error.toString()}
+        />
+      );
+    }
+  }, [svgURL]);
 
   const saveToFile = useCallback(async () => {
     const blob = await getSVG();
@@ -250,6 +284,19 @@ export default function MagicShareButton({
           title="Save as…"
         >
           <FontAwesomeIcon fixedWidth icon={faDownload} />
+        </button>
+        <button
+          className="yim-share-button btn btn-icon btn-link text-nowrap ms-2"
+          type="button"
+          onClick={copyAltText}
+          title="Copy alt text for image"
+        >
+          <span className="text-muted">alt text</span>
+          <FontAwesomeIcon
+            className="text-muted ms-1"
+            icon={faClone}
+            fixedWidth
+          />
         </button>
       </div>
     </>
