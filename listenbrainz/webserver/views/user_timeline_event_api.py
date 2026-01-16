@@ -1167,7 +1167,7 @@ def get_recording_pin_events(
             )
 
             events.append(APITimelineEvent(
-                id=pin.id,
+                id=pin.row_id,
                 event_type=UserTimelineEventType.RECORDING_PIN,
                 user_name=pin_event.user_name,
                 created=pin.created.timestamp(),
