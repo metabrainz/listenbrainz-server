@@ -444,8 +444,6 @@ export default function BrainzPlayer() {
   const { submitCurrentListen, submitNowPlaying } = useListenSubmission({
     currentUser,
     listenBrainzAPIBaseURI,
-    onError: handleError,
-    onWarning: handleWarning,
     dataSourceRefs,
   });
 
