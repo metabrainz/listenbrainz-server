@@ -9,7 +9,7 @@ from more_itertools import chunked
 from listenbrainz.background.listens_importer.base import BaseListensImporter
 
 
-class YouTubeListensImporter(BaseListensImporter):
+class YouTubeMusicListensImporter(BaseListensImporter):
     """Importer for YouTube Music listening history exports."""
 
     def __init__(self, *args, **kwargs):
@@ -33,7 +33,7 @@ class YouTubeListensImporter(BaseListensImporter):
             try:
                 time_str = item.get("time", "")
                 timestamp = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-            except (KeyError, TypeError, ValueError):
+            except (TypeError, ValueError):
                 current_app.logger.error("Invalid YouTube timestamp in item: %s", item, exc_info=True)
                 continue
 
@@ -66,6 +66,9 @@ class YouTubeListensImporter(BaseListensImporter):
                 if not channel_name:
                     continue
 
+                if(channel_name.endswith(" - Topic")):
+                    channel_name=channel_name[:-8]
+
                 track_name = title
                 artist_name = channel_name
 
@@ -82,11 +85,19 @@ class YouTubeListensImporter(BaseListensImporter):
                 video_url = item.get("titleUrl", "")
                 if video_url:
                     additional_info["origin_url"] = video_url
-                    match = re.search(r'watch\?v=([^&]+)', video_url)
-                    if match:
-                        video_id=match.group(1)
-                    else: 
-                        continue
+                    video_id = None
+                    patterns = [
+                        r'watch\?v=([^&]+)',
+                        r'youtu\.be/([^?]+)',
+                        r'embed/([^?]+)',
+                        r'v/([^?]+)',
+                        r'e/([^?]+)'
+                    ]
+                    for pattern in patterns:
+                        match = re.search(pattern, video_url)
+                        if match:
+                            video_id = match.group(1)
+                            break
                     if video_id:
                         additional_info["youtube_id"] = video_id
 

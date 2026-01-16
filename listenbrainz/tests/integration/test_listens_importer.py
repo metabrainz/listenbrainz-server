@@ -846,8 +846,8 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
 
     def test_import_youtube(self):
         data = {
-            "service": "youtube",
-            "file": open(self.path_to_data_file("youtube.json"), "rb")
+            "service": "youtubemusic",
+            "file": open(self.path_to_data_file("youtubemusic.json"), "rb")
         }
         response = self.client.post(
             self.custom_url_for("import_listens_api_v1.create_import_task"),
@@ -857,6 +857,15 @@ class ImportTestCase(ListenAPIIntegrationTestCase):
         )
         self.assert200(response)
         import_id = response.json["import_id"]
+
+        # Manually process the background task since the background processor isn't running in tests
+        from listenbrainz.background.background_tasks import BackgroundTasks, get_task, remove_task
+        processor = BackgroundTasks()
+        task = get_task()
+        self.assertIsNotNone(task)
+        self.assertEqual(task.task, "import_listens")
+        processor.process_task(task)
+        remove_task(task)
 
         url = self.custom_url_for("api_v1.get_listens", user_name=self.user["musicbrainz_id"])
         response = self.wait_for_query_to_have_items(url, num_items=1, attempts=20)
