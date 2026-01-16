@@ -13,7 +13,8 @@ $white-background: $white;
 $youtube-player-height: 200px;
 $youtube-player-width: 350px;
 $youtube-button-size: 30px;
-$youtube-resize-transition: height 0.25s ease-out;
+$youtube-resize-transition: width 0.15s ease-in-out, height 0.15s ease-in-out;
+$youtube-expanded-width: 1280px;
 
 #brainz-player {
   position: fixed;
@@ -78,6 +79,9 @@ $youtube-resize-transition: height 0.25s ease-out;
         height: $youtube-player-height + $youtube-button-size;
         width: $youtube-player-width;
         max-width: calc(100vw - 20px);
+        @media (min-width: $offscreen-sidenav-breakpoint) {
+          max-width: calc(100vw - 200px - 20px);
+        }
         z-index: 4;
         text-align: right; // to align the move and reduce buttons
         transition: $youtube-resize-transition;
@@ -86,6 +90,14 @@ $youtube-resize-transition: height 0.25s ease-out;
           height: $youtube-button-size;
           .youtube-player {
             height: 0;
+          }
+        }
+
+        &.expanded {
+          width: min(#{$youtube-expanded-width}, 100%);
+          height: calc(min(70vw, 700px) + #{$youtube-button-size});
+          .youtube-player {
+            height: min(70vw, 700px);
           }
         }
 
@@ -116,6 +128,7 @@ $youtube-resize-transition: height 0.25s ease-out;
             cursor: grabbing;
           }
         }
+
       }
     }
   }
