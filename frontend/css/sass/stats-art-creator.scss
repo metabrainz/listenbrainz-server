@@ -41,7 +41,8 @@
     align-items: start;
     justify-items: center;
 
-    @supports not selector(: : -webkit-scrollbar) {
+    /* prettier-ignore */
+    @supports not selector(::-webkit-scrollbar) {
       scrollbar-width: thin;
       scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
@@ -65,7 +66,8 @@
     max-width: 320px;
     overflow-y: scroll;
 
-    @supports not selector(: : -webkit-scrollbar) {
+    /* prettier-ignore */
+    @supports not selector(::-webkit-scrollbar) {
       scrollbar-width: thin;
       scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
