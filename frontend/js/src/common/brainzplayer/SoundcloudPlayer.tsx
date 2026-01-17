@@ -137,7 +137,7 @@ export default class SoundcloudPlayer
   componentDidUpdate(prevProps: DataSourceProps) {
     const { volume } = this.props;
     if (prevProps.volume !== volume && this.soundcloudPlayer?.setVolume) {
-      this.soundcloudPlayer?.setVolume((volume ?? 100) / 100);
+      this.soundcloudPlayer?.setVolume(volume ?? 100);
     }
   }
 
