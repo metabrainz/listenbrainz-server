@@ -103,7 +103,6 @@ export default NiceModal.create(() => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [invertOrder, setInvertOrder] = useState(false);
   const [keepModalOpen, setKeepModalOpen] = useState(false);
-  const [searchText, setSearchText] = useState<string>("");
   // Used for the automatic switching and search trigger if pasting URL for another entity type
   const [textToSearch, setTextToSearch] = useState<string>();
   const addSingleListenRef = useRef<{ reset: () => void }>(null);
@@ -293,16 +292,16 @@ export default NiceModal.create(() => {
             <AddSingleListen
               onPayloadChange={setSelectedListens}
               switchMode={switchMode}
-              initialText={textToSearch || searchText}
-              onSearchTextChange={setSearchText}
+              initialText={textToSearch}
+              onSearchTextChange={setTextToSearch}
             />
           )}
           {listenOption === SubmitListenType.album && (
             <AddAlbumListens
               onPayloadChange={setSelectedListens}
               switchMode={switchMode}
-              initialText={textToSearch || searchText}
-              onSearchTextChange={setSearchText}
+              initialText={textToSearch}
+              onSearchTextChange={setTextToSearch}
             />
           )}
           <hr />
