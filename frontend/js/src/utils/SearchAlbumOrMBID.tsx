@@ -31,6 +31,7 @@ type SearchAlbumOrMBIDProps = {
   defaultValue?: string;
   switchMode?: (text: string) => void;
   requiredInput?: boolean;
+  onSearchTextChange?: (text: string) => void;
 };
 
 const SearchAlbumOrMBID = forwardRef<
@@ -42,6 +43,7 @@ const SearchAlbumOrMBID = forwardRef<
     defaultValue,
     switchMode,
     requiredInput = true,
+    onSearchTextChange,
   }: SearchAlbumOrMBIDProps,
   inputRefForParent
 ) {
@@ -210,6 +212,7 @@ const SearchAlbumOrMBID = forwardRef<
           name="release-mbid"
           onChange={(event) => {
             setInputValue(event.target.value);
+            onSearchTextChange?.(event.target.value);
           }}
           placeholder="Album name or MusicBrainz URL/MBID"
           required={requiredInput}

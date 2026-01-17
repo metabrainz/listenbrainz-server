@@ -293,6 +293,7 @@ export default NiceModal.create(() => {
               onPayloadChange={setSelectedListens}
               switchMode={switchMode}
               initialText={textToSearch}
+              onSearchTextChange={setTextToSearch}
             />
           )}
           {listenOption === SubmitListenType.album && (
@@ -300,6 +301,7 @@ export default NiceModal.create(() => {
               onPayloadChange={setSelectedListens}
               switchMode={switchMode}
               initialText={textToSearch}
+              onSearchTextChange={setTextToSearch}
             />
           )}
           <hr />
