@@ -457,13 +457,13 @@ export default class APIService {
         if (!response.ok) {
           if (retries > 0) {
             // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-            return this.retrySubmit(userToken, listenType, payload, retries)
+            return this.retrySubmit(userToken, listenType, payload, retries);
           }
           return response;
         }
       } catch (error) {
         if (retries > 0) {
-          return this.retrySubmit(userToken, listenType, payload, retries)
+          return this.retrySubmit(userToken, listenType, payload, retries);
         }
 
         throw error;
@@ -481,26 +481,31 @@ export default class APIService {
       .then((response2) => response2)
       .catch((error) => {
         if (retries > 0) {
-          return this.retrySubmit(userToken, listenType, payload, retries)
+          return this.retrySubmit(userToken, listenType, payload, retries);
         }
         return error;
       });
   };
 
-  //Helper Function for the retry logic 
+  // Helper Function for the retry logic
 
   private async retrySubmit(
     userToken: string,
     listenType: ListenType,
-    payload: Listen | Array<Listen>,//can  be single listen obj or array of Listen obj
+    payload: Listen | Array<Listen>, // can  be single listen obj or array of Listen obj
     retries: number
   ): Promise<Response> {
     await new Promise((resolve) => {
       setTimeout(resolve, 3000);
     });
-    //Passing payload with type  assertion.
-    return this.submitListens(userToken, listenType, payload as any, retries - 1);
-  };
+    // Passing payload with type  assertion.
+    return this.submitListens(
+      userToken,
+      listenType,
+      payload as any,
+      retries - 1
+    );
+  }
 
   /*
    *  Send a GET request to the ListenBrainz server to get the latest import time
@@ -510,10 +515,11 @@ export default class APIService {
     userName: string,
     service: ImportService
   ): Promise<LatestImportResponse> => {
-    const url = `${this.APIBaseURI
-      }/latest-import?user_name=${encodeURIComponent(
-        userName
-      )}&service=${service}`;
+    const url = `${
+      this.APIBaseURI
+    }/latest-import?user_name=${encodeURIComponent(
+      userName
+    )}&service=${service}`;
     const response = await fetch(url, {
       method: "GET",
     });
@@ -551,8 +557,8 @@ export default class APIService {
     const url = `${this.APIBaseURI}/import-listens/${importId}/`;
     const headers = authToken
       ? {
-        Authorization: `Token ${authToken}`,
-      }
+          Authorization: `Token ${authToken}`,
+        }
       : undefined;
     const response = await fetch(url, {
       method: "GET",
@@ -1009,8 +1015,9 @@ export default class APIService {
 
     const url = `${this.APIBaseURI}/user/${encodeURIComponent(
       userName
-    )}/playlists${createdFor ? "/createdfor" : ""}${collaborator ? "/collaborator" : ""
-      }?offset=${offset}&count=${count}`;
+    )}/playlists${createdFor ? "/createdfor" : ""}${
+      collaborator ? "/collaborator" : ""
+    }?offset=${offset}&count=${count}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -1195,10 +1202,11 @@ export default class APIService {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `${this.APIBaseURI
-      }/recommendation/feedback/user/${encodeURIComponent(
-        userName
-      )}/recordings?mbids=${recordings}`;
+    const url = `${
+      this.APIBaseURI
+    }/recommendation/feedback/user/${encodeURIComponent(
+      userName
+    )}/recordings?mbids=${recordings}`;
     const response = await fetch(url);
     await this.checkStatus(response);
     return response.json();
@@ -1536,9 +1544,9 @@ export default class APIService {
     releaseGroupMBID: string
   ): Promise<
     MusicBrainzReleaseGroup &
-    WithArtistCredits & {
-      releases: Array<MusicBrainzRelease & WithMedia>;
-    }
+      WithArtistCredits & {
+        releases: Array<MusicBrainzRelease & WithMedia>;
+      }
   > => {
     const url = `${this.MBBaseURI}/release-group/${releaseGroupMBID}?fmt=json&inc=releases+artists+media`;
     const response = await fetch(encodeURI(url));
@@ -2055,8 +2063,8 @@ export default class APIService {
               <${formattedEntityName} id="${entityMBID}">
                   <user-tag-list>
                       <user-tag vote="${lowerCase(
-          action
-        )}"><name>${safeTagName}</name></user-tag>
+                        action
+                      )}"><name>${safeTagName}</name></user-tag>
                   </user-tag-list>
               </${formattedEntityName}>
           </${formattedEntityName}-list>
@@ -2249,8 +2257,9 @@ export default class APIService {
     prompt: string,
     mode: Modes = Modes.easy
   ): Promise<LBRadioResponse> {
-    const url = `${this.APIBaseURI
-      }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
+    const url = `${
+      this.APIBaseURI
+    }/explore/lb-radio?prompt=${encodeURIComponent(prompt)}&mode=${mode}`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
