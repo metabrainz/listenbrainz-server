@@ -457,30 +457,13 @@ export default class APIService {
         if (!response.ok) {
           if (retries > 0) {
             // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-            await new Promise((resolve) => {
-              setTimeout(resolve, 3000);
-            });
-            return this.submitListens(
-              userToken,
-              listenType,
-              payload,
-              retries - 1
-            );
+            return this.retrySubmit(userToken, listenType, payload, retries);
           }
           return response;
         }
       } catch (error) {
         if (retries > 0) {
-          // Retry if there is an network error
-          await new Promise((resolve) => {
-            setTimeout(resolve, 3000);
-          });
-          return this.submitListens(
-            userToken,
-            listenType,
-            payload,
-            retries - 1
-          );
+          return this.retrySubmit(userToken, listenType, payload, retries);
         }
 
         throw error;
@@ -498,16 +481,31 @@ export default class APIService {
       .then((response2) => response2)
       .catch((error) => {
         if (retries > 0) {
-          return this.submitListens(
-            userToken,
-            listenType,
-            payload,
-            retries - 1
-          );
+          return this.retrySubmit(userToken, listenType, payload, retries);
         }
         return error;
       });
   };
+
+  // Helper Function for the retry logic
+
+  private async retrySubmit(
+    userToken: string,
+    listenType: ListenType,
+    payload: Listen | Array<Listen>, // can  be single listen obj or array of Listen obj
+    retries: number
+  ): Promise<Response> {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    // Passing payload with type  assertion.
+    return this.submitListens(
+      userToken,
+      listenType,
+      payload as any,
+      retries - 1
+    );
+  }
 
   /*
    *  Send a GET request to the ListenBrainz server to get the latest import time
