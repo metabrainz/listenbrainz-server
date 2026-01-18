@@ -168,7 +168,7 @@ class ClickHouseListenConsumer(ConsumerMixin):
         values = [
             (
                 listen['user_id'],
-                datetime.fromtimestamp(listen['listened_at'], tz=timezone.utc),
+                datetime.fromtimestamp(listen['timestamp'], tz=timezone.utc),
                 listen['recording_msid'],
             )
             for listen in listens
