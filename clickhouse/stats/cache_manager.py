@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS deleted_listens_log (
     user_id UInt32,
     date Date,
     listened_at DateTime64(3),
-    artist_id UInt64,
+    artist_id UInt64 DEFAULT 0,        -- MB artist ID (small) or hash (large)
     recording_id UInt64,
     release_group_id UInt64,
     processed UInt8 DEFAULT 0,
@@ -148,11 +148,12 @@ class EntityConfig:
 
 
 # Entity configurations for artists, recordings, and release groups
+# Artist uses unified artist_id: MB ID (small) for mapped, hash (large) for unmapped
 ARTIST_CONFIG = EntityConfig(
     entity_type='artist',
     stats_table='user_artist_stats_daily',
-    dimension_table='artist_dim',
-    id_column='artist_id',
+    dimension_table='artist_cache',  # Primary lookup for mapped artists
+    id_column='artist_id',  # Unified ID: MB ID or hash
     dimension_fields=[
         ('artist_mbid', 'artist_mbid'),
         ('artist_name', 'artist_name'),
@@ -339,7 +340,6 @@ class StatsCacheManager:
         """
         entity_type = self.entity_config.entity_type
         stats_table = self.entity_config.stats_table
-        id_column = self.entity_config.id_column
 
         logger.info(f"Processing pending deletions for {entity_type}...")
 
@@ -349,6 +349,13 @@ class StatsCacheManager:
         if cutoff is not None:
             cutoff_filter = "AND deleted_at <= {cutoff:DateTime64(3)}"
             params['cutoff'] = cutoff
+
+        # Artists use dual-key pattern
+        if entity_type == 'artist':
+            return self._process_artist_deletions(cutoff_filter, params)
+
+        # Other entity types use single id_column pattern
+        id_column = self.entity_config.id_column
 
         # Count pending deletions that have a valid entity ID for this type
         count_result = self.ch_client.query(f"""
@@ -377,6 +384,39 @@ class StatsCacheManager:
         """, parameters=params)
 
         logger.info(f"Processed {pending_count} deletions for {entity_type}")
+        return pending_count
+
+    def _process_artist_deletions(self, cutoff_filter: str, params: dict) -> int:
+        """
+        Process pending deletions for artists using unified artist_id.
+        """
+        # Count pending deletions that have artist_id
+        count_result = self.ch_client.query(f"""
+            SELECT count() FROM deleted_listens_log
+            WHERE processed = 0 AND artist_id != 0 {cutoff_filter}
+        """, parameters=params)
+        pending_count = count_result.first_row[0]
+
+        if pending_count == 0:
+            logger.info("No pending deletions to process for artist")
+            return 0
+
+        logger.info(f"Processing {pending_count} pending deletions for artist")
+
+        # Insert negative counts
+        self.ch_client.command(f"""
+            INSERT INTO user_artist_stats_daily (date, user_id, artist_id, listen_count)
+            SELECT
+                date,
+                user_id,
+                artist_id,
+                -toInt64(count()) AS listen_count
+            FROM deleted_listens_log
+            WHERE processed = 0 AND artist_id != 0 {cutoff_filter}
+            GROUP BY date, user_id, artist_id
+        """, parameters=params)
+
+        logger.info(f"Processed {pending_count} deletions for artist")
         return pending_count
 
     def mark_deletions_processed(self, cutoff: Optional[datetime] = None):
@@ -587,6 +627,10 @@ class StatsCacheManager:
         if not user_ids:
             return {}
 
+        # Artists use dual-key pattern with special query
+        if self.entity_config.entity_type == 'artist':
+            return self._compute_top_artists_batch(time_range, user_ids, limit)
+
         range_config = TIME_RANGES.get(time_range, {'filter': '', 'period_start_sql': "toDate('1970-01-01')"})
         date_filter = range_config['filter']
 
@@ -663,6 +707,100 @@ class StatsCacheManager:
                         for i in range(len(self.entity_config.dimension_fields))
                     },
                     'listen_count': t[len(self.entity_config.dimension_fields)],
+                }
+                for t in entities_tuples
+            ]
+
+        return user_entities
+
+    def _compute_top_artists_batch(
+        self,
+        time_range: str,
+        user_ids: list[int],
+        limit: int = 1000
+    ) -> dict[int, list[dict]]:
+        """
+        Compute top N artists using unified artist_id.
+
+        artist_id is a single UInt64 column that contains:
+        - MB's integer artist ID for mapped artists (small values, < 2^32)
+        - sipHash64 hash for unmapped artists (large 64-bit values)
+
+        Mapped artists join to artist_cache, unmapped to artist_dim.
+        Since IDs don't overlap, we LEFT JOIN both and COALESCE.
+        """
+        range_config = TIME_RANGES.get(time_range, {'filter': '', 'period_start_sql': "toDate('1970-01-01')"})
+        date_filter = range_config['filter']
+
+        query = f"""
+            WITH aggregated AS (
+                SELECT
+                    user_id,
+                    artist_id,
+                    sum(listen_count) AS listen_count
+                FROM user_artist_stats_daily
+                WHERE user_id IN ({{user_ids:Array(UInt32)}})
+                {date_filter}
+                GROUP BY user_id, artist_id
+                HAVING listen_count > 0
+            ),
+            ranked AS (
+                SELECT
+                    user_id,
+                    artist_id,
+                    listen_count,
+                    row_number() OVER (PARTITION BY user_id ORDER BY listen_count DESC) AS rn
+                FROM aggregated
+            ),
+            top_n AS (
+                SELECT user_id, artist_id, listen_count
+                FROM ranked
+                WHERE rn <= {{limit:UInt32}}
+            ),
+            with_metadata AS (
+                SELECT
+                    t.user_id,
+                    t.listen_count,
+                    -- LEFT JOIN both tables; one will match based on ID range
+                    COALESCE(nullIf(ac.artist_mbid, ''), ad.artist_mbid, '') AS artist_mbid,
+                    COALESCE(ac.artist_name, ad.artist_name, '') AS artist_name
+                FROM top_n t
+                LEFT JOIN artist_cache ac FINAL ON t.artist_id = ac.artist_id
+                LEFT JOIN artist_dim ad FINAL ON t.artist_id = ad.artist_id
+            )
+            SELECT
+                user_id,
+                arrayMap(
+                    x -> (x.2, x.3, x.1),
+                    arraySort(
+                        x -> -x.1,
+                        groupArray(
+                            tuple(listen_count, nullIf(artist_mbid, ''), artist_name)
+                        )
+                    )
+                ) AS entities
+            FROM with_metadata
+            GROUP BY user_id
+            ORDER BY user_id
+        """
+
+        ch_start = time.perf_counter()
+        result = self.ch_client.query(
+            query,
+            parameters={'user_ids': user_ids, 'limit': limit}
+        )
+        ch_elapsed = time.perf_counter() - ch_start
+        logger.info(f"ClickHouse artist query took {ch_elapsed:.2f}s for {len(user_ids)} users")
+
+        user_entities: dict[int, list[dict]] = {uid: [] for uid in user_ids}
+
+        for row in result.result_rows:
+            user_id, entities_tuples = row
+            user_entities[user_id] = [
+                {
+                    'artist_mbid': t[0],
+                    'artist_name': t[1],
+                    'listen_count': t[2],
                 }
                 for t in entities_tuples
             ]
@@ -1228,6 +1366,8 @@ def delete_listen(
     recording_msid: str,
     artist_name: str,
     artist_credit_mbids: list[str],
+    artist_mb_ids: list[int],
+    is_mapped: bool,
     recording_mbid: Optional[str] = None,
     track_name: Optional[str] = None,
     release_group_mbid: Optional[str] = None,
@@ -1239,11 +1379,30 @@ def delete_listen(
     This should be called by the application when a user deletes a listen.
     Logs the deletion for all entity types (artist, recording, release_group)
     so that stats caches can be properly invalidated.
+
+    Args:
+        ch_client: ClickHouse client
+        user_id: User ID
+        listened_at: Listen timestamp
+        recording_msid: Recording MSID
+        artist_name: Artist name
+        artist_credit_mbids: List of artist credit MBIDs
+        artist_mb_ids: List of MB integer artist IDs (from listens table)
+        is_mapped: Whether the listen was mapped to MB data
+        recording_mbid: Recording MBID (optional)
+        track_name: Track name (optional)
+        release_group_mbid: Release group MBID (optional)
+        release_group_name: Release group name (optional)
     """
-    if artist_credit_mbids:
-        mbids = artist_credit_mbids
-    else:
-        mbids = ['']
+    # Ensure we have at least one entry for the artist loop
+    if not artist_credit_mbids:
+        artist_credit_mbids = ['']
+    if not artist_mb_ids:
+        artist_mb_ids = [0] * len(artist_credit_mbids)
+
+    # Ensure arrays are same length
+    while len(artist_mb_ids) < len(artist_credit_mbids):
+        artist_mb_ids.append(0)
 
     recording_id = 0
     if recording_mbid:
@@ -1269,11 +1428,16 @@ def delete_listen(
         """, parameters={'mbid': '', 'name': release_group_name})
         release_group_id = release_group_id_query.first_row[0]
 
-    for mbid in mbids:
-        artist_id_query = ch_client.query("""
-            SELECT artistId({mbid:String}, {name:String})
-        """, parameters={'mbid': mbid, 'name': artist_name})
-        artist_id = artist_id_query.first_row[0]
+    # For each artist, compute the unified artist_id
+    for mbid, mb_id in zip(artist_credit_mbids, artist_mb_ids):
+        # Use MB ID if mapped, otherwise compute hash
+        if is_mapped and mb_id != 0:
+            artist_id = mb_id
+        else:
+            hash_query = ch_client.query("""
+                SELECT artistHash({mbid:String}, {name:String})
+            """, parameters={'mbid': mbid, 'name': artist_name})
+            artist_id = hash_query.first_row[0]
 
         ch_client.command("""
             INSERT INTO deleted_listens_log
