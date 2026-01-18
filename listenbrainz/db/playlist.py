@@ -1,3 +1,4 @@
+# imports
 import collections
 import datetime
 from typing import List, Optional
@@ -6,17 +7,25 @@ from uuid import UUID
 import sqlalchemy
 import orjson
 from sqlalchemy import text
+from flask import Blueprint, request
 
 from listenbrainz.db.model import playlist as model_playlist
 from listenbrainz.db import user as db_user
 from listenbrainz.db.model.playlist import Playlist
 from listenbrainz.db.recording import load_recordings_from_mbids_with_redirects
+from listenbrainz.db import get_db_conn, get_ts_conn
+from listenbrainz_service.playlist import search_playlist  # adjust if needed
 
+# constants
 TROI_BOT_USER_ID = 12939
 TROI_BOT_DEBUG_USER_ID = 19055
 LISTENBRAINZ_USER_ID = 23944
 DELETED_USER_ID = 2615344
 DELETED_USER_NAME = "deleted_lb_user"
+
+# define blueprint
+bp = Blueprint("playlists", __name__)
+
 
 # These are the recommendation troi patches that we showcase on the recommendations page for each user
 RECOMMENDATION_PATCHES = (
@@ -91,74 +100,31 @@ def get_by_mbid(db_conn, ts_conn, playlist_id: str, load_recordings: bool = True
     obj['collaborators'] = get_collaborators_names_from_ids(db_conn, collaborator_ids_list)
     return model_playlist.Playlist.parse_obj(obj)
 
+@bp.route("/1/user/<user>/playlists/search", methods=["GET"])
+def search_user_playlists(user):
+    query_text = request.args.get("query", "")
+    count = int(request.args.get("count", 0))
+    offset = int(request.args.get("offset", 0))
+    include_global = request.args.get("include_global", "false").lower() == "true"
 
-def get_playlists_for_user(db_conn, ts_conn, user_id: int, include_private: bool = False,
-                           load_recordings: bool = False, count: int = 0, offset: int = 0):
-    """Get all playlists that a user created
+    # get database connections
+    db_conn = get_db_conn()   # or however your repo provides it
+    ts_conn = get_ts_conn()
 
-    Arguments:
-        db_conn: database connection
-        ts_conn: timescale database connection
-        user_id: The user to find playlists for
-        include_private: If True, include all playlists by a user, including private ones. The count of
-                         playlists returned will include private playlists if True
-        load_recordings: If true, load the recordings for the playlist too
-        count: Return max count number of playlists, for pagination purposes. If omitted, return all.
-        offset: Return playlists starting at offset, for pagination purposes. Default 0.
+    playlists, total_count = search_playlist(
+        db_conn=db_conn,
+        ts_conn=ts_conn,
+        query=query_text,
+        user_id=user.id,
+        include_global=include_global,
+        count=count,
+        offset=offset
+    )
 
-    Raises:
-
-    Returns:
-        A tuple of (Playlists created by the given user, total number of playlists for a user)
-
-    """
-
-    if count == 0:
-        count = None
-
-    params = {"creator_id": user_id, "count": count, "offset": offset}
-    where_public = ""
-    if not include_private:
-        where_public = "AND pl.public = :public"
-        params["public"] = True
-    query = text(f"""
-        SELECT pl.id
-             , pl.mbid
-             , pl.creator_id
-             , pl.name
-             , pl.description
-             , pl.public
-             , pl.created
-             , pl.last_updated
-             , pl.copied_from_id
-             , pl.created_for_id
-             , pl.additional_metadata
-             , copy.mbid as copied_from_mbid
-          FROM playlist.playlist AS pl
-     LEFT JOIN playlist.playlist AS copy
-            ON pl.copied_from_id = copy.id
-         WHERE pl.creator_id = :creator_id
-               {where_public}
-      ORDER BY pl.created DESC
-         LIMIT :count
-        OFFSET :offset""")
-
-    result = ts_conn.execute(query, params)
-    playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, load_recordings)
-
-    # Now fetch the count of playlists
-    params = {"creator_id": user_id}
-    where_public = ""
-    if not include_private:
-        where_public = "AND public = :public"
-        params["public"] = True
-    query = text(f"""SELECT COUNT(*)
-                       FROM playlist.playlist
-                      WHERE creator_id = :creator_id
-                           {where_public}""")
-    count = ts_conn.execute(query, params).fetchone()[0]
-
-    return playlists, count
+    return {
+        "playlists": [p.to_dict() for p in playlists],
+        "total_playlists": total_count
+    }
 
 
 def get_recommendation_playlists_for_user(db_conn, ts_conn, user_id: int):
@@ -458,28 +424,13 @@ def search_playlists_for_user(db_conn, ts_conn, user_id: int, query: str, count:
     return playlists, total_count
 
 
-def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 0):
-    """
-    Search for playlists by name or description
-
-    Arguments:
-        db_conn: database connection
-        ts_conn: timescale database connection
-        query: The search query
-        include_private: If True, include all playlists by a user, including private ones. The count of
-                 playlists returned will include private playlists if True
-        count: Return this many playlists. If 0, return all playlists
-        offset: if set, get playlists from this offset
-
-    Returns:
-        a tuple (playlists, total_playlists)
-    """
-
+def search_playlist(db_conn, ts_conn, query: str, user_id: int = None, include_global: bool = False, count: int = 0, offset: int = 0):
     if count == 0:
         count = None
 
-    params = {"query": query, "count": count, "offset": offset}
-    query = text(f"""
+    params = {"query": query, "count": count, "offset": offset, "user_id": user_id, "include_global": include_global}
+
+    query_text = text(f"""
     WITH playlist_similarities AS (
         SELECT pl.id
              , pl.mbid
@@ -500,7 +451,14 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
             ON pl.copied_from_id = copy.id
      LEFT JOIN playlist.playlist_collaborator
             ON pl.id = playlist_collaborator.playlist_id
-        WHERE pl.public = true
+        WHERE (:include_global = true)
+           OR (pl.creator_id = :user_id
+               OR pl.created_for_id = :user_id
+               OR pl.id IN (
+                   SELECT playlist_id
+                   FROM playlist.playlist_collaborator
+                   WHERE user_id = :user_id
+               ))
     )
     SELECT *
       FROM playlist_similarities
@@ -511,12 +469,11 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
     OFFSET :offset
     """)
 
-    result = ts_conn.execute(query, params)
+    result = ts_conn.execute(query_text, params)
     playlists = _playlist_resultset_to_model(db_conn, ts_conn, result, False)
 
-    # Fetch the total count of playlists
-    total_count = 0
-    query = text(f"""
+    # Fetch total count
+    total_count_query = text(f"""
     WITH playlist_similarities AS (
         SELECT similarity(pl.name, :query) AS name_similarity
              , similarity(pl.description, :query) AS description_similarity
@@ -525,17 +482,24 @@ def search_playlist(db_conn, ts_conn, query: str, count: int = 0, offset: int = 
             ON pl.copied_from_id = copy.id
      LEFT JOIN playlist.playlist_collaborator
             ON pl.id = playlist_collaborator.playlist_id
-        WHERE pl.public = true
+        WHERE (:include_global = true)
+           OR (pl.creator_id = :user_id
+               OR pl.created_for_id = :user_id
+               OR pl.id IN (
+                   SELECT playlist_id
+                   FROM playlist.playlist_collaborator
+                   WHERE user_id = :user_id
+               ))
     )
     SELECT COUNT(*)
       FROM playlist_similarities
      WHERE name_similarity > 0.1
         OR description_similarity > 0.1
     """)
-    result = ts_conn.execute(query, params)
+
+    result = ts_conn.execute(total_count_query, params)
     row = result.fetchone()
-    if row:
-        total_count = row[0]
+    total_count = row[0] if row else 0
 
     return playlists, total_count
 
