@@ -84,8 +84,8 @@ LISTEN_ENRICHMENT_QUERY = """
          , (artist_data->'artist_credit_id')::INT AS artist_credit_id
          , mbc.artist_mbids::TEXT[] AS m_artist_credit_mbids
          , mbc.artist_data->>'name' AS m_artist_name
-         , mbc.release_mbid::TEXT AS m_release_mbid
-         , mbc.release_data->>'name' AS m_release_name
+         , COALESCE(mbc.release_mbid::TEXT, '') AS m_release_mbid
+         , COALESCE(mbc.release_data->>'name', '') AS m_release_name
          , mbc.recording_data->>'name' AS m_recording_name
       FROM listen_with_mbid l
  LEFT JOIN mapping.mb_metadata_cache mbc
