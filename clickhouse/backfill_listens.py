@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-ClickHouse Listen Backfiller
+ClickHouse Listen Backfiller - Simplified
 
 This script reads listens directly from the TimescaleDB `listen` table,
 enchriches them with mapping and metadata, and inserts them into the
 ClickHouse `listens` table.
 
-It's designed for backfilling historical data, processing listens one day
-at a time. This is similar to clickhouse/listen_consumer.py, but reads
-from the database instead of RabbitMQ.
+It's designed for backfilling historical data. It processes listens in batches
+ordered by listened_at, using the timestamp of the last processed listen to
+fetch the next batch.
 """
 
 import logging
@@ -28,27 +28,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Copied from listen_consumer.py
+# This query fetches a batch of listens and enriches them in one go.
+# It uses a `listens_to_process` CTE to select a batch of listens
+# starting after a specific timestamp, which allows for pagination.
 LISTEN_ENRICHMENT_QUERY = """
-    WITH listen_keys (user_id, listened_at, recording_msid) AS (VALUES %s),
+    WITH listens_to_process AS (
+        SELECT listened_at, created, user_id, recording_msid, data
+          FROM listen
+         WHERE listened_at > %s
+      ORDER BY listened_at
+         LIMIT %s
+    ),
     listen_with_mbid AS (
         SELECT l.listened_at
              , l.created::timestamp(3) with time zone AS created
              , l.user_id
              , l.recording_msid
-             , data->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
-             , data->>'artist_name' AS l_artist_name
-             , data->>'release_name' AS l_release_name
-             , data->'additional_info'->>'release_mbid' AS l_release_mbid
-             , data->>'track_name' AS l_recording_name
-             , data->'additional_info'->>'recording_mbid' AS l_recording_mbid
+             , l.data->'additional_info'->'artist_mbids' AS l_artist_credit_mbids
+             , l.data->>'artist_name' AS l_artist_name
+             , l.data->>'release_name' AS l_release_name
+             , l.data->'additional_info'->>'release_mbid' AS l_release_mbid
+             , l.data->>'track_name' AS l_recording_name
+             , l.data->'additional_info'->>'recording_mbid' AS l_recording_mbid
              -- prefer to use user specified mapping, then mbid mapper's mapping, finally other user's specified mappings
              , COALESCE(user_mm.recording_mbid, mm.recording_mbid, other_mm.recording_mbid) AS m_recording_mbid
-          FROM listen l
-          JOIN listen_keys lk
-            ON l.user_id = lk.user_id
-           AND l.listened_at = lk.listened_at
-           AND l.recording_msid = lk.recording_msid
+          FROM listens_to_process l
      LEFT JOIN mbid_mapping mm
             ON l.recording_msid = mm.recording_msid
      LEFT JOIN mbid_manual_mapping user_mm
@@ -96,6 +100,7 @@ LISTEN_ENRICHMENT_QUERY = """
          , m_recording_name
          , m_artist_mb_ids
       FROM listen_with_artist_ids
+  ORDER BY listened_at
 """
 
 
@@ -105,7 +110,7 @@ class ClickHouseBackfiller:
     def __init__(self):
         self.ch_client: Optional[Client] = None
         self.ts_conn = None
-        self.batch_size = 1000
+        self.batch_size = 1000  # Number of listens to process in each batch
 
     def init_clickhouse(self):
         """Initialize ClickHouse connection."""
@@ -115,7 +120,6 @@ class ClickHouseBackfiller:
             database=config.CLICKHOUSE_DATABASE,
             username=config.CLICKHOUSE_USERNAME,
             password=config.CLICKHOUSE_PASSWORD,
-            # Disable async insert for a batch script
         )
         logger.info(f"Connected to ClickHouse at {config.CLICKHOUSE_HOST}:{config.CLICKHOUSE_PORT}")
 
@@ -130,156 +134,92 @@ class ClickHouseBackfiller:
         )
         logger.info(f"Connected to TimescaleDB at {config.TIMESCALE_HOST}:{config.TIMESCALE_PORT}")
 
-    def enrich_listens(self, listen_keys: list) -> list[dict]:
-        """
-        Query TimescaleDB to get full listen data with mapping info.
-
-        Args:
-            listen_keys: List of listen key tuples (user_id, listened_at, recording_msid)
-
-        Returns:
-            List of enriched listen dicts ready for ClickHouse insertion
-        """
-        if not listen_keys:
-            return []
-
-        # Query TimescaleDB for enriched data using execute_values
-        enriched = []
+    def _fetch_enriched_batch(self, last_listened_at: datetime) -> list[dict]:
+        """Fetches and enriches a batch of listens directly from TimescaleDB."""
         try:
             with self.ts_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curs:
-                rows = psycopg2.extras.execute_values(
-                    curs,
-                    LISTEN_ENRICHMENT_QUERY,
-                    listen_keys,
-                    template="(%s::int, %s::timestamptz, %s::uuid)",
-                    fetch=True,
-                )
-
-                for row in rows:
-                    is_mapped = row['artist_credit_id'] is not None
-                    if is_mapped:
-                        artist_name = row['m_artist_name']
-                        release_name = row['m_release_name']
-                        recording_name = row['m_recording_name']
-                        artist_credit_id = row['artist_credit_id']
-                        artist_credit_mbids = row['m_artist_credit_mbids'] or []
-                        release_mbid = row['m_release_mbid'] or ''
-                        recording_mbid = row['m_recording_mbid'] or ''
-                        artist_mb_ids = row['m_artist_mb_ids'] or []
-                    else:
-                        artist_name = row['l_artist_name']
-                        release_name = row['l_release_name'] or ''
-                        recording_name = row['l_recording_name']
-                        artist_credit_id = 0
-                        artist_credit_mbids = row['l_artist_credit_mbids'] or []
-                        release_mbid = row['l_release_mbid'] or ''
-                        recording_mbid = row['l_recording_mbid'] or ''
-                        artist_mb_ids = []
-
-                    enriched.append({
-                        'listened_at': row['listened_at'],
-                        'created': row['created'],
-                        'user_id': row['user_id'],
-                        'recording_msid': row['recording_msid'],
-                        'artist_name': artist_name,
-                        'artist_credit_id': artist_credit_id,
-                        'release_name': release_name,
-                        'release_mbid': release_mbid,
-                        'recording_name': recording_name,
-                        'recording_mbid': recording_mbid,
-                        'artist_credit_mbids': artist_credit_mbids,
-                        'artist_mb_ids': artist_mb_ids,
-                        'is_mapped': is_mapped,
-                    })
-
+                curs.execute(LISTEN_ENRICHMENT_QUERY, (last_listened_at, self.batch_size))
+                rows = curs.fetchall()
+            self.ts_conn.rollback()
+            return rows
         except Exception as e:
-            logger.error(f"Error enriching listens from TimescaleDB: {e}", exc_info=True)
-            try:
-                self.ts_conn.rollback()
-            except Exception:
-                pass
+            logger.error(f"Error fetching enriched batch from TimescaleDB: {e}", exc_info=True)
+            self.ts_conn.rollback()
+            return []
 
-        return enriched
+    def _transform_enriched_rows(self, rows: list[dict]) -> list[dict]:
+        """Transforms raw enriched rows into the final format for ClickHouse."""
+        transformed = []
+        for row in rows:
+            is_mapped = row['artist_credit_id'] is not None
+            if is_mapped:
+                artist_name = row['m_artist_name']
+                release_name = row['m_release_name']
+                recording_name = row['m_recording_name']
+                artist_credit_id = row['artist_credit_id']
+                artist_credit_mbids = row['m_artist_credit_mbids'] or []
+                release_mbid = row['m_release_mbid'] or ''
+                recording_mbid = row['m_recording_mbid'] or ''
+                artist_mb_ids = row['m_artist_mb_ids'] or []
+            else:
+                artist_name = row['l_artist_name']
+                release_name = row['l_release_name'] or ''
+                recording_name = row['l_recording_name']
+                artist_credit_id = 0
+                artist_credit_mbids = row['l_artist_credit_mbids'] or []
+                release_mbid = row['l_release_mbid'] or ''
+                recording_mbid = row['l_recording_mbid'] or ''
+                artist_mb_ids = []
 
-    def process_batch(self, listen_keys: list):
-        """Enrich a batch of listens and insert them into ClickHouse."""
-        if not listen_keys:
+            transformed.append({
+                'listened_at': row['listened_at'],
+                'created': row['created'],
+                'user_id': row['user_id'],
+                'recording_msid': row['recording_msid'],
+                'artist_name': artist_name,
+                'artist_credit_id': artist_credit_id,
+                'release_name': release_name,
+                'release_mbid': release_mbid,
+                'recording_name': recording_name,
+                'recording_mbid': recording_mbid,
+                'artist_credit_mbids': artist_credit_mbids,
+                'artist_mb_ids': artist_mb_ids,
+                'is_mapped': is_mapped,
+            })
+        return transformed
+
+    def _insert_to_clickhouse(self, enriched_listens: list[dict]):
+        """Inserts a batch of enriched listens into ClickHouse."""
+        if not enriched_listens:
             return
 
-        try:
-            enriched = self.enrich_listens(listen_keys)
+        columns = [
+            'listened_at', 'created', 'user_id', 'recording_msid',
+            'artist_name', 'artist_credit_id', 'release_name', 'release_mbid',
+            'recording_name', 'recording_mbid', 'artist_credit_mbids',
+            'artist_mb_ids', 'is_mapped'
+        ]
 
-            if not enriched:
-                logger.warning(f"No listens enriched from batch of {len(listen_keys)}")
-                return
-
-            columns = [
-                'listened_at', 'created', 'user_id', 'recording_msid',
-                'artist_name', 'artist_credit_id', 'release_name', 'release_mbid',
-                'recording_name', 'recording_mbid', 'artist_credit_mbids',
-                'artist_mb_ids', 'is_mapped'
+        rows = [
+            [
+                listen['listened_at'],
+                listen['created'],
+                listen['user_id'],
+                listen['recording_msid'],
+                listen['artist_name'],
+                listen['artist_credit_id'],
+                listen['release_name'],
+                listen['release_mbid'],
+                listen['recording_name'],
+                listen['recording_mbid'],
+                listen['artist_credit_mbids'],
+                listen['artist_mb_ids'],
+                listen['is_mapped'],
             ]
+            for listen in enriched_listens
+        ]
 
-            rows = [
-                [
-                    listen['listened_at'],
-                    listen['created'],
-                    listen['user_id'],
-                    listen['recording_msid'],
-                    listen['artist_name'],
-                    listen['artist_credit_id'],
-                    listen['release_name'],
-                    listen['release_mbid'],
-                    listen['recording_name'],
-                    listen['recording_mbid'],
-                    listen['artist_credit_mbids'],
-                    listen['artist_mb_ids'],
-                    listen['is_mapped'],
-                ]
-                for listen in enriched
-            ]
-
-            self.ch_client.insert(
-                'listens',
-                rows,
-                column_names=columns,
-            )
-
-            logger.debug(f"Inserted {len(enriched)} listens into ClickHouse.")
-
-        except Exception as e:
-            logger.error(f"Error processing batch: {e}", exc_info=True)
-
-    def backfill_day(self, day: datetime.date):
-        """Backfill all listens for a specific day."""
-        logger.info(f"Backfilling listens for {day}")
-        day_start = datetime.combine(day, datetime.min.time(), tzinfo=timezone.utc)
-        day_end = day_start + timedelta(days=1)
-
-        # Using a named cursor for server-side processing to avoid loading all rows into memory at once
-        with self.ts_conn.cursor(name='listen_cursor') as curs:
-            curs.itersize = self.batch_size  # fetch this many rows at a time
-            curs.execute("""
-                SELECT user_id, listened_at, recording_msid
-                FROM listen
-                WHERE listened_at >= %s AND listened_at < %s
-            """, (day_start, day_end))
-
-            batch = []
-            processed_count = 0
-            for row in curs:
-                batch.append(row)
-                if len(batch) >= self.batch_size:
-                    self.process_batch(batch)
-                    processed_count += len(batch)
-                    logger.info(f"  ... processed {processed_count} listens for {day}")
-                    batch = []
-
-            if batch:
-                self.process_batch(batch)
-                processed_count += len(batch)
-
-        logger.info(f"Finished day {day}, total listens: {processed_count}")
+        self.ch_client.insert('listens', rows, column_names=columns)
 
     def run(self):
         """Main method to run the backfill process."""
@@ -287,34 +227,51 @@ class ClickHouseBackfiller:
             self.init_clickhouse()
             self.init_timescale()
 
+            # Find the starting point for the backfill
             with self.ts_conn.cursor() as curs:
-                curs.execute("SELECT min(listened_at)::date, max(listened_at)::date FROM listen where listened_at >= make_date(2020, 1, 1)")
+                curs.execute("SELECT min(listened_at) FROM listen")
                 res = curs.fetchone()
-                if not res:
-                    logger.info("No listens found in the listen table.")
+                if res and res[0]:
+                    # Start from just before the very first listen to include it
+                    last_listened_at = res[0] - timedelta(microseconds=1)
+                else:
+                    logger.info("No listens found in the listen table to backfill.")
                     return
-                start_date, end_date = res
+            self.ts_conn.rollback()  # End the transaction
 
-            if not start_date or not end_date:
-                logger.info("No listens found in the listen table.")
-                return
+            logger.info(f"Starting backfill from {last_listened_at}")
 
-            logger.info(f"Starting backfill from {start_date} to {end_date}")
+            total_processed = 0
+            progress_report_count = 0
 
-            current_date = start_date
-            while current_date <= end_date:
-                self.backfill_day(current_date)
-                current_date += timedelta(days=1)
-                # Commit after each day to free up resources on the PostgreSQL server.
-                self.ts_conn.commit()
+            while True:
+                enriched_rows = self._fetch_enriched_batch(last_listened_at)
 
-            logger.info("Backfill completed.")
+                if not enriched_rows:
+                    logger.info("No more listens to process.")
+                    break
+
+                transformed_listens = self._transform_enriched_rows(enriched_rows)
+                self._insert_to_clickhouse(transformed_listens)
+
+                batch_size = len(transformed_listens)
+                total_processed += batch_size
+                last_listened_at = transformed_listens[-1]['listened_at']
+
+                # Report progress every 100k listens
+                if total_processed >= progress_report_count + 100000:
+                    progress_report_count = (total_processed // 100000) * 100000
+                    logger.info(f"Processed {progress_report_count} listens... Last timestamp: {last_listened_at}")
+
+            logger.info(f"Backfill completed. Total listens processed: {total_processed}")
 
         except Exception as e:
             logger.critical(f"An unhandled error occurred: {e}", exc_info=True)
         finally:
             if self.ts_conn:
                 self.ts_conn.close()
+            if self.ch_client:
+                self.ch_client.close()
 
 
 def main():
