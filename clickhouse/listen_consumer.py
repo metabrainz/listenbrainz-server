@@ -239,6 +239,8 @@ class ClickHouseListenConsumer(ConsumerMixin):
         try:
             # Enrich listens with mapping data from TimescaleDB
             enriched = self.enrich_listens(self.pending_listens)
+            for listen in enriched:
+                print(listen)
 
             if not enriched:
                 logger.warning(f"No listens enriched from batch of {len(self.pending_listens)}")
