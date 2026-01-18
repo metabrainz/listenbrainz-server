@@ -66,6 +66,11 @@ SPARK_RESULT_QUEUE = "spark_result"
 SPARK_REQUEST_EXCHANGE = "spark_request"
 SPARK_REQUEST_QUEUE = "spark_request"
 
+CLICKHOUSE_EXCHANGE = "clickhouse"
+CLICKHOUSE_QUEUE = "clickhouse"
+CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
+CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
+
 REJECTION_EXCHANGE = "rejection"
 REJECTION_QUEUE = "rejection"
 

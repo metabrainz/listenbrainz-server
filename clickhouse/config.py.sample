@@ -1,0 +1,44 @@
+# ClickHouse connection settings
+CLICKHOUSE_HOST = "localhost"
+CLICKHOUSE_PORT = 8123
+CLICKHOUSE_DATABASE = "default"
+CLICKHOUSE_USERNAME = "default"
+CLICKHOUSE_PASSWORD = ""
+
+# TimescaleDB connection settings (for mapping data lookup in listen consumer)
+TIMESCALE_HOST = "localhost"
+TIMESCALE_PORT = 5432
+TIMESCALE_DATABASE = "listenbrainz"
+TIMESCALE_USERNAME = "listenbrainz"
+TIMESCALE_PASSWORD = ""
+
+# RabbitMQ connection settings
+RABBITMQ_HOST = "rabbitmq"
+RABBITMQ_PORT = 5672
+RABBITMQ_USERNAME = "guest"
+RABBITMQ_PASSWORD = "guest"
+RABBITMQ_VHOST = "/"
+
+# RabbitMQ exchanges and queues for ClickHouse operations
+# Stats/management requests
+CLICKHOUSE_EXCHANGE = "clickhouse"
+CLICKHOUSE_QUEUE = "clickhouse"
+
+# Results sent back to ListenBrainz
+CLICKHOUSE_RESULT_EXCHANGE = "clickhouse_result"
+CLICKHOUSE_RESULT_QUEUE = "clickhouse_result"
+
+# Listen ingestion - consumes from the existing UNIQUE_EXCHANGE
+# This is the exchange where deduplicated listens are published after TimescaleDB insert
+UNIQUE_EXCHANGE = "unique"
+CLICKHOUSE_LISTEN_QUEUE = "clickhouse_listens"
+
+# FTP settings for dump download
+FTP_SERVER_URI = "ftp.eu.metabrainz.org"
+FTP_LISTENS_DIR = "/pub/musicbrainz/listenbrainz/"
+
+# Stats settings
+# Database prefix for CouchDB stats databases (format: clk_{entity}_{range}_{YYYYMMDD})
+STATS_COUCH_DB_PREFIX = "clk"
+STATS_TOP_N = 1000  # Number of top entities to cache per user
+STATS_BATCH_SIZE = 1000  # Number of users to process per batch
