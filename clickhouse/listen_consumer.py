@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 # Query to get full listen data with mapping, similar to spark dump
 # Uses VALUES clause populated by execute_values for efficient batch lookup
+# Also looks up MB integer artist IDs from the artist table
 LISTEN_ENRICHMENT_QUERY = """
     WITH listen_keys (user_id, listened_at, recording_msid) AS (VALUES %s),
     listen_with_mbid AS (
@@ -69,11 +70,31 @@ LISTEN_ENRICHMENT_QUERY = """
            AND user_mm.user_id = l.user_id
      LEFT JOIN mbid_manual_mapping_top other_mm
             ON l.recording_msid = other_mm.recording_msid
+    ),
+    -- Look up MB integer artist IDs from artist_mbids array
+    listen_with_artist_ids AS (
+        SELECT l.*
+             , mbc.artist_mbids AS m_artist_mbids
+             , (mbc.artist_data->'artist_credit_id')::INT AS artist_credit_id
+             , mbc.artist_data->>'name' AS m_artist_name
+             , COALESCE(mbc.release_mbid::TEXT, '') AS m_release_mbid
+             , COALESCE(mbc.release_data->>'name', '') AS m_release_name
+             , mbc.recording_data->>'name' AS m_recording_name
+             -- Get artist IDs by looking up each MBID in the artist table
+             , COALESCE(
+                   (SELECT array_agg(COALESCE(a.id, 0) ORDER BY idx)
+                    FROM unnest(mbc.artist_mbids) WITH ORDINALITY AS u(mbid, idx)
+                    LEFT JOIN mapping.mb_artist_id_gid_cache_tmp a ON a.gid = u.mbid),
+                   ARRAY[]::INT[]
+               ) AS m_artist_mb_ids
+          FROM listen_with_mbid l
+     LEFT JOIN mapping.mb_metadata_cache mbc
+            ON l.m_recording_mbid = mbc.recording_mbid
     )
-    SELECT l.listened_at
-         , l.created
-         , l.user_id
-         , l.recording_msid::TEXT
+    SELECT listened_at
+         , created
+         , user_id
+         , recording_msid::TEXT
          , l_artist_credit_mbids
          , l_artist_name
          , l_release_name
@@ -81,15 +102,14 @@ LISTEN_ENRICHMENT_QUERY = """
          , l_recording_name
          , l_recording_mbid
          , m_recording_mbid::TEXT
-         , (artist_data->'artist_credit_id')::INT AS artist_credit_id
-         , mbc.artist_mbids::TEXT[] AS m_artist_credit_mbids
-         , mbc.artist_data->>'name' AS m_artist_name
-         , COALESCE(mbc.release_mbid::TEXT, '') AS m_release_mbid
-         , COALESCE(mbc.release_data->>'name', '') AS m_release_name
-         , mbc.recording_data->>'name' AS m_recording_name
-      FROM listen_with_mbid l
- LEFT JOIN mapping.mb_metadata_cache mbc
-        ON l.m_recording_mbid = mbc.recording_mbid
+         , artist_credit_id
+         , m_artist_mbids::TEXT[] AS m_artist_credit_mbids
+         , m_artist_name
+         , m_release_mbid
+         , m_release_name
+         , m_recording_name
+         , m_artist_mb_ids
+      FROM listen_with_artist_ids
 """
 
 
@@ -190,7 +210,10 @@ class ClickHouseListenConsumer(ConsumerMixin):
 
                 for row in rows:
                     # Either take the mapping metadata or the original listen metadata
-                    if row['artist_credit_id'] is not None:
+                    # is_mapped=True means data comes from MB mapping (trusted MBIDs)
+                    # is_mapped=False means user-submitted data (MBIDs not trusted for grouping)
+                    is_mapped = row['artist_credit_id'] is not None
+                    if is_mapped:
                         artist_name = row['m_artist_name']
                         release_name = row['m_release_name']
                         recording_name = row['m_recording_name']
@@ -198,6 +221,8 @@ class ClickHouseListenConsumer(ConsumerMixin):
                         artist_credit_mbids = row['m_artist_credit_mbids'] or []
                         release_mbid = row['m_release_mbid'] or ''
                         recording_mbid = row['m_recording_mbid'] or ''
+                        # MB integer artist IDs from the artist table lookup
+                        artist_mb_ids = row['m_artist_mb_ids'] or []
                     else:
                         artist_name = row['l_artist_name']
                         release_name = row['l_release_name'] or ''
@@ -206,6 +231,8 @@ class ClickHouseListenConsumer(ConsumerMixin):
                         artist_credit_mbids = row['l_artist_credit_mbids'] or []
                         release_mbid = row['l_release_mbid'] or ''
                         recording_mbid = row['l_recording_mbid'] or ''
+                        # Unmapped listens have no MB artist IDs
+                        artist_mb_ids = []
 
                     enriched.append({
                         'listened_at': row['listened_at'],
@@ -219,6 +246,8 @@ class ClickHouseListenConsumer(ConsumerMixin):
                         'recording_name': recording_name,
                         'recording_mbid': recording_mbid,
                         'artist_credit_mbids': artist_credit_mbids,
+                        'artist_mb_ids': artist_mb_ids,
+                        'is_mapped': is_mapped,
                     })
 
         except Exception as e:
@@ -252,7 +281,8 @@ class ClickHouseListenConsumer(ConsumerMixin):
             columns = [
                 'listened_at', 'created', 'user_id', 'recording_msid',
                 'artist_name', 'artist_credit_id', 'release_name', 'release_mbid',
-                'recording_name', 'recording_mbid', 'artist_credit_mbids'
+                'recording_name', 'recording_mbid', 'artist_credit_mbids',
+                'artist_mb_ids', 'is_mapped'
             ]
 
             rows = [
@@ -268,6 +298,8 @@ class ClickHouseListenConsumer(ConsumerMixin):
                     listen['recording_name'],
                     listen['recording_mbid'],
                     listen['artist_credit_mbids'],
+                    listen['artist_mb_ids'],
+                    listen['is_mapped'],
                 ]
                 for listen in enriched
             ]

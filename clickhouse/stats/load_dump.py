@@ -32,6 +32,8 @@ COLUMNS = [
     "recording_name",
     "recording_mbid",
     "artist_credit_mbids",
+    "artist_mb_ids",
+    "is_mapped",
 ]
 
 
@@ -107,6 +109,28 @@ def transform_arrow_table(table: pa.Table) -> pa.Table:
         lambda x: [v for v in x if v is not None] if x is not None else []
     )
     new_columns["artist_credit_mbids"] = pa.array(clean_mbids.tolist(), type=pa.list_(pa.string()))
+
+    # artist_mb_ids - MB integer artist IDs (may not exist in older dumps)
+    if "artist_mb_ids" in table.column_names:
+        arr = table.column("artist_mb_ids")
+        ids_series = arr.to_pandas()
+        clean_ids = ids_series.apply(
+            lambda x: [v for v in x if v is not None] if x is not None else []
+        )
+        new_columns["artist_mb_ids"] = pa.array(clean_ids.tolist(), type=pa.list_(pa.uint32()))
+    else:
+        # Default to empty arrays for older dumps
+        new_columns["artist_mb_ids"] = pa.array(
+            [[] for _ in range(table.num_rows)], type=pa.list_(pa.uint32())
+        )
+
+    # is_mapped - whether listen uses MB mapping data (may not exist in older dumps)
+    if "is_mapped" in table.column_names:
+        new_columns["is_mapped"] = table.column("is_mapped")
+    else:
+        # Default to False for older dumps (will be computed based on artist_credit_id > 0)
+        # Actually, infer from artist_credit_id: mapped if artist_credit_id > 0
+        new_columns["is_mapped"] = pc.greater(new_columns["artist_credit_id"], pa.scalar(0, type=pa.uint64()))
 
     return pa.table({col: new_columns[col] for col in COLUMNS})
 
@@ -200,6 +224,19 @@ def load_parquet_file_pandas(
             df["recording_mbid"] = df["recording_mbid"].fillna("")
 
             df["artist_credit_mbids"] = df["artist_credit_mbids"].apply(fix_array)
+
+            # artist_mb_ids - MB integer artist IDs (may not exist in older dumps)
+            if "artist_mb_ids" in df.columns:
+                df["artist_mb_ids"] = df["artist_mb_ids"].apply(fix_array)
+            else:
+                df["artist_mb_ids"] = [[] for _ in range(len(df))]
+
+            # is_mapped - whether listen uses MB mapping data (may not exist in older dumps)
+            if "is_mapped" in df.columns:
+                df["is_mapped"] = df["is_mapped"].fillna(False).astype(bool)
+            else:
+                # Infer from artist_credit_id: mapped if artist_credit_id > 0
+                df["is_mapped"] = df["artist_credit_id"] > 0
 
             client.insert_df(
                 table="listens",
