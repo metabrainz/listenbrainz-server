@@ -288,7 +288,7 @@ class ClickHouseBackfiller:
             self.init_timescale()
 
             with self.ts_conn.cursor() as curs:
-                curs.execute("SELECT min(listened_at)::date, max(listened_at)::date FROM listen")
+                curs.execute("SELECT min(listened_at)::date, max(listened_at)::date FROM listen where listened_at >= make_date(2020, 1, 1)")
                 res = curs.fetchone()
                 if not res:
                     logger.info("No listens found in the listen table.")
