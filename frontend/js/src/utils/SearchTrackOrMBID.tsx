@@ -48,6 +48,7 @@ type SearchTrackOrMBIDProps = {
   expectedPayload: PayloadType;
   switchMode?: (text: string) => void;
   requiredInput?: boolean;
+  onSearchTextChange?: (text: string) => void;
 } & ConditionalReturnValue;
 
 const SearchTrackOrMBID = forwardRef<
@@ -61,6 +62,7 @@ const SearchTrackOrMBID = forwardRef<
     autofocus = true,
     switchMode,
     requiredInput = true,
+    onSearchTextChange,
   }: SearchTrackOrMBIDProps,
   inputRefForParent
 ) {
@@ -277,6 +279,7 @@ const SearchTrackOrMBID = forwardRef<
           name="recording-mbid"
           onChange={(event) => {
             setInputValue(event.target.value);
+            onSearchTextChange?.(event.target.value);
           }}
           placeholder="Track name or MusicBrainz URL/MBID"
           required={requiredInput}
