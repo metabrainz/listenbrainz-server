@@ -312,11 +312,16 @@ export default function AddTagSelect(props: {
             flexWrap: "nowrap",
             overflowX: "auto",
             paddingRight: "3.5em",
-            scrollbarWidth: "none",
-            "-ms-overflow-style": "none",
+            scrollbarWidth: "thin",
             "::-webkit-scrollbar": {
-              display: "none",
-              width: "0px",
+              height: "5px",
+              backgroundColor: "#f5f5f5",
+            },
+            "::-webkit-scrollbar-track": {
+              backgroundColor: "#f5f5f5",
+            },
+            ":hover::-webkit-scrollbar-thumb": {
+              backgroundColor: "#ccc",
             },
           }),
           indicatorsContainer: (styles) => ({
